@@ -64,8 +64,13 @@ class RunHistory:
     @property
     def current(self) -> RecorderRuns:
         """Get the current run."""
-        assert self._current_run_info is not None
-        return self._current_run_info
+        # If start has not been called yet because the recorder is
+        # still starting up we want history to use the current time
+        # as the created time to ensure we can still return results
+        # and we do not try to pull data from the previous run.
+        return self._current_run_info or RecorderRuns(
+            start=self.recording_start, created=dt_util.utcnow()
+        )
 
     def get(self, start: datetime) -> RecorderRuns | None:
         """Return the recorder run that started before or at start.

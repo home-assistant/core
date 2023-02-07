@@ -39,9 +39,9 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
         except RadiothermTstatError as ex:
             msg = f"{self._description} was busy (invalid value returned): {ex}"
             raise UpdateFailed(msg) from ex
-        except (OSError, URLError) as ex:
-            msg = f"{self._description} connection error: {ex}"
-            raise UpdateFailed(msg) from ex
         except timeout as ex:
             msg = f"{self._description}) timed out waiting for a response: {ex}"
+            raise UpdateFailed(msg) from ex
+        except (OSError, URLError) as ex:
+            msg = f"{self._description} connection error: {ex}"
             raise UpdateFailed(msg) from ex

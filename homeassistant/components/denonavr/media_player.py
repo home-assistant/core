@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
 from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
@@ -16,7 +16,6 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -140,8 +139,7 @@ async def async_setup_entry(
 def async_log_errors(
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
-    """
-    Log errors occurred when calling a Denon AVR receiver.
+    """Log errors occurred when calling a Denon AVR receiver.
 
     Decorates methods of DenonDevice class.
     Declaration of staticmethod for this method is at the end of this class.

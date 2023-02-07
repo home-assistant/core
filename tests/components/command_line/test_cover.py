@@ -6,7 +6,7 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.cover import DOMAIN, SCAN_INTERVAL
@@ -38,7 +38,7 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
     await hass.async_block_till_done()
 
 
-async def test_no_covers(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_no_covers(caplog: pytest.LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
@@ -153,7 +153,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 async def test_move_cover_failure(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test command failure."""
 

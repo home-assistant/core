@@ -85,9 +85,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     unique_id = ""
                     title = f"{host}:{port}"
                     if ip_address is not None:
-                        # Since IP addresses can change and therefore are not allowed in a
-                        # unique_id, fall back to the MAC address and port (to support
-                        # servers with same MAC address but different ports).
+                        # Since IP addresses can change and therefore are not allowed
+                        # in a unique_id, fall back to the MAC address and port (to
+                        # support servers with same MAC address but different ports).
                         unique_id = f"{mac_address}-{port}"
                         if ip_address.version == 6:
                             title = f"[{host}]:{port}"
@@ -101,15 +101,16 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                             unique_id = f"{host}-srv"
                             title = host
                         else:
-                            # Use host name and port in unique_id (to support servers with
-                            # same host name but different ports).
+                            # Use host name and port in unique_id (to support servers
+                            # with same host name but different ports).
                             unique_id = f"{host}-{port}"
 
                     # Abort in case the host was already configured before.
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
 
-                    # Configuration data are available and no error was detected, create configuration entry.
+                    # Configuration data are available and no error was detected,
+                    # create configuration entry.
                     return self.async_create_entry(title=title, data=config_data)
 
         # Show configuration form (default form in case of no user_input,

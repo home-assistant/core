@@ -27,7 +27,6 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
         async def connect() -> None:
             """Mock connect."""
             await asyncio.sleep(0)
-            client.connected = True
 
         async def listen(init_ready: asyncio.Event | None) -> None:
             """Mock listen."""
@@ -35,7 +34,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
                 init_ready.set()
             listen_block = asyncio.Event()
             await listen_block.wait()
-            assert False, "Listen was not cancelled!"
+            pytest.fail("Listen was not cancelled!")
 
         client.connect = AsyncMock(side_effect=connect)
         client.start_listening = AsyncMock(side_effect=listen)

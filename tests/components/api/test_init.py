@@ -1,5 +1,5 @@
 """The tests for the Home Assistant API component."""
-# pylint: disable=protected-access
+
 from http import HTTPStatus
 import json
 from unittest.mock import patch
@@ -30,8 +30,9 @@ async def test_api_list_state_entities(hass, mock_api_client):
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
 
-    remote_data = [ha.State.from_dict(item) for item in json]
-    assert remote_data == hass.states.async_all()
+    remote_data = [ha.State.from_dict(item).as_dict() for item in json]
+    local_data = [state.as_dict() for state in hass.states.async_all()]
+    assert remote_data == local_data
 
 
 async def test_api_get_state(hass, mock_api_client):

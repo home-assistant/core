@@ -153,12 +153,12 @@ class _Data:
 Data = _Data()
 
 
-async def test_v1_data():
+async def test_v1_data() -> None:
     """Test for version 1 api based on message."""
     assert dialogflow.get_api_version(Data.v1) == 1
 
 
-async def test_v2_data():
+async def test_v2_data() -> None:
     """Test for version 2 api based on message."""
     assert dialogflow.get_api_version(Data.v2) == 2
 

@@ -108,7 +108,7 @@ def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic or "#" in validated_topic:
-        raise vol.Invalid("Wildcards can not be used in topic names")
+        raise vol.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
 
 

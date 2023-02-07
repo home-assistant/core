@@ -53,7 +53,6 @@ async def test_invalid_api_key(hass):
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
         side_effect=InvalidApiKeyError("Invalid API key"),
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -69,7 +68,6 @@ async def test_api_error(hass):
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
         side_effect=ApiError("Invalid response from AccuWeather API"),
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -87,7 +85,6 @@ async def test_requests_exceeded_error(hass):
             "The allowed number of requests has been exceeded"
         ),
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -127,7 +124,6 @@ async def test_create_entry(hass):
     ), patch(
         "homeassistant.components.accuweather.async_setup_entry", return_value=True
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

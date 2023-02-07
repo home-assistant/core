@@ -3,7 +3,7 @@
   "name": "UniFi Network",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifi",
-  "requirements": ["aiounifi==43"],
+  "requirements": ["aiounifi==44"],
   "codeowners": ["@Kane610"],
   "quality_scale": "platinum",
   "ssdp": [

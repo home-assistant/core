@@ -198,7 +198,7 @@ class ComponentFactory:
             const.DOMAIN, context={"source": SOURCE_USER}
         )
         assert result
-        # pylint: disable=protected-access
+
         state = config_entry_oauth2_flow._encode_jwt(
             self._hass,
             {

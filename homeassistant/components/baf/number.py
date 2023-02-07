@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from aiobafi6 import Device
 
@@ -43,7 +43,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
         native_min_value=0,
         native_max_value=SPEED_RANGE[1] - 1,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda device: cast(Optional[int], device.comfort_min_speed),
+        value_fn=lambda device: cast(int | None, device.comfort_min_speed),
         mode=NumberMode.BOX,
     ),
     BAFNumberDescription(
@@ -52,7 +52,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
         native_min_value=1,
         native_max_value=SPEED_RANGE[1],
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda device: cast(Optional[int], device.comfort_max_speed),
+        value_fn=lambda device: cast(int | None, device.comfort_max_speed),
         mode=NumberMode.BOX,
     ),
     BAFNumberDescription(
@@ -61,7 +61,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
         native_min_value=SPEED_RANGE[0],
         native_max_value=SPEED_RANGE[1],
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda device: cast(Optional[int], device.comfort_heat_assist_speed),
+        value_fn=lambda device: cast(int | None, device.comfort_heat_assist_speed),
         mode=NumberMode.BOX,
     ),
 )
@@ -74,7 +74,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         native_max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        value_fn=lambda device: cast(Optional[int], device.return_to_auto_timeout),
+        value_fn=lambda device: cast(int | None, device.return_to_auto_timeout),
         mode=NumberMode.SLIDER,
     ),
     BAFNumberDescription(
@@ -84,7 +84,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         native_max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        value_fn=lambda device: cast(Optional[int], device.motion_sense_timeout),
+        value_fn=lambda device: cast(int | None, device.motion_sense_timeout),
         mode=NumberMode.SLIDER,
     ),
 )
@@ -97,9 +97,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
         native_max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        value_fn=lambda device: cast(
-            Optional[int], device.light_return_to_auto_timeout
-        ),
+        value_fn=lambda device: cast(int | None, device.light_return_to_auto_timeout),
         mode=NumberMode.SLIDER,
     ),
     BAFNumberDescription(
@@ -109,7 +107,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
         native_max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        value_fn=lambda device: cast(Optional[int], device.light_auto_motion_timeout),
+        value_fn=lambda device: cast(int | None, device.light_auto_motion_timeout),
         mode=NumberMode.SLIDER,
     ),
 )

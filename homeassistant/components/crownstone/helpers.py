@@ -13,8 +13,7 @@ from .const import DONT_USE_USB, MANUAL_PATH, REFRESH_LIST
 def list_ports_as_str(
     serial_ports: list[ListPortInfo], no_usb_option: bool = True
 ) -> list[str]:
-    """
-    Represent currently available serial ports as string.
+    """Represent currently available serial ports as string.
 
     Adds option to not use usb on top of the list,
     option to use manual path or refresh list at the end.

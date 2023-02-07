@@ -9,7 +9,7 @@ import inspect
 from json import JSONEncoder
 import logging
 import os
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
-_T = TypeVar("_T", bound=Union[Mapping[str, Any], Sequence[Any]])
+_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 
 
 @bind_hass

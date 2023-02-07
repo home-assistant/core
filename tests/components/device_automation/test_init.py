@@ -867,13 +867,21 @@ async def test_automation_with_device_action(hass, caplog, fake_integration):
 
 
 async def test_automation_with_dynamically_validated_action(
-    hass, caplog, fake_integration
+    hass, caplog, device_reg, fake_integration
 ):
     """Test device automation with an action which is dynamically validated."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
     module = module_cache["fake_integration.device_action"]
     module.async_validate_action_config = AsyncMock()
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
 
     assert await async_setup_component(
         hass,
@@ -882,7 +890,7 @@ async def test_automation_with_dynamically_validated_action(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event1"},
-                "action": {"device_id": "", "domain": "fake_integration"},
+                "action": {"device_id": device_entry.id, "domain": "fake_integration"},
             }
         },
     )
@@ -940,13 +948,21 @@ async def test_automation_with_device_condition(hass, caplog, fake_integration):
 
 
 async def test_automation_with_dynamically_validated_condition(
-    hass, caplog, fake_integration
+    hass, caplog, device_reg, fake_integration
 ):
     """Test device automation with a condition which is dynamically validated."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
     module = module_cache["fake_integration.device_condition"]
     module.async_validate_condition_config = AsyncMock()
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
 
     assert await async_setup_component(
         hass,
@@ -957,7 +973,7 @@ async def test_automation_with_dynamically_validated_condition(
                 "trigger": {"platform": "event", "event_type": "test_event1"},
                 "condition": {
                     "condition": "device",
-                    "device_id": "none",
+                    "device_id": device_entry.id,
                     "domain": "fake_integration",
                 },
                 "action": {"service": "test.automation", "entity_id": "hello.world"},
@@ -1119,6 +1135,24 @@ async def test_automation_with_bad_condition_action(hass, caplog):
     )
 
     assert "required key not provided" in caplog.text
+
+
+async def test_automation_with_bad_condition_missing_domain(hass, caplog):
+    """Test automation with bad device condition."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "condition": {"condition": "device", "device_id": "hello.device"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    assert "required key not provided @ data['condition'][0]['domain']" in caplog.text
 
 
 async def test_automation_with_bad_condition(hass, caplog):
@@ -1305,3 +1339,105 @@ async def test_websocket_device_not_found(hass, hass_ws_client):
     assert msg["id"] == 1
     assert not msg["success"]
     assert msg["error"] == {"code": "not_found", "message": "Device not found"}
+
+
+async def test_automation_with_unknown_device(hass, caplog, fake_integration):
+    """Test device automation with a trigger with an unknown device."""
+
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module = module_cache["fake_integration.device_trigger"]
+    module.async_validate_trigger_config = AsyncMock()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": "no_such_device",
+                    "domain": "fake_integration",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_validate_trigger_config.assert_not_awaited()
+    assert (
+        "Automation with alias 'hello' failed to setup triggers and has been disabled: "
+        "Unknown device 'no_such_device'" in caplog.text
+    )
+
+
+async def test_automation_with_device_wrong_domain(
+    hass, caplog, device_reg, fake_integration
+):
+    """Test device automation where the device doesn't have the right config entry."""
+
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module = module_cache["fake_integration.device_trigger"]
+    module.async_validate_trigger_config = AsyncMock()
+
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id="not_fake_integration_config_entry",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": device_entry.id,
+                    "domain": "fake_integration",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_validate_trigger_config.assert_not_awaited()
+    assert (
+        "Automation with alias 'hello' failed to setup triggers and has been disabled: "
+        f"Device '{device_entry.id}' has no config entry from domain 'fake_integration'"
+        in caplog.text
+    )
+
+
+async def test_automation_with_device_component_not_loaded(
+    hass, caplog, device_reg, fake_integration
+):
+    """Test device automation where the device's config entry is not loaded."""
+
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module = module_cache["fake_integration.device_trigger"]
+    module.async_validate_trigger_config = AsyncMock()
+    module.async_attach_trigger = AsyncMock()
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": device_entry.id,
+                    "domain": "fake_integration",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    module.async_validate_trigger_config.assert_not_awaited()

@@ -23,18 +23,18 @@ class FilterTest:
     should_pass: bool
 
 
-async def test_datetime():
+async def test_datetime() -> None:
     """Test datetime encoding."""
     time = datetime(2019, 1, 13, 12, 30, 5)
     assert victim().encode(time) == '"2019-01-13T12:30:05"'
 
 
-async def test_no_datetime():
+async def test_no_datetime() -> None:
     """Test integer encoding."""
     assert victim().encode(42) == "42"
 
 
-async def test_nested():
+async def test_nested() -> None:
     """Test dictionary encoding."""
     assert victim().encode({"foo": "bar"}) == '{"foo": "bar"}'
 

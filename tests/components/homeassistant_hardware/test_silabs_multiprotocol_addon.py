@@ -20,9 +20,6 @@ from tests.common import MockConfigEntry, MockModule, mock_integration, mock_pla
 TEST_DOMAIN = "test"
 
 
-pytest.skip(reason="Temporarily disabled", allow_module_level=True)
-
-
 class TestConfigFlow(ConfigFlow, domain=TEST_DOMAIN):
     """Handle a config flow for the silabs multiprotocol add-on."""
 

@@ -271,7 +271,6 @@ class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
             attr[ATTR_TEMPERATURE] = self._device.internal_temperature
 
         if isinstance(self._device, Presence):
-
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
 

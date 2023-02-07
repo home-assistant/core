@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -57,7 +58,7 @@ async def setup_demo_climate(hass):
     await hass.async_block_till_done()
 
 
-def test_setup_params(hass):
+def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == HVACMode.COOL
@@ -78,7 +79,7 @@ def test_setup_params(hass):
     ]
 
 
-def test_default_setup_params(hass):
+def test_default_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_MIN_TEMP) == 7

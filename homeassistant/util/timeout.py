@@ -10,6 +10,8 @@ import enum
 from types import TracebackType
 from typing import Any
 
+from typing_extensions import Self
+
 from .async_ import run_callback_threadsafe
 
 ZONE_GLOBAL = "global"
@@ -32,7 +34,7 @@ class _GlobalFreezeContext:
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._manager: TimeoutManager = manager
 
-    async def __aenter__(self) -> _GlobalFreezeContext:
+    async def __aenter__(self) -> Self:
         self._enter()
         return self
 
@@ -45,7 +47,7 @@ class _GlobalFreezeContext:
         self._exit()
         return None
 
-    def __enter__(self) -> _GlobalFreezeContext:
+    def __enter__(self) -> Self:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
@@ -100,7 +102,7 @@ class _ZoneFreezeContext:
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._zone: _ZoneTimeoutManager = zone
 
-    async def __aenter__(self) -> _ZoneFreezeContext:
+    async def __aenter__(self) -> Self:
         self._enter()
         return self
 
@@ -113,7 +115,7 @@ class _ZoneFreezeContext:
         self._exit()
         return None
 
-    def __enter__(self) -> _ZoneFreezeContext:
+    def __enter__(self) -> Self:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
@@ -161,7 +163,7 @@ class _GlobalTaskContext:
         self._state: _State = _State.INIT
         self._cool_down: float = cool_down
 
-    async def __aenter__(self) -> _GlobalTaskContext:
+    async def __aenter__(self) -> Self:
         self._manager.global_tasks.append(self)
         self._start_timer()
         self._state = _State.ACTIVE
@@ -271,7 +273,7 @@ class _ZoneTaskContext:
         """Return state of the Zone task."""
         return self._state
 
-    async def __aenter__(self) -> _ZoneTaskContext:
+    async def __aenter__(self) -> Self:
         self._zone.enter_task(self)
         self._state = _State.ACTIVE
 

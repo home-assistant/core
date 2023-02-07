@@ -45,6 +45,7 @@ class ColorChannel(ZigbeeChannel):
         "color_capabilities": True,
         "color_loop_active": False,
         "start_up_color_temperature": True,
+        "options": True,
     }
 
     @cached_property
@@ -167,3 +168,13 @@ class ColorChannel(ZigbeeChannel):
             self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Color_loop in self.color_capabilities
         )
+
+    @property
+    def options(self) -> lighting.Color.Options:
+        """Return ZCL options of the channel."""
+        return lighting.Color.Options(self.cluster.get("options", 0))
+
+    @property
+    def execute_if_off_supported(self) -> bool:
+        """Return True if the channel can execute commands when off."""
+        return lighting.Color.Options.Execute_if_off in self.options

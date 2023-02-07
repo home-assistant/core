@@ -12,15 +12,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.freeze_time("2021-11-13 11:48:00")
-async def test_button_identify(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_elgato: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_button_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> None:
     """Test the Elgato identify button."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -65,10 +60,9 @@ async def test_button_identify(
     assert state.state == "2021-11-13T11:48:00+00:00"
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_button_identify_error(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_elgato: MagicMock,
+    hass: HomeAssistant, mock_elgato: MagicMock
 ) -> None:
     """Test an error occurs with the Elgato identify button."""
     mock_elgato.identify.side_effect = ElgatoError
@@ -82,6 +76,5 @@ async def test_button_identify_error(
             {ATTR_ENTITY_ID: "button.frenck_identify"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(mock_elgato.identify.mock_calls) == 1

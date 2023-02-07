@@ -168,8 +168,7 @@ class NAD(MediaPlayerEntity):
             )
 
     def calc_volume(self, decibel):
-        """
-        Calculate the volume given the decibel.
+        """Calculate the volume given the decibel.
 
         Return the volume (0..1).
         """
@@ -178,8 +177,7 @@ class NAD(MediaPlayerEntity):
         )
 
     def calc_db(self, volume):
-        """
-        Calculate the decibel given the volume.
+        """Calculate the decibel given the volume.
 
         Return the dB.
         """

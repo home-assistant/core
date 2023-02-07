@@ -3,10 +3,15 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -110,7 +115,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         result = self.unpack_structure_result(raw_result.registers)
         if self._coordinator:
             if result:
-                result_array = list(map(int, result.split(",")))
+                result_array = list(
+                    map(float if self._precision else int, result.split(","))
+                )
                 self._attr_native_value = result_array[0]
                 self._coordinator.async_set_updated_data(result_array)
             else:
@@ -127,11 +134,11 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[list[int]]]],
+    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
     RestoreEntity,
     SensorEntity,
 ):
-    """Modbus slave binary sensor."""
+    """Modbus slave register sensor."""
 
     def __init__(
         self,
@@ -139,10 +146,13 @@ class SlaveSensor(
         idx: int,
         entry: dict[str, Any],
     ) -> None:
-        """Initialize the Modbus binary sensor."""
+        """Initialize the Modbus register sensor."""
         idx += 1
         self._idx = idx
         self._attr_name = f"{entry[CONF_NAME]} {idx}"
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
+        if self._attr_unique_id:
+            self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
         self._attr_available = False
         super().__init__(coordinator)
 
@@ -156,6 +166,5 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        if result:
-            self._attr_native_value = result[self._idx]
+        self._attr_native_value = result[self._idx] if result else None
         super()._handle_coordinator_update()

@@ -413,8 +413,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     @property
     def extra_state_attributes(self):
-        """
-        Return device specific state attributes.
+        """Return device specific state attributes.
 
         Include attributes from the Demand Response Load Control (drlc)
         and Power Consumption capabilities.

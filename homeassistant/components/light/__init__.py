@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Any, cast, final
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -434,7 +435,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         legacy_supported_color_modes = light._light_internal_supported_color_modes
         supported_color_modes = light.supported_color_modes
 
@@ -679,7 +680,7 @@ class Profile:
         )
 
     @classmethod
-    def from_csv_row(cls, csv_row: list[str]) -> Profile:
+    def from_csv_row(cls, csv_row: list[str]) -> Self:
         """Create profile from a CSV row tuple."""
         return cls(*cls.SCHEMA(csv_row))
 

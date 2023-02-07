@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -171,14 +172,14 @@ class Counter(collection.CollectionEntity, RestoreEntity):
         self._state: int | None = config[CONF_INITIAL]
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> Counter:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Create counter instance from storage."""
         counter = cls(config)
         counter.editable = True
         return counter
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> Counter:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Create counter instance from yaml config."""
         counter = cls(config)
         counter.editable = False

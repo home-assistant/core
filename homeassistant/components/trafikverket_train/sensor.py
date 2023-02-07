@@ -138,7 +138,6 @@ class TrainSensor(SensorEntity):
                     self._from_station, self._to_station, when
                 )
             else:
-
                 _state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )

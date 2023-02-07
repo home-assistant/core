@@ -1,7 +1,6 @@
 """Support for ESPHome covers."""
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import Any
 
 from aioesphomeapi import CoverInfo, CoverOperation, CoverState
@@ -16,6 +15,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
@@ -57,9 +57,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     @property
     def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        with suppress(ValueError):
-            return CoverDeviceClass(self._static_info.device_class)
-        return None
+        return try_parse_enum(CoverDeviceClass, self._static_info.device_class)
 
     @property
     def assumed_state(self) -> bool:

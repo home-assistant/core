@@ -274,7 +274,6 @@ class AsusWrtRouter:
             entity_reg, self._entry.entry_id
         )
         for entry in track_entries:
-
             if entry.domain != TRACKER_DOMAIN:
                 continue
             device_mac = format_mac(entry.unique_id)

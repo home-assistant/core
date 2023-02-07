@@ -105,7 +105,10 @@ async def setup_subaru_config_entry(
         MOCK_API_CONNECT,
         return_value=connect_effect is None,
         side_effect=connect_effect,
-    ), patch(MOCK_API_GET_VEHICLES, return_value=vehicle_list,), patch(
+    ), patch(
+        MOCK_API_GET_VEHICLES,
+        return_value=vehicle_list,
+    ), patch(
         MOCK_API_VIN_TO_NAME,
         return_value=vehicle_data[VEHICLE_NAME],
     ), patch(

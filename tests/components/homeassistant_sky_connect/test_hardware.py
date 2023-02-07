@@ -1,10 +1,11 @@
-"""Test the Home Assistant Sky Connect hardware platform."""
+"""Test the Home Assistant SkyConnect hardware platform."""
 from unittest.mock import patch
 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_DATA = {
     "device": "bla_device",
@@ -29,14 +30,15 @@ async def test_hardware_info(
     hass: HomeAssistant, hass_ws_client, addon_store_info
 ) -> None:
     """Test we can get the board info."""
-    mock_integration(hass, MockModule("usb"))
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id="unique_1",
     )
     config_entry.add_to_hass(hass)
@@ -44,7 +46,7 @@ async def test_hardware_info(
         data=CONFIG_ENTRY_DATA_2,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id="unique_2",
     )
     config_entry_2.add_to_hass(hass)
@@ -74,7 +76,7 @@ async def test_hardware_info(
                     "manufacturer": "bla_manufacturer",
                     "description": "bla_description",
                 },
-                "name": "Home Assistant Sky Connect",
+                "name": "Home Assistant SkyConnect",
                 "url": None,
             },
             {
@@ -87,7 +89,7 @@ async def test_hardware_info(
                     "manufacturer": "bla_manufacturer_2",
                     "description": "bla_description_2",
                 },
-                "name": "Home Assistant Sky Connect",
+                "name": "Home Assistant SkyConnect",
                 "url": None,
             },
         ]

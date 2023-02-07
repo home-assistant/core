@@ -9,8 +9,8 @@
       "connectable": false
     }
   ],
-  "requirements": ["sensorpush-ble==1.5.2"],
-  "dependencies": ["bluetooth"],
+  "requirements": ["sensorpush-ble==1.5.5"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
 }

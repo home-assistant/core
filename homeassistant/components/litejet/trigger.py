@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from pylitejet import LiteJet
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -91,7 +92,6 @@ async def async_attach_trigger(
         """Handle the release of the LiteJet switch's button."""
         nonlocal cancel_pressed_more_than, pressed_time
         nonlocal held_less_than, held_more_than
-        # pylint: disable=not-callable
         if cancel_pressed_more_than is not None:
             cancel_pressed_more_than()
             cancel_pressed_more_than = None
@@ -104,7 +104,7 @@ async def async_attach_trigger(
         ):
             hass.add_job(call_action)
 
-    system = hass.data[DOMAIN]
+    system: LiteJet = hass.data[DOMAIN]
 
     system.on_switch_pressed(number, pressed)
     system.on_switch_released(number, released)

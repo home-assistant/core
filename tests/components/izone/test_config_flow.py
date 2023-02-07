@@ -14,7 +14,7 @@ def mock_disco():
     disco = Mock()
     disco.pi_disco = Mock()
     disco.pi_disco.controllers = {}
-    yield disco
+    return disco
 
 
 def _mock_start_discovery(hass, mock_disco):

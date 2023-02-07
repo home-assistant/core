@@ -62,19 +62,20 @@ async def test_media_player_playback(
 
     # Test media lookup failure
     payload = '{"library_name": "Movies", "title": "Movie 1" }'
-    with patch("plexapi.library.LibrarySection.search", return_value=None):
-        with pytest.raises(HomeAssistantError) as excinfo:
-            assert await hass.services.async_call(
-                MP_DOMAIN,
-                SERVICE_PLAY_MEDIA,
-                {
-                    ATTR_ENTITY_ID: media_player,
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
-                    ATTR_MEDIA_CONTENT_ID: payload,
-                },
-                True,
-            )
-            assert not playmedia_mock.called
+    with patch(
+        "plexapi.library.LibrarySection.search", return_value=None
+    ), pytest.raises(HomeAssistantError) as excinfo:
+        assert await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MOVIE,
+                ATTR_MEDIA_CONTENT_ID: payload,
+            },
+            True,
+        )
+        assert not playmedia_mock.called
     assert f"No {MediaType.MOVIE} results in 'Movies' for" in str(excinfo.value)
 
     movie1 = MockPlexMedia("Movie", "movie")

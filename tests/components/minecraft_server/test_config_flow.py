@@ -99,7 +99,10 @@ async def test_invalid_ip(hass: HomeAssistant) -> None:
 
 async def test_same_host(hass: HomeAssistant) -> None:
     """Test abort in case of same host name."""
-    with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,), patch(
+    with patch(
+        "aiodns.DNSResolver.query",
+        side_effect=aiodns.error.DNSError,
+    ), patch(
         "mcstatus.server.MinecraftServer.status",
         return_value=PingResponse(STATUS_RESPONSE_RAW),
     ):
@@ -166,7 +169,10 @@ async def test_connection_failed(hass: HomeAssistant) -> None:
 
 async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with a SRV record."""
-    with patch("aiodns.DNSResolver.query", return_value=SRV_RECORDS,), patch(
+    with patch(
+        "aiodns.DNSResolver.query",
+        return_value=SRV_RECORDS,
+    ), patch(
         "mcstatus.server.MinecraftServer.status",
         return_value=PingResponse(STATUS_RESPONSE_RAW),
     ):
@@ -182,7 +188,10 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None
 
 async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with a host name."""
-    with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,), patch(
+    with patch(
+        "aiodns.DNSResolver.query",
+        side_effect=aiodns.error.DNSError,
+    ), patch(
         "mcstatus.server.MinecraftServer.status",
         return_value=PingResponse(STATUS_RESPONSE_RAW),
     ):

@@ -9,7 +9,10 @@ import logging
 import requests
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_NEST, DOMAIN
@@ -21,14 +24,9 @@ NEST_BRAND = "Nest"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a Nest Cam.
-
-    No longer in use.
-    """
-
-
-async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_legacy_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a Nest sensor based on a config entry."""
     camera_devices = await hass.async_add_executor_job(hass.data[DATA_NEST].cameras)
     cameras = [NestCamera(structure, device) for structure, device in camera_devices]

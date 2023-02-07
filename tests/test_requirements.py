@@ -14,7 +14,7 @@ from homeassistant.requirements import (
     async_process_requirements,
 )
 
-from tests.common import MockModule, mock_integration
+from .common import MockModule, mock_integration
 
 
 def env_without_wheel_links():
@@ -138,7 +138,6 @@ async def test_get_integration_with_requirements(hass):
     ) as mock_is_installed, patch(
         "homeassistant.util.package.install_package", return_value=True
     ) as mock_inst:
-
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
@@ -193,7 +192,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
     ) as mock_is_installed, patch(
         "homeassistant.util.package.install_package", side_effect=_mock_install_package
     ) as mock_inst:
-
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
@@ -224,7 +222,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
     ) as mock_is_installed, patch(
         "homeassistant.util.package.install_package", side_effect=_mock_install_package
     ) as mock_inst:
-
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
@@ -243,7 +240,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
     ) as mock_is_installed, patch(
         "homeassistant.util.package.install_package", side_effect=_mock_install_package
     ) as mock_inst:
-
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
@@ -274,7 +270,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(ha
     ) as mock_is_installed, patch(
         "homeassistant.util.package.install_package", return_value=True
     ) as mock_inst:
-
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )

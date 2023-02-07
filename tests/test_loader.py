@@ -3,11 +3,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import core, loader
+from homeassistant import loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
+from homeassistant.core import HomeAssistant, callback
 
-from tests.common import MockModule, mock_integration
+from .common import MockModule, mock_integration
 
 
 async def test_component_dependencies(hass):
@@ -24,21 +25,13 @@ async def test_component_dependencies(hass):
     mock_integration(hass, MockModule("mod1", ["mod3"]))
 
     with pytest.raises(loader.CircularDependency):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_3", mod_3, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
     # Depend on non-existing component
     mod_1 = mock_integration(hass, MockModule("mod1", ["nonexisting"]))
 
     with pytest.raises(loader.IntegrationNotFound):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_1", mod_1, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_1", mod_1, set(), set())
 
     # Having an after dependency 2 deps down that is circular
     mod_1 = mock_integration(
@@ -46,21 +39,17 @@ async def test_component_dependencies(hass):
     )
 
     with pytest.raises(loader.CircularDependency):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_3", mod_3, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
 
-def test_component_loader(hass):
+def test_component_loader(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     assert components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
     assert hass.components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
 
 
-def test_component_loader_non_existing(hass):
+def test_component_loader_non_existing(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     with pytest.raises(ImportError):
@@ -81,7 +70,7 @@ async def test_helpers_wrapper(hass):
 
     result = []
 
-    @core.callback
+    @callback
     def discovery_callback(service, discovered):
         """Handle discovery callback."""
         result.append(discovered)
@@ -138,16 +127,16 @@ async def test_custom_integration_version_not_valid(
         await loader.async_get_integration(hass, "test_no_version")
 
     assert (
-        "The custom integration 'test_no_version' does not have a version key in the manifest file and was blocked from loading."
-        in caplog.text
-    )
+        "The custom integration 'test_no_version' does not have a version key in the"
+        " manifest file and was blocked from loading."
+    ) in caplog.text
 
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test2")
     assert (
-        "The custom integration 'test_bad_version' does not have a valid version key (bad) in the manifest file and was blocked from loading."
-        in caplog.text
-    )
+        "The custom integration 'test_bad_version' does not have a valid version key"
+        " (bad) in the manifest file and was blocked from loading."
+    ) in caplog.text
 
 
 async def test_get_integration(hass):
@@ -186,7 +175,7 @@ async def test_get_integration_custom_component(hass, enable_custom_integrations
     assert integration.name == "Test Package"
 
 
-def test_integration_properties(hass):
+def test_integration_properties(hass: HomeAssistant) -> None:
     """Test integration properties."""
     integration = loader.Integration(
         hass,

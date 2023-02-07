@@ -276,7 +276,7 @@ async def test_agent_user_id_storage(hass, hass_storage):
     )
 
 
-async def test_agent_user_id_connect():
+async def test_agent_user_id_connect() -> None:
     """Test the connection and disconnection of users."""
     config = MockConfig()
     store = config._store
@@ -332,7 +332,7 @@ def test_supported_features_string(caplog):
     assert "Entity test.entity_id contains invalid supported_features value invalid"
 
 
-def test_request_data():
+def test_request_data() -> None:
     """Test request data properties."""
     config = MockConfig()
     data = helpers.RequestData(
@@ -428,7 +428,7 @@ async def test_config_local_sdk_warn_version(hass, hass_client, caplog, version)
     ) in caplog.text
 
 
-def test_is_supported_cached():
+def test_is_supported_cached() -> None:
     """Test is_supported is cached."""
     config = MockConfig()
 

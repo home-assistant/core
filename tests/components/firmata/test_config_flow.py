@@ -70,7 +70,6 @@ async def test_import(hass: HomeAssistant) -> None:
     ) as mock_setup, patch(
         "homeassistant.components.firmata.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

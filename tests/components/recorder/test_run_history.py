@@ -45,3 +45,14 @@ async def test_run_history(recorder_mock, hass):
         process_timestamp(instance.run_history.get(now).start)
         == instance.run_history.recording_start
     )
+
+
+async def test_run_history_during_schema_migration(recorder_mock, hass):
+    """Test the run history during schema migration."""
+    instance = recorder.get_instance(hass)
+    run_history = instance.run_history
+    assert run_history.current.start == run_history.recording_start
+    with instance.get_session() as session:
+        run_history.start(session)
+    assert run_history.current.start == run_history.recording_start
+    assert run_history.current.created >= run_history.recording_start

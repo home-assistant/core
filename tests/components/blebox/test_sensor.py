@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import device_registry as dr
 
@@ -66,7 +66,7 @@ async def test_init(tempsensor, hass):
     assert state.name == "tempSensor-0.temperature"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.state == STATE_UNKNOWN
 
     device_registry = dr.async_get(hass)
@@ -91,7 +91,7 @@ async def test_update(tempsensor, hass):
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.state == "25.18"
 
 

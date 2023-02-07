@@ -51,8 +51,8 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise CannotConnect() from err
         except AuthException as err:
             raise InvalidAuth() from err
-        else:
-            return token is not None
+
+        return token is not None
 
     async def async_step_user(self, user_input=None):
         """Handle gathering login info."""

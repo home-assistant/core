@@ -1,5 +1,4 @@
-"""
-Test for RFlink sensor components.
+"""Test for RFlink sensor components.
 
 Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.

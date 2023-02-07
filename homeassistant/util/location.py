@@ -1,5 +1,4 @@
-"""
-Module with location helpers.
+"""Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """

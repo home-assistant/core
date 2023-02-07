@@ -188,6 +188,7 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
+
         # Per conversation with Joshua Reyes of Dark Sky, to get the total
         # forecasted precipitation, you have to multiple the intensity by
         # the hours for the forecast interval

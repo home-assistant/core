@@ -102,7 +102,7 @@ async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
     assert entity_id == "light.test2"
 
 
-def test_config_alexa_entity_id_to_number():
+def test_config_alexa_entity_id_to_number() -> None:
     """Test config adheres to the type."""
     conf = Config(None, {"type": "alexa"}, "127.0.0.1")
 

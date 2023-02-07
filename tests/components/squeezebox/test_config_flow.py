@@ -37,7 +37,10 @@ async def patch_async_query_unauthorized(self, *args):
 
 async def test_user_form(hass):
     """Test user-initiated flow, including discovery and the edit step."""
-    with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
+    with patch(
+        "pysqueezebox.Server.async_query",
+        return_value={"uuid": UUID},
+    ), patch(
         "homeassistant.components.squeezebox.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -191,7 +194,10 @@ async def test_discovery_no_uuid(hass):
 
 async def test_dhcp_discovery(hass):
     """Test we can process discovery from dhcp."""
-    with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
+    with patch(
+        "pysqueezebox.Server.async_query",
+        return_value={"uuid": UUID},
+    ), patch(
         "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover
     ):
         result = await hass.config_entries.flow.async_init(

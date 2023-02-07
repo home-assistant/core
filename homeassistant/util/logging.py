@@ -11,7 +11,6 @@ import queue
 import traceback
 from typing import Any, TypeVar, cast, overload
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback, is_callback
 
 _T = TypeVar("_T")
@@ -35,6 +34,8 @@ class HideSensitiveDataFilter(logging.Filter):
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
 
+    listener: logging.handlers.QueueListener | None = None
+
     def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
         """Prepare a record for queuing.
 
@@ -45,8 +46,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
         return record
 
     def handle(self, record: logging.LogRecord) -> Any:
-        """
-        Conditionally emit the specified logging record.
+        """Conditionally emit the specified logging record.
 
         Depending on which filters have been added to the handler, push the new
         records onto the backing Queue.
@@ -62,11 +62,21 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
             self.emit(record)
         return return_value
 
+    def close(self) -> None:
+        """Tidy up any resources used by the handler.
+
+        This adds shutdown of the QueueListener
+        """
+        super().close()
+        if not self.listener:
+            return
+        self.listener.stop()
+        self.listener = None
+
 
 @callback
 def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
-    """
-    Migrate the existing log handlers to use the queue.
+    """Migrate the existing log handlers to use the queue.
 
     This allows us to avoid blocking I/O and formatting messages
     in the event loop as log messages are written in another thread.
@@ -83,19 +93,9 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         migrated_handlers.append(handler)
 
     listener = logging.handlers.QueueListener(simple_queue, *migrated_handlers)
+    queue_handler.listener = listener
 
     listener.start()
-
-    @callback
-    def _async_stop_queue_handler(_: Any) -> None:
-        """Cleanup handler."""
-        # Ensure any messages that happen after close still get logged
-        for original_handler in migrated_handlers:
-            logging.root.addHandler(original_handler)
-        logging.root.removeHandler(queue_handler)
-        listener.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
 
 def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
@@ -120,14 +120,14 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
 def catch_log_exception(
     func: Callable[..., Coroutine[Any, Any, Any]], format_err: Callable[..., Any]
 ) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Overload for Coroutine that returns a Coroutine."""
+    ...
 
 
 @overload
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any]
 ) -> Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]:
-    """Overload for a callback that returns a callback."""
+    ...
 
 
 def catch_log_exception(

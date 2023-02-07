@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_DEHUMIDIFIER = "humidifier.dehumidifier"
@@ -37,14 +38,14 @@ async def setup_demo_humidifier(hass):
     await hass.async_block_till_done()
 
 
-def test_setup_params(hass):
+def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_HUMIDITY) == 54
 
 
-def test_default_setup_params(hass):
+def test_default_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_MIN_HUMIDITY) == 0

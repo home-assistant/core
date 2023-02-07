@@ -87,7 +87,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(error)
         if not structure:
             error = (
-                f"Error in sensor {name}. The `{CONF_STRUCTURE}` field can not be empty"
+                f"Error in sensor {name}. The `{CONF_STRUCTURE}` field cannot be empty"
             )
             raise vol.Invalid(error)
         try:

@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_URL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 VALID_CONFIG = {
@@ -77,7 +78,7 @@ async def test_auth_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_import_flow(hass) -> None:
+async def test_import_flow(hass: HomeAssistant) -> None:
     """Test the import configuration flow."""
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",

@@ -176,12 +176,14 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.WATT_HOUR: 1 * 1000,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
+        UnitOfEnergy.MEGA_JOULE: 3.6,
         UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
         UnitOfEnergy.WATT_HOUR,
         UnitOfEnergy.KILO_WATT_HOUR,
         UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.GIGA_JOULE,
     }
 

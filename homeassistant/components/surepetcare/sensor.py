@@ -29,7 +29,6 @@ async def async_setup_entry(
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
-
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,

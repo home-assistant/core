@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -172,7 +172,7 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.current_temp")
     assert state.state == "22.1"
-    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
 

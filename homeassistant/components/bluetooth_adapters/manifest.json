@@ -1,0 +1,11 @@
+{
+  "domain": "bluetooth_adapters",
+  "name": "Bluetooth Adapters",
+  "documentation": "https://www.home-assistant.io/integrations/bluetooth_adapters",
+  "dependencies": ["bluetooth"],
+  "after_dependencies": ["esphome", "shelly", "ruuvi_gateway"],
+  "quality_scale": "internal",
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_push",
+  "integration_type": "system"
+}

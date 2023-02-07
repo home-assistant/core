@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import cast
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
@@ -147,14 +148,14 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> InputButton:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         button = cls(config)
         button.editable = True
         return button
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> InputButton:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         button = cls(config)
         button.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

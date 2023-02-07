@@ -65,8 +65,7 @@ def hass_to_crownstone_state(value: int) -> int:
 
 
 class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
-    """
-    Representation of a crownstone.
+    """Representation of a crownstone.
 
     Light platform is used to support dimming.
     """

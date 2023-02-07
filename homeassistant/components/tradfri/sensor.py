@@ -89,9 +89,9 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="aqi",
         name="air quality",
-        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        icon="mdi:air-filter",
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(

@@ -206,7 +206,10 @@ async def test_form_entry_exists(hass):
 
     with patch("energyflip.EnergyFlip.authenticate", return_value=None), patch(
         "energyflip.EnergyFlip.customer_overview", return_value=None
-    ), patch("energyflip.EnergyFlip.get_user_id", return_value="test-id",), patch(
+    ), patch(
+        "energyflip.EnergyFlip.get_user_id",
+        return_value="test-id",
+    ), patch(
         "homeassistant.components.huisbaasje.async_setup_entry",
         return_value=True,
     ):

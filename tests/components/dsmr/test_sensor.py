@@ -22,12 +22,11 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    VOLUME_CUBIC_METERS,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -65,7 +64,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
         GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+                {"value": Decimal(745.695), "unit": UnitOfVolume.CUBIC_METERS},
             ]
         ),
     }
@@ -133,7 +132,8 @@ async def test_default_setup(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
     )
 
 
@@ -228,13 +228,17 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
-    assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
+    assert (
+        gas_consumption.attributes.get("unit_of_measurement")
+        == UnitOfVolume.CUBIC_METERS
+    )
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
     )
 
 
@@ -305,7 +309,8 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
     )
 
 
@@ -340,10 +345,10 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
             ]
         ),
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
         ),
     }
 
@@ -373,12 +378,16 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.KILO_WATT_HOUR
     )
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_production_total")
     assert active_tariff.state == "654.321"
-    assert active_tariff.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+    assert (
+        active_tariff.attributes.get("unit_of_measurement")
+        == UnitOfEnergy.KILO_WATT_HOUR
+    )
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -389,7 +398,8 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
     )
 
 
@@ -460,7 +470,8 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
     )
 
 
@@ -536,10 +547,10 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
 
     telegram = {
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
         ),
     }
 
@@ -569,7 +580,8 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.KILO_WATT_HOUR
     )
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_production_total")
@@ -579,7 +591,8 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.KILO_WATT_HOUR
     )
 
 
@@ -607,10 +620,10 @@ async def test_easymeter(hass, dsmr_connection_fixture):
 
     telegram = {
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(54184.6316), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal(54184.6316), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(19981.1069), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal(19981.1069), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
         ),
     }
 
@@ -643,7 +656,8 @@ async def test_easymeter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.KILO_WATT_HOUR
     )
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_production_total")
@@ -653,7 +667,8 @@ async def test_easymeter(hass, dsmr_connection_fixture):
         == SensorStateClass.TOTAL_INCREASING
     )
     assert (
-        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+        active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.KILO_WATT_HOUR
     )
 
 

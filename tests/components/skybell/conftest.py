@@ -3,12 +3,12 @@
 from unittest.mock import AsyncMock, patch
 
 from aioskybell import Skybell, SkybellDevice
-from pytest import fixture
+import pytest
 
 from . import USER_ID
 
 
-@fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def skybell_mock():
     """Fixture for our skybell tests."""
     mocked_skybell_device = AsyncMock(spec=SkybellDevice)

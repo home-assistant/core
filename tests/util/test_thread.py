@@ -57,7 +57,7 @@ class _EmptyClass:
     """An empty class."""
 
 
-async def test_deadlock_safe_shutdown_no_threads():
+async def test_deadlock_safe_shutdown_no_threads() -> None:
     """Test we can shutdown without deadlock without any threads to join."""
 
     dead_thread_mock = Mock(
@@ -78,7 +78,7 @@ async def test_deadlock_safe_shutdown_no_threads():
     assert not daemon_thread_mock.join.called
 
 
-async def test_deadlock_safe_shutdown():
+async def test_deadlock_safe_shutdown() -> None:
     """Test we can shutdown without deadlock."""
 
     normal_thread_mock = Mock(

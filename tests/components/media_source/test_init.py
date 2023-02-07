@@ -10,7 +10,7 @@ from homeassistant.components.media_source import const, models
 from homeassistant.setup import async_setup_component
 
 
-async def test_is_media_source_id():
+async def test_is_media_source_id() -> None:
     """Test media source validation."""
     assert media_source.is_media_source_id(media_source.URI_SCHEME)
     assert media_source.is_media_source_id(f"{media_source.URI_SCHEME}domain")
@@ -20,7 +20,7 @@ async def test_is_media_source_id():
     assert not media_source.is_media_source_id("test")
 
 
-async def test_generate_media_source_id():
+async def test_generate_media_source_id() -> None:
     """Test identifier generation."""
     tests = [
         (None, None),
@@ -258,7 +258,7 @@ async def test_websocket_resolve_media(hass, hass_ws_client, filename):
     assert msg["error"]["message"] == "test"
 
 
-async def test_browse_resolve_without_setup():
+async def test_browse_resolve_without_setup() -> None:
     """Test browse and resolve work without being setup."""
     with pytest.raises(BrowseError):
         await media_source.async_browse_media(Mock(data={}), None)

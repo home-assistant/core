@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -53,7 +53,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
                 "domain": SENSOR_DOMAIN,
                 "platform": FB_DOMAIN,
                 "unique_id": CONF_FAKE_AIN,
-                "unit_of_measurement": TEMP_CELSIUS,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
             CONF_FAKE_AIN,
             f"{CONF_FAKE_AIN}_temperature",
@@ -106,7 +106,7 @@ async def test_update_unique_id(
                 "domain": SENSOR_DOMAIN,
                 "platform": FB_DOMAIN,
                 "unique_id": f"{CONF_FAKE_AIN}_temperature",
-                "unit_of_measurement": TEMP_CELSIUS,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
             f"{CONF_FAKE_AIN}_temperature",
         ),

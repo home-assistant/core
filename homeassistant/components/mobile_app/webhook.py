@@ -15,10 +15,14 @@ from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import camera, cloud, notify as hass_notify, tag
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
+from homeassistant.components import (
+    camera,
+    cloud,
+    conversation,
+    notify as hass_notify,
+    tag,
 )
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
@@ -27,10 +31,7 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
 )
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import (
-    DEVICE_CLASSES as SENSOR_CLASSES,
-    STATE_CLASSES as SENSOSR_STATE_CLASSES,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -52,7 +53,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -125,8 +126,7 @@ WEBHOOK_COMMANDS: Registry[
     str, Callable[[HomeAssistant, ConfigEntry, Any], Coroutine[Any, Any, Response]]
 ] = Registry()
 
-COMBINED_CLASSES = set(BINARY_SENSOR_CLASSES + SENSOR_CLASSES)
-SENSOR_TYPES = [ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR]
+SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema(
     {
@@ -299,6 +299,28 @@ async def webhook_fire_event(
         context=registration_context(config_entry.data),
     )
     return empty_okay_response()
+
+
+@WEBHOOK_COMMANDS.register("conversation_process")
+@validate_schema(
+    {
+        vol.Required("text"): cv.string,
+        vol.Optional("language"): cv.string,
+        vol.Optional("conversation_id"): cv.string,
+    }
+)
+async def webhook_conversation_process(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
+) -> Response:
+    """Handle a conversation process webhook."""
+    result = await conversation.async_converse(
+        hass,
+        text=data["text"],
+        language=data.get("language"),
+        conversation_id=data.get("conversation_id"),
+        context=registration_context(config_entry.data),
+    )
+    return webhook_response(result.as_dict(), registration=config_entry.data)
 
 
 @WEBHOOK_COMMANDS.register("stream_camera")
@@ -479,19 +501,27 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
     vol.All(
         {
             vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
-                vol.Lower, vol.In(COMBINED_CLASSES)
+            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
+                None,
+                vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass)),
+                vol.All(vol.Lower, vol.Coerce(SensorDeviceClass)),
             ),
             vol.Required(ATTR_SENSOR_NAME): cv.string,
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
             vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-            vol.Optional(ATTR_SENSOR_UOM): cv.string,
+            vol.Optional(ATTR_SENSOR_UOM): vol.Any(None, cv.string),
             vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
-                None, bool, str, int, float
+                None, bool, int, float, str
             ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): vol.Any(
+                None, vol.Coerce(EntityCategory)
+            ),
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
+                None, cv.icon
+            ),
+            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.Any(
+                None, vol.Coerce(SensorStateClass)
+            ),
             vol.Optional(ATTR_SENSOR_DISABLED): bool,
         },
         _validate_state_class_sensor,
@@ -591,8 +621,10 @@ async def webhook_update_sensor_states(
     sensor_schema_full = vol.Schema(
         {
             vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, str, int, float),
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
+                None, cv.icon
+            ),
+            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
             vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
         }

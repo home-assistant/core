@@ -257,7 +257,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.ENERGY,
         name="Battery available energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     RenaultSensorEntityDescription(
         key="battery_temperature",
@@ -313,7 +313,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         icon="mdi:fuel",
         name="Fuel quantity",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         requires_fuel=True,
         value_lambda=_get_rounded_value,
     ),

@@ -12,8 +12,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=redefined-outer-name
-
 
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):

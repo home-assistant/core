@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
-from kostal.plenticore import PlenticoreApiClient, SettingsData
+from pykoplenti import ApiClient, SettingsData
 import pytest
 
 from homeassistant.components.number import (
@@ -23,17 +23,17 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_plenticore_client() -> Generator[PlenticoreApiClient, None, None]:
-    """Return a patched PlenticoreApiClient."""
+def mock_plenticore_client() -> Generator[ApiClient, None, None]:
+    """Return a patched ApiClient."""
     with patch(
-        "homeassistant.components.kostal_plenticore.helper.PlenticoreApiClient",
+        "homeassistant.components.kostal_plenticore.helper.ApiClient",
         autospec=True,
     ) as plenticore_client_class:
         yield plenticore_client_class.return_value
 
 
 @pytest.fixture
-def mock_get_setting_values(mock_plenticore_client: PlenticoreApiClient) -> list:
+def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
     """Add a setting value to the given Plenticore client.
 
     Returns a list with setting values which can be extended by test cases.
@@ -88,7 +88,7 @@ def mock_get_setting_values(mock_plenticore_client: PlenticoreApiClient) -> list
 async def test_setup_all_entries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: PlenticoreApiClient,
+    mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
@@ -107,7 +107,7 @@ async def test_setup_all_entries(
 async def test_setup_no_entries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: PlenticoreApiClient,
+    mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
@@ -128,7 +128,7 @@ async def test_setup_no_entries(
 async def test_number_has_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: PlenticoreApiClient,
+    mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
@@ -153,7 +153,7 @@ async def test_number_has_value(
 async def test_number_is_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: PlenticoreApiClient,
+    mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
@@ -174,7 +174,7 @@ async def test_number_is_unavailable(
 async def test_set_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_plenticore_client: PlenticoreApiClient,
+    mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):

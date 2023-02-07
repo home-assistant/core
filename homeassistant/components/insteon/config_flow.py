@@ -49,6 +49,7 @@ STEP_PLM = "plm"
 STEP_HUB_V1 = "hubv1"
 STEP_HUB_V2 = "hubv2"
 STEP_CHANGE_HUB_CONFIG = "change_hub_config"
+STEP_CHANGE_PLM_CONFIG = "change_plm_config"
 STEP_ADD_X10 = "add_x10"
 STEP_ADD_OVERRIDE = "add_override"
 STEP_REMOVE_OVERRIDE = "remove_override"
@@ -213,7 +214,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(config_entries.DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
 
-    async def async_step_confirm_usb(self, user_input=None):
+    async def async_step_confirm_usb(self, user_input=None) -> FlowResult:
         """Confirm a USB discovery."""
         if user_input is not None:
             return await self.async_step_plm({CONF_DEVICE: self._device_path})
@@ -240,17 +241,19 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
         """Init the InsteonOptionsFlowHandler class."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Init the options config flow."""
         errors = {}
         if user_input is not None:
             change_hub_config = user_input.get(STEP_CHANGE_HUB_CONFIG, False)
+            change_plm_config = user_input.get(STEP_CHANGE_PLM_CONFIG, False)
             device_override = user_input.get(STEP_ADD_OVERRIDE, False)
             x10_device = user_input.get(STEP_ADD_X10, False)
             remove_override = user_input.get(STEP_REMOVE_OVERRIDE, False)
             remove_x10 = user_input.get(STEP_REMOVE_X10, False)
             if _only_one_selected(
                 change_hub_config,
+                change_plm_config,
                 device_override,
                 x10_device,
                 remove_override,
@@ -258,6 +261,8 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             ):
                 if change_hub_config:
                     return await self.async_step_change_hub_config()
+                if change_plm_config:
+                    return await self.async_step_change_plm_config()
                 if device_override:
                     return await self.async_step_add_override()
                 if x10_device:
@@ -274,6 +279,8 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
         }
         if self.config_entry.data.get(CONF_HOST):
             data_schema[vol.Optional(STEP_CHANGE_HUB_CONFIG)] = bool
+        else:
+            data_schema[vol.Optional(STEP_CHANGE_PLM_CONFIG)] = bool
 
         options = {**self.config_entry.options}
         if options.get(CONF_OVERRIDE):
@@ -285,7 +292,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init", data_schema=vol.Schema(data_schema), errors=errors
         )
 
-    async def async_step_change_hub_config(self, user_input=None):
+    async def async_step_change_hub_config(self, user_input=None) -> FlowResult:
         """Change the Hub configuration."""
         if user_input is not None:
             data = {
@@ -306,7 +313,24 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_CHANGE_HUB_CONFIG, data_schema=data_schema
         )
 
-    async def async_step_add_override(self, user_input=None):
+    async def async_step_change_plm_config(self, user_input=None) -> FlowResult:
+        """Change the PLM configuration."""
+        if user_input is not None:
+            data = {
+                **self.config_entry.data,
+                CONF_DEVICE: user_input[CONF_DEVICE],
+            }
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+            return self.async_create_entry(
+                title="",
+                data={**self.config_entry.options},
+            )
+        data_schema = build_plm_schema(**self.config_entry.data)
+        return self.async_show_form(
+            step_id=STEP_CHANGE_PLM_CONFIG, data_schema=data_schema
+        )
+
+    async def async_step_add_override(self, user_input=None) -> FlowResult:
         """Add a device override."""
         errors = {}
         if user_input is not None:
@@ -322,22 +346,22 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_ADD_OVERRIDE, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_add_x10(self, user_input=None):
+    async def async_step_add_x10(self, user_input=None) -> FlowResult:
         """Add an X10 device."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             options = add_x10_device({**self.config_entry.options}, user_input)
             async_dispatcher_send(self.hass, SIGNAL_ADD_X10_DEVICE, user_input)
             return self.async_create_entry(title="", data=options)
-        schema_defaults = user_input if user_input is not None else {}
+        schema_defaults: dict[str, str] = user_input if user_input is not None else {}
         data_schema = build_x10_schema(**schema_defaults)
         return self.async_show_form(
             step_id=STEP_ADD_X10, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_remove_override(self, user_input=None):
+    async def async_step_remove_override(self, user_input=None) -> FlowResult:
         """Remove a device override."""
-        errors = {}
+        errors: dict[str, str] = {}
         options = self.config_entry.options
         if user_input is not None:
             options = _remove_override(user_input[CONF_ADDRESS], options)
@@ -353,9 +377,9 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             step_id=STEP_REMOVE_OVERRIDE, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_remove_x10(self, user_input=None):
+    async def async_step_remove_x10(self, user_input=None) -> FlowResult:
         """Remove an X10 device."""
-        errors = {}
+        errors: dict[str, str] = {}
         options = self.config_entry.options
         if user_input is not None:
             options, housecode, unitcode = _remove_x10(user_input[CONF_DEVICE], options)

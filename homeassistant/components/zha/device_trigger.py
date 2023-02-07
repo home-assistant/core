@@ -41,7 +41,7 @@ async def async_validate_trigger_config(
         zha_device.device_automation_triggers is None
         or trigger not in zha_device.device_automation_triggers
     ):
-        raise InvalidDeviceAutomationConfig
+        raise InvalidDeviceAutomationConfig(f"device does not have trigger {trigger}")
 
     return config
 
@@ -92,7 +92,7 @@ async def async_get_triggers(
         return []
 
     triggers = []
-    for trigger, subtype in zha_device.device_automation_triggers.keys():
+    for trigger, subtype in zha_device.device_automation_triggers:
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,

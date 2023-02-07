@@ -115,7 +115,9 @@ async def test_ignore_no_name_but_create_if_set_later(hass):
             BLUECHARM_BEACON_SERVICE_INFO,
             service_data={
                 "00002080-0000-1000-8000-00805f9b34fb": b"j\x0c\x0e\xfe\x13U",
-                "0000feaa-0000-1000-8000-00805f9b34fb": b" \x00\x0c\x00\x1c\x00\x00\x00\x06h\x00\x008\x10",
+                "0000feaa-0000-1000-8000-00805f9b34fb": (
+                    b" \x00\x0c\x00\x1c\x00\x00\x00\x06h\x00\x008\x10"
+                ),
             },
         ),
     )

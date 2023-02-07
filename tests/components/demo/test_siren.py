@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_SIREN = "siren.siren"
@@ -30,14 +31,14 @@ async def setup_demo_siren(hass):
     await hass.async_block_till_done()
 
 
-def test_setup_params(hass):
+def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
     assert ATTR_AVAILABLE_TONES not in state.attributes
 
 
-def test_all_setup_params(hass):
+def test_all_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with all parameters."""
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
     assert state.attributes.get(ATTR_AVAILABLE_TONES) == ["fire", "alarm"]

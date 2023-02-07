@@ -60,4 +60,3 @@ async def setup_config_entry_fixture(hass, config_entry, mock_aioambient):
     """Define a fixture to set up ambient_station."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield

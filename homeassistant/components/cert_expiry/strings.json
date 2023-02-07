@@ -12,7 +12,7 @@
       }
     },
     "error": {
-      "resolve_failed": "This host can not be resolved",
+      "resolve_failed": "This host cannot be resolved",
       "connection_timeout": "Timeout when connecting to this host",
       "connection_refused": "Connection refused when connecting to host"
     },

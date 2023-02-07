@@ -84,9 +84,9 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
             raise ConfigEntryAuthFailed(exception) from exception
         except UptimeRobotException as exception:
             raise UpdateFailed(exception) from exception
-        else:
-            if response.status != API_ATTR_OK:
-                raise UpdateFailed(response.error.message)
+
+        if response.status != API_ATTR_OK:
+            raise UpdateFailed(response.error.message)
 
         monitors: list[UptimeRobotMonitor] = response.data
 

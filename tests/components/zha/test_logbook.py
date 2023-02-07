@@ -138,9 +138,9 @@ async def test_zha_logbook_event_device_with_triggers(hass, mock_devices):
 
     assert events[1]["name"] == "FakeManufacturer FakeModel"
     assert events[1]["domain"] == "zha"
-    assert (
-        events[1]["message"]
-        == "Up - Remote Button Double Press event was fired with parameters: {'test': 'test'}"
+    assert events[1]["message"] == (
+        "Up - Remote Button Double Press event was fired with parameters: "
+        "{'test': 'test'}"
     )
 
 

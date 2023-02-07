@@ -46,9 +46,9 @@ def websocket_list_entities(
     msg_json = (
         msg_json_prefix
         + ",".join(
-            entry.json_repr
+            entry.partial_json_repr
             for entry in registry.entities.values()
-            if entry.json_repr is not None
+            if entry.partial_json_repr is not None
         )
         + "]}"
     )
@@ -260,31 +260,9 @@ def websocket_remove_entity(
 
 
 @callback
-def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
-    """Convert entry to API format."""
-    return {
-        "area_id": entry.area_id,
-        "config_entry_id": entry.config_entry_id,
-        "device_id": entry.device_id,
-        "disabled_by": entry.disabled_by,
-        "entity_category": entry.entity_category,
-        "entity_id": entry.entity_id,
-        "has_entity_name": entry.has_entity_name,
-        "hidden_by": entry.hidden_by,
-        "icon": entry.icon,
-        "id": entry.id,
-        "name": entry.name,
-        "original_name": entry.original_name,
-        "platform": entry.platform,
-        "translation_key": entry.translation_key,
-        "unique_id": entry.unique_id,
-    }
-
-
-@callback
 def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
-    data = _entry_dict(entry)
+    data = entry.as_partial_dict
     data["aliases"] = entry.aliases
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class

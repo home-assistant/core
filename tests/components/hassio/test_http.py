@@ -6,6 +6,7 @@ from aiohttp import StreamReader
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
+from homeassistant.core import HomeAssistant
 
 
 async def test_forward_request(hassio_client, aioclient_mock):
@@ -170,7 +171,7 @@ async def test_backup_download_headers(hassio_client, aioclient_mock):
     assert resp.headers["Content-Disposition"] == content_disposition
 
 
-def test_need_auth(hass):
+def test_need_auth(hass: HomeAssistant) -> None:
     """Test if the requested path needs authentication."""
     assert not _need_auth(hass, "addons/test/logo")
     assert _need_auth(hass, "backups/new/upload")

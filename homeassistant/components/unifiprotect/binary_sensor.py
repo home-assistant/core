@@ -346,6 +346,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
+        ufp_enabled="is_motion_detection_on",
         ufp_event_obj="last_motion_event",
     ),
     ProtectBinaryEventEntityDescription(

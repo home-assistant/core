@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "La configuraci\u00f3n de Wake on Lan usando YAML se ha movido a clave de integraci\u00f3n. \n\nTu configuraci\u00f3n YAML existente funcionar\u00e1 durante 2 versiones m\u00e1s. \n\nMigra tu configuraci\u00f3n YAML a clave de integraci\u00f3n de acuerdo con la documentaci\u00f3n.",
-            "title": "La configuraci\u00f3n YAML de Wake on Lan se ha movido"
-        }
-    }
-}

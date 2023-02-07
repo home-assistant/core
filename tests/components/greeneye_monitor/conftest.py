@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.greeneye_monitor import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, POWER_WATT
+from homeassistant.const import UnitOfElectricPotential, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -27,7 +27,7 @@ def assert_sensor_state(
     assert state
     actual_state = state.state
     assert actual_state == expected_state
-    for (key, value) in attributes.items():
+    for key, value in attributes.items():
         assert key in state.attributes
         assert state.attributes[key] == value
 
@@ -61,7 +61,7 @@ def assert_power_sensor_registered(
 ) -> None:
     """Assert that a power sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "current", number, name)
-    assert sensor.unit_of_measurement == POWER_WATT
+    assert sensor.unit_of_measurement == UnitOfPower.WATT
     assert sensor.original_device_class is SensorDeviceClass.POWER
 
 
@@ -70,7 +70,7 @@ def assert_voltage_sensor_registered(
 ) -> None:
     """Assert that a voltage sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "volts", number, name)
-    assert sensor.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT
+    assert sensor.unit_of_measurement == UnitOfElectricPotential.VOLT
     assert sensor.original_device_class is SensorDeviceClass.VOLTAGE
 
 

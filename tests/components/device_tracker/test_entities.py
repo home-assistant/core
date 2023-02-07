@@ -53,7 +53,7 @@ async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
     assert entity_state.state == STATE_HOME
 
 
-def test_scanner_entity():
+def test_scanner_entity() -> None:
     """Test coverage for base ScannerEntity entity class."""
     entity = ScannerEntity()
     with pytest.raises(NotImplementedError):
@@ -68,7 +68,7 @@ def test_scanner_entity():
     assert entity.hostname is None
 
 
-def test_base_tracker_entity():
+def test_base_tracker_entity() -> None:
     """Test coverage for base BaseTrackerEntity entity class."""
     entity = BaseTrackerEntity()
     with pytest.raises(NotImplementedError):

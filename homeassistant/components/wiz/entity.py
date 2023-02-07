@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from pywizlight.bulblibrary import BulbType
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
 from .models import WizData
 
 
-class WizEntity(CoordinatorEntity[DataUpdateCoordinator[Optional[float]]], Entity):
+class WizEntity(CoordinatorEntity[DataUpdateCoordinator[float | None]], Entity):
     """Representation of WiZ entity."""
 
     _attr_has_entity_name = True

@@ -5,8 +5,7 @@ from homeassistant.components.sensor import SensorDeviceClass, significant_chang
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 
 AQI_ATTRS = {
@@ -23,12 +22,12 @@ HUMIDITY_ATTRS = {
 
 TEMP_CELSIUS_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 
 TEMP_FREEDOM_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 
 

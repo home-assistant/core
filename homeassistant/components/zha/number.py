@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
@@ -35,10 +36,6 @@ if TYPE_CHECKING:
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
-
-_ZHANumberConfigurationEntitySelfT = TypeVar(
-    "_ZHANumberConfigurationEntitySelfT", bound="ZHANumberConfigurationEntity"
-)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -383,12 +380,12 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZHANumberConfigurationEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZHANumberConfigurationEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None

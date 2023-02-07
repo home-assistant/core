@@ -42,7 +42,7 @@ async def test_async_create_certificate_temp_files(
     )
 
 
-async def test_reading_non_exitisting_certificate_file():
+async def test_reading_non_exitisting_certificate_file() -> None:
     """Test reading a non existing certificate file."""
     assert (
         mqtt.util.migrate_certificate_file_to_content("/home/file_not_exists") is None

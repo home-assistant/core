@@ -34,7 +34,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=SRP_ENERGY_DOMAIN):
 
         if user_input is not None:
             try:
-
                 srp_client = SrpEnergyClient(
                     user_input[CONF_ID],
                     user_input[CONF_USERNAME],

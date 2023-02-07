@@ -21,7 +21,6 @@ async def test_create_entry(hass):
     with patch(
         "homeassistant.components.launch_library.async_setup_entry", return_value=True
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},

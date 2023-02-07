@@ -251,7 +251,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""
         if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
-
             if timestamp:
                 timestamp = dt.utc_from_timestamp(timestamp)
 

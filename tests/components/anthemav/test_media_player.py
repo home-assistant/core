@@ -1,5 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
-from typing import Callable
+from collections.abc import Callable
 from unittest.mock import AsyncMock
 
 import pytest

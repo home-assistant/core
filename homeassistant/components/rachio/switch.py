@@ -122,7 +122,7 @@ async def async_setup_entry(
             entity.entity_id: entity.zone_id for entity in zone_entities
         }
 
-        for (count, data) in enumerate(entity_id):
+        for count, data in enumerate(entity_id):
             if data in entity_to_zone_id:
                 # Time can be passed as a list per zone,
                 # or one time for all zones

@@ -728,14 +728,14 @@ async def help_test_discovery_update(
     assert state.name == "Beer"
 
     if state_data1:
-        for (mqtt_messages, expected_state, attributes) in state_data1:
-            for (topic, data) in mqtt_messages:
+        for mqtt_messages, expected_state, attributes in state_data1:
+            for topic, data in mqtt_messages:
                 async_fire_mqtt_message(hass, topic, data)
             state = hass.states.get(f"{domain}.beer")
             if expected_state:
                 assert state.state == expected_state
             if attributes:
-                for (attr, value) in attributes:
+                for attr, value in attributes:
                     assert state.attributes.get(attr) == value
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data2)
@@ -746,14 +746,14 @@ async def help_test_discovery_update(
     assert state.name == "Milk"
 
     if state_data2:
-        for (mqtt_messages, expected_state, attributes) in state_data2:
-            for (topic, data) in mqtt_messages:
+        for mqtt_messages, expected_state, attributes in state_data2:
+            for topic, data in mqtt_messages:
                 async_fire_mqtt_message(hass, topic, data)
             state = hass.states.get(f"{domain}.beer")
             if expected_state:
                 assert state.state == expected_state
             if attributes:
-                for (attr, value) in attributes:
+                for attr, value in attributes:
                     assert state.attributes.get(attr) == value
 
     state = hass.states.get(f"{domain}.milk")

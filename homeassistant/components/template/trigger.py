@@ -73,7 +73,7 @@ async def async_attach_trigger(
             return
 
         if delay_cancel:
-            # pylint: disable=not-callable
+            # pylint: disable-next=not-callable
             delay_cancel()
             delay_cancel = None
 
@@ -149,7 +149,7 @@ async def async_attach_trigger(
         """Remove state listeners async."""
         unsub()
         if delay_cancel:
-            # pylint: disable=not-callable
+            # pylint: disable-next=not-callable
             delay_cancel()
 
     return async_remove

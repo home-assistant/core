@@ -1,7 +1,0 @@
-{
-    "config": {
-        "error": {
-            "unsupported_hardware": "\u60a8\u7684\u8bbe\u5907\u786c\u4ef6:\u201c {unsupported_device}\u201d \uff0c\u4e0d\u88ab\u6b64\u96c6\u6210\u6240\u652f\u6301\u3002"
-        }
-    }
-}

@@ -78,9 +78,9 @@ async def test_humanifying_zwave_js_notification_event(
 
     assert events[1]["name"] == "Touchscreen Deadbolt"
     assert events[1]["domain"] == "zwave_js"
-    assert (
-        events[1]["message"]
-        == "fired Entry Control CC 'notification' event for event type '1' with data type '2'"
+    assert events[1]["message"] == (
+        "fired Entry Control CC 'notification' event for event type '1' "
+        "with data type '2'"
     )
 
     assert events[2]["name"] == "Touchscreen Deadbolt"

@@ -83,7 +83,7 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
             for _ in range(pickup_index):
                 event = next(relevant_events)
         except StopIteration:
-            LOGGER.info("No pickup event found for %s", self.entity_description.key)
+            LOGGER.debug("No pickup event found for %s", self.entity_description.key)
             self._attr_extra_state_attributes = {}
             self._attr_native_value = None
         else:

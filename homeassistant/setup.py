@@ -30,24 +30,27 @@ ATTR_COMPONENT = "component"
 BASE_PLATFORMS = {platform.value for platform in Platform}
 
 # DATA_SETUP is a dict[str, asyncio.Task[bool]], indicating domains which are currently
-# being setup or which failed to setup
-# - Tasks are added to DATA_SETUP by `async_setup_component`, the key is the domain being setup
-#   and the Task is the `_async_setup_component` helper.
-# - Tasks are removed from DATA_SETUP if setup was successful, that is, the task returned True
+# being setup or which failed to setup:
+# - Tasks are added to DATA_SETUP by `async_setup_component`, the key is the domain
+#   being setup and the Task is the `_async_setup_component` helper.
+# - Tasks are removed from DATA_SETUP if setup was successful, that is,
+#   the task returned True.
 DATA_SETUP = "setup_tasks"
 
-# DATA_SETUP_DONE is a dict [str, asyncio.Event], indicating components which will be setup
-# - Events are added to DATA_SETUP_DONE during bootstrap by async_set_domains_to_be_loaded,
-#   the key is the domain which will be loaded
-# - Events are set and removed from DATA_SETUP_DONE when async_setup_component is finished,
-#   regardless of if the setup was successful or not.
+# DATA_SETUP_DONE is a dict [str, asyncio.Event], indicating components which
+# will be setup:
+# - Events are added to DATA_SETUP_DONE during bootstrap by
+#   async_set_domains_to_be_loaded, the key is the domain which will be loaded.
+# - Events are set and removed from DATA_SETUP_DONE when async_setup_component
+#   is finished, regardless of if the setup was successful or not.
 DATA_SETUP_DONE = "setup_done"
 
-# DATA_SETUP_DONE is a dict [str, datetime], indicating when an attempt to setup a component
-# started
+# DATA_SETUP_DONE is a dict [str, datetime], indicating when an attempt
+# to setup a component started.
 DATA_SETUP_STARTED = "setup_started"
 
-# DATA_SETUP_TIME is a dict [str, timedelta], indicating how time was spent setting up a component
+# DATA_SETUP_TIME is a dict [str, timedelta], indicating how time was spent
+# setting up a component.
 DATA_SETUP_TIME = "setup_time"
 
 DATA_DEPS_REQS = "deps_reqs_processed"
@@ -283,7 +286,7 @@ async def _async_setup_component(
 
         # Flush out async_setup calling create_task. Fragile but covered by test.
         await asyncio.sleep(0)
-        await hass.config_entries.flow.async_wait_init_flow_finish(domain)
+        await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
         # Add to components before the entry.async_setup
         # call to avoid a deadlock when forwarding platforms

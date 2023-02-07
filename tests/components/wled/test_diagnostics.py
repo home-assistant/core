@@ -1,15 +1,14 @@
 """Tests for the diagnostics data provided by the WLED integration."""
-from aiohttp import ClientSession
-
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ):
     """Test diagnostics."""
@@ -26,9 +25,11 @@ async def test_diagnostics(
             "free_heap": 14600,
             "leds": {
                 "__type": "<class 'wled.models.Leds'>",
-                "repr": "Leds(cct=False, count=30, fps=None, light_capabilities=None, "
-                "max_power=850, max_segments=10, power=470, rgbw=False, wv=True, "
-                "segment_light_capabilities=None)",
+                "repr": (
+                    "Leds(cct=False, count=30, fps=None, light_capabilities=None, "
+                    "max_power=850, max_segments=10, power=470, rgbw=False, wv=True, "
+                    "segment_light_capabilities=None)"
+                ),
             },
             "live_ip": "Unknown",
             "live_mode": "Unknown",

@@ -153,8 +153,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     @property
     def state(self) -> str | None:
-        """
-        Get the current vacuum state.
+        """Get the current vacuum state.
 
         NB: Currently, we do not return an error state because they can be very, very stale.
         In the app, these are (usually) handled by showing the robot as stopped and sending the

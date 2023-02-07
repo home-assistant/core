@@ -337,8 +337,8 @@ async def test_unknown_zone(hass, calls, caplog):
     )
 
     assert (
-        "Automation 'My Automation' is referencing non-existing zone 'zone.no_such_zone' in a zone trigger"
-        not in caplog.text
+        "Automation 'My Automation' is referencing non-existing zone"
+        " 'zone.no_such_zone' in a zone trigger" not in caplog.text
     )
 
     hass.states.async_set(
@@ -350,6 +350,6 @@ async def test_unknown_zone(hass, calls, caplog):
     await hass.async_block_till_done()
 
     assert (
-        "Automation 'My Automation' is referencing non-existing zone 'zone.no_such_zone' in a zone trigger"
-        in caplog.text
+        "Automation 'My Automation' is referencing non-existing zone"
+        " 'zone.no_such_zone' in a zone trigger" in caplog.text
     )

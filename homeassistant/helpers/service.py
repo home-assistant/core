@@ -6,9 +6,8 @@ from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar
 
-from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -614,7 +613,6 @@ async def entity_service_call(  # noqa: C901
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
-
                 if entity.entity_id not in all_referenced:
                     continue
 

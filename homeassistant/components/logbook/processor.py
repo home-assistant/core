@@ -56,7 +56,7 @@ from .const import (
 from .helpers import is_sensor_continuous
 from .models import EventAsRow, LazyEventPartialState, async_event_to_row
 from .queries import statement_for_request
-from .queries.common import PSUEDO_EVENT_STATE_CHANGED
+from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
 
 @dataclass
@@ -201,7 +201,7 @@ def _humanify(
         event_type = row.event_type
         if event_type == EVENT_CALL_SERVICE:
             continue
-        if event_type is PSUEDO_EVENT_STATE_CHANGED:
+        if event_type is PSEUDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
             # Skip continuous sensors

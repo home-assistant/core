@@ -156,8 +156,7 @@ class NetatmoDataHandler:
         await self.async_dispatch()
 
     async def async_update(self, event_time: datetime) -> None:
-        """
-        Update device.
+        """Update device.
 
         We do up to BATCH_SIZE calls in one update in order
         to minimize the calls on the api service.

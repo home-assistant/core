@@ -195,7 +195,9 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
-    def __init__(self, data, device, description: BinarySensorEntityDescription):
+    def __init__(
+        self, data, device, description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
@@ -235,7 +237,9 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     entity_description: AugustBinarySensorEntityDescription
 
-    def __init__(self, data, device, description: AugustBinarySensorEntityDescription):
+    def __init__(
+        self, data, device, description: AugustBinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description

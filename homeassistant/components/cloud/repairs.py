@@ -24,8 +24,7 @@ def async_manage_legacy_subscription_issue(
     hass: HomeAssistant,
     subscription_info: dict[str, Any],
 ) -> None:
-    """
-    Manage the legacy subscription issue.
+    """Manage the legacy subscription issue.
 
     If the provider is "legacy" create an issue,
     in all other cases remove the issue.
@@ -72,7 +71,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
 
         async def _async_wait_for_plan_change() -> None:
             flow_manager = repairs_flow_manager(self.hass)
-            # We can not get here without a flow manager
+            # We cannot get here without a flow manager
             assert flow_manager is not None
 
             retries = 0

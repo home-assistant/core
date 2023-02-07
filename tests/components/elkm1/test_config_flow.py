@@ -1587,9 +1587,6 @@ async def test_multiple_instances_with_tls_v12(hass):
         )
         await hass.async_block_till_done()
 
-    import pprint
-
-    pprint.pprint(result2)
     assert result2["type"] == "create_entry"
     assert result2["title"] == "guest_house"
     assert result2["data"] == {

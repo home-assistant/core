@@ -60,7 +60,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
         self.discovery_info = None
@@ -95,8 +95,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = _base_schema(self.discovery_info)
 
     async def _validate_input(self, data):
-        """
-        Validate the user input allows us to connect.
+        """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
         """

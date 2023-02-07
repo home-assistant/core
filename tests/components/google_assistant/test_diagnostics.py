@@ -1,6 +1,4 @@
 """Test diagnostics."""
-
-from typing import Any
 from unittest.mock import ANY
 
 from homeassistant import core, setup
@@ -10,9 +8,12 @@ from homeassistant.setup import async_setup_component
 from .test_http import DUMMY_CONFIG
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass: core.HomeAssistant, hass_client: Any):
+async def test_diagnostics(
+    hass: core.HomeAssistant, hass_client: ClientSessionGenerator
+):
     """Test diagnostics v1."""
 
     await setup.async_setup_component(

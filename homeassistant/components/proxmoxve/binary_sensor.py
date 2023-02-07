@@ -78,7 +78,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         host_name,
         node_name,
         vm_id,
-    ):
+    ) -> None:
         """Create the binary sensor for vms or containers."""
         super().__init__(
             coordinator, unique_id, name, icon, host_name, node_name, vm_id

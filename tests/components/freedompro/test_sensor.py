@@ -60,7 +60,6 @@ async def test_sensor_get_state(
         "homeassistant.components.freedompro.get_states",
         return_value=states_response,
     ):
-
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
 

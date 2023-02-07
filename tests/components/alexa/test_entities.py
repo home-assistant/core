@@ -114,6 +114,6 @@ async def test_serialize_discovery_recovers(hass, caplog):
 
     assert "Alexa.PowerController" not in interfaces
     assert (
-        f"Error serializing Alexa.PowerController discovery for {hass.states.get('switch.bla')}"
-        in caplog.text
-    )
+        "Error serializing Alexa.PowerController discovery"
+        f" for {hass.states.get('switch.bla')}"
+    ) in caplog.text

@@ -224,7 +224,7 @@ def test_config_valid_verify_ssl_bool(hass, mock_session_send):
     )
 
 
-def test_config_errors():
+def test_config_errors() -> None:
     """Test for configuration errors."""
     with pytest.raises(vol.Invalid):
         tomato.PLATFORM_SCHEMA(

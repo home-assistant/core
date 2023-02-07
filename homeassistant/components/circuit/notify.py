@@ -1,15 +1,23 @@
 """Unify Circuit platform for notify component."""
+from __future__ import annotations
+
 import logging
 
 from circuit_webhook import Circuit
 
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> CircuitNotificationService | None:
     """Get the Unify Circuit notification service."""
     if discovery_info is None:
         return None

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Generic, TypeVar, Union, cast
+from typing import Generic, TypeVar, cast
 
 from aiopyarr import Health, RadarrMovie, RootFolder, SystemStatus, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-T = TypeVar("T", bound=Union[SystemStatus, list[RootFolder], list[Health], int])
+T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):

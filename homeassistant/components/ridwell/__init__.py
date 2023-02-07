@@ -1,84 +1,24 @@
 """The Ridwell integration."""
 from __future__ import annotations
 
-import asyncio
-from dataclasses import dataclass
-from datetime import timedelta
 from typing import Any
 
-from aioridwell import async_get_client
-from aioridwell.errors import InvalidCredentialsError, RidwellError
-from aioridwell.model import RidwellAccount, RidwellPickupEvent
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, entity_registry as er
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, LOGGER, SENSOR_TYPE_NEXT_PICKUP
-
-DEFAULT_UPDATE_INTERVAL = timedelta(hours=1)
+from .coordinator import RidwellDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 
-@dataclass
-class RidwellData:
-    """Define an object to be stored in `hass.data`."""
-
-    accounts: dict[str, RidwellAccount]
-    coordinator: DataUpdateCoordinator[dict[str, RidwellPickupEvent]]
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ridwell from a config entry."""
-    session = aiohttp_client.async_get_clientsession(hass)
-
-    try:
-        client = await async_get_client(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
-        )
-    except InvalidCredentialsError as err:
-        raise ConfigEntryAuthFailed("Invalid username/password") from err
-    except RidwellError as err:
-        raise ConfigEntryNotReady(err) from err
-
-    accounts = await client.async_get_accounts()
-
-    async def async_update_data() -> dict[str, RidwellPickupEvent]:
-        """Get the latest pickup events."""
-        data = {}
-
-        async def async_get_pickups(account: RidwellAccount) -> None:
-            """Get the latest pickups for an account."""
-            data[account.account_id] = await account.async_get_next_pickup_event()
-
-        tasks = [async_get_pickups(account) for account in accounts.values()]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for result in results:
-            if isinstance(result, InvalidCredentialsError):
-                raise ConfigEntryAuthFailed("Invalid username/password") from result
-            if isinstance(result, RidwellError):
-                raise UpdateFailed(result) from result
-
-        return data
-
-    coordinator: DataUpdateCoordinator[
-        dict[str, RidwellPickupEvent]
-    ] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=entry.title,
-        update_interval=DEFAULT_UPDATE_INTERVAL,
-        update_method=async_update_data,
-    )
-
-    await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = RidwellData(
-        accounts=accounts, coordinator=coordinator
-    )
+    coordinator = RidwellDataUpdateCoordinator(hass, name=entry.title)
+    await coordinator.async_initialize()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

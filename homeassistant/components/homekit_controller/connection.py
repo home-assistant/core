@@ -465,8 +465,7 @@ class HKDevice:
 
     @callback
     def async_create_devices(self) -> None:
-        """
-        Build device registry entries for all accessories paired with the bridge.
+        """Build device registry entries for all accessories paired with the bridge.
 
         This is done as well as by the entities for 2 reasons. First, the bridge
         might not have any entities attached to it. Secondly there are stateless
@@ -536,8 +535,7 @@ class HKDevice:
         self.unreliable_serial_numbers = unreliable_serial_numbers
 
     async def async_process_entity_map(self) -> None:
-        """
-        Process the entity map and load any platforms or entities that need adding.
+        """Process the entity map and load any platforms or entities that need adding.
 
         This is idempotent and will be called at startup and when we detect metadata changes
         via the c# counter on the zeroconf record.
@@ -759,8 +757,7 @@ class HKDevice:
 
     @property
     def unique_id(self) -> str:
-        """
-        Return a unique id for this accessory or bridge.
+        """Return a unique id for this accessory or bridge.
 
         This id is random and will change if a device undergoes a hard reset.
         """

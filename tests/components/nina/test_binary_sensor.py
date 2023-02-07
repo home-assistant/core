@@ -46,7 +46,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA
         )
@@ -155,7 +154,6 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_CORONA
         )

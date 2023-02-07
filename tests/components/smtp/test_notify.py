@@ -78,7 +78,7 @@ def message():
         0,
         True,
     )
-    yield mailer
+    return mailer
 
 
 HTML = """

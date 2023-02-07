@@ -86,8 +86,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_init(user_input)
 
     async def async_step_import(self, import_config):
-        """
-        Import an OpenTherm Gateway device as a config entry.
+        """Import an OpenTherm Gateway device as a config entry.
 
         This flow is triggered by `async_setup` for configured devices.
         """

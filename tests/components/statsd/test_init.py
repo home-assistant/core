@@ -18,7 +18,7 @@ def mock_client():
         yield mock_client.return_value
 
 
-def test_invalid_config():
+def test_invalid_config() -> None:
     """Test configuration with defaults."""
     config = {"statsd": {"host1": "host1"}}
 

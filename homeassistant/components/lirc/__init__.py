@@ -42,8 +42,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 class LircInterface(threading.Thread):
-    """
-    This interfaces with the lirc daemon to read IR commands.
+    """This interfaces with the lirc daemon to read IR commands.
 
     When using lirc in blocking mode, sometimes repeated commands get produced
     in the next read of a command so we use a thread here to just wait
@@ -60,7 +59,7 @@ class LircInterface(threading.Thread):
     def run(self):
         """Run the loop of the LIRC interface thread."""
         _LOGGER.debug("LIRC interface thread started")
-        while not self.stopped.isSet():
+        while not self.stopped.is_set():
             try:
                 code = lirc.nextcode()  # list; empty if no buttons pressed
             except lirc.NextCodeError:

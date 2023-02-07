@@ -270,7 +270,6 @@ class Alert(Entity):
         await self._send_notification_message(message)
 
     async def _send_notification_message(self, message: Any) -> None:
-
         if not self._notifiers:
             return
 

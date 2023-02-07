@@ -8,7 +8,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -35,11 +35,11 @@ async def test_entity_state(hass, lcn_connection):
     """Test state of entity."""
     state = hass.states.get(SENSOR_VAR1)
     assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(SENSOR_SETPOINT1)
     assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(SENSOR_LED6)
     assert state

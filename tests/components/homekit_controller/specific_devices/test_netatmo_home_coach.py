@@ -1,5 +1,4 @@
-"""
-Regression tests for Netamo Healthy Home Coach.
+"""Regression tests for Netamo Healthy Home Coach.
 
 https://github.com/home-assistant/core/issues/73360
 """

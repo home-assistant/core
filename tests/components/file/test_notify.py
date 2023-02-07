@@ -51,7 +51,6 @@ async def test_notify_file(hass: HomeAssistant, timestamp: bool):
     with patch("homeassistant.components.file.notify.open", m_open, create=True), patch(
         "homeassistant.components.file.notify.os.stat"
     ) as mock_st, patch("homeassistant.util.dt.utcnow", return_value=dt_util.utcnow()):
-
         mock_st.return_value.st_size = 0
         title = (
             f"{ATTR_TITLE_DEFAULT} notifications "

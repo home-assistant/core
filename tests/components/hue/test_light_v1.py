@@ -650,7 +650,7 @@ async def test_light_turn_off_service(hass, mock_bridge_v1):
     assert light.state == "off"
 
 
-def test_available():
+def test_available() -> None:
     """Test available property."""
     light = hue_light.HueLight(
         light=Mock(
@@ -704,7 +704,7 @@ def test_available():
     assert light.available is True
 
 
-def test_hs_color():
+def test_hs_color() -> None:
     """Test hs_color property."""
     light = hue_light.HueLight(
         light=Mock(

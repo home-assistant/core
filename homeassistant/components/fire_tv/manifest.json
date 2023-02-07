@@ -1,0 +1,6 @@
+{
+  "domain": "fire_tv",
+  "name": "Amazon Fire TV",
+  "integration_type": "virtual",
+  "supported_by": "androidtv"
+}

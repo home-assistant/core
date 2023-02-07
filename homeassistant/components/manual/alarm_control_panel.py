@@ -174,8 +174,7 @@ def setup_platform(
 
 
 class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
-    """
-    Representation of an alarm status.
+    """Representation of an alarm status.
 
     When armed, will be arming for 'arming_time', after that armed.
     When triggered, will be pending for the triggering state's 'delay_time'.
@@ -339,8 +338,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._async_update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
-        """
-        Send alarm trigger command.
+        """Send alarm trigger command.
 
         No code needed, a trigger time of zero for the current state
         disables the alarm.

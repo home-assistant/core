@@ -38,13 +38,13 @@ async def test_connect_error(hass, config):
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
-async def test_get_pin_from_discovery_hostname():
+async def test_get_pin_from_discovery_hostname() -> None:
     """Test getting a device PIN from the zeroconf-discovered hostname."""
     pin = async_get_pin_from_discovery_hostname("GVC1-3456.local.")
     assert pin == "3456"
 
 
-async def test_get_pin_from_uid():
+async def test_get_pin_from_uid() -> None:
     """Test getting a device PIN from its UID."""
     pin = async_get_pin_from_uid("ABCDEF123456")
     assert pin == "3456"

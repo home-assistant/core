@@ -29,6 +29,7 @@ TUYA_SUPPORT_TYPE = {
     "fsd",  # Fan with Light
     "fskg",  # Fan wall switch
     "kj",  # Air Purifier
+    "cs",  # Dehumidifier
 }
 
 

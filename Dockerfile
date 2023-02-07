@@ -5,6 +5,8 @@ FROM ${BUILD_FROM}
 ENV \
     S6_SERVICES_GRACETIME=220000
 
+ARG QEMU_CPU
+
 WORKDIR /usr/src
 
 ## Setup Home Assistant Core dependencies
@@ -19,13 +21,19 @@ RUN \
         --use-deprecated=legacy-resolver \
         -r homeassistant/requirements.txt
 
-COPY requirements_all.txt home_assistant_frontend-* homeassistant/
+COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
 RUN \
     if ls homeassistant/home_assistant_frontend*.whl 1> /dev/null 2>&1; then \
         pip3 install \
             --no-cache-dir \
             --no-index \
             homeassistant/home_assistant_frontend-*.whl; \
+    fi \
+    && if ls homeassistant/home_assistant_intents*.whl 1> /dev/null 2>&1; then \
+        pip3 install \
+            --no-cache-dir \
+            --no-index \
+            homeassistant/home_assistant_intents-*.whl; \
     fi \
     && \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \

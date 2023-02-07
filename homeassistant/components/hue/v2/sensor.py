@@ -1,7 +1,7 @@
 """Support for Hue sensors."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -32,13 +32,13 @@ from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType = Union[DevicePower, LightLevel, Temperature, ZigbeeConnectivity]
-ControllerType = Union[
-    DevicePowerController,
-    LightLevelController,
-    TemperatureController,
-    ZigbeeConnectivityController,
-]
+SensorType: TypeAlias = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
+ControllerType: TypeAlias = (
+    DevicePowerController
+    | LightLevelController
+    | TemperatureController
+    | ZigbeeConnectivityController
+)
 
 
 async def async_setup_entry(

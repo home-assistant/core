@@ -144,7 +144,6 @@ async def test_manual_entry(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -190,7 +189,6 @@ async def test_multi_discovery_cannot_connect(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
-
         mock_intellifire_config_flow.poll.side_effect = ConnectionError
 
         result = await hass.config_entries.flow.async_init(

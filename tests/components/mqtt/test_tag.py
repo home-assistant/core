@@ -4,10 +4,12 @@ import json
 from unittest.mock import ANY, patch
 
 import pytest
+from voluptuous import MultipleInvalid
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -803,6 +805,50 @@ async def test_cleanup_device_with_entity2(
     # Verify device registry entry is cleared
     device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
+
+
+@pytest.mark.xfail(raises=MultipleInvalid)
+async def test_update_with_bad_config_not_breaks_discovery(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config,
+    tag_mock,
+) -> None:
+    """Test a bad update does not break discovery."""
+    await mqtt_mock_entry_no_yaml_config()
+    config1 = {
+        "topic": "test-topic",
+        "device": {"identifiers": ["helloworld"]},
+    }
+    config2 = {
+        "topic": "test-topic",
+        "device": {"bad_key": "some bad value"},
+    }
+
+    config3 = {
+        "topic": "test-topic-update",
+        "device": {"identifiers": ["helloworld"]},
+    }
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    data3 = json.dumps(config3)
+
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    await hass.async_block_till_done()
+
+    # Update with bad identifier
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data2)
+    await hass.async_block_till_done()
+
+    # Topic update
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data3)
+    await hass.async_block_till_done()
+
+    # Fake tag scan.
+    async_fire_mqtt_message(hass, "test-topic-update", "12345")
+
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, "12345", ANY)
 
 
 async def test_unload_entry(hass, device_reg, mqtt_mock, tag_mock, tmp_path) -> None:

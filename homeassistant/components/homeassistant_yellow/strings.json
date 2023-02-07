@@ -31,8 +31,7 @@
       "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
       "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
       "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
-      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]",
-      "disabled_due_to_bug": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::disabled_due_to_bug%]"
+      "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",

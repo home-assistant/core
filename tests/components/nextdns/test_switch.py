@@ -997,11 +997,12 @@ async def test_switch_failure(hass: HomeAssistant, exc: Exception) -> None:
     """Tests that the turn on/off service throws HomeAssistantError."""
     await init_integration(hass)
 
-    with patch("homeassistant.components.nextdns.NextDns.set_setting", side_effect=exc):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
-                blocking=True,
-            )
+    with patch(
+        "homeassistant.components.nextdns.NextDns.set_setting", side_effect=exc
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )

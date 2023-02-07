@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "alert": {
-            "description": "{description}",
-            "title": "{title}"
-        }
-    }
-}

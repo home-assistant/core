@@ -10,7 +10,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -152,7 +152,6 @@ async def test_load_from_db(recorder_mock, hass):
     """
     plant_name = "wise_plant"
     for value in [20, 30, 10]:
-
         hass.states.async_set(
             BRIGHTNESS_ENTITY, value, {ATTR_UNIT_OF_MEASUREMENT: "Lux"}
         )
@@ -193,13 +192,13 @@ async def test_brightness_history(hass):
     assert state.state == STATE_OK
 
 
-def test_daily_history_no_data(hass):
+def test_daily_history_no_data(hass: HomeAssistant) -> None:
     """Test with empty history."""
     dh = plant.DailyHistory(3)
     assert dh.max is None
 
 
-def test_daily_history_one_day(hass):
+def test_daily_history_one_day(hass: HomeAssistant) -> None:
     """Test storing data for the same day."""
     dh = plant.DailyHistory(3)
     values = [-2, 10, 0, 5, 20]
@@ -210,7 +209,7 @@ def test_daily_history_one_day(hass):
         assert dh.max == max_value
 
 
-def test_daily_history_multiple_days(hass):
+def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     """Test storing data for different days."""
     dh = plant.DailyHistory(3)
     today = datetime.now()

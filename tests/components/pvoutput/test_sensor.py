@@ -10,12 +10,10 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    POWER_KILO_WATT,
-    POWER_WATT,
-    TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -44,7 +42,7 @@ async def test_sensors(
         == "Frenck's Solar Farm Energy consumed"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.WATT_HOUR
     assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.frenck_s_solar_farm_energy_generated")
@@ -60,7 +58,7 @@ async def test_sensors(
         == "Frenck's Solar Farm Energy generated"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.WATT_HOUR
     assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.frenck_s_solar_farm_efficiency")
@@ -74,7 +72,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{ENERGY_KILO_WATT_HOUR}/{POWER_KILO_WATT}"
+        == f"{UnitOfEnergy.KILO_WATT_HOUR}/{UnitOfPower.KILO_WATT}"
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
@@ -91,7 +89,7 @@ async def test_sensors(
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's Solar Farm Power consumed"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.frenck_s_solar_farm_power_generated")
@@ -107,7 +105,7 @@ async def test_sensors(
         == "Frenck's Solar Farm Power generated"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.frenck_s_solar_farm_temperature")
@@ -120,7 +118,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's Solar Farm Temperature"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("sensor.frenck_s_solar_farm_voltage")
@@ -133,7 +131,9 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's Solar Farm Voltage"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_POTENTIAL_VOLT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricPotential.VOLT
+    )
     assert ATTR_ICON not in state.attributes
 
     assert entry.device_id

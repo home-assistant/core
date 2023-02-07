@@ -7,7 +7,7 @@ import pytest_socket
 from homeassistant.core import async_get_hass
 
 
-def test_sockets_disabled():
+def test_sockets_disabled() -> None:
     """Test we can't open sockets."""
     with pytest.raises(pytest_socket.SocketBlockedError):
         socket.socket()

@@ -372,7 +372,6 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
         elif isinstance(self._device, LightLevel):
-
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
 

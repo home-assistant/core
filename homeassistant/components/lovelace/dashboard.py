@@ -6,7 +6,7 @@ import logging
 import os
 from pathlib import Path
 import time
-from typing import Optional, cast
+from typing import cast
 
 import voluptuous as vol
 
@@ -234,7 +234,7 @@ class DashboardsCollection(collection.StorageCollection):
     async def _async_load_data(self) -> dict | None:
         """Load the data."""
         if (data := await self.store.async_load()) is None:
-            return cast(Optional[dict], data)
+            return cast(dict | None, data)
 
         updated = False
 
@@ -246,7 +246,7 @@ class DashboardsCollection(collection.StorageCollection):
         if updated:
             await self.store.async_save(data)
 
-        return cast(Optional[dict], data)
+        return cast(dict | None, data)
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""

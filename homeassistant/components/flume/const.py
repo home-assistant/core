@@ -15,10 +15,10 @@ PLATFORMS = [
 
 DEFAULT_NAME = "Flume Sensor"
 
-# Flume API limits individual endpoints to 120 queries per hour
-NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=1)
-DEVICE_SCAN_INTERVAL = timedelta(minutes=5)
-DEVICE_CONNECTION_SCAN_INTERVAL = timedelta(minutes=1)
+# Flume API limits queries to 120 per hour
+NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=5)
+DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
+DEVICE_CONNECTION_SCAN_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__package__)
 

@@ -10,8 +10,7 @@ from homeassistant.components.pi_hole.const import (
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -199,15 +198,3 @@ async def test_remove_obsolete(hass: HomeAssistant):
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert CONF_STATISTICS_ONLY not in entry.data
-
-
-async def test_missing_api_key(hass: HomeAssistant):
-    """Tests start reauth flow if api key is missing."""
-    mocked_hole = _create_mocked_hole()
-    data = CONFIG_DATA_DEFAULTS.copy()
-    data.pop(CONF_API_KEY)
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=data)
-    entry.add_to_hass(hass)
-    with _patch_init_hole(mocked_hole):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == ConfigEntryState.SETUP_ERROR

@@ -196,8 +196,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         return True
 
     async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
-        """
-        Set new preset mode.
+        """Set new preset mode.
 
         Returns true if the mode has been changed, false otherwise.
         """
@@ -221,8 +220,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         return True
 
     async def _async_set_percentage_internal(self, percentage: int) -> bool:
-        """
-        Set fan speed percentage for current profile.
+        """Set fan speed percentage for current profile.
 
         Returns true if speed has been changed, false otherwise.
         """

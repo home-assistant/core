@@ -32,7 +32,7 @@ class VilfoRouterSensor(SensorEntity):
 
     entity_description: VilfoSensorEntityDescription
 
-    def __init__(self, api, description: VilfoSensorEntityDescription):
+    def __init__(self, api, description: VilfoSensorEntityDescription) -> None:
         """Initialize."""
         self.entity_description = description
         self.api = api

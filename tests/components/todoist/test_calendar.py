@@ -80,7 +80,7 @@ async def test_calendar_entity_unique_id(todoist_api, hass, api):
 
     registry = entity_registry.async_get(hass)
     entity = registry.async_get("calendar.name")
-    assert "12345" == entity.unique_id
+    assert entity.unique_id == "12345"
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")

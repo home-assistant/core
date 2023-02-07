@@ -11,7 +11,7 @@ import mimetypes
 import os
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Any, Optional, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from aiohttp import web
 import mutagen
@@ -51,7 +51,7 @@ from .media_source import generate_media_source_id, media_source_id_to_kwargs
 
 _LOGGER = logging.getLogger(__name__)
 
-TtsAudioType = tuple[Optional[str], Optional[bytes]]
+TtsAudioType = tuple[str | None, bytes | None]
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"

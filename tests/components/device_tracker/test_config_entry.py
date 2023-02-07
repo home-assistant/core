@@ -12,7 +12,7 @@ from tests.common import (
 )
 
 
-def test_tracker_entity():
+def test_tracker_entity() -> None:
     """Test tracker entity."""
 
     class TestEntry(ce.TrackerEntity):

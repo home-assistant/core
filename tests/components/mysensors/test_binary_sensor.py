@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from unittest.mock import MagicMock
 
 from mysensors.sensor import Sensor
 
@@ -15,7 +14,6 @@ async def test_door_sensor(
     hass: HomeAssistant,
     door_sensor: Sensor,
     receive_message: Callable[[str], None],
-    transport_write: MagicMock,
 ) -> None:
     """Test a door sensor."""
     entity_id = "binary_sensor.door_sensor_1_1"

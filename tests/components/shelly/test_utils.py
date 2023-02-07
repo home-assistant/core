@@ -151,7 +151,7 @@ async def test_get_block_device_sleep_period(settings, sleep_period):
 
 
 @freeze_time("2019-01-10 18:43:00+00:00")
-async def test_get_device_uptime():
+async def test_get_device_uptime() -> None:
     """Test block test get device uptime."""
     assert get_device_uptime(
         55, dt.as_utc(dt.parse_datetime("2019-01-10 18:42:00+00:00"))

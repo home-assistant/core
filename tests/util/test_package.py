@@ -237,7 +237,7 @@ async def test_async_get_user_site(mock_env_copy):
     assert ret == os.path.join(deps_dir, "lib_dir")
 
 
-def test_check_package_global():
+def test_check_package_global() -> None:
     """Test for an installed package."""
     first_package = list(pkg_resources.working_set)[0]
     installed_package = first_package.project_name
@@ -250,12 +250,12 @@ def test_check_package_global():
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
-def test_check_package_zip():
+def test_check_package_zip() -> None:
     """Test for an installed zip package."""
     assert not package.is_installed(TEST_ZIP_REQ)
 
 
-def test_get_distribution_falls_back_to_version():
+def test_get_distribution_falls_back_to_version() -> None:
     """Test for get_distribution failing and fallback to version."""
     first_package = list(pkg_resources.working_set)[0]
     installed_package = first_package.project_name
@@ -272,7 +272,7 @@ def test_get_distribution_falls_back_to_version():
         assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
-def test_check_package_previous_failed_install():
+def test_check_package_previous_failed_install() -> None:
     """Test for when a previously install package failed and left cruft behind."""
     first_package = list(pkg_resources.working_set)[0]
     installed_package = first_package.project_name

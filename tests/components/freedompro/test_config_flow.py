@@ -32,7 +32,6 @@ async def test_invalid_auth(hass):
             "code": -201,
         },
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -51,7 +50,6 @@ async def test_connection_error(hass):
             "code": -200,
         },
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -70,7 +68,6 @@ async def test_create_entry(hass):
             "devices": DEVICES,
         },
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

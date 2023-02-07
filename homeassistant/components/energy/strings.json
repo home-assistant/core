@@ -27,7 +27,7 @@
     },
     "entity_unexpected_unit_gas": {
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
-      "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor:)"
+      "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor):"
     },
     "entity_unexpected_unit_water": {
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",

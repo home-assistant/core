@@ -1,7 +1,7 @@
 """Tests for the Abode alarm control panel device."""
 from unittest.mock import PropertyMock, patch
 
-import abodepy.helpers.constants as CONST
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -49,8 +49,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
 async def test_set_alarm_away(hass: HomeAssistant) -> None:
     """Test the alarm control panel can be set to away."""
-    with patch("abodepy.AbodeEventController.add_device_callback") as mock_callback:
-        with patch("abodepy.ALARM.AbodeAlarm.set_away") as mock_set_away:
+    with patch(
+        "jaraco.abode.event_controller.EventController.add_device_callback"
+    ) as mock_callback:
+        with patch("jaraco.abode.devices.alarm.Alarm.set_away") as mock_set_away:
             await setup_platform(hass, ALARM_DOMAIN)
 
             await hass.services.async_call(
@@ -63,7 +65,7 @@ async def test_set_alarm_away(hass: HomeAssistant) -> None:
             mock_set_away.assert_called_once()
 
         with patch(
-            "abodepy.ALARM.AbodeAlarm.mode",
+            "jaraco.abode.devices.alarm.Alarm.mode",
             new_callable=PropertyMock,
         ) as mock_mode:
             mock_mode.return_value = CONST.MODE_AWAY
@@ -78,8 +80,10 @@ async def test_set_alarm_away(hass: HomeAssistant) -> None:
 
 async def test_set_alarm_home(hass: HomeAssistant) -> None:
     """Test the alarm control panel can be set to home."""
-    with patch("abodepy.AbodeEventController.add_device_callback") as mock_callback:
-        with patch("abodepy.ALARM.AbodeAlarm.set_home") as mock_set_home:
+    with patch(
+        "jaraco.abode.event_controller.EventController.add_device_callback"
+    ) as mock_callback:
+        with patch("jaraco.abode.devices.alarm.Alarm.set_home") as mock_set_home:
             await setup_platform(hass, ALARM_DOMAIN)
 
             await hass.services.async_call(
@@ -92,7 +96,7 @@ async def test_set_alarm_home(hass: HomeAssistant) -> None:
             mock_set_home.assert_called_once()
 
         with patch(
-            "abodepy.ALARM.AbodeAlarm.mode", new_callable=PropertyMock
+            "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
         ) as mock_mode:
             mock_mode.return_value = CONST.MODE_HOME
 
@@ -106,8 +110,10 @@ async def test_set_alarm_home(hass: HomeAssistant) -> None:
 
 async def test_set_alarm_standby(hass: HomeAssistant) -> None:
     """Test the alarm control panel can be set to standby."""
-    with patch("abodepy.AbodeEventController.add_device_callback") as mock_callback:
-        with patch("abodepy.ALARM.AbodeAlarm.set_standby") as mock_set_standby:
+    with patch(
+        "jaraco.abode.event_controller.EventController.add_device_callback"
+    ) as mock_callback:
+        with patch("jaraco.abode.devices.alarm.Alarm.set_standby") as mock_set_standby:
             await setup_platform(hass, ALARM_DOMAIN)
             await hass.services.async_call(
                 ALARM_DOMAIN,
@@ -119,7 +125,7 @@ async def test_set_alarm_standby(hass: HomeAssistant) -> None:
             mock_set_standby.assert_called_once()
 
         with patch(
-            "abodepy.ALARM.AbodeAlarm.mode", new_callable=PropertyMock
+            "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
         ) as mock_mode:
             mock_mode.return_value = CONST.MODE_STANDBY
 
@@ -133,7 +139,9 @@ async def test_set_alarm_standby(hass: HomeAssistant) -> None:
 
 async def test_state_unknown(hass: HomeAssistant) -> None:
     """Test an unknown alarm control panel state."""
-    with patch("abodepy.ALARM.AbodeAlarm.mode", new_callable=PropertyMock) as mock_mode:
+    with patch(
+        "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
+    ) as mock_mode:
         await setup_platform(hass, ALARM_DOMAIN)
         await hass.async_block_till_done()
 

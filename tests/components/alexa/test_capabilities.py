@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 
 from .test_common import (
@@ -412,7 +412,7 @@ async def test_report_fan_speed_state(hass):
 
 
 async def test_report_humidifier_humidity_state(hass):
-    """Test PercentageController, PowerLevelController reports humidifier humidity correctly."""
+    """Test PercentageController, PowerLevelController humidifier humidity reporting."""
     hass.states.async_set(
         "humidifier.dry",
         "on",
@@ -639,7 +639,7 @@ async def test_report_climate_state(hass):
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.downstairs")
@@ -658,7 +658,7 @@ async def test_report_climate_state(hass):
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.downstairs")
@@ -677,7 +677,7 @@ async def test_report_climate_state(hass):
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.downstairs")
@@ -694,7 +694,7 @@ async def test_report_climate_state(hass):
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 31,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.downstairs")
@@ -710,7 +710,7 @@ async def test_report_climate_state(hass):
             "friendly_name": "Climate Heat",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.heat")
@@ -726,7 +726,7 @@ async def test_report_climate_state(hass):
             "friendly_name": "Climate Cool",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.cool")
@@ -753,7 +753,7 @@ async def test_report_climate_state(hass):
             "friendly_name": "Climate Unsupported",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     msg = await reported_properties(hass, "climate.unsupported", True)
@@ -767,14 +767,16 @@ async def test_temperature_sensor_sensor(hass):
         hass.states.async_set(
             "sensor.temp_living_room",
             bad_value,
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
 
         properties = await reported_properties(hass, "sensor.temp_living_room")
         properties.assert_not_has_property("Alexa.TemperatureSensor", "temperature")
 
     hass.states.async_set(
-        "sensor.temp_living_room", "34", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.temp_living_room",
+        "34",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     properties = await reported_properties(hass, "sensor.temp_living_room")
     properties.assert_equal(
@@ -932,7 +934,10 @@ async def test_report_image_processing(hass):
 
 @pytest.mark.parametrize("domain", ["button", "input_button"])
 async def test_report_button_pressed(hass, domain):
-    """Test button presses report human presence detection events to trigger routines."""
+    """Test button presses report human presence detection events.
+
+    For use to trigger routines.
+    """
     hass.states.async_set(
         f"{domain}.test_button", "now", {"friendly_name": "Test button"}
     )
@@ -990,7 +995,7 @@ async def test_get_property_blowup(hass, caplog):
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     with patch(

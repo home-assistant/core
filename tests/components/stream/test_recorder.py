@@ -199,8 +199,7 @@ async def test_record_stream_audio(
     expected_audio_streams,
     h264_mov_video,
 ):
-    """
-    Test treatment of different audio inputs.
+    """Test treatment of different audio inputs.
 
     Record stream output should have an audio channel when input has
     a valid codec and audio packets and no audio channel otherwise.

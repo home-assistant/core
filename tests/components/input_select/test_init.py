@@ -1,5 +1,5 @@
 """The tests for the Input select component."""
-# pylint: disable=protected-access
+
 from unittest.mock import patch
 
 import pytest

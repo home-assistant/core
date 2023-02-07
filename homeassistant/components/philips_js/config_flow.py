@@ -49,7 +49,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._pair_state: Any = None
 
     async def _async_create_current(self) -> FlowResult:
-
         system = self._current[CONF_SYSTEM]
         return self.async_create_entry(
             title=f"{system['name']} ({system['serialnumber']})",

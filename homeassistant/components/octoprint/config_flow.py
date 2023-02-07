@@ -1,6 +1,7 @@
 """Config flow for OctoPrint integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -50,8 +51,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    api_key_task = None
-    _reauth_data = None
+    api_key_task: asyncio.Task[None] | None = None
+    _reauth_data: dict[str, Any] | None = None
 
     def __init__(self) -> None:
         """Handle a config flow for OctoPrint."""

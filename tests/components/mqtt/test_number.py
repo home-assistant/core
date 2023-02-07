@@ -25,8 +25,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -88,7 +88,7 @@ async def test_run_number_setup(hass, mqtt_mock_entry_with_yaml_config):
                     "command_topic": topic,
                     "name": "Test Number",
                     "device_class": "temperature",
-                    "unit_of_measurement": TEMP_FAHRENHEIT,
+                    "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
                     "payload_reset": "reset!",
                 }
             }
@@ -190,7 +190,7 @@ async def test_restore_native_value(hass, mqtt_mock_entry_with_yaml_config):
                 number.DOMAIN: {
                     "command_topic": topic,
                     "device_class": "temperature",
-                    "unit_of_measurement": TEMP_FAHRENHEIT,
+                    "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
                     "name": "Test Number",
                 }
             }

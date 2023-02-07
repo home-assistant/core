@@ -12,9 +12,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.helpers import device_registry as dr
@@ -93,6 +92,7 @@ async def test_setting_sensor_value_via_mqtt_message(
                     "name": "test",
                     "state_topic": "test-topic",
                     "unit_of_measurement": "fav unit",
+                    "suggested_display_precision": 1,
                 }
             }
         },
@@ -100,10 +100,12 @@ async def test_setting_sensor_value_via_mqtt_message(
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
-    async_fire_mqtt_message(hass, "test-topic", "100")
+    async_fire_mqtt_message(hass, "test-topic", "100.22")
     state = hass.states.get("sensor.test")
 
-    assert state.state == "100"
+    # Rounding happens at the frontend
+    # the state should show the received value
+    assert state.state == "100.22"
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
@@ -165,6 +167,61 @@ async def test_setting_sensor_native_value_handling_via_mqtt_message(
     assert state.state == state_value
     assert state.attributes.get("device_class") == device_class
     assert log == ("Invalid state message" in caplog.text)
+
+
+async def test_setting_numeric_sensor_native_value_handling_via_mqtt_message(
+    hass: ha.HomeAssistant,
+    mqtt_mock_entry_with_yaml_config,
+) -> None:
+    """Test the setting of a numeric sensor value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.power }}",
+                    "device_class": "power",
+                    "unit_of_measurement": "W",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    # float value
+    async_fire_mqtt_message(hass, "test-topic", '{ "power": 45.3, "current": 5.24 }')
+    state = hass.states.get("sensor.test")
+    assert state.attributes.get("device_class") == "power"
+    assert state.state == "45.3"
+
+    # null value, native value should be None
+    async_fire_mqtt_message(hass, "test-topic", '{ "power": null, "current": 5.34 }')
+    state = hass.states.get("sensor.test")
+    assert state.state == "unknown"
+
+    # int value
+    async_fire_mqtt_message(hass, "test-topic", '{ "power": 20, "current": 5.34 }')
+    state = hass.states.get("sensor.test")
+    assert state.state == "20"
+
+    # int value
+    async_fire_mqtt_message(hass, "test-topic", '{ "power": "21", "current": 5.34 }')
+    state = hass.states.get("sensor.test")
+    assert state.state == "21"
+
+    # ignore empty value, native sensor value should not change
+    async_fire_mqtt_message(hass, "test-topic", '{ "power": "", "current": 5.34 }')
+    state = hass.states.get("sensor.test")
+    assert state.state == "21"
+
+    # omitting value, causing it to be ignored, native sensor value should not change (template warning will be logged though)
+    async_fire_mqtt_message(hass, "test-topic", '{ "current": 5.34 }')
+    state = hass.states.get("sensor.test")
+    assert state.state == "21"
 
 
 async def test_setting_sensor_value_expires_availability_topic(
@@ -293,7 +350,6 @@ async def test_setting_sensor_value_via_mqtt_json_message(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val }}",
                 }
             }
@@ -326,7 +382,6 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val | is_defined }}-{{ value_json.par }}",
                 }
             }
@@ -1127,14 +1182,14 @@ async def test_cleanup_triggers_and_restoring_state(
     config1["expire_after"] = 30
     config1["state_topic"] = "test-topic1"
     config1["device_class"] = "temperature"
-    config1["unit_of_measurement"] = TEMP_FAHRENHEIT
+    config1["unit_of_measurement"] = UnitOfTemperature.FAHRENHEIT.value
 
     config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config2["name"] = "test2"
     config2["expire_after"] = 5
     config2["state_topic"] = "test-topic2"
     config2["device_class"] = "temperature"
-    config2["unit_of_measurement"] = TEMP_CELSIUS
+    config2["unit_of_measurement"] = UnitOfTemperature.CELSIUS.value
 
     freezer.move_to("2022-02-02 12:01:00+01:00")
 

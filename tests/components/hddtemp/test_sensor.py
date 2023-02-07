@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG_MINIMAL = {"sensor": {"platform": "hddtemp"}}
@@ -31,25 +31,25 @@ REFERENCE = {
     "/dev/sda1": {
         "device": "/dev/sda1",
         "temperature": "29",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "model": "WDC WD30EZRX-12DC0B0",
     },
     "/dev/sdb1": {
         "device": "/dev/sdb1",
         "temperature": "32",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "model": "WDC WD15EADS-11P7B2",
     },
     "/dev/sdc1": {
         "device": "/dev/sdc1",
         "temperature": "29",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "model": "WDC WD20EARX-22MMMB0",
     },
     "/dev/sdd1": {
         "device": "/dev/sdd1",
         "temperature": "32",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "model": "WDC WD15EARS-00Z5B1",
     },
 }
@@ -161,7 +161,6 @@ async def test_hddtemp_multiple_disks(hass, telnetmock):
         "sensor.hd_temperature_dev_sdb1",
         "sensor.hd_temperature_dev_sdc1",
     ]:
-
         state = hass.states.get(sensor)
 
         reference = REFERENCE[state.attributes.get("device")]

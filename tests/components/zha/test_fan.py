@@ -271,7 +271,7 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     new=AsyncMock(return_value=zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinator):
@@ -383,7 +383,7 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
     new=AsyncMock(side_effect=ZigbeeException),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_fan_entity_failure_state(

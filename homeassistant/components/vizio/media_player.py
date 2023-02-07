@@ -71,7 +71,8 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     device_class = config_entry.data[CONF_DEVICE_CLASS]
 
-    # If config entry options not set up, set them up, otherwise assign values managed in options
+    # If config entry options not set up, set them up,
+    # otherwise assign values managed in options
     volume_step = config_entry.options.get(
         CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
     )

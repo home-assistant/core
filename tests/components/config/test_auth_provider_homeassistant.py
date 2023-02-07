@@ -61,7 +61,7 @@ async def test_create_auth_system_generated_user(hass, hass_ws_client):
     assert result["error"]["code"] == "system_generated"
 
 
-async def test_create_auth_user_already_credentials():
+async def test_create_auth_user_already_credentials() -> None:
     """Test we can't create auth for user with pre-existing credentials."""
     # assert False
 

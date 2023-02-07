@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Final
 
+import voluptuous as vol
+
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -122,7 +124,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -289,7 +291,7 @@ class NumberDeviceClass(StrEnum):
     TEMPERATURE = "temperature"
     """Temperature.
 
-    Unit of measurement: `°C`, `°F`
+    Unit of measurement: `°C`, `°F`, `K`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
@@ -342,6 +344,15 @@ class NumberDeviceClass(StrEnum):
     """
 
 
+class NumberMode(StrEnum):
+    """Modes for number entities."""
+
+    AUTO = "auto"
+    BOX = "box"
+    SLIDER = "slider"
+
+
+DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
@@ -384,10 +395,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     NumberDeviceClass.SPEED: set(UnitOfSpeed).union(set(UnitOfVolumetricFlux)),
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.TEMPERATURE: {
-        UnitOfTemperature.CELSIUS,
-        UnitOfTemperature.FAHRENHEIT,
-    },
+    NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },

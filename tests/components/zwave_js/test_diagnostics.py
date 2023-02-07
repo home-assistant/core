@@ -112,7 +112,7 @@ async def test_device_diagnostics_error(hass, integration):
         await async_get_device_diagnostics(hass, integration, device)
 
 
-async def test_empty_zwave_value_matcher():
+async def test_empty_zwave_value_matcher() -> None:
     """Test empty ZwaveValueMatcher is invalid."""
     with pytest.raises(ValueError):
         ZwaveValueMatcher()

@@ -54,10 +54,12 @@ async def test_user_show_locations(hass):
         RESPONSE_SUCCESS,
     ]
 
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses,) as mock_request, patch(
+    with patch(
+        TOTALCONNECT_REQUEST,
+        side_effect=responses,
+    ) as mock_request, patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -178,13 +180,15 @@ async def test_no_locations(hass):
         RESPONSE_DISARMED,
     ]
 
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses,) as mock_request, patch(
+    with patch(
+        TOTALCONNECT_REQUEST,
+        side_effect=responses,
+    ) as mock_request, patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.totalconnect.TotalConnectClient.get_number_locations",
         return_value=0,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

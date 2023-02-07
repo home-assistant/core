@@ -1,7 +1,7 @@
 """Support for switch platform for Hue resources (V2 only)."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -22,9 +22,9 @@ from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 
-ControllerType = Union[LightLevelController, MotionController]
+ControllerType: TypeAlias = LightLevelController | MotionController
 
-SensingService = Union[LightLevel, Motion]
+SensingService: TypeAlias = LightLevel | Motion
 
 
 async def async_setup_entry(

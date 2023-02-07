@@ -1,8 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "single_instance_allowed": "J\u00e1 configurado. Apenas uma \u00fanica configura\u00e7\u00e3o \u00e9 poss\u00edvel.",
-            "webhook_not_internet_accessible": "O seu Home Assistant necessita estar acess\u00edvel a partir da Internet para receber mensagens do tipo webhook."
-        }
-    }
-}

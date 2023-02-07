@@ -17,8 +17,8 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
-    PRECIPITATION_MILLIMETERS,
     STATE_UNKNOWN,
+    UnitOfPrecipitationDepth,
     UnitOfTemperature,
 )
 
@@ -287,7 +287,10 @@ async def test_sensor_attributes(hass, monkeypatch):
     assert rain_state
     assert rain_state.attributes["device_class"] == SensorDeviceClass.PRECIPITATION
     assert rain_state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
-    assert rain_state.attributes["unit_of_measurement"] == PRECIPITATION_MILLIMETERS
+    assert (
+        rain_state.attributes["unit_of_measurement"]
+        == UnitOfPrecipitationDepth.MILLIMETERS
+    )
 
     humidity_state = hass.states.get("sensor.humidity_device")
     assert humidity_state

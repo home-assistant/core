@@ -35,8 +35,7 @@ def process_error(update: Update, context: CallbackContext) -> None:
 
 
 class PollBot(BaseTelegramBotEntity):
-    """
-    Controls the Updater object that holds the bot and a dispatcher.
+    """Controls the Updater object that holds the bot and a dispatcher.
 
     The dispatcher is set up by the super class to pass telegram updates to `self.handle_update`
     """

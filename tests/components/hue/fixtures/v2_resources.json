@@ -225,6 +225,125 @@
     "type": "scene"
   },
   {
+    "id": "redacted-8abe5a3e-94c8-4058-908f-56241818509a",
+    "type": "smart_scene",
+    "metadata": {
+      "name": "Smart Test Scene",
+      "image": {
+        "rid": "eb014820-a902-4652-8ca7-6e29c03b87a1",
+        "rtype": "public_image"
+      }
+    },
+    "group": {
+      "rid": "6ddc9066-7e7d-4a03-a773-c73937968296",
+      "rtype": "room"
+    },
+    "week_timeslots": [
+      {
+        "timeslots": [
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 7,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 10,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 16,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 20,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 22,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 0,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          }
+        ],
+        "recurrence": [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday"
+        ]
+      }
+    ],
+    "active_timeslot": {
+      "timeslot_id": 1,
+      "weekday": "wednesday"
+    },
+    "state": "active"
+  },
+  {
     "id": "3ff06175-29e8-44a8-8fe7-af591b0025da",
     "id_v1": "/sensors/50",
     "metadata": {

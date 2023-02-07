@@ -172,7 +172,7 @@ async def test_controlling_validation_state_via_topic(
     assert state.state == "no"
 
 
-async def test_attribute_validation_max_greater_then_min(hass) -> None:
+async def test_attribute_validation_max_greater_then_min(hass: HomeAssistant) -> None:
     """Test the validation of min and max configuration attributes."""
     assert not await async_setup_component(
         hass,
@@ -190,7 +190,9 @@ async def test_attribute_validation_max_greater_then_min(hass) -> None:
     )
 
 
-async def test_attribute_validation_max_not_greater_then_max_state_length(hass) -> None:
+async def test_attribute_validation_max_not_greater_then_max_state_length(
+    hass: HomeAssistant,
+) -> None:
     """Test the max value of of max configuration attribute."""
     assert not await async_setup_component(
         hass,

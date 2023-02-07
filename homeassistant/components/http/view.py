@@ -20,7 +20,11 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
-from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS, json_bytes
+from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS, json_bytes, json_dumps
+from homeassistant.util.json import (
+    find_paths_unserializable_data,
+    format_unserializable_data,
+)
 
 from .const import KEY_AUTHENTICATED, KEY_HASS
 
@@ -54,7 +58,12 @@ class HomeAssistantView:
         try:
             msg = json_bytes(result)
         except JSON_ENCODE_EXCEPTIONS as err:
-            _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
+            _LOGGER.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(result, dump=json_dumps)
+                ),
+            )
             raise HTTPInternalServerError from err
         response = web.Response(
             body=msg,
@@ -157,9 +166,9 @@ def request_handler_factory(
         elif result is None:
             bresult = b""
         else:
-            assert (
-                False
-            ), f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+            raise TypeError(
+                f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+            )
 
         return web.Response(body=bresult, status=status_code)
 

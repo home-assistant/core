@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-from aiohttp import ClientSession
-
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -18,10 +16,14 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_update_entities_initialized(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
 ):
     """Test update entities."""
 
@@ -37,7 +39,10 @@ async def test_update_entities_initialized(
 
 
 async def test_update_available(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
 ):
     """Test update entities."""
 
@@ -61,7 +66,10 @@ async def test_update_available(
 
 
 async def test_no_update_available(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
 ):
     """Test update entities."""
 
@@ -80,7 +88,10 @@ async def test_no_update_available(
 
 
 async def test_available_update_can_be_installed(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
 ):
     """Test update entities."""
 

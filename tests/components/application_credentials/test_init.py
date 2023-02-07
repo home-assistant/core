@@ -7,7 +7,6 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -31,6 +30,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_platform
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
@@ -171,7 +171,9 @@ class OAuthFixture:
 
 @pytest.fixture
 async def oauth_fixture(
-    hass: HomeAssistant, hass_client_no_auth: Any, aioclient_mock: Any
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: Any,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
@@ -211,9 +213,7 @@ ClientFixture = Callable[[], Client]
 
 
 @pytest.fixture
-async def ws_client(
-    hass_ws_client: Callable[[...], ClientWebSocketResponse]
-) -> ClientFixture:
+async def ws_client(hass_ws_client: WebSocketGenerator) -> ClientFixture:
     """Fixture for creating the test websocket client."""
 
     async def create_client() -> Client:

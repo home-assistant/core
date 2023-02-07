@@ -27,8 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _item_preset_payload(preset: Preset, player_mode: str) -> BrowseMedia:
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -47,8 +46,7 @@ def _item_preset_payload(preset: Preset, player_mode: str) -> BrowseMedia:
 def _item_payload(
     key, item: dict[str, str], player_mode: str, parent_keys: list[str]
 ) -> BrowseMedia:
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -76,8 +74,7 @@ def _item_payload(
 
 
 async def browse_top_level(current_mode, afsapi: AFSAPI):
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """

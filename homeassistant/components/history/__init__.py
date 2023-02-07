@@ -1,45 +1,54 @@
 """Provide pre-made queries on top of the recorder component."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import time
-from typing import Any, cast
+from typing import cast
 
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components import frontend, websocket_api
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.recorder import (
+    DOMAIN as RECORDER_DOMAIN,
+    get_instance,
+    history,
+)
 from homeassistant.components.recorder.filters import (
     Filters,
+    extract_include_exclude_filter_conf,
+    merge_include_exclude_filters,
     sqlalchemy_filter_from_include_exclude_conf,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.components.websocket_api import messages
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
-from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from . import websocket_api
+from .const import DOMAIN
+from .helpers import entities_may_have_state_changes_after
+from .models import HistoryConfig
 
-DOMAIN = "history"
-HISTORY_FILTERS = "history_filters"
-HISTORY_USE_INCLUDE_ORDER = "history_use_include_order"
+_LOGGER = logging.getLogger(__name__)
 
 CONF_ORDER = "use_include_order"
 
-
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-            {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_ORDER),
+            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+                {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -49,132 +58,25 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
+    recorder_conf = config.get(RECORDER_DOMAIN, {})
+    history_conf = config.get(DOMAIN, {})
+    recorder_filter = extract_include_exclude_filter_conf(recorder_conf)
+    logbook_filter = extract_include_exclude_filter_conf(history_conf)
+    merged_filter = merge_include_exclude_filters(recorder_filter, logbook_filter)
 
-    hass.data[HISTORY_FILTERS] = filters = sqlalchemy_filter_from_include_exclude_conf(
-        conf
-    )
-    hass.data[HISTORY_USE_INCLUDE_ORDER] = use_include_order = conf.get(CONF_ORDER)
+    possible_merged_entities_filter = convert_include_exclude_filter(merged_filter)
 
-    hass.http.register_view(HistoryPeriodView(filters, use_include_order))
+    sqlalchemy_filter = None
+    entity_filter = None
+    if not possible_merged_entities_filter.empty_filter:
+        sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(conf)
+        entity_filter = possible_merged_entities_filter
+
+    hass.data[DOMAIN] = HistoryConfig(sqlalchemy_filter, entity_filter)
+    hass.http.register_view(HistoryPeriodView(sqlalchemy_filter))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
-    websocket_api.async_register_command(hass, ws_get_history_during_period)
-
+    websocket_api.async_setup(hass)
     return True
-
-
-def _ws_get_significant_states(
-    hass: HomeAssistant,
-    msg_id: int,
-    start_time: dt,
-    end_time: dt | None,
-    entity_ids: list[str] | None,
-    filters: Filters | None,
-    use_include_order: bool | None,
-    include_start_time_state: bool,
-    significant_changes_only: bool,
-    minimal_response: bool,
-    no_attributes: bool,
-) -> str:
-    """Fetch history significant_states and convert them to json in the executor."""
-    states = history.get_significant_states(
-        hass,
-        start_time,
-        end_time,
-        entity_ids,
-        filters,
-        include_start_time_state,
-        significant_changes_only,
-        minimal_response,
-        no_attributes,
-        True,
-    )
-
-    if not use_include_order or not filters:
-        return JSON_DUMP(messages.result_message(msg_id, states))
-
-    return JSON_DUMP(
-        messages.result_message(
-            msg_id,
-            {
-                order_entity: states.pop(order_entity)
-                for order_entity in filters.included_entities
-                if order_entity in states
-            }
-            | states,
-        )
-    )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "history/history_during_period",
-        vol.Required("start_time"): str,
-        vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
-        vol.Optional("include_start_time_state", default=True): bool,
-        vol.Optional("significant_changes_only", default=True): bool,
-        vol.Optional("minimal_response", default=False): bool,
-        vol.Optional("no_attributes", default=False): bool,
-    }
-)
-@websocket_api.async_response
-async def ws_get_history_during_period(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle history during period websocket command."""
-    start_time_str = msg["start_time"]
-    end_time_str = msg.get("end_time")
-
-    if start_time := dt_util.parse_datetime(start_time_str):
-        start_time = dt_util.as_utc(start_time)
-    else:
-        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
-        return
-
-    if end_time_str:
-        if end_time := dt_util.parse_datetime(end_time_str):
-            end_time = dt_util.as_utc(end_time)
-        else:
-            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
-            return
-    else:
-        end_time = None
-
-    if start_time > dt_util.utcnow():
-        connection.send_result(msg["id"], {})
-        return
-
-    entity_ids = msg.get("entity_ids")
-    include_start_time_state = msg["include_start_time_state"]
-
-    if (
-        not include_start_time_state
-        and entity_ids
-        and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
-    ):
-        connection.send_result(msg["id"], {})
-        return
-
-    significant_changes_only = msg["significant_changes_only"]
-    no_attributes = msg["no_attributes"]
-    minimal_response = msg["minimal_response"]
-
-    connection.send_message(
-        await get_instance(hass).async_add_executor_job(
-            _ws_get_significant_states,
-            hass,
-            msg["id"],
-            start_time,
-            end_time,
-            entity_ids,
-            hass.data[HISTORY_FILTERS],
-            hass.data[HISTORY_USE_INCLUDE_ORDER],
-            include_start_time_state,
-            significant_changes_only,
-            minimal_response,
-            no_attributes,
-        )
-    )
 
 
 class HistoryPeriodView(HomeAssistantView):
@@ -184,10 +86,9 @@ class HistoryPeriodView(HomeAssistantView):
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
 
-    def __init__(self, filters: Filters | None, use_include_order: bool) -> None:
+    def __init__(self, filters: Filters | None) -> None:
         """Initialize the history period view."""
         self.filters = filters
-        self.use_include_order = use_include_order
 
     async def get(
         self, request: web.Request, datetime: str | None = None
@@ -232,7 +133,9 @@ class HistoryPeriodView(HomeAssistantView):
         if (
             not include_start_time_state
             and entity_ids
-            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+            and not entities_may_have_state_changes_after(
+                hass, entity_ids, start_time, no_attributes
+            )
         ):
             return self.json([])
 
@@ -285,28 +188,4 @@ class HistoryPeriodView(HomeAssistantView):
                 "Extracted %d states in %fs", sum(map(len, states.values())), elapsed
             )
 
-        # Optionally reorder the result to respect the ordering given
-        # by any entities explicitly included in the configuration.
-        if not self.filters or not self.use_include_order:
-            return self.json(list(states.values()))
-
-        sorted_result = [
-            states.pop(order_entity)
-            for order_entity in self.filters.included_entities
-            if order_entity in states
-        ]
-        sorted_result.extend(list(states.values()))
-        return self.json(sorted_result)
-
-
-def _entities_may_have_state_changes_after(
-    hass: HomeAssistant, entity_ids: Iterable, start_time: dt
-) -> bool:
-    """Check the state machine to see if entities have changed since start time."""
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-
-        if state is None or state.last_changed > start_time:
-            return True
-
-    return False
+        return self.json(list(states.values()))

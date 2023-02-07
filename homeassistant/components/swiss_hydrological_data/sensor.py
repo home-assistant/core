@@ -125,7 +125,6 @@ class SwissHydrologicalDataSensor(SensorEntity):
         attrs = {}
 
         if not self._data:
-
             return attrs
 
         attrs[ATTR_WATER_BODY_TYPE] = self._data["water-body-type"]

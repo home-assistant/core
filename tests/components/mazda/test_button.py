@@ -5,13 +5,14 @@ import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_button_setup_non_electric_vehicle(hass) -> None:
+async def test_button_setup_non_electric_vehicle(hass: HomeAssistant) -> None:
     """Test creation of button entities."""
     await init_integration(hass)
 
@@ -58,7 +59,7 @@ async def test_button_setup_non_electric_vehicle(hass) -> None:
     assert state is None
 
 
-async def test_button_setup_electric_vehicle(hass) -> None:
+async def test_button_setup_electric_vehicle(hass: HomeAssistant) -> None:
     """Test creation of button entities for an electric vehicle."""
     await init_integration(hass, electric_vehicle=True)
 
@@ -133,7 +134,7 @@ async def test_button_press(hass, entity_id_suffix, api_method_name) -> None:
     api_method.assert_called_once_with(12345)
 
 
-async def test_button_press_error(hass) -> None:
+async def test_button_press_error(hass: HomeAssistant) -> None:
     """Test the Mazda API raising an error when a button entity is pressed."""
     client_mock = await init_integration(hass)
 

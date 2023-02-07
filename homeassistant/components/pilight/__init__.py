@@ -7,10 +7,9 @@ import functools
 import logging
 import socket
 import threading
-from typing import Any
+from typing import Any, ParamSpec
 
 from pilight import pilight
-from typing_extensions import ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -142,7 +141,7 @@ class CallRateDelayThrottle:
     it should not block the mainloop.
     """
 
-    def __init__(self, hass, delay_seconds: float) -> None:
+    def __init__(self, hass: HomeAssistant, delay_seconds: float) -> None:
         """Initialize the delay handler."""
         self._delay = timedelta(seconds=max(0.0, delay_seconds))
         self._queue: list[Callable[[Any], None]] = []

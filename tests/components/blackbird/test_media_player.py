@@ -11,11 +11,7 @@ from homeassistant.components.blackbird.media_player import (
     PLATFORM_SCHEMA,
     setup_platform,
 )
-from homeassistant.components.media_player import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-)
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON
 
 
@@ -57,7 +53,7 @@ class MockBlackbird:
         self.zones[3].av = source_idx
 
 
-def test_valid_serial_schema():
+def test_valid_serial_schema() -> None:
     """Test valid schema."""
     valid_schema = {
         "platform": "blackbird",
@@ -86,7 +82,7 @@ def test_valid_serial_schema():
     PLATFORM_SCHEMA(valid_schema)
 
 
-def test_valid_socket_schema():
+def test_valid_socket_schema() -> None:
     """Test valid schema."""
     valid_schema = {
         "platform": "blackbird",
@@ -108,7 +104,7 @@ def test_valid_socket_schema():
     PLATFORM_SCHEMA(valid_schema)
 
 
-def test_invalid_schemas():
+def test_invalid_schemas() -> None:
     """Test invalid schemas."""
     schemas = (
         {},  # Empty
@@ -290,7 +286,9 @@ async def test_state(hass, media_player_entity, mock_blackbird):
 async def test_supported_features(media_player_entity):
     """Test supported features property."""
     assert (
-        SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
         == media_player_entity.supported_features
     )
 

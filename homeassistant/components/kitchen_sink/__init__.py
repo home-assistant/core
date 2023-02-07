@@ -15,9 +15,9 @@ from homeassistant.components.recorder.statistics import (
     async_import_statistics,
     get_last_statistics,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -25,16 +25,25 @@ import homeassistant.util.dt as dt_util
 DOMAIN = "kitchen_sink"
 
 
-COMPONENTS_WITH_DEMO_PLATFORM = [
-    Platform.SENSOR,
-]
+COMPONENTS_WITH_DEMO_PLATFORM = [Platform.SENSOR, Platform.LOCK]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""
-    # Set up demo platforms
-    for platform in COMPONENTS_WITH_DEMO_PLATFORM:
-        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set the config entry up."""
+    # Set up demo platforms with config entry
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, COMPONENTS_WITH_DEMO_PLATFORM
+    )
 
     # Create issues
     _create_issues(hass)

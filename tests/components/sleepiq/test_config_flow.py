@@ -84,7 +84,6 @@ async def test_success(hass: HomeAssistant) -> None:
         "homeassistant.components.sleepiq.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], SLEEPIQ_CONFIG
         )

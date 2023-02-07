@@ -10,7 +10,8 @@
         "reveal": "always",
         "panel": "new"
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "dependsOn": ["Compile English translations"]
     },
     {
       "label": "Pytest",
@@ -28,9 +29,37 @@
       "problemMatcher": []
     },
     {
+      "label": "Pytest (changed tests only)",
+      "type": "shell",
+      "command": "pytest --timeout=10 --picked",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Flake8",
       "type": "shell",
       "command": "pre-commit run flake8 --all-files",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ruff",
+      "type": "shell",
+      "command": "pre-commit run ruff --all-files",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -114,19 +143,14 @@
       "problemMatcher": []
     },
     {
-      "label": "Compile translations",
+      "label": "Compile English translations",
       "detail": "In order to test changes to translation files, the translation strings must be compiled into Home Assistant's translation directories.",
       "type": "shell",
-      "command": "python3 -m script.translations develop --integration ${input:integrationName}",
+      "command": "python3 -m script.translations develop --all",
       "group": {
         "kind": "build",
         "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "problemMatcher": []
+      }
     }
   ],
   "inputs": [

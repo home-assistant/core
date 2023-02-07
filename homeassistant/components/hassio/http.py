@@ -23,6 +23,7 @@ from multidict import istr
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.onboarding import async_is_onboarded
+from homeassistant.core import HomeAssistant
 
 from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID
 
@@ -165,7 +166,7 @@ def _get_timeout(path: str) -> ClientTimeout:
     return ClientTimeout(connect=10, total=300)
 
 
-def _need_auth(hass, path: str) -> bool:
+def _need_auth(hass: HomeAssistant, path: str) -> bool:
     """Return if a path need authentication."""
     if not async_is_onboarded(hass) and NO_AUTH_ONBOARDING.match(path):
         return False

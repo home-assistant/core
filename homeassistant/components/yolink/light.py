@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from yolink.client_request import ClientRequest
+from yolink.const import ATTR_DEVICE_DIMMER
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, ATTR_DEVICE_DIMMER, DOMAIN
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -19,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Dimmer from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     entities = [
         YoLinkDimmerEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
@@ -61,7 +64,7 @@ class YoLinkDimmerEntity(YoLinkEntity, LightEntity):
         if brightness is not None:
             self._attr_brightness = brightness
             params["brightness"] = round(brightness / 255, 2) * 100
-        await self.call_device_api("setState", params)
+        await self.call_device(ClientRequest("setState", params))
         self._attr_is_on = state == "open"
         self.async_write_ha_state()
 

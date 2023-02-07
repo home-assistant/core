@@ -32,10 +32,10 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
 )
 from homeassistant.core import CoreState, State
 from homeassistant.helpers import entity_registry
@@ -105,7 +105,7 @@ async def test_state(hass, yaml_config, config_entry_config):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
 
@@ -113,26 +113,26 @@ async def test_state(hass, yaml_config, config_entry_config):
     assert state is not None
     assert state.state == "0"
     assert state.attributes.get("status") == COLLECTING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
     assert state.attributes.get("status") == PAUSED
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "0"
     assert state.attributes.get("status") == PAUSED
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
             entity_id,
             3,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -166,7 +166,7 @@ async def test_state(hass, yaml_config, config_entry_config):
         hass.states.async_set(
             entity_id,
             6,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -210,7 +210,7 @@ async def test_state(hass, yaml_config, config_entry_config):
 
     # test invalid state
     hass.states.async_set(
-        entity_id, "*", {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id, "*", {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill_midpeak")
@@ -219,7 +219,9 @@ async def test_state(hass, yaml_config, config_entry_config):
 
     # test unavailable source
     hass.states.async_set(
-        entity_id, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id,
+        STATE_UNAVAILABLE,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
     )
     await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill_midpeak")
@@ -306,7 +308,7 @@ async def test_init(hass, yaml_config, config_entry_config):
     assert state.state == STATE_UNKNOWN
 
     hass.states.async_set(
-        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
 
     await hass.async_block_till_done()
@@ -314,12 +316,12 @@ async def test_init(hass, yaml_config, config_entry_config):
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
 
 async def test_unique_id(hass):
@@ -467,7 +469,7 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        entity_id_energy, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id_energy, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     hass.states.async_set(
         entity_id_gas, 2, {ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit"}
@@ -479,7 +481,7 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
     assert state.state == "0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is SensorDeviceClass.ENERGY.value
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.gas_meter")
     assert state is not None
@@ -534,7 +536,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     attributes={
                         ATTR_STATUS: PAUSED,
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
                     },
                 ),
                 {
@@ -555,7 +557,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     attributes={
                         ATTR_STATUS: PAUSED,
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
                     },
                 ),
                 {
@@ -573,7 +575,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     attributes={
                         ATTR_STATUS: COLLECTING,
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
                     },
                 ),
                 {
@@ -591,7 +593,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
                     attributes={
                         ATTR_STATUS: COLLECTING,
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
                     },
                 ),
                 {},
@@ -618,7 +620,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
     assert state.state == "3"
     assert state.attributes.get("status") == PAUSED
     assert state.attributes.get("last_reset") == last_reset
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state.state == "5"
@@ -627,7 +629,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
     assert state.state == "6"
     assert state.attributes.get("status") == COLLECTING
     assert state.attributes.get("last_reset") == last_reset
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_superpeak")
     assert state.state == STATE_UNKNOWN
@@ -694,7 +696,7 @@ async def test_net_consumption(hass, yaml_config, config_entry_config):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.states.async_set(
-        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
 
@@ -703,7 +705,7 @@ async def test_net_consumption(hass, yaml_config, config_entry_config):
         hass.states.async_set(
             entity_id,
             1,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -762,7 +764,7 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplo
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.states.async_set(
-        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
 
@@ -771,7 +773,7 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplo
         hass.states.async_set(
             entity_id,
             1,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -781,7 +783,7 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplo
         hass.states.async_set(
             entity_id,
             None,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -848,7 +850,7 @@ async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
 
         async_fire_time_changed(hass, now)
         hass.states.async_set(
-            entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+            entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
         )
         await hass.async_block_till_done()
 
@@ -861,7 +863,7 @@ async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
         hass.states.async_set(
             entity_id,
             None,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -873,7 +875,7 @@ async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
         hass.states.async_set(
             entity_id,
             3,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -888,7 +890,7 @@ async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
         hass.states.async_set(
             entity_id,
             6,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -925,7 +927,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
 
         async_fire_time_changed(hass, now)
         hass.states.async_set(
-            entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+            entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
         )
         await hass.async_block_till_done()
 
@@ -935,7 +937,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         hass.states.async_set(
             entity_id,
             3,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -947,7 +949,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         hass.states.async_set(
             entity_id,
             6,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -978,7 +980,7 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         hass.states.async_set(
             entity_id,
             10,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()

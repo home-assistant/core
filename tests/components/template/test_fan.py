@@ -139,8 +139,12 @@ async def test_wrong_template_config(hass, start_ha):
             {{ 'off' }}
         {% endif %}
     """,
-                        "percentage_template": "{{ states('input_number.percentage') }}",
-                        "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+                        "percentage_template": (
+                            "{{ states('input_number.percentage') }}"
+                        ),
+                        "preset_mode_template": (
+                            "{{ states('input_select.preset_mode') }}"
+                        ),
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
                         "speed_count": "3",
@@ -216,7 +220,9 @@ async def test_templates_with_entities(hass, start_ha):
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
                             "preset_modes": ["auto", "smart"],
-                            "preset_mode_template": "{{ states('sensor.preset_mode') }}",
+                            "preset_mode_template": (
+                                "{{ states('sensor.preset_mode') }}"
+                            ),
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         },
@@ -251,7 +257,9 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
                 "platform": "template",
                 "fans": {
                     "test_fan": {
-                        "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                        "availability_template": (
+                            "{{ is_state('availability_boolean.state', 'on') }}"
+                        ),
                         "value_template": "{{ 'on' }}",
                         "oscillating_template": "{{ 1 == 1 }}",
                         "direction_template": "{{ 'forward' }}",
@@ -362,7 +370,9 @@ async def test_template_with_unavailable_entities(hass, states, start_ha):
                     "test_fan": {
                         "value_template": "{{ 'on' }}",
                         "availability_template": "{{ x - 12 }}",
-                        "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+                        "preset_mode_template": (
+                            "{{ states('input_select.preset_mode') }}"
+                        ),
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
                         "turn_on": {"service": "script.fan_on"},
@@ -937,7 +947,10 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
                         "friendly_name": "Mechanische ventilatie",
                         "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
                         "value_template": "{{ states('light.mv_snelheid') }}",
-                        "percentage_template": "{{ (state_attr('light.mv_snelheid','brightness') | int / 255 * 100) | int }}",
+                        "percentage_template": (
+                            "{{ (state_attr('light.mv_snelheid','brightness') | int /"
+                            " 255 * 100) | int }}"
+                        ),
                         "turn_on": [
                             {
                                 "service": "switch.turn_off",

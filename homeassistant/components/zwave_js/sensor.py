@@ -565,8 +565,8 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         if (
             self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
             or (
-                not str(self.info.primary_value.value)
-                in self.info.primary_value.metadata.states
+                str(self.info.primary_value.value)
+                not in self.info.primary_value.metadata.states
             )
         ):
             return str(self.info.primary_value.value)

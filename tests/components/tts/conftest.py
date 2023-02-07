@@ -55,12 +55,12 @@ def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request
         return
 
     # Print contents of dir if failed
-    print("Content of dir for", request.node.nodeid)
+    print("Content of dir for", request.node.nodeid)  # noqa: T201
     for fil in tmp_path.iterdir():
-        print(fil.relative_to(tmp_path))
+        print(fil.relative_to(tmp_path))  # noqa: T201
 
     # To show the log.
-    assert False
+    pytest.fail("Test failed, see log for details")
 
 
 @pytest.fixture(autouse=True)

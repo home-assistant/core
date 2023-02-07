@@ -46,7 +46,6 @@ async def test_ensure_device_tracker_platform_validation(hass):
         autospec=True,
         side_effect=mock_setup_scanner,
     ) as mock_sp:
-
         dev_id = "paulus"
         topic = "location/paulus"
         assert await async_setup_component(

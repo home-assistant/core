@@ -44,6 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.capabilities.events:
         platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
 
+    if device.capabilities.imaging:
+        platforms += [Platform.SWITCH]
+
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     entry.async_on_unload(
@@ -60,8 +63,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     platforms = ["camera"]
 
     if device.capabilities.events and device.events.started:
-        platforms += ["binary_sensor", "sensor"]
+        platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
         await device.events.async_stop()
+    if device.capabilities.imaging:
+        platforms += [Platform.SWITCH]
 
     return await hass.config_entries.async_unload_platforms(entry, platforms)
 

@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings cover platform.
+"""Test for the SmartThings cover platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -124,7 +123,7 @@ async def test_set_cover_position(hass, device_factory):
     assert state.attributes[ATTR_BATTERY_LEVEL] == 95
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
     # Ensure API called
-    # pylint: disable=protected-access
+
     assert device._api.post_device_command.call_count == 1  # type: ignore
 
 
@@ -147,7 +146,7 @@ async def test_set_cover_position_unsupported(hass, device_factory):
     assert ATTR_CURRENT_POSITION not in state.attributes
 
     # Ensure API was not called
-    # pylint: disable=protected-access
+
     assert device._api.post_device_command.call_count == 0  # type: ignore
 
 

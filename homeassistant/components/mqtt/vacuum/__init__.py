@@ -15,13 +15,11 @@ from ..mixins import async_setup_entry_helper, warn_for_legacy_schema
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import (
     DISCOVERY_SCHEMA_LEGACY,
-    PLATFORM_SCHEMA_LEGACY,
     PLATFORM_SCHEMA_LEGACY_MODERN,
     async_setup_entity_legacy,
 )
 from .schema_state import (
     DISCOVERY_SCHEMA_STATE,
-    PLATFORM_SCHEMA_STATE,
     PLATFORM_SCHEMA_STATE_MODERN,
     async_setup_entity_state,
 )
@@ -30,15 +28,6 @@ from .schema_state import (
 def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema."""
     schemas = {LEGACY: DISCOVERY_SCHEMA_LEGACY, STATE: DISCOVERY_SCHEMA_STATE}
-    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
-    return config
-
-
-# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
-# HA Core 2022.6
-def validate_mqtt_vacuum(config_value: ConfigType) -> ConfigType:
-    """Validate MQTT vacuum schema (deprecated)."""
-    schemas = {LEGACY: PLATFORM_SCHEMA_LEGACY, STATE: PLATFORM_SCHEMA_STATE}
     config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
     return config
 

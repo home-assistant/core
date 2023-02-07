@@ -11,7 +11,7 @@ from .common import ComponentFactory
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.fixture()
+@pytest.fixture
 def component_factory(
     hass: HomeAssistant,
     hass_client_no_auth,

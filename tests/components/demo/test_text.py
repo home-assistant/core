@@ -10,6 +10,7 @@ from homeassistant.components.text import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, MAX_LENGTH_STATE_STATE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_TEXT = "text.text"
@@ -22,7 +23,7 @@ async def setup_demo_text(hass):
     await hass.async_block_till_done()
 
 
-def test_setup_params(hass):
+def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_TEXT)
     assert state.state == "Hello world"

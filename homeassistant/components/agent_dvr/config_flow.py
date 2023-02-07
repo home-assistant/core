@@ -1,4 +1,6 @@
 """Config flow to configure Agent devices."""
+from contextlib import suppress
+
 from agent import AgentConnectionError, AgentError
 from agent.a import Agent
 import voluptuous as vol
@@ -31,10 +33,8 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             server_origin = generate_url(host, port)
             agent_client = Agent(server_origin, async_get_clientsession(self.hass))
 
-            try:
+            with suppress(AgentConnectionError, AgentError):
                 await agent_client.update()
-            except (AgentConnectionError, AgentError):
-                pass
 
             await agent_client.close()
 

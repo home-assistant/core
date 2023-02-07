@@ -24,13 +24,13 @@ from homeassistant.components.homematicip_cloud.sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_MILLIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    SPEED_KILOMETERS_PER_HOUR,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPower,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.setup import async_setup_component
 
@@ -133,7 +133,7 @@ async def test_hmip_temperature_sensor1(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "21.0"
-    assert ha_state.attributes["unit_of_measurement"] == TEMP_CELSIUS
+    assert ha_state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
@@ -158,7 +158,7 @@ async def test_hmip_temperature_sensor2(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "20.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     await async_manipulate_test_data(hass, hmip_device, "valveActualTemperature", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
@@ -183,7 +183,7 @@ async def test_hmip_temperature_sensor3(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "23.3"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
@@ -228,7 +228,7 @@ async def test_hmip_thermostat_evo_temperature(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "18.7"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     await async_manipulate_test_data(hass, hmip_device, "valveActualTemperature", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
@@ -252,7 +252,7 @@ async def test_hmip_power_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "0.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
     await async_manipulate_test_data(hass, hmip_device, "currentPowerConsumption", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
@@ -332,7 +332,9 @@ async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "2.6"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     await async_manipulate_test_data(hass, hmip_device, "windSpeed", 9.4)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "9.4"
@@ -352,7 +354,7 @@ async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
         205: "SSW",
         227.5: "SW",
         250: "WSW",
-        272.5: POWER_WATT,
+        272.5: UnitOfPower.WATT,
         295: "WNW",
         317.5: "NW",
         340: "NNW",
@@ -379,7 +381,7 @@ async def test_hmip_today_rain_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "3.9"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_MILLIMETERS
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
     await async_manipulate_test_data(hass, hmip_device, "todayRainCounter", 14.2)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "14.2"
@@ -404,7 +406,7 @@ async def test_hmip_temperature_external_sensor_channel_1(
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "25.4"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     await async_manipulate_test_data(hass, hmip_device, "temperatureExternalOne", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
@@ -429,7 +431,7 @@ async def test_hmip_temperature_external_sensor_channel_2(
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "22.4"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     await async_manipulate_test_data(hass, hmip_device, "temperatureExternalTwo", 23.4)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.4"
@@ -452,7 +454,7 @@ async def test_hmip_temperature_external_sensor_delta(hass, default_mock_hap_fac
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "0.4"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     await async_manipulate_test_data(
         hass, hmip_device, "temperatureExternalDelta", -0.5
     )

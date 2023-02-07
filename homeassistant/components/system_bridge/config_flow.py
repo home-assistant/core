@@ -116,7 +116,7 @@ class ConfigFlow(
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._name: str | None = None
         self._input: dict[str, Any] = {}

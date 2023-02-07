@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
@@ -195,7 +196,7 @@ async def setup_mock_component(hass):
     await hass.async_block_till_done()
 
 
-def test_games_reformat_to_dict(hass):
+def test_games_reformat_to_dict(hass: HomeAssistant) -> None:
     """Test old data format is converted to new format."""
     with patch(
         "homeassistant.components.ps4.load_json",
@@ -218,7 +219,7 @@ def test_games_reformat_to_dict(hass):
         assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
-def test_load_games(hass):
+def test_load_games(hass: HomeAssistant) -> None:
     """Test that games are loaded correctly."""
     with patch(
         "homeassistant.components.ps4.load_json", return_value=MOCK_GAMES
@@ -237,7 +238,7 @@ def test_load_games(hass):
     assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
-def test_loading_games_returns_dict(hass):
+def test_loading_games_returns_dict(hass: HomeAssistant) -> None:
     """Test that loading games always returns a dict."""
     with patch(
         "homeassistant.components.ps4.load_json", side_effect=HomeAssistantError

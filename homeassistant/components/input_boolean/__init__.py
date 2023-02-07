@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -167,14 +168,14 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> InputBoolean:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_bool = cls(config)
         input_bool.editable = True
         return input_bool
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> InputBoolean:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_bool = cls(config)
         input_bool.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

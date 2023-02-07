@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings light platform.
+"""Test for the SmartThings light platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -195,8 +194,7 @@ async def test_turn_on_with_brightness(hass, light_devices):
 
 
 async def test_turn_on_with_minimal_brightness(hass, light_devices):
-    """
-    Test lights set to lowest brightness when converted scale would be zero.
+    """Test lights set to lowest brightness when converted scale would be zero.
 
     SmartThings light brightness is a percentage (0-100), but Home Assistant uses a
     0-255 scale.  This tests if a really low value (1-2) is passed, we don't

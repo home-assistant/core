@@ -23,7 +23,7 @@ def mock_session():
         yield mocker
 
 
-def test_client_id_scheme():
+def test_client_id_scheme() -> None:
     """Test we enforce valid scheme."""
     assert indieauth._parse_client_id("http://ex.com/")
     assert indieauth._parse_client_id("https://ex.com/")
@@ -32,7 +32,7 @@ def test_client_id_scheme():
         indieauth._parse_client_id("ftp://ex.com")
 
 
-def test_client_id_path():
+def test_client_id_path() -> None:
     """Test we enforce valid path."""
     assert indieauth._parse_client_id("http://ex.com").path == "/"
     assert indieauth._parse_client_id("http://ex.com/hello").path == "/hello"
@@ -54,13 +54,13 @@ def test_client_id_path():
         indieauth._parse_client_id("http://ex.com/hello/../yo")
 
 
-def test_client_id_fragment():
+def test_client_id_fragment() -> None:
     """Test we enforce valid fragment."""
     with pytest.raises(ValueError):
         indieauth._parse_client_id("http://ex.com/#yoo")
 
 
-def test_client_id_user_pass():
+def test_client_id_user_pass() -> None:
     """Test we enforce valid username/password."""
     with pytest.raises(ValueError):
         indieauth._parse_client_id("http://user@ex.com/")
@@ -69,7 +69,7 @@ def test_client_id_user_pass():
         indieauth._parse_client_id("http://user:pass@ex.com/")
 
 
-def test_client_id_hostname():
+def test_client_id_hostname() -> None:
     """Test we enforce valid hostname."""
     assert indieauth._parse_client_id("http://www.home-assistant.io/")
     assert indieauth._parse_client_id("http://[::1]")
@@ -91,7 +91,7 @@ def test_client_id_hostname():
         assert indieauth._parse_client_id("http://192.167.0.0/")
 
 
-def test_parse_url_lowercase_host():
+def test_parse_url_lowercase_host() -> None:
     """Test we update empty paths."""
     assert indieauth._parse_url("http://ex.com/hello").path == "/hello"
     assert indieauth._parse_url("http://EX.COM/hello").hostname == "ex.com"
@@ -101,12 +101,12 @@ def test_parse_url_lowercase_host():
     assert parts.path == "/HELLO"
 
 
-def test_parse_url_path():
+def test_parse_url_path() -> None:
     """Test we update empty paths."""
     assert indieauth._parse_url("http://ex.com").path == "/"
 
 
-async def test_verify_redirect_uri():
+async def test_verify_redirect_uri() -> None:
     """Test that we verify redirect uri correctly."""
     assert await indieauth.verify_redirect_uri(
         None, "http://ex.com", "http://ex.com/callback"
@@ -190,9 +190,19 @@ async def test_verify_redirect_uri_android_ios(client_id):
                 client_id,
                 "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
             )
+            assert await indieauth.verify_redirect_uri(
+                None,
+                client_id,
+                "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
+            )
         else:
             assert not await indieauth.verify_redirect_uri(
                 None,
                 client_id,
                 "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+            )
+            assert not await indieauth.verify_redirect_uri(
+                None,
+                client_id,
+                "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
             )

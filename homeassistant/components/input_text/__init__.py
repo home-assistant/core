@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -196,14 +197,14 @@ class InputText(collection.CollectionEntity, RestoreEntity):
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> InputText:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_text = cls(config)
         input_text.editable = True
         return input_text
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> InputText:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_text = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

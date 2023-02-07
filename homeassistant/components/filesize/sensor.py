@@ -56,7 +56,6 @@ SENSOR_TYPES = (
         icon=ICON,
         name="Last Updated",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

@@ -52,7 +52,7 @@ def domain_bps(hass):
     )
 
 
-def test_blueprint_model_init():
+def test_blueprint_model_init() -> None:
     """Test constructor validation."""
     with pytest.raises(errors.InvalidBlueprint):
         models.Blueprint({})
@@ -91,7 +91,7 @@ def test_blueprint_properties(blueprint_1):
     }
 
 
-def test_blueprint_update_metadata():
+def test_blueprint_update_metadata() -> None:
     """Test update metadata."""
     bp = models.Blueprint(
         {
@@ -106,7 +106,7 @@ def test_blueprint_update_metadata():
     assert bp.metadata["source_url"] == "http://bla.com"
 
 
-def test_blueprint_validate():
+def test_blueprint_validate() -> None:
     """Test validate blueprint."""
     assert (
         models.Blueprint(
@@ -256,10 +256,10 @@ async def test_domain_blueprints_add_blueprint(domain_bps, blueprint_1):
     with patch.object(domain_bps, "_create_file") as create_file_mock:
         # Should add extension when not present.
         await domain_bps.async_add_blueprint(blueprint_1, "something")
-        assert create_file_mock.call_args[0][1] == ("something.yaml")
+        assert create_file_mock.call_args[0][1] == "something.yaml"
 
         await domain_bps.async_add_blueprint(blueprint_1, "something2.yaml")
-        assert create_file_mock.call_args[0][1] == ("something2.yaml")
+        assert create_file_mock.call_args[0][1] == "something2.yaml"
 
     # Should be in cache.
     with patch.object(domain_bps, "_load_blueprint") as mock_load:

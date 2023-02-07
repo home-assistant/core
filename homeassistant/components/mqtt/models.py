@@ -8,7 +8,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, Union
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import attr
 
@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_THIS = "this"
 
-PublishPayloadType = Union[str, bytes, int, float, None]
+PublishPayloadType = str | bytes | int | float | None
 
 
 @attr.s(slots=True, frozen=True)

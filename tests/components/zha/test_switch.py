@@ -257,7 +257,7 @@ async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
 
 
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_switch_entity(

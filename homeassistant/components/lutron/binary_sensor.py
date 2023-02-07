@@ -24,7 +24,7 @@ def setup_platform(
     if discovery_info is None:
         return
     devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["binary_sensor"]:
+    for area_name, device in hass.data[LUTRON_DEVICES]["binary_sensor"]:
         dev = LutronOccupancySensor(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 

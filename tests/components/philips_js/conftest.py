@@ -2,7 +2,7 @@
 from unittest.mock import create_autospec, patch
 
 from haphilipsjs import PhilipsTV
-from pytest import fixture
+import pytest
 
 from homeassistant.components.philips_js.const import DOMAIN
 
@@ -11,12 +11,12 @@ from . import MOCK_CONFIG, MOCK_ENTITY_ID, MOCK_NAME, MOCK_SERIAL_NO, MOCK_SYSTE
 from tests.common import MockConfigEntry, mock_device_registry
 
 
-@fixture(autouse=True)
+@pytest.fixture(autouse=True)
 async def setup_notification(hass):
     """Configure notification system."""
 
 
-@fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def mock_tv():
     """Disable component actual use."""
     tv = create_autospec(PhilipsTV)
@@ -42,7 +42,7 @@ def mock_tv():
         yield tv
 
 
-@fixture
+@pytest.fixture
 async def mock_config_entry(hass):
     """Get standard player."""
     config_entry = MockConfigEntry(
@@ -52,13 +52,13 @@ async def mock_config_entry(hass):
     return config_entry
 
 
-@fixture
+@pytest.fixture
 def mock_device_reg(hass):
     """Get standard device."""
     return mock_device_registry(hass)
 
 
-@fixture
+@pytest.fixture
 async def mock_entity(hass, mock_device_reg, mock_config_entry):
     """Get standard player."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -66,7 +66,7 @@ async def mock_entity(hass, mock_device_reg, mock_config_entry):
     return MOCK_ENTITY_ID
 
 
-@fixture
+@pytest.fixture
 def mock_device(hass, mock_device_reg, mock_entity, mock_config_entry):
     """Get standard device."""
     return mock_device_reg.async_get_or_create(

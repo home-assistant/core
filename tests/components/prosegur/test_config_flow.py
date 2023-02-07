@@ -1,7 +1,7 @@
 """Test the Prosegur Alarm config flow."""
 from unittest.mock import MagicMock, patch
 
-from pytest import mark
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.prosegur.config_flow import CannotConnect, InvalidAuth
@@ -179,7 +179,7 @@ async def test_reauth_flow(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "exception, base_error",
     [
         (CannotConnect, "cannot_connect"),

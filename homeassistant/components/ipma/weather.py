@@ -121,7 +121,7 @@ class IPMAWeather(WeatherEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, location: Location, api: IPMA_API, config):
+    def __init__(self, location: Location, api: IPMA_API, config) -> None:
         """Initialise the platform with a data instance and station name."""
         self._api = api
         self._location_name = config.get(CONF_NAME, location.name)

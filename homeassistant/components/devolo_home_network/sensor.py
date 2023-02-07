@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
@@ -30,11 +30,7 @@ from .entity import DevoloEntity
 
 _DataT = TypeVar(
     "_DataT",
-    bound=Union[
-        LogicalNetwork,
-        list[ConnectedStationInfo],
-        list[NeighborAPInfo],
-    ],
+    bound=LogicalNetwork | list[ConnectedStationInfo] | list[NeighborAPInfo],
 )
 
 

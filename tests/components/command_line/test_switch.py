@@ -8,7 +8,7 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
@@ -93,7 +93,9 @@ async def test_state_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo 1 > {path}",
                     "command_off": f"echo 0 > {path}",
                     "value_template": '{{ value=="1" }}',
-                    "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
+                    "icon_template": (
+                        '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}'
+                    ),
                 }
             },
         )
@@ -142,7 +144,10 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo '{oncmd}' > {path}",
                     "command_off": f"echo '{offcmd}' > {path}",
                     "value_template": '{{ value_json.status=="ok" }}',
-                    "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
+                    "icon_template": (
+                        '{% if value_json.status=="ok" %} mdi:on'
+                        "{% else %} mdi:off {% endif %}"
+                    ),
                 }
             },
         )
@@ -276,7 +281,7 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
 
 
 async def test_switch_command_state_fail(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch failures are handled correctly."""
     await setup_test_entity(
@@ -313,7 +318,7 @@ async def test_switch_command_state_fail(
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -346,7 +351,7 @@ async def test_switch_command_state_code_exceptions(
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -379,7 +384,9 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-async def test_no_switches(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_no_switches(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test with no switches."""
 
     await setup_test_entity(hass, {})
@@ -421,7 +428,9 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     )
 
 
-async def test_command_failure(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_command_failure(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test command failure."""
 
     await setup_test_entity(

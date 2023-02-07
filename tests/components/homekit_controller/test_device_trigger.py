@@ -20,7 +20,6 @@ from tests.common import (
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture
 def calls(hass):
     """Track calls to a mock service."""

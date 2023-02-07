@@ -7,8 +7,8 @@ import voluptuous as vol
 from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant import const as ha_const
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -39,7 +39,7 @@ from .core.const import (
 )
 from .core.discovery import GROUP_PROBE
 
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_BAUDRATE): cv.positive_int,
     vol.Optional(CONF_DATABASE): cv.string,
@@ -99,7 +99,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if config.get(CONF_ENABLE_QUIRKS, True):
         setup_quirks(config)
 
-    # temporary code to remove the ZHA storage file from disk. this will be removed in 2022.10.0
+    # temporary code to remove the ZHA storage file from disk.
+    # this will be removed in 2022.10.0
     storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
     if os.path.isfile(storage_path):
         _LOGGER.debug("removing ZHA storage file")
@@ -128,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await zha_gateway.shutdown()
 
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
-        ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
+        EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
     )
 
     await zha_gateway.async_initialize_devices_and_entities()

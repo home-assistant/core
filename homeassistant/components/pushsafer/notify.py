@@ -1,4 +1,6 @@
 """Pushsafer platform for notify component."""
+from __future__ import annotations
+
 import base64
 from http import HTTPStatus
 import logging
@@ -17,7 +19,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_ICON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://www.pushsafer.com/api"
@@ -49,7 +53,11 @@ ATTR_PICTURE1_AUTH = "auth"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEVICE_KEY): cv.string})
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> PushsaferNotificationService:
     """Get the Pushsafer.com notification service."""
     return PushsaferNotificationService(
         config.get(CONF_DEVICE_KEY), hass.config.is_allowed_path

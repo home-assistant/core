@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     device_trigger,
 )
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -311,13 +311,13 @@ async def test_get_trigger_capabilities_temp_humid(hass, type):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "description": {"suffix": TEMP_CELSIUS},
+            "description": {"suffix": UnitOfTemperature.CELSIUS},
             "name": "above",
             "optional": True,
             "type": "float",
         },
         {
-            "description": {"suffix": TEMP_CELSIUS},
+            "description": {"suffix": UnitOfTemperature.CELSIUS},
             "name": "below",
             "optional": True,
             "type": "float",

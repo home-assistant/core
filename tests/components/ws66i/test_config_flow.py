@@ -36,7 +36,6 @@ async def test_form(hass):
         "homeassistant.components.ws66i.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         ws66i_instance = mock_ws66i.return_value
 
         result2 = await hass.config_entries.flow.async_configure(

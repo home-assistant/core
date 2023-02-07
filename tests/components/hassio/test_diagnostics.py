@@ -3,7 +3,6 @@
 import os
 from unittest.mock import patch
 
-from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
@@ -12,6 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -156,7 +156,7 @@ def mock_all(aioclient_mock, request):
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test diagnostic information."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)

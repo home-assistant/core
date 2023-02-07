@@ -1,5 +1,5 @@
 """The tests for the counter component."""
-# pylint: disable=protected-access
+
 import logging
 
 import pytest

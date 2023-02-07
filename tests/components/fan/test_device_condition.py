@@ -136,7 +136,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_on "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -154,7 +158,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_off - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_off "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

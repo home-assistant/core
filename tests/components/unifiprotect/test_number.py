@@ -1,5 +1,5 @@
 """Test the UniFi Protect number platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from datetime import timedelta

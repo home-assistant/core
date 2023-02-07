@@ -168,7 +168,7 @@ async def async_setup_platform(
 class StartcaSensor(SensorEntity):
     """Representation of Start.ca Bandwidth sensor."""
 
-    def __init__(self, startcadata, name, description: SensorEntityDescription):
+    def __init__(self, startcadata, name, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.startcadata = startcadata

@@ -142,7 +142,7 @@ class ValloxState:
         """Return cached UUID value."""
         uuid = _api_get_uuid(self.metric_cache)
         if not isinstance(uuid, UUID):
-            raise ValueError
+            raise TypeError
         return uuid
 
     def get_next_filter_change_date(self) -> date | None:

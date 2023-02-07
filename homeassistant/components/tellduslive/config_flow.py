@@ -34,7 +34,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init config flow."""
         self._hosts = [CLOUD_NAME]
         self._host = None
@@ -42,7 +42,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._scan_interval = SCAN_INTERVAL
 
     def _get_auth_url(self):
-
         self._session = Session(
             public_key=PUBLIC_KEY,
             private_key=NOT_SO_PRIVATE_KEY,

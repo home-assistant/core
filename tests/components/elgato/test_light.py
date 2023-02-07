@@ -27,14 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
 
-
-async def test_light_state_temperature(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_elgato: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("init_integration", "mock_elgato")
+async def test_light_state_temperature(hass: HomeAssistant) -> None:
     """Test the creation and values of the Elgato Lights in temperature mode."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -71,14 +66,9 @@ async def test_light_state_temperature(
     assert device_entry.hw_version == "53"
 
 
-@pytest.mark.parametrize(
-    "mock_elgato", [{"settings": "color", "state": "color"}], indirect=True
-)
-async def test_light_state_color(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_elgato: MagicMock,
-) -> None:
+@pytest.mark.parametrize("device_fixtures", ["light-strip"])
+@pytest.mark.usefixtures("device_fixtures", "init_integration", "mock_elgato")
+async def test_light_state_color(hass: HomeAssistant) -> None:
     """Test the creation and values of the Elgato Lights in temperature mode."""
     entity_registry = er.async_get(hass)
 
@@ -103,11 +93,11 @@ async def test_light_state_color(
 
 
 @pytest.mark.parametrize(
-    "mock_elgato", [{"settings": "color", "state": "temperature"}], indirect=True
+    ("device_fixtures", "state_variant"), [("light-strip", "state-color-temperature")]
 )
+@pytest.mark.usefixtures("state_variant", "device_fixtures", "init_integration")
 async def test_light_change_state_temperature(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_elgato: MagicMock,
 ) -> None:
     """Test the change of state of a Elgato Key Light device."""
@@ -174,11 +164,9 @@ async def test_light_change_state_temperature(
 
 
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.usefixtures("init_integration")
 async def test_light_unavailable(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_elgato: MagicMock,
-    service: str,
+    hass: HomeAssistant, mock_elgato: MagicMock, service: str
 ) -> None:
     """Test error/unavailable handling of an Elgato Light."""
     mock_elgato.state.side_effect = ElgatoError
@@ -191,18 +179,14 @@ async def test_light_unavailable(
             {ATTR_ENTITY_ID: "light.frenck"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("light.frenck")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_light_identify(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_elgato: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> None:
     """Test identifying an Elgato Light."""
     await hass.services.async_call(
         DOMAIN,
@@ -217,10 +201,9 @@ async def test_light_identify(
     mock_elgato.identify.assert_called_with()
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_light_identify_error(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_elgato: MagicMock,
+    hass: HomeAssistant, mock_elgato: MagicMock
 ) -> None:
     """Test error occurred during identifying an Elgato Light."""
     mock_elgato.identify.side_effect = ElgatoError
@@ -235,6 +218,5 @@ async def test_light_identify_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert len(mock_elgato.identify.mock_calls) == 1

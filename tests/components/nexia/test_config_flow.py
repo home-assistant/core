@@ -53,7 +53,9 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("homeassistant.components.nexia.config_flow.NexiaHome.login",), patch(
+    with patch(
+        "homeassistant.components.nexia.config_flow.NexiaHome.login",
+    ), patch(
         "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
         return_value=None,
     ):

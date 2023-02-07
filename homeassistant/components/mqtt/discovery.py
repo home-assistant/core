@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.json import json_loads_object
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
@@ -126,7 +126,7 @@ async def async_start(  # noqa: C901
 
         if payload:
             try:
-                discovery_payload = MQTTDiscoveryPayload(json_loads(payload))
+                discovery_payload = MQTTDiscoveryPayload(json_loads_object(payload))
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
@@ -198,7 +198,7 @@ async def async_start(  # noqa: C901
         if discovery_hash in mqtt_data.discovery_pending_discovered:
             pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
             pending.appendleft(discovery_payload)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Component has already been discovered: %s %s, queuing update",
                 component,
                 discovery_id,
@@ -279,7 +279,7 @@ async def async_start(  # noqa: C901
     mqtt_data.last_discovery = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
 
-    for (integration, topics) in mqtt_integrations.items():
+    for integration, topics in mqtt_integrations.items():
 
         async def async_integration_message_received(
             integration: str, msg: ReceiveMessage

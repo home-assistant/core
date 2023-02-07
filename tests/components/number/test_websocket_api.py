@@ -22,7 +22,7 @@ async def test_device_class_units(hass: HomeAssistant, hass_ws_client) -> None:
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"units": unordered(["°F", "°C"])}
+    assert msg["result"] == {"units": unordered(["°F", "°C", "K"])}
 
     # Device class with units which number doesn't allow customizing & converting
     await client.send_json(

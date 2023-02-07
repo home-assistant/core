@@ -24,15 +24,14 @@ from tests.common import MockConfigEntry
 
 async def test_bluetooth_discovery(hass: HomeAssistant):
     """Test discovery via bluetooth with a valid device."""
-    with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
-        with patch_airthings_ble(
-            AirthingsDevice(name="Airthings Wave+", identifier="123456")
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_BLUETOOTH},
-                data=WAVE_SERVICE_INFO,
-            )
+    with patch_async_ble_device_from_address(WAVE_SERVICE_INFO), patch_airthings_ble(
+        AirthingsDevice(name="Airthings Wave+", identifier="123456")
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_BLUETOOTH},
+            data=WAVE_SERVICE_INFO,
+        )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -66,13 +65,14 @@ async def test_bluetooth_discovery_airthings_ble_update_failed(
     """Test discovery via bluetooth but there's an exception from airthings-ble."""
     for loop in [(Exception(), "unknown"), (BleakError(), "cannot_connect")]:
         exc, reason = loop
-        with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
-            with patch_airthings_ble(side_effect=exc):
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_BLUETOOTH},
-                    data=WAVE_SERVICE_INFO,
-                )
+        with patch_async_ble_device_from_address(
+            WAVE_SERVICE_INFO
+        ), patch_airthings_ble(side_effect=exc):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_BLUETOOTH},
+                data=WAVE_SERVICE_INFO,
+            )
 
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == reason
@@ -99,14 +99,12 @@ async def test_user_setup(hass: HomeAssistant):
     with patch(
         "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[WAVE_SERVICE_INFO],
+    ), patch_async_ble_device_from_address(WAVE_SERVICE_INFO), patch_airthings_ble(
+        AirthingsDevice(name="Airthings Wave+", identifier="123456")
     ):
-        with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
-            with patch_airthings_ble(
-                AirthingsDevice(name="Airthings Wave+", identifier="123456")
-            ):
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_USER}
-                )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
@@ -167,12 +165,12 @@ async def test_user_setup_unknown_error(hass: HomeAssistant):
     with patch(
         "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[WAVE_SERVICE_INFO],
+    ), patch_async_ble_device_from_address(WAVE_SERVICE_INFO), patch_airthings_ble(
+        None, Exception()
     ):
-        with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
-            with patch_airthings_ble(None, Exception()):
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_USER}
-                )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
@@ -183,12 +181,12 @@ async def test_user_setup_unable_to_connect(hass: HomeAssistant):
     with patch(
         "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[WAVE_SERVICE_INFO],
+    ), patch_async_ble_device_from_address(WAVE_SERVICE_INFO), patch_airthings_ble(
+        side_effect=BleakError("An error")
     ):
-        with patch_async_ble_device_from_address(WAVE_SERVICE_INFO):
-            with patch_airthings_ble(side_effect=BleakError("An error")):
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_USER}
-                )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"

@@ -149,7 +149,9 @@ async def test_form_2fa_invalid_key(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "2fa"
 
-    with patch("homeassistant.components.blink.config_flow.Auth.startup",), patch(
+    with patch(
+        "homeassistant.components.blink.config_flow.Auth.startup",
+    ), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
         return_value=False,
     ), patch(

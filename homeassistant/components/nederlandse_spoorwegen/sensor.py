@@ -229,7 +229,8 @@ class NSDepartureSensor(SensorEntity):
             self._trips = None
             return
 
-        # Set the search parameter to search from a specific trip time or to just search for next trip.
+        # Set the search parameter to search from a specific trip time
+        # or to just search for next trip.
         if self._time:
             trip_time = (
                 datetime.today()

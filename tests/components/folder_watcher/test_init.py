@@ -28,7 +28,7 @@ async def test_valid_path_setup(hass):
         )
 
 
-def test_event():
+def test_event() -> None:
     """Check that Home Assistant events are fired correctly on watchdog event."""
 
     class MockPatternMatchingEventHandler:
@@ -58,7 +58,7 @@ def test_event():
         }
 
 
-def test_move_event():
+def test_move_event() -> None:
     """Check that Home Assistant events are fired correctly on watchdog event."""
 
     class MockPatternMatchingEventHandler:

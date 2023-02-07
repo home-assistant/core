@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import (
     ACK_ECHO,
@@ -102,7 +102,7 @@ async def test_communication_failure(
     ] == config_entry_states
 
 
-@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+@pytest.mark.parametrize("platforms", [[Platform.NUMBER, Platform.SENSOR]])
 async def test_rain_delay_service(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -130,6 +130,15 @@ async def test_rain_delay_service(
     )
 
     assert len(aioclient_mock.mock_calls) == 1
+
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_raindelay"
+    )
+    assert issue
+    assert issue.translation_placeholders == {
+        "alternate_target": "number.rain_bird_controller_rain_delay"
+    }
 
 
 async def test_rain_delay_invalid_config_entry(

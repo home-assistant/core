@@ -153,7 +153,7 @@ class KNXCommonFlow(ABC, FlowHandler):
         # keep a reference to the generator to scan in background until user selects a connection type
         self._async_scan_gen = self._gatewayscanner.async_scan()
         try:
-            await self._async_scan_gen.__anext__()
+            await anext(self._async_scan_gen)
         except StopAsyncIteration:
             pass  # scan finished, no interfaces discovered
         else:

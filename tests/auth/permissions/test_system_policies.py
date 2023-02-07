@@ -6,7 +6,7 @@ from homeassistant.auth.permissions import (
 )
 
 
-def test_admin_policy():
+def test_admin_policy() -> None:
     """Test admin policy works."""
     # Make sure it's valid
     POLICY_SCHEMA(system_policies.ADMIN_POLICY)
@@ -17,7 +17,7 @@ def test_admin_policy():
     assert perms.check_entity("light.kitchen", "edit")
 
 
-def test_user_policy():
+def test_user_policy() -> None:
     """Test user policy works."""
     # Make sure it's valid
     POLICY_SCHEMA(system_policies.USER_POLICY)
@@ -28,7 +28,7 @@ def test_user_policy():
     assert perms.check_entity("light.kitchen", "edit")
 
 
-def test_read_only_policy():
+def test_read_only_policy() -> None:
     """Test read only policy works."""
     # Make sure it's valid
     POLICY_SCHEMA(system_policies.READ_ONLY_POLICY)

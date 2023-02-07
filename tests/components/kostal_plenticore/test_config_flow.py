@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from kostal.plenticore import PlenticoreAuthenticationException
+from pykoplenti import AuthenticationException
 
 from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN
@@ -20,7 +20,7 @@ async def test_formx(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class, patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
         return_value=True,
@@ -32,7 +32,7 @@ async def test_formx(hass):
             return_value={"scb:network": {"Hostname": "scb"}}
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__ = AsyncMock()
@@ -70,15 +70,15 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
         mock_api_ctx.login = AsyncMock(
-            side_effect=PlenticoreAuthenticationException(404, "invalid user"),
+            side_effect=AuthenticationException(404, "invalid user"),
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__.return_value = None
@@ -104,7 +104,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
@@ -112,7 +112,7 @@ async def test_form_cannot_connect(hass):
             side_effect=asyncio.TimeoutError(),
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__.return_value = None
@@ -138,7 +138,7 @@ async def test_form_unexpected_error(hass):
     )
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
@@ -146,7 +146,7 @@ async def test_form_unexpected_error(hass):
             side_effect=Exception(),
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__.return_value = None

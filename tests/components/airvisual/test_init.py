@@ -24,12 +24,15 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import (
     COORDS_CONFIG,
+    COORDS_CONFIG2,
     NAME_CONFIG,
     TEST_API_KEY,
     TEST_CITY,
     TEST_COUNTRY,
     TEST_LATITUDE,
+    TEST_LATITUDE2,
     TEST_LONGITUDE,
+    TEST_LONGITUDE2,
     TEST_STATE,
 )
 
@@ -53,6 +56,10 @@ async def test_migration_1_2(hass, mock_pyairvisual):
                     CONF_STATE: TEST_STATE,
                     CONF_COUNTRY: TEST_COUNTRY,
                 },
+                {
+                    CONF_LATITUDE: TEST_LATITUDE2,
+                    CONF_LONGITUDE: TEST_LONGITUDE2,
+                },
             ],
         },
         version=1,
@@ -63,7 +70,7 @@ async def test_migration_1_2(hass, mock_pyairvisual):
     await hass.async_block_till_done()
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 2
+    assert len(config_entries) == 3
 
     # Ensure that after migration, each configuration has its own config entry:
     identifier1 = f"{TEST_LATITUDE}, {TEST_LONGITUDE}"
@@ -80,6 +87,14 @@ async def test_migration_1_2(hass, mock_pyairvisual):
     assert config_entries[1].data == {
         **NAME_CONFIG,
         CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_NAME,
+    }
+
+    identifier3 = f"{TEST_LATITUDE2}, {TEST_LONGITUDE2}"
+    assert config_entries[2].unique_id == identifier3
+    assert config_entries[2].title == f"Cloud API ({identifier3})"
+    assert config_entries[2].data == {
+        **COORDS_CONFIG2,
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     }
 
 

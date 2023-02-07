@@ -47,7 +47,6 @@ async def init_integration(
     ), patch("srpenergy.client.SrpEnergyClient.usage", return_value=usage), patch(
         "homeassistant.components.srp_energy.SrpEnergyClient.usage", return_value=usage
     ):
-
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

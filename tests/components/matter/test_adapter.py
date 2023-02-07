@@ -27,15 +27,43 @@ async def test_device_registry_single_node_device(
     )
 
     dev_reg = dr.async_get(hass)
-
-    entry = dev_reg.async_get_device({(DOMAIN, "mock-onoff-light")})
+    entry = dev_reg.async_get_device(
+        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+    )
     assert entry is not None
+
+    # test serial id present as additional identifier
+    assert (DOMAIN, "serial_12345678") in entry.identifiers
 
     assert entry.name == "Mock OnOff Light"
     assert entry.manufacturer == "Nabu Casa"
     assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
     assert entry.sw_version == "v1.0"
+
+
+async def test_device_registry_single_node_device_alt(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test additional device with different attribute values."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "on-off-plugin-unit",
+        matter_client,
+    )
+
+    dev_reg = dr.async_get(hass)
+    entry = dev_reg.async_get_device(
+        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+    )
+    assert entry is not None
+
+    # test name is derived from productName (because nodeLabel is absent)
+    assert entry.name == "Mock OnOffPluginUnit (powerplug/switch)"
+
+    # test serial id NOT present as additional identifier
+    assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
 
 
 @pytest.mark.skip("Waiting for a new test fixture")

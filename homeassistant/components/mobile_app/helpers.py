@@ -14,7 +14,7 @@ from nacl.secret import SecretBox
 from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.json import JSONEncoder, json_loads
+from homeassistant.helpers.json import JSONEncoder, JsonObjectType, json_loads_object
 
 from .const import (
     ATTR_APP_DATA,
@@ -71,7 +71,7 @@ def _decrypt_payload_helper(
     ciphertext: str,
     get_key_bytes: Callable[[str, int], str | bytes],
     key_encoder,
-) -> dict[str, str] | None:
+) -> JsonObjectType | None:
     """Decrypt encrypted payload."""
     try:
         keylen, decrypt = setup_decrypt(key_encoder)
@@ -86,12 +86,12 @@ def _decrypt_payload_helper(
     key_bytes = get_key_bytes(key, keylen)
 
     msg_bytes = decrypt(ciphertext, key_bytes)
-    message = json_loads(msg_bytes)
+    message = json_loads_object(msg_bytes)
     _LOGGER.debug("Successfully decrypted mobile_app payload")
     return message
 
 
-def _decrypt_payload(key: str | None, ciphertext: str) -> dict[str, str] | None:
+def _decrypt_payload(key: str | None, ciphertext: str) -> JsonObjectType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> str:
@@ -100,7 +100,7 @@ def _decrypt_payload(key: str | None, ciphertext: str) -> dict[str, str] | None:
     return _decrypt_payload_helper(key, ciphertext, get_key_bytes, HexEncoder)
 
 
-def _decrypt_payload_legacy(key: str | None, ciphertext: str) -> dict[str, str] | None:
+def _decrypt_payload_legacy(key: str | None, ciphertext: str) -> JsonObjectType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> bytes:

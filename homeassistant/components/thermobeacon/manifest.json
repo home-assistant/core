@@ -37,7 +37,7 @@
     { "local_name": "ThermoBeacon", "connectable": false }
   ],
   "requirements": ["thermobeacon-ble==0.6.0"],
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
 }
