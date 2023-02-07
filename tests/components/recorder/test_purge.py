@@ -90,9 +90,15 @@ async def test_purge_old_states(
 
         assert "test.recorder2" in instance._old_states
 
-        states_after_purge = session.query(States)
-        assert states_after_purge[1].old_state_id == states_after_purge[0].state_id
-        assert states_after_purge[0].old_state_id is None
+        states_after_purge = list(session.query(States))
+        # Since these states are deleted in batches, we can't guarantee the order
+        # but we can look them up by state
+        state_map_by_state = {state.state: state for state in states_after_purge}
+        dontpurgeme_5 = state_map_by_state["dontpurgeme_5"]
+        dontpurgeme_4 = state_map_by_state["dontpurgeme_4"]
+
+        assert dontpurgeme_5.old_state_id == dontpurgeme_4.state_id
+        assert dontpurgeme_4.old_state_id is None
 
         finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
