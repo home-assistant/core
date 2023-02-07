@@ -9,7 +9,7 @@ from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-from functools import cache, lru_cache, partial, wraps
+from functools import cache, cached_property, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -733,10 +733,12 @@ class AllStates:
         self._collect_all_lifecycle()
         return self._hass.states.async_entity_ids_count()
 
-    def __call__(self, entity_id: str) -> str:
+    def __call__(self, entity_id: str, with_unit: bool = False) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
-        return STATE_UNKNOWN if state is None else state.state
+        if state is None:
+            return STATE_UNKNOWN
+        return state.state_with_unit if with_unit else state.state
 
     def __repr__(self) -> str:
         """Representation of All States."""
@@ -883,11 +885,20 @@ class TemplateStateBase(State):
         self._collect_state()
         return self._state.name
 
-    @property
+    @cached_property
     def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
+        # Import here, not at top-level, to avoid circular import
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.sensor import (
+            DOMAIN as SENSOR_DOMAIN,
+            async_state_with_unit,
+        )
+
         self._collect_state()
         unit = self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if split_entity_id(self._entity_id)[0] == SENSOR_DOMAIN:
+            return async_state_with_unit(self._hass, self._entity_id, self._state)
         return f"{self._state.state} {unit}" if unit else self._state.state
 
     def __eq__(self, other: Any) -> bool:
