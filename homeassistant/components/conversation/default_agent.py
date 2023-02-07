@@ -18,7 +18,7 @@ import yaml
 
 from homeassistant import core, setup
 from homeassistant.helpers import area_registry, entity_registry, intent, template
-from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DOMAIN
@@ -29,9 +29,9 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 REGEX_TYPE = type(re.compile(""))
 
 
-def json_load(fp: IO[str]) -> dict[str, Any]:
+def json_load(fp: IO[str]) -> JsonObjectType:
     """Wrap json_loads for get_intents."""
-    return json_loads(fp.read())
+    return json_loads_object(fp.read())
 
 
 @dataclass
