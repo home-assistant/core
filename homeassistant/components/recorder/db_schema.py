@@ -232,7 +232,7 @@ class Events(Base):
         )
         try:
             return Event(
-                self.event_type,
+                self.event_type or "",
                 json_loads_object(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
