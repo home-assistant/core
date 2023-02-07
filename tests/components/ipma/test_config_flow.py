@@ -12,7 +12,7 @@ from . import MockLocation
 from tests.common import MockConfigEntry, mock_registry
 
 
-async def test_show_config_form():
+async def test_show_config_form() -> None:
     """Test show configuration form."""
     hass = Mock()
     flow = config_flow.IpmaFlowHandler()
@@ -24,7 +24,7 @@ async def test_show_config_form():
     assert result["step_id"] == "user"
 
 
-async def test_show_config_form_default_values():
+async def test_show_config_form_default_values() -> None:
     """Test show configuration form."""
     hass = Mock()
     flow = config_flow.IpmaFlowHandler()
@@ -54,7 +54,7 @@ async def test_flow_with_home_location(hass):
     assert result["step_id"] == "user"
 
 
-async def test_flow_show_form():
+async def test_flow_show_form() -> None:
     """Test show form scenarios first time.
 
     Test when the form should show when no configurations exists
@@ -70,7 +70,7 @@ async def test_flow_show_form():
         assert len(config_form.mock_calls) == 1
 
 
-async def test_flow_entry_created_from_user_input():
+async def test_flow_entry_created_from_user_input() -> None:
     """Test that create data from user input.
 
     Test when the form should show when no configurations exists
@@ -97,7 +97,7 @@ async def test_flow_entry_created_from_user_input():
         assert not config_form.mock_calls
 
 
-async def test_flow_entry_config_entry_already_exists():
+async def test_flow_entry_config_entry_already_exists() -> None:
     """Test that create data from user input and config_entry already exists.
 
     Test when the form should show when user puts existing name

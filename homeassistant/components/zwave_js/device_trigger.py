@@ -258,7 +258,7 @@ async def async_get_triggers(
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
 
-    if node.client.driver and node.client.driver.controller.own_node_id == node.node_id:
+    if node.client.driver and node.client.driver.controller.own_node == node:
         return triggers
 
     # We can add a node status trigger if the node status sensor is enabled

@@ -10,6 +10,7 @@ import logging
 from math import ceil, floor
 from typing import Any, final
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +25,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -32,6 +33,7 @@ from .const import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_SET_VALUE,
     UNIT_CONVERTERS,
@@ -539,7 +541,7 @@ class NumberExtraStoredData(ExtraStoredData):
         return dataclasses.asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> NumberExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored number state from a dict."""
         try:
             return cls(

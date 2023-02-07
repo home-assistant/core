@@ -65,7 +65,9 @@ def mock_elgato(request: pytest.FixtureRequest) -> Generator[None, MagicMock, No
     if hasattr(request, "param") and request.param:
         variant = request.param
 
-    with patch("homeassistant.components.elgato.Elgato", autospec=True) as elgato_mock:
+    with patch(
+        "homeassistant.components.elgato.coordinator.Elgato", autospec=True
+    ) as elgato_mock:
         elgato = elgato_mock.return_value
         elgato.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
         elgato.state.return_value = State.parse_raw(

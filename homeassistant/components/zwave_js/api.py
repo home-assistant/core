@@ -500,6 +500,7 @@ async def websocket_network_status(
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
+            "rf_region": controller.rf_region,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
