@@ -105,9 +105,14 @@ async def test_lock_open_with_code(hass: HomeAssistant) -> None:
     assert lock.state_attributes == {"code_format": r"^\d{4}$"}
 
     with pytest.raises(ValueError):
+        await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    with pytest.raises(ValueError):
         await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "HELLO"}))
     await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "1234"}))
     assert lock.calls_open.call_count == 1
+
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    assert lock.calls_open.call_count == 2
 
 
 async def test_lock_lock_with_code(hass: HomeAssistant) -> None:
@@ -119,8 +124,16 @@ async def test_lock_lock_with_code(hass: HomeAssistant) -> None:
     assert not lock.is_locked
 
     with pytest.raises(ValueError):
+        await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    with pytest.raises(ValueError):
         await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "HELLO"}))
     await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "1234"}))
+    assert lock.is_locked
+
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "1234"}))
+    assert not lock.is_locked
+
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
     assert lock.is_locked
 
 
@@ -133,8 +146,16 @@ async def test_lock_unlock_with_code(hass: HomeAssistant) -> None:
     assert lock.is_locked
 
     with pytest.raises(ValueError):
+        await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    with pytest.raises(ValueError):
         await _async_unlock(
             lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "HELLO"})
         )
     await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "1234"}))
+    assert not lock.is_locked
+
+    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "1234"}))
+    assert lock.is_locked
+
+    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
     assert not lock.is_locked

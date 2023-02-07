@@ -87,8 +87,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Lock the lock."""
+    code: str | None
     if (
-        (code := service_call.data.get(ATTR_CODE))
+        (code := service_call.data.get(ATTR_CODE)) is not None
         and entity.code_format_cmp
         and not entity.code_format_cmp.match(code)
     ):
@@ -100,8 +101,9 @@ async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
 
 async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Unlock the lock."""
+    code: str | None
     if (
-        (code := service_call.data.get(ATTR_CODE))
+        (code := service_call.data.get(ATTR_CODE)) is not None
         and entity.code_format_cmp
         and not entity.code_format_cmp.match(code)
     ):
@@ -113,8 +115,9 @@ async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     """Open the door latch."""
+    code: str | None
     if (
-        (code := service_call.data.get(ATTR_CODE))
+        (code := service_call.data.get(ATTR_CODE)) is not None
         and entity.code_format_cmp
         and not entity.code_format_cmp.match(code)
     ):
