@@ -214,7 +214,7 @@ def test_get_random_string(mock_random):
     assert util.get_random_string(length=3) == "ABC"
 
 
-async def test_throttle_async():
+async def test_throttle_async() -> None:
     """Test Throttle decorator with async method."""
 
     @util.Throttle(timedelta(seconds=2))
