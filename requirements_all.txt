@@ -2403,6 +2403,9 @@ slackclient==2.5.0
 # homeassistant.components.xmpp
 slixmpp==1.8.4
 
+# homeassistant.components.smartenergy_awattar
+smart-energy.awattar-api==0.2.0
+
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
 

@@ -5147,6 +5147,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "smartenergy_awattar": {
+      "name": "Awattar",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "smarther": {
       "name": "Smarther",
       "integration_type": "virtual",
