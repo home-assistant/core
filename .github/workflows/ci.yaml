@@ -924,6 +924,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+    needs:
       - info
       - base
       - gen-requirements-all
