@@ -950,7 +950,7 @@ openai==0.26.2
 openerz-api==0.2.0
 
 # homeassistant.components.oralb
-oralb-ble==0.17.2
+oralb-ble==0.17.4
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
@@ -1618,7 +1618,7 @@ samsungtvws[async,encrypted]==2.5.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.6.4
+screenlogicpy==0.7.0
 
 # homeassistant.components.backup
 securetar==2022.2.0
@@ -1817,7 +1817,7 @@ vallox-websocket-api==3.0.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.12.0
+velbus-aio==2023.2.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
