@@ -40,7 +40,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a new instance of the flow handler."""
         self.access_token = None
         self.app_id = None
