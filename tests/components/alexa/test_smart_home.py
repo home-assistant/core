@@ -12,7 +12,7 @@ from homeassistant.components.media_player import MediaPlayerEntityFeature
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -54,7 +54,7 @@ async def mock_stream(hass):
     await hass.async_block_till_done()
 
 
-def test_create_api_message_defaults(hass):
+def test_create_api_message_defaults(hass: HomeAssistant) -> None:
     """Create an API message response of a request with defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
     directive_header = request["directive"]["header"]
@@ -79,7 +79,7 @@ def test_create_api_message_defaults(hass):
     assert msg["endpoint"] is not request["directive"]["endpoint"]
 
 
-def test_create_api_message_special():
+def test_create_api_message_special() -> None:
     """Create an API message response of a request with non defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn")
     directive_header = request["directive"]["header"]

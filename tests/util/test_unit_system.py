@@ -35,7 +35,7 @@ SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
 
 
-def test_invalid_units():
+def test_invalid_units() -> None:
     """Test errors are raised when invalid units are passed in."""
     with pytest.raises(ValueError):
         UnitSystem(
@@ -129,7 +129,7 @@ def test_invalid_units():
         )
 
 
-def test_invalid_value():
+def test_invalid_value() -> None:
     """Test no conversion happens if value is non-numeric."""
     with pytest.raises(TypeError):
         METRIC_SYSTEM.length("25a", UnitOfLength.KILOMETERS)
@@ -145,7 +145,7 @@ def test_invalid_value():
         METRIC_SYSTEM.accumulated_precipitation("50mm", UnitOfLength.MILLIMETERS)
 
 
-def test_as_dict():
+def test_as_dict() -> None:
     """Test that the as_dict() method returns the expected dictionary."""
     expected = {
         LENGTH: UnitOfLength.KILOMETERS,
@@ -160,18 +160,18 @@ def test_as_dict():
     assert expected == METRIC_SYSTEM.as_dict()
 
 
-def test_temperature_same_unit():
+def test_temperature_same_unit() -> None:
     """Test no conversion happens if to unit is same as from unit."""
     assert METRIC_SYSTEM.temperature(5, METRIC_SYSTEM.temperature_unit) == 5
 
 
-def test_temperature_unknown_unit():
+def test_temperature_unknown_unit() -> None:
     """Test no conversion happens if unknown unit."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.temperature(5, "abc")
 
 
-def test_temperature_to_metric():
+def test_temperature_to_metric() -> None:
     """Test temperature conversion to metric system."""
     assert METRIC_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 25
     assert (
@@ -180,19 +180,19 @@ def test_temperature_to_metric():
     )
 
 
-def test_temperature_to_imperial():
+def test_temperature_to_imperial() -> None:
     """Test temperature conversion to imperial system."""
     assert IMPERIAL_SYSTEM.temperature(77, IMPERIAL_SYSTEM.temperature_unit) == 77
     assert IMPERIAL_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 77
 
 
-def test_length_unknown_unit():
+def test_length_unknown_unit() -> None:
     """Test length conversion with unknown from unit."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "fr")
 
 
-def test_length_to_metric():
+def test_length_to_metric() -> None:
     """Test length conversion to metric system."""
     assert METRIC_SYSTEM.length(100, METRIC_SYSTEM.length_unit) == 100
     assert METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit) == pytest.approx(
@@ -200,7 +200,7 @@ def test_length_to_metric():
     )
 
 
-def test_length_to_imperial():
+def test_length_to_imperial() -> None:
     """Test length conversion to imperial system."""
     assert IMPERIAL_SYSTEM.length(100, IMPERIAL_SYSTEM.length_unit) == 100
     assert IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == pytest.approx(
@@ -208,13 +208,13 @@ def test_length_to_imperial():
     )
 
 
-def test_wind_speed_unknown_unit():
+def test_wind_speed_unknown_unit() -> None:
     """Test wind_speed conversion with unknown from unit."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "turtles")
 
 
-def test_wind_speed_to_metric():
+def test_wind_speed_to_metric() -> None:
     """Test length conversion to metric system."""
     assert METRIC_SYSTEM.wind_speed(100, METRIC_SYSTEM.wind_speed_unit) == 100
     # 1 m/s is about 2.237 mph
@@ -223,7 +223,7 @@ def test_wind_speed_to_metric():
     ) == pytest.approx(1000, abs=0.1)
 
 
-def test_wind_speed_to_imperial():
+def test_wind_speed_to_imperial() -> None:
     """Test wind_speed conversion to imperial system."""
     assert IMPERIAL_SYSTEM.wind_speed(100, IMPERIAL_SYSTEM.wind_speed_unit) == 100
     assert IMPERIAL_SYSTEM.wind_speed(
@@ -231,18 +231,18 @@ def test_wind_speed_to_imperial():
     ) == pytest.approx(2237, abs=0.1)
 
 
-def test_pressure_same_unit():
+def test_pressure_same_unit() -> None:
     """Test no conversion happens if to unit is same as from unit."""
     assert METRIC_SYSTEM.pressure(5, METRIC_SYSTEM.pressure_unit) == 5
 
 
-def test_pressure_unknown_unit():
+def test_pressure_unknown_unit() -> None:
     """Test no conversion happens if unknown unit."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.pressure(5, "K")
 
 
-def test_pressure_to_metric():
+def test_pressure_to_metric() -> None:
     """Test pressure conversion to metric system."""
     assert METRIC_SYSTEM.pressure(25, METRIC_SYSTEM.pressure_unit) == 25
     assert METRIC_SYSTEM.pressure(14.7, IMPERIAL_SYSTEM.pressure_unit) == pytest.approx(
@@ -250,7 +250,7 @@ def test_pressure_to_metric():
     )
 
 
-def test_pressure_to_imperial():
+def test_pressure_to_imperial() -> None:
     """Test pressure conversion to imperial system."""
     assert IMPERIAL_SYSTEM.pressure(77, IMPERIAL_SYSTEM.pressure_unit) == 77
     assert IMPERIAL_SYSTEM.pressure(
@@ -258,7 +258,7 @@ def test_pressure_to_imperial():
     ) == pytest.approx(14.7, abs=1e-4)
 
 
-def test_accumulated_precipitation_same_unit():
+def test_accumulated_precipitation_same_unit() -> None:
     """Test no conversion happens if to unit is same as from unit."""
     assert (
         METRIC_SYSTEM.accumulated_precipitation(
@@ -268,13 +268,13 @@ def test_accumulated_precipitation_same_unit():
     )
 
 
-def test_accumulated_precipitation_unknown_unit():
+def test_accumulated_precipitation_unknown_unit() -> None:
     """Test no conversion happens if unknown unit."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.accumulated_precipitation(5, "K")
 
 
-def test_accumulated_precipitation_to_metric():
+def test_accumulated_precipitation_to_metric() -> None:
     """Test accumulated_precipitation conversion to metric system."""
     assert (
         METRIC_SYSTEM.accumulated_precipitation(
@@ -287,7 +287,7 @@ def test_accumulated_precipitation_to_metric():
     ) == pytest.approx(254, abs=1e-4)
 
 
-def test_accumulated_precipitation_to_imperial():
+def test_accumulated_precipitation_to_imperial() -> None:
     """Test accumulated_precipitation conversion to imperial system."""
     assert (
         IMPERIAL_SYSTEM.accumulated_precipitation(
@@ -300,7 +300,7 @@ def test_accumulated_precipitation_to_imperial():
     ) == pytest.approx(10, abs=1e-4)
 
 
-def test_properties():
+def test_properties() -> None:
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == UnitOfLength.KILOMETERS
     assert METRIC_SYSTEM.wind_speed_unit == UnitOfSpeed.METERS_PER_SECOND

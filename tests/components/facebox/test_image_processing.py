@@ -130,23 +130,23 @@ def test_check_box_health(caplog):
         assert "ConnectionError: Is facebox running?" in caplog.text
 
 
-def test_encode_image():
+def test_encode_image() -> None:
     """Test that binary data is encoded correctly."""
     assert fb.encode_image(b"test") == "dGVzdA=="
 
 
-def test_get_matched_faces():
+def test_get_matched_faces() -> None:
     """Test that matched_faces are parsed correctly."""
     assert fb.get_matched_faces(PARSED_FACES) == MATCHED_FACES
 
 
-def test_parse_faces():
+def test_parse_faces() -> None:
     """Test parsing of raw face data, and generation of matched_faces."""
     assert fb.parse_faces(MOCK_JSON["faces"]) == PARSED_FACES
 
 
 @patch("os.access", Mock(return_value=False))
-def test_valid_file_path():
+def test_valid_file_path() -> None:
     """Test that an invalid file_path is caught."""
     assert not fb.valid_file_path("test_path")
 

@@ -20,7 +20,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import mock_restore_cache
 
 
-async def test_state(hass) -> None:
+async def test_state(hass: HomeAssistant) -> None:
     """Test integration sensor state."""
     config = {
         "sensor": {
