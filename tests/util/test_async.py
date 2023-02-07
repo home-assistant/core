@@ -75,7 +75,7 @@ def banned_function():
     """Mock banned function."""
 
 
-async def test_check_loop_async():
+async def test_check_loop_async() -> None:
     """Test check_loop detects when called from event loop without integration context."""
     with pytest.raises(RuntimeError):
         hasync.check_loop(banned_function)
@@ -180,7 +180,7 @@ def test_check_loop_sync(caplog):
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-def test_protect_loop_sync():
+def test_protect_loop_sync() -> None:
     """Test protect_loop calls check_loop."""
     func = Mock()
     with patch("homeassistant.util.async_.check_loop") as mock_check_loop:
@@ -217,7 +217,7 @@ async def test_protect_loop_debugger_sleep(caplog):
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-async def test_gather_with_concurrency():
+async def test_gather_with_concurrency() -> None:
     """Test gather_with_concurrency limits the number of running tasks."""
 
     runs = 0

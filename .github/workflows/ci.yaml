@@ -28,7 +28,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 4
+  CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 3
   HA_SHORT_VERSION: 2023.3

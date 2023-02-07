@@ -845,7 +845,7 @@ async def test_write_lock_db(
         await hass.async_add_executor_job(_drop_table)
 
 
-def test_is_second_sunday():
+def test_is_second_sunday() -> None:
     """Test we can find the second sunday of the month."""
     assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
     assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
@@ -856,7 +856,7 @@ def test_is_second_sunday():
     assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False
 
 
-def test_build_mysqldb_conv():
+def test_build_mysqldb_conv() -> None:
     """Test building the MySQLdb connect conv param."""
     mock_converters = Mock(conversions={"original": "preserved"})
     mock_constants = Mock(FIELD_TYPE=Mock(DATETIME="DATETIME"))
