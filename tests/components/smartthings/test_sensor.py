@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import EntityCategory
 from .conftest import setup_platform
 
 
-async def test_mapping_integrity():
+async def test_mapping_integrity() -> None:
     """Test ensures the map dicts have proper integrity."""
     for capability, maps in sensor.CAPABILITY_TO_SENSORS.items():
         assert capability in CAPABILITIES, capability
