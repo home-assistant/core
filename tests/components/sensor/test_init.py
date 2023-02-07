@@ -1176,7 +1176,7 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
 
 
-def test_device_classes_aligned():
+def test_device_classes_aligned() -> None:
     """Make sure all number device classes are also available in SensorDeviceClass."""
 
     for device_class in NumberDeviceClass:

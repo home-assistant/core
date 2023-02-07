@@ -1934,7 +1934,7 @@ async def test_multiple_zones(hass):
     assert not test(hass)
 
 
-async def test_extract_entities():
+async def test_extract_entities() -> None:
     """Test extracting entities."""
     assert condition.async_extract_entities(
         {
@@ -2007,7 +2007,7 @@ async def test_extract_entities():
     }
 
 
-async def test_extract_devices():
+async def test_extract_devices() -> None:
     """Test extracting devices."""
     assert condition.async_extract_devices(
         {

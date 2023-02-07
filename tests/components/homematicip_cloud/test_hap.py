@@ -88,7 +88,7 @@ async def test_hap_setup_works(hass):
     assert hap.home is home
 
 
-async def test_hap_setup_connection_error():
+async def test_hap_setup_connection_error() -> None:
     """Test a failed accesspoint setup."""
     hass = Mock()
     entry = Mock()

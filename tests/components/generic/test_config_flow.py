@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry
@@ -736,7 +737,7 @@ async def test_unload_entry(hass, fakeimg_png):
     assert mock_entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
-async def test_reload_on_title_change(hass) -> None:
+async def test_reload_on_title_change(hass: HomeAssistant) -> None:
     """Test the integration gets reloaded when the title is updated."""
 
     test_data = TESTDATA_OPTIONS
@@ -758,7 +759,7 @@ async def test_reload_on_title_change(hass) -> None:
     assert hass.states.get("camera.my_title").attributes["friendly_name"] == "New Title"
 
 
-async def test_migrate_existing_ids(hass) -> None:
+async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
     """Test that existing ids are migrated for issue #70568."""
 
     registry = entity_registry.async_get(hass)

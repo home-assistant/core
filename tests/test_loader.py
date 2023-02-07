@@ -3,9 +3,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import core, loader
+from homeassistant import loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
+from homeassistant.core import HomeAssistant, callback
 
 from .common import MockModule, mock_integration
 
@@ -41,14 +42,14 @@ async def test_component_dependencies(hass):
         await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
 
-def test_component_loader(hass):
+def test_component_loader(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     assert components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
     assert hass.components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
 
 
-def test_component_loader_non_existing(hass):
+def test_component_loader_non_existing(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     with pytest.raises(ImportError):
@@ -69,7 +70,7 @@ async def test_helpers_wrapper(hass):
 
     result = []
 
-    @core.callback
+    @callback
     def discovery_callback(service, discovered):
         """Handle discovery callback."""
         result.append(discovered)
@@ -174,7 +175,7 @@ async def test_get_integration_custom_component(hass, enable_custom_integrations
     assert integration.name == "Test Package"
 
 
-def test_integration_properties(hass):
+def test_integration_properties(hass: HomeAssistant) -> None:
     """Test integration properties."""
     integration = loader.Integration(
         hass,

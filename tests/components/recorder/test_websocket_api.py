@@ -126,7 +126,7 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
 }
 
 
-def test_converters_align_with_sensor():
+def test_converters_align_with_sensor() -> None:
     """Ensure UNIT_SCHEMA is aligned with sensor UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
         assert converter.UNIT_CLASS in UNIT_SCHEMA.schema
@@ -2163,7 +2163,7 @@ async def test_backup_start_timeout(
     recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test getting backup start when recorder is not present."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
@@ -2204,7 +2204,7 @@ async def test_backup_end_without_start(
     recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test backup start."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
