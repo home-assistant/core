@@ -261,7 +261,7 @@ async def async_get_integration_descriptions(
     config_flow_path = pathlib.Path(base) / "integrations.json"
 
     flow = await hass.async_add_executor_job(config_flow_path.read_text)
-    core_flows: dict[str, Any] = cast(dict[str, Any], json_loads(flow))
+    core_flows = cast(dict[str, Any], json_loads(flow))
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
         "integration": {},
