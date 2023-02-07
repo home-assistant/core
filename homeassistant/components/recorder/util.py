@@ -583,20 +583,18 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
+_FuncType = Callable[Concatenate[_RecorderT, _P], bool]
+
+
 def retryable_database_job(
     description: str,
-) -> Callable[
-    [Callable[Concatenate[_RecorderT, _P], bool]],
-    Callable[Concatenate[_RecorderT, _P], bool],
-]:
+) -> Callable[[_FuncType[_RecorderT, _P]], _FuncType[_RecorderT, _P]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(
-        job: Callable[Concatenate[_RecorderT, _P], bool]
-    ) -> Callable[Concatenate[_RecorderT, _P], bool]:
+    def decorator(job: _FuncType[_RecorderT, _P]) -> _FuncType[_RecorderT, _P]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
