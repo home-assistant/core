@@ -14,6 +14,18 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture
+def device_fixtures() -> str:
+    """Return the device fixtures for a specific device."""
+    return "key-light"
+
+
+@pytest.fixture
+def state_variant() -> str:
+    """Return the state variant to load for a device."""
+    return "state"
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
@@ -48,40 +60,44 @@ def mock_onboarding() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_elgato_config_flow() -> Generator[None, MagicMock, None]:
+def mock_elgato_config_flow(device_fixtures: str) -> Generator[None, MagicMock, None]:
     """Return a mocked Elgato client."""
     with patch(
         "homeassistant.components.elgato.config_flow.Elgato", autospec=True
     ) as elgato_mock:
         elgato = elgato_mock.return_value
-        elgato.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
+        elgato.info.return_value = Info.parse_raw(
+            load_fixture(f"{device_fixtures}/info.json", DOMAIN)
+        )
         yield elgato
 
 
 @pytest.fixture
-def mock_elgato(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_elgato(
+    device_fixtures: str, state_variant: str
+) -> Generator[None, MagicMock, None]:
     """Return a mocked Elgato client."""
-    variant = {"state": "temperature", "settings": "temperature"}
-    if hasattr(request, "param") and request.param:
-        variant = request.param
-
     with patch(
         "homeassistant.components.elgato.coordinator.Elgato", autospec=True
     ) as elgato_mock:
         elgato = elgato_mock.return_value
-        elgato.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
+        elgato.info.return_value = Info.parse_raw(
+            load_fixture(f"{device_fixtures}/info.json", DOMAIN)
+        )
         elgato.state.return_value = State.parse_raw(
-            load_fixture(f"state-{variant['state']}.json", DOMAIN)
+            load_fixture(f"{device_fixtures}/{state_variant}.json", DOMAIN)
         )
         elgato.settings.return_value = Settings.parse_raw(
-            load_fixture(f"settings-{variant['settings']}.json", DOMAIN)
+            load_fixture(f"{device_fixtures}/settings.json", DOMAIN)
         )
         yield elgato
 
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_elgato: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_elgato: MagicMock,
 ) -> MockConfigEntry:
     """Set up the Elgato integration for testing."""
     mock_config_entry.add_to_hass(hass)
