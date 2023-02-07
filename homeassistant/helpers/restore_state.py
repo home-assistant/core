@@ -5,7 +5,9 @@ from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, cast
+
+from typing_extensions import Self
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
@@ -31,8 +33,6 @@ STATE_DUMP_INTERVAL = timedelta(minutes=15)
 
 # How long should a saved state be preserved if the entity no longer exists
 STATE_EXPIRATION = timedelta(days=7)
-
-_StoredStateSelfT = TypeVar("_StoredStateSelfT", bound="StoredState")
 
 
 class ExtraStoredData(ABC):
@@ -82,7 +82,7 @@ class StoredState:
         return result
 
     @classmethod
-    def from_dict(cls: type[_StoredStateSelfT], json_dict: dict) -> _StoredStateSelfT:
+    def from_dict(cls, json_dict: dict) -> Self:
         """Initialize a stored state from a dict."""
         extra_data_dict = json_dict.get("extra_data")
         extra_data = RestoredExtraData(extra_data_dict) if extra_data_dict else None
