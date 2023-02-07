@@ -91,6 +91,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 ]
 
 _TEST_FIXTURES: dict[str, list[str] | str] = {
+    "caplog": "pytest.LogCaptureFixture",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",
