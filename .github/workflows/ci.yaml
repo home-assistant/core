@@ -34,6 +34,8 @@ env:
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
+  MARIADB_VERSIONS: "['mariadb:10.9.3']"
+  POSTGRESQL_VERSIONS: "['postgres:15.0']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -105,8 +107,8 @@ jobs:
         run: |
           # Defaults
           integrations_glob=""
-          mariadb_groups="['mariadb']"
-          postgresql_groups="['postgresql']"
+          mariadb_groups=${MARIADB_VERSIONS}
+          postgresql_groups=${POSTGRESQL_VERSIONS}
           test_full_suite="true"
           test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
           test_group_count=10
@@ -154,8 +156,8 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
-            mariadb_groups="['mariadb']"
-            postgresql_groups="['postgresql']"
+            mariadb_groups=${MARIADB_VERSIONS}
+            postgresql_groups=${POSTGRESQL_VERSIONS}
             test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
             test_group_count=10
             test_full_suite="true"
