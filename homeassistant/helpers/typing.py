@@ -17,11 +17,6 @@ TemplateVarsType = Mapping[str, Any] | None
 # Custom type for recorder Queries
 QueryType = Any
 
-JsonValueType = (
-    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
-)
-"""Data that can be returned by the standard JSON deserializing process."""
-
 
 class UndefinedType(Enum):
     """Singleton type for use with not set sentinel values."""

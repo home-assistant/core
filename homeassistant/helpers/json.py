@@ -7,7 +7,10 @@ from typing import Any, Final
 
 import orjson
 
-from .typing import JsonValueType
+JsonValueType = (
+    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
+)
+"""Data that can be returned by the standard JSON deserializing process."""
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
 JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
