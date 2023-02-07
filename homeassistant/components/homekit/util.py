@@ -448,13 +448,13 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 
 def density_to_air_quality_voc(density: float) -> int:
     """Map VOCs µg/m3 to HomeKit AirQuality level."""
-    if density <= 24:
+    if density <= 250:
         return 1
-    if density <= 48:
+    if density <= 500:
         return 2
-    if density <= 64:
+    if density <= 1000:
         return 3
-    if density <= 96:
+    if density <= 3000:
         return 4
     return 5
 
