@@ -1143,26 +1143,45 @@ async def test_unit_conversion_priority_suggested_unit_change(
 
 
 @pytest.mark.parametrize(
-    "native_unit, suggested_precision, native_value, device_class",
+    "unit_system, native_unit, integration_suggested_precision,"
+    "options_suggested_precision, native_value, device_class, extra_options",
     [
         # Distance
         (
+            METRIC_SYSTEM,
             UnitOfLength.KILOMETERS,
+            4,
             4,
             1000,
             SensorDeviceClass.DISTANCE,
+            {},
+        ),
+        # Air pressure
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfPressure.HPA,
+            0,
+            1,
+            1000,
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
         ),
     ],
 )
 async def test_suggested_precision_option(
     hass,
     enable_custom_integrations,
+    unit_system,
     native_unit,
-    suggested_precision,
+    integration_suggested_precision,
+    options_suggested_precision,
     native_value,
     device_class,
+    extra_options,
 ):
     """Test suggested precision is stored in the registry."""
+
+    hass.config.units = unit_system
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
@@ -1173,7 +1192,7 @@ async def test_suggested_precision_option(
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
-        suggested_display_precision=suggested_precision,
+        suggested_display_precision=integration_suggested_precision,
         unique_id="very_unique",
     )
     entity0 = platform.ENTITIES["0"]
@@ -1183,33 +1202,57 @@ async def test_suggested_precision_option(
 
     # Assert the suggested precision is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
-    assert entry.options == {
-        "sensor": {"suggested_display_precision": suggested_precision}
+    assert entry.options == extra_options | {
+        "sensor": {"suggested_display_precision": options_suggested_precision}
     }
 
 
 @pytest.mark.parametrize(
-    "native_unit, old_precision, new_precision, native_value, device_class",
+    "unit_system, native_unit, suggested_unit, old_precision, new_precision,"
+    "opt_precision, native_value, device_class, extra_options",
     [
+        # Distance
         (
+            METRIC_SYSTEM,
+            UnitOfLength.KILOMETERS,
             UnitOfLength.KILOMETERS,
             4,
             1,
+            1,
             1000,
             SensorDeviceClass.DISTANCE,
+            {},
+        ),
+        # Air pressure
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+            1,
+            1,
+            2,
+            1000,
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
         ),
     ],
 )
 async def test_suggested_precision_option_update(
     hass,
     enable_custom_integrations,
+    unit_system,
     native_unit,
+    suggested_unit,
     old_precision,
     new_precision,
+    opt_precision,
     native_value,
     device_class,
+    extra_options,
 ):
     """Test suggested precision stored in the registry is updated."""
+
+    hass.config.units = unit_system
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
@@ -1228,7 +1271,7 @@ async def test_suggested_precision_option_update(
         entry.entity_id,
         "sensor.private",
         {
-            "suggested_unit_of_measurement": native_unit,
+            "suggested_unit_of_measurement": suggested_unit,
         },
     )
 
@@ -1249,10 +1292,10 @@ async def test_suggested_precision_option_update(
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.options == {
         "sensor": {
-            "suggested_display_precision": new_precision,
+            "suggested_display_precision": opt_precision,
         },
         "sensor.private": {
-            "suggested_unit_of_measurement": native_unit,
+            "suggested_unit_of_measurement": suggested_unit,
         },
     }
 
