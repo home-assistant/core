@@ -674,6 +674,9 @@ hassil==0.2.6
 # homeassistant.components.tasmota
 hatasmota==0.6.3
 
+# homeassistant.components.jewish_calendar
+hdate==0.10.4
+
 # homeassistant.components.here_travel_time
 here_routing==0.2.0
 
