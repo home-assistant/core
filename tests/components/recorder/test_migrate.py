@@ -398,7 +398,7 @@ def test_modify_column(engine_type, substr):
         assert not connection.execute.called
 
 
-def test_forgiving_add_column():
+def test_forgiving_add_column() -> None:
     """Test that add column will continue if column exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
     with Session(engine) as session:
@@ -413,7 +413,7 @@ def test_forgiving_add_column():
         )
 
 
-def test_forgiving_add_index():
+def test_forgiving_add_index() -> None:
     """Test that add index will continue if index exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
     db_schema.Base.metadata.create_all(engine)
@@ -454,7 +454,7 @@ class MockPyODBCProgrammingError(Exception):
     """A mock pyodbc error."""
 
 
-def test_raise_if_exception_missing_str():
+def test_raise_if_exception_missing_str() -> None:
     """Test we raise an exception if strings are not present."""
     programming_exc = ProgrammingError("select * from;", Mock(), Mock())
     programming_exc.__cause__ = MockPyODBCProgrammingError(
@@ -469,7 +469,7 @@ def test_raise_if_exception_missing_str():
         migration.raise_if_exception_missing_str(programming_exc, ["not present"])
 
 
-def test_raise_if_exception_missing_empty_cause_str():
+def test_raise_if_exception_missing_empty_cause_str() -> None:
     """Test we raise an exception if strings are not present with an empty cause."""
     programming_exc = ProgrammingError("select * from;", Mock(), Mock())
     programming_exc.__cause__ = MockPyODBCProgrammingError()

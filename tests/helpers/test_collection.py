@@ -99,7 +99,7 @@ class MockStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-def test_id_manager():
+def test_id_manager() -> None:
     """Test the ID manager."""
     id_manager = collection.IDManager()
     assert not id_manager.has_id("some_id")

@@ -29,13 +29,13 @@ from tests.common import (
 )
 
 
-def test_generate_entity_id_requires_hass_or_ids():
+def test_generate_entity_id_requires_hass_or_ids() -> None:
     """Ensure we require at least hass or current ids."""
     with pytest.raises(ValueError):
         entity.generate_entity_id("test.{}", "hello world")
 
 
-def test_generate_entity_id_given_keys():
+def test_generate_entity_id_given_keys() -> None:
     """Test generating an entity id given current ids."""
     assert (
         entity.generate_entity_id(
