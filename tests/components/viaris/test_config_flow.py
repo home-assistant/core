@@ -25,20 +25,16 @@ async def test_form(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "serial_number": "12345678",
-                "topic_prefix": "XEO/VIARIS/",
-            },
+            {"serial_number": "EVVC312345678"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "VIARIS 12345678"
+    assert result2["title"] == "VIARIS EVVC312345678"
     assert result2["data"] == {
-        "serial_number": "12345678",
-        "topic_prefix": "XEO/VIARIS/",
+        "serial_number": "EVVC312345678",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -54,8 +50,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "serial_number": "12345678",
-                "topic_prefix": "XEO/VIARIS/",
+                "serial_number": "EVVC312345678",
             },
         )
 
@@ -76,8 +71,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "serial_number": "12345678",
-                "topic_prefix": "XEO/VIARIS/",
+                "serial_number": "EVVC312345678",
             },
         )
 

@@ -2,22 +2,21 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya está configurado"
+
         },
-        "flow_title": "{name}",
         "error": {
             "cannot_connect": "Fallo en la conexión",
-            "invalid_auth": "Fallo en la utenticación",
-            "unknown": "Error inesperado"
+            "invalid_auth": "Fallo en la autenticación",
+            "unknown": "Error inesperado",
+            "invalid_serial":"N\u00famero de serie incorrecto",
+            "invalid_serial_length": "Longitud incorrecta del n\u00famero de serie"
         },
+        "flow_title": "{name}",
         "step": {
-            "discovery_confirm": {
-                "description": "Quiere configurar {name}?"
-            },
             "user": {
-                "description": "Por favor, proporcione el numero de serie del dispositivo",
+                "description": "Por favor, introduzca en may\u00fasculas el n\u00famero de serie del cargador",
                 "data": {
-                    "serial_number": "Numero de serie",
-                    "topic_prefix": "Topic"
+                    "serial_number": "N\u00famero de serie"
                 }
             }
         }

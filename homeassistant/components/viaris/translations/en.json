@@ -6,14 +6,16 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "invalid_serial": "Incorrect serial number",
+            "invalid_serial_length": "incorrect length serial number"
         },
         "flow_title": "{name}",
         "step": {
             "user": {
+                "description": "Enter charger serial number in capital letters, please ",
                 "data": {
-                    "serial_number": "Introduzca el n\u00famero de serie",
-                    "topic_prefix": "Introduzca el topic"
+                    "serial_number": "Serial number"
                 }
             }
         }

@@ -5876,6 +5876,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "viaris": {
+      "name": "Viaris EV charger",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "vicare": {
       "name": "Viessmann ViCare",
       "integration_type": "hub",

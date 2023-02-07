@@ -14,5 +14,8 @@ MQTT = {
         "XEO/VIARIS/+/stat/0/+/streamrt/modulator",
         "XEO/VIARIS/+/stat/0/+/value/evsm/mennekes",
         "XEO/VIARIS/+/stat/0/+/value/evsm/schuko",
+        "XEO/VIARIS/+/stat/0/+/boot/sys",
+        "XEO/VIARIS/+/stat/0/+/init_boot/sys",
+        "XEO/VIARIS/+/stat/0/+/cfg/mqtt_user",
     ],
 }
