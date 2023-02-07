@@ -339,7 +339,7 @@ def test_remove_lib_on_upgrade_94(mock_docker, mock_os, mock_shutil, hass):
         assert mock_shutil.rmtree.call_args == mock.call(hass_path)
 
 
-def test_process_config_upgrade(hass):
+def test_process_config_upgrade(hass: HomeAssistant) -> None:
     """Test update of version on upgrade."""
     ha_version = "0.92.0"
 
@@ -357,7 +357,7 @@ def test_process_config_upgrade(hass):
         assert opened_file.write.call_args == mock.call("0.91.0")
 
 
-def test_config_upgrade_same_version(hass):
+def test_config_upgrade_same_version(hass: HomeAssistant) -> None:
     """Test no update of version on no upgrade."""
     ha_version = __version__
 
@@ -372,7 +372,7 @@ def test_config_upgrade_same_version(hass):
         assert opened_file.write.call_count == 0
 
 
-def test_config_upgrade_no_file(hass):
+def test_config_upgrade_no_file(hass: HomeAssistant) -> None:
     """Test update of version on upgrade, with no version file."""
     mock_open = mock.mock_open()
     mock_open.side_effect = [FileNotFoundError(), mock.DEFAULT, mock.DEFAULT]

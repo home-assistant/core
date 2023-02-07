@@ -7,6 +7,7 @@ from unittest.mock import patch
 from voluptuous import MultipleInvalid
 
 from homeassistant.components import pilight
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -388,7 +389,7 @@ async def test_call_rate_delay_throttle_enabled(hass):
         assert runs == exp
 
 
-def test_call_rate_delay_throttle_disabled(hass):
+def test_call_rate_delay_throttle_disabled(hass: HomeAssistant) -> None:
     """Test that the limiter is a noop if no delay set."""
     runs = []
 
