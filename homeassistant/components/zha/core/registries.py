@@ -93,9 +93,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: Platform.SWITCH,
         zigpy.profiles.zha.DeviceType.SHADE: Platform.COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: Platform.SWITCH,
-        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: (
-            Platform.ALARM_CONTROL_PANEL
-        ),
+        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: Platform.ALARM_CONTROL_PANEL,
         zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: Platform.SIREN,
     },
     zigpy.profiles.zll.PROFILE_ID: {
@@ -146,6 +144,9 @@ class MatchRule:
     aux_channels: frozenset[str] | Callable = attr.ib(
         factory=_get_empty_frozenset, converter=set_or_callable
     )
+    quirk_classes: frozenset[str] | Callable = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
+    )
 
     @property
     def weight(self) -> int:
@@ -167,6 +168,10 @@ class MatchRule:
             weight += 301 - (
                 1 if callable(self.manufacturers) else len(self.manufacturers)
             )
+        if self.quirk_classes:
+            weight += 201 - (
+                1 if callable(self.quirk_classes) else len(self.quirk_classes)
+            )
 
         weight += 10 * len(self.channel_names)
         weight += 5 * len(self.generic_ids)
@@ -187,15 +192,21 @@ class MatchRule:
             claimed.extend([ch for ch in channel_pool if ch.name in self.aux_channels])
         return claimed
 
-    def strict_matched(self, manufacturer: str, model: str, channels: list) -> bool:
+    def strict_matched(
+        self, manufacturer: str, model: str, channels: list, quirk_class: str
+    ) -> bool:
         """Return True if this device matches the criteria."""
-        return all(self._matched(manufacturer, model, channels))
+        return all(self._matched(manufacturer, model, channels, quirk_class))
 
-    def loose_matched(self, manufacturer: str, model: str, channels: list) -> bool:
+    def loose_matched(
+        self, manufacturer: str, model: str, channels: list, quirk_class: str
+    ) -> bool:
         """Return True if this device matches the criteria."""
-        return any(self._matched(manufacturer, model, channels))
+        return any(self._matched(manufacturer, model, channels, quirk_class))
 
-    def _matched(self, manufacturer: str, model: str, channels: list) -> list:
+    def _matched(
+        self, manufacturer: str, model: str, channels: list, quirk_class: str
+    ) -> list:
         """Return a list of field matches."""
         if not any(attr.asdict(self).values()):
             return [False]
@@ -220,6 +231,12 @@ class MatchRule:
                 matches.append(self.models(model))
             else:
                 matches.append(model in self.models)
+
+        if self.quirk_classes:
+            if callable(self.quirk_classes):
+                matches.append(self.quirk_classes(quirk_class))
+            else:
+                matches.append(quirk_class in self.quirk_classes)
 
         return matches
 
@@ -261,12 +278,13 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         channels: list[ZigbeeChannel],
+        quirk_class: str,
         default: type[ZhaEntity] | None = None,
     ) -> tuple[type[ZhaEntity] | None, list[ZigbeeChannel]]:
         """Match a ZHA Channels to a ZHA Entity class."""
         matches = self._strict_registry[component]
         for match in sorted(matches, key=lambda x: x.weight, reverse=True):
-            if match.strict_matched(manufacturer, model, channels):
+            if match.strict_matched(manufacturer, model, channels, quirk_class):
                 claimed = match.claim_channels(channels)
                 return self._strict_registry[component][match], claimed
 
@@ -277,6 +295,7 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         channels: list[ZigbeeChannel],
+        quirk_class: str,
     ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ZigbeeChannel]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
@@ -285,7 +304,7 @@ class ZHAEntityRegistry:
             for stop_match_grp, matches in stop_match_groups.items():
                 sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
                 for match in sorted_matches:
-                    if match.strict_matched(manufacturer, model, channels):
+                    if match.strict_matched(manufacturer, model, channels, quirk_class):
                         claimed = match.claim_channels(channels)
                         for ent_class in stop_match_groups[stop_match_grp][match]:
                             ent_n_channels = EntityClassAndChannels(ent_class, claimed)
@@ -301,6 +320,7 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         channels: list[ZigbeeChannel],
+        quirk_class: str,
     ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ZigbeeChannel]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
@@ -312,7 +332,7 @@ class ZHAEntityRegistry:
             for stop_match_grp, matches in stop_match_groups.items():
                 sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
                 for match in sorted_matches:
-                    if match.strict_matched(manufacturer, model, channels):
+                    if match.strict_matched(manufacturer, model, channels, quirk_class):
                         claimed = match.claim_channels(channels)
                         for ent_class in stop_match_groups[stop_match_grp][match]:
                             ent_n_channels = EntityClassAndChannels(ent_class, claimed)
@@ -335,11 +355,17 @@ class ZHAEntityRegistry:
         manufacturers: Callable | set[str] | str | None = None,
         models: Callable | set[str] | str | None = None,
         aux_channels: Callable | set[str] | str | None = None,
+        quirk_classes: set[str] | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a strict match rule."""
 
         rule = MatchRule(
-            channel_names, generic_ids, manufacturers, models, aux_channels
+            channel_names,
+            generic_ids,
+            manufacturers,
+            models,
+            aux_channels,
+            quirk_classes,
         )
 
         def decorator(zha_ent: _ZhaEntityT) -> _ZhaEntityT:
@@ -361,6 +387,7 @@ class ZHAEntityRegistry:
         models: Callable | set[str] | str | None = None,
         aux_channels: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
+        quirk_classes: set[str] | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
@@ -370,6 +397,7 @@ class ZHAEntityRegistry:
             manufacturers,
             models,
             aux_channels,
+            quirk_classes,
         )
 
         def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
@@ -394,6 +422,7 @@ class ZHAEntityRegistry:
         models: Callable | set[str] | str | None = None,
         aux_channels: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
+        quirk_classes: set[str] | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
@@ -403,6 +432,7 @@ class ZHAEntityRegistry:
             manufacturers,
             models,
             aux_channels,
+            quirk_classes,
         )
 
         def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
