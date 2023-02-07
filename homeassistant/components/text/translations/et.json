@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "set_value": "Olemi {entity_name} v\u00e4\u00e4rtuse m\u00e4\u00e4ramine"
-        }
-    },
-    "title": "Tekst"
-}

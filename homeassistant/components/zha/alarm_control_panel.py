@@ -89,7 +89,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.TRIGGER
     )
 
-    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs) -> None:
         """Initialize the ZHA alarm control device."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         cfg_entry = zha_device.gateway.config_entry

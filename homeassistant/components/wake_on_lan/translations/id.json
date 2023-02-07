@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "Konfigurasi Integrasi Wake-on-LAN menggunakan YAML telah dipindahkan ke kunci integrasi.\n\nKonfigurasi YAML Anda yang ada saat ini akan berfungsi hingga 2 versi berikutnya.\n\nMigrasikan konfigurasi YAML Anda ke kunci integrasi sesuai dengan dokumentasi.",
-            "title": "Konfigurasi YAML Integrasi Wake-on-LAN telah dipindahkan"
-        }
-    }
-}

@@ -276,7 +276,7 @@ async def test_agent_user_id_storage(hass, hass_storage):
     )
 
 
-async def test_agent_user_id_connect():
+async def test_agent_user_id_connect() -> None:
     """Test the connection and disconnection of users."""
     config = MockConfig()
     store = config._store

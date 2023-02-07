@@ -37,6 +37,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
@@ -1075,9 +1076,6 @@ class EventBus:
             )
 
 
-_StateT = TypeVar("_StateT", bound="State")
-
-
 class State:
     """Object to represent a state within the state machine.
 
@@ -1200,7 +1198,7 @@ class State:
         return compressed_state
 
     @classmethod
-    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
+    def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
         """Initialize a state from a dict.
 
         Async friendly.

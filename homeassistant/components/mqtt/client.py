@@ -10,7 +10,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 import uuid
 
 import attr
@@ -151,9 +151,9 @@ AsyncDeprecatedMessageCallbackType = Callable[
     [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
 ]
 DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
-DeprecatedMessageCallbackTypes = Union[
-    AsyncDeprecatedMessageCallbackType, DeprecatedMessageCallbackType
-]
+DeprecatedMessageCallbackTypes = (
+    AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType
+)
 
 
 # Support for a deprecated callback type will be removed from HA core 2023.2.0
