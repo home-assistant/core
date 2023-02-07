@@ -126,7 +126,7 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
 }
 
 
-def test_converters_align_with_sensor():
+def test_converters_align_with_sensor() -> None:
     """Ensure UNIT_SCHEMA is aligned with sensor UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
         assert converter.UNIT_CLASS in UNIT_SCHEMA.schema

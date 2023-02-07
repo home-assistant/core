@@ -734,7 +734,7 @@ def test_saving_state_with_oversized_attributes(hass_recorder, caplog):
     assert states[1].attributes == {}
 
 
-def test_recorder_setup_failure(hass):
+def test_recorder_setup_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
@@ -749,7 +749,7 @@ def test_recorder_setup_failure(hass):
     hass.stop()
 
 
-def test_recorder_validate_schema_failure(hass):
+def test_recorder_validate_schema_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch(
@@ -766,7 +766,7 @@ def test_recorder_validate_schema_failure(hass):
     hass.stop()
 
 
-def test_recorder_setup_failure_without_event_listener(hass):
+def test_recorder_setup_failure_without_event_listener(hass: HomeAssistant) -> None:
     """Test recorder setup failure when the event listener is not setup."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(

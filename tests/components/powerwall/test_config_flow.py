@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .mocks import (
@@ -507,7 +508,9 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(hass):
     assert entry.unique_id == MOCK_GATEWAY_DIN
 
 
-async def test_discovered_wifi_does_not_update_ip_if_is_still_online(hass) -> None:
+async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
+    hass: HomeAssistant,
+) -> None:
     """Test a discovery does not update the ip unless the powerwall at the old ip is offline."""
     entry = MockConfigEntry(
         domain=DOMAIN,

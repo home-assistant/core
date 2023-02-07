@@ -2348,7 +2348,7 @@ async def test_services_filter_parameters(
     assert data == {}
 
 
-def test_valid_supported_color_modes():
+def test_valid_supported_color_modes() -> None:
     """Test valid_supported_color_modes."""
     supported = {light.ColorMode.HS}
     assert light.valid_supported_color_modes(supported) == supported
@@ -2387,7 +2387,7 @@ def test_valid_supported_color_modes():
         light.valid_supported_color_modes(supported)
 
 
-def test_filter_supported_color_modes():
+def test_filter_supported_color_modes() -> None:
     """Test filter_supported_color_modes."""
     supported = {light.ColorMode.HS}
     assert light.filter_supported_color_modes(supported) == supported
