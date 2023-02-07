@@ -105,8 +105,8 @@ jobs:
         run: |
           # Defaults
           integrations_glob=""
-          mariadb_groups="[]"
-          postgresql_groups="[]"
+          mariadb_groups="['mariadb']"
+          postgresql_groups="['postgresql']"
           test_full_suite="true"
           test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
           test_group_count=10
@@ -140,6 +140,8 @@ jobs:
             tests_glob=$(echo "${tests}" | jq -cSr '. | join(",")')
             [[ "${tests_glob}" == *","* ]] && tests_glob="{${tests_glob}}"
 
+            mariadb_groups="[]"
+            postgresql_groups="[]"
             test_full_suite="false"
           fi
 
@@ -152,6 +154,8 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
+            mariadb_groups="['mariadb']"
+            postgresql_groups="['postgresql']"
             test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
             test_group_count=10
             test_full_suite="true"
