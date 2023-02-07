@@ -47,6 +47,7 @@ from homeassistant.helpers.json import (
     json_bytes,
     json_bytes_strip_null,
     json_loads,
+    json_loads_object,
 )
 import homeassistant.util.dt as dt_util
 
@@ -232,7 +233,7 @@ class Events(Base):
         try:
             return Event(
                 self.event_type or "",
-                json_loads(self.event_data) if self.event_data else {},
+                json_loads_object(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
@@ -403,7 +404,7 @@ class States(Base):
             parent_id=self.context_parent_id,
         )
         try:
-            attrs = json_loads(self.attributes) if self.attributes else {}
+            attrs = json_loads_object(self.attributes) if self.attributes else {}
         except JSON_DECODE_EXCEPTIONS:
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
