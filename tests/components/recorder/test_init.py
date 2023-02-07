@@ -567,10 +567,15 @@ def test_saving_state_include_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
-    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
+    state_map = {state.entity_id: state for state in states}
+
+    assert (
+        _state_with_context(hass, "test2.recorder").as_dict()
+        == state_map["test2.recorder"].as_dict()
+    )
     assert (
         _state_with_context(hass, "test3.included_entity").as_dict()
-        == states[1].as_dict()
+        == state_map["test3.included_entity"].as_dict()
     )
 
 
