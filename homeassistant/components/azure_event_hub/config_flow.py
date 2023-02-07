@@ -84,7 +84,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION: int = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self._data: dict[str, Any] = {}
         self._options: dict[str, Any] = deepcopy(DEFAULT_OPTIONS)
