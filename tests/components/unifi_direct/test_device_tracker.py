@@ -141,7 +141,7 @@ def test_bad_response_returns_none(hass):
     assert _response_to_json("{(}") == {}
 
 
-def test_config_error():
+def test_config_error() -> None:
     """Test for configuration errors."""
     with pytest.raises(vol.Invalid):
         PLATFORM_SCHEMA(

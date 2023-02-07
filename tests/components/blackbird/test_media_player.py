@@ -53,7 +53,7 @@ class MockBlackbird:
         self.zones[3].av = source_idx
 
 
-def test_valid_serial_schema():
+def test_valid_serial_schema() -> None:
     """Test valid schema."""
     valid_schema = {
         "platform": "blackbird",
@@ -82,7 +82,7 @@ def test_valid_serial_schema():
     PLATFORM_SCHEMA(valid_schema)
 
 
-def test_valid_socket_schema():
+def test_valid_socket_schema() -> None:
     """Test valid schema."""
     valid_schema = {
         "platform": "blackbird",
@@ -104,7 +104,7 @@ def test_valid_socket_schema():
     PLATFORM_SCHEMA(valid_schema)
 
 
-def test_invalid_schemas():
+def test_invalid_schemas() -> None:
     """Test invalid schemas."""
     schemas = (
         {},  # Empty

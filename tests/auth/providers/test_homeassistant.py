@@ -36,7 +36,7 @@ async def test_validating_password_invalid_user(data, hass):
         data.validate_login("non-existing", "pw")
 
 
-async def test_not_allow_set_id():
+async def test_not_allow_set_id() -> None:
     """Test we are not allowed to set an ID in config."""
     hass = Mock()
     with pytest.raises(vol.Invalid):

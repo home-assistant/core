@@ -321,7 +321,7 @@ async def test_config(hass):
     assert "icon" not in no_icon.attributes
 
 
-def test_validator():
+def test_validator() -> None:
     """Test validators."""
     parsed = ha_scene.STATES_SCHEMA({"light.Test": {"state": "on"}})
     assert len(parsed) == 1

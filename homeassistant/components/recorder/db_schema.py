@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 import ciso8601
 from fnvhash import fnv1a_32
@@ -30,6 +30,7 @@ from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
+from typing_extensions import Self
 
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
@@ -61,8 +62,6 @@ from .models import (
 Base = declarative_base()
 
 SCHEMA_VERSION = 35
-
-_StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -484,9 +483,7 @@ class StatisticsBase:
     sum = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(
-        cls: type[_StatisticsBaseSelfT], metadata_id: int, stats: StatisticData
-    ) -> _StatisticsBaseSelfT:
+    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
@@ -601,7 +598,7 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
 
         return [row[0] for row in query]
 
-    def to_native(self, validate_entity_id: bool = True) -> RecorderRuns:
+    def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""
         return self
 
