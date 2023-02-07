@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypedDict, TypeVar, cast, overload
+from typing import Any, TypedDict, cast, overload
 
 import ciso8601
 from fnvhash import fnv1a_32
@@ -32,6 +32,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
+from typing_extensions import Self
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.const import (
@@ -60,8 +61,6 @@ ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEAT
 Base = declarative_base()
 
 SCHEMA_VERSION = 30
-
-_StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -491,9 +490,7 @@ class StatisticsBase:
     sum = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(
-        cls: type[_StatisticsBaseSelfT], metadata_id: int, stats: StatisticData
-    ) -> _StatisticsBaseSelfT:
+    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,

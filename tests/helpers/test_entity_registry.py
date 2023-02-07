@@ -1290,7 +1290,7 @@ async def test_resolve_entity_ids(hass, registry):
         er.async_validate_entity_ids(registry, ["unknown_uuid"])
 
 
-def test_entity_registry_items():
+def test_entity_registry_items() -> None:
     """Test the EntityRegistryItems container."""
     entities = er.EntityRegistryItems()
     assert entities.get_entity_id(("a", "b", "c")) is None

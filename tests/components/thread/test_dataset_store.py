@@ -122,9 +122,7 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
         if dataset.source == "🎅":
             dataset_3_store_1 = dataset
 
-    assert dataset_1_store_1.preferred
-    assert not dataset_2_store_1.preferred
-    assert not dataset_3_store_1.preferred
+    assert store1.preferred_dataset == dataset_1_store_1.id
 
     store2 = dataset_store.DatasetStore(hass)
     await flush_store(store1._store)
@@ -135,12 +133,15 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
     for dataset in store2.datasets.values():
         if dataset.source == "Google":
             dataset_1_store_2 = dataset
+        if dataset.source == "Multipan":
+            dataset_2_store_2 = dataset
         if dataset.source == "🎅":
             dataset_3_store_2 = dataset
 
     assert list(store1.datasets) == list(store2.datasets)
 
     assert dataset_1_store_1 == dataset_1_store_2
+    assert dataset_2_store_1 == dataset_2_store_2
     assert dataset_3_store_1 == dataset_3_store_2
 
 
@@ -154,27 +155,26 @@ async def test_loading_datasets_from_storage(hass: HomeAssistant, hass_storage) 
                 {
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id1",
-                    "preferred": True,
                     "source": "source_1",
                     "tlv": "DATASET_1",
                 },
                 {
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id2",
-                    "preferred": True,
                     "source": "source_2",
                     "tlv": "DATASET_2",
                 },
                 {
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id3",
-                    "preferred": True,
                     "source": "source_3",
                     "tlv": "DATASET_3",
                 },
-            ]
+            ],
+            "preferred_dataset": "id1",
         },
     }
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 3
+    assert store.preferred_dataset == "id1"

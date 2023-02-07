@@ -533,7 +533,8 @@ def _apply_update(  # noqa: C901
         _drop_index(session_maker, "states", "states__state_changes")
         _drop_index(session_maker, "states", "states__significant_changes")
         _drop_index(session_maker, "states", "ix_states_entity_id_created")
-        # This used to create ix_states_entity_id_last_updated, but it was removed in version 32
+        # This used to create ix_states_entity_id_last_updated,
+        # but it was removed in version 32
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
         _create_index(session_maker, "states", "ix_states_event_id")
@@ -544,21 +545,25 @@ def _apply_update(  # noqa: C901
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "events", "ix_events_context_id")
-        # This used to create ix_events_context_user_id, but it was removed in version 28
+        # This used to create ix_events_context_user_id,
+        # but it was removed in version 28
         _add_columns(
             session_maker,
             "states",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "states", "ix_states_context_id")
-        # This used to create ix_states_context_user_id, but it was removed in version 28
+        # This used to create ix_states_context_user_id,
+        # but it was removed in version 28
     elif new_version == 7:
-        # There used to be a ix_states_entity_id index here, but it was removed in later schema
+        # There used to be a ix_states_entity_id index here,
+        # but it was removed in later schema
         pass
     elif new_version == 8:
         _add_columns(session_maker, "events", ["context_parent_id CHARACTER(36)"])
         _add_columns(session_maker, "states", ["old_state_id INTEGER"])
-        # This used to create ix_events_context_parent_id, but it was removed in version 28
+        # This used to create ix_events_context_parent_id,
+        # but it was removed in version 28
     elif new_version == 9:
         # We now get the context from events with a join
         # since its always there on state_changed events
@@ -576,7 +581,8 @@ def _apply_update(  # noqa: C901
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
         _drop_index(session_maker, "states", "ix_states_entity_id")
-        # This used to create ix_events_event_type_time_fired, but it was removed in version 32
+        # This used to create ix_events_event_type_time_fired,
+        # but it was removed in version 32
         _drop_index(session_maker, "events", "ix_events_event_type")
     elif new_version == 10:
         # Now done in step 11

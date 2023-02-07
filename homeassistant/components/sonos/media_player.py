@@ -261,7 +261,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             "STOPPED",
         ):
             # Sonos can consider itself "paused" but without having media loaded
-            # (happens if playing Spotify and via Spotify app you pick another device to play on)
+            # (happens if playing Spotify and via Spotify app
+            # you pick another device to play on)
             if self.media.title is None:
                 return MediaPlayerState.IDLE
             return MediaPlayerState.PAUSED

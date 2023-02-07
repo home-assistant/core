@@ -118,7 +118,7 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     return mock_pymodbus
 
 
-async def test_number_validator():
+async def test_number_validator() -> None:
     """Test number validator."""
 
     for value, value_type in (
