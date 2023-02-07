@@ -1020,6 +1020,8 @@ jobs:
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
     needs:
       - info
       - base
@@ -1115,7 +1117,6 @@ jobs:
     needs:
       - info
       - pytest
-      - pytest-postgres
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.3.0
