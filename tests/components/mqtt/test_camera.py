@@ -42,7 +42,7 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
 DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
 
@@ -56,7 +56,7 @@ def camera_platform_only():
 
 async def test_run_camera_setup(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test that it fetches the given payload."""
@@ -116,7 +116,7 @@ async def test_run_camera_b64_encoded(
 
 async def test_camera_b64_encoded_with_availability(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test availability works if b64 encoding is turned on."""
