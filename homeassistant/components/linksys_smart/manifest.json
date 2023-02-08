@@ -1,7 +1,7 @@
 {
   "domain": "linksys_smart",
   "name": "Linksys Smart Wi-Fi",
-  "documentation": "https://www.home-assistant.io/integrations/linksys_smart",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/linksys_smart",
   "iot_class": "local_polling"
 }
