@@ -11,7 +11,7 @@
         }
       },
       "reauth_validate": {
-        "description": "If you are using the August cloud integration to obtain the key, you may be able to avoid manual reauthentication by reloading the August cloud integration while the lock is in Bluetooth range.",
+        "description": "Enter the updated key for the {title} lock with address {address}. If you are using the August cloud integration to obtain the key, you may be able to avoid manual reauthentication by reloading the August cloud integration while the lock is in Bluetooth range.",
         "data": {
           "key": "[%key:component::yalexs_ble::config::step::user::data::key%]",
           "slot": "[%key:component::yalexs_ble::config::step::user::data::slot%]"

@@ -215,6 +215,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_KEY): str, vol.Required(CONF_SLOT): int}
             ),
+            description_placeholders={
+                "address": reauth_entry.data[CONF_ADDRESS],
+                "title": reauth_entry.title,
+            },
             errors=errors,
         )
 
