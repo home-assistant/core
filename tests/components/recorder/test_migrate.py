@@ -27,6 +27,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
 
@@ -45,7 +46,7 @@ def _get_native_states(hass, entity_id):
         ]
 
 
-async def test_schema_update_calls(hass):
+async def test_schema_update_calls(hass: HomeAssistant) -> None:
     """Test that schema migrations occur in correct order."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -74,7 +75,7 @@ async def test_schema_update_calls(hass):
     )
 
 
-async def test_migration_in_progress(hass):
+async def test_migration_in_progress(hass: HomeAssistant) -> None:
     """Test that we can check for migration in progress."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -94,7 +95,7 @@ async def test_migration_in_progress(hass):
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-async def test_database_migration_failed(hass):
+async def test_database_migration_failed(hass: HomeAssistant) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -125,7 +126,7 @@ async def test_database_migration_failed(hass):
     assert len(mock_dismiss.mock_calls) == 1
 
 
-async def test_database_migration_encounters_corruption(hass):
+async def test_database_migration_encounters_corruption(hass: HomeAssistant) -> None:
     """Test we move away the database if its corrupt."""
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -156,7 +157,9 @@ async def test_database_migration_encounters_corruption(hass):
     assert move_away.called
 
 
-async def test_database_migration_encounters_corruption_not_sqlite(hass):
+async def test_database_migration_encounters_corruption_not_sqlite(
+    hass: HomeAssistant,
+) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -190,7 +193,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     assert len(mock_dismiss.mock_calls) == 1
 
 
-async def test_events_during_migration_are_queued(hass):
+async def test_events_during_migration_are_queued(hass: HomeAssistant) -> None:
     """Test that events during migration are queued."""
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -224,7 +227,7 @@ async def test_events_during_migration_are_queued(hass):
     assert len(db_states) == 2
 
 
-async def test_events_during_migration_queue_exhausted(hass):
+async def test_events_during_migration_queue_exhausted(hass: HomeAssistant) -> None:
     """Test that events during migration takes so long the queue is exhausted."""
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -365,7 +368,7 @@ async def test_schema_migrate(hass, start_version, live):
         assert recorder.util.async_migration_in_progress(hass) is not True
 
 
-def test_invalid_update(hass):
+def test_invalid_update(hass: HomeAssistant) -> None:
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
         migration._apply_update(hass, Mock(), Mock(), -1, 0)
@@ -398,7 +401,7 @@ def test_modify_column(engine_type, substr):
         assert not connection.execute.called
 
 
-def test_forgiving_add_column():
+def test_forgiving_add_column() -> None:
     """Test that add column will continue if column exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
     with Session(engine) as session:
@@ -413,7 +416,7 @@ def test_forgiving_add_column():
         )
 
 
-def test_forgiving_add_index():
+def test_forgiving_add_index() -> None:
     """Test that add index will continue if index exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
     db_schema.Base.metadata.create_all(engine)
@@ -454,7 +457,7 @@ class MockPyODBCProgrammingError(Exception):
     """A mock pyodbc error."""
 
 
-def test_raise_if_exception_missing_str():
+def test_raise_if_exception_missing_str() -> None:
     """Test we raise an exception if strings are not present."""
     programming_exc = ProgrammingError("select * from;", Mock(), Mock())
     programming_exc.__cause__ = MockPyODBCProgrammingError(
@@ -469,7 +472,7 @@ def test_raise_if_exception_missing_str():
         migration.raise_if_exception_missing_str(programming_exc, ["not present"])
 
 
-def test_raise_if_exception_missing_empty_cause_str():
+def test_raise_if_exception_missing_empty_cause_str() -> None:
     """Test we raise an exception if strings are not present with an empty cause."""
     programming_exc = ProgrammingError("select * from;", Mock(), Mock())
     programming_exc.__cause__ = MockPyODBCProgrammingError()

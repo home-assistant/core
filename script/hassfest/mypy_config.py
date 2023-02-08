@@ -41,13 +41,20 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "follow_imports": "silent",
     # Enable some checks globally.
     "ignore_missing_imports": "true",
+    "local_partial_types": "true",
     "strict_equality": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": ", ".join(["ignore-without-code"]),
+    "enable_error_code": ", ".join(
+        [
+            "ignore-without-code",
+            "redundant-self",
+            "truthy-iterable",
+        ]
+    ),
     "disable_error_code": ", ".join(["annotation-unchecked"]),
     # Strict_concatenate breaks passthrough ParamSpec typing
     "strict_concatenate": "false",

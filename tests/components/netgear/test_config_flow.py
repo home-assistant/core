@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -209,7 +210,7 @@ async def test_abort_if_already_setup(hass, service):
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_already_configured(hass):
+async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test ssdp abort when the router is already configured."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -235,7 +236,7 @@ async def test_ssdp_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_ipv6(hass):
+async def test_ssdp_ipv6(hass: HomeAssistant) -> None:
     """Test ssdp abort when using a ipv6 address."""
     MockConfigEntry(
         domain=DOMAIN,

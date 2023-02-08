@@ -6,9 +6,11 @@ import pytest
 
 from homeassistant.components import owntracks
 from homeassistant.const import STATE_NOT_HOME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
+from tests.typing import ClientSessionGenerator
 
 USER = "greg"
 DEVICE = "phone"
@@ -1519,7 +1521,9 @@ async def test_region_mapping(hass, setup_comp):
     assert_location_state(hass, "inner")
 
 
-async def test_restore_state(hass, hass_client):
+async def test_restore_state(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that we can restore state."""
     entry = MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
@@ -1557,7 +1561,9 @@ async def test_restore_state(hass, hass_client):
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
 
 
-async def test_returns_empty_friends(hass, hass_client):
+async def test_returns_empty_friends(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that an empty list of persons' locations is returned."""
     entry = MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
@@ -1578,7 +1584,9 @@ async def test_returns_empty_friends(hass, hass_client):
     assert await resp.text() == "[]"
 
 
-async def test_returns_array_friends(hass, hass_client):
+async def test_returns_array_friends(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that a list of persons' current locations is returned."""
     otracks = MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}

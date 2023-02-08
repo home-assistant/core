@@ -1,5 +1,4 @@
 """Axis switch platform tests."""
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -13,12 +12,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import API_DISCOVERY_PORT_MANAGEMENT, NAME
 
 
-async def test_platform_manually_configured(hass):
+async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     """Test that nothing happens when platform is manually configured."""
     assert await async_setup_component(
         hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": AXIS_DOMAIN}}

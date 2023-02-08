@@ -443,6 +443,7 @@ FLOWS = {
         "toon",
         "totalconnect",
         "tplink",
+        "tplink_omada",
         "traccar",
         "tractive",
         "tradfri",

@@ -1,6 +1,4 @@
 """Test Dynalite __init__."""
-
-
 from unittest.mock import call, patch
 
 import pytest
@@ -8,19 +6,20 @@ from voluptuous import MultipleInvalid
 
 import homeassistant.components.dynalite.const as dynalite
 from homeassistant.const import CONF_DEFAULT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_empty_config(hass):
+async def test_empty_config(hass: HomeAssistant) -> None:
     """Test with an empty config."""
     assert await async_setup_component(hass, dynalite.DOMAIN, {}) is True
     assert len(hass.config_entries.flow.async_progress()) == 0
     assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 0
 
 
-async def test_async_setup(hass):
+async def test_async_setup(hass: HomeAssistant) -> None:
     """Test a successful setup with all of the different options."""
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
@@ -83,7 +82,7 @@ async def test_async_setup(hass):
     assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 1
 
 
-async def test_service_request_area_preset(hass):
+async def test_service_request_area_preset(hass: HomeAssistant) -> None:
     """Test requesting and area preset via service call."""
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
@@ -155,7 +154,7 @@ async def test_service_request_area_preset(hass):
         mock_req_area_pres.assert_called_once_with(7, 1)
 
 
-async def test_service_request_channel_level(hass):
+async def test_service_request_channel_level(hass: HomeAssistant) -> None:
     """Test requesting the level of a channel via service call."""
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
@@ -206,7 +205,7 @@ async def test_service_request_channel_level(hass):
         assert mock_req_chan_lvl.mock_calls == [call(4, 5), call(4, 5)]
 
 
-async def test_async_setup_bad_config1(hass):
+async def test_async_setup_bad_config1(hass: HomeAssistant) -> None:
     """Test a successful with bad config on templates."""
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
@@ -235,7 +234,7 @@ async def test_async_setup_bad_config1(hass):
         await hass.async_block_till_done()
 
 
-async def test_async_setup_bad_config2(hass):
+async def test_async_setup_bad_config2(hass: HomeAssistant) -> None:
     """Test a successful with bad config on numbers."""
     host = "1.2.3.4"
     with patch(
@@ -260,7 +259,7 @@ async def test_async_setup_bad_config2(hass):
     assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 0
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test being able to unload an entry."""
     host = "1.2.3.4"
     entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: host})

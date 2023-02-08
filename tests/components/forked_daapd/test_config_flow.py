@@ -14,6 +14,7 @@ from homeassistant.components.forked_daapd.const import (
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -52,7 +53,7 @@ def config_entry_fixture():
     )
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -131,7 +132,7 @@ async def test_config_flow_no_websocket(hass, config_entry):
         assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
-async def test_config_flow_zeroconf_invalid(hass):
+async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     """Test that an invalid zeroconf entry doesn't work."""
     # test with no discovery properties
     discovery_info = zeroconf.ZeroconfServiceInfo(
@@ -195,7 +196,7 @@ async def test_config_flow_zeroconf_invalid(hass):
     assert result["reason"] == "not_forked_daapd"
 
 
-async def test_config_flow_zeroconf_valid(hass):
+async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
     """Test that a valid zeroconf entry works."""
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.1",

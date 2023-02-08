@@ -1,11 +1,12 @@
 """Test intent_script component."""
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
 from tests.common import async_mock_service
 
 
-async def test_intent_script(hass):
+async def test_intent_script(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
 
@@ -44,7 +45,7 @@ async def test_intent_script(hass):
     assert response.card["simple"]["content"] == "Content for Paulus"
 
 
-async def test_intent_script_wait_response(hass):
+async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
 
@@ -89,7 +90,7 @@ async def test_intent_script_wait_response(hass):
     assert response.card["simple"]["content"] == "Content for Paulus"
 
 
-async def test_intent_script_falsy_reprompt(hass):
+async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
 

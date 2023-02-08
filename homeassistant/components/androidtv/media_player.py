@@ -140,12 +140,13 @@ async def async_setup_entry(
     )
 
 
+_FuncType = Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]
+
+
 def adb_decorator(
     override_available: bool = False,
-) -> Callable[
-    [Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]],
-    Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]],
-]:
+) -> Callable[[_FuncType[_ADBDeviceT, _P, _R]], _ReturnFuncType[_ADBDeviceT, _P, _R]]:
     """Wrap ADB methods and catch exceptions.
 
     Allows for overriding the available status of the ADB connection via the
@@ -153,8 +154,8 @@ def adb_decorator(
     """
 
     def _adb_decorator(
-        func: Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
-    ) -> Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]:
+        func: _FuncType[_ADBDeviceT, _P, _R]
+    ) -> _ReturnFuncType[_ADBDeviceT, _P, _R]:
         """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)

@@ -93,7 +93,7 @@ def test_sensor(hass: HomeAssistant):
     assert tested == 5
 
 
-def test_invalid_sensor_config():
+def test_invalid_sensor_config() -> None:
     """Test config type failures."""
     with pytest.raises(vol.Invalid):  # No subscription
         vultr.PLATFORM_SCHEMA(

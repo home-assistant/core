@@ -1,7 +1,7 @@
 """Test Xiaomi binary sensors."""
-
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 
 from . import make_advertisement
 
@@ -9,7 +9,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 
-async def test_door_problem_sensors(hass):
+async def test_door_problem_sensors(hass: HomeAssistant) -> None:
     """Test setting up a door binary sensor with additional problem sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -53,7 +53,7 @@ async def test_door_problem_sensors(hass):
     await hass.async_block_till_done()
 
 
-async def test_light_motion(hass):
+async def test_light_motion(hass: HomeAssistant) -> None:
     """Test setting up a light and motion binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -89,7 +89,7 @@ async def test_light_motion(hass):
     await hass.async_block_till_done()
 
 
-async def test_moisture(hass):
+async def test_moisture(hass: HomeAssistant) -> None:
     """Test setting up a moisture binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -123,7 +123,7 @@ async def test_moisture(hass):
     await hass.async_block_till_done()
 
 
-async def test_opening(hass):
+async def test_opening(hass: HomeAssistant) -> None:
     """Test setting up a opening binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -158,7 +158,7 @@ async def test_opening(hass):
     await hass.async_block_till_done()
 
 
-async def test_opening_problem_sensors(hass):
+async def test_opening_problem_sensors(hass: HomeAssistant) -> None:
     """Test setting up a opening binary sensor with additional problem sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -213,7 +213,7 @@ async def test_opening_problem_sensors(hass):
     await hass.async_block_till_done()
 
 
-async def test_smoke(hass):
+async def test_smoke(hass: HomeAssistant) -> None:
     """Test setting up a smoke binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -12,6 +12,7 @@ from homeassistant.components.logi_circle.config_flow import (
     AuthorizationFailed,
     LogiCircleAuthCallbackView,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
@@ -95,7 +96,7 @@ async def test_full_flow_implementation(hass, mock_logi_circle):
     assert result["title"] == "Logi Circle ({})".format("testId")
 
 
-async def test_we_reprompt_user_to_follow_link(hass):
+async def test_we_reprompt_user_to_follow_link(hass: HomeAssistant) -> None:
     """Test we prompt user to follow link if previously prompted."""
     flow = init_config_flow(hass)
 
@@ -103,7 +104,7 @@ async def test_we_reprompt_user_to_follow_link(hass):
     assert result["errors"]["base"] == "follow_link"
 
 
-async def test_abort_if_no_implementation_registered(hass):
+async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> None:
     """Test we abort if no implementation is registered."""
     flow = config_flow.LogiCircleFlowHandler()
     flow.hass = hass
@@ -113,7 +114,7 @@ async def test_abort_if_no_implementation_registered(hass):
     assert result["reason"] == "missing_configuration"
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Logi Circle is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(domain=config_flow.DOMAIN).add_to_hass(hass)
@@ -160,7 +161,7 @@ async def test_abort_if_authorize_fails(hass, mock_logi_circle, side_effect, err
     assert result["errors"]["base"] == error
 
 
-async def test_not_pick_implementation_if_only_one(hass):
+async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
     """Test we bypass picking implementation if we have one flow_imp."""
     flow = init_config_flow(hass)
 
@@ -189,7 +190,7 @@ async def test_gen_auth_url(hass, mock_logi_circle):
     assert result == "http://authorize.url"
 
 
-async def test_callback_view_rejects_missing_code(hass):
+async def test_callback_view_rejects_missing_code(hass: HomeAssistant) -> None:
     """Test the auth callback view rejects requests with no code."""
     view = LogiCircleAuthCallbackView()
     resp = await view.get(MockRequest(hass, {}))

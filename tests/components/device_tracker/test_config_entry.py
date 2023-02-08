@@ -1,6 +1,6 @@
 """Test Device Tracker config entry things."""
 from homeassistant.components.device_tracker import DOMAIN, config_entry as ce
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -12,7 +12,7 @@ from tests.common import (
 )
 
 
-def test_tracker_entity():
+def test_tracker_entity() -> None:
     """Test tracker entity."""
 
     class TestEntry(ce.TrackerEntity):
@@ -104,7 +104,7 @@ async def test_cleanup_legacy(hass, enable_custom_integrations):
     assert dev_reg.async_get(device2.id) is None
 
 
-async def test_register_mac(hass):
+async def test_register_mac(hass: HomeAssistant) -> None:
     """Test registering a mac."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -137,7 +137,7 @@ async def test_register_mac(hass):
     assert entity_entry_1.disabled_by is None
 
 
-async def test_register_mac_ignored(hass):
+async def test_register_mac_ignored(hass: HomeAssistant) -> None:
     """Test ignoring registering a mac."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -170,7 +170,7 @@ async def test_register_mac_ignored(hass):
     assert entity_entry_1.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_connected_device_registered(hass):
+async def test_connected_device_registered(hass: HomeAssistant) -> None:
     """Test dispatch on connected device being registered."""
 
     registry = mock_registry(hass)

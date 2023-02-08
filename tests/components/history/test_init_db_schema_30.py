@@ -80,7 +80,7 @@ def db_schema_30():
 
 
 @pytest.mark.usefixtures("hass_history")
-def test_setup():
+def test_setup() -> None:
     """Test setup method of history."""
     # Verification occurs in the fixture
 
@@ -822,9 +822,8 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 3
-    assert response_json[0][0]["entity_id"] == "binary_sensor.sensor"
-    assert response_json[1][0]["entity_id"] == "light.cow"
-    assert response_json[2][0]["entity_id"] == "light.match"
+    entities = {state[0]["entity_id"] for state in response_json}
+    assert entities == {"binary_sensor.sensor", "light.cow", "light.match"}
 
 
 async def test_fetch_period_api_with_entity_glob_include_and_exclude(
@@ -864,10 +863,13 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 4
-    assert response_json[0][0]["entity_id"] == "light.many_state_changes"
-    assert response_json[1][0]["entity_id"] == "light.match"
-    assert response_json[2][0]["entity_id"] == "media_player.test"
-    assert response_json[3][0]["entity_id"] == "switch.match"
+    entities = {state[0]["entity_id"] for state in response_json}
+    assert entities == {
+        "light.many_state_changes",
+        "light.match",
+        "media_player.test",
+        "switch.match",
+    }
 
 
 async def test_entity_ids_limit_via_api(recorder_mock, hass, hass_client):

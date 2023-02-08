@@ -6,6 +6,7 @@ from unittest.mock import patch
 import forecastio
 from requests.exceptions import ConnectionError as ConnectError
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
@@ -77,7 +78,7 @@ async def test_setup_with_config(hass, requests_mock):
         assert state is not None
 
 
-async def test_setup_with_invalid_config(hass):
+async def test_setup_with_invalid_config(hass: HomeAssistant) -> None:
     """Test the platform setup with invalid configuration."""
     assert await async_setup_component(hass, "sensor", INVALID_CONFIG_MINIMAL)
     await hass.async_block_till_done()
@@ -86,7 +87,7 @@ async def test_setup_with_invalid_config(hass):
     assert state is None
 
 
-async def test_setup_with_language_config(hass):
+async def test_setup_with_language_config(hass: HomeAssistant) -> None:
     """Test the platform setup with language configuration."""
     with patch("homeassistant.components.darksky.sensor.forecastio.load_forecast"):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_LANG_DE)
@@ -96,7 +97,7 @@ async def test_setup_with_language_config(hass):
         assert state is not None
 
 
-async def test_setup_with_invalid_language_config(hass):
+async def test_setup_with_invalid_language_config(hass: HomeAssistant) -> None:
     """Test the platform setup with language configuration."""
     assert await async_setup_component(hass, "sensor", INVALID_CONFIG_LANG)
     await hass.async_block_till_done()
@@ -123,7 +124,7 @@ async def test_setup_bad_api_key(hass, requests_mock):
     assert hass.states.get("sensor.dark_sky_summary") is None
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test setting up with a connection error."""
     with patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",

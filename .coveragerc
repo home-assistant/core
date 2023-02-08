@@ -1008,6 +1008,7 @@ omit =
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/entity.py
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
     homeassistant/components/screenlogic/sensor.py
@@ -1268,6 +1269,10 @@ omit =
     homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink_lte/*
+    homeassistant/components/tplink_omada/__init__.py
+    homeassistant/components/tplink_omada/coordinator.py
+    homeassistant/components/tplink_omada/entity.py
+    homeassistant/components/tplink_omada/switch.py
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py

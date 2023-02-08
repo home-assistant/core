@@ -35,6 +35,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
@@ -162,7 +163,7 @@ async def mock_ddp_response(hass, mock_status_data):
     await hass.async_block_till_done()
 
 
-async def test_media_player_is_setup_correctly_with_entry(hass):
+async def test_media_player_is_setup_correctly_with_entry(hass: HomeAssistant) -> None:
     """Test entity is setup correctly with entry correctly."""
     mock_entity_id = await setup_mock_component(hass)
     mock_state = hass.states.get(mock_entity_id).state
@@ -176,7 +177,7 @@ async def test_media_player_is_setup_correctly_with_entry(hass):
     assert mock_state == STATE_UNKNOWN
 
 
-async def test_state_standby_is_set(hass):
+async def test_state_standby_is_set(hass: HomeAssistant) -> None:
     """Test that state is set to standby."""
     mock_entity_id = await setup_mock_component(hass)
 
@@ -185,7 +186,7 @@ async def test_state_standby_is_set(hass):
     assert hass.states.get(mock_entity_id).state == STATE_STANDBY
 
 
-async def test_state_playing_is_set(hass):
+async def test_state_playing_is_set(hass: HomeAssistant) -> None:
     """Test that state is set to playing."""
     mock_entity_id = await setup_mock_component(hass)
     mock_func = "{}{}".format(
@@ -199,7 +200,7 @@ async def test_state_playing_is_set(hass):
     assert hass.states.get(mock_entity_id).state == STATE_PLAYING
 
 
-async def test_state_idle_is_set(hass):
+async def test_state_idle_is_set(hass: HomeAssistant) -> None:
     """Test that state is set to idle."""
     mock_entity_id = await setup_mock_component(hass)
 
@@ -208,14 +209,14 @@ async def test_state_idle_is_set(hass):
     assert hass.states.get(mock_entity_id).state == STATE_IDLE
 
 
-async def test_state_none_is_set(hass):
+async def test_state_none_is_set(hass: HomeAssistant) -> None:
     """Test that state is set to None."""
     mock_entity_id = await setup_mock_component(hass)
 
     assert hass.states.get(mock_entity_id).state == STATE_UNKNOWN
 
 
-async def test_media_attributes_are_fetched(hass):
+async def test_media_attributes_are_fetched(hass: HomeAssistant) -> None:
     """Test that media attributes are fetched."""
     mock_entity_id = await setup_mock_component(hass)
     mock_func = "{}{}".format(
@@ -313,7 +314,7 @@ async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     assert mock_entry.identifiers == {(DOMAIN, MOCK_HOST_ID)}
 
 
-async def test_device_info_is_assummed(hass):
+async def test_device_info_is_assummed(hass: HomeAssistant) -> None:
     """Test that device info is assumed if device is unavailable."""
     # Create a device registry entry with device info.
     mock_d_registry = mock_device_registry(hass)
@@ -349,7 +350,7 @@ async def test_device_info_is_assummed(hass):
     assert mock_entities[0] == mock_entity_id
 
 
-async def test_device_info_assummed_works(hass):
+async def test_device_info_assummed_works(hass: HomeAssistant) -> None:
     """Reverse test that device info assumption works."""
     mock_d_registry = mock_device_registry(hass)
     mock_entity_id = await setup_mock_component(hass)
@@ -363,7 +364,7 @@ async def test_device_info_assummed_works(hass):
     assert not mock_d_entries
 
 
-async def test_turn_on(hass):
+async def test_turn_on(hass: HomeAssistant) -> None:
     """Test that turn on service calls function."""
     mock_entity_id = await setup_mock_component(hass)
     mock_func = "{}{}".format(
@@ -379,7 +380,7 @@ async def test_turn_on(hass):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_turn_off(hass):
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test that turn off service calls function."""
     mock_entity_id = await setup_mock_component(hass)
     mock_func = "{}{}".format(
@@ -395,7 +396,7 @@ async def test_turn_off(hass):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_toggle(hass):
+async def test_toggle(hass: HomeAssistant) -> None:
     """Test that toggle service calls function."""
     mock_entity_id = await setup_mock_component(hass)
     mock_func = "{}{}".format(
@@ -411,7 +412,7 @@ async def test_toggle(hass):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_media_pause(hass):
+async def test_media_pause(hass: HomeAssistant) -> None:
     """Test that media pause service calls function."""
     mock_entity_id = await setup_mock_component(hass)
     mock_func = "{}{}".format(
@@ -427,7 +428,7 @@ async def test_media_pause(hass):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_media_stop(hass):
+async def test_media_stop(hass: HomeAssistant) -> None:
     """Test that media stop service calls function."""
     mock_entity_id = await setup_mock_component(hass)
     mock_func = "{}{}".format(
@@ -506,7 +507,7 @@ async def test_select_source_id(hass, patch_load_json):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_ps4_send_command(hass):
+async def test_ps4_send_command(hass: HomeAssistant) -> None:
     """Test that ps4 send command service calls function."""
     mock_entity_id = await setup_mock_component(hass)
 
@@ -521,7 +522,7 @@ async def test_ps4_send_command(hass):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_entry_is_unloaded(hass):
+async def test_entry_is_unloaded(hass: HomeAssistant) -> None:
     """Test that entry is unloaded."""
     mock_entry = MockConfigEntry(
         domain=ps4.DOMAIN, data=MOCK_DATA, version=VERSION, entry_id=MOCK_ENTRY_ID
