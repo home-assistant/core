@@ -588,7 +588,7 @@ async def test_rapid_rediscover_unique(
     events = []
 
     @ha.callback
-    def callback(event) -> None:
+    def callback(event: ha.Event) -> None:
         """Verify event got called."""
         events.append(event)
 
@@ -1332,7 +1332,7 @@ async def test_no_implicit_state_topic_switch(
 ) -> None:
     """Test no implicit state topic for switch."""
     await mqtt_mock_entry_no_yaml_config()
-    data = '{ "name": "Test1", "command_topic": "cmnd"' "}"
+    data = '{ "name": "Test1", "command_topic": "cmnd" }'
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
     await hass.async_block_till_done()
