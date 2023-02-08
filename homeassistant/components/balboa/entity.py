@@ -46,7 +46,10 @@ class BalboaEntity(BalboaBaseEntity):
 
 
 class BalboaControlEntity(BalboaBaseEntity):
-    """Balboa spa control entity."""
+    """Balboa control entity.
+
+    Listens to updates on the specific control, rather than the client.
+    """
 
     def __init__(self, control: SpaControl) -> None:
         """Initialize the control."""
