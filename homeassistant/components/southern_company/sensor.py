@@ -24,12 +24,15 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
+from .config_flow import InvalidAuth
 from .const import DOMAIN as SOUTHERN_COMPANY_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,16 +45,55 @@ PARALLEL_UPDATES = 0
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="month_cost",
+        key="dollars_to_date",
         name="Monthly cost",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key="month_cons",
+        key="total_kwh_used",
         name="Monthly net consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="average_daily_cost",
+        name="Average daily cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="average_daily_usage",
+        name="Average daily usage",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="projected_usage_high",
+        name="Higher projected monthly usage",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="projected_usage_low",
+        name="Lower projected monthly usage",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="projected_bill_amount_low",
+        name="Lower projected monthly cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="projected_bill_amount_high",
+        name="Higher projected monthly cost",
+        device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
@@ -64,39 +106,17 @@ async def async_setup_entry(
 
     southern_company_connection = hass.data[SOUTHERN_COMPANY_DOMAIN][entry.entry_id]
 
-    # entity_registry = async_get_entity_reg(hass)
-    # device_registry = async_get_dev_reg(hass)
-
     coordinator = SouthernCompanyCoordinator(hass, southern_company_connection)
     entities: list[SouthernCompanySensor] = []
     await southern_company_connection.get_jwt()
     for account in await southern_company_connection.get_accounts():
+        device = DeviceInfo(
+            identifiers={((SOUTHERN_COMPANY_DOMAIN), account.number)},
+            name=f"Account {account.number}",
+            manufacturer="Southern Company",
+        )
         for sensor in SENSORS:
-            entities.append(SouthernCompanySensor(account, coordinator, sensor))
-
-        # migrate
-        # old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
-        # if old_id is None:
-        #     continue
-
-        # # migrate to new device ids
-        # old_entity_id = entity_registry.async_get_entity_id(
-        #     "sensor", SOUTHERN_COMPANY_DOMAIN, old_id
-        # )
-        # if old_entity_id is not None:
-        #     entity_registry.async_update_entity(
-        #         old_entity_id, new_unique_id=home.home_id
-        #     )
-
-        # # migrate to new device ids
-        # device_entry = device_registry.async_get_device(
-        #     {(SOUTHERN_COMPANY_DOMAIN, old_id)}
-        # )
-        # if device_entry and entry.entry_id in device_entry.config_entries:
-        #     device_registry.async_update_device(
-        #         device_entry.id,
-        #         new_identifiers={(SOUTHERN_COMPANY_DOMAIN, home.home_id)},
-        #     )
+            entities.append(SouthernCompanySensor(account, coordinator, sensor, device))
 
     async_add_entities(entities, True)
 
@@ -111,6 +131,7 @@ class SouthernCompanySensor(
         account: southern_company_api.Account,
         coordinator: SouthernCompanyCoordinator,
         entity_description: SensorEntityDescription,
+        device: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -119,11 +140,23 @@ class SouthernCompanySensor(
 
         self._attr_unique_id = f"{self._account.number}_{self.entity_description.key}"
         self._attr_name = f"{entity_description.name}"
+        self._attr_device_info = device
+        self._sensor_data = None
 
-        self._device_name = self._account.number
+    @property
+    def native_value(self) -> StateType:
+        """Return the state."""
+        return self._sensor_data
+
+    def _handle_coordinator_update(self) -> None:
+        if self.coordinator.data is not None:
+            self._sensor_data = getattr(
+                self.coordinator.data[self._account.number], self.entity_description.key
+            )
+            self.async_write_ha_state()
 
 
-class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
+class SouthernCompanyCoordinator(DataUpdateCoordinator):
     """Handle Southern company data and insert statistics."""
 
     def __init__(
@@ -140,13 +173,25 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
         )
         self._southern_company_connection = southern_company_connection
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(
+        self,
+    ) -> dict[str, southern_company_api.account.MonthlyUsage]:
         """Update data via API."""
-        await self._insert_statistics()
+        if self._southern_company_connection.jwt is not None:
+            account_month_data: dict[
+                str, southern_company_api.account.MonthlyUsage
+            ] = {}
+            for account in self._southern_company_connection.accounts:
+                account_month_data[account.number] = await account.get_month_data(
+                    self._southern_company_connection.jwt
+                )
+            await self._insert_statistics()
+            return account_month_data
+        raise InvalidAuth("No jwt token")
 
     async def _insert_statistics(self) -> None:
         """Insert Southern Company statistics."""
-        for account in await self._southern_company_connection.get_accounts():
+        for account in self._southern_company_connection.accounts:
             cost_statistic_id = (
                 f"{SOUTHERN_COMPANY_DOMAIN}:energy_" f"cost_" f"{account.number}"
             )
@@ -228,6 +273,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
                 from_time = data.time
                 time_zone = pytz.timezone("America/New_York")
                 from_time = time_zone.localize(from_time)
+                from_time = from_time.replace(second=0, microsecond=0, minute=0)
 
                 if from_time is None or (
                     last_stats_time is not None and from_time <= last_stats_time

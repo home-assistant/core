@@ -1,11 +1,9 @@
 """Test the Southern Company config flow."""
 from unittest.mock import patch
 
+from southern_company_api.exceptions import CantReachSouthernCompany, InvalidLogin
+
 from homeassistant import config_entries
-from homeassistant.components.southern_company.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
 from homeassistant.components.southern_company.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -52,7 +50,7 @@ async def test_form_invalid_auth(recorder_mock, hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.southern_company.config_flow.SouthernCompanyAPI.authenticate",
-        side_effect=InvalidAuth,
+        side_effect=InvalidLogin,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -74,7 +72,7 @@ async def test_form_cannot_connect(recorder_mock, hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.southern_company.config_flow.SouthernCompanyAPI.authenticate",
-        side_effect=CannotConnect,
+        side_effect=CantReachSouthernCompany,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -86,3 +84,25 @@ async def test_form_cannot_connect(recorder_mock, hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_other_exception(recorder_mock, hass: HomeAssistant) -> None:
+    """Test we handle other exception errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.southern_company.config_flow.SouthernCompanyAPI.authenticate",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
