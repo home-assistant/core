@@ -16,7 +16,7 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -224,7 +224,7 @@ async def test_device_tracker_discovery_update(
 
 async def test_cleanup_device_tracker(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     device_registry,
     entity_registry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,

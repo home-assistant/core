@@ -20,7 +20,7 @@ from tests.common import (
     async_fire_mqtt_message,
     async_get_device_automations,
 )
-from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, WebSocketGenerator
 
 DEFAULT_CONFIG_DEVICE = {
     "device": {"identifiers": ["0AFFD2"]},
@@ -403,7 +403,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_without_device(
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     device_registry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
@@ -551,7 +551,7 @@ async def test_entity_device_info_update(
 
 async def test_cleanup_tag(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     device_registry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:

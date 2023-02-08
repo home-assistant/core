@@ -23,7 +23,7 @@ from tests.common import (
     async_mock_service,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -709,7 +709,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     device_registry,
     calls,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
@@ -1080,7 +1080,7 @@ async def test_entity_device_info_update(
 
 async def test_cleanup_trigger(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     device_registry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
