@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import asyncio
 
-import async_timeout
-from yalexs_ble import PushLock, local_name_is_unique
+from yalexs_ble import AuthError, PushLock, YaleXSBLEError, local_name_is_unique
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DEVICE_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
@@ -57,12 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(DEVICE_TIMEOUT):
-            await startup_event.wait()
-    except asyncio.TimeoutError as ex:
+        await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
+    except AuthError as ex:
+        raise ConfigEntryAuthFailed(str(ex)) from ex
+    except YaleXSBLEError as ex:
         raise ConfigEntryNotReady(
-            f"{push_lock.last_error}; "
-            f"Try moving the Bluetooth adapter closer to {local_name}"
+            f"{ex}; " f"Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex
     finally:
         cancel_first_update()
