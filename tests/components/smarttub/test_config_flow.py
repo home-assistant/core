@@ -6,11 +6,12 @@ from smarttub import LoginFailed
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
