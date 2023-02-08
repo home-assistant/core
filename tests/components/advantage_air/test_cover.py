@@ -1,5 +1,4 @@
 """Test the Advantage Air Cover Platform."""
-
 from json import loads
 
 from homeassistant.components.advantage_air.const import (
@@ -15,6 +14,7 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -25,8 +25,12 @@ from . import (
     add_mock_config,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_cover_async_setup_entry(hass, aioclient_mock):
+
+async def test_cover_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test cover platform."""
 
     aioclient_mock.get(
