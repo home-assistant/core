@@ -122,7 +122,7 @@ async def test_error_wrong_password_ssh(hass, config, error):
     assert result["errors"] == {"base": error}
 
 
-async def test_error_invalid_ssh(hass):
+async def test_error_invalid_ssh(hass: HomeAssistant) -> None:
     """Test we abort if invalid ssh file is provided."""
     config_data = CONFIG_DATA.copy()
     config_data.pop(CONF_PASSWORD)
@@ -142,7 +142,7 @@ async def test_error_invalid_ssh(hass):
         assert result["errors"] == {"base": "ssh_not_file"}
 
 
-async def test_error_invalid_host(hass):
+async def test_error_invalid_host(hass: HomeAssistant) -> None:
     """Test we abort if host name is invalid."""
     with patch(
         "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
@@ -158,7 +158,7 @@ async def test_error_invalid_host(hass):
         assert result["errors"] == {"base": "invalid_host"}
 
 
-async def test_abort_if_not_unique_id_setup(hass):
+async def test_abort_if_not_unique_id_setup(hass: HomeAssistant) -> None:
     """Test we abort if component without uniqueid is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -202,7 +202,7 @@ async def test_update_uniqueid_exist(hass, mock_unique_id):
 
 
 @pytest.mark.usefixtures("connect")
-async def test_abort_invalid_unique_id(hass):
+async def test_abort_invalid_unique_id(hass: HomeAssistant) -> None:
     """Test we abort if uniqueid not available."""
     MockConfigEntry(
         domain=DOMAIN,
