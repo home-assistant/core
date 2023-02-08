@@ -227,12 +227,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "ld2410_ble",
-        "manufacturer_data_start": [
-            7,
-            1,
-        ],
-        "manufacturer_id": 256,
-        "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb",
+        "local_name": "HLK-LD2410_*",
     },
     {
         "domain": "ld2410_ble",

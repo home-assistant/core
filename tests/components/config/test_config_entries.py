@@ -1,5 +1,4 @@
 """Test config entries API."""
-
 from collections import OrderedDict
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch
@@ -10,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.generated import config_flows
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.loader import IntegrationNotFound
@@ -22,6 +21,7 @@ from tests.common import (
     mock_entity_platform,
     mock_integration,
 )
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -635,7 +635,9 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_get_progress_index(hass, hass_ws_client):
+async def test_get_progress_index(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test querying for the flows that are in progress."""
     assert await async_setup_component(hass, "config", {})
     mock_entity_platform(hass, "config_flow.test", None)
@@ -936,7 +938,9 @@ async def test_options_flow_with_invalid_data(hass, client):
         }
 
 
-async def test_update_prefrences(hass, hass_ws_client):
+async def test_update_prefrences(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can update system options."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -985,7 +989,9 @@ async def test_update_prefrences(hass, hass_ws_client):
     assert entry.pref_disable_polling is True
 
 
-async def test_update_entry(hass, hass_ws_client):
+async def test_update_entry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can update entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -1008,7 +1014,9 @@ async def test_update_entry(hass, hass_ws_client):
     assert entry.title == "Updated Title"
 
 
-async def test_update_entry_nonexisting(hass, hass_ws_client):
+async def test_update_entry_nonexisting(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can update entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -1027,7 +1035,9 @@ async def test_update_entry_nonexisting(hass, hass_ws_client):
     assert response["error"]["code"] == "not_found"
 
 
-async def test_disable_entry(hass, hass_ws_client):
+async def test_disable_entry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can disable entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -1085,7 +1095,9 @@ async def test_disable_entry(hass, hass_ws_client):
     assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
 
-async def test_disable_entry_nonexisting(hass, hass_ws_client):
+async def test_disable_entry_nonexisting(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can disable entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -1104,7 +1116,9 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
     assert response["error"]["code"] == "not_found"
 
 
-async def test_ignore_flow(hass, hass_ws_client):
+async def test_ignore_flow(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
     mock_integration(
@@ -1147,7 +1161,9 @@ async def test_ignore_flow(hass, hass_ws_client):
     assert entry.title == "Test Integration"
 
 
-async def test_ignore_flow_nonexisting(hass, hass_ws_client):
+async def test_ignore_flow_nonexisting(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)

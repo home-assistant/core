@@ -90,6 +90,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -626,7 +627,9 @@ async def test_pb_read(
     assert state == do_expect
 
 
-async def test_pymodbus_constructor_fail(hass, caplog):
+async def test_pymodbus_constructor_fail(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Run test for failing pymodbus constructor."""
     config = {
         DOMAIN: [

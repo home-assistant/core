@@ -13,6 +13,7 @@ from homeassistant.components.hue.const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 
@@ -55,7 +56,7 @@ async def test_bridge_setup_v2(hass, mock_api_v2):
     assert forward_entries == {"light", "binary_sensor", "sensor", "switch", "scene"}
 
 
-async def test_bridge_setup_invalid_api_key(hass):
+async def test_bridge_setup_invalid_api_key(hass: HomeAssistant) -> None:
     """Test we start config flow if username is no longer whitelisted."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1}
@@ -71,7 +72,7 @@ async def test_bridge_setup_invalid_api_key(hass):
     assert mock_init.mock_calls[0][2]["data"] == {"host": "1.2.3.4"}
 
 
-async def test_bridge_setup_timeout(hass):
+async def test_bridge_setup_timeout(hass: HomeAssistant) -> None:
     """Test we retry to connect if we cannot connect."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 1}

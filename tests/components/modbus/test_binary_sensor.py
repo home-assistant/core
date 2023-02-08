@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -388,7 +388,9 @@ async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
         assert entry.unique_id == unique_id
 
 
-async def test_no_discovery_info_binary_sensor(hass, caplog):
+async def test_no_discovery_info_binary_sensor(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert SENSOR_DOMAIN not in hass.config.components
     assert await async_setup_component(

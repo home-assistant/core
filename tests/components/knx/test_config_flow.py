@@ -100,7 +100,7 @@ class GatewayScannerMock:
             yield gateway
 
 
-async def test_user_single_instance(hass):
+async def test_user_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
