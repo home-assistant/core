@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -235,7 +236,26 @@ async def test_ssdp_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_ipv6(hass):
+async def test_ssdp_no_serial(hass: HomeAssistant) -> None:
+    """Test ssdp abort when the ssdp info does not include a serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URL,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "no_serial"
+
+
+async def test_ssdp_ipv6(hass: HomeAssistant) -> None:
     """Test ssdp abort when using a ipv6 address."""
     MockConfigEntry(
         domain=DOMAIN,
