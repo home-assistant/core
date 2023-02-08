@@ -9,6 +9,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
@@ -440,12 +441,12 @@ async def test_http_no_repair_issue(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.reolink.host.get_url",
-        return_value="http://test_homeassistant_address",
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await async_process_ha_core_config(
+        hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 0
@@ -470,12 +471,12 @@ async def test_https_repair_issue(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.reolink.host.get_url",
-        return_value="https://test_homeassistant_address",
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await async_process_ha_core_config(
+        hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 1
