@@ -6,11 +6,12 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import cast
 from homeassistant.components.cast.home_assistant_cast import CAST_USER_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_creating_entry_sets_up_media_player(hass):
+async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up Cast loads the media player."""
     with patch(
         "homeassistant.components.cast.media_player.async_setup_entry",
@@ -55,7 +56,7 @@ async def test_single_instance(hass, source):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_setup(hass):
+async def test_user_setup(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
@@ -75,7 +76,7 @@ async def test_user_setup(hass):
     }
 
 
-async def test_user_setup_options(hass):
+async def test_user_setup_options(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
@@ -97,7 +98,7 @@ async def test_user_setup_options(hass):
     }
 
 
-async def test_zeroconf_setup(hass):
+async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     """Test we can finish a config flow through zeroconf."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_ZEROCONF}
@@ -117,7 +118,7 @@ async def test_zeroconf_setup(hass):
     }
 
 
-async def test_zeroconf_setup_onboarding(hass):
+async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
     """Test we automatically finish a config flow through zeroconf during onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False

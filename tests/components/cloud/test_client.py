@@ -14,7 +14,7 @@ from homeassistant.components.cloud.const import (
     PREF_ENABLE_GOOGLE,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -30,7 +30,7 @@ def mock_cloud_inst():
     return MagicMock(subscription_expired=False)
 
 
-async def test_handler_alexa(hass):
+async def test_handler_alexa(hass: HomeAssistant) -> None:
     """Test handler Alexa."""
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     hass.states.async_set("switch.test2", "on", {"friendly_name": "Test switch 2"})
@@ -83,7 +83,7 @@ async def test_handler_alexa_disabled(hass, mock_cloud_fixture):
     assert resp["event"]["payload"]["type"] == "BRIDGE_UNREACHABLE"
 
 
-async def test_handler_google_actions(hass):
+async def test_handler_google_actions(hass: HomeAssistant) -> None:
     """Test handler Google Actions."""
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     hass.states.async_set("switch.test2", "on", {"friendly_name": "Test switch 2"})
@@ -164,7 +164,9 @@ async def test_handler_google_actions_disabled(
     assert resp["payload"] == response_payload
 
 
-async def test_webhook_msg(hass, caplog):
+async def test_webhook_msg(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test webhook msg."""
     with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
@@ -269,7 +271,7 @@ async def test_google_config_should_2fa(hass, mock_cloud_setup, mock_cloud_login
     assert not gconf.should_2fa(state)
 
 
-async def test_set_username(hass):
+async def test_set_username(hass: HomeAssistant) -> None:
     """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
@@ -284,7 +286,9 @@ async def test_set_username(hass):
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
 
 
-async def test_login_recovers_bad_internet(hass, caplog):
+async def test_login_recovers_bad_internet(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test Alexa can recover bad auth."""
     prefs = Mock(
         alexa_enabled=True,
