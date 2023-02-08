@@ -24,7 +24,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 import homeassistant.core as ha
-from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
+from homeassistant.core import (
+    DOMAIN as HASS_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -43,7 +49,7 @@ MAX_HUMIDITY = 65
 TARGET_HUMIDITY = 42
 
 
-async def test_setup_missing_conf(hass):
+async def test_setup_missing_conf(hass: HomeAssistant) -> None:
     """Test set up humidity_control with missing config values."""
     config = {
         "platform": "generic_hygrostat",
@@ -55,7 +61,7 @@ async def test_setup_missing_conf(hass):
         await hass.async_block_till_done()
 
 
-async def test_valid_conf(hass):
+async def test_valid_conf(hass: HomeAssistant) -> None:
     """Test set up generic_hygrostat with valid config values."""
     assert await async_setup_component(
         hass,
@@ -215,7 +221,7 @@ async def setup_comp_2(hass):
     await hass.async_block_till_done()
 
 
-async def test_unavailable_state(hass):
+async def test_unavailable_state(hass: HomeAssistant) -> None:
     """Test the setting of defaults to unknown."""
     await async_setup_component(
         hass,
@@ -242,7 +248,7 @@ async def test_unavailable_state(hass):
     assert hass.states.get(ENTITY).state == STATE_OFF
 
 
-async def test_setup_defaults_to_unknown(hass):
+async def test_setup_defaults_to_unknown(hass: HomeAssistant) -> None:
     """Test the setting of defaults to unknown."""
     await async_setup_component(
         hass,
@@ -687,11 +693,11 @@ async def test_init_ignores_tolerance(hass, setup_comp_3):
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 39)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_dry_off_within_tolerance(hass, setup_comp_3):
@@ -1184,7 +1190,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(hass, setup_
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_float_tolerance_values(hass):
+async def test_float_tolerance_values(hass: HomeAssistant) -> None:
     """Test if dehumidifier does not turn on within floating point tolerance."""
     assert await async_setup_component(
         hass,
@@ -1210,7 +1216,7 @@ async def test_float_tolerance_values(hass):
     assert len(calls) == 0
 
 
-async def test_float_tolerance_values_2(hass):
+async def test_float_tolerance_values_2(hass: HomeAssistant) -> None:
     """Test if dehumidifier turns off when oudside of floating point tolerance values."""
     assert await async_setup_component(
         hass,
@@ -1239,7 +1245,7 @@ async def test_float_tolerance_values_2(hass):
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_custom_setup_params(hass):
+async def test_custom_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with custom parameters."""
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1266,7 +1272,7 @@ async def test_custom_setup_params(hass):
     assert state.attributes.get("humidity") == TARGET_HUMIDITY
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1304,7 +1310,7 @@ async def test_restore_state(hass):
     assert state.state == STATE_OFF
 
 
-async def test_restore_state_target_humidity(hass):
+async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
     """Ensure restore target humidity if available."""
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1342,7 +1348,7 @@ async def test_restore_state_target_humidity(hass):
     assert state.state == STATE_OFF
 
 
-async def test_restore_state_and_return_to_normal(hass):
+async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
     """Ensure retain of target humidity for normal mode."""
     _setup_sensor(hass, 55)
     await hass.async_block_till_done()
@@ -1399,7 +1405,7 @@ async def test_restore_state_and_return_to_normal(hass):
     assert state.state == STATE_OFF
 
 
-async def test_no_restore_state(hass):
+async def test_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup if they exist.
 
     Allows for graceful reboot.
@@ -1440,9 +1446,8 @@ async def test_no_restore_state(hass):
     assert state.state == STATE_OFF
 
 
-async def test_restore_state_uncoherence_case(hass):
-    """
-    Test restore from a strange state.
+async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
+    """Test restore from a strange state.
 
     - Turn the generic hygrostat off
     - Restart HA and restore state from DB
@@ -1502,7 +1507,7 @@ def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
     )
 
 
-async def test_away_fixed_humidity_mode(hass):
+async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
     """Ensure retain of target humidity for normal mode."""
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()

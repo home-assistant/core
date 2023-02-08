@@ -6,7 +6,7 @@ import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -96,7 +96,7 @@ def _schema_is_current(current_version: int) -> bool:
 
 
 def validate_db_schema(
-    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
 ) -> SchemaValidationStatus | None:
     """Check if the schema is valid.
 
@@ -113,7 +113,7 @@ def validate_db_schema(
     if is_current := _schema_is_current(current_version):
         # We can only check for further errors if the schema is current, because
         # columns may otherwise not exist etc.
-        schema_errors |= statistics_validate_db_schema(hass, engine, session_maker)
+        schema_errors |= statistics_validate_db_schema(hass, instance, session_maker)
 
     valid = is_current and not schema_errors
 
@@ -274,9 +274,13 @@ def _drop_index(
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
-        if index_name == "ix_states_context_parent_id":
-            # Was only there on nightly so we do not want
+        if index_name in ("ix_states_entity_id", "ix_states_context_parent_id"):
+            # ix_states_context_parent_id was only there on nightly so we do not want
             # to generate log noise or issues about it.
+            #
+            # ix_states_entity_id was only there for users who upgraded from schema
+            # version 8 or earlier. Newer installs will not have it so we do not
+            # want to generate log noise or issues about it.
             return
 
         _LOGGER.warning(
@@ -440,17 +444,17 @@ def _update_states_table_with_foreign_key_options(
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
     old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
-        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)
+        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
     )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(alter["old_fk"]))
+                connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
-                        connection.execute(AddConstraint(fkc))
+                        connection.execute(AddConstraint(fkc))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
@@ -480,7 +484,7 @@ def _drop_foreign_key_constraints(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(drop))
+                connection.execute(DropConstraint(drop))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
@@ -505,12 +509,12 @@ def _apply_update(  # noqa: C901
         timestamp_type = "FLOAT"
 
     if new_version == 1:
-        _create_index(session_maker, "events", "ix_events_time_fired")
+        # This used to create ix_events_time_fired, but it was removed in version 32
+        pass
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
         _create_index(session_maker, "recorder_runs", "ix_recorder_runs_start_end")
-        # Create indexes for states
-        _create_index(session_maker, "states", "ix_states_last_updated")
+        # This used to create ix_states_last_updated bit it was removed in version 32
     elif new_version == 3:
         # There used to be a new index here, but it was removed in version 4.
         pass
@@ -529,8 +533,8 @@ def _apply_update(  # noqa: C901
         _drop_index(session_maker, "states", "states__state_changes")
         _drop_index(session_maker, "states", "states__significant_changes")
         _drop_index(session_maker, "states", "ix_states_entity_id_created")
-
-        _create_index(session_maker, "states", "ix_states_entity_id_last_updated")
+        # This used to create ix_states_entity_id_last_updated,
+        # but it was removed in version 32
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
         _create_index(session_maker, "states", "ix_states_event_id")
@@ -541,20 +545,25 @@ def _apply_update(  # noqa: C901
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "events", "ix_events_context_id")
-        _create_index(session_maker, "events", "ix_events_context_user_id")
+        # This used to create ix_events_context_user_id,
+        # but it was removed in version 28
         _add_columns(
             session_maker,
             "states",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "states", "ix_states_context_id")
-        _create_index(session_maker, "states", "ix_states_context_user_id")
+        # This used to create ix_states_context_user_id,
+        # but it was removed in version 28
     elif new_version == 7:
-        _create_index(session_maker, "states", "ix_states_entity_id")
+        # There used to be a ix_states_entity_id index here,
+        # but it was removed in later schema
+        pass
     elif new_version == 8:
         _add_columns(session_maker, "events", ["context_parent_id CHARACTER(36)"])
         _add_columns(session_maker, "states", ["old_state_id INTEGER"])
-        _create_index(session_maker, "events", "ix_events_context_parent_id")
+        # This used to create ix_events_context_parent_id,
+        # but it was removed in version 28
     elif new_version == 9:
         # We now get the context from events with a join
         # since its always there on state_changed events
@@ -572,7 +581,8 @@ def _apply_update(  # noqa: C901
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
         _drop_index(session_maker, "states", "ix_states_entity_id")
-        _create_index(session_maker, "events", "ix_events_event_type_time_fired")
+        # This used to create ix_events_event_type_time_fired,
+        # but it was removed in version 32
         _drop_index(session_maker, "events", "ix_events_event_type")
     elif new_version == 10:
         # Now done in step 11
@@ -620,18 +630,21 @@ def _apply_update(  # noqa: C901
         # Order matters! Statistics and StatisticsShortTerm have a relation with
         # StatisticsMeta, so statistics need to be deleted before meta (or in pair
         # depending on the SQL backend); and meta needs to be created before statistics.
+
+        # We need to cast __table__ to Table, explanation in
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9130
         Base.metadata.drop_all(
             bind=engine,
             tables=[
-                StatisticsShortTerm.__table__,
-                Statistics.__table__,
-                StatisticsMeta.__table__,
+                cast(Table, StatisticsShortTerm.__table__),
+                cast(Table, Statistics.__table__),
+                cast(Table, StatisticsMeta.__table__),
             ],
         )
 
-        StatisticsMeta.__table__.create(engine)
-        StatisticsShortTerm.__table__.create(engine)
-        Statistics.__table__.create(engine)
+        cast(Table, StatisticsMeta.__table__).create(engine)
+        cast(Table, StatisticsShortTerm.__table__).create(engine)
+        cast(Table, Statistics.__table__).create(engine)
     elif new_version == 19:
         # This adds the statistic runs table, insert a fake run to prevent duplicating
         # statistics.
@@ -684,20 +697,22 @@ def _apply_update(  # noqa: C901
         # so statistics need to be deleted before meta (or in pair depending
         # on the SQL backend); and meta needs to be created before statistics.
         if engine.dialect.name == "oracle":
+            # We need to cast __table__ to Table, explanation in
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9130
             Base.metadata.drop_all(
                 bind=engine,
                 tables=[
-                    StatisticsShortTerm.__table__,
-                    Statistics.__table__,
-                    StatisticsMeta.__table__,
-                    StatisticsRuns.__table__,
+                    cast(Table, StatisticsShortTerm.__table__),
+                    cast(Table, Statistics.__table__),
+                    cast(Table, StatisticsMeta.__table__),
+                    cast(Table, StatisticsRuns.__table__),
                 ],
             )
 
-            StatisticsRuns.__table__.create(engine)
-            StatisticsMeta.__table__.create(engine)
-            StatisticsShortTerm.__table__.create(engine)
-            Statistics.__table__.create(engine)
+            cast(Table, StatisticsRuns.__table__).create(engine)
+            cast(Table, StatisticsMeta.__table__).create(engine)
+            cast(Table, StatisticsShortTerm.__table__).create(engine)
+            cast(Table, Statistics.__table__).create(engine)
 
         # Block 5-minute statistics for one hour from the last run, or it will overlap
         # with existing hourly statistics. Don't block on a database with no existing
@@ -705,6 +720,8 @@ def _apply_update(  # noqa: C901
         with session_scope(session=session_maker()) as session:
             if session.query(Statistics.id).count() and (
                 last_run_string := session.query(
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
                     func.max(StatisticsRuns.start)
                 ).scalar()
             ):
@@ -859,6 +876,11 @@ def _apply_update(  # noqa: C901
         _drop_index(session_maker, "events", "ix_events_event_type_time_fired")
         _drop_index(session_maker, "states", "ix_states_last_updated")
         _drop_index(session_maker, "events", "ix_events_time_fired")
+    elif new_version == 33:
+        # This index is no longer used and can cause MySQL to use the wrong index
+        # when querying the states table.
+        # https://github.com/home-assistant/core/issues/83787
+        _drop_index(session_maker, "states", "ix_states_entity_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -981,7 +1003,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -1012,7 +1034,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(

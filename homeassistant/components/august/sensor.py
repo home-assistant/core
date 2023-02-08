@@ -268,7 +268,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
         device,
         old_device,
         description: AugustSensorEntityDescription[_T],
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description

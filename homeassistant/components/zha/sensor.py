@@ -4,8 +4,9 @@ from __future__ import annotations
 import enum
 import functools
 import numbers
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction
@@ -67,13 +68,6 @@ from .entity import ZhaEntity
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
-
-_SensorSelfT = TypeVar("_SensorSelfT", bound="Sensor")
-_BatterySelfT = TypeVar("_BatterySelfT", bound="Battery")
-_ThermostatHVACActionSelfT = TypeVar(
-    "_ThermostatHVACActionSelfT", bound="ThermostatHVACAction"
-)
-_RSSISensorSelfT = TypeVar("_RSSISensorSelfT", bound="RSSISensor")
 
 PARALLEL_UPDATES = 5
 
@@ -139,12 +133,12 @@ class Sensor(ZhaEntity, SensorEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_SensorSelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _SensorSelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -209,12 +203,12 @@ class Battery(Sensor):
 
     @classmethod
     def create_entity(
-        cls: type[_BatterySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _BatterySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Unlike any other entity, PowerConfiguration cluster may not support
@@ -511,7 +505,7 @@ class PolledSmartEnergySummation(SmartEnergySummation):
     models={"ZLinky_TIC"},
 )
 class Tier1SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier1_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier1_summation_delivered"
 ):
     """Tier 1 Smart Energy Metering summation sensor."""
 
@@ -524,7 +518,7 @@ class Tier1SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier2SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier2_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier2_summation_delivered"
 ):
     """Tier 2 Smart Energy Metering summation sensor."""
 
@@ -537,7 +531,7 @@ class Tier2SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier3SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier3_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier3_summation_delivered"
 ):
     """Tier 3 Smart Energy Metering summation sensor."""
 
@@ -550,7 +544,7 @@ class Tier3SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier4SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier4_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier4_summation_delivered"
 ):
     """Tier 4 Smart Energy Metering summation sensor."""
 
@@ -563,7 +557,7 @@ class Tier4SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier5SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier5_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier5_summation_delivered"
 ):
     """Tier 5 Smart Energy Metering summation sensor."""
 
@@ -576,7 +570,7 @@ class Tier5SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier6SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier6_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier6_summation_delivered"
 ):
     """Tier 6 Smart Energy Metering summation sensor."""
 
@@ -710,12 +704,12 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
 
     @classmethod
     def create_entity(
-        cls: type[_ThermostatHVACActionSelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ThermostatHVACActionSelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -839,12 +833,12 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
     @classmethod
     def create_entity(
-        cls: type[_RSSISensorSelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _RSSISensorSelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None

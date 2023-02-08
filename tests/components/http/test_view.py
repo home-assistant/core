@@ -1,4 +1,5 @@
 """Tests for Home Assistant View."""
+from decimal import Decimal
 from http import HTTPStatus
 import json
 from unittest.mock import AsyncMock, Mock
@@ -32,18 +33,18 @@ def mock_request_with_stopping():
 
 async def test_invalid_json(caplog):
     """Test trying to return invalid JSON."""
-    view = HomeAssistantView()
-
     with pytest.raises(HTTPInternalServerError):
-        view.json(rb"\ud800")
+        HomeAssistantView.json({"hello": Decimal("2.0")})
 
-    assert "Unable to serialize to JSON" in caplog.text
+    assert (
+        "Unable to serialize to JSON. Bad data found at $.hello=2.0(<class 'decimal.Decimal'>"
+        in caplog.text
+    )
 
 
-async def test_nan_serialized_to_null(caplog):
+async def test_nan_serialized_to_null() -> None:
     """Test nan serialized to null JSON."""
-    view = HomeAssistantView()
-    response = view.json(float("NaN"))
+    response = HomeAssistantView.json(float("NaN"))
     assert json.loads(response.body.decode("utf-8")) is None
 
 

@@ -1,10 +1,12 @@
 """Models for Recorder."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Literal, TypedDict, overload
 
+from awesomeversion import AwesomeVersion
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
@@ -14,8 +16,10 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.json import json_loads_object
 import homeassistant.util.dt as dt_util
+
+from .const import SupportedDialect
 
 # pylint: disable=invalid-name
 
@@ -233,15 +237,6 @@ class LazyStatePreSchema31(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (
-            other.__class__ in [self.__class__, State]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )
-
 
 class LazyState(State):
     """A lazy version of core State after schema 31."""
@@ -341,15 +336,6 @@ class LazyState(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (
-            other.__class__ in [self.__class__, State]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )
-
 
 def decode_attributes_from_row(
     row: Row, attr_cache: dict[str, dict[str, Any]]
@@ -361,7 +347,7 @@ def decode_attributes_from_row(
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
     try:
-        attr_cache[source] = attributes = json_loads(source)
+        attr_cache[source] = attributes = json_loads_object(source)
     except ValueError:
         _LOGGER.exception("Error converting row to state attributes: %s", source)
         attr_cache[source] = attributes = {}
@@ -443,3 +429,27 @@ class StatisticPeriod(TypedDict, total=False):
     calendar: CalendarStatisticPeriod
     fixed_period: FixedStatisticPeriod
     rolling_window: RollingWindowStatisticPeriod
+
+
+@dataclass
+class DatabaseEngine:
+    """Properties of the database engine."""
+
+    dialect: SupportedDialect
+    optimizer: DatabaseOptimizer
+    version: AwesomeVersion | None
+
+
+@dataclass
+class DatabaseOptimizer:
+    """Properties of the database optimizer for the configured database engine."""
+
+    # Some MariaDB versions have a bug that causes a slow query when using
+    # a range in a select statement with an IN clause.
+    #
+    # https://jira.mariadb.org/browse/MDEV-25020
+    #
+    # Historically, we have applied this logic to PostgreSQL as well, but
+    # it may not be necessary. We should revisit this in the future
+    # when we have more data.
+    slow_range_in_select: bool

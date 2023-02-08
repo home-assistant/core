@@ -6,6 +6,7 @@ import pywemo
 
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, WemoDiscovery
 from homeassistant.components.wemo.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -21,12 +22,12 @@ from .conftest import (
 from tests.common import async_fire_time_changed
 
 
-async def test_config_no_config(hass):
+async def test_config_no_config(hass: HomeAssistant) -> None:
     """Component setup succeeds when there are no config entry for the domain."""
     assert await async_setup_component(hass, DOMAIN, {})
 
 
-async def test_config_no_static(hass):
+async def test_config_no_static(hass: HomeAssistant) -> None:
     """Component setup succeeds when there are no static config entries."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: False}})
 
@@ -89,7 +90,7 @@ async def test_static_config_without_port(hass, pywemo_device):
     assert len(entity_entries) == 1
 
 
-async def test_static_config_with_invalid_host(hass):
+async def test_static_config_with_invalid_host(hass: HomeAssistant) -> None:
     """Component setup fails if a static host is invalid."""
     setup_success = await async_setup_component(
         hass,

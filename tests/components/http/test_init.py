@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 import homeassistant.components.http as http
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -103,7 +104,7 @@ async def test_not_log_password(hass, hass_client_no_auth, caplog, legacy_auth):
     assert "some-pass" not in logs
 
 
-async def test_proxy_config(hass):
+async def test_proxy_config(hass: HomeAssistant) -> None:
     """Test use_x_forwarded_for must config together with trusted_proxies."""
     assert (
         await async_setup_component(
@@ -120,7 +121,7 @@ async def test_proxy_config(hass):
     )
 
 
-async def test_proxy_config_only_use_xff(hass):
+async def test_proxy_config_only_use_xff(hass: HomeAssistant) -> None:
     """Test use_x_forwarded_for must config together with trusted_proxies."""
     assert (
         await async_setup_component(
@@ -130,7 +131,7 @@ async def test_proxy_config_only_use_xff(hass):
     )
 
 
-async def test_proxy_config_only_trust_proxies(hass):
+async def test_proxy_config_only_trust_proxies(hass: HomeAssistant) -> None:
     """Test use_x_forwarded_for must config together with trusted_proxies."""
     assert (
         await async_setup_component(
@@ -412,7 +413,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     assert len(mock_builder.mock_calls) == 1
 
 
-async def test_cors_defaults(hass):
+async def test_cors_defaults(hass: HomeAssistant) -> None:
     """Test the CORS default settings."""
     with patch("homeassistant.components.http.setup_cors") as mock_setup:
         assert await async_setup_component(hass, "http", {})

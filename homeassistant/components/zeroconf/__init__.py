@@ -15,7 +15,12 @@ import sys
 from typing import Any, Final, cast
 
 import voluptuous as vol
-from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
+from zeroconf import (
+    BadTypeInNameException,
+    InterfaceChoice,
+    IPVersion,
+    ServiceStateChange,
+)
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
@@ -399,7 +404,13 @@ class ZeroconfDiscovery:
         self, zeroconf: HaZeroconf, service_type: str, name: str
     ) -> None:
         """Process a zeroconf update."""
-        async_service_info = AsyncServiceInfo(service_type, name)
+        try:
+            async_service_info = AsyncServiceInfo(service_type, name)
+        except BadTypeInNameException as ex:
+            # Some devices broadcast a name that is not a valid DNS name
+            # This is a bug in the device firmware and we should ignore it
+            _LOGGER.debug("Bad name in zeroconf record: %s: %s", name, ex)
+            return
         await async_service_info.async_request(zeroconf, 3000)
 
         info = info_from_service(async_service_info)

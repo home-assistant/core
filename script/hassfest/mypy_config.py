@@ -41,13 +41,20 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "follow_imports": "silent",
     # Enable some checks globally.
     "ignore_missing_imports": "true",
+    "local_partial_types": "true",
     "strict_equality": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": ", ".join(["ignore-without-code"]),
+    "enable_error_code": ", ".join(
+        [
+            "ignore-without-code",
+            "redundant-self",
+            "truthy-iterable",
+        ]
+    ),
     "disable_error_code": ", ".join(["annotation-unchecked"]),
     # Strict_concatenate breaks passthrough ParamSpec typing
     "strict_concatenate": "false",
@@ -92,8 +99,7 @@ def _strict_module_in_ignore_list(
 
 
 def _sort_within_sections(line_iter: Iterable[str]) -> Iterable[str]:
-    """
-    Sort lines within sections.
+    """Sort lines within sections.
 
     Sections are defined as anything not delimited by a blank line
     or an octothorpe-prefixed comment line.

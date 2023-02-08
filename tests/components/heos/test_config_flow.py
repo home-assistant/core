@@ -10,6 +10,7 @@ from homeassistant.components.heos.config_flow import HeosFlowHandler
 from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 
 async def test_flow_aborts_already_setup(hass, config_entry):
@@ -22,7 +23,7 @@ async def test_flow_aborts_already_setup(hass, config_entry):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_no_host_shows_form(hass):
+async def test_no_host_shows_form(hass: HomeAssistant) -> None:
     """Test form is shown when host not provided."""
     flow = HeosFlowHandler()
     flow.hass = hass

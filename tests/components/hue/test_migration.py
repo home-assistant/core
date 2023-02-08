@@ -2,12 +2,13 @@
 from unittest.mock import patch
 
 from homeassistant.components import hue
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
-async def test_migrate_api_key(hass):
+async def test_migrate_api_key(hass: HomeAssistant) -> None:
     """Test if username gets migrated to api_key."""
     config_entry = MockConfigEntry(
         domain=hue.DOMAIN,
@@ -22,7 +23,7 @@ async def test_migrate_api_key(hass):
     }
 
 
-async def test_auto_switchover(hass):
+async def test_auto_switchover(hass: HomeAssistant) -> None:
     """Test if config entry from v1 automatically switches to v2."""
     config_entry = MockConfigEntry(
         domain=hue.DOMAIN,

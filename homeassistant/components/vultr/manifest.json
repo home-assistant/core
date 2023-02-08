@@ -1,9 +1,9 @@
 {
   "domain": "vultr",
   "name": "Vultr",
-  "documentation": "https://www.home-assistant.io/integrations/vultr",
-  "requirements": ["vultr==0.1.2"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/vultr",
   "iot_class": "cloud_polling",
-  "loggers": ["vultr"]
+  "loggers": ["vultr"],
+  "requirements": ["vultr==0.1.2"]
 }

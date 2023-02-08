@@ -748,7 +748,7 @@ async def test_disabled_by_config_entry_pref(registry):
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
 
 
-async def test_restore_states(hass):
+async def test_restore_states(hass: HomeAssistant) -> None:
     """Test restoring states."""
     hass.state = CoreState.not_running
 
@@ -814,7 +814,7 @@ async def test_restore_states(hass):
     assert hass.states.get("light.all_info_set") is None
 
 
-async def test_async_get_device_class_lookup(hass):
+async def test_async_get_device_class_lookup(hass: HomeAssistant) -> None:
     """Test registry device class lookup."""
     hass.state = CoreState.not_running
 
@@ -1290,7 +1290,7 @@ async def test_resolve_entity_ids(hass, registry):
         er.async_validate_entity_ids(registry, ["unknown_uuid"])
 
 
-def test_entity_registry_items():
+def test_entity_registry_items() -> None:
     """Test the EntityRegistryItems container."""
     entities = er.EntityRegistryItems()
     assert entities.get_entity_id(("a", "b", "c")) is None
@@ -1318,7 +1318,7 @@ def test_entity_registry_items():
     assert entities.get_entry(entry2.id) is None
 
 
-async def test_disabled_by_str_not_allowed(hass):
+async def test_disabled_by_str_not_allowed(hass: HomeAssistant) -> None:
     """Test we need to pass disabled by type."""
     reg = er.async_get(hass)
 
@@ -1334,7 +1334,7 @@ async def test_disabled_by_str_not_allowed(hass):
         )
 
 
-async def test_entity_category_str_not_allowed(hass):
+async def test_entity_category_str_not_allowed(hass: HomeAssistant) -> None:
     """Test we need to pass entity category type."""
     reg = er.async_get(hass)
 
@@ -1350,7 +1350,7 @@ async def test_entity_category_str_not_allowed(hass):
         )
 
 
-async def test_hidden_by_str_not_allowed(hass):
+async def test_hidden_by_str_not_allowed(hass: HomeAssistant) -> None:
     """Test we need to pass hidden by type."""
     reg = er.async_get(hass)
 

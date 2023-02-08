@@ -12,6 +12,7 @@ from homeassistant.components.plaato.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +34,7 @@ def mock_webhook_id():
         yield
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test show configuration form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -44,7 +45,7 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_show_config_form_device_type_airlock(hass):
+async def test_show_config_form_device_type_airlock(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -61,7 +62,7 @@ async def test_show_config_form_device_type_airlock(hass):
     assert result["data_schema"].schema.get(CONF_USE_WEBHOOK) == bool
 
 
-async def test_show_config_form_device_type_keg(hass):
+async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -163,7 +164,7 @@ async def test_show_config_form_validate_webhook_not_connected(hass, webhook_id)
     assert result["reason"] == "cloud_not_connected"
 
 
-async def test_show_config_form_validate_token(hass):
+async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
     """Test show configuration form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -281,7 +282,7 @@ async def test_show_config_form_api_method_no_auth_token(hass, webhook_id):
     assert result["errors"]["base"] == "no_api_method"
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -294,7 +295,6 @@ async def test_options(hass):
     with patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -329,7 +329,6 @@ async def test_options_webhook(hass, webhook_id):
     with patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

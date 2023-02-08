@@ -110,8 +110,7 @@ class InMemoryStorage:
         self.mem: dict[str, bytes] = {}
 
     def store_and_get_identifier(self, data: bytes) -> str:
-        """
-        Temporarily store data and return identifier to be able to retrieve it.
+        """Temporarily store data and return identifier to be able to retrieve it.
 
         Data expires after 5 minutes.
         """

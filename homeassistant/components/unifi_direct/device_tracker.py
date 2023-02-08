@@ -102,7 +102,6 @@ class UnifiDeviceScanner(DeviceScanner):
         self.connected = False
 
     def _get_update(self):
-
         try:
             if not self.connected:
                 self._connect()

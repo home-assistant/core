@@ -1,10 +1,10 @@
 {
   "domain": "environment_canada",
   "name": "Environment Canada",
-  "documentation": "https://www.home-assistant.io/integrations/environment_canada",
-  "requirements": ["env_canada==0.5.22"],
   "codeowners": ["@gwww", "@michaeldavie"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/environment_canada",
   "iot_class": "cloud_polling",
-  "loggers": ["env_canada"]
+  "loggers": ["env_canada"],
+  "requirements": ["env_canada==0.5.28"]
 }
