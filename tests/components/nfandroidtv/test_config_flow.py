@@ -5,6 +5,7 @@ from notifications_android_tv.notifications import ConnectError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nfandroidtv.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from . import (
     CONF_CONFIG_FLOW,
@@ -25,7 +26,7 @@ def _patch_setup():
     )
 
 
-async def test_flow_user(hass):
+async def test_flow_user(hass: HomeAssistant) -> None:
     """Test user initialized flow."""
     mocked_tv = await _create_mocked_tv()
     with _patch_config_flow_tv(mocked_tv), _patch_setup():
@@ -42,7 +43,7 @@ async def test_flow_user(hass):
         assert result["data"] == CONF_DATA
 
 
-async def test_flow_user_already_configured(hass):
+async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -66,7 +67,7 @@ async def test_flow_user_already_configured(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_flow_user_cannot_connect(hass):
+async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     mocked_tv = await _create_mocked_tv(True)
     with _patch_config_flow_tv(mocked_tv) as tvmock:
@@ -81,7 +82,7 @@ async def test_flow_user_cannot_connect(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_user_unknown_error(hass):
+async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
     mocked_tv = await _create_mocked_tv(True)
     with _patch_config_flow_tv(mocked_tv) as tvmock:

@@ -102,7 +102,6 @@ async def _async_port_entities_list(
     _LOGGER.debug("IP source for %s is %s", avm_wrapper.host, local_ip)
 
     for i in range(port_forwards_count):
-
         portmap = await avm_wrapper.async_get_port_mapping(
             avm_wrapper.device_conn_type, i
         )
@@ -406,7 +405,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             self._attributes[attr] = self.port_mapping[key]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
-
         if self.port_mapping is None:
             return False
 

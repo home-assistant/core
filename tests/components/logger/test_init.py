@@ -3,8 +3,11 @@ from collections import defaultdict
 import logging
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant.components import logger
 from homeassistant.components.logger import LOGSEVERITY
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 HASS_NS = "unused.homeassistant"
@@ -17,7 +20,9 @@ INTEGRATION = "test_component"
 INTEGRATION_NS = f"homeassistant.components.{INTEGRATION}"
 
 
-async def test_log_filtering(hass, caplog):
+async def test_log_filtering(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test logging filters."""
 
     assert await async_setup_component(
@@ -85,7 +90,7 @@ async def test_log_filtering(hass, caplog):
     )
 
 
-async def test_setting_level(hass):
+async def test_setting_level(hass: HomeAssistant) -> None:
     """Test we set log levels."""
     mocks = defaultdict(Mock)
 
@@ -150,7 +155,7 @@ async def test_setting_level(hass):
     )
 
 
-async def test_can_set_level_from_yaml(hass):
+async def test_can_set_level_from_yaml(hass: HomeAssistant) -> None:
     """Test logger propagation."""
 
     assert await async_setup_component(

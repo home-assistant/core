@@ -3,9 +3,11 @@ import logging
 from unittest.mock import MagicMock, patch
 
 from pyfido.client import PyFidoError
+import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
+from homeassistant.core import HomeAssistant
 
 from tests.common import assert_setup_component
 
@@ -60,7 +62,7 @@ async def test_fido_sensor(event_loop, hass):
         assert state.state == "100.33"
 
 
-async def test_error(hass, caplog):
+async def test_error(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test the Fido sensor errors."""
     caplog.set_level(logging.ERROR)
 

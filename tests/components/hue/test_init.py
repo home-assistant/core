@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import hue
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -32,7 +33,7 @@ def mock_bridge_setup():
         yield mock_bridge.return_value
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that we do not discover anything or try to set up a bridge."""
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
@@ -125,7 +126,7 @@ async def test_fixing_unique_id_other_correct(hass, mock_bridge_setup):
     assert hass.config_entries.async_entries() == [correct_entry]
 
 
-async def test_security_vuln_check(hass):
+async def test_security_vuln_check(hass: HomeAssistant) -> None:
     """Test that we report security vulnerabilities."""
     entry = MockConfigEntry(
         domain=hue.DOMAIN, data={"host": "0.0.0.0", "api_version": 1}
@@ -151,7 +152,6 @@ async def test_security_vuln_check(hass):
             )
         ),
     ):
-
         assert await async_setup_component(hass, "hue", {})
 
     await hass.async_block_till_done()

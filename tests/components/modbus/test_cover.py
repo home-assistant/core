@@ -1,5 +1,4 @@
 """The tests for the Modbus cover component."""
-
 from pymodbus.exceptions import ModbusException
 import pytest
 
@@ -29,7 +28,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
@@ -311,7 +310,9 @@ async def test_service_cover_move(hass, mock_modbus, mock_ha):
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
 
 
-async def test_no_discovery_info_cover(hass, caplog):
+async def test_no_discovery_info_cover(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert COVER_DOMAIN not in hass.config.components
     assert await async_setup_component(

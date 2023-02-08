@@ -107,6 +107,16 @@ class RuntimeEntryData:
             return self.device_info.friendly_name
         return self.name
 
+    @property
+    def signal_device_updated(self) -> str:
+        """Return the signal to listen to for core device state update."""
+        return f"esphome_{self.entry_id}_on_device_update"
+
+    @property
+    def signal_static_info_updated(self) -> str:
+        """Return the signal to listen to for updates on static info."""
+        return f"esphome_{self.entry_id}_on_list"
+
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""
@@ -168,8 +178,7 @@ class RuntimeEntryData:
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Then send dispatcher event
-        signal = f"esphome_{self.entry_id}_on_list"
-        async_dispatcher_send(hass, signal, infos)
+        async_dispatcher_send(hass, self.signal_static_info_updated, infos)
 
     @callback
     def async_subscribe_state_update(
@@ -203,8 +212,7 @@ class RuntimeEntryData:
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:
         """Distribute an update of a core device state like availability."""
-        signal = f"esphome_{self.entry_id}_on_device_update"
-        async_dispatcher_send(hass, signal)
+        async_dispatcher_send(hass, self.signal_device_updated)
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
         """Load the retained data from store and return de-serialized data."""

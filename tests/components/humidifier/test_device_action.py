@@ -6,6 +6,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_action
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -147,7 +148,7 @@ async def test_get_actions_hidden_auxiliary(
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass):
+async def test_action(hass: HomeAssistant) -> None:
     """Test for actions."""
     hass.states.async_set(
         "humidifier.entity",

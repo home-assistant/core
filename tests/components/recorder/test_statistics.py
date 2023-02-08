@@ -16,6 +16,7 @@ from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.statistics import (
+    STATISTIC_UNIT_TO_UNIT_CONVERTER,
     _statistics_during_period_with_session,
     _update_or_add_metadata,
     async_add_external_statistics,
@@ -29,6 +30,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -47,6 +49,15 @@ from .common import (
 from tests.common import get_test_home_assistant, mock_registry
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
+
+def test_converters_align_with_sensor() -> None:
+    """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
+    for converter in UNIT_CONVERTERS.values():
+        assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+
+    for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+        assert converter in UNIT_CONVERTERS.values()
 
 
 def test_compile_hourly_statistics(hass_recorder):
@@ -1722,13 +1733,18 @@ def record_states(hass):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
-        states[mp].append(
-            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
-        )
         states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=one + timedelta(microseconds=1),
+    ):
+        states[mp].append(
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
+        )
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two

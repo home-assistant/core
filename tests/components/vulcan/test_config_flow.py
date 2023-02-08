@@ -17,6 +17,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.vulcan import config_flow, const, register
 from homeassistant.components.vulcan.config_flow import ClientConnectionError, Keystore
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -29,7 +30,7 @@ fake_account = Account(
 )
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     flow = config_flow.VulcanFlowHandler()
     flow.hass = hass
@@ -209,7 +210,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=InvalidTokenException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -223,7 +223,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=ExpiredTokenException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -237,7 +236,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=InvalidPINException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -251,7 +249,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=InvalidSymbolException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -265,7 +262,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=ClientConnectionError,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -279,7 +275,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=Exception,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -525,7 +520,9 @@ async def test_multiple_config_entries_using_saved_credentials_4(mock_student, h
     assert len(mock_setup_entry.mock_calls) == 3
 
 
-async def test_multiple_config_entries_without_valid_saved_credentials(hass):
+async def test_multiple_config_entries_without_valid_saved_credentials(
+    hass: HomeAssistant,
+) -> None:
     """Test a unsuccessful config flow for multiple config entries without valid saved credentials."""
     MockConfigEntry(
         entry_id="456",
@@ -619,7 +616,9 @@ async def test_multiple_config_entries_using_saved_credentials_with_connections_
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_multiple_config_entries_using_saved_credentials_with_unknown_error(hass):
+async def test_multiple_config_entries_using_saved_credentials_with_unknown_error(
+    hass: HomeAssistant,
+) -> None:
     """Test a unsuccessful config flow for multiple config entries without valid saved credentials."""
     MockConfigEntry(
         entry_id="456",

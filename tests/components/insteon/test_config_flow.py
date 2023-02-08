@@ -84,9 +84,10 @@ async def _init_form(hass, modem_type):
 
 async def _device_form(hass, flow_id, connection, user_input):
     """Test the PLM, Hub v1 or Hub v2 form."""
-    with patch(PATCH_CONNECTION, new=connection,), patch(
-        PATCH_ASYNC_SETUP, return_value=True
-    ) as mock_setup, patch(
+    with patch(
+        PATCH_CONNECTION,
+        new=connection,
+    ), patch(PATCH_ASYNC_SETUP, return_value=True) as mock_setup, patch(
         PATCH_ASYNC_SETUP_ENTRY,
         return_value=True,
     ) as mock_setup_entry:
@@ -200,7 +201,10 @@ async def test_failed_connection_hub(hass: HomeAssistant):
 
 async def _import_config(hass, config):
     """Run the import step."""
-    with patch(PATCH_CONNECTION, new=mock_successful_connection,), patch(
+    with patch(
+        PATCH_CONNECTION,
+        new=mock_successful_connection,
+    ), patch(
         PATCH_ASYNC_SETUP, return_value=True
     ), patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
         return await hass.config_entries.flow.async_init(
@@ -287,7 +291,10 @@ async def test_import_existing(hass: HomeAssistant):
 async def test_import_failed_connection(hass: HomeAssistant):
     """Test a failed connection on import."""
 
-    with patch(PATCH_CONNECTION, new=mock_failed_connection,), patch(
+    with patch(
+        PATCH_CONNECTION,
+        new=mock_failed_connection,
+    ), patch(
         PATCH_ASYNC_SETUP, return_value=True
     ), patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
         result = await hass.config_entries.flow.async_init(
@@ -620,7 +627,7 @@ async def test_options_override_bad_data(hass: HomeAssistant):
     assert result["errors"] == {"base": "input_error"}
 
 
-async def test_discovery_via_usb(hass):
+async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     """Test usb flow."""
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyINSTEON",
@@ -649,7 +656,7 @@ async def test_discovery_via_usb(hass):
     assert result2["data"] == {"device": "/dev/ttyINSTEON"}
 
 
-async def test_discovery_via_usb_already_setup(hass):
+async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
     """Test usb flow -- already setup."""
 
     MockConfigEntry(

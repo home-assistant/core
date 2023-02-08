@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -85,7 +86,7 @@ def _get_mock_powerview_fwversion(fwversion=None, get_resources=None):
     return mock_powerview_fwversion
 
 
-async def test_user_form(hass):
+async def test_user_form(hass: HomeAssistant) -> None:
     """Test we get the user form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -128,7 +129,7 @@ async def test_user_form(hass):
     assert result4["type"] == "abort"
 
 
-async def test_user_form_legacy(hass):
+async def test_user_form_legacy(hass: HomeAssistant) -> None:
     """Test we get the user form with a legacy device."""
 
     result = await hass.config_entries.flow.async_init(
@@ -254,7 +255,7 @@ async def test_form_homekit_and_dhcp(hass, source, discovery_info):
     assert result3["type"] == "abort"
 
 
-async def test_discovered_by_homekit_and_dhcp(hass):
+async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
 
     mock_powerview_userdata = _get_mock_powerview_userdata()
@@ -285,7 +286,7 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     assert result2["reason"] == "already_in_progress"
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -307,7 +308,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_no_data(hass):
+async def test_form_no_data(hass: HomeAssistant) -> None:
     """Test we handle no data being returned from the hub."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -327,7 +328,7 @@ async def test_form_no_data(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_unknown_exception(hass):
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

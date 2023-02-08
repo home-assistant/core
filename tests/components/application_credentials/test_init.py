@@ -30,7 +30,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_platform
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
@@ -171,7 +171,9 @@ class OAuthFixture:
 
 @pytest.fixture
 async def oauth_fixture(
-    hass: HomeAssistant, hass_client_no_auth: Any, aioclient_mock: Any
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: Any,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
@@ -412,7 +414,7 @@ async def test_import_named_credential(
     ]
 
 
-async def test_config_flow_no_credentials(hass):
+async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import RequiredParameterMissing
 from homeassistant.helpers import device_registry, entity_registry
 
@@ -825,7 +825,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
     assert orig_light4 == new_light4
 
     # Ensure enums converted
-    for (old, new) in (
+    for old, new in (
         (orig_via, new_via),
         (orig_light, new_light),
         (orig_light4, new_light4),
@@ -1159,7 +1159,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, re
     assert len(registry.deleted_devices) == 0
 
 
-async def test_cleanup_startup(hass):
+async def test_cleanup_startup(hass: HomeAssistant) -> None:
     """Test we run a cleanup on startup."""
     hass.state = CoreState.not_running
 
@@ -1173,7 +1173,7 @@ async def test_cleanup_startup(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_cleanup_entity_registry_change(hass):
+async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
     """Test we run a cleanup when entity registry changes.
 
     Don't pre-load the registries as the debouncer will then not be waiting for

@@ -157,7 +157,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         if change_type == collection.CHANGE_ADDED:
-
             existing = hass.data[DOMAIN]["dashboards"].get(url_path)
 
             if existing:

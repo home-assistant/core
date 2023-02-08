@@ -110,7 +110,6 @@ async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
     ):
-
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 

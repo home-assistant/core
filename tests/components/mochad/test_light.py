@@ -1,11 +1,11 @@
 """The tests for the mochad light platform."""
-
 import unittest.mock as mock
 
 import pytest
 
 from homeassistant.components import light
 from homeassistant.components.mochad import light as mochad
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -24,7 +24,7 @@ def light_mock(hass, brightness):
     return mochad.MochadLight(hass, controller_mock, dev_dict)
 
 
-async def test_setup_adds_proper_devices(hass):
+async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
     good_config = {
         "mochad": {},

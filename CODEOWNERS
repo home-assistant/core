@@ -135,8 +135,8 @@ build.json @home-assistant/supervisor
 /tests/components/backup/ @home-assistant/core
 /homeassistant/components/baf/ @bdraco @jfroy
 /tests/components/baf/ @bdraco @jfroy
-/homeassistant/components/balboa/ @garbled1
-/tests/components/balboa/ @garbled1
+/homeassistant/components/balboa/ @garbled1 @natekspencer
+/tests/components/balboa/ @garbled1 @natekspencer
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
 /homeassistant/components/beewi_smartclim/ @alemuro
@@ -286,8 +286,10 @@ build.json @home-assistant/supervisor
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
 /tests/components/eafm/ @Jc2k
-/homeassistant/components/ecobee/ @marthoc
-/tests/components/ecobee/ @marthoc
+/homeassistant/components/easyenergy/ @klaasnicolaas
+/tests/components/easyenergy/ @klaasnicolaas
+/homeassistant/components/ecobee/ @marthoc @marcolivierarsenault
+/tests/components/ecobee/ @marthoc @marcolivierarsenault
 /homeassistant/components/econet/ @vangorra @w1ll1am23
 /tests/components/econet/ @vangorra @w1ll1am23
 /homeassistant/components/ecovacs/ @OverloadUT @mib1185
@@ -309,8 +311,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/emoncms/ @borpin
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
-/homeassistant/components/emulated_hue/ @bdraco
-/tests/components/emulated_hue/ @bdraco
+/homeassistant/components/emulated_hue/ @bdraco @Tho85
+/tests/components/emulated_hue/ @bdraco @Tho85
 /homeassistant/components/emulated_kasa/ @kbickar
 /tests/components/emulated_kasa/ @kbickar
 /homeassistant/components/energy/ @home-assistant/core
@@ -1229,6 +1231,8 @@ build.json @home-assistant/supervisor
 /tests/components/totalconnect/ @austinmroczek
 /homeassistant/components/tplink/ @rytilahti @thegardenmonkey
 /tests/components/tplink/ @rytilahti @thegardenmonkey
+/homeassistant/components/tplink_omada/ @MarkGodwin
+/tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core

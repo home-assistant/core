@@ -1,8 +1,8 @@
 """The tests for notify services that change targets."""
-
 import asyncio
 from unittest.mock import Mock, patch
 
+import pytest
 import yaml
 
 from homeassistant import config as hass_config
@@ -124,7 +124,9 @@ class NotificationService(notify.BaseNotificationService):
         return self.target_list
 
 
-async def test_warn_template(hass, caplog):
+async def test_warn_template(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning when template used."""
     assert await async_setup_component(hass, "notify", {})
 
