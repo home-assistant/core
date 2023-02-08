@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -112,6 +113,15 @@ COLOR_MODES_COLOR = {
     ColorMode.RGBWW,
     ColorMode.XY,
 }
+
+
+class LightServices(StrEnum):
+    """Additional service calls."""
+
+    SERVICE_LIGHT_FLASH = "flash"
+    SERVICE_LIGHT_BRIGHTNESS_INC = "inc"
+    SERVICE_LIGHT_BRIGHTNESS_DEC = "dec"
+
 
 # mypy: disallow-any-generics
 
@@ -282,6 +292,8 @@ LIGHT_TURN_ON_SCHEMA = {
 }
 
 LIGHT_TURN_OFF_SCHEMA = {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH}
+
+LIGHT_FLASH_SCHEMA = {ATTR_FLASH: VALID_FLASH}
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -591,6 +603,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         else:
             await async_handle_light_on_service(light, call)
 
+    async def async_handle_flash_service(light: LightEntity, call: ServiceCall) -> None:
+        """Handle flashing a light."""
+        if not (light.supported_features & LightEntityFeature.FLASH):
+            return
+        params: dict[str, Any] = dict(call.data["params"])
+        data = {ATTR_ENTITY_ID: call.data[ATTR_ENTITY_ID]}
+        # Short flash by default:
+        data[ATTR_FLASH] = FLASH_SHORT
+        if ATTR_FLASH in params:
+            data[ATTR_FLASH] = params[ATTR_FLASH]
+        # We use the same logic as the action here. Note that the light will stay on if it was off.
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=None
+        )
+
     # Listen for light on and light off service calls.
 
     component.async_register_entity_service(
@@ -609,6 +636,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         SERVICE_TOGGLE,
         vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
         async_handle_toggle_service,
+    )
+
+    component.async_register_entity_service(
+        LightServices.SERVICE_LIGHT_FLASH,
+        vol.All(cv.make_entity_service_schema(LIGHT_FLASH_SCHEMA), preprocess_data),
+        async_handle_flash_service,
     )
 
     return True

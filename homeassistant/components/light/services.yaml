@@ -574,3 +574,22 @@ toggle:
       description: Light effect.
       selector:
         text:
+flash:
+  name: Flash
+  description: >
+    Flash device long or short.
+  target:
+    entity:
+      domain: light
+  fields:
+    flash:
+      name: Flash
+      description: If the light should flash (and stay on).
+      advanced: true
+      selector:
+        select:
+          options:
+            - label: "Long"
+              value: "long"
+            - label: "Short"
+              value: "short"
