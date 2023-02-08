@@ -780,7 +780,7 @@ def test_recorder_setup_failure_without_event_listener(hass: HomeAssistant) -> N
     hass.stop()
 
 
-async def test_defaults_set(hass):
+async def test_defaults_set(hass: HomeAssistant) -> None:
     """Test the config defaults are set."""
     recorder_config = None
 
@@ -1637,7 +1637,9 @@ async def test_database_lock_without_instance(recorder_mock, hass):
             assert instance.unlock_database()
 
 
-async def test_in_memory_database(hass, caplog):
+async def test_in_memory_database(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test connecting to an in-memory recorder is not allowed."""
     assert not await async_setup_component(
         hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}}
@@ -1903,6 +1905,9 @@ async def test_connect_args_priority(hass, config_url):
 
         def on_connect_url(self, url):
             return False
+
+        def _builtin_onconnect(self):
+            ...
 
     class MockEntrypoint:
         def engine_created(*_):

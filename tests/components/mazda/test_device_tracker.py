@@ -6,12 +6,13 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_device_tracker(hass):
+async def test_device_tracker(hass: HomeAssistant) -> None:
     """Test creation of the device tracker."""
     await init_integration(hass)
 

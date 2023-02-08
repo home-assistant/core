@@ -1,5 +1,4 @@
 """Test reproduce state for Fan."""
-
 import pytest
 
 from homeassistant.components.fan import (
@@ -11,13 +10,15 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Fan states."""
     hass.states.async_set("fan.entity_off", "off", {})
     hass.states.async_set("fan.entity_on", "on", {})
@@ -245,7 +246,7 @@ async def test_modern_turn_on_percentage_from_different_speed(hass, start_state)
     assert len(set_preset_mode) == 0
 
 
-async def test_modern_turn_on_percentage_from_same_speed(hass):
+async def test_modern_turn_on_percentage_from_same_speed(hass: HomeAssistant) -> None:
     """Test modern fan state reproduction, turning on with the same percentage as in the state."""
     hass.states.async_set(MODERN_FAN_ENTITY, "off", MODERN_FAN_OFF_PERCENTAGE15_STATE)
 
@@ -311,7 +312,7 @@ async def test_modern_turn_on_preset_mode_from_different_speed(hass, start_state
     assert len(set_preset_mode) == 0
 
 
-async def test_modern_turn_on_preset_mode_from_same_speed(hass):
+async def test_modern_turn_on_preset_mode_from_same_speed(hass: HomeAssistant) -> None:
     """Test modern fan state reproduction, turning on with the same preset mode as in the state."""
     hass.states.async_set(
         MODERN_FAN_ENTITY, "off", MODERN_FAN_OFF_PPRESET_MODE_AUTO_STATE
@@ -457,7 +458,7 @@ async def test_modern_to_percentage(hass, start_state):
     assert len(set_preset_mode) == 0
 
 
-async def test_modern_direction(hass):
+async def test_modern_direction(hass: HomeAssistant) -> None:
     """Test modern fan state reproduction, switching only direction state."""
     hass.states.async_set(MODERN_FAN_ENTITY, "on", MODERN_FAN_ON_PRESET_MODE_AUTO_STATE)
 

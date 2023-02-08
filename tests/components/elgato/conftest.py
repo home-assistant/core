@@ -2,14 +2,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from elgato import Info, Settings, State
+from elgato import BatteryInfo, ElgatoNoBatteryError, Info, Settings, State
 import pytest
 
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, get_fixture_path, load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -90,6 +90,17 @@ def mock_elgato(
         elgato.settings.return_value = Settings.parse_raw(
             load_fixture(f"{device_fixtures}/settings.json", DOMAIN)
         )
+
+        # This may, or may not, be a battery-powered device
+        if get_fixture_path(f"{device_fixtures}/battery.json", DOMAIN).exists():
+            elgato.has_battery.return_value = True
+            elgato.battery.return_value = BatteryInfo.parse_raw(
+                load_fixture(f"{device_fixtures}/battery.json", DOMAIN)
+            )
+        else:
+            elgato.has_battery.return_value = False
+            elgato.battery.side_effect = ElgatoNoBatteryError
+
         yield elgato
 
 

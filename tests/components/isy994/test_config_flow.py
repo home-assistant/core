@@ -721,7 +721,7 @@ async def test_form_dhcp_existing_ignored_entry(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth(hass):
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,

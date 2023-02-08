@@ -16,6 +16,7 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -181,7 +182,7 @@ def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
         yield mock_usb_serial_by_id
 
 
-async def test_manual(hass):
+async def test_manual(hass: HomeAssistant) -> None:
     """Test we create an entry with manual step."""
 
     result = await hass.config_entries.flow.async_init(
@@ -281,7 +282,7 @@ async def test_manual_errors(hass, integration, url, error, flow, flow_params):
     assert result["errors"] == {"base": error}
 
 
-async def test_manual_already_configured(hass):
+async def test_manual_already_configured(hass: HomeAssistant) -> None:
     """Test that only one unique instance is allowed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -928,7 +929,7 @@ async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_op
     assert result["reason"] == "already_configured"
 
 
-async def test_usb_discovery_requires_supervisor(hass):
+async def test_usb_discovery_requires_supervisor(hass: HomeAssistant) -> None:
     """Test usb discovery flow is aborted when there is no supervisor."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -2605,7 +2606,7 @@ async def test_import_addon_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf(hass):
+async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test zeroconf discovery."""
 
     result = await hass.config_entries.flow.async_init(

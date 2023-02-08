@@ -9,6 +9,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.roomba import config_flow
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -112,7 +113,7 @@ def _mocked_connection_refused_on_getpassword(*_):
     return roomba_password
 
 
-async def test_form_user_discovery_and_password_fetch(hass):
+async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> None:
     """Test we can discovery and fetch the password."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -170,7 +171,7 @@ async def test_form_user_discovery_and_password_fetch(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_skips_known(hass):
+async def test_form_user_discovery_skips_known(hass: HomeAssistant) -> None:
     """Test discovery proceeds to manual if all discovered are already known."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
@@ -189,7 +190,9 @@ async def test_form_user_discovery_skips_known(hass):
     assert result["step_id"] == "manual"
 
 
-async def test_form_user_no_devices_found_discovery_aborts_already_configured(hass):
+async def test_form_user_no_devices_found_discovery_aborts_already_configured(
+    hass: HomeAssistant,
+) -> None:
     """Test if we manually configure an existing host we abort."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
@@ -217,7 +220,9 @@ async def test_form_user_no_devices_found_discovery_aborts_already_configured(ha
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
+async def test_form_user_discovery_manual_and_auto_password_fetch(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery skipped and we can auto fetch the password."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -287,7 +292,9 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discover_fails_aborts_already_configured(hass):
+async def test_form_user_discover_fails_aborts_already_configured(
+    hass: HomeAssistant,
+) -> None:
     """Test if we manually configure an existing host we abort after failed discovery."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
@@ -355,7 +362,9 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
     assert result3["reason"] == "cannot_connect"
 
 
-async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass):
+async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery finds no devices and we can auto fetch the password."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -416,7 +425,9 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(hass):
+async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery finds no devices and password fetch fails."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -547,7 +558,9 @@ async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_an
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_user_discovery_and_password_fetch_gets_connection_refused(hass):
+async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
+    hass: HomeAssistant,
+) -> None:
     """Test we can discovery and fetch the password manually."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -801,7 +814,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_da
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_discovery_with_ignored(hass):
+async def test_dhcp_discovery_with_ignored(hass: HomeAssistant) -> None:
     """Test ignored entries do not break checking for existing entries."""
 
     config_entry = MockConfigEntry(
@@ -826,7 +839,7 @@ async def test_dhcp_discovery_with_ignored(hass):
     assert result["type"] == "form"
 
 
-async def test_dhcp_discovery_already_configured_host(hass):
+async def test_dhcp_discovery_already_configured_host(hass: HomeAssistant) -> None:
     """Test we abort if the host is already configured."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: MOCK_IP})
@@ -850,7 +863,7 @@ async def test_dhcp_discovery_already_configured_host(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery_already_configured_blid(hass):
+async def test_dhcp_discovery_already_configured_blid(hass: HomeAssistant) -> None:
     """Test we abort if the blid is already configured."""
 
     config_entry = MockConfigEntry(
@@ -876,7 +889,7 @@ async def test_dhcp_discovery_already_configured_blid(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery_not_irobot(hass):
+async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
     """Test we abort if the discovered device is not an irobot device."""
 
     config_entry = MockConfigEntry(
@@ -902,7 +915,7 @@ async def test_dhcp_discovery_not_irobot(hass):
     assert result["reason"] == "not_irobot_device"
 
 
-async def test_dhcp_discovery_partial_hostname(hass):
+async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     """Test we abort flows when we have a partial hostname."""
 
     with patch(

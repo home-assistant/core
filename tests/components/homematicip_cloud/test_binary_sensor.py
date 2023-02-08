@@ -23,12 +23,13 @@ from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_SABOTAGE,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 
-async def test_manually_configured_platform(hass):
+async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     """Test that we do not set up an access point."""
     assert await async_setup_component(
         hass,

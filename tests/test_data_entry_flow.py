@@ -236,7 +236,7 @@ async def test_discovery_init_flow(manager):
     assert entry["source"] == config_entries.SOURCE_DISCOVERY
 
 
-async def test_finish_callback_change_result_type(hass):
+async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
     """Test finish callback can change result type."""
 
     class TestFlow(data_entry_flow.FlowHandler):
