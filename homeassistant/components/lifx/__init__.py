@@ -234,7 +234,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data[DOMAIN]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: LIFXUpdateCoordinator = domain_data.pop(entry.entry_id)
-        coordinator.connection.async_stop()
+        coordinator.async_stop()
     # Only the DATA_LIFX_MANAGER left, remove it.
     if len(domain_data) == 1:
         manager: LIFXManager = domain_data.pop(DATA_LIFX_MANAGER)
