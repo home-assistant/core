@@ -1,15 +1,15 @@
 """Tests for iAqualink integration utility functions."""
-
 from iaqualink.exception import AqualinkServiceException
 import pytest
 
 from homeassistant.components.iaqualink.utils import await_or_reraise
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import async_raises, async_returns
 
 
-async def test_await_or_reraise(hass):
+async def test_await_or_reraise(hass: HomeAssistant) -> None:
     """Test await_or_reraise for all values of awaitable."""
     async_noop = async_returns(None)
     await await_or_reraise(async_noop())
