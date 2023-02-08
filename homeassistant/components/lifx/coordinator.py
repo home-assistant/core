@@ -174,7 +174,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             except asyncio.TimeoutError:
                 self.connection.async_stop()
                 await self.connection.async_setup()
-            await self._async_update_data_locked()
+                await self._async_update_data_locked()
 
     async def _async_update_data_locked(self) -> None:
         """Fetch all device data from the api while the lock is held."""
