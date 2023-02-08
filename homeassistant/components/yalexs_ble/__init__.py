@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
 
-    startup_event = asyncio.Event()
+    asyncio.Event()
 
     @callback
     def _async_update_ble(
@@ -39,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update from a ble callback."""
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
 
-    cancel_first_update = push_lock.register_callback(lambda *_: startup_event.set())
     entry.async_on_unload(await push_lock.start())
 
     # We may already have the advertisement, so check for it.
@@ -63,8 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex
-    finally:
-        cancel_first_update()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
         entry.title, push_lock
