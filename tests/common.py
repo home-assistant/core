@@ -530,11 +530,17 @@ def mock_component(hass: HomeAssistant, component: str) -> None:
     hass.config.components.add(component)
 
 
-def mock_registry(
+def mock_entity_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, entity_registry.RegistryEntry] | None = None,
 ) -> entity_registry.EntityRegistry:
-    """Mock the Entity Registry."""
+    """Mock the Entity Registry.
+
+    Replaces the active registry in the hass object with a fresh,
+    untainted, optionally preloaded registry.
+    Should only be used if a test pre-stage the registry with data,
+    or needs to reset/re-stage the registry during tests.
+    """
     registry = entity_registry.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
@@ -546,10 +552,20 @@ def mock_registry(
     return registry
 
 
+# deprecated - kept for compatibility
+mock_registry = mock_entity_registry
+
+
 def mock_area_registry(
     hass: HomeAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
 ) -> area_registry.AreaRegistry:
-    """Mock the Area Registry."""
+    """Mock the Area Registry.
+
+    Replaces the active registry in the hass object with a fresh,
+    untainted, optionally preloaded registry.
+    Should only be used if a test pre-stage the registry with data,
+    or needs to reset/re-stage the registry during tests.
+    """
     registry = area_registry.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
 
@@ -561,7 +577,13 @@ def mock_device_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, device_registry.DeviceEntry] | None = None,
 ) -> device_registry.DeviceRegistry:
-    """Mock the Device Registry."""
+    """Mock the Device Registry.
+
+    Replaces the active registry in the hass object with a fresh,
+    untainted, optionally preloaded registry.
+    Should only be used if a test pre-stage the registry with data,
+    or needs to reset/re-stage the registry during tests.
+    """
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = device_registry.DeviceRegistryItems()
     if mock_entries is None:
