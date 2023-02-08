@@ -355,7 +355,7 @@ beautifulsoup4==4.11.1
 bellows==0.34.7
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.12.0
+bimmer_connected==0.12.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==2.13.0
@@ -370,7 +370,7 @@ blebox_uniapi==2.1.4
 blinkpy==0.19.2
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.2.1
+bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.15.2
@@ -511,7 +511,7 @@ energyzero==0.3.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.27
+env_canada==0.5.28
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -735,7 +735,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.5.5
+inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.2.0
@@ -753,7 +753,7 @@ ismartgate==4.0.4
 janus==1.0.0
 
 # homeassistant.components.abode
-jaraco.abode==3.2.1
+jaraco.abode==3.3.0
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
@@ -947,7 +947,7 @@ openai==0.26.2
 openerz-api==0.2.0
 
 # homeassistant.components.oralb
-oralb-ble==0.17.2
+oralb-ble==0.17.4
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
@@ -1051,7 +1051,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.2
+py-synologydsm-api==2.1.4
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1221,7 +1221,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.11
+pyisy==3.1.13
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1367,7 +1367,7 @@ pyps4-2ndscreen==1.3.1
 pyqwikswitch==0.93
 
 # homeassistant.components.rainbird
-pyrainbird==1.1.0
+pyrainbird==2.0.0
 
 # homeassistant.components.risco
 pyrisco==0.5.7
@@ -1627,10 +1627,10 @@ sense_energy==0.11.1
 sensirion-ble==0.0.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.5.1
+sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.5.2
+sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
 sentry-sdk==1.13.0
@@ -1745,7 +1745,7 @@ tesla-wall-connector==1.0.2
 thermobeacon-ble==0.6.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.4.3
+thermopro-ble==0.4.5
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
@@ -1862,7 +1862,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.15.0
+xiaomi-ble==0.16.1
 
 # homeassistant.components.knx
 xknx==2.3.0

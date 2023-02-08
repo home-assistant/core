@@ -231,7 +231,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -241,7 +246,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
@@ -276,7 +286,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -286,7 +301,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
@@ -444,11 +464,13 @@ def test_supported_pgsql(caplog, pgsql_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(
+    database_engine = util.setup_connection_for_dialect(
         instance_mock, "postgresql", dbapi_connection, True
     )
 
     assert "minimum supported version" not in caplog.text
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -525,9 +547,13 @@ def test_supported_sqlite(caplog, sqlite_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    database_engine = util.setup_connection_for_dialect(
+        instance_mock, "sqlite", dbapi_connection, True
+    )
 
     assert "minimum supported version" not in caplog.text
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 @pytest.mark.parametrize(
@@ -599,7 +625,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    await hass.async_add_executor_job(
+    database_engine = await hass.async_add_executor_job(
         util.setup_connection_for_dialect,
         instance_mock,
         "mysql",
@@ -612,6 +638,9 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is not None
     assert issue.translation_placeholders == {"min_version": min_version}
+
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -649,7 +678,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version)
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    await hass.async_add_executor_job(
+    database_engine = await hass.async_add_executor_job(
         util.setup_connection_for_dialect,
         instance_mock,
         "mysql",
@@ -661,6 +690,9 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version)
     registry = async_get_issue_registry(hass)
     issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
     assert issue is None
+
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 def test_basic_sanity_check(hass_recorder, recorder_db_url):

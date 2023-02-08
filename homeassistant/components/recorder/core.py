@@ -14,7 +14,6 @@ import time
 from typing import Any, TypeVar, cast
 
 import async_timeout
-from awesomeversion import AwesomeVersion
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.engine import Engine
@@ -67,6 +66,7 @@ from .db_schema import (
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
+    DatabaseEngine,
     StatisticData,
     StatisticMetaData,
     UnsupportedDialect,
@@ -173,7 +173,7 @@ class Recorder(threading.Thread):
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
-        self.engine_version: AwesomeVersion | None = None
+        self.database_engine: DatabaseEngine | None = None
         # Database connection is ready, but non-live migration may be in progress
         db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
         self.async_db_connected: asyncio.Future[bool] = db_connected
@@ -1125,13 +1125,13 @@ class Recorder(threading.Thread):
         ) -> None:
             """Dbapi specific connection settings."""
             assert self.engine is not None
-            if version := setup_connection_for_dialect(
+            if database_engine := setup_connection_for_dialect(
                 self,
                 self.engine.dialect.name,
                 dbapi_connection,
                 not self._completed_first_database_setup,
             ):
-                self.engine_version = version
+                self.database_engine = database_engine
             self._completed_first_database_setup = True
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
