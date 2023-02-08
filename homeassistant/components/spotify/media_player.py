@@ -166,7 +166,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if not self._currently_playing:
             return None
         item = self._currently_playing.get("item") or {}
-        return MediaType.PODCAST if item.get("type") == MediaType.EPISODE else MediaType.MUSIC
+        return (
+            MediaType.PODCAST
+            if item.get("type") == MediaType.EPISODE
+            else MediaType.MUSIC
+        )
 
     @property
     def media_duration(self) -> int | None:
@@ -198,20 +202,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Return the media image URL."""
-        if (
-            not self._currently_playing
-            or self._currently_playing.get("item") is None
-        ):
+        if not self._currently_playing or self._currently_playing.get("item") is None:
             return None
 
-        item = self._currently_playing.get("item")
+        item = self._currently_playing["item"]
         if item["type"] == MediaType.EPISODE:
             if item["images"]:
                 return fetch_image_url(item)
-            elif item["show"]["images"]:
+            if item["show"]["images"]:
                 return fetch_image_url(item["show"])
-            else:
-                return None
+            return None
 
         if not item["album"]["images"]:
             return None
@@ -231,13 +231,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if not self._currently_playing or self._currently_playing.get("item") is None:
             return None
 
-        item = self._currently_playing.get("item")
+        item = self._currently_playing["item"]
         if item["type"] == MediaType.EPISODE:
             return item["show"]["publisher"]
 
-        return ", ".join(
-            artist["name"] for artist in item["artists"]
-        )
+        return ", ".join(artist["name"] for artist in item["artists"])
 
     @property
     def media_album_name(self) -> str | None:
@@ -245,7 +243,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if not self._currently_playing or self._currently_playing.get("item") is None:
             return None
 
-        item = self._currently_playing.get("item")
+        item = self._currently_playing["item"]
         if item["type"] == MediaType.EPISODE:
             return item["show"]["name"]
 
@@ -387,7 +385,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             ).result()
             self.data.client.set_auth(auth=self.data.session.token["access_token"])
 
-        current = self.data.client.current_playback(additional_types=[MediaType.EPISODE])
+        current = self.data.client.current_playback(
+            additional_types=[MediaType.EPISODE]
+        )
         self._currently_playing = current or {}
 
         context = self._currently_playing.get("context")
