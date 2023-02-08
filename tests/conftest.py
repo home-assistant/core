@@ -1245,23 +1245,23 @@ def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
 
 @pytest.fixture
 def area_registry(hass: HomeAssistant) -> ar.AreaRegistry:
-    """Return the area registry."""
+    """Return the area registry from the current hass instance."""
     return ar.async_get(hass)
 
 
 @pytest.fixture
 def device_registry(hass: HomeAssistant) -> dr.DeviceRegistry:
-    """Return the device registry."""
+    """Return the device registry from the current hass instance."""
     return dr.async_get(hass)
 
 
 @pytest.fixture
 def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
-    """Return the entity registry."""
+    """Return the entity registry from the current hass instance."""
     return er.async_get(hass)
 
 
 @pytest.fixture
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
-    """Return the issue registry."""
+    """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
