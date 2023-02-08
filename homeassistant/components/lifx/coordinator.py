@@ -104,6 +104,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         self.device.retry_count = MESSAGE_RETRIES
         self.device.unregister_timeout = UNAVAILABLE_GRACE
 
+    @callback
+    def async_stop(self) -> None:
+        """Shutdown the connection."""
+        self._connection.async_stop()
+
     @property
     def serial_number(self) -> str:
         """Return the internal mac address."""
