@@ -283,7 +283,7 @@ class ReolinkHost:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="https_webhook",
                 translation_placeholders={
-                    "webhook_address": self._webhook_url,
+                    "base_url": base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
