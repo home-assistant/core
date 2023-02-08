@@ -1131,7 +1131,6 @@ async def help_test_entity_id_update_subscriptions(
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    entity_registry: er.EntityRegistry,
     topics: list[str] | None = None,
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
@@ -1145,6 +1144,7 @@ async def help_test_entity_id_update_subscriptions(
         config[mqtt.DOMAIN][domain]["state_topic"] = "test-topic"
         topics = ["avty-topic", "test-topic"]
     assert len(topics) > 0
+    entity_registry = er.async_get(hass)
 
     assert await async_setup_component(
         hass,
@@ -1180,7 +1180,6 @@ async def help_test_entity_id_update_discovery_update(
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    entity_registry: er.EntityRegistry,
     topic: str | None = None,
 ) -> None:
     """Test MQTT discovery update after entity_id is updated."""
@@ -1194,6 +1193,7 @@ async def help_test_entity_id_update_discovery_update(
         config[mqtt.DOMAIN][domain]["availability_topic"] = "avty-topic"
         topic = "avty-topic"
 
+    entity_registry = er.async_get(hass)
     data = json.dumps(config[mqtt.DOMAIN][domain])
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
@@ -1488,8 +1488,6 @@ async def help_test_entity_debug_info_update_entity_id(
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test debug_info.
 
@@ -1502,6 +1500,8 @@ async def help_test_entity_debug_info_update_entity_id(
     config["unique_id"] = "veryunique"
     config["platform"] = "mqtt"
 
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
