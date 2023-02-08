@@ -27,7 +27,8 @@
       "wait_for_bluetooth_connect": "Connecting..."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_unconfigured_devices": "No unconfigured devices found."
     }
   }
 }

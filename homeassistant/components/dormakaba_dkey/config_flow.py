@@ -6,11 +6,14 @@ import logging
 from typing import Any
 
 from bleak import BleakError
-from py_dormakaba_dkey import DKEYLock, errors as dkey_errors
+from py_dormakaba_dkey import DKEYLock, device_filter, errors as dkey_errors
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
@@ -34,7 +37,54 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._connect_task: Task | None = None
+        # Populated by user step
+        self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
+        # Populated by bluetooth and user steps
         self._discovery_info: BluetoothServiceInfoBleak | None = None
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the user step to pick discovered device."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            address = user_input[CONF_ADDRESS]
+            await self.async_set_unique_id(address)
+            self._abort_if_unique_id_configured()
+            self._discovery_info = self._discovered_devices[address]
+            return await self.async_step_bluetooth_connect()
+
+        current_addresses = self._async_current_ids()
+        for discovery in async_discovered_service_info(self.hass):
+            if (
+                discovery.address in current_addresses
+                or discovery.address in self._discovered_devices
+                or not device_filter(discovery.advertisement)
+            ):
+                continue
+            self._discovered_devices[discovery.address] = discovery
+
+        if not self._discovered_devices:
+            return self.async_abort(reason="no_unconfigured_devices")
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_ADDRESS): vol.In(
+                    {
+                        service_info.address: (
+                            f"{service_info.name} ({service_info.address})"
+                        )
+                        for service_info in self._discovered_devices.values()
+                    }
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak

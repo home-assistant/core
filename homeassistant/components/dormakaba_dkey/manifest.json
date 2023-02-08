@@ -14,6 +14,6 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/dormakaba_dkey",
   "iot_class": "local_polling",
-  "requirements": ["py-dormakaba-dkey==1.0.0"],
+  "requirements": ["py-dormakaba-dkey==1.0.1"],
   "integration_type": "device"
 }
