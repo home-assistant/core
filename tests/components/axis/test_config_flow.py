@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_HOST, MAC, MODEL, NAME
@@ -108,7 +109,7 @@ async def test_manual_configuration_update_configuration(
     assert mock_config_entry.data[CONF_HOST] == "2.3.4.5"
 
 
-async def test_flow_fails_faulty_credentials(hass):
+async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
@@ -134,7 +135,7 @@ async def test_flow_fails_faulty_credentials(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_fails_cannot_connect(hass):
+async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
     """Test that config flow fails on cannot connect."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
