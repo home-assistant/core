@@ -194,7 +194,7 @@ async def test_discover_fan(
     async_fire_mqtt_message(
         hass,
         "homeassistant/fan/bla/config",
-        ('{ "name": "Beer",' '  "command_topic": "test_topic" }'),
+        '{ "name": "Beer", "command_topic": "test_topic" }',
     )
     await hass.async_block_till_done()
 
@@ -1308,7 +1308,7 @@ async def test_missing_discover_abbreviations(
     for fil in Path(mqtt.__file__).parent.rglob("*.py"):
         if fil.name == "trigger.py":
             continue
-        with open(fil) as file:
+        with open(fil, encoding="utf-8") as file:
             matches = re.findall(regex, file.read())
             for match in matches:
                 if (
@@ -1332,7 +1332,7 @@ async def test_no_implicit_state_topic_switch(
 ) -> None:
     """Test no implicit state topic for switch."""
     await mqtt_mock_entry_no_yaml_config()
-    data = '{ "name": "Test1",' '  "command_topic": "cmnd"' "}"
+    data = '{ "name": "Test1", "command_topic": "cmnd"' "}"
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
     await hass.async_block_till_done()
