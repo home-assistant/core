@@ -86,7 +86,7 @@ def assert_condition_trace(expected):
             assert_element(condition_trace[key][index], element, path)
 
 
-async def test_invalid_condition(hass):
+async def test_invalid_condition(hass: HomeAssistant) -> None:
     """Test if invalid condition raises."""
     with pytest.raises(HomeAssistantError):
         await condition.async_from_config(
@@ -104,7 +104,7 @@ async def test_invalid_condition(hass):
         )
 
 
-async def test_and_condition(hass):
+async def test_and_condition(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "alias": "And Condition",
@@ -177,7 +177,7 @@ async def test_and_condition(hass):
     )
 
 
-async def test_and_condition_raises(hass):
+async def test_and_condition_raises(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "alias": "And Condition",
@@ -250,7 +250,7 @@ async def test_and_condition_raises(hass):
     )
 
 
-async def test_and_condition_with_template(hass):
+async def test_and_condition_with_template(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "condition": "and",
@@ -289,7 +289,7 @@ async def test_and_condition_with_template(hass):
     assert test(hass)
 
 
-async def test_and_condition_shorthand(hass):
+async def test_and_condition_shorthand(hass: HomeAssistant) -> None:
     """Test the 'and' condition shorthand."""
     config = {
         "alias": "And Condition Shorthand",
@@ -331,7 +331,7 @@ async def test_and_condition_shorthand(hass):
     assert test(hass)
 
 
-async def test_and_condition_list_shorthand(hass):
+async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     """Test the 'and' condition list shorthand."""
     config = {
         "alias": "And Condition List Shorthand",
@@ -373,7 +373,7 @@ async def test_and_condition_list_shorthand(hass):
     assert test(hass)
 
 
-async def test_malformed_and_condition_list_shorthand(hass):
+async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     """Test the 'and' condition list shorthand syntax check."""
     config = {
         "alias": "Bad shorthand syntax",
@@ -384,7 +384,7 @@ async def test_malformed_and_condition_list_shorthand(hass):
         cv.CONDITION_SCHEMA(config)
 
 
-async def test_or_condition(hass):
+async def test_or_condition(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "alias": "Or Condition",
@@ -467,7 +467,7 @@ async def test_or_condition(hass):
     )
 
 
-async def test_or_condition_raises(hass):
+async def test_or_condition_raises(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "alias": "Or Condition",
@@ -540,7 +540,7 @@ async def test_or_condition_raises(hass):
     )
 
 
-async def test_or_condition_with_template(hass):
+async def test_or_condition_with_template(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "condition": "or",
@@ -567,7 +567,7 @@ async def test_or_condition_with_template(hass):
     assert test(hass)
 
 
-async def test_or_condition_shorthand(hass):
+async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
     """Test the 'or' condition shorthand."""
     config = {
         "alias": "Or Condition Shorthand",
@@ -597,7 +597,7 @@ async def test_or_condition_shorthand(hass):
     assert test(hass)
 
 
-async def test_not_condition(hass):
+async def test_not_condition(hass: HomeAssistant) -> None:
     """Test the 'not' condition."""
     config = {
         "alias": "Not Condition",
@@ -696,7 +696,7 @@ async def test_not_condition(hass):
     )
 
 
-async def test_not_condition_raises(hass):
+async def test_not_condition_raises(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "alias": "Not Condition",
@@ -763,7 +763,7 @@ async def test_not_condition_raises(hass):
     )
 
 
-async def test_not_condition_with_template(hass):
+async def test_not_condition_with_template(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "condition": "not",
@@ -796,7 +796,7 @@ async def test_not_condition_with_template(hass):
     assert not test(hass)
 
 
-async def test_not_condition_shorthand(hass):
+async def test_not_condition_shorthand(hass: HomeAssistant) -> None:
     """Test the 'or' condition shorthand."""
     config = {
         "alias": "Not Condition Shorthand",
@@ -832,7 +832,7 @@ async def test_not_condition_shorthand(hass):
     assert not test(hass)
 
 
-async def test_time_window(hass):
+async def test_time_window(hass: HomeAssistant) -> None:
     """Test time condition windows."""
     sixam = "06:00:00"
     sixpm = "18:00:00"
@@ -885,7 +885,7 @@ async def test_time_window(hass):
         assert test2(hass)
 
 
-async def test_time_using_input_datetime(hass):
+async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
     """Test time conditions using input_datetime entities."""
     await async_setup_component(
         hass,
@@ -1005,7 +1005,7 @@ async def test_time_using_input_datetime(hass):
         condition.time(hass, before="input_datetime.not_existing")
 
 
-async def test_time_using_sensor(hass):
+async def test_time_using_sensor(hass: HomeAssistant) -> None:
     """Test time conditions using sensor entities."""
     hass.states.async_set(
         "sensor.am",
@@ -1089,7 +1089,7 @@ async def test_time_using_sensor(hass):
         condition.time(hass, before="sensor.not_existing")
 
 
-async def test_state_raises(hass):
+async def test_state_raises(hass: HomeAssistant) -> None:
     """Test that state raises ConditionError on errors."""
     # No entity
     with pytest.raises(ConditionError, match="no entity"):
@@ -1124,7 +1124,7 @@ async def test_state_raises(hass):
         test(hass)
 
 
-async def test_state_unknown_attribute(hass):
+async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that state returns False on unknown attribute."""
     # Unknown attribute
     config = {
@@ -1156,7 +1156,7 @@ async def test_state_unknown_attribute(hass):
     )
 
 
-async def test_state_multiple_entities(hass):
+async def test_state_multiple_entities(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1219,7 +1219,7 @@ async def test_state_multiple_entities_match_any(hass: HomeAssistant) -> None:
     assert not test(hass)
 
 
-async def test_multiple_states(hass):
+async def test_multiple_states(hass: HomeAssistant) -> None:
     """Test with multiple states in condition."""
     config = {
         "condition": "and",
@@ -1246,7 +1246,7 @@ async def test_multiple_states(hass):
     assert not test(hass)
 
 
-async def test_state_attribute(hass):
+async def test_state_attribute(hass: HomeAssistant) -> None:
     """Test with state attribute in condition."""
     config = {
         "condition": "and",
@@ -1279,7 +1279,7 @@ async def test_state_attribute(hass):
     assert not test(hass)
 
 
-async def test_state_attribute_boolean(hass):
+async def test_state_attribute_boolean(hass: HomeAssistant) -> None:
     """Test with boolean state attribute in condition."""
     config = {
         "condition": "state",
@@ -1304,7 +1304,7 @@ async def test_state_attribute_boolean(hass):
     assert test(hass)
 
 
-async def test_state_entity_registry_id(hass):
+async def test_state_entity_registry_id(hass: HomeAssistant) -> None:
     """Test with entity specified by entity registry id."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -1327,7 +1327,7 @@ async def test_state_entity_registry_id(hass):
     assert not test(hass)
 
 
-async def test_state_using_input_entities(hass):
+async def test_state_using_input_entities(hass: HomeAssistant) -> None:
     """Test state conditions using input_* entities."""
     await async_setup_component(
         hass,
@@ -1408,7 +1408,7 @@ async def test_state_using_input_entities(hass):
     assert test(hass)
 
 
-async def test_numeric_state_known_non_matching(hass):
+async def test_numeric_state_known_non_matching(hass: HomeAssistant) -> None:
     """Test that numeric_state doesn't match on known non-matching states."""
     hass.states.async_set("sensor.temperature", "unavailable")
     config = {
@@ -1460,7 +1460,7 @@ async def test_numeric_state_known_non_matching(hass):
     )
 
 
-async def test_numeric_state_raises(hass):
+async def test_numeric_state_raises(hass: HomeAssistant) -> None:
     """Test that numeric_state raises ConditionError on errors."""
     # Unknown entities
     config = {
@@ -1550,7 +1550,7 @@ async def test_numeric_state_raises(hass):
         test(hass)
 
 
-async def test_numeric_state_unknown_attribute(hass):
+async def test_numeric_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that numeric_state returns False on unknown attribute."""
     # Unknown attribute
     config = {
@@ -1583,7 +1583,7 @@ async def test_numeric_state_unknown_attribute(hass):
     )
 
 
-async def test_numeric_state_multiple_entities(hass):
+async def test_numeric_state_multiple_entities(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1613,7 +1613,7 @@ async def test_numeric_state_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_numeric_state_attribute(hass):
+async def test_numeric_state_attribute(hass: HomeAssistant) -> None:
     """Test with numeric state attribute in condition."""
     config = {
         "condition": "and",
@@ -1646,7 +1646,7 @@ async def test_numeric_state_attribute(hass):
     assert not test(hass)
 
 
-async def test_numeric_state_entity_registry_id(hass):
+async def test_numeric_state_entity_registry_id(hass: HomeAssistant) -> None:
     """Test with entity specified by entity registry id."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -1669,7 +1669,7 @@ async def test_numeric_state_entity_registry_id(hass):
     assert not test(hass)
 
 
-async def test_numeric_state_using_input_number(hass):
+async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
     """Test numeric_state conditions using input_number entities."""
     hass.states.async_set("number.low", 10)
     await async_setup_component(
@@ -1739,7 +1739,7 @@ async def test_numeric_state_using_input_number(hass):
         )
 
 
-async def test_zone_raises(hass):
+async def test_zone_raises(hass: HomeAssistant) -> None:
     """Test that zone raises ConditionError on errors."""
     config = {
         "condition": "zone",
@@ -1825,7 +1825,7 @@ async def test_zone_raises(hass):
     assert test(hass)
 
 
-async def test_zone_multiple_entities(hass):
+async def test_zone_multiple_entities(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1885,7 +1885,7 @@ async def test_zone_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_multiple_zones(hass):
+async def test_multiple_zones(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1934,7 +1934,7 @@ async def test_multiple_zones(hass):
     assert not test(hass)
 
 
-async def test_extract_entities():
+async def test_extract_entities() -> None:
     """Test extracting entities."""
     assert condition.async_extract_entities(
         {
@@ -2007,7 +2007,7 @@ async def test_extract_entities():
     }
 
 
-async def test_extract_devices():
+async def test_extract_devices() -> None:
     """Test extracting devices."""
     assert condition.async_extract_devices(
         {
@@ -2056,7 +2056,7 @@ async def test_extract_devices():
     ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
 
 
-async def test_condition_template_error(hass):
+async def test_condition_template_error(hass: HomeAssistant) -> None:
     """Test invalid template."""
     config = {"condition": "template", "value_template": "{{ undefined.state }}"}
     config = cv.CONDITION_SCHEMA(config)
@@ -2067,7 +2067,7 @@ async def test_condition_template_error(hass):
         test(hass)
 
 
-async def test_condition_template_invalid_results(hass):
+async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
     """Test template condition render false with invalid results."""
     config = {"condition": "template", "value_template": "{{ 'string' }}"}
     config = cv.CONDITION_SCHEMA(config)
@@ -3260,7 +3260,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
     )
 
 
-async def test_trigger(hass):
+async def test_trigger(hass: HomeAssistant) -> None:
     """Test trigger condition."""
     config = {"alias": "Trigger Cond", "condition": "trigger", "id": "123456"}
     config = cv.CONDITION_SCHEMA(config)
@@ -3274,7 +3274,7 @@ async def test_trigger(hass):
     assert test(hass, {"trigger": {"id": "123456"}})
 
 
-async def test_platform_async_validate_condition_config(hass):
+async def test_platform_async_validate_condition_config(hass: HomeAssistant) -> None:
     """Test platform.async_validate_condition_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     with patch(
@@ -3305,7 +3305,7 @@ async def test_disabled_condition(hass: HomeAssistant) -> None:
     assert test(hass) is None
 
 
-async def test_and_condition_with_disabled_condition(hass):
+async def test_and_condition_with_disabled_condition(hass: HomeAssistant) -> None:
     """Test the 'and' condition with one of the conditions disabled."""
     config = {
         "alias": "And Condition",
@@ -3370,7 +3370,7 @@ async def test_and_condition_with_disabled_condition(hass):
     )
 
 
-async def test_or_condition_with_disabled_condition(hass):
+async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None:
     """Test the 'or' condition with one of the conditions disabled."""
     config = {
         "alias": "Or Condition",

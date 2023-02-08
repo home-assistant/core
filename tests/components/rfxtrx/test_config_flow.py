@@ -912,7 +912,7 @@ async def test_options_configure_rfy_cover_device(hass):
     )
 
 
-def test_get_serial_by_id_no_dir():
+def test_get_serial_by_id_no_dir() -> None:
     """Test serial by id conversion if there's no /dev/serial/by-id."""
     p1 = patch("os.path.isdir", MagicMock(return_value=False))
     p2 = patch("os.scandir")
@@ -923,7 +923,7 @@ def test_get_serial_by_id_no_dir():
         assert scan_mock.call_count == 0
 
 
-def test_get_serial_by_id():
+def test_get_serial_by_id() -> None:
     """Test serial by id conversion."""
     p1 = patch("os.path.isdir", MagicMock(return_value=True))
     p2 = patch("os.scandir")

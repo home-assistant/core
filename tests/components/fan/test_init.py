@@ -12,7 +12,7 @@ class BaseFan(FanEntity):
         """Initialize the fan."""
 
 
-def test_fanentity():
+def test_fanentity() -> None:
     """Test fan entity methods."""
     fan = BaseFan()
     assert fan.state == "off"
