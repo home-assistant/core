@@ -68,8 +68,6 @@ class ReolinkHost:
 
     async def async_init(self) -> None:
         """Connect to Reolink host."""
-        self._api.expire_session()
-
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
@@ -301,9 +299,10 @@ class ReolinkHost:
             )
             return
 
-        channel = await self._api.ONVIF_event_callback(data)
+        channels = await self._api.ONVIF_event_callback(data)
 
-        if channel is None:
+        if channels is None:
             async_dispatcher_send(hass, f"{webhook_id}_all", {})
         else:
-            async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
+            for channel in channels:
+                async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
