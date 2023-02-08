@@ -1,5 +1,4 @@
 """Tests for ZHA config flow."""
-
 import copy
 from datetime import timedelta
 import json
@@ -33,6 +32,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
 )
 from homeassistant.const import CONF_SOURCE
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -118,7 +118,7 @@ def com_port(device="/dev/ttyUSB1234"):
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_zeroconf_discovery_znp(hass):
+async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -216,7 +216,7 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass):
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_efr32_via_zeroconf(hass):
+async def test_efr32_via_zeroconf(hass: HomeAssistant) -> None:
     """Test zeroconf flow -- efr32 radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -266,7 +266,7 @@ async def test_efr32_via_zeroconf(hass):
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_zeroconf_ip_change(hass):
+async def test_discovery_via_zeroconf_ip_change(hass: HomeAssistant) -> None:
     """Test zeroconf flow -- radio detected."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -305,7 +305,7 @@ async def test_discovery_via_zeroconf_ip_change(hass):
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_zeroconf_ip_change_ignored(hass):
+async def test_discovery_via_zeroconf_ip_change_ignored(hass: HomeAssistant) -> None:
     """Test zeroconf flow that was ignored gets updated."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -334,7 +334,7 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass):
     }
 
 
-async def test_discovery_confirm_final_abort_if_entries(hass):
+async def test_discovery_confirm_final_abort_if_entries(hass: HomeAssistant) -> None:
     """Test discovery aborts if ZHA was set up after the confirmation dialog is shown."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -366,7 +366,7 @@ async def test_discovery_confirm_final_abort_if_entries(hass):
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_usb(hass):
+async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     """Test usb flow -- radio detected."""
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyZIGBEE",
@@ -483,7 +483,7 @@ async def test_discovery_via_usb_no_radio(probe_mock, hass):
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_usb_already_setup(hass):
+async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
     """Test usb flow -- already setup."""
 
     MockConfigEntry(
@@ -508,7 +508,7 @@ async def test_discovery_via_usb_already_setup(hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_discovery_via_usb_path_changes(hass):
+async def test_discovery_via_usb_path_changes(hass: HomeAssistant) -> None:
     """Test usb flow already setup and the path changes."""
 
     entry = MockConfigEntry(
@@ -547,7 +547,7 @@ async def test_discovery_via_usb_path_changes(hass):
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_usb_deconz_already_discovered(hass):
+async def test_discovery_via_usb_deconz_already_discovered(hass: HomeAssistant) -> None:
     """Test usb flow -- deconz discovered."""
     result = await hass.config_entries.flow.async_init(
         "deconz",
@@ -581,7 +581,7 @@ async def test_discovery_via_usb_deconz_already_discovered(hass):
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_usb_deconz_already_setup(hass):
+async def test_discovery_via_usb_deconz_already_setup(hass: HomeAssistant) -> None:
     """Test usb flow -- deconz setup."""
     MockConfigEntry(domain="deconz", data={}).add_to_hass(hass)
     await hass.async_block_till_done()
@@ -603,7 +603,7 @@ async def test_discovery_via_usb_deconz_already_setup(hass):
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_usb_deconz_ignored(hass):
+async def test_discovery_via_usb_deconz_ignored(hass: HomeAssistant) -> None:
     """Test usb flow -- deconz ignored."""
     MockConfigEntry(
         domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
@@ -627,7 +627,7 @@ async def test_discovery_via_usb_deconz_ignored(hass):
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_via_usb_zha_ignored_updates(hass):
+async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> None:
     """Test usb flow that was ignored gets updated."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -659,7 +659,7 @@ async def test_discovery_via_usb_zha_ignored_updates(hass):
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_discovery_already_setup(hass):
+async def test_discovery_already_setup(hass: HomeAssistant) -> None:
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -689,7 +689,7 @@ async def test_discovery_already_setup(hass):
     mock_detect_radio_type(radio_type=RadioType.deconz),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_user_flow(hass):
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test user flow -- radio detected."""
 
     port = com_port()
@@ -727,7 +727,7 @@ async def test_user_flow(hass):
     mock_detect_radio_type(ret=False),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_user_flow_not_detected(hass):
+async def test_user_flow_not_detected(hass: HomeAssistant) -> None:
     """Test user flow, radio not detected."""
 
     port = com_port()
@@ -744,7 +744,7 @@ async def test_user_flow_not_detected(hass):
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_user_flow_show_form(hass):
+async def test_user_flow_show_form(hass: HomeAssistant) -> None:
     """Test user step form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -756,7 +756,7 @@ async def test_user_flow_show_form(hass):
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[]))
-async def test_user_flow_show_manual(hass):
+async def test_user_flow_show_manual(hass: HomeAssistant) -> None:
     """Test user flow manual entry when no comport detected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -767,7 +767,7 @@ async def test_user_flow_show_manual(hass):
     assert result["step_id"] == "manual_pick_radio_type"
 
 
-async def test_user_flow_manual(hass):
+async def test_user_flow_manual(hass: HomeAssistant) -> None:
     """Test user flow manual entry."""
 
     result = await hass.config_entries.flow.async_init(
@@ -792,7 +792,7 @@ async def test_pick_radio_flow(hass, radio_type):
     assert result["step_id"] == "manual_port_config"
 
 
-async def test_user_flow_existing_config_entry(hass):
+async def test_user_flow_existing_config_entry(hass: HomeAssistant) -> None:
     """Test if config entry already exists."""
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
@@ -999,7 +999,7 @@ async def test_hardware(onboarded, hass):
     }
 
 
-async def test_hardware_already_setup(hass):
+async def test_hardware_already_setup(hass: HomeAssistant) -> None:
     """Test hardware flow -- already setup."""
 
     MockConfigEntry(
@@ -1643,7 +1643,7 @@ async def test_options_flow_defaults(async_setup_entry, async_unload_effect, has
     ),
 )
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_options_flow_defaults_socket(hass):
+async def test_options_flow_defaults_socket(hass: HomeAssistant) -> None:
     """Test options flow defaults work even for serial ports that can't be listed."""
 
     entry = MockConfigEntry(
