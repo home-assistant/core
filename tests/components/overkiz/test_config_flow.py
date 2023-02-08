@@ -256,7 +256,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_flow(hass):
+async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     """Test that zeroconf discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -288,7 +288,7 @@ async def test_zeroconf_flow(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_flow_already_configured(hass):
+async def test_zeroconf_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that zeroconf doesn't setup already configured gateways."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -307,7 +307,7 @@ async def test_zeroconf_flow_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_success(hass):
+async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test reauthentication flow."""
 
     mock_entry = MockConfigEntry(
@@ -349,7 +349,7 @@ async def test_reauth_success(hass):
         assert mock_entry.data["password"] == TEST_PASSWORD2
 
 
-async def test_reauth_wrong_account(hass):
+async def test_reauth_wrong_account(hass: HomeAssistant) -> None:
     """Test reauthentication flow."""
 
     mock_entry = MockConfigEntry(

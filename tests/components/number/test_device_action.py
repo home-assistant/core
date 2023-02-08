@@ -5,6 +5,7 @@ import voluptuous_serialize
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.number import DOMAIN, device_action
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -130,7 +131,7 @@ async def test_get_action_no_state(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass):
+async def test_action(hass: HomeAssistant) -> None:
     """Test for actions."""
     hass.states.async_set("number.entity", 0.5, {"min_value": 0.0, "max_value": 1.0})
 
@@ -166,7 +167,7 @@ async def test_action(hass):
     assert len(calls) == 1
 
 
-async def test_capabilities(hass):
+async def test_capabilities(hass: HomeAssistant) -> None:
     """Test getting capabilities."""
     capabilities = await device_action.async_get_action_capabilities(
         hass,
