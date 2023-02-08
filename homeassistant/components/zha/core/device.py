@@ -9,8 +9,9 @@ from functools import cached_property
 import logging
 import random
 import time
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 from zigpy import types
 import zigpy.device
 import zigpy.exceptions
@@ -89,8 +90,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
-
-_ZHADeviceSelfT = TypeVar("_ZHADeviceSelfT", bound="ZHADevice")
 
 
 class DeviceStatus(Enum):
@@ -346,12 +345,12 @@ class ZHADevice(LogMixin):
 
     @classmethod
     def new(
-        cls: type[_ZHADeviceSelfT],
+        cls,
         hass: HomeAssistant,
         zigpy_dev: zigpy.device.Device,
         gateway: ZHAGateway,
         restored: bool = False,
-    ) -> _ZHADeviceSelfT:
+    ) -> Self:
         """Create new device."""
         zha_dev = cls(hass, zigpy_dev, gateway)
         zha_dev.channels = channels.Channels.new(zha_dev)

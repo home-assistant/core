@@ -152,3 +152,27 @@ async def test_migrate_device_id_no_serial(
 
     assert device.identifiers == variant.after
     assert device.manufacturer == variant.manufacturer
+
+
+async def test_migrate_ble_unique_id(hass: HomeAssistant):
+    """Test that a config entry with incorrect unique_id is repaired."""
+    accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
+
+    fake_controller = await setup_platform(hass)
+    await fake_controller.add_paired_device(accessories, "02:03:EF:02:03:EF")
+    config_entry = MockConfigEntry(
+        version=1,
+        domain="homekit_controller",
+        entry_id="TestData",
+        data={"AccessoryPairingID": "02:03:EF:02:03:EF"},
+        title="test",
+        unique_id="01:02:AB:01:02:AB",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.unique_id == "01:02:AB:01:02:AB"
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.unique_id == "02:03:ef:02:03:ef"

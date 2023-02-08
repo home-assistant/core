@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.4.6
+aiohomekit==2.5.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -449,7 +449,7 @@ blinkstick==1.2.0
 blockchain==1.4.4
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.2.1
+bluemaestro-ble==0.2.3
 
 # homeassistant.components.decora
 # homeassistant.components.zengge
@@ -661,7 +661,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.27
+env_canada==0.5.28
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -831,7 +831,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.3.0
+greeclimate==1.4.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -979,7 +979,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.5.5
+inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.2.0
@@ -1000,7 +1000,7 @@ ismartgate==5.0.0
 janus==1.0.0
 
 # homeassistant.components.abode
-jaraco.abode==3.2.1
+jaraco.abode==3.3.0
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
@@ -1186,7 +1186,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.6.0
+nettigo-air-monitor==2.0.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1302,7 +1302,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.17.2
+oralb-ble==0.17.5
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -1705,7 +1705,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.11
+pyisy==3.1.13
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2297,7 +2297,7 @@ satel_integra==0.3.7
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.6.4
+screenlogicpy==0.7.1
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -2316,10 +2316,10 @@ sense_energy==0.11.1
 sensirion-ble==0.0.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.5.1
+sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.5.2
+sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
 sentry-sdk==1.13.0
@@ -2392,7 +2392,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.45
+sqlalchemy==2.0.2
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2485,7 +2485,7 @@ tesla-wall-connector==1.0.2
 thermobeacon-ble==0.6.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.4.3
+thermopro-ble==0.4.5
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
@@ -2516,6 +2516,9 @@ total_connect_client==2023.1
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
+
+# homeassistant.components.tplink_omada
+tplink-omada-client==1.1.0
 
 # homeassistant.components.transmission
 transmission-rpc==3.4.0
@@ -2568,7 +2571,7 @@ vallox-websocket-api==3.0.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.12.0
+velbus-aio==2023.2.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19

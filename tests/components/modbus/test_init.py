@@ -90,6 +90,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -118,7 +119,7 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     return mock_pymodbus
 
 
-async def test_number_validator():
+async def test_number_validator() -> None:
     """Test number validator."""
 
     for value, value_type in (
@@ -626,7 +627,9 @@ async def test_pb_read(
     assert state == do_expect
 
 
-async def test_pymodbus_constructor_fail(hass, caplog):
+async def test_pymodbus_constructor_fail(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Run test for failing pymodbus constructor."""
     config = {
         DOMAIN: [

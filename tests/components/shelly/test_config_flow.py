@@ -20,6 +20,7 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
@@ -275,7 +276,7 @@ async def test_form_errors_test_connection(hass, exc, base_error):
     assert result2["errors"] == {"base": base_error}
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
@@ -340,7 +341,7 @@ async def test_user_setup_ignored_device(hass, mock_block_device):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_firmware_unsupported(hass):
+async def test_form_firmware_unsupported(hass: HomeAssistant) -> None:
     """Test we abort if device firmware is unsupported."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -540,7 +541,7 @@ async def test_zeroconf_sleeping_device(hass, mock_block_device, monkeypatch):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_sleeping_device_error(hass):
+async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
     """Test sleeping device configuration via zeroconf with error."""
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -563,7 +564,7 @@ async def test_zeroconf_sleeping_device_error(hass):
         assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_already_configured(hass):
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
@@ -587,7 +588,7 @@ async def test_zeroconf_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_zeroconf_ignored(hass):
+async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
     """Test zeroconf when the device was previously ignored."""
 
     entry = MockConfigEntry(
@@ -611,7 +612,7 @@ async def test_zeroconf_ignored(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_with_wifi_ap_ip(hass):
+async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
     """Test we ignore the Wi-FI AP IP."""
 
     entry = MockConfigEntry(
@@ -635,7 +636,7 @@ async def test_zeroconf_with_wifi_ap_ip(hass):
     assert entry.data["host"] == "2.2.2.2"
 
 
-async def test_zeroconf_firmware_unsupported(hass):
+async def test_zeroconf_firmware_unsupported(hass: HomeAssistant) -> None:
     """Test we abort if device firmware is unsupported."""
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -651,7 +652,7 @@ async def test_zeroconf_firmware_unsupported(hass):
         assert result["reason"] == "unsupported_firmware"
 
 
-async def test_zeroconf_cannot_connect(hass):
+async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     """Test we get the form."""
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",

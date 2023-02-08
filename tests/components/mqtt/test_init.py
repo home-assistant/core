@@ -635,7 +635,7 @@ async def test_publish_function_with_bad_encoding_conditions(
     )
 
 
-def test_validate_topic():
+def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
     with pytest.raises(vol.Invalid):
@@ -679,7 +679,7 @@ def test_validate_topic():
         mqtt.util.valid_topic("\U0001ffff")
 
 
-def test_validate_subscribe_topic():
+def test_validate_subscribe_topic() -> None:
     """Test invalid subscribe topics."""
     mqtt.valid_subscribe_topic("#")
     mqtt.valid_subscribe_topic("sport/#")
@@ -708,7 +708,7 @@ def test_validate_subscribe_topic():
     mqtt.valid_subscribe_topic("$SYS/#")
 
 
-def test_validate_publish_topic():
+def test_validate_publish_topic() -> None:
     """Test invalid publish topics."""
     with pytest.raises(vol.Invalid):
         mqtt.valid_publish_topic("pub+")
@@ -724,7 +724,7 @@ def test_validate_publish_topic():
     mqtt.valid_publish_topic("$SYS/")
 
 
-def test_entity_device_info_schema():
+def test_entity_device_info_schema() -> None:
     """Test MQTT entity device info validation."""
     # just identifier
     MQTT_ENTITY_DEVICE_INFO_SCHEMA({"identifiers": ["abcd"]})

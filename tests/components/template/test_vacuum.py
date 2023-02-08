@@ -11,6 +11,7 @@ from homeassistant.components.vacuum import (
     STATE_RETURNING,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import assert_setup_component
@@ -311,7 +312,7 @@ async def test_unique_id(hass, start_ha):
     assert len(hass.states.async_all("vacuum")) == 1
 
 
-async def test_unused_services(hass):
+async def test_unused_services(hass: HomeAssistant) -> None:
     """Test calling unused services should not crash."""
     await _register_basic_vacuum(hass)
 
