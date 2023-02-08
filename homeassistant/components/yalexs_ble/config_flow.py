@@ -195,7 +195,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, reauth_entry.data[CONF_ADDRESS], True
                 )
             ) is None:
-                errors = {"base": "cannot_connect"}
+                errors = {"base": "no_longer_in_range"}
             elif not (
                 errors := await async_validate_lock_or_error(
                     reauth_entry.data[CONF_LOCAL_NAME],
