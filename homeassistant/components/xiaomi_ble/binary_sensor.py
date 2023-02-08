@@ -134,9 +134,8 @@ class XiaomiBluetoothSensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.device_info:
-            if self.device_info[ATTR_MODEL] in SLEEPY_DEVICE_MODELS:
-                # These devices sleep for an indeterminate amount of time
-                # so there is no way to track their availability.
-                return True
+        if self.device_info and self.device_info[ATTR_MODEL] in SLEEPY_DEVICE_MODELS:
+            # These devices sleep for an indeterminate amount of time
+            # so there is no way to track their availability.
+            return True
         return super().available
