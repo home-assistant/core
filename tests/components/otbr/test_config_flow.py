@@ -56,6 +56,64 @@ async def test_user_flow(
     assert config_entry.unique_id == otbr.DOMAIN
 
 
+async def test_user_flow_router_not_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the user flow when the border router has no dataset.
+
+    This tests the behavior when the thread integration has no preferred dataset.
+    """
+    url = "http://custom_url:1234"
+    aioclient_mock.get(f"{url}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
+    aioclient_mock.post(f"{url}/node/dataset/active", status=HTTPStatus.ACCEPTED)
+    aioclient_mock.post(f"{url}/node/state", status=HTTPStatus.OK)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.otbr.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": url,
+            },
+        )
+
+    # Check we create a dataset and enable the router
+    assert aioclient_mock.mock_calls[-2][0] == "POST"
+    assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
+    assert aioclient_mock.mock_calls[-2][2] == {"NetworkName": "home-assistant"}
+
+    assert aioclient_mock.mock_calls[-1][0] == "POST"
+    assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
+    assert aioclient_mock.mock_calls[-1][2] == "enabled"
+
+    expected_data = {
+        "url": "http://custom_url:1234",
+    }
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Open Thread Border Router"
+    assert result["data"] == expected_data
+    assert result["options"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert config_entry.title == "Open Thread Border Router"
+    assert config_entry.unique_id == otbr.DOMAIN
+
+
 async def test_user_flow_404(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

@@ -23,6 +23,18 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def _connect_and_create_dataset(self, url: str) -> None:
+        """Connect to the OTBR and create a dataset if it doesn't have one."""
+        api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
+        if await api.get_active_dataset_tlvs() is None:
+            if dataset := await async_get_preferred_dataset(self.hass):
+                await api.set_active_dataset_tlvs(bytes.fromhex(dataset))
+            else:
+                await api.create_active_dataset(
+                    python_otbr_api.OperationalDataSet(network_name="home-assistant")
+                )
+            await api.set_enabled(True)
+
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
@@ -34,9 +46,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             url = user_input[CONF_URL]
-            api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
             try:
-                await api.get_active_dataset_tlvs()
+                await self._connect_and_create_dataset(url)
             except python_otbr_api.OTBRError:
                 errors["base"] = "cannot_connect"
             else:
@@ -59,18 +70,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         config = discovery_info.config
         url = f"http://{config['host']}:{config['port']}"
 
-        api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
         try:
-            if await api.get_active_dataset_tlvs() is None:
-                if dataset := await async_get_preferred_dataset(self.hass):
-                    await api.set_active_dataset_tlvs(bytes.fromhex(dataset))
-                else:
-                    await api.create_active_dataset(
-                        python_otbr_api.OperationalDataSet(
-                            network_name="home-assistant"
-                        )
-                    )
-                await api.set_enabled(True)
+            await self._connect_and_create_dataset(url)
         except python_otbr_api.OTBRError as exc:
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
             return self.async_abort(reason="unknown")
