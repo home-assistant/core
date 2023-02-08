@@ -16,11 +16,13 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -198,7 +200,9 @@ def mock_all(aioclient_mock, request, os_info):
     )
 
 
-async def test_setup_api_ping(hass, aioclient_mock):
+async def test_setup_api_ping(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API ping."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, "hassio", {})
@@ -210,7 +214,9 @@ async def test_setup_api_ping(hass, aioclient_mock):
     assert hass.components.hassio.is_hassio()
 
 
-async def test_setup_api_panel(hass, aioclient_mock):
+async def test_setup_api_panel(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API ping."""
     assert await async_setup_component(hass, "frontend", {})
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -236,7 +242,9 @@ async def test_setup_api_panel(hass, aioclient_mock):
     }
 
 
-async def test_setup_api_push_api_data(hass, aioclient_mock):
+async def test_setup_api_push_api_data(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API push."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
@@ -251,7 +259,9 @@ async def test_setup_api_push_api_data(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[1][2]["watchdog"]
 
 
-async def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
+async def test_setup_api_push_api_data_server_host(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API push with active server host."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
@@ -349,7 +359,9 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock, hass_storage
     assert aioclient_mock.mock_calls[1][2]["refresh_token"] == token.token
 
 
-async def test_setup_core_push_timezone(hass, aioclient_mock):
+async def test_setup_core_push_timezone(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API push default data."""
     hass.config.time_zone = "testzone"
 
@@ -367,7 +379,9 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][2]["timezone"] == "America/New_York"
 
 
-async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
+async def test_setup_hassio_no_additional_data(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch.dict(
         os.environ, {"SUPERVISOR_TOKEN": "123456"}
@@ -380,14 +394,16 @@ async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
-async def test_fail_setup_without_environ_var(hass):
+async def test_fail_setup_without_environ_var(hass: HomeAssistant) -> None:
     """Fail setup if no environ variable set."""
     with patch.dict(os.environ, {}, clear=True):
         result = await async_setup_component(hass, "hassio", {})
         assert not result
 
 
-async def test_warn_when_cannot_connect(hass, caplog):
+async def test_warn_when_cannot_connect(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Fail warn when we cannot connect."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
@@ -528,7 +544,7 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
     assert aioclient_mock.call_count == 7
 
 
-async def test_entry_load_and_unload(hass):
+async def test_entry_load_and_unload(hass: HomeAssistant) -> None:
     """Test loading and unloading config entry."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -545,7 +561,7 @@ async def test_entry_load_and_unload(hass):
     assert ADDONS_COORDINATOR not in hass.data
 
 
-async def test_migration_off_hassio(hass):
+async def test_migration_off_hassio(hass: HomeAssistant) -> None:
     """Test that when a user moves instance off Hass.io, config entry gets cleaned up."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -554,7 +570,7 @@ async def test_migration_off_hassio(hass):
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 
-async def test_device_registry_calls(hass):
+async def test_device_registry_calls(hass: HomeAssistant) -> None:
     """Test device registry entries for hassio."""
     dev_reg = async_get(hass)
     supervisor_mock_data = {
@@ -694,7 +710,9 @@ async def test_device_registry_calls(hass):
         assert len(dev_reg.devices) == 4
 
 
-async def test_coordinator_updates(hass, caplog):
+async def test_coordinator_updates(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test coordinator updates."""
     await async_setup_component(hass, "homeassistant", {})
     with patch.dict(os.environ, MOCK_ENVIRON), patch(

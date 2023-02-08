@@ -195,7 +195,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     assert "component2" not in hass.config.components
 
 
-async def test_get_translations_while_loading_components(hass):
+async def test_get_translations_while_loading_components(hass: HomeAssistant) -> None:
     """Test the get translations helper loads config flow translations."""
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
@@ -231,7 +231,7 @@ async def test_get_translations_while_loading_components(hass):
     assert load_count == 1
 
 
-async def test_get_translation_categories(hass):
+async def test_get_translation_categories(hass: HomeAssistant) -> None:
     """Test the get translations helper loads config flow translations."""
     with patch.object(translation, "async_get_config_flows", return_value={"light"}):
         translations = await translation.async_get_translations(
@@ -351,7 +351,7 @@ async def test_translation_merging_loaded_together(hass, caplog):
     assert translations == hue_translations | homekit_translations
 
 
-async def test_caching(hass):
+async def test_caching(hass: HomeAssistant) -> None:
     """Test we cache data."""
     hass.config.components.add("sensor")
     hass.config.components.add("light")

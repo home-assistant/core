@@ -1,5 +1,4 @@
 """The tests for Kira."""
-
 import os
 import shutil
 import tempfile
@@ -8,6 +7,7 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.components.kira as kira
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 TEST_CONFIG = {
@@ -45,13 +45,13 @@ def work_dir():
     shutil.rmtree(work_dir, ignore_errors=True)
 
 
-async def test_kira_empty_config(hass):
+async def test_kira_empty_config(hass: HomeAssistant) -> None:
     """Kira component should load a default sensor."""
     await async_setup_component(hass, kira.DOMAIN, {kira.DOMAIN: {}})
     assert len(hass.data[kira.DOMAIN]["sensor"]) == 1
 
 
-async def test_kira_setup(hass):
+async def test_kira_setup(hass: HomeAssistant) -> None:
     """Ensure platforms are loaded correctly."""
     await async_setup_component(hass, kira.DOMAIN, TEST_CONFIG)
     assert len(hass.data[kira.DOMAIN]["sensor"]) == 2

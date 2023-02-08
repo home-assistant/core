@@ -5,6 +5,7 @@ import pytest
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch_component
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -23,7 +24,7 @@ GOOD_CONFIG = {
 }
 
 
-async def test_setup_adds_proper_devices(hass):
+async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
     with mock.patch(
         "homeassistant.components.mfi.switch.MFiClient"

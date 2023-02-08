@@ -13,6 +13,7 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
@@ -49,7 +50,9 @@ async def test_shared_device_mac(
     assert "will resume when device is online" in caplog.text
 
 
-async def test_setup_entry_not_shelly(hass, caplog):
+async def test_setup_entry_not_shelly(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test not Shelly entry."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
