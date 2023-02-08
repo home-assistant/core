@@ -22,8 +22,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
@@ -587,12 +586,12 @@ async def test_rapid_rediscover_unique(
     await mqtt_mock_entry_no_yaml_config()
     events = []
 
-    @ha.callback
-    def callback(event: ha.Event) -> None:
+    @callback
+    def test_callback(event: Event) -> None:
         """Verify event got called."""
         events.append(event)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)
 
     async_fire_mqtt_message(
         hass,
@@ -650,12 +649,12 @@ async def test_rapid_reconfigure(
     await mqtt_mock_entry_no_yaml_config()
     events = []
 
-    @ha.callback
-    def callback(event: ha.Event) -> None:
+    @callback
+    def test_callback(event: Event) -> None:
         """Verify event got called."""
         events.append(event)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)
 
     # Discovery immediately followed by reconfig
     async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
@@ -1642,7 +1641,7 @@ async def test_unique_id_collission_has_priority(
 @pytest.mark.xfail(raises=MultipleInvalid)
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_update_with_bad_config_not_breaks_discovery(
-    hass: ha.HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test a bad update does not break discovery."""
     await mqtt_mock_entry_no_yaml_config()
