@@ -97,6 +97,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "caplog": "pytest.LogCaptureFixture",
     "device_registry": "DeviceRegistry",
     "entity_registry": "EntityRegistry",
+    "issue_registry": "IssueRegistry",
     "hass_client": "ClientSessionGenerator",
     "hass_client_no_auth": "ClientSessionGenerator",
     "hass_ws_client": "WebSocketGenerator",
