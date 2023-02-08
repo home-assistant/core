@@ -1,5 +1,6 @@
 """Tests for the Diagnostics integration."""
 from http import HTTPStatus
+from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ async def _get_diagnostics_for_config_entry(
         f"/api/diagnostics/config_entry/{config_entry.entry_id}"
     )
     assert response.status == HTTPStatus.OK
-    return await response.json()
+    return cast(JsonObjectType, await response.json())
 
 
 async def get_diagnostics_for_config_entry(
@@ -33,7 +34,7 @@ async def get_diagnostics_for_config_entry(
 ) -> JsonObjectType:
     """Return the diagnostics config entry for the specified domain."""
     data = await _get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-    return data["data"]
+    return cast(JsonObjectType, data["data"])
 
 
 async def _get_diagnostics_for_device(
@@ -50,7 +51,7 @@ async def _get_diagnostics_for_device(
         f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/{device.id}"
     )
     assert response.status == HTTPStatus.OK
-    return await response.json()
+    return cast(JsonObjectType, await response.json())
 
 
 async def get_diagnostics_for_device(
@@ -61,4 +62,4 @@ async def get_diagnostics_for_device(
 ) -> JsonObjectType:
     """Return the diagnostics for the specified device."""
     data = await _get_diagnostics_for_device(hass, hass_client, config_entry, device)
-    return data["data"]
+    return cast(JsonObjectType, data["data"])
