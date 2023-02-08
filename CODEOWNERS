@@ -1088,6 +1088,8 @@ build.json @home-assistant/supervisor
 /tests/components/smappee/ @bsmappee
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
+/homeassistant/components/smartenergy_goecharger/ @openkfw
+/tests/components/smartenergy_goecharger/ @openkfw
 /homeassistant/components/smartthings/ @andrewsayre
 /tests/components/smartthings/ @andrewsayre
 /homeassistant/components/smarttub/ @mdz

@@ -1653,6 +1653,9 @@ simplisafe-python==2022.12.0
 # homeassistant.components.slack
 slackclient==2.5.0
 
+# homeassistant.components.smartenergy_goecharger
+smart-energy.goecharger-api==0.3.1
+
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
 
