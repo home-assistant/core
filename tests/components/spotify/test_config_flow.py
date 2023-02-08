@@ -43,7 +43,7 @@ async def component_setup(hass: HomeAssistant) -> None:
     assert result
 
 
-async def test_abort_if_no_configuration(hass):
+async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow aborts when no configuration is present."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -60,7 +60,7 @@ async def test_abort_if_no_configuration(hass):
     assert result["reason"] == "missing_credentials"
 
 
-async def test_zeroconf_abort_if_existing_entry(hass):
+async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check zeroconf flow aborts when an entry already exist."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -304,7 +304,7 @@ async def test_reauth_account_mismatch(
     assert result["reason"] == "reauth_account_mismatch"
 
 
-async def test_abort_if_no_reauth_entry(hass):
+async def test_abort_if_no_reauth_entry(hass: HomeAssistant) -> None:
     """Check flow aborts when no entry is known when entring reauth confirmation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "reauth_confirm"}

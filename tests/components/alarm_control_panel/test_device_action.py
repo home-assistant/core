@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -24,22 +24,8 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.mark.parametrize(
@@ -95,8 +81,8 @@ def entity_reg(hass):
 )
 async def test_get_actions(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     set_state,
     features_reg,
     features_state,
@@ -105,11 +91,11 @@ async def test_get_actions(
     """Test we get the expected actions from a alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -148,19 +134,19 @@ async def test_get_actions(
 )
 async def test_get_actions_hidden_auxiliary(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     hidden_by,
     entity_category,
 ):
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -186,15 +172,17 @@ async def test_get_actions_hidden_auxiliary(
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_arm_night_only(hass, device_reg, entity_reg):
+async def test_get_actions_arm_night_only(hass, device_registry, entity_registry):
     """Test we get the expected actions from a alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     hass.states.async_set(
         "alarm_control_panel.test_5678", "attributes", {"supported_features": 4}
     )
@@ -221,7 +209,7 @@ async def test_get_actions_arm_night_only(hass, device_reg, entity_reg):
 
 
 async def test_get_action_capabilities(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass, device_registry, entity_registry, enable_custom_integrations
 ):
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -231,11 +219,11 @@ async def test_get_action_capabilities(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["no_arm_code"].unique_id,
@@ -265,7 +253,7 @@ async def test_get_action_capabilities(
 
 
 async def test_get_action_capabilities_arm_code(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass, device_registry, entity_registry, enable_custom_integrations
 ):
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -275,11 +263,11 @@ async def test_get_action_capabilities_arm_code(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["arm_code"].unique_id,

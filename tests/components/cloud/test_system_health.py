@@ -4,13 +4,17 @@ from unittest.mock import Mock
 
 from aiohttp import ClientError
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import get_system_health_info
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_cloud_system_health(hass, aioclient_mock):
+async def test_cloud_system_health(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test cloud system health."""
     aioclient_mock.get("https://cloud.bla.com/status", text="")
     aioclient_mock.get("https://cert-server/directory", text="")
