@@ -73,6 +73,7 @@ from homeassistant.util import slugify
 from . import patchers
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 HOST = "127.0.0.1"
 
@@ -860,7 +861,9 @@ async def test_androidtv_volume_set(hass: HomeAssistant) -> None:
         patch_set_volume_level.assert_called_with(0.5)
 
 
-async def test_get_image_http(hass, hass_client_no_auth):
+async def test_get_image_http(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test taking a screen capture.
 
     This is based on `test_get_image_http` in tests/components/media_player/test_init.py.

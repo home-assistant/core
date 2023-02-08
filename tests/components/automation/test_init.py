@@ -58,6 +58,7 @@ from tests.common import (
 )
 from tests.components.logbook.common import MockRow, mock_humanify
 from tests.components.repairs import get_repairs
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -2351,7 +2352,9 @@ async def test_recursive_automation(hass: HomeAssistant, automation_mode, caplog
         assert "Disallowed recursion detected" not in caplog.text
 
 
-async def test_websocket_config(hass, hass_ws_client):
+async def test_websocket_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test config command."""
     config = {
         "alias": "hello",
