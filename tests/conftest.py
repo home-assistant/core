@@ -998,6 +998,23 @@ def recorder_config():
 def recorder_db_url(pytestconfig):
     """Prepare a default database for tests and return a connection URL."""
     db_url: str = pytestconfig.getoption("dburl")
+    if db_url.startswith(("postgresql://", "mysql://")):
+        import sqlalchemy_utils
+
+        def _ha_orm_quote(mixed, ident):
+            """Conditionally quote an identifier.
+
+            Modified to include https://github.com/kvesteri/sqlalchemy-utils/pull/677
+            """
+            if isinstance(mixed, sqlalchemy_utils.functions.orm.Dialect):
+                dialect = mixed
+            elif hasattr(mixed, "dialect"):
+                dialect = mixed.dialect
+            else:
+                dialect = sqlalchemy_utils.functions.orm.get_bind(mixed).dialect
+            return dialect.preparer(dialect).quote(ident)
+
+        sqlalchemy_utils.functions.database.quote = _ha_orm_quote
     if db_url.startswith("mysql://"):
         import sqlalchemy_utils
 

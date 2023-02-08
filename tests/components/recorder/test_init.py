@@ -1904,6 +1904,9 @@ async def test_connect_args_priority(hass, config_url):
         def on_connect_url(self, url):
             return False
 
+        def _builtin_onconnect(self):
+            ...
+
     class MockEntrypoint:
         def engine_created(*_):
             ...
