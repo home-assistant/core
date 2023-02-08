@@ -8,6 +8,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
 from homeassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -357,7 +358,7 @@ async def test_invalid_config(hass, calls):
     assert len(calls) == 0
 
 
-async def test_get_trigger_capabilities_on(hass):
+async def test_get_trigger_capabilities_on(hass: HomeAssistant) -> None:
     """Test we get the expected capabilities from a humidifier trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
@@ -377,7 +378,7 @@ async def test_get_trigger_capabilities_on(hass):
     ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
 
 
-async def test_get_trigger_capabilities_off(hass):
+async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
     """Test we get the expected capabilities from a humidifier trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
@@ -397,7 +398,7 @@ async def test_get_trigger_capabilities_off(hass):
     ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
 
 
-async def test_get_trigger_capabilities_humidity(hass):
+async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
     """Test we get the expected capabilities from a humidifier trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
