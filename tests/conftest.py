@@ -77,7 +77,10 @@ from .common import (  # noqa: E402, isort:skip
     init_recorder_component,
     mock_storage,
 )
-from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
+from .test_util.aiohttp import (  # noqa: E402, isort:skip
+    AiohttpClientMocker,
+    mock_aiohttp_client,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -475,7 +478,7 @@ def requests_mock():
 
 
 @pytest.fixture
-def aioclient_mock():
+def aioclient_mock() -> Generator[AiohttpClientMocker, None, None]:
     """Fixture to mock aioclient calls."""
     with mock_aiohttp_client() as mock_session:
         yield mock_session

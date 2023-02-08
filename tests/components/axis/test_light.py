@@ -1,5 +1,4 @@
 """Axis light platform tests."""
-
 from unittest.mock import patch
 
 import pytest
@@ -14,6 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import DEFAULT_HOST, NAME
@@ -57,7 +57,7 @@ def light_control_fixture(light_control_items):
     )
 
 
-async def test_platform_manually_configured(hass):
+async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     """Test that nothing happens when platform is manually configured."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": AXIS_DOMAIN}}

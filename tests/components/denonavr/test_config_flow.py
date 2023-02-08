@@ -18,6 +18,7 @@ from homeassistant.components.denonavr.config_flow import (
     AvrTimoutError,
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -69,7 +70,7 @@ def denonavr_connect_fixture():
         yield
 
 
-async def test_config_flow_manual_host_success(hass):
+async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user.
 
     Host specified.
@@ -99,7 +100,7 @@ async def test_config_flow_manual_host_success(hass):
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
-async def test_config_flow_manual_discover_1_success(hass):
+async def test_config_flow_manual_discover_1_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user.
 
     Without the host specified and 1 receiver discovered.
@@ -133,7 +134,7 @@ async def test_config_flow_manual_discover_1_success(hass):
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
-async def test_config_flow_manual_discover_2_success(hass):
+async def test_config_flow_manual_discover_2_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user.
 
     Without the host specified and 2 receiver discovered.
@@ -176,7 +177,7 @@ async def test_config_flow_manual_discover_2_success(hass):
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
-async def test_config_flow_manual_discover_error(hass):
+async def test_config_flow_manual_discover_error(hass: HomeAssistant) -> None:
     """Failed flow manually initialized by the user.
 
     Without the host specified and no receiver discovered.
@@ -203,7 +204,7 @@ async def test_config_flow_manual_discover_error(hass):
     assert result["errors"] == {"base": "discovery_error"}
 
 
-async def test_config_flow_manual_host_no_serial(hass):
+async def test_config_flow_manual_host_no_serial(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user.
 
     Host specified and an error getting the serial number.
@@ -236,7 +237,7 @@ async def test_config_flow_manual_host_no_serial(hass):
     }
 
 
-async def test_config_flow_manual_host_connection_error(hass):
+async def test_config_flow_manual_host_connection_error(hass: HomeAssistant) -> None:
     """Failed flow manually initialized by the user.
 
     Host specified and a connection error.
@@ -265,7 +266,7 @@ async def test_config_flow_manual_host_connection_error(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_config_flow_manual_host_no_device_info(hass):
+async def test_config_flow_manual_host_no_device_info(hass: HomeAssistant) -> None:
     """Failed flow manually initialized by the user.
 
     Host specified and no device info (due to receiver power off).
@@ -291,7 +292,7 @@ async def test_config_flow_manual_host_no_device_info(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_config_flow_ssdp(hass):
+async def test_config_flow_ssdp(hass: HomeAssistant) -> None:
     """Successful flow initialized by ssdp discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -328,7 +329,7 @@ async def test_config_flow_ssdp(hass):
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
-async def test_config_flow_ssdp_not_denon(hass):
+async def test_config_flow_ssdp_not_denon(hass: HomeAssistant) -> None:
     """Failed flow initialized by ssdp discovery.
 
     Not supported manufacturer.
@@ -352,7 +353,7 @@ async def test_config_flow_ssdp_not_denon(hass):
     assert result["reason"] == "not_denonavr_manufacturer"
 
 
-async def test_config_flow_ssdp_missing_info(hass):
+async def test_config_flow_ssdp_missing_info(hass: HomeAssistant) -> None:
     """Failed flow initialized by ssdp discovery.
 
     Missing information.
@@ -374,7 +375,7 @@ async def test_config_flow_ssdp_missing_info(hass):
     assert result["reason"] == "not_denonavr_missing"
 
 
-async def test_config_flow_ssdp_ignored_model(hass):
+async def test_config_flow_ssdp_ignored_model(hass: HomeAssistant) -> None:
     """Failed flow initialized by ssdp discovery.
 
     Model in the ignored models list.
@@ -398,7 +399,7 @@ async def test_config_flow_ssdp_ignored_model(hass):
     assert result["reason"] == "not_denonavr_manufacturer"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -443,7 +444,9 @@ async def test_options_flow(hass):
     }
 
 
-async def test_config_flow_manual_host_no_serial_double_config(hass):
+async def test_config_flow_manual_host_no_serial_double_config(
+    hass: HomeAssistant,
+) -> None:
     """Failed flow manually initialized by the user twice.
 
     Host specified and an error getting the serial number.

@@ -650,7 +650,7 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
     assert result7["errors"] == {"stream_source": "malformed_url"}
 
 
-async def test_slug(hass, caplog):
+async def test_slug(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test that the slug function generates an error in case of invalid template.
 
     Other paths in the slug function are already tested by other tests.
