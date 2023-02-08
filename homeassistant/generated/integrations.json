@@ -6382,6 +6382,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "zcs_azzurro_inverter": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "zengge": {
       "name": "Zengge",
       "integration_type": "hub",
@@ -6575,6 +6580,7 @@
     "tod",
     "uptime",
     "utility_meter",
-    "waze_travel_time"
+    "waze_travel_time",
+    "zcs_azzurro_inverter"
   ]
 }

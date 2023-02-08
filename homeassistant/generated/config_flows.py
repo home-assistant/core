@@ -502,6 +502,7 @@ FLOWS = {
         "yolink",
         "youless",
         "zamg",
+        "zcs_azzurro_inverter",
         "zerproc",
         "zeversolar",
         "zha",

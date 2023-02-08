@@ -1,0 +1,15 @@
+{
+  "domain": "zcs_azzurro_inverter",
+  "name": "ZCS Azzurro inverter",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zcs_azzurro",
+  "requirements": ["requests==2.28.1"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@AlePerla"],
+  "iot_class": "cloud_polling",
+  "integration_type": "hub",
+  "loggers": ["zcs_azzurro_inveter"]
+}
