@@ -31,6 +31,7 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_async_setup_no_domain_config(hass: HomeAssistant):
@@ -286,7 +287,9 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant):
     assert device.suggested_area == "Office"
 
 
-async def test_device_remove_devices(hass, hass_ws_client):
+async def test_device_remove_devices(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
 

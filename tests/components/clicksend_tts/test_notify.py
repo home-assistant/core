@@ -9,6 +9,7 @@ import requests_mock
 
 from homeassistant.components import notify
 import homeassistant.components.clicksend_tts.notify as cs_tts
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -62,7 +63,7 @@ async def test_no_notify_service(hass, mock_clicksend_tts_notify, caplog):
     assert "Failed to initialize notification service clicksend_tts" in caplog.text
 
 
-async def test_send_simple_message(hass):
+async def test_send_simple_message(hass: HomeAssistant) -> None:
     """Test sending a simple message with success."""
 
     with requests_mock.Mocker() as mock:

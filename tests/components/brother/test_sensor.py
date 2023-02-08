@@ -365,7 +365,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry.unique_id == "0123456789_uptime"
 
 
-async def test_disabled_by_default_sensors(hass):
+async def test_disabled_by_default_sensors(hass: HomeAssistant) -> None:
     """Test the disabled by default Brother sensors."""
     await init_integration(hass)
 
