@@ -1356,23 +1356,15 @@ async def test_no_implicit_state_topic_switch(
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
         }
     ],
 )
 async def test_complex_discovery_topic_prefix(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Tests handling of discovery topic prefix with multiple slashes."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {
-            mqtt.DOMAIN: {
-                mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
-            }
-        },
-    )
-    await mqtt_mock_entry_with_yaml_config()
+    await mqtt_mock_entry_no_yaml_config()
 
     async_fire_mqtt_message(
         hass,
