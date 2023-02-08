@@ -34,8 +34,8 @@ env:
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
-  MARIADB_VERSIONS: "['mariadb:10.9.3']"
-  POSTGRESQL_VERSIONS: "['postgres:15.0']"
+  MARIADB_VERSIONS: "[]"
+  POSTGRESQL_VERSIONS: "[]"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
