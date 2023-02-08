@@ -16,21 +16,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
+from .const import ASSOCIATION_DATA, DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
 from .models import DormakabaDkeyData
 
 PLATFORMS: list[Platform] = [Platform.LOCK]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Dormakaba dKey integration."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -41,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Could not find dKey device with address {address}")
 
     lock = DKEYLock(ble_device)
-    lock.set_association_data(AssociationData.from_json(entry.data["association_data"]))
+    lock.set_association_data(AssociationData.from_json(entry.data[ASSOCIATION_DATA]))
 
     @callback
     def _async_update_ble(
@@ -62,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    async def _async_update():
+    async def _async_update() -> None:
         """Update the device state."""
         try:
             await lock.update()
@@ -97,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     finally:
         cancel_first_update()
 
-    hass.data[DOMAIN][entry.entry_id] = DormakabaDkeyData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = DormakabaDkeyData(
         entry.title, lock, coordinator
     )
 

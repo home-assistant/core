@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import ASSOCIATION_DATA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,7 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 or lock.name,
                 data={
                     CONF_ADDRESS: self._discovery_info.device.address,
-                    "association_data": association_data.to_json(),
+                    ASSOCIATION_DATA: association_data.to_json(),
                 },
             )
 

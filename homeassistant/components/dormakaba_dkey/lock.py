@@ -28,16 +28,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the lock platform for Dormakaba dKey."""
     data: DormakabaDkeyData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([DormakabaDkeyLock(data.coordinator, data.lock, entry.title)])
+    async_add_entities([DormakabaDkeyLock(data.coordinator, data.lock)])
 
 
-class DormakabaDkeyLock(CoordinatorEntity, LockEntity):
+class DormakabaDkeyLock(CoordinatorEntity[DataUpdateCoordinator[None]], LockEntity):
     """Representation of Dormakaba dKey lock."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, lock: DKEYLock, name: str
+        self, coordinator: DataUpdateCoordinator[None], lock: DKEYLock
     ) -> None:
         """Initialize a Dormakaba dKey lock."""
         super().__init__(coordinator)

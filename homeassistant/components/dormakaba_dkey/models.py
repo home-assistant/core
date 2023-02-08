@@ -14,4 +14,4 @@ class DormakabaDkeyData:
 
     title: str
     lock: DKEYLock
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[None]

@@ -19,8 +19,8 @@
       }
     },
     "error": {
-      "invalid_code": "Invalid activaction code. An activaction code consist of 8 characters, separated by a dash, e.g. GBZT-HXC0.",
-      "wrong_code": "Wrong activaction code. Note that an activation code can only be used once.",
+      "invalid_code": "Invalid activation code. An activation code consist of 8 characters, separated by a dash, e.g. GBZT-HXC0.",
+      "wrong_code": "Wrong activation code. Note that an activation code can only be used once.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "progress": {
