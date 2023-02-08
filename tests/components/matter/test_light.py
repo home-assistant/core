@@ -53,16 +53,6 @@ async def extended_color_light_node_fixture(
     )
 
 
-# @pytest.fixture(name="light_node")
-# async def extended_color_light_node_fixture(
-#    hass: HomeAssistant, matter_client: MagicMock
-# ) -> MatterNode:
-#    """Fixture for an extended color light node."""
-#    return await setup_integration_with_node_fixture(
-#        hass, "extended-color-light", matter_client
-#    )
-
-
 async def test_on_off_light(
     hass: HomeAssistant,
     matter_client: MagicMock,
