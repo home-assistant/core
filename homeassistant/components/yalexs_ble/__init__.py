@@ -29,8 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
 
-    asyncio.Event()
-
     @callback
     def _async_update_ble(
         service_info: bluetooth.BluetoothServiceInfoBleak,
