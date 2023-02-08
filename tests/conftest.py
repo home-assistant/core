@@ -50,6 +50,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     event,
+    issue_registry as ir,
     recorder as recorder_helper,
 )
 from homeassistant.helpers.json import json_loads
@@ -1258,3 +1259,9 @@ def device_registry(hass: HomeAssistant) -> dr.DeviceRegistry:
 def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
     """Return the entity registry."""
     return er.async_get(hass)
+
+
+@pytest.fixture
+def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
+    """Return the issue registry."""
+    return ir.async_get(hass)
