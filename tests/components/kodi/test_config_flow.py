@@ -9,6 +9,7 @@ from homeassistant.components.kodi.config_flow import (
     InvalidAuthError,
 )
 from homeassistant.components.kodi.const import DEFAULT_TIMEOUT, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .util import (
     TEST_CREDENTIALS,
@@ -401,7 +402,7 @@ async def test_form_exception_ws(hass, user_flow):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_discovery(hass):
+async def test_discovery(hass: HomeAssistant) -> None:
     """Test discovery flow works."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -442,7 +443,7 @@ async def test_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_discovery_cannot_connect_http(hass):
+async def test_discovery_cannot_connect_http(hass: HomeAssistant) -> None:
     """Test discovery aborts if cannot connect."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -461,7 +462,7 @@ async def test_discovery_cannot_connect_http(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovery_cannot_connect_ws(hass):
+async def test_discovery_cannot_connect_ws(hass: HomeAssistant) -> None:
     """Test discovery aborts if cannot connect to websocket."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -504,7 +505,7 @@ async def test_discovery_exception_http(hass, user_flow):
     assert result["reason"] == "unknown"
 
 
-async def test_discovery_invalid_auth(hass):
+async def test_discovery_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth during discovery."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -524,7 +525,7 @@ async def test_discovery_invalid_auth(hass):
     assert result["errors"] == {}
 
 
-async def test_discovery_duplicate_data(hass):
+async def test_discovery_duplicate_data(hass: HomeAssistant) -> None:
     """Test discovery aborts if same mDNS packet arrives."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -550,7 +551,7 @@ async def test_discovery_duplicate_data(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_discovery_updates_unique_id(hass):
+async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     """Test a duplicate discovery id aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -572,7 +573,7 @@ async def test_discovery_updates_unique_id(hass):
     assert entry.data["name"] == "hostname"
 
 
-async def test_discovery_without_unique_id(hass):
+async def test_discovery_without_unique_id(hass: HomeAssistant) -> None:
     """Test a discovery flow with no unique id aborts."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -584,7 +585,7 @@ async def test_discovery_without_unique_id(hass):
     assert result["reason"] == "no_uuid"
 
 
-async def test_form_import(hass):
+async def test_form_import(hass: HomeAssistant) -> None:
     """Test we get the form with import source."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -610,7 +611,7 @@ async def test_form_import(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_import_invalid_auth(hass):
+async def test_form_import_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth on import."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -629,7 +630,7 @@ async def test_form_import_invalid_auth(hass):
     assert result["reason"] == "invalid_auth"
 
 
-async def test_form_import_cannot_connect(hass):
+async def test_form_import_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect on import."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -648,7 +649,7 @@ async def test_form_import_cannot_connect(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_form_import_exception(hass):
+async def test_form_import_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exception on import."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
