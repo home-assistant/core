@@ -25,7 +25,7 @@ async def test_setup_entry(hass: HomeAssistant, mock_zeroconf):
         assert entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.credentials_invalid
+@pytest.mark.parametrize("credentials_valid", [False])
 async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
     """Test setup entry fails if credentials are invalid."""
     entry = configure_integration(hass)
@@ -33,7 +33,7 @@ async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.maintenance
+@pytest.mark.parametrize("maintenance", [True])
 async def test_setup_entry_maintenance(hass: HomeAssistant):
     """Test setup entry fails if mydevolo is in maintenance mode."""
     entry = configure_integration(hass)
