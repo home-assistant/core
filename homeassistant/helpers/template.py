@@ -737,14 +737,12 @@ class AllStates:
         self,
         entity_id: str,
         rounded: bool | object = _SENTINEL,
-        with_unit: bool | object = _SENTINEL,
+        with_unit: bool = False,
     ) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         if state is None:
             return STATE_UNKNOWN
-        if with_unit is _SENTINEL:
-            with_unit = False
         if rounded is _SENTINEL:
             rounded = with_unit
         if rounded or with_unit:
