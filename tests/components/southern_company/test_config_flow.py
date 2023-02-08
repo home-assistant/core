@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(recorder_mock, hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -20,7 +20,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.southern_company.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.southern_company.config_flow.SouthernCompanyAPI.authenticate",
         return_value=True,
     ), patch(
         "homeassistant.components.southern_company.async_setup_entry",
@@ -29,7 +29,6 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -37,29 +36,27 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Southern_Company"
     assert result2["data"] == {
-        "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(recorder_mock, hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.southern_company.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.southern_company.config_flow.SouthernCompanyAPI.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -69,20 +66,19 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(recorder_mock, hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.southern_company.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.southern_company.config_flow.SouthernCompanyAPI.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
