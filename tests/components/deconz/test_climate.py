@@ -40,6 +40,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -47,8 +48,12 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_sensors(hass, aioclient_mock):
+
+async def test_no_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no climate entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
@@ -725,7 +730,9 @@ async def test_climate_device_with_preset(hass, aioclient_mock, mock_deconz_webs
         )
 
 
-async def test_clip_climate_device(hass, aioclient_mock):
+async def test_clip_climate_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test successful creation of sensor entities."""
     data = {
         "sensors": {
@@ -871,7 +878,9 @@ async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocke
     )
 
 
-async def test_not_allow_clip_thermostat(hass, aioclient_mock):
+async def test_not_allow_clip_thermostat(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP thermostats are not allowed."""
     data = {
         "sensors": {
