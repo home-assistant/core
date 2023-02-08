@@ -1,8 +1,24 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
+  "after_dependencies": ["onboarding", "usb", "zeroconf"],
+  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
   "config_flow": true,
+  "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
+  "iot_class": "local_polling",
+  "loggers": [
+    "aiosqlite",
+    "bellows",
+    "crccheck",
+    "pure_pcapy3",
+    "zhaquirks",
+    "zigpy",
+    "zigpy_deconz",
+    "zigpy_xbee",
+    "zigpy_zigate",
+    "zigpy_znp"
+  ],
   "requirements": [
     "bellows==0.34.7",
     "pyserial==3.5",
@@ -82,7 +98,6 @@
       "known_devices": ["Bitron Video AV2010/10"]
     }
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
   "zeroconf": [
     {
       "type": "_esphomelib._tcp.local.",
@@ -100,20 +115,5 @@
       "type": "_slzb-06._tcp.local.",
       "name": "slzb-06*"
     }
-  ],
-  "dependencies": ["file_upload"],
-  "after_dependencies": ["onboarding", "usb", "zeroconf"],
-  "iot_class": "local_polling",
-  "loggers": [
-    "aiosqlite",
-    "bellows",
-    "crccheck",
-    "pure_pcapy3",
-    "zhaquirks",
-    "zigpy",
-    "zigpy_deconz",
-    "zigpy_xbee",
-    "zigpy_zigate",
-    "zigpy_znp"
   ]
 }
