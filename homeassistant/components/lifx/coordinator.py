@@ -169,32 +169,42 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         async with self.lock:
-            if self.device.host_firmware_version is None:
-                self.device.get_hostfirmware()
-            if self.device.product is None:
-                self.device.get_version()
-            if self.device.group is None:
-                self.device.get_group()
+            try:
+                await self._async_update_data_locked()
+            except asyncio.TimeoutError:
+                self.connection.async_stop()
+                self.connection.async_setup()
+            await self._async_update_data_locked()
 
-            response = await async_execute_lifx(self.device.get_color)
+    async def _async_update_data_locked(self) -> None:
+        """Fetch all device data from the api while the lock is held."""
+        assert self.lock.locked(), "Lock must be held to update data"
+        if self.device.host_firmware_version is None:
+            self.device.get_hostfirmware()
+        if self.device.product is None:
+            self.device.get_version()
+        if self.device.group is None:
+            self.device.get_group()
 
-            if self.device.product is None:
-                raise UpdateFailed(
-                    f"Failed to fetch get version from device: {self.device.ip_addr}"
-                )
+        response = await async_execute_lifx(self.device.get_color)
 
-            # device.mac_addr is not the mac_address, its the serial number
-            if self.device.mac_addr == TARGET_ANY:
-                self.device.mac_addr = response.target_addr
+        if self.device.product is None:
+            raise UpdateFailed(
+                f"Failed to fetch get version from device: {self.device.ip_addr}"
+            )
 
-            # Update extended multizone devices
-            if lifx_features(self.device)["extended_multizone"]:
-                await self.async_get_extended_color_zones()
-                await self.async_get_multizone_effect()
-            # use legacy methods for older devices
-            elif lifx_features(self.device)["multizone"]:
-                await self.async_get_color_zones()
-                await self.async_get_multizone_effect()
+        # device.mac_addr is not the mac_address, its the serial number
+        if self.device.mac_addr == TARGET_ANY:
+            self.device.mac_addr = response.target_addr
+
+        # Update extended multizone devices
+        if lifx_features(self.device)["extended_multizone"]:
+            await self.async_get_extended_color_zones()
+            await self.async_get_multizone_effect()
+        # use legacy methods for older devices
+        elif lifx_features(self.device)["multizone"]:
+            await self.async_get_color_zones()
+            await self.async_get_multizone_effect()
 
     async def async_get_color_zones(self) -> None:
         """Get updated color information for each zone."""
@@ -405,15 +415,15 @@ class LIFXSensorUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
+        async with self.parent.lock:
+            if self._update_rssi is True:
+                await self.async_update_rssi()
 
-        if self._update_rssi is True:
-            await self.async_update_rssi()
+            if lifx_features(self.device)["hev"]:
+                await self.async_get_hev_cycle()
 
-        if lifx_features(self.device)["hev"]:
-            await self.async_get_hev_cycle()
-
-        if lifx_features(self.device)["infrared"]:
-            await async_execute_lifx(self.device.get_infrared)
+            if lifx_features(self.device)["infrared"]:
+                await async_execute_lifx(self.device.get_infrared)
 
     async def async_set_infrared_brightness(self, option: str) -> None:
         """Set infrared brightness."""
