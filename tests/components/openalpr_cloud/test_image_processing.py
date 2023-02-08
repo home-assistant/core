@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events, load_fixture
@@ -48,7 +49,7 @@ PARAMS = {
 }
 
 
-async def test_setup_platform(hass):
+async def test_setup_platform(hass: HomeAssistant) -> None:
     """Set up platform with one entity."""
     config = {
         ip.DOMAIN: {
@@ -67,7 +68,7 @@ async def test_setup_platform(hass):
     assert hass.states.get("image_processing.openalpr_demo_camera")
 
 
-async def test_setup_platform_name(hass):
+async def test_setup_platform_name(hass: HomeAssistant) -> None:
     """Set up platform with one entity and set name."""
     config = {
         ip.DOMAIN: {
@@ -86,7 +87,7 @@ async def test_setup_platform_name(hass):
     assert hass.states.get("image_processing.test_local")
 
 
-async def test_setup_platform_without_api_key(hass):
+async def test_setup_platform_without_api_key(hass: HomeAssistant) -> None:
     """Set up platform with one entity without api_key."""
     config = {
         ip.DOMAIN: {
@@ -101,7 +102,7 @@ async def test_setup_platform_without_api_key(hass):
         await async_setup_component(hass, ip.DOMAIN, config)
 
 
-async def test_setup_platform_without_region(hass):
+async def test_setup_platform_without_region(hass: HomeAssistant) -> None:
     """Set up platform with one entity without region."""
     config = {
         ip.DOMAIN: {

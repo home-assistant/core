@@ -41,7 +41,7 @@ dependencies    = [
     "lru-dict==1.1.8",
     "PyJWT==2.5.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==39.0.0",
+    "cryptography==39.0.1",
     # pyOpenSSL 23.0.0 is required to work with cryptography 39+
     "pyOpenSSL==23.0.0",
     "orjson==3.8.5",
@@ -112,7 +112,6 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "hass_constructor",
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
@@ -164,9 +163,6 @@ good-names = [
 # Pylint CodeStyle plugin
 # consider-using-namedtuple-or-dataclass - too opinionated
 # consider-using-assignment-expr - decision to use := better left to devs
-# ---
-# Temporary for the Python 3.10 update, remove with mypy v1.0
-# consider-alternative-union-syntax
 disable = [
     "format",
     "abstract-method",
@@ -191,7 +187,6 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
-    "consider-alternative-union-syntax",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
@@ -275,6 +270,9 @@ ignore = [
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
+
+[tool.ruff.pyupgrade]
+keep-runtime-typing = true
 
 [tool.ruff.per-file-ignores]
 

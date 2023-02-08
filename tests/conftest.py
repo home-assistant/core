@@ -45,8 +45,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
+    area_registry as ar,
     config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
     event,
+    issue_registry as ir,
     recorder as recorder_helper,
 )
 from homeassistant.helpers.json import json_loads
@@ -55,7 +59,13 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .typing import ClientSessionGenerator, WebSocketGenerator
+from .typing import (
+    ClientSessionGenerator,
+    MqttMockHAClient,
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -71,7 +81,10 @@ from .common import (  # noqa: E402, isort:skip
     init_recorder_component,
     mock_storage,
 )
-from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
+from .test_util.aiohttp import (  # noqa: E402, isort:skip
+    AiohttpClientMocker,
+    mock_aiohttp_client,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,8 +101,6 @@ def _utcnow():
 
 dt_util.utcnow = _utcnow
 event.time_tracker_utcnow = _utcnow
-
-MqttMockType = Callable[..., Coroutine[Any, Any, MagicMock]]
 
 
 def pytest_addoption(parser):
@@ -471,7 +482,7 @@ def requests_mock():
 
 
 @pytest.fixture
-def aioclient_mock():
+def aioclient_mock() -> Generator[AiohttpClientMocker, None, None]:
     """Fixture to mock aioclient calls."""
     with mock_aiohttp_client() as mock_session:
         yield mock_session
@@ -718,7 +729,7 @@ def mqtt_config_entry_data() -> dict[str, Any] | None:
 
 
 @pytest.fixture
-def mqtt_client_mock(hass: HomeAssistant) -> Generator[Any, MagicMock, None]:
+def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None, None]:
     """Fixture to mock MQTT client."""
 
     mid: int = 0
@@ -765,10 +776,10 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[Any, MagicMock, None]:
 @pytest.fixture
 async def mqtt_mock(
     hass: HomeAssistant,
-    mqtt_client_mock: MagicMock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
-    mqtt_mock_entry_no_yaml_config: Callable[..., Coroutine[Any, Any, MagicMock]],
-) -> AsyncGenerator[MagicMock, None]:
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> AsyncGenerator[MqttMockHAClient, None]:
     """Fixture to mock MQTT component."""
     return await mqtt_mock_entry_no_yaml_config()
 
@@ -776,9 +787,9 @@ async def mqtt_mock(
 @asynccontextmanager
 async def _mqtt_mock_entry(
     hass: HomeAssistant,
-    mqtt_client_mock: MagicMock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[Callable[..., Coroutine[Any, Any, Any]], None]:
+) -> AsyncGenerator[MqttMockHAClientGenerator, None]:
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
@@ -822,12 +833,12 @@ async def _mqtt_mock_entry(
 
         return mock_mqtt_instance
 
-    def create_mock_mqtt(*args, **kwargs) -> MagicMock:
+    def create_mock_mqtt(*args, **kwargs) -> MqttMockHAClient:
         """Create a mock based on mqtt.MQTT."""
         nonlocal mock_mqtt_instance
         nonlocal real_mqtt_instance
         real_mqtt_instance = real_mqtt(*args, **kwargs)
-        mock_mqtt_instance = MagicMock(
+        mock_mqtt_instance = MqttMockHAClient(
             return_value=real_mqtt_instance,
             spec_set=real_mqtt_instance,
             wraps=real_mqtt_instance,
@@ -841,9 +852,9 @@ async def _mqtt_mock_entry(
 @pytest.fixture
 async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
-    mqtt_client_mock: MagicMock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[MqttMockType, None,]:
+) -> AsyncGenerator[MqttMockHAClientGenerator, None]:
     """Set up an MQTT config entry without MQTT yaml config."""
 
     async def _async_setup_config_entry(
@@ -854,7 +865,7 @@ async def mqtt_mock_entry_no_yaml_config(
         await hass.async_block_till_done()
         return True
 
-    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
+    async def _setup_mqtt_entry() -> MqttMockHAClient:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_setup_config_entry)
 
@@ -867,9 +878,9 @@ async def mqtt_mock_entry_no_yaml_config(
 @pytest.fixture
 async def mqtt_mock_entry_with_yaml_config(
     hass: HomeAssistant,
-    mqtt_client_mock: MagicMock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[MqttMockType, None,]:
+) -> AsyncGenerator[MqttMockHAClientGenerator, None]:
     """Set up an MQTT config entry with MQTT yaml config."""
 
     async def _async_do_not_setup_config_entry(
@@ -878,7 +889,7 @@ async def mqtt_mock_entry_with_yaml_config(
         """Do nothing."""
         return True
 
-    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
+    async def _setup_mqtt_entry() -> MqttMockHAClient:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
@@ -991,6 +1002,23 @@ def recorder_config():
 def recorder_db_url(pytestconfig):
     """Prepare a default database for tests and return a connection URL."""
     db_url: str = pytestconfig.getoption("dburl")
+    if db_url.startswith(("postgresql://", "mysql://")):
+        import sqlalchemy_utils
+
+        def _ha_orm_quote(mixed, ident):
+            """Conditionally quote an identifier.
+
+            Modified to include https://github.com/kvesteri/sqlalchemy-utils/pull/677
+            """
+            if isinstance(mixed, sqlalchemy_utils.functions.orm.Dialect):
+                dialect = mixed
+            elif hasattr(mixed, "dialect"):
+                dialect = mixed.dialect
+            else:
+                dialect = sqlalchemy_utils.functions.orm.get_bind(mixed).dialect
+            return dialect.preparer(dialect).quote(ident)
+
+        sqlalchemy_utils.functions.database.quote = _ha_orm_quote
     if db_url.startswith("mysql://"):
         import sqlalchemy_utils
 
@@ -998,9 +1026,12 @@ def recorder_db_url(pytestconfig):
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding=charset)
     elif db_url.startswith("postgresql://"):
-        pass
+        import sqlalchemy_utils
+
+        assert not sqlalchemy_utils.database_exists(db_url)
+        sqlalchemy_utils.create_database(db_url, encoding="utf8")
     yield db_url
-    if db_url.startswith("mysql://"):
+    if db_url.startswith("mysql://") or db_url.startswith("postgresql://"):
         sqlalchemy_utils.drop_database(db_url)
 
 
@@ -1227,3 +1258,27 @@ def mock_bleak_scanner_start():
 @pytest.fixture(name="mock_bluetooth")
 def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
     """Mock out bluetooth from starting."""
+
+
+@pytest.fixture
+def area_registry(hass: HomeAssistant) -> ar.AreaRegistry:
+    """Return the area registry from the current hass instance."""
+    return ar.async_get(hass)
+
+
+@pytest.fixture
+def device_registry(hass: HomeAssistant) -> dr.DeviceRegistry:
+    """Return the device registry from the current hass instance."""
+    return dr.async_get(hass)
+
+
+@pytest.fixture
+def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
+    """Return the entity registry from the current hass instance."""
+    return er.async_get(hass)
+
+
+@pytest.fixture
+def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
+    """Return the issue registry from the current hass instance."""
+    return ir.async_get(hass)

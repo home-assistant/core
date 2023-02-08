@@ -1,11 +1,11 @@
 """Test the Melnor sensors."""
-
 from __future__ import annotations
 
 from freezegun import freeze_time
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 
@@ -20,7 +20,7 @@ from .conftest import (
 from tests.common import async_fire_time_changed
 
 
-async def test_battery_sensor(hass):
+async def test_battery_sensor(hass: HomeAssistant) -> None:
     """Test the battery sensor."""
 
     entry = mock_config_entry(hass)
@@ -36,7 +36,7 @@ async def test_battery_sensor(hass):
         assert battery_sensor.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-async def test_minutes_remaining_sensor(hass):
+async def test_minutes_remaining_sensor(hass: HomeAssistant) -> None:
     """Test the minutes remaining sensor."""
 
     now = dt_util.utcnow()
@@ -72,7 +72,7 @@ async def test_minutes_remaining_sensor(hass):
         assert minutes_remaining_sensor.state == end_time.isoformat(timespec="seconds")
 
 
-async def test_rssi_sensor(hass):
+async def test_rssi_sensor(hass: HomeAssistant) -> None:
     """Test the rssi sensor."""
 
     entry = mock_config_entry(hass)

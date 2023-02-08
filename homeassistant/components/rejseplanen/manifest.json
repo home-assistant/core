@@ -1,9 +1,9 @@
 {
   "domain": "rejseplanen",
   "name": "Rejseplanen",
-  "documentation": "https://www.home-assistant.io/integrations/rejseplanen",
-  "requirements": ["rjpl==0.3.6"],
   "codeowners": ["@DarkFox"],
+  "documentation": "https://www.home-assistant.io/integrations/rejseplanen",
   "iot_class": "cloud_polling",
-  "loggers": ["rjpl"]
+  "loggers": ["rjpl"],
+  "requirements": ["rjpl==0.3.6"]
 }

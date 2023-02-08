@@ -1,5 +1,4 @@
 """Test the cloud component."""
-
 from unittest.mock import patch
 
 import pytest
@@ -8,12 +7,12 @@ from homeassistant.components import cloud
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
 
-async def test_constructor_loads_info_from_config(hass):
+async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     """Test non-dev mode loads info from SERVERS constant."""
     with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(

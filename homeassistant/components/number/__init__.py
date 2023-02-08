@@ -10,6 +10,7 @@ import logging
 from math import ceil, floor
 from typing import Any, final
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -540,7 +541,7 @@ class NumberExtraStoredData(ExtraStoredData):
         return dataclasses.asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> NumberExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored number state from a dict."""
         try:
             return cls(

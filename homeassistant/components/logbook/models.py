@@ -82,7 +82,7 @@ class EventAsRow:
 
 
 @callback
-def async_event_to_row(event: Event) -> EventAsRow | None:
+def async_event_to_row(event: Event) -> EventAsRow:
     """Convert an event to a row."""
     if event.event_type != EVENT_STATE_CHANGED:
         return EventAsRow(

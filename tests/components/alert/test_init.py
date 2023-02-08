@@ -79,7 +79,7 @@ def mock_notifier(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, notify.DOMAIN, NOTIFIER)
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup method."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     assert hass.states.get(ENTITY_ID).state == STATE_IDLE
@@ -305,7 +305,7 @@ async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) 
     assert len(mock_notifier) == 0
 
 
-async def test_done_message_state_tracker_reset_on_cancel(hass):
+async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -> None:
     """Test that the done message is reset when canceled."""
     entity = alert.Alert(hass, *TEST_NOACK)
     entity._cancel = lambda *args: None

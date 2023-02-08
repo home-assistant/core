@@ -53,7 +53,7 @@ async def async_setup_entry(
 class BlinkSensor(SensorEntity):
     """A Blink camera sensor."""
 
-    def __init__(self, data, camera, description: SensorEntityDescription):
+    def __init__(self, data, camera, description: SensorEntityDescription) -> None:
         """Initialize sensors from Blink camera."""
         self.entity_description = description
         self._attr_name = f"{DOMAIN} {camera} {description.name}"
