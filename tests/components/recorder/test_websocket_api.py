@@ -19,6 +19,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -33,6 +34,7 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
@@ -2051,7 +2053,9 @@ async def test_recorder_info(recorder_mock, hass, hass_ws_client):
     }
 
 
-async def test_recorder_info_no_recorder(hass, hass_ws_client):
+async def test_recorder_info_no_recorder(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting recorder status when recorder is not present."""
     client = await hass_ws_client()
 
@@ -2061,7 +2065,9 @@ async def test_recorder_info_no_recorder(hass, hass_ws_client):
     assert response["error"]["code"] == "unknown_command"
 
 
-async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
+async def test_recorder_info_bad_recorder_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting recorder status when recorder is not started."""
     config = {recorder.CONF_DB_URL: "sqlite://no_file", recorder.CONF_DB_RETRY_WAIT: 0}
 
@@ -2085,7 +2091,9 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     assert response["result"]["thread_running"] is False
 
 
-async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
+async def test_recorder_info_migration_queue_exhausted(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting recorder status when recorder queue is exhausted."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
