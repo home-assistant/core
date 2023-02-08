@@ -14,6 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import DKEY_DISCOVERY_INFO
 
+from tests.common import MockConfigEntry
+
 
 async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     """Test bluetooth step success path."""
@@ -72,6 +74,20 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == DKEY_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
     mock_associate.assert_awaited_once_with("1234-1234")
+
+
+async def test_bluetooth_step_already_configured(hass: HomeAssistant) -> None:
+    """Test bluetooth step success path."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=DKEY_DISCOVERY_INFO.address)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=DKEY_DISCOVERY_INFO,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize("exc", (BleakError, Exception))
