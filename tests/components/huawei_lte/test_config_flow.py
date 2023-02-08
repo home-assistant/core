@@ -1,5 +1,4 @@
 """Tests for the Huawei LTE config flow."""
-
 from unittest.mock import patch
 
 from huawei_lte_api.enums.client import ResponseCodeEnum
@@ -19,6 +18,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +36,7 @@ FIXTURE_USER_INPUT_OPTIONS = {
 }
 
 
-async def test_show_set_form(hass):
+async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -366,7 +366,7 @@ async def test_reauth(
         assert entry.data[k] == v
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options produce expected data."""
 
     config_entry = MockConfigEntry(

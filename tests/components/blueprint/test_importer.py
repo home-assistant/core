@@ -5,9 +5,11 @@ from pathlib import Path
 import pytest
 
 from homeassistant.components.blueprint import importer
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(scope="session")
@@ -208,7 +210,9 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
     assert imported_blueprint.blueprint.metadata["source_url"] == url
 
 
-async def test_fetch_blueprint_from_github_gist_url(hass, aioclient_mock):
+async def test_fetch_blueprint_from_github_gist_url(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
         "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344",

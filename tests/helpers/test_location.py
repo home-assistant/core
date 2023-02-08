@@ -45,7 +45,7 @@ def test_closest_returns_closest() -> None:
     assert state == location.closest(123.45, 123.45, [state, state2])
 
 
-async def test_coordinates_function_as_attributes(hass):
+async def test_coordinates_function_as_attributes(hass: HomeAssistant) -> None:
     """Test coordinates function."""
     hass.states.async_set(
         "test.object", "happy", {"latitude": 32.87336, "longitude": -117.22943}
@@ -53,13 +53,13 @@ async def test_coordinates_function_as_attributes(hass):
     assert location.find_coordinates(hass, "test.object") == "32.87336,-117.22943"
 
 
-async def test_coordinates_function_as_state(hass):
+async def test_coordinates_function_as_state(hass: HomeAssistant) -> None:
     """Test coordinates function."""
     hass.states.async_set("test.object", "32.87336,-117.22943")
     assert location.find_coordinates(hass, "test.object") == "32.87336,-117.22943"
 
 
-async def test_coordinates_function_device_tracker_in_zone(hass):
+async def test_coordinates_function_device_tracker_in_zone(hass: HomeAssistant) -> None:
     """Test coordinates function."""
     hass.states.async_set(
         "zone.home",
@@ -73,7 +73,7 @@ async def test_coordinates_function_device_tracker_in_zone(hass):
     )
 
 
-async def test_coordinates_function_zone_friendly_name(hass):
+async def test_coordinates_function_zone_friendly_name(hass: HomeAssistant) -> None:
     """Test coordinates function."""
     hass.states.async_set(
         "zone.home",
@@ -88,7 +88,9 @@ async def test_coordinates_function_zone_friendly_name(hass):
     assert location.find_coordinates(hass, "my_home") == "32.87336,-117.22943"
 
 
-async def test_coordinates_function_device_tracker_from_input_select(hass):
+async def test_coordinates_function_device_tracker_from_input_select(
+    hass: HomeAssistant,
+) -> None:
     """Test coordinates function."""
     hass.states.async_set(
         "input_select.select",
@@ -111,7 +113,9 @@ def test_coordinates_function_returns_none_on_recursion(hass: HomeAssistant) -> 
     assert location.find_coordinates(hass, "test.first") is None
 
 
-async def test_coordinates_function_returns_state_if_no_coords(hass):
+async def test_coordinates_function_returns_state_if_no_coords(
+    hass: HomeAssistant,
+) -> None:
     """Test test_coordinates function."""
     hass.states.async_set(
         "test.object",

@@ -1,7 +1,11 @@
 """Support for Elgato button."""
 from __future__ import annotations
 
-from elgato import ElgatoError
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Any
+
+from elgato import Elgato, ElgatoError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +19,31 @@ from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 
+@dataclass
+class ElgatoButtonEntityDescriptionMixin:
+    """Mixin values for Elgato entities."""
+
+    press_fn: Callable[[Elgato], Awaitable[Any]]
+
+
+@dataclass
+class ElgatoButtonEntityDescription(
+    ButtonEntityDescription, ElgatoButtonEntityDescriptionMixin
+):
+    """Class describing Elgato button entities."""
+
+
+BUTTONS = [
+    ElgatoButtonEntityDescription(
+        key="identify",
+        name="Identify",
+        icon="mdi:help",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda client: client.identify(),
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -22,29 +51,36 @@ async def async_setup_entry(
 ) -> None:
     """Set up Elgato button based on a config entry."""
     coordinator: ElgatoDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ElgatoIdentifyButton(coordinator)])
+    async_add_entities(
+        ElgatoButtonEntity(
+            coordinator=coordinator,
+            description=description,
+        )
+        for description in BUTTONS
+    )
 
 
-class ElgatoIdentifyButton(ElgatoEntity, ButtonEntity):
-    """Defines an Elgato identify button."""
+class ElgatoButtonEntity(ElgatoEntity, ButtonEntity):
+    """Defines an Elgato button."""
 
-    def __init__(self, coordinator: ElgatoDataUpdateCoordinator) -> None:
+    entity_description: ElgatoButtonEntityDescription
+
+    def __init__(
+        self,
+        coordinator: ElgatoDataUpdateCoordinator,
+        description: ElgatoButtonEntityDescription,
+    ) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator=coordinator)
-        self.entity_description = ButtonEntityDescription(
-            key="identify",
-            name="Identify",
-            icon="mdi:help",
-            entity_category=EntityCategory.CONFIG,
-        )
+        self.entity_description = description
         self._attr_unique_id = (
-            f"{coordinator.data.info.serial_number}_{self.entity_description.key}"
+            f"{coordinator.data.info.serial_number}_{description.key}"
         )
 
     async def async_press(self) -> None:
-        """Identify the light, will make it blink."""
+        """Trigger button press on the Elgato device."""
         try:
-            await self.coordinator.client.identify()
+            await self.entity_description.press_fn(self.coordinator.client)
         except ElgatoError as error:
             raise HomeAssistantError(
                 "An error occurred while identifying the Elgato Light"

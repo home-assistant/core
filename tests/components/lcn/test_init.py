@@ -10,6 +10,7 @@ from pypck.connection import (
 from homeassistant import config_entries
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MockPchkConnectionManager, setup_component
@@ -114,7 +115,7 @@ async def test_async_setup_entry_raises_timeout_error(hass, entry):
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_from_configuration_yaml(hass):
+async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
     """Test a successful setup using data from configuration.yaml."""
     with patch(
         "pypck.connection.PchkConnectionManager", MockPchkConnectionManager

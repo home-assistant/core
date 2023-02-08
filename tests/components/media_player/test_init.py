@@ -14,10 +14,15 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-async def test_get_image_http(hass, hass_client_no_auth):
+
+async def test_get_image_http(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test get image via http command."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -40,7 +45,9 @@ async def test_get_image_http(hass, hass_client_no_auth):
     assert content == b"image"
 
 
-async def test_get_image_http_remote(hass, hass_client_no_auth):
+async def test_get_image_http_remote(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test get image url via http command."""
     with patch(
         "homeassistant.components.media_player.MediaPlayerEntity."
@@ -126,7 +133,9 @@ async def test_get_async_get_browse_image(hass, hass_client_no_auth, hass_ws_cli
     assert content == b"image"
 
 
-async def test_media_browse(hass, hass_ws_client):
+async def test_media_browse(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test browsing media."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -201,7 +210,7 @@ async def test_media_browse(hass, hass_ws_client):
     assert msg["result"] == {"bla": "yo"}
 
 
-async def test_group_members_available_when_off(hass):
+async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     """Test that group_members are still available when media_player is off."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -263,7 +272,7 @@ async def test_enqueue_rewrite(hass, input, expected):
     assert mock_play_media.mock_calls[0][2]["enqueue"] == expected
 
 
-async def test_enqueue_alert_exclusive(hass):
+async def test_enqueue_alert_exclusive(hass: HomeAssistant) -> None:
     """Test that alert and enqueue cannot be used together."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}

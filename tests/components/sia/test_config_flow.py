@@ -16,6 +16,7 @@ from homeassistant.components.sia.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -186,7 +187,7 @@ async def test_create_additional_account(hass, entry_with_additional_account_con
     assert entry_with_additional_account_config["options"] == ADDITIONAL_OUT["options"]
 
 
-async def test_abort_form(hass):
+async def test_abort_form(hass: HomeAssistant) -> None:
     """Test aborting a config that already exists."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -304,7 +305,7 @@ async def test_unknown_account(hass, flow_at_user_step):
         assert result_err["data_schema"] == ACCOUNT_SCHEMA
 
 
-async def test_options_basic(hass):
+async def test_options_basic(hass: HomeAssistant) -> None:
     """Test options flow for single account."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -329,7 +330,7 @@ async def test_options_basic(hass):
     }
 
 
-async def test_options_additional(hass):
+async def test_options_additional(hass: HomeAssistant) -> None:
     """Test options flow for single account."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

@@ -200,7 +200,7 @@ async def test_device_properties(
     assert getattr(device, device_property) == target_value
 
 
-async def test_locate(hass):
+async def test_locate(hass: HomeAssistant) -> None:
     """Test that the locate command works."""
     with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
