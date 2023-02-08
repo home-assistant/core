@@ -3688,10 +3688,22 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
     tpl3 = template.Template("{{ states('sensor.test') }}", hass)
     tpl4 = template.Template("{{ states('sensor.test2') }}", hass)
 
+    # AllStates.__call__ and with_unit=True
+    tpl5 = template.Template("{{ states('sensor.test', with_unit=True) }}", hass)
+    tpl6 = template.Template("{{ states('sensor.test2', with_unit=True) }}", hass)
+
+    # AllStates.__call__ and rounded=True
+    tpl7 = template.Template("{{ states('sensor.test', rounded=True) }}", hass)
+    tpl8 = template.Template("{{ states('sensor.test2', rounded=True) }}", hass)
+
     assert tpl.async_render() == "23.00 beers"
     assert tpl2.async_render() == "23 beers"
     assert tpl3.async_render() == 23
     assert tpl4.async_render() == 23
+    assert tpl5.async_render() == "23.00 beers"
+    assert tpl6.async_render() == "23 beers"
+    assert tpl7.async_render() == 23.0
+    assert tpl8.async_render() == 23
 
     hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
@@ -3700,6 +3712,10 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
     assert tpl2.async_render() == "23.015 beers"
     assert tpl3.async_render() == 23.015
     assert tpl4.async_render() == 23.015
+    assert tpl5.async_render() == "23.02 beers"
+    assert tpl6.async_render() == "23.015 beers"
+    assert tpl7.async_render() == 23.02
+    assert tpl8.async_render() == 23.015
 
 
 @pytest.mark.parametrize(

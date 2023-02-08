@@ -734,14 +734,21 @@ class AllStates:
         return self._hass.states.async_entity_ids_count()
 
     def __call__(
-        self, entity_id: str, rounded: bool = False, with_unit: bool = False
+        self,
+        entity_id: str,
+        rounded: bool | object = _SENTINEL,
+        with_unit: bool | object = _SENTINEL,
     ) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         if state is None:
             return STATE_UNKNOWN
+        if with_unit is _SENTINEL:
+            with_unit = False
+        if rounded is _SENTINEL:
+            rounded = with_unit
         if rounded or with_unit:
-            return state.format_state(rounded, with_unit)
+            return state.format_state(rounded, with_unit)  # type: ignore[arg-type]
         return state.state
 
     def __repr__(self) -> str:
