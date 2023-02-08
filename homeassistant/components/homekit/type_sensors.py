@@ -284,10 +284,13 @@ class NitrogenDioxideSensor(AirQualitySensor):
 
 @TYPES.register("VolatileOrganicCompoundsSensor")
 class VolatileOrganicCompoundsSensor(AirQualitySensor):
-    """Generate a VolatileOrganicCompoundsSensor accessory as VOCs sensor."""
+    """Generate a VolatileOrganicCompoundsSensor accessory as VOCs sensor.
+    
+    Sensor entity must return VOC in µg/m3.
+    """
 
     def create_services(self):
-        """Override the init function for PM 2.5 Sensor."""
+        """Override the init function for VOC Sensor."""
         serv_air_quality: Service = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_VOC_DENSITY]
         )
