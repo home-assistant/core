@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed(str(ex)) from ex
     except YaleXSBLEError as ex:
         raise ConfigEntryNotReady(
-            f"{ex}; " f"Try moving the Bluetooth adapter closer to {local_name}"
+            f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex
     finally:
         cancel_first_update()
