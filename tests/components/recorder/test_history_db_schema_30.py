@@ -249,7 +249,7 @@ def test_get_last_state_changes(hass_recorder):
 
     start = dt_util.utcnow() - timedelta(minutes=2)
     point = start + timedelta(minutes=1)
-    point2 = point + timedelta(minutes=1)
+    point2 = point + timedelta(minutes=1, seconds=1)
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
