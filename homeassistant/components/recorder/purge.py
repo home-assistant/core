@@ -8,6 +8,7 @@ from itertools import islice, zip_longest
 import logging
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
@@ -616,9 +617,9 @@ def _purge_filtered_states(
     database_engine: DatabaseEngine,
 ) -> None:
     """Remove filtered states and linked events."""
-    state_ids: list[int]
-    attributes_ids: list[int]
-    event_ids: list[int]
+    state_ids: tuple[int, ...]
+    attributes_ids: tuple[int, ...]
+    event_ids: tuple[int, ...]
     state_ids, attributes_ids, event_ids = zip(
         *(
             session.query(States.state_id, States.attributes_id, States.event_id)
@@ -627,12 +628,12 @@ def _purge_filtered_states(
             .all()
         )
     )
-    event_ids = [id_ for id_ in event_ids if id_ is not None]
+    filtered_event_ids = [id_ for id_ in event_ids if id_ is not None]
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
-    _purge_event_ids(session, event_ids)
+    _purge_event_ids(session, filtered_event_ids)
     unused_attribute_ids_set = _select_unused_attributes_ids(
         session, {id_ for id_ in attributes_ids if id_ is not None}, database_engine
     )
@@ -656,7 +657,7 @@ def _purge_filtered_events(
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids)
     )
-    states: list[States] = (
+    states: list[Row[tuple[int]]] = (
         session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     )
     state_ids: set[int] = {state.state_id for state in states}

@@ -190,7 +190,7 @@ class Recorder(threading.Thread):
 
         self.schema_version = 0
         self._commits_without_expire = 0
-        self._old_states: dict[str, States] = {}
+        self._old_states: dict[str | None, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
         self._pending_state_attributes: dict[str, StateAttributes] = {}
@@ -739,6 +739,7 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_migration_started)
 
         try:
+            assert self.engine is not None
             migration.migrate_schema(
                 self, self.hass, self.engine, self.get_session, schema_status
             )
@@ -1026,6 +1027,8 @@ class Recorder(threading.Thread):
 
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
+        assert self.engine is not None
+        assert self.event_session is not None
         migration.post_schema_migration(
             self.engine, self.event_session, old_version, new_version
         )
@@ -1034,7 +1037,7 @@ class Recorder(threading.Thread):
         """Send a keep alive to keep the db connection open."""
         assert self.event_session is not None
         _LOGGER.debug("Sending keepalive")
-        self.event_session.connection().scalar(select([1]))
+        self.event_session.connection().scalar(select(1))
 
     @callback
     def event_listener(self, event: Event) -> None:
@@ -1198,6 +1201,8 @@ class Recorder(threading.Thread):
         start = start.replace(minute=0, second=0, microsecond=0)
 
         # Find the newest statistics run, if any
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
             start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
 

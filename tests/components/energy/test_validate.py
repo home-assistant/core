@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
 from homeassistant.const import UnitOfEnergy
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
@@ -52,7 +53,7 @@ async def mock_energy_manager(recorder_mock, hass):
     return manager
 
 
-async def test_validation_empty_config(hass):
+async def test_validation_empty_config(hass: HomeAssistant) -> None:
     """Test validating an empty config."""
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [],

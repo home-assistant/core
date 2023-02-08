@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 from homeassistant.util.color import RGBColor
@@ -64,7 +64,7 @@ async def test_loading(hass, store):
     assert data == MOCK_DATA
 
 
-async def test_custom_encoder(hass):
+async def test_custom_encoder(hass: HomeAssistant) -> None:
     """Test we can save and load data."""
 
     class JSONEncoder(json.JSONEncoder):

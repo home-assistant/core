@@ -10,6 +10,7 @@ from homeassistant.components import azure_event_hub
 from homeassistant.components.azure_event_hub.const import CONF_SEND_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -21,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_import(hass):
+async def test_import(hass: HomeAssistant) -> None:
     """Test the popping of the filter and further import of the config."""
     config = {
         DOMAIN: {
@@ -41,7 +42,7 @@ async def test_import(hass):
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_filter_only_config(hass):
+async def test_filter_only_config(hass: HomeAssistant) -> None:
     """Test the popping of the filter and further import of the config."""
     config = {
         DOMAIN: {

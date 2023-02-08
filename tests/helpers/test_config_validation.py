@@ -11,6 +11,7 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, selector, template
 
 
@@ -487,7 +488,7 @@ def test_slug() -> None:
         schema(value)
 
 
-def test_string(hass):
+def test_string(hass: HomeAssistant) -> None:
     """Test string validation."""
     schema = vol.Schema(cv.string)
 

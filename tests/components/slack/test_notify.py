@@ -1,10 +1,7 @@
 """Test slack notifications."""
 from __future__ import annotations
 
-import logging
 from unittest.mock import AsyncMock, Mock
-
-from _pytest.logging import LogCaptureFixture
 
 from homeassistant.components import notify
 from homeassistant.components.slack import DOMAIN
@@ -16,7 +13,6 @@ from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_NAME, CONF_PLATFOR
 
 from . import CONF_DATA
 
-MODULE_PATH = "homeassistant.components.slack.notify"
 SERVICE_NAME = f"notify_{DOMAIN}"
 
 DEFAULT_CONFIG = {
@@ -29,13 +25,6 @@ DEFAULT_CONFIG = {
         }
     ]
 }
-
-
-def filter_log_records(caplog: LogCaptureFixture) -> list[logging.LogRecord]:
-    """Filter all unrelated log records."""
-    return [
-        rec for rec in caplog.records if rec.name.endswith(f"{DOMAIN}.{notify.DOMAIN}")
-    ]
 
 
 async def test_message_includes_default_emoji() -> None:

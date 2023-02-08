@@ -414,7 +414,7 @@ async def test_import_named_credential(
     ]
 
 
-async def test_config_flow_no_credentials(hass):
+async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}

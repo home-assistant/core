@@ -6,7 +6,7 @@ import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -96,7 +96,7 @@ def _schema_is_current(current_version: int) -> bool:
 
 
 def validate_db_schema(
-    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
 ) -> SchemaValidationStatus | None:
     """Check if the schema is valid.
 
@@ -113,7 +113,7 @@ def validate_db_schema(
     if is_current := _schema_is_current(current_version):
         # We can only check for further errors if the schema is current, because
         # columns may otherwise not exist etc.
-        schema_errors |= statistics_validate_db_schema(hass, engine, session_maker)
+        schema_errors |= statistics_validate_db_schema(hass, instance, session_maker)
 
     valid = is_current and not schema_errors
 
@@ -444,17 +444,17 @@ def _update_states_table_with_foreign_key_options(
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
     old_states_table = Table(  # noqa: F841 pylint: disable=unused-variable
-        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)
+        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
     )
 
     for alter in alters:
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(alter["old_fk"]))
+                connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
-                        connection.execute(AddConstraint(fkc))
+                        connection.execute(AddConstraint(fkc))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
@@ -484,7 +484,7 @@ def _drop_foreign_key_constraints(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(drop))
+                connection.execute(DropConstraint(drop))  # type: ignore[no-untyped-call]
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
@@ -630,18 +630,21 @@ def _apply_update(  # noqa: C901
         # Order matters! Statistics and StatisticsShortTerm have a relation with
         # StatisticsMeta, so statistics need to be deleted before meta (or in pair
         # depending on the SQL backend); and meta needs to be created before statistics.
+
+        # We need to cast __table__ to Table, explanation in
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9130
         Base.metadata.drop_all(
             bind=engine,
             tables=[
-                StatisticsShortTerm.__table__,
-                Statistics.__table__,
-                StatisticsMeta.__table__,
+                cast(Table, StatisticsShortTerm.__table__),
+                cast(Table, Statistics.__table__),
+                cast(Table, StatisticsMeta.__table__),
             ],
         )
 
-        StatisticsMeta.__table__.create(engine)
-        StatisticsShortTerm.__table__.create(engine)
-        Statistics.__table__.create(engine)
+        cast(Table, StatisticsMeta.__table__).create(engine)
+        cast(Table, StatisticsShortTerm.__table__).create(engine)
+        cast(Table, Statistics.__table__).create(engine)
     elif new_version == 19:
         # This adds the statistic runs table, insert a fake run to prevent duplicating
         # statistics.
@@ -694,20 +697,22 @@ def _apply_update(  # noqa: C901
         # so statistics need to be deleted before meta (or in pair depending
         # on the SQL backend); and meta needs to be created before statistics.
         if engine.dialect.name == "oracle":
+            # We need to cast __table__ to Table, explanation in
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9130
             Base.metadata.drop_all(
                 bind=engine,
                 tables=[
-                    StatisticsShortTerm.__table__,
-                    Statistics.__table__,
-                    StatisticsMeta.__table__,
-                    StatisticsRuns.__table__,
+                    cast(Table, StatisticsShortTerm.__table__),
+                    cast(Table, Statistics.__table__),
+                    cast(Table, StatisticsMeta.__table__),
+                    cast(Table, StatisticsRuns.__table__),
                 ],
             )
 
-            StatisticsRuns.__table__.create(engine)
-            StatisticsMeta.__table__.create(engine)
-            StatisticsShortTerm.__table__.create(engine)
-            Statistics.__table__.create(engine)
+            cast(Table, StatisticsRuns.__table__).create(engine)
+            cast(Table, StatisticsMeta.__table__).create(engine)
+            cast(Table, StatisticsShortTerm.__table__).create(engine)
+            cast(Table, Statistics.__table__).create(engine)
 
         # Block 5-minute statistics for one hour from the last run, or it will overlap
         # with existing hourly statistics. Don't block on a database with no existing
@@ -715,6 +720,8 @@ def _apply_update(  # noqa: C901
         with session_scope(session=session_maker()) as session:
             if session.query(Statistics.id).count() and (
                 last_run_string := session.query(
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
                     func.max(StatisticsRuns.start)
                 ).scalar()
             ):
@@ -996,7 +1003,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -1027,7 +1034,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
