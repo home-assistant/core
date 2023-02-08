@@ -651,7 +651,7 @@ async def test_rapid_reconfigure(
     events = []
 
     @ha.callback
-    def callback(event) -> None:
+    def callback(event: ha.Event) -> None:
         """Verify event got called."""
         events.append(event)
 
