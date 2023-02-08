@@ -32,7 +32,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import entity
+from homeassistant.helpers import entity, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -40,7 +40,6 @@ from tests.common import (
     async_capture_events,
     async_mock_service,
     get_test_home_assistant,
-    mock_registry,
     mock_service,
     patch_yaml_files,
 )
@@ -379,18 +378,19 @@ async def test_not_allowing_recursion(
         ), service
 
 
-async def test_reload_config_entry_by_entity_id(hass: HomeAssistant) -> None:
+async def test_reload_config_entry_by_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test being able to reload a config entry by entity_id."""
     await async_setup_component(hass, "homeassistant", {})
-    entity_reg = mock_registry(hass)
     entry1 = MockConfigEntry(domain="mockdomain")
     entry1.add_to_hass(hass)
     entry2 = MockConfigEntry(domain="mockdomain")
     entry2.add_to_hass(hass)
-    reg_entity1 = entity_reg.async_get_or_create(
+    reg_entity1 = entity_registry.async_get_or_create(
         "binary_sensor", "powerwall", "battery_charging", config_entry=entry1
     )
-    reg_entity2 = entity_reg.async_get_or_create(
+    reg_entity2 = entity_registry.async_get_or_create(
         "binary_sensor", "powerwall", "battery_status", config_entry=entry2
     )
     with patch(
