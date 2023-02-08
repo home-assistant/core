@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components import mqtt, sensor
 from homeassistant.const import EVENT_STATE_CHANGED, Platform
-import homeassistant.core as ha
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message
@@ -12,9 +12,9 @@ from tests.common import async_fire_mqtt_message
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_availability_with_shared_state_topic(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
-):
+) -> None:
     """Test the state is not changed twice.
 
     When an entity with a shared state_topic and availability_topic becomes available
@@ -42,11 +42,11 @@ async def test_availability_with_shared_state_topic(
 
     events = []
 
-    @ha.callback
-    def callback(event):
+    @callback
+    def test_callback(event):
         events.append(event)
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)
 
     async_fire_mqtt_message(hass, "test-topic", "100")
     await hass.async_block_till_done()

@@ -6,6 +6,7 @@ from pyotgw.vars import OTGW, OTGW_ABOUT
 from homeassistant import setup
 from homeassistant.components.opentherm_gw.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -27,7 +28,7 @@ MOCK_CONFIG_ENTRY = MockConfigEntry(
 )
 
 
-async def test_device_registry_insert(hass):
+async def test_device_registry_insert(hass: HomeAssistant) -> None:
     """Test that the device registry is initialized correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
@@ -45,7 +46,7 @@ async def test_device_registry_insert(hass):
     assert gw_dev.sw_version == VERSION_OLD
 
 
-async def test_device_registry_update(hass):
+async def test_device_registry_update(hass: HomeAssistant) -> None:
     """Test that the device registry is updated correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 

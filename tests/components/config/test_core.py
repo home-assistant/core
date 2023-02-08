@@ -12,8 +12,11 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util, location
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -24,7 +27,9 @@ async def client(hass, hass_ws_client):
     return await hass_ws_client(hass)
 
 
-async def test_validate_config_ok(hass, hass_client):
+async def test_validate_config_ok(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test checking config."""
     with patch.object(config, "SECTIONS", ["core"]):
         await async_setup_component(hass, "config", {})

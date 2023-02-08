@@ -22,6 +22,7 @@ from homeassistant.components.esphome import (
 )
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import VALID_NOISE_PSK
@@ -760,7 +761,7 @@ async def test_discovery_dhcp_no_changes(hass, mock_client):
     assert entry.data[CONF_HOST] == "192.168.43.183"
 
 
-async def test_discovery_hassio(hass):
+async def test_discovery_hassio(hass: HomeAssistant) -> None:
     """Test dashboard discovery."""
     result = await hass.config_entries.flow.async_init(
         "esphome",

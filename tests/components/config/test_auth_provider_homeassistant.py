@@ -3,8 +3,10 @@ import pytest
 
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
+from homeassistant.core import HomeAssistant
 
 from tests.common import CLIENT_ID, MockUser
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +42,9 @@ async def hass_admin_credential(hass, auth_provider):
     )
 
 
-async def test_create_auth_system_generated_user(hass, hass_ws_client):
+async def test_create_auth_system_generated_user(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can't add auth to system generated users."""
     system_user = MockUser(system_generated=True).add_to_hass(hass)
     client = await hass_ws_client(hass)
@@ -61,7 +65,7 @@ async def test_create_auth_system_generated_user(hass, hass_ws_client):
     assert result["error"]["code"] == "system_generated"
 
 
-async def test_create_auth_user_already_credentials():
+async def test_create_auth_user_already_credentials() -> None:
     """Test we can't create auth for user with pre-existing credentials."""
     # assert False
 
@@ -229,7 +233,9 @@ async def test_delete_requires_admin(hass, hass_ws_client, hass_read_only_access
     assert result["error"]["code"] == "unauthorized"
 
 
-async def test_delete_unknown_auth(hass, hass_ws_client):
+async def test_delete_unknown_auth(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test trying to delete an unknown auth username."""
     client = await hass_ws_client(hass)
 

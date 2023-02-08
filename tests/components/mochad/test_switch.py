@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.mochad import switch as mochad
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -25,7 +26,7 @@ def switch_mock(hass):
     return mochad.MochadSwitch(hass, controller_mock, dev_dict)
 
 
-async def test_setup_adds_proper_devices(hass):
+async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
     good_config = {
         "mochad": {},

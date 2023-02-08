@@ -16,7 +16,10 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.models import UnsupportedDialect
+from homeassistant.components.recorder.models import (
+    UnsupportedDialect,
+    process_timestamp,
+)
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
@@ -44,8 +47,8 @@ def test_session_scope_not_setup(hass_recorder):
 
 def test_recorder_bad_commit(hass_recorder, recorder_db_url):
     """Bad _commit should retry 3 times."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test is specific for SQLite: mysql does not raise an OperationalError
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # This test is specific for SQLite: mysql/postgresql does not raise an OperationalError
         # which triggers retries for the bad query below, it raises ProgrammingError
         # on which we give up
         return
@@ -696,7 +699,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version)
 
 def test_basic_sanity_check(hass_recorder, recorder_db_url):
     """Test the basic sanity checks with a missing table."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -714,7 +717,7 @@ def test_basic_sanity_check(hass_recorder, recorder_db_url):
 
 def test_combined_checks(hass_recorder, caplog, recorder_db_url):
     """Run Checks on the open database."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -780,24 +783,23 @@ def test_end_incomplete_runs(hass_recorder, caplog):
         assert run_info.closed_incorrect is False
 
         now = dt_util.utcnow()
-        now_without_tz = now.replace(tzinfo=None)
         end_incomplete_runs(session, now)
         run_info = run_information_with_session(session)
         assert run_info.closed_incorrect is True
-        assert run_info.end == now_without_tz
+        assert process_timestamp(run_info.end) == now
         session.flush()
 
         later = dt_util.utcnow()
         end_incomplete_runs(session, later)
         run_info = run_information_with_session(session)
-        assert run_info.end == now_without_tz
+        assert process_timestamp(run_info.end) == now
 
     assert "Ended unfinished session" in caplog.text
 
 
 def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
     """Test periodic db cleanups."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -844,7 +846,7 @@ async def test_write_lock_db(
         await hass.async_add_executor_job(_drop_table)
 
 
-def test_is_second_sunday():
+def test_is_second_sunday() -> None:
     """Test we can find the second sunday of the month."""
     assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
     assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
@@ -855,7 +857,7 @@ def test_is_second_sunday():
     assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False
 
 
-def test_build_mysqldb_conv():
+def test_build_mysqldb_conv() -> None:
     """Test building the MySQLdb connect conv param."""
     mock_converters = Mock(conversions={"original": "preserved"})
     mock_constants = Mock(FIELD_TYPE=Mock(DATETIME="DATETIME"))
@@ -924,7 +926,7 @@ def test_execute_stmt_lambda_element(hass_recorder):
 
 
 @freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
-async def test_resolve_period(hass):
+async def test_resolve_period(hass: HomeAssistant) -> None:
     """Test statistic_during_period."""
 
     now = dt_util.utcnow()
