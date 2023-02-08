@@ -75,8 +75,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         assert connection.device is not None
-        self.connection = connection
-        self.device: Light = connection.device
+        self._connection = connection
         self.lock = asyncio.Lock()
         self.active_effect = FirmwareEffect.OFF
         self.sensor_coordinator = LIFXSensorUpdateCoordinator(hass, self, title)
@@ -92,6 +91,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
+
+    @property
+    def device(self) -> Light:
+        """Return the device."""
+        return self._connection.device
 
     @callback
     def async_setup(self) -> None:
@@ -172,9 +176,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             try:
                 await self._async_update_data_locked()
             except asyncio.TimeoutError:
-                self.connection.async_stop()
-                await self.connection.async_setup()
-                self.device = self.connection.device
+                self._connection.async_stop()
+                await self._connection.async_setup()
                 await self._async_update_data_locked()
 
     async def _async_update_data_locked(self) -> None:
