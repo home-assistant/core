@@ -46,7 +46,7 @@ def _get_native_states(hass, entity_id):
         ]
 
 
-async def test_schema_update_calls(hass):
+async def test_schema_update_calls(hass: HomeAssistant) -> None:
     """Test that schema migrations occur in correct order."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -75,7 +75,7 @@ async def test_schema_update_calls(hass):
     )
 
 
-async def test_migration_in_progress(hass):
+async def test_migration_in_progress(hass: HomeAssistant) -> None:
     """Test that we can check for migration in progress."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -95,7 +95,7 @@ async def test_migration_in_progress(hass):
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-async def test_database_migration_failed(hass):
+async def test_database_migration_failed(hass: HomeAssistant) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -126,7 +126,7 @@ async def test_database_migration_failed(hass):
     assert len(mock_dismiss.mock_calls) == 1
 
 
-async def test_database_migration_encounters_corruption(hass):
+async def test_database_migration_encounters_corruption(hass: HomeAssistant) -> None:
     """Test we move away the database if its corrupt."""
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -157,7 +157,9 @@ async def test_database_migration_encounters_corruption(hass):
     assert move_away.called
 
 
-async def test_database_migration_encounters_corruption_not_sqlite(hass):
+async def test_database_migration_encounters_corruption_not_sqlite(
+    hass: HomeAssistant,
+) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -191,7 +193,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     assert len(mock_dismiss.mock_calls) == 1
 
 
-async def test_events_during_migration_are_queued(hass):
+async def test_events_during_migration_are_queued(hass: HomeAssistant) -> None:
     """Test that events during migration are queued."""
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -225,7 +227,7 @@ async def test_events_during_migration_are_queued(hass):
     assert len(db_states) == 2
 
 
-async def test_events_during_migration_queue_exhausted(hass):
+async def test_events_during_migration_queue_exhausted(hass: HomeAssistant) -> None:
     """Test that events during migration takes so long the queue is exhausted."""
 
     assert recorder.util.async_migration_in_progress(hass) is False

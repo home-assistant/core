@@ -1,9 +1,9 @@
 """Tests for IPMA config flow."""
-
 from unittest.mock import Mock, patch
 
 from homeassistant.components.ipma import DOMAIN, config_flow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -36,7 +36,7 @@ async def test_show_config_form_default_values() -> None:
     assert result["step_id"] == "user"
 
 
-async def test_flow_with_home_location(hass):
+async def test_flow_with_home_location(hass: HomeAssistant) -> None:
     """Test config flow .
 
     Tests the flow when a default location is configured
@@ -122,7 +122,7 @@ async def test_flow_entry_config_entry_already_exists() -> None:
         assert len(flow._errors) == 1
 
 
-async def test_config_entry_migration(hass):
+async def test_config_entry_migration(hass: HomeAssistant) -> None:
     """Tests config entry without mode in unique_id can be migrated."""
     ipma_entry = MockConfigEntry(
         domain=DOMAIN,

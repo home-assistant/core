@@ -1,14 +1,17 @@
 """Test stream init."""
-
 import logging
 
 import av
+import pytest
 
 from homeassistant.components.stream import __name__ as stream_name
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_log_levels(hass, caplog):
+async def test_log_levels(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that the worker logs the url without username and password."""
 
     logging.getLogger(stream_name).setLevel(logging.INFO)

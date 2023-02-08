@@ -7,9 +7,12 @@ import pytest
 
 from homeassistant.components import usb
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import conbee_device, slae_sh_device
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="operating_system")
@@ -156,7 +159,9 @@ async def test_removal_by_observer_before_started(hass, operating_system):
     await hass.async_block_till_done()
 
 
-async def test_discovered_by_websocket_scan(hass, hass_ws_client):
+async def test_discovered_by_websocket_scan(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
@@ -232,7 +237,9 @@ async def test_discovered_by_websocket_scan_limited_by_description_matcher(
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-async def test_most_targeted_matcher_wins(hass, hass_ws_client):
+async def test_most_targeted_matcher_wins(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the most targeted matcher is used."""
     new_usb = [
         {"domain": "less", "vid": "3039", "pid": "3039"},
@@ -522,7 +529,9 @@ async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_discovered_by_websocket_scan_match_vid_only(hass, hass_ws_client):
+async def test_discovered_by_websocket_scan_match_vid_only(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan only matching vid."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
 
@@ -558,7 +567,9 @@ async def test_discovered_by_websocket_scan_match_vid_only(hass, hass_ws_client)
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-async def test_discovered_by_websocket_scan_match_vid_wrong_pid(hass, hass_ws_client):
+async def test_discovered_by_websocket_scan_match_vid_wrong_pid(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan only matching vid but wrong pid."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "9999"}]
 
@@ -593,7 +604,9 @@ async def test_discovered_by_websocket_scan_match_vid_wrong_pid(hass, hass_ws_cl
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_discovered_by_websocket_no_vid_pid(hass, hass_ws_client):
+async def test_discovered_by_websocket_no_vid_pid(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test a device is discovered from websocket scan with no vid or pid."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "9999"}]
 
@@ -835,7 +848,9 @@ def test_human_readable_device_name() -> None:
     assert "8A2A" in name
 
 
-async def test_async_is_plugged_in(hass, hass_ws_client):
+async def test_async_is_plugged_in(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test async_is_plugged_in."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
@@ -906,7 +921,9 @@ async def test_async_is_plugged_in_case_enforcement(hass, matcher):
             usb.async_is_plugged_in(hass, matcher)
 
 
-async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_client):
+async def test_web_socket_triggers_discovery_request_callbacks(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the websocket call triggers a discovery request callback."""
     mock_callback = Mock()
 
@@ -938,7 +955,9 @@ async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_cli
         assert len(mock_callback.mock_calls) == 1
 
 
-async def test_initial_scan_callback(hass, hass_ws_client):
+async def test_initial_scan_callback(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test it's possible to register a callback when the initial scan is done."""
     mock_callback_1 = Mock()
     mock_callback_2 = Mock()
@@ -971,7 +990,9 @@ async def test_initial_scan_callback(hass, hass_ws_client):
         cancel_2()
 
 
-async def test_cancel_initial_scan_callback(hass, hass_ws_client):
+async def test_cancel_initial_scan_callback(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test it's possible to cancel an initial scan callback."""
     mock_callback = Mock()
 

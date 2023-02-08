@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
@@ -58,7 +59,7 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
     }
 
 
-async def test_cover_intents_loading(hass):
+async def test_cover_intents_loading(hass: HomeAssistant) -> None:
     """Test Cover Intents Loading."""
     assert await async_setup_component(hass, "intent", {})
 
@@ -86,7 +87,7 @@ async def test_cover_intents_loading(hass):
     assert call.data == {"entity_id": "cover.garage_door"}
 
 
-async def test_turn_on_intent(hass):
+async def test_turn_on_intent(hass: HomeAssistant) -> None:
     """Test HassTurnOn intent."""
     result = await async_setup_component(hass, "homeassistant", {})
     result = await async_setup_component(hass, "intent", {})
@@ -108,7 +109,7 @@ async def test_turn_on_intent(hass):
     assert call.data == {"entity_id": ["light.test_light"]}
 
 
-async def test_turn_off_intent(hass):
+async def test_turn_off_intent(hass: HomeAssistant) -> None:
     """Test HassTurnOff intent."""
     result = await async_setup_component(hass, "homeassistant", {})
     result = await async_setup_component(hass, "intent", {})
@@ -129,7 +130,7 @@ async def test_turn_off_intent(hass):
     assert call.data == {"entity_id": ["light.test_light"]}
 
 
-async def test_toggle_intent(hass):
+async def test_toggle_intent(hass: HomeAssistant) -> None:
     """Test HassToggle intent."""
     result = await async_setup_component(hass, "homeassistant", {})
     result = await async_setup_component(hass, "intent", {})
@@ -150,7 +151,7 @@ async def test_toggle_intent(hass):
     assert call.data == {"entity_id": ["light.test_light"]}
 
 
-async def test_turn_on_multiple_intent(hass):
+async def test_turn_on_multiple_intent(hass: HomeAssistant) -> None:
     """Test HassTurnOn intent with multiple similar entities.
 
     This tests that matching finds the proper entity among similar names.

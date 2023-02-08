@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -633,7 +633,7 @@ async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
     }
 
 
-async def test_prepare_reload(hass):
+async def test_prepare_reload(hass: HomeAssistant) -> None:
     """Test calling the reload service."""
     language = hass.config.language
     assert await async_setup_component(hass, "conversation", {})
@@ -654,7 +654,7 @@ async def test_prepare_reload(hass):
     assert not agent._lang_intents.get(language)
 
 
-async def test_prepare_fail(hass):
+async def test_prepare_fail(hass: HomeAssistant) -> None:
     """Test calling prepare with a non-existent language."""
     assert await async_setup_component(hass, "conversation", {})
 
@@ -691,7 +691,7 @@ async def test_language_region(hass, init_components):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_reload_on_new_component(hass):
+async def test_reload_on_new_component(hass: HomeAssistant) -> None:
     """Test intents being reloaded when a new component is loaded."""
     language = hass.config.language
     assert await async_setup_component(hass, "conversation", {})
@@ -849,7 +849,7 @@ async def test_light_area_same_name(hass, init_components):
     assert call.data == {"entity_id": kitchen_light.entity_id}
 
 
-async def test_agent_id_validator_invalid_agent(hass):
+async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
     """Test validating agent id."""
     with pytest.raises(vol.Invalid):
         conversation.agent_id_validator("invalid_agent")

@@ -23,6 +23,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
@@ -857,7 +858,7 @@ async def test_homekit_controller_still_discovered_unpaired_for_polling(
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
 
 
-async def test_info_from_service_non_utf8(hass):
+async def test_info_from_service_non_utf8(hass: HomeAssistant) -> None:
     """Test info_from_service handles non UTF-8 property keys and values correctly."""
     service_type = "_test._tcp.local."
     info = zeroconf.info_from_service(
@@ -872,7 +873,7 @@ async def test_info_from_service_non_utf8(hass):
     assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
 
 
-async def test_info_from_service_with_addresses(hass):
+async def test_info_from_service_with_addresses(hass: HomeAssistant) -> None:
     """Test info_from_service does not throw when there are no addresses."""
     service_type = "_test._tcp.local."
     info = zeroconf.info_from_service(
@@ -881,7 +882,9 @@ async def test_info_from_service_with_addresses(hass):
     assert info is None
 
 
-async def test_info_from_service_with_link_local_address_first(hass):
+async def test_info_from_service_with_link_local_address_first(
+    hass: HomeAssistant,
+) -> None:
     """Test that the link local address is ignored."""
     service_type = "_test._tcp.local."
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
@@ -890,7 +893,9 @@ async def test_info_from_service_with_link_local_address_first(hass):
     assert info.host == "192.168.66.12"
 
 
-async def test_info_from_service_with_unspecified_address_first(hass):
+async def test_info_from_service_with_unspecified_address_first(
+    hass: HomeAssistant,
+) -> None:
     """Test that the unspecified address is ignored."""
     service_type = "_test._tcp.local."
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
@@ -899,7 +904,9 @@ async def test_info_from_service_with_unspecified_address_first(hass):
     assert info.host == "192.168.66.12"
 
 
-async def test_info_from_service_with_unspecified_address_only(hass):
+async def test_info_from_service_with_unspecified_address_only(
+    hass: HomeAssistant,
+) -> None:
     """Test that the unspecified address is ignored."""
     service_type = "_test._tcp.local."
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
@@ -908,7 +915,9 @@ async def test_info_from_service_with_unspecified_address_only(hass):
     assert info is None
 
 
-async def test_info_from_service_with_link_local_address_second(hass):
+async def test_info_from_service_with_link_local_address_second(
+    hass: HomeAssistant,
+) -> None:
     """Test that the link local address is ignored."""
     service_type = "_test._tcp.local."
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
@@ -917,7 +926,9 @@ async def test_info_from_service_with_link_local_address_second(hass):
     assert info.host == "192.168.66.12"
 
 
-async def test_info_from_service_with_link_local_address_only(hass):
+async def test_info_from_service_with_link_local_address_only(
+    hass: HomeAssistant,
+) -> None:
     """Test that the link local address is ignored."""
     service_type = "_test._tcp.local."
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
@@ -926,7 +937,7 @@ async def test_info_from_service_with_link_local_address_only(hass):
     assert info is None
 
 
-async def test_info_from_service_prefers_ipv4(hass):
+async def test_info_from_service_prefers_ipv4(hass: HomeAssistant) -> None:
     """Test that ipv4 addresses are preferred."""
     service_type = "_test._tcp.local."
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
@@ -935,7 +946,7 @@ async def test_info_from_service_prefers_ipv4(hass):
     assert info.host == "192.168.66.12"
 
 
-async def test_info_from_service_can_return_ipv6(hass):
+async def test_info_from_service_can_return_ipv6(hass: HomeAssistant) -> None:
     """Test that IPv6-only devices can be discovered."""
     service_type = "_test._tcp.local."
     service_info = get_service_info_mock(service_type, f"test.{service_type}")

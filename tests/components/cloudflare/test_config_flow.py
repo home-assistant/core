@@ -8,6 +8,7 @@ from pycfdns.exceptions import (
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_SOURCE, CONF_ZONE
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
@@ -144,7 +145,7 @@ async def test_user_form_unexpected_exception(hass, cfupdate_flow):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_user_form_single_instance_allowed(hass):
+async def test_user_form_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
