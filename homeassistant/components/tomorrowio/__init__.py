@@ -140,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_setup_entry(entry)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -223,8 +223,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
-        """
-        Unload a config entry from coordinator.
+        """Unload a config entry from coordinator.
 
         Returns whether coordinator can be removed as well because there are no
         config entries tied to it anymore.
@@ -341,8 +340,7 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         )
 
     def _get_current_property(self, property_name: str) -> int | str | float | None:
-        """
-        Get property from current conditions.
+        """Get property from current conditions.
 
         Used for V4 API.
         """

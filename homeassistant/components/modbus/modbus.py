@@ -371,10 +371,10 @@ class ModbusHub:
         except ModbusException as exception_error:
             self._log_error(str(exception_error), error_state=False)
             return False
-        else:
-            message = f"modbus {self.name} communication open"
-            _LOGGER.info(message)
-            return True
+
+        message = f"modbus {self.name} communication open"
+        _LOGGER.info(message)
+        return True
 
     def _pymodbus_call(
         self, unit: int | None, address: int, value: int | list[int], use_call: str

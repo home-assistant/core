@@ -71,7 +71,7 @@ class DiscoverYandexTransport(SensorEntity):
 
     _attr_attribution = "Data provided by maps.yandex.ru"
 
-    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name):
+    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name) -> None:
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id

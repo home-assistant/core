@@ -74,7 +74,7 @@ async def async_setup_entry(
         ISYNodeQueryButtonEntity(
             node=isy,
             name="Query",
-            unique_id=isy.uuid,
+            unique_id=f"{isy.uuid}_query",
             device_info=DeviceInfo(identifiers={(DOMAIN, isy.uuid)}),
             entity_category=EntityCategory.DIAGNOSTIC,
         )

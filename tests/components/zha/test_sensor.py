@@ -309,7 +309,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             smartenergy.Metering.cluster_id,
             "instantaneous_demand",
             async_test_metering,
-            1,
+            9,
             {
                 "demand_formatting": 0xF9,
                 "divisor": 1,
@@ -323,7 +323,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             smartenergy.Metering.cluster_id,
             "summation_delivered",
             async_test_smart_energy_summation,
-            1,
+            9,
             {
                 "demand_formatting": 0xF9,
                 "divisor": 1000,
@@ -875,7 +875,10 @@ async def test_se_summation_uom(
         (9, "ACTIVE_MEASUREMENT, PHASE_A_MEASUREMENT"),
         (
             15,
-            "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT",
+            (
+                "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT,"
+                " PHASE_A_MEASUREMENT"
+            ),
         ),
     ),
 )

@@ -209,7 +209,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=InvalidTokenException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -223,7 +222,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=ExpiredTokenException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -237,7 +235,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=InvalidPINException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -251,7 +248,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=InvalidSymbolException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -265,7 +261,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=ClientConnectionError,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
@@ -279,7 +274,6 @@ async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass)
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=Exception,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},

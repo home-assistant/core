@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Any
 
 from pynws import SimpleNWS
 
@@ -174,11 +176,11 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data,
-        hass_data,
+        entry_data: MappingProxyType[str, Any],
+        hass_data: dict[str, Any],
         description: NWSSensorEntityDescription,
-        station,
-    ):
+        station: str,
+    ) -> None:
         """Initialise the platform with a data instance."""
         super().__init__(hass_data[COORDINATOR_OBSERVATION])
         self._nws: SimpleNWS = hass_data[NWS_DATA]
@@ -191,7 +193,7 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
             self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state."""
         value = self._nws.observation.get(self.entity_description.key)
         if value is None:
@@ -224,7 +226,7 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         return value
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return f"{base_unique_id(self._latitude, self._longitude)}_{self.entity_description.key}"
 

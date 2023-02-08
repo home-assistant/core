@@ -34,7 +34,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -392,7 +392,7 @@ async def test_state_missing_entity_id(hass, setup_comp):
     assert state.state == STATE_OFF
 
 
-async def test_setup_before_started(hass):
+async def test_setup_before_started(hass: HomeAssistant) -> None:
     """Test we can setup before starting."""
     hass.state = CoreState.stopped
     assert await async_setup_component(hass, DOMAIN, CONFIG_MISSING_FAN)
@@ -534,7 +534,7 @@ async def test_service_calls(hass, setup_comp):
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested fan group."""
     await async_setup_component(
         hass,

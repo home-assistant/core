@@ -11,8 +11,10 @@ import functools
 import logging
 from random import randint
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 import weakref
+
+from typing_extensions import Self
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
@@ -86,7 +88,6 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-_ConfigEntryStateSelfT = TypeVar("_ConfigEntryStateSelfT", bound="ConfigEntryState")
 _R = TypeVar("_R")
 
 
@@ -110,9 +111,7 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(
-        cls: type[_ConfigEntryStateSelfT], value: str, recoverable: bool
-    ) -> _ConfigEntryStateSelfT:
+    def __new__(cls, value: str, recoverable: bool) -> Self:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
@@ -627,7 +626,7 @@ class ConfigEntry:
                 )
                 return False
             if result:
-                # pylint: disable=protected-access
+                # pylint: disable-next=protected-access
                 hass.config_entries._async_schedule_save()
             # https://github.com/python/mypy/issues/11839
             return result  # type: ignore[no-any-return]
@@ -761,6 +760,15 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         super().__init__(hass)
         self.config_entries = config_entries
         self._hass_config = hass_config
+        self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
+        self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
+
+    async def async_wait_import_flow_initialized(self, handler: str) -> None:
+        """Wait till all import flows in progress are initialized."""
+        if not (current := self._pending_import_flows.get(handler)):
+            return
+
+        await asyncio.wait(current.values())
 
     @callback
     def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
@@ -770,11 +778,76 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             for flow in self._progress.values()
         )
 
+    async def async_init(
+        self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
+    ) -> FlowResult:
+        """Start a configuration flow."""
+        if not context or "source" not in context:
+            raise KeyError("Context not set or doesn't have a source set")
+
+        flow_id = uuid_util.random_uuid_hex()
+        if context["source"] == SOURCE_IMPORT:
+            init_done: asyncio.Future[None] = asyncio.Future()
+            self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
+
+        task = asyncio.create_task(self._async_init(flow_id, handler, context, data))
+        self._initialize_tasks.setdefault(handler, []).append(task)
+
+        try:
+            flow, result = await task
+        finally:
+            self._initialize_tasks[handler].remove(task)
+            self._pending_import_flows.get(handler, {}).pop(flow_id, None)
+
+        if result["type"] != data_entry_flow.FlowResultType.ABORT:
+            await self.async_post_init(flow, result)
+
+        return result
+
+    async def _async_init(
+        self,
+        flow_id: str,
+        handler: str,
+        context: dict,
+        data: Any,
+    ) -> tuple[data_entry_flow.FlowHandler, FlowResult]:
+        """Run the init in a task to allow it to be canceled at shutdown."""
+        flow = await self.async_create_flow(handler, context=context, data=data)
+        if not flow:
+            raise data_entry_flow.UnknownFlow("Flow was not created")
+        flow.hass = self.hass
+        flow.handler = handler
+        flow.flow_id = flow_id
+        flow.context = context
+        flow.init_data = data
+        self._async_add_flow_progress(flow)
+        try:
+            result = await self._async_handle_step(flow, flow.init_step, data)
+        finally:
+            init_done = self._pending_import_flows.get(handler, {}).get(flow_id)
+            if init_done and not init_done.done():
+                init_done.set_result(None)
+        return flow, result
+
+    async def async_shutdown(self) -> None:
+        """Cancel any initializing flows."""
+        for task_list in self._initialize_tasks.values():
+            for task in task_list:
+                task.cancel()
+
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
+
+        # Mark the step as done.
+        # We do this to avoid a circular dependency where async_finish_flow sets up a
+        # new entry, which needs the integration to be set up, which is waiting for
+        # init to be done.
+        init_done = self._pending_import_flows.get(flow.handler, {}).get(flow.flow_id)
+        if init_done and not init_done.done():
+            init_done.set_result(None)
 
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):
@@ -1253,10 +1326,10 @@ class ConfigEntries:
         report(
             (
                 "called async_setup_platforms instead of awaiting"
-                " async_forward_entry_setups; this will fail in version 2022.12"
+                " async_forward_entry_setups; this will fail in version 2023.3"
             ),
             # Raise this to warning once all core integrations have been migrated
-            level=logging.DEBUG,
+            level=logging.WARNING,
             error_if_core=False,
         )
         for platform in platforms:
@@ -1363,7 +1436,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if not self.context:
             return None
 
-        return cast(Optional[str], self.context.get("unique_id"))
+        return cast(str | None, self.context.get("unique_id"))
 
     @staticmethod
     @callback
@@ -1381,7 +1454,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
     ) -> None:
-        """Abort if current entries match all data."""
+        """Abort if current entries match all data.
+
+        Requires `already_configured` in strings.json in user visible flows.
+        """
         if match_dict is None:
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
@@ -1403,7 +1479,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         *,
         error: str = "already_configured",
     ) -> None:
-        """Abort if the unique ID is already configured."""
+        """Abort if the unique ID is already configured.
+
+        Requires strings.json entry corresponding to the `error` parameter
+        in user visible flows.
+        """
         if self.unique_id is None:
             return
 
@@ -1545,6 +1625,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         when the handler has no existing config entries.
 
         It ensures that the discovery can be ignored by the user.
+
+        Requires `already_configured` and `already_in_progress` in strings.json
+        in user visible flows.
         """
         if self.unique_id is not None:
             return

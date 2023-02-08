@@ -99,7 +99,7 @@ def async_user_not_allowed_do_auth(
         return "No request available to validate local access"
 
     if "cloud" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from hass_nabucasa import remote
 
         if remote.is_cloud_request.get():
@@ -139,8 +139,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     hass.data[STORAGE_KEY] = refresh_token.id
 
     async def async_validate_auth_header(request: Request) -> bool:
-        """
-        Test authorization header against access token.
+        """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
         """

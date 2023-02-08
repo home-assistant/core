@@ -61,6 +61,6 @@ BUTTONS = [
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_fn=lambda coordinator: coordinator.reboot_starlink(),
+        press_fn=lambda coordinator: coordinator.async_reboot_starlink(),
     )
 ]

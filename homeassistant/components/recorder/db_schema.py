@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 import ciso8601
 from fnvhash import fnv1a_32
@@ -30,6 +30,7 @@ from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
+from typing_extensions import Self
 
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
@@ -43,20 +44,20 @@ from homeassistant.helpers.json import (
     JSON_DECODE_EXCEPTIONS,
     JSON_DUMP,
     json_bytes,
+    json_bytes_strip_null,
     json_loads,
+    json_loads_object,
 )
 import homeassistant.util.dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import StatisticData, StatisticMetaData, process_timestamp
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 32
-
-_StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
+SCHEMA_VERSION = 33
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +71,9 @@ TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
+
+MAX_STATE_ATTRS_BYTES = 16384
+PSQL_DIALECT = SupportedDialect.POSTGRESQL
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -171,16 +175,17 @@ class Events(Base):  # type: ignore[misc,valid-type]
         return (
             "<recorder.Events("
             f"id={self.event_id}, type='{self.event_type}', "
-            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired_isotime}'"
+            f"origin_idx='{self.origin_idx}', time_fired='{self._time_fired_isotime}'"
             f", data_id={self.data_id})>"
         )
 
     @property
-    def time_fired_isotime(self) -> str:
+    def _time_fired_isotime(self) -> str:
         """Return time_fired as an isotime string."""
-        date_time = dt_util.utc_from_timestamp(self.time_fired_ts) or process_timestamp(
-            self.time_fired
-        )
+        if self.time_fired_ts is not None:
+            date_time = dt_util.utc_from_timestamp(self.time_fired_ts)
+        else:
+            date_time = process_timestamp(self.time_fired)
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
@@ -207,7 +212,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
         try:
             return Event(
                 self.event_type,
-                json_loads(self.event_data) if self.event_data else {},
+                json_loads_object(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
@@ -241,17 +246,12 @@ class EventData(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event: Event) -> EventData:
-        """Create object from an event."""
-        shared_data = json_bytes(event.data)
-        return EventData(
-            shared_data=shared_data.decode("utf-8"),
-            hash=EventData.hash_shared_data_bytes(shared_data),
-        )
-
-    @staticmethod
-    def shared_data_bytes_from_event(event: Event) -> bytes:
+    def shared_data_bytes_from_event(
+        event: Event, dialect: SupportedDialect | None
+    ) -> bytes:
         """Create shared_data from an event."""
+        if dialect == SupportedDialect.POSTGRESQL:
+            return json_bytes_strip_null(event.data)
         return json_bytes(event.data)
 
     @staticmethod
@@ -307,16 +307,17 @@ class States(Base):  # type: ignore[misc,valid-type]
         return (
             f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
             f" state='{self.state}', event_id='{self.event_id}',"
-            f" last_updated='{self.last_updated_isotime}',"
+            f" last_updated='{self._last_updated_isotime}',"
             f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
         )
 
     @property
-    def last_updated_isotime(self) -> str:
+    def _last_updated_isotime(self) -> str:
         """Return last_updated as an isotime string."""
-        date_time = dt_util.utc_from_timestamp(
-            self.last_updated_ts
-        ) or process_timestamp(self.last_updated)
+        if self.last_updated_ts is not None:
+            date_time = dt_util.utc_from_timestamp(self.last_updated_ts)
+        else:
+            date_time = process_timestamp(self.last_updated)
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
@@ -358,7 +359,7 @@ class States(Base):  # type: ignore[misc,valid-type]
             parent_id=self.context_parent_id,
         )
         try:
-            attrs = json_loads(self.attributes) if self.attributes else {}
+            attrs = json_loads_object(self.attributes) if self.attributes else {}
         except JSON_DECODE_EXCEPTIONS:
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
@@ -403,18 +404,10 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event: Event) -> StateAttributes:
-        """Create object from a state_changed event."""
-        state: State | None = event.data.get("new_state")
-        # None state means the state was removed from the state machine
-        attr_bytes = b"{}" if state is None else json_bytes(state.attributes)
-        dbstate = StateAttributes(shared_attrs=attr_bytes.decode("utf-8"))
-        dbstate.hash = StateAttributes.hash_shared_attrs_bytes(attr_bytes)
-        return dbstate
-
-    @staticmethod
     def shared_attrs_bytes_from_event(
-        event: Event, exclude_attrs_by_domain: dict[str, set[str]]
+        event: Event,
+        exclude_attrs_by_domain: dict[str, set[str]],
+        dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
@@ -425,9 +418,20 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        return json_bytes(
+        encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
+        bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
+        if len(bytes_result) > MAX_STATE_ATTRS_BYTES:
+            _LOGGER.warning(
+                "State attributes for %s exceed maximum size of %s bytes. "
+                "This can cause database performance issues; Attributes "
+                "will not be stored",
+                state.entity_id,
+                MAX_STATE_ATTRS_BYTES,
+            )
+            return b"{}"
+        return bytes_result
 
     @staticmethod
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
@@ -468,9 +472,7 @@ class StatisticsBase:
     sum = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(
-        cls: type[_StatisticsBaseSelfT], metadata_id: int, stats: StatisticData
-    ) -> _StatisticsBaseSelfT:
+    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,
@@ -572,7 +574,7 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
 
         return [row[0] for row in query]
 
-    def to_native(self, validate_entity_id: bool = True) -> RecorderRuns:
+    def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""
         return self
 
