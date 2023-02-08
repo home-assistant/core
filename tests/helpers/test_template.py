@@ -1904,6 +1904,56 @@ def test_regex_findall_index(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "LHR"
 
 
+def test_bitwise_lshift(hass: HomeAssistant) -> None:
+    """Test bitwise_lshift method."""
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_lshift(8) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 8 << 8
+    tpl = template.Template(
+        """
+{{ 10 | bitwise_lshift(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 10 << 2
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_lshift(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 8 << 2
+
+
+def test_bitwise_rshift(hass: HomeAssistant) -> None:
+    """Test bitwise_rshift method."""
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_rshift(8) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 8 >> 8
+    tpl = template.Template(
+        """
+{{ 10 | bitwise_rshift(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 10 >> 2
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_rshift(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == 8 >> 2
+
+
 def test_bitwise_and(hass: HomeAssistant) -> None:
     """Test bitwise_and method."""
     tpl = template.Template(

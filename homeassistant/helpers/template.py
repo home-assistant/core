@@ -1845,6 +1845,16 @@ def regex_findall(value, find="", ignorecase=False):
     return _regex_cache(find, flags).findall(value)
 
 
+def bitwise_lshift(value, num):
+    """Perform a bitwise left shift operation."""
+    return value << num
+
+
+def bitwise_rshift(value, num):
+    """Perform a bitwise right shift operation."""
+    return value >> num
+
+
 def bitwise_and(first_value, second_value):
     """Perform a bitwise and operation."""
     return first_value & second_value
@@ -2100,6 +2110,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["bitwise_lshift"] = bitwise_lshift
+        self.filters["bitwise_rshift"] = bitwise_rshift
         self.filters["pack"] = struct_pack
         self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
