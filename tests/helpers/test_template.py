@@ -1609,16 +1609,16 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
-def test_is_nominal(hass):
-    """Test is_nominal method."""
-    hass.states.async_set("test.nominal1", "nominal1")
-    hass.states.async_set("test.nominal2", "nominal2")
+def test_has_value(hass):
+    """Test has_value method."""
+    hass.states.async_set("test.value1", "value1")
+    hass.states.async_set("test.value2", "value2")
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
     hass.states.async_set("test.unknown", STATE_UNKNOWN)
 
     tpl = template.Template(
         """
-{{ is_nominal("test.nominal1") }}
+{{ has_value("test.value1") }}
         """,
         hass,
     )
@@ -1626,7 +1626,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ is_nominal(states.test.nominal1) }}
+{{ has_value(states.test.value1) }}
         """,
         hass,
     )
@@ -1634,7 +1634,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{% if "test.nominal1" is nominal %}yes{% else %}no{% endif %}
+{% if "test.value1" is has_value %}yes{% else %}no{% endif %}
         """,
         hass,
     )
@@ -1642,7 +1642,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{% if states.test.nominal1 is nominal %}yes{% else %}no{% endif %}
+{% if states.test.value1 is has_value %}yes{% else %}no{% endif %}
         """,
         hass,
     )
@@ -1650,7 +1650,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ is_nominal(["test.nominal1",states.test.nominal2]) }}
+{{ has_value(["test.value1",states.test.value2]) }}
         """,
         hass,
     )
@@ -1658,7 +1658,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ ["test.nominal1","test.unavailable"] | is_nominal }}
+{{ ["test.value1","test.unavailable"] | has_value }}
         """,
         hass,
     )
@@ -1666,7 +1666,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ ["test.unknown",states.test.nominal1] | select("nominal") | list | count }}
+{{ ["test.unknown",states.test.value1] | select("has_value") | list | count }}
         """,
         hass,
     )
@@ -1674,7 +1674,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ states | select("nominal") | list | count }}
+{{ states | select("has_value") | list | count }}
         """,
         hass,
     )
@@ -1682,7 +1682,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ states | selectattr("state", "nominal") | list | count }}
+{{ states | selectattr("state", "has_value") | list | count }}
         """,
         hass,
     )
@@ -1690,7 +1690,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ is_nominal("test.noobject") }}
+{{ has_value("test.noobject") }}
         """,
         hass,
     )
@@ -1698,7 +1698,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ is_nominal(states.test.noobject) }}
+{{ has_value(states.test.noobject) }}
         """,
         hass,
     )
@@ -1706,7 +1706,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ is_nominal([states.test.noobject, states.test.noobject2]) }}
+{{ has_value([states.test.noobject, states.test.noobject2]) }}
         """,
         hass,
     )

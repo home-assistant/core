@@ -1471,8 +1471,8 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
-def is_nominal(hass: HomeAssistant, entity_id: str | State | Iterable | None) -> bool:
-    """Test if an entity has a nominal state."""
+def has_value(hass: HomeAssistant, entity_id: str | State | Iterable | None) -> bool:
+    """Test if an entity has a valid value."""
     # Entity is a non-existing object
     if entity_id is None:
         return False
@@ -2330,7 +2330,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "state_attr",
                 "states",
-                "is_nominal",
+                "has_value",
                 "utcnow",
                 "now",
                 "device_attr",
@@ -2347,9 +2347,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_id",
                 "area_id",
                 "area_name",
-                "is_nominal",
+                "has_value",
             ]
-            hass_tests = ["nominal"]
+            hass_tests = ["has_value"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
@@ -2371,9 +2371,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
-        self.globals["is_nominal"] = hassfunction(is_nominal)
-        self.filters["is_nominal"] = pass_context(self.globals["is_nominal"])
-        self.tests["nominal"] = pass_eval_context(self.globals["is_nominal"])
+        self.globals["has_value"] = hassfunction(has_value)
+        self.filters["has_value"] = pass_context(self.globals["has_value"])
+        self.tests["has_value"] = pass_eval_context(self.globals["has_value"])
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
