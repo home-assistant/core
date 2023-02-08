@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -254,7 +255,7 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[2].data["some"] == "current_humidity_changed"
 
 
-async def test_get_trigger_capabilities_hvac_mode(hass):
+async def test_get_trigger_capabilities_hvac_mode(hass: HomeAssistant) -> None:
     """Test we get the expected capabilities from a climate trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
