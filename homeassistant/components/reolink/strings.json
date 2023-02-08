@@ -41,7 +41,7 @@
   "issues": {
     "https_webhook": {
       "title": "Reolink webhook URL uses HTTPS (SSL)",
-      "description": "Reolink products can not push motion events to a HTTPS address (SSL), please configure a (local) HTTP address under settings->system->network->Home Assistant URL"
+      "description": "Reolink products can not push motion events to a HTTPS address (SSL), please configure a (local) HTTP address under `Home Assistant URL` in the [network settings](https://my.home-assistant.io/redirect/network/)"
     }
   }
 }
