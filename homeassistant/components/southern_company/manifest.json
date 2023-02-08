@@ -3,7 +3,7 @@
   "name": "Southern Company",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/southern_company",
-  "requirements": ["southern-company-api==0.2.2"],
+  "requirements": ["southern-company-api==0.2.3"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
