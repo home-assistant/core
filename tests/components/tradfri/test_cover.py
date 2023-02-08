@@ -27,7 +27,7 @@ def blind_response() -> dict[str, Any]:
 
 
 @pytest.fixture
-def blind(blind_response) -> Blind:
+def blind(blind_response: dict[str, Any]) -> Blind:
     """Return blind."""
     device = Device(blind_response)
     blind_control = device.blind_control
