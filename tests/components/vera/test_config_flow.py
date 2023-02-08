@@ -124,7 +124,7 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
         }
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     base_url = "http://127.0.0.1/"
     entry = MockConfigEntry(

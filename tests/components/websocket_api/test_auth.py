@@ -15,11 +15,12 @@ from homeassistant.components.websocket_api.const import (
     SIGNAL_WEBSOCKET_DISCONNECTED,
     URL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -138,7 +139,9 @@ async def test_auth_active_user_inactive(hass, hass_client_no_auth, hass_access_
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_active_with_password_not_allow(hass, hass_client_no_auth):
+async def test_auth_active_with_password_not_allow(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
@@ -174,7 +177,9 @@ async def test_auth_legacy_support_with_password(
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_with_invalid_token(hass, hass_client_no_auth):
+async def test_auth_with_invalid_token(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
