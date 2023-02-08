@@ -1,8 +1,6 @@
 """The Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
-
 from yalexs_ble import AuthError, PushLock, YaleXSBLEError, local_name_is_unique
 
 from homeassistant.components import bluetooth
