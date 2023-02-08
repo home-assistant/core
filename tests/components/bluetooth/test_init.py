@@ -2612,7 +2612,9 @@ async def test_auto_detect_bluetooth_adapters_linux_multiple(hass, two_adapters)
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
 
 
-async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
+async def test_auto_detect_bluetooth_adapters_linux_none_found(
+    hass: HomeAssistant,
+) -> None:
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -2626,7 +2628,7 @@ async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 0
 
 
-async def test_auto_detect_bluetooth_adapters_macos(hass):
+async def test_auto_detect_bluetooth_adapters_macos(hass: HomeAssistant) -> None:
     """Test we auto detect bluetooth adapters on macos."""
     with patch("bluetooth_adapters.systems.platform.system", return_value="Darwin"):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
@@ -2635,7 +2637,7 @@ async def test_auto_detect_bluetooth_adapters_macos(hass):
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
 
 
-async def test_no_auto_detect_bluetooth_adapters_windows(hass):
+async def test_no_auto_detect_bluetooth_adapters_windows(hass: HomeAssistant) -> None:
     """Test we auto detect bluetooth adapters on windows."""
     with patch(
         "bluetooth_adapters.systems.platform.system",

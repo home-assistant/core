@@ -14,12 +14,13 @@ from homeassistant.components.alexa import errors as alexa_errors
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.util.location import LocationInfo
 
 from . import mock_cloud, mock_cloud_prefs
 
 from tests.components.google_assistant import MockConfig
+from tests.typing import WebSocketGenerator
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/payments/subscription_info"
 
@@ -427,7 +428,9 @@ async def test_websocket_status(
     }
 
 
-async def test_websocket_status_not_logged_in(hass, hass_ws_client):
+async def test_websocket_status_not_logged_in(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test querying the status."""
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/status"})
@@ -466,7 +469,9 @@ async def test_websocket_subscription_fail(
     assert response["error"]["code"] == "request_failed"
 
 
-async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
+async def test_websocket_subscription_not_logged_in(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test querying the status."""
     client = await hass_ws_client(hass)
     with patch(
