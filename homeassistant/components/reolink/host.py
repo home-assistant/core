@@ -283,6 +283,7 @@ class ReolinkHost:
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="https_webhook",
+                translation_placeholders={"webhook_address": self._webhook_url},
             )
 
         _LOGGER.debug("Registered webhook: %s", event_id)
