@@ -1983,6 +1983,8 @@ def _sorted_statistics_to_dict(
                 stats_at_start_time[stat.metadata_id] = (stat,)
 
     # Append all statistic entries, and optionally do unit conversion
+    table_duration_seconds = table.duration.total_seconds()
+    timestamp_to_datetime = dt_util.utc_from_timestamp
     for meta_id, group in groupby(
         stats,
         lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
@@ -1997,11 +1999,10 @@ def _sorted_statistics_to_dict(
             convert = no_conversion
         ent_results = result[meta_id]
         for db_state in chain(stats_at_start_time.get(meta_id, ()), group):
-            start = dt_util.utc_from_timestamp(db_state.start_ts)
-            end = start + table.duration
+            start_ts = db_state.start_ts
             row: dict[str, Any] = {
-                "start": start,
-                "end": end,
+                "start": timestamp_to_datetime(start_ts),
+                "end": timestamp_to_datetime(start_ts + table_duration_seconds),
             }
             if "mean" in types:
                 row["mean"] = convert(db_state.mean)
