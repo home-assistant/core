@@ -35,7 +35,7 @@ def update_events(hass):
 
 
 async def test_get(hass: HomeAssistant, entity_registry: er.EntityRegistry):
-    """test we can get an item."""
+    """Test we can get an item."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
 
     assert entity_registry.async_get(entry.entity_id) is entry
