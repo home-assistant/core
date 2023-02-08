@@ -58,6 +58,10 @@ _SENTINEL = object()
 
 DISCOVERY_COUNT = len(MQTT)
 
+_MqttMessageType = list[tuple[str, str]]
+_AttributesType = list[tuple[str, Any]]
+_StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None]]
+
 
 async def help_test_availability_when_connection_lost(
     hass: HomeAssistant,
@@ -735,11 +739,6 @@ async def help_test_discovery_removal(
     assert state is None
 
 
-MqttMessageType = list[tuple[str, str]]
-AttributesType = list[tuple[str, Any]]
-StateDataType = list[tuple[MqttMessageType, str | None, AttributesType | None]]
-
-
 async def help_test_discovery_update(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
@@ -747,8 +746,8 @@ async def help_test_discovery_update(
     domain,
     discovery_config1: DiscoveryInfoType,
     discovery_config2: DiscoveryInfoType,
-    state_data1: StateDataType | None = None,
-    state_data2: StateDataType | None = None,
+    state_data1: _StateDataType | None = None,
+    state_data2: _StateDataType | None = None,
 ) -> None:
     """Test update of discovered component.
 
