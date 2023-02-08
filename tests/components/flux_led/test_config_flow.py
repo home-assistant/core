@@ -372,7 +372,7 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_discovery_and_dhcp(hass):
+async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
     with _patch_discovery(), _patch_wifibulb():
@@ -410,7 +410,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     assert result3["reason"] == "already_in_progress"
 
 
-async def test_discovered_by_discovery(hass):
+async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from discovery."""
 
     with _patch_discovery(), _patch_wifibulb():
@@ -448,7 +448,7 @@ async def test_discovered_by_discovery(hass):
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_udp_responds(hass):
+async def test_discovered_by_dhcp_udp_responds(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from dhcp but with udp response."""
 
     with _patch_discovery(), _patch_wifibulb():
@@ -484,7 +484,7 @@ async def test_discovered_by_dhcp_udp_responds(hass):
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_no_udp_response(hass):
+async def test_discovered_by_dhcp_no_udp_response(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from dhcp but no udp response."""
 
     with _patch_discovery(no_device=True), _patch_wifibulb():
@@ -514,7 +514,9 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
+async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(
+    hass: HomeAssistant,
+) -> None:
     """Test we can setup when discovered from dhcp but part of the udp response is missing."""
 
     with _patch_discovery(no_device=True), _patch_wifibulb():
@@ -545,7 +547,9 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
     assert mock_async_setup_entry.called
 
 
-async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(hass):
+async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(
+    hass: HomeAssistant,
+) -> None:
     """Test we can setup when discovered from dhcp but no udp response or tcp response."""
 
     with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
@@ -584,7 +588,9 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     assert config_entry.unique_id == MAC_ADDRESS
 
 
-async def test_mac_address_off_by_one_updated_via_discovery(hass):
+async def test_mac_address_off_by_one_updated_via_discovery(
+    hass: HomeAssistant,
+) -> None:
     """Test the mac address is updated when its off by one from integration discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
@@ -605,7 +611,9 @@ async def test_mac_address_off_by_one_updated_via_discovery(hass):
     assert config_entry.unique_id == MAC_ADDRESS
 
 
-async def test_mac_address_off_by_one_not_updated_from_dhcp(hass):
+async def test_mac_address_off_by_one_not_updated_from_dhcp(
+    hass: HomeAssistant,
+) -> None:
     """Test the mac address is NOT updated when its off by one from dhcp discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
