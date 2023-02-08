@@ -5,18 +5,22 @@ from collections.abc import Callable
 from datetime import timedelta
 import logging
 
+import aiohttp
+from awattar_api.awattar_api import AwattarApi
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    API,
     AWATTAR_API_URL,
     AWATTAR_COORDINATOR,
     CONF_COUNTRY,
@@ -50,6 +54,16 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+async def ping_awattar(hass: HomeAssistant) -> None:
+    """Make a call to Awattar. If it fails raise an error."""
+
+    try:
+        api: AwattarApi = hass.data[DOMAIN][INIT_STATE][API]
+        await hass.async_add_executor_job(api.get_electricity_price)
+    except (aiohttp.ClientError, RuntimeError) as ex:
+        raise ConfigEntryNotReady(ex) from ex
 
 
 def _setup_coordinator(
@@ -106,6 +120,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.debug("Configuring Awattar API")
     hass.data[DOMAIN][INIT_STATE] = init_state(AWATTAR_API_URL[country])
+
+    # handle platform not ready
+    await ping_awattar(hass)
+
     await _setup_coordinator(
         hass,
         scan_interval,
@@ -182,6 +200,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if DOMAIN in config:
         hass.data[DOMAIN][INIT_STATE] = _setup_api(config)
+
+        # handle platform not ready
+        await ping_awattar(hass)
 
         await _setup_coordinator(
             hass, scan_interval, AWATTAR_COORDINATOR
