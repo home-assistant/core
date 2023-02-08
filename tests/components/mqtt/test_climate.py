@@ -144,7 +144,7 @@ async def test_preset_none_in_preset_modes(hass: HomeAssistant, caplog) -> None:
     ],
 )
 async def test_preset_modes_deprecation_guard(
-    hass: HomeAssistant, caplog, parameter, config_value
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, parameter, config_value
 ) -> None:
     """Test the configuration for invalid legacy parameters."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
@@ -200,7 +200,7 @@ async def test_get_hvac_modes(
 async def test_set_operation_bad_attr_and_state(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting operation mode without required attribute.
 
@@ -327,7 +327,7 @@ async def test_set_operation_with_power_command(
 async def test_set_fan_mode_bad_attr(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting fan mode without required attribute."""
     assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
@@ -417,7 +417,7 @@ async def test_set_fan_mode(
 async def test_set_swing_mode_bad_attr(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting swing mode without required attribute."""
     assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
@@ -838,7 +838,7 @@ async def test_handle_action_received(
 async def test_set_preset_mode_optimistic(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting of the preset mode."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -888,7 +888,7 @@ async def test_set_preset_mode_optimistic(
 async def test_set_preset_mode_explicit_optimistic(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting of the preset mode."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -940,7 +940,7 @@ async def test_set_preset_mode_explicit_optimistic(
 async def test_set_preset_mode_pessimistic(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting of the preset mode."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -1075,7 +1075,7 @@ async def test_custom_availability_payload(
 async def test_get_target_temperature_low_high_with_templates(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test getting temperature high/low with templates."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -1115,7 +1115,7 @@ async def test_get_target_temperature_low_high_with_templates(
 async def test_get_with_templates(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test getting various attributes with templates."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -1236,7 +1236,7 @@ async def test_get_with_templates(
 async def test_set_and_templates(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setting various attributes with templates."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -1467,7 +1467,7 @@ async def test_setting_attribute_with_template(
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
@@ -1482,7 +1482,7 @@ async def test_update_with_json_attrs_not_dict(
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
@@ -1497,7 +1497,7 @@ async def test_update_with_json_attrs_bad_json(
 async def test_discovery_update_attr(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
@@ -1555,7 +1555,7 @@ async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) 
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     topic,
     value,
     attribute,
@@ -1579,7 +1579,7 @@ async def test_encoding_subscribable_topics(
 async def test_discovery_removal_climate(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered climate."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
@@ -1591,7 +1591,7 @@ async def test_discovery_removal_climate(
 async def test_discovery_update_climate(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered climate."""
     config1 = {"name": "Beer"}
@@ -1604,7 +1604,7 @@ async def test_discovery_update_climate(
 async def test_discovery_update_unchanged_climate(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered climate."""
     data1 = '{ "name": "Beer" }'
@@ -1625,7 +1625,7 @@ async def test_discovery_update_unchanged_climate(
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer", "power_command_topic": "test_topic#" }'
@@ -1865,7 +1865,7 @@ async def test_precision_whole(
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     service,
     topic,
     parameters,
@@ -1954,7 +1954,7 @@ async def test_humidity_configuration_validity(
 async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     tmp_path,
 ) -> None:
     """Test reloading the MQTT platform."""

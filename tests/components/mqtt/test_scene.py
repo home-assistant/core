@@ -173,7 +173,7 @@ async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) 
 async def test_discovery_removal_scene(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered scene."""
     data = '{ "name": "test",' '  "command_topic": "test_topic" }'
@@ -185,7 +185,7 @@ async def test_discovery_removal_scene(
 async def test_discovery_update_payload(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered scene."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
@@ -208,7 +208,7 @@ async def test_discovery_update_payload(
 async def test_discovery_update_unchanged_scene(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered scene."""
     data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
@@ -229,7 +229,7 @@ async def test_discovery_update_unchanged_scene(
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -242,7 +242,7 @@ async def test_discovery_broken(
 async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     tmp_path,
 ) -> None:
     """Test reloading the MQTT platform."""

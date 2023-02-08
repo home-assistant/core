@@ -223,7 +223,7 @@ async def test_setting_attribute_with_template(
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
@@ -238,7 +238,7 @@ async def test_update_with_json_attrs_not_dict(
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
@@ -253,7 +253,7 @@ async def test_update_with_json_attrs_bad_json(
 async def test_discovery_update_attr(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
@@ -291,7 +291,7 @@ async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) 
 async def test_discovery_removal_camera(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered camera."""
     data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][camera.DOMAIN])
@@ -303,7 +303,7 @@ async def test_discovery_removal_camera(
 async def test_discovery_update_camera(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered camera."""
     config1 = {"name": "Beer", "topic": "test_topic"}
@@ -317,7 +317,7 @@ async def test_discovery_update_camera(
 async def test_discovery_update_unchanged_camera(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered camera."""
     data1 = '{ "name": "Beer", "topic": "test_topic"}'
@@ -338,7 +338,7 @@ async def test_discovery_update_unchanged_camera(
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -425,7 +425,7 @@ async def test_entity_debug_info_message(
 async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     tmp_path,
 ) -> None:
     """Test reloading the MQTT platform."""

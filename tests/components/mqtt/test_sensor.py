@@ -139,7 +139,7 @@ async def test_setting_sensor_value_via_mqtt_message(
 async def test_setting_sensor_native_value_handling_via_mqtt_message(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     device_class,
     native_value,
     state_value,
@@ -228,7 +228,7 @@ async def test_setting_numeric_sensor_native_value_handling_via_mqtt_message(
 async def test_setting_sensor_value_expires_availability_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the expiration of the value."""
     assert await async_setup_component(
@@ -264,7 +264,7 @@ async def test_setting_sensor_value_expires_availability_topic(
 async def test_setting_sensor_value_expires(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the expiration of the value."""
     assert await async_setup_component(
@@ -411,7 +411,7 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
 async def test_setting_sensor_last_reset_via_mqtt_message(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setting of the last_reset property via MQTT."""
     assert await async_setup_component(
@@ -445,7 +445,7 @@ async def test_setting_sensor_last_reset_via_mqtt_message(
 @pytest.mark.parametrize("datestring", ["2020-21-02 08:11:00", "Hello there!"])
 async def test_setting_sensor_bad_last_reset_via_mqtt_message(
     hass: HomeAssistant,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     datestring,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
@@ -535,7 +535,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(
 async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     extra,
 ) -> None:
     """Test the setting of the value via MQTT with JSON payload."""
@@ -887,7 +887,7 @@ async def test_setting_attribute_with_template(
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
@@ -902,7 +902,7 @@ async def test_update_with_json_attrs_not_dict(
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
@@ -917,7 +917,7 @@ async def test_update_with_json_attrs_bad_json(
 async def test_discovery_update_attr(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
@@ -955,7 +955,7 @@ async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) 
 async def test_discovery_removal_sensor(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered sensor."""
     data = '{ "name": "test", "state_topic": "test_topic" }'
@@ -967,7 +967,7 @@ async def test_discovery_removal_sensor(
 async def test_discovery_update_sensor_topic_template(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered sensor."""
     config = {"name": "test", "state_topic": "test_topic"}
@@ -1004,7 +1004,7 @@ async def test_discovery_update_sensor_topic_template(
 async def test_discovery_update_sensor_template(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered sensor."""
     config = {"name": "test", "state_topic": "test_topic"}
@@ -1039,7 +1039,7 @@ async def test_discovery_update_sensor_template(
 async def test_discovery_update_unchanged_sensor(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered sensor."""
     data1 = '{ "name": "Beer", "state_topic": "test_topic" }'
@@ -1060,7 +1060,7 @@ async def test_discovery_update_unchanged_sensor(
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer", "state_topic": "test_topic#" }'
@@ -1253,7 +1253,7 @@ async def test_value_template_with_entity_id(
 async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     tmp_path,
 ) -> None:
     """Test reloading the MQTT platform."""
@@ -1267,7 +1267,7 @@ async def test_reloadable(
 async def test_cleanup_triggers_and_restoring_state(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     tmp_path,
     freezer,
 ) -> None:
@@ -1367,7 +1367,7 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     topic,
     value,
     attribute,

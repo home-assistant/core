@@ -436,7 +436,7 @@ async def test_controlling_state_via_topic(
 async def test_invalid_state_via_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of empty data via topic."""
     config = {
@@ -2180,7 +2180,7 @@ async def test_setting_attribute_with_template(
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
@@ -2195,7 +2195,7 @@ async def test_update_with_json_attrs_not_dict(
 async def test_update_with_json_attrs_bad_json(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
@@ -2210,7 +2210,7 @@ async def test_update_with_json_attrs_bad_json(
 async def test_discovery_update_attr(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
@@ -2250,7 +2250,7 @@ async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) 
 async def test_discovery_removal_light(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered light."""
     data = (
@@ -2266,7 +2266,7 @@ async def test_discovery_removal_light(
 async def test_discovery_ignores_extra_keys(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test discovery ignores extra keys that are not blocked."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2284,7 +2284,7 @@ async def test_discovery_ignores_extra_keys(
 async def test_discovery_update_light_topic_and_template(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered light."""
     config1 = {
@@ -2541,7 +2541,7 @@ async def test_discovery_update_light_topic_and_template(
 async def test_discovery_update_light_template(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered light."""
     config1 = {
@@ -2756,7 +2756,7 @@ async def test_discovery_update_light_template(
 async def test_discovery_update_unchanged_light(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered light."""
     data1 = (
@@ -2781,7 +2781,7 @@ async def test_discovery_update_unchanged_light(
 async def test_discovery_broken(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -2973,7 +2973,7 @@ async def test_max_mireds(
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     service,
     topic,
     parameters,
@@ -3009,7 +3009,7 @@ async def test_publishing_with_custom_encoding(
 async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     tmp_path,
 ) -> None:
     """Test reloading the MQTT platform."""
@@ -3053,7 +3053,7 @@ async def test_reloadable(
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     topic,
     value,
     attribute,
@@ -3096,7 +3096,7 @@ async def test_encoding_subscribable_topics(
 async def test_encoding_subscribable_topics_brightness(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     topic,
     value,
     attribute,
