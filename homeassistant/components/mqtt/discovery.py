@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.json import json_loads_object
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
@@ -126,7 +126,7 @@ async def async_start(  # noqa: C901
 
         if payload:
             try:
-                discovery_payload = MQTTDiscoveryPayload(json_loads(payload))
+                discovery_payload = MQTTDiscoveryPayload(json_loads_object(payload))
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return

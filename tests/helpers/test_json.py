@@ -6,13 +6,14 @@ from typing import NamedTuple
 
 import pytest
 
-from homeassistant import core
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder,
     json_bytes_strip_null,
     json_dumps,
     json_dumps_sorted,
+    json_loads_object,
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
@@ -22,7 +23,7 @@ from homeassistant.util.color import RGBColor
 def test_json_encoder(hass, encoder):
     """Test the JSON encoders."""
     ha_json_enc = encoder()
-    state = core.State("test.test", "hello")
+    state = State("test.test", "hello")
 
     # Test serializing a datetime
     now = dt_util.utcnow()
@@ -36,7 +37,7 @@ def test_json_encoder(hass, encoder):
     assert ha_json_enc.default(state) == state.as_dict()
 
 
-def test_json_encoder_raises(hass):
+def test_json_encoder_raises(hass: HomeAssistant) -> None:
     """Test the JSON encoder raises on unsupported types."""
     ha_json_enc = JSONEncoder()
 
@@ -45,7 +46,7 @@ def test_json_encoder_raises(hass):
         ha_json_enc.default(1)
 
 
-def test_extended_json_encoder(hass):
+def test_extended_json_encoder(hass: HomeAssistant) -> None:
     """Test the extended JSON encoder."""
     ha_json_enc = ExtendedJSONEncoder()
     # Test serializing a timedelta
@@ -135,3 +136,20 @@ def test_json_bytes_strip_null() -> None:
         json_bytes_strip_null([[{"k1": {"k2": ["silly\0stuff"]}}]])
         == b'[[{"k1":{"k2":["silly"]}}]]'
     )
+
+
+def test_json_loads_object():
+    """Test json_loads_object validates result."""
+    assert json_loads_object('{"c":1.2}') == {"c": 1.2}
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'list'>"
+    ):
+        json_loads_object("[]")
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'bool'>"
+    ):
+        json_loads_object("true")
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'NoneType'>"
+    ):
+        json_loads_object("null")

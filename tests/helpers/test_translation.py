@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
@@ -75,7 +76,7 @@ async def test_component_translation_path(hass, enable_custom_integrations):
     )
 
 
-def test_load_translations_files(hass):
+def test_load_translations_files(hass: HomeAssistant) -> None:
     """Test the load translation files function."""
     # Test one valid and one invalid file
     file1 = hass.config.path(
