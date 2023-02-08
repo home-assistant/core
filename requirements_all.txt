@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.4.6
+aiohomekit==2.5.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1302,7 +1302,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.17.4
+oralb-ble==0.17.5
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -1705,7 +1705,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.11
+pyisy==3.1.13
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2297,7 +2297,7 @@ satel_integra==0.3.7
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.7.0
+screenlogicpy==0.7.1
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -2392,7 +2392,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.45
+sqlalchemy==2.0.2
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6

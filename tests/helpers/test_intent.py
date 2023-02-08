@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry,
     config_validation as cv,
@@ -23,7 +23,7 @@ class MockIntentHandler(intent.IntentHandler):
         self.slot_schema = slot_schema
 
 
-async def test_async_match_states(hass):
+async def test_async_match_states(hass: HomeAssistant) -> None:
     """Test async_match_state helper."""
     areas = area_registry.async_get(hass)
     area_kitchen = areas.async_get_or_create("kitchen")
@@ -101,7 +101,7 @@ async def test_async_match_states(hass):
     ) == [state2]
 
 
-async def test_match_device_area(hass):
+async def test_match_device_area(hass: HomeAssistant) -> None:
     """Test async_match_state with a device in an area."""
     areas = area_registry.async_get(hass)
     area_kitchen = areas.async_get_or_create("kitchen")

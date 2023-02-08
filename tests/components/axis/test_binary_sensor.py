@@ -1,17 +1,17 @@
 """Axis binary sensor platform tests."""
-
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import NAME
 
 
-async def test_platform_manually_configured(hass):
+async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     """Test that nothing happens when platform is manually configured."""
     assert (
         await async_setup_component(

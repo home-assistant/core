@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 import contextlib
 import dataclasses
 from datetime import datetime, timedelta
@@ -13,7 +13,7 @@ import logging
 import os
 import re
 from statistics import mean
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from sqlalchemy import bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine import Engine
@@ -84,7 +84,7 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
-QUERY_STATISTICS = [
+QUERY_STATISTICS = (
     Statistics.metadata_id,
     Statistics.start_ts,
     Statistics.mean,
@@ -93,9 +93,9 @@ QUERY_STATISTICS = [
     Statistics.last_reset_ts,
     Statistics.state,
     Statistics.sum,
-]
+)
 
-QUERY_STATISTICS_SHORT_TERM = [
+QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.metadata_id,
     StatisticsShortTerm.start_ts,
     StatisticsShortTerm.mean,
@@ -104,30 +104,34 @@ QUERY_STATISTICS_SHORT_TERM = [
     StatisticsShortTerm.last_reset_ts,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
-]
+)
 
-QUERY_STATISTICS_SUMMARY_MEAN = [
+QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     func.min(StatisticsShortTerm.min),
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     func.max(StatisticsShortTerm.max),
-]
+)
 
-QUERY_STATISTICS_SUMMARY_SUM = [
+QUERY_STATISTICS_SUMMARY_SUM = (
     StatisticsShortTerm.metadata_id,
     StatisticsShortTerm.start_ts,
     StatisticsShortTerm.last_reset_ts,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
     func.row_number()
-    .over(
+    .over(  # type: ignore[no-untyped-call]
         partition_by=StatisticsShortTerm.metadata_id,
         order_by=StatisticsShortTerm.start_ts.desc(),
     )
     .label("rownum"),
-]
+)
 
-QUERY_STATISTIC_META = [
+QUERY_STATISTIC_META = (
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
     StatisticsMeta.source,
@@ -135,7 +139,7 @@ QUERY_STATISTIC_META = [
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
     StatisticsMeta.name,
-]
+)
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
@@ -379,7 +383,7 @@ def _update_or_add_metadata(
             statistic_id,
             new_metadata,
         )
-        return meta.id  # type: ignore[no-any-return]
+        return meta.id
 
     metadata_id, old_metadata = old_metadata_dict[statistic_id]
     if (
@@ -408,7 +412,7 @@ def _update_or_add_metadata(
 
 
 def _find_duplicates(
-    session: Session, table: type[Statistics | StatisticsShortTerm]
+    session: Session, table: type[StatisticsBase]
 ) -> tuple[list[int], list[dict]]:
     """Find duplicated statistics."""
     subquery = (
@@ -418,6 +422,8 @@ def _find_duplicates(
             literal_column("1").label("is_duplicate"),
         )
         .group_by(table.metadata_id, table.start)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )
@@ -453,7 +459,7 @@ def _find_duplicates(
     if not duplicates:
         return (duplicate_ids, non_identical_duplicates_as_dict)
 
-    def columns_to_dict(duplicate: type[Statistics | StatisticsShortTerm]) -> dict:
+    def columns_to_dict(duplicate: Row) -> dict:
         """Convert a SQLAlchemy row to dict."""
         dict_ = {}
         for key in (
@@ -495,7 +501,7 @@ def _find_duplicates(
 
 
 def _delete_duplicates_from_table(
-    session: Session, table: type[Statistics | StatisticsShortTerm]
+    session: Session, table: type[StatisticsBase]
 ) -> tuple[int, list[dict]]:
     """Identify and delete duplicated statistics from a specified table."""
     all_non_identical_duplicates: list[dict] = []
@@ -571,6 +577,8 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
             literal_column("1").label("is_duplicate"),
         )
         .group_by(StatisticsMeta.statistic_id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )
@@ -703,8 +711,8 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
                 }
 
     # Insert compiled hourly statistics in the database
-    for metadata_id, stat in summary.items():
-        session.add(Statistics.from_stats(metadata_id, stat))
+    for metadata_id, summary_item in summary.items():
+        session.add(Statistics.from_stats(metadata_id, summary_item))
 
 
 @retryable_database_job("statistics")
@@ -774,7 +782,7 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
 
 def _adjust_sum_statistics(
     session: Session,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     metadata_id: int,
     start_time: datetime,
     adj: float,
@@ -799,7 +807,7 @@ def _adjust_sum_statistics(
 
 def _insert_statistics(
     session: Session,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     metadata_id: int,
     statistic: StatisticData,
 ) -> None:
@@ -816,7 +824,7 @@ def _insert_statistics(
 
 def _update_statistics(
     session: Session,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     stat_id: int,
     statistic: StatisticData,
 ) -> None:
@@ -850,8 +858,11 @@ def _generate_get_metadata_stmt(
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
     stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
-    if statistic_ids is not None:
-        stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
+    if statistic_ids:
+        stmt += lambda q: q.where(
+            # https://github.com/python/mypy/issues/2608
+            StatisticsMeta.statistic_id.in_(statistic_ids)  # type:ignore[arg-type]
+        )
     if statistic_source is not None:
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
@@ -883,15 +894,15 @@ def get_metadata_with_session(
         return {}
 
     return {
-        meta["statistic_id"]: (
-            meta["id"],
+        meta.statistic_id: (
+            meta.id,
             {
-                "has_mean": meta["has_mean"],
-                "has_sum": meta["has_sum"],
-                "name": meta["name"],
-                "source": meta["source"],
-                "statistic_id": meta["statistic_id"],
-                "unit_of_measurement": meta["unit_of_measurement"],
+                "has_mean": meta.has_mean,
+                "has_sum": meta.has_sum,
+                "name": meta.name,
+                "source": meta.source,
+                "statistic_id": meta.statistic_id,
+                "unit_of_measurement": meta.unit_of_measurement,
             },
         )
         for meta in result
@@ -1166,7 +1177,7 @@ def _statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Prepare a database query for statistics during a given period.
@@ -1174,26 +1185,30 @@ def _statistics_during_period_stmt(
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
     start_time_ts = start_time.timestamp()
-    columns = [table.metadata_id, table.start_ts]
-    if "last_reset" in types:
-        columns.append(table.last_reset_ts)
-    if "max" in types:
-        columns.append(table.max)
-    if "mean" in types:
-        columns.append(table.mean)
-    if "min" in types:
-        columns.append(table.min)
-    if "state" in types:
-        columns.append(table.state)
-    if "sum" in types:
-        columns.append(table.sum)
 
-    stmt = lambda_stmt(lambda: select(columns).filter(table.start_ts >= start_time_ts))
+    columns = select(table.metadata_id, table.start_ts)
+    if "last_reset" in types:
+        columns = columns.add_columns(table.last_reset_ts)
+    if "max" in types:
+        columns = columns.add_columns(table.max)
+    if "mean" in types:
+        columns = columns.add_columns(table.mean)
+    if "min" in types:
+        columns = columns.add_columns(table.min)
+    if "state" in types:
+        columns = columns.add_columns(table.state)
+    if "sum" in types:
+        columns = columns.add_columns(table.sum)
+
+    stmt = lambda_stmt(lambda: columns.filter(table.start_ts >= start_time_ts))
     if end_time is not None:
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     if metadata_ids:
-        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
+        stmt += lambda q: q.filter(
+            # https://github.com/python/mypy/issues/2608
+            table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
+        )
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
     return stmt
 
@@ -1203,36 +1218,45 @@ def _get_max_mean_min_statistic_in_sub_period(
     result: dict[str, float],
     start_time: datetime | None,
     end_time: datetime | None,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     types: set[Literal["max", "mean", "min", "change"]],
     metadata_id: int,
 ) -> None:
     """Return max, mean and min during the period."""
     # Calculate max, mean, min
-    columns = []
+    columns = select()
     if "max" in types:
-        columns.append(func.max(table.max))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
+        columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
-        columns.append(func.avg(table.mean))
-        columns.append(func.count(table.mean))
+        columns = columns.add_columns(func.avg(table.mean))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
+        columns = columns.add_columns(func.count(table.mean))
     if "min" in types:
-        columns.append(func.min(table.min))
-    stmt = lambda_stmt(lambda: select(columns).filter(table.metadata_id == metadata_id))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
+        columns = columns.add_columns(func.min(table.min))
+    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
     if start_time is not None:
         start_time_ts = start_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
     if end_time is not None:
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts < end_time_ts)
-    stats = execute_stmt_lambda_element(session, stmt)
-    if "max" in types and stats and (new_max := stats[0].max) is not None:
+    stats = cast(Sequence[Row[Any]], execute_stmt_lambda_element(session, stmt))
+    if not stats:
+        return
+    if "max" in types and (new_max := stats[0].max) is not None:
         old_max = result.get("max")
         result["max"] = max(new_max, old_max) if old_max is not None else new_max
-    if "mean" in types and stats and stats[0].avg is not None:
-        duration = stats[0].count * table.duration.total_seconds()
+    if "mean" in types and stats[0].avg is not None:
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9127
+        duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
         result["duration"] = result.get("duration", 0.0) + duration
         result["mean_acc"] = result.get("mean_acc", 0.0) + stats[0].avg * duration
-    if "min" in types and stats and (new_min := stats[0].min) is not None:
+    if "min" in types and (new_min := stats[0].min) is not None:
         old_min = result.get("min")
         result["min"] = min(new_min, old_min) if old_min is not None else new_min
 
@@ -1305,7 +1329,7 @@ def _get_max_mean_min_statistic(
 
 def _first_statistic(
     session: Session,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     metadata_id: int,
 ) -> datetime | None:
     """Return the data of the oldest statistic row for a given metadata id."""
@@ -1315,7 +1339,7 @@ def _first_statistic(
         .order_by(table.start_ts.asc())
         .limit(1)
     )
-    if stats := execute_stmt_lambda_element(session, stmt):
+    if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
         return dt_util.utc_from_timestamp(stats[0].start_ts)
     return None
 
@@ -1334,7 +1358,7 @@ def _get_oldest_sum_statistic(
     def _get_oldest_sum_statistic_in_sub_period(
         session: Session,
         start_time: datetime | None,
-        table: type[Statistics | StatisticsShortTerm],
+        table: type[StatisticsBase],
         metadata_id: int,
     ) -> float | None:
         """Return the oldest non-NULL sum during the period."""
@@ -1355,7 +1379,7 @@ def _get_oldest_sum_statistic(
             prev_period = period - table.duration
             prev_period_ts = prev_period.timestamp()
             stmt += lambda q: q.filter(table.start_ts >= prev_period_ts)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
         return stats[0].sum if stats else None
 
     oldest_sum: float | None = None
@@ -1418,7 +1442,7 @@ def _get_newest_sum_statistic(
         session: Session,
         start_time: datetime | None,
         end_time: datetime | None,
-        table: type[Statistics | StatisticsShortTerm],
+        table: type[StatisticsBase],
         metadata_id: int,
     ) -> float | None:
         """Return the newest non-NULL sum during the period."""
@@ -1437,7 +1461,7 @@ def _get_newest_sum_statistic(
         if end_time is not None:
             end_time_ts = end_time.timestamp()
             stmt += lambda q: q.filter(table.start_ts < end_time_ts)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
         return stats[0].sum if stats else None
 
@@ -1740,7 +1764,7 @@ def _get_last_statistics(
     number_of_stats: int,
     statistic_id: str,
     convert_units: bool,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
@@ -1806,6 +1830,8 @@ def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
     return (
         select(
             StatisticsShortTerm.metadata_id,
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+            # pylint: disable-next=not-callable
             func.max(StatisticsShortTerm.start_ts).label("start_max"),
         )
         .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
@@ -1871,29 +1897,31 @@ def get_latest_short_term_statistics(
 def _statistics_at_time(
     session: Session,
     metadata_ids: set[int],
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     start_time: datetime,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-) -> list | None:
+) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
-    columns = [table.metadata_id, table.start_ts]
+    columns = select(table.metadata_id, table.start_ts)
     if "last_reset" in types:
-        columns.append(table.last_reset_ts)
+        columns = columns.add_columns(table.last_reset_ts)
     if "max" in types:
-        columns.append(table.max)
+        columns = columns.add_columns(table.max)
     if "mean" in types:
-        columns.append(table.mean)
+        columns = columns.add_columns(table.mean)
     if "min" in types:
-        columns.append(table.min)
+        columns = columns.add_columns(table.min)
     if "state" in types:
-        columns.append(table.state)
+        columns = columns.add_columns(table.state)
     if "sum" in types:
-        columns.append(table.sum)
+        columns = columns.add_columns(table.sum)
 
-    stmt = lambda_stmt(lambda: select(columns))
     start_time_ts = start_time.timestamp()
+    stmt = lambda_stmt(lambda: columns)
 
     most_recent_statistic_ids = (
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         lambda_stmt(lambda: select(func.max(table.id).label("max_id")))
         .filter(table.start_ts < start_time_ts)
         .filter(table.metadata_id.in_(metadata_ids))
@@ -1905,7 +1933,7 @@ def _statistics_at_time(
         most_recent_statistic_ids,
         table.id == most_recent_statistic_ids.c.max_id,
     )
-    return execute_stmt_lambda_element(session, stmt)
+    return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
 def _sorted_statistics_to_dict(
@@ -1915,7 +1943,7 @@ def _sorted_statistics_to_dict(
     statistic_ids: list[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     start_time: datetime | None,
     units: dict[str, str] | None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
@@ -2008,7 +2036,7 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
 
 def _statistics_exists(
     session: Session,
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
     metadata_id: int,
     start: datetime,
 ) -> int | None:
@@ -2019,7 +2047,7 @@ def _statistics_exists(
         .filter((table.metadata_id == metadata_id) & (table.start_ts == start_ts))
         .first()
     )
-    return result["id"] if result else None
+    return result.id if result else None
 
 
 @callback
@@ -2111,11 +2139,16 @@ def _filter_unique_constraint_integrity_error(
             ignore = True
         if (
             dialect_name == SupportedDialect.POSTGRESQL
+            and err.orig
             and hasattr(err.orig, "pgcode")
             and err.orig.pgcode == "23505"
         ):
             ignore = True
-        if dialect_name == SupportedDialect.MYSQL and hasattr(err.orig, "args"):
+        if (
+            dialect_name == SupportedDialect.MYSQL
+            and err.orig
+            and hasattr(err.orig, "args")
+        ):
             with contextlib.suppress(TypeError):
                 if err.orig.args[0] == 1062:
                     ignore = True
@@ -2139,7 +2172,7 @@ def _import_statistics_with_session(
     session: Session,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
 ) -> bool:
     """Import statistics to the database."""
     old_metadata_dict = get_metadata_with_session(
@@ -2160,7 +2193,7 @@ def import_statistics(
     instance: Recorder,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
-    table: type[Statistics | StatisticsShortTerm],
+    table: type[StatisticsBase],
 ) -> bool:
     """Process an import_statistics job."""
 
@@ -2218,7 +2251,7 @@ def _change_statistics_unit_for_table(
     convert: Callable[[float | None], float | None],
 ) -> None:
     """Insert statistics in the database."""
-    columns = [table.id, table.mean, table.min, table.max, table.state, table.sum]
+    columns = (table.id, table.mean, table.min, table.max, table.state, table.sum)
     query = session.query(*columns).filter_by(metadata_id=bindparam("metadata_id"))
     rows = execute(query.params(metadata_id=metadata_id))
     for row in rows:
@@ -2259,7 +2292,11 @@ def change_statistics_unit(
         metadata_id = metadata[0]
 
         convert = _get_unit_converter(old_unit, new_unit)
-        for table in (StatisticsShortTerm, Statistics):
+        tables: tuple[type[StatisticsBase], ...] = (
+            Statistics,
+            StatisticsShortTerm,
+        )
+        for table in tables:
             _change_statistics_unit_for_table(session, table, metadata_id, convert)
         session.query(StatisticsMeta).filter(
             StatisticsMeta.statistic_id == statistic_id
