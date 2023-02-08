@@ -926,7 +926,7 @@ def test_execute_stmt_lambda_element(hass_recorder):
 
 
 @freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
-async def test_resolve_period(hass):
+async def test_resolve_period(hass: HomeAssistant) -> None:
     """Test statistic_during_period."""
 
     now = dt_util.utcnow()
