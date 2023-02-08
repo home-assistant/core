@@ -534,7 +534,17 @@ def mock_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, entity_registry.RegistryEntry] | None = None,
 ) -> entity_registry.EntityRegistry:
-    """Mock the Entity Registry."""
+    """Mock the Entity Registry.
+
+    This should only be used if you need to mock/re-stage a clean mocked
+    entity registry in your current hass object. It can be useful to,
+    for example, pre-load the registry with items.
+
+    This mock will thus replace the existing registry in the running hass.
+
+    If you just need to access the existing registry, use the `entity_registry`
+    fixture instead.
+    """
     registry = entity_registry.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
@@ -549,7 +559,17 @@ def mock_registry(
 def mock_area_registry(
     hass: HomeAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
 ) -> area_registry.AreaRegistry:
-    """Mock the Area Registry."""
+    """Mock the Area Registry.
+
+    This should only be used if you need to mock/re-stage a clean mocked
+    area registry in your current hass object. It can be useful to,
+    for example, pre-load the registry with items.
+
+    This mock will thus replace the existing registry in the running hass.
+
+    If you just need to access the existing registry, use the `area_registry`
+    fixture instead.
+    """
     registry = area_registry.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
 
@@ -561,7 +581,17 @@ def mock_device_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, device_registry.DeviceEntry] | None = None,
 ) -> device_registry.DeviceRegistry:
-    """Mock the Device Registry."""
+    """Mock the Device Registry.
+
+    This should only be used if you need to mock/re-stage a clean mocked
+    device registry in your current hass object. It can be useful to,
+    for example, pre-load the registry with items.
+
+    This mock will thus replace the existing registry in the running hass.
+
+    If you just need to access the existing registry, use the `device_registry`
+    fixture instead.
+    """
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = device_registry.DeviceRegistryItems()
     if mock_entries is None:

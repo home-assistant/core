@@ -91,7 +91,16 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 ]
 
 _TEST_FIXTURES: dict[str, list[str] | str] = {
+    "aioclient_mock": "AiohttpClientMocker",
+    "aiohttp_client": "ClientSessionGenerator",
+    "area_registry": "AreaRegistry",
     "caplog": "pytest.LogCaptureFixture",
+    "device_registry": "DeviceRegistry",
+    "entity_registry": "EntityRegistry",
+    "hass_client": "ClientSessionGenerator",
+    "hass_client_no_auth": "ClientSessionGenerator",
+    "hass_ws_client": "WebSocketGenerator",
+    "issue_registry": "IssueRegistry",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",

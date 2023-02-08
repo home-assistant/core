@@ -5,6 +5,7 @@ import aprslib
 import pytest
 
 import homeassistant.components.aprs.device_tracker as device_tracker
+from homeassistant.core import HomeAssistant
 
 DEFAULT_PORT = 14580
 
@@ -297,7 +298,7 @@ def test_aprs_listener_rx_msg_no_position() -> None:
         see.assert_not_called()
 
 
-async def test_setup_scanner(hass):
+async def test_setup_scanner(hass: HomeAssistant) -> None:
     """Test setup_scanner."""
     with patch(
         "homeassistant.components.aprs.device_tracker.AprsListenerThread"
@@ -321,7 +322,7 @@ async def test_setup_scanner(hass):
         )
 
 
-async def test_setup_scanner_timeout(hass):
+async def test_setup_scanner_timeout(hass: HomeAssistant) -> None:
     """Test setup_scanner failure from timeout."""
     with patch("aprslib.IS.connect", side_effect=TimeoutError):
         config = {

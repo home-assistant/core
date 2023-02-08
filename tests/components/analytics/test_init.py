@@ -2,12 +2,13 @@
 from unittest.mock import patch
 
 from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 MOCK_VERSION = "1970.1.0"
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup of the integration."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

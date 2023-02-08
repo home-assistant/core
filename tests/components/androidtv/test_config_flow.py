@@ -34,6 +34,7 @@ from homeassistant.components.androidtv.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
 
@@ -116,7 +117,7 @@ async def test_user(hass, config, eth_mac, wifi_mac):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_adbkey(hass):
+async def test_user_adbkey(hass: HomeAssistant) -> None:
     """Test user step with adbkey file."""
     config_data = CONFIG_PYTHON_ADB.copy()
     config_data[CONF_ADBKEY] = ADBKEY
@@ -139,7 +140,7 @@ async def test_user_adbkey(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_error_both_key_server(hass):
+async def test_error_both_key_server(hass: HomeAssistant) -> None:
     """Test we abort if both adb key and server are provided."""
     config_data = CONFIG_ADB_SERVER.copy()
 
@@ -167,7 +168,7 @@ async def test_error_both_key_server(hass):
         assert result2["data"] == CONFIG_ADB_SERVER
 
 
-async def test_error_invalid_key(hass):
+async def test_error_invalid_key(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
     config_data = CONFIG_PYTHON_ADB.copy()
     config_data[CONF_ADBKEY] = ADBKEY
@@ -221,7 +222,7 @@ async def test_invalid_mac(hass, config, eth_mac, wifi_mac):
         assert result["reason"] == "invalid_unique_id"
 
 
-async def test_abort_if_host_exist(hass):
+async def test_abort_if_host_exist(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
     MockConfigEntry(
         domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
@@ -239,7 +240,7 @@ async def test_abort_if_host_exist(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_if_unique_exist(hass):
+async def test_abort_if_unique_exist(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
     config_data = CONFIG_ADB_SERVER.copy()
     config_data[CONF_HOST] = "127.0.0.2"
@@ -262,7 +263,7 @@ async def test_abort_if_unique_exist(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_on_connect_failed(hass):
+async def test_on_connect_failed(hass: HomeAssistant) -> None:
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -300,7 +301,7 @@ async def test_on_connect_failed(hass):
         assert result3["data"] == CONFIG_ADB_SERVER
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

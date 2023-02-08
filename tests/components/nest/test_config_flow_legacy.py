@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nest import DOMAIN, config_flow
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_CONFIG_LEGACY
@@ -13,7 +14,7 @@ from tests.common import MockConfigEntry
 CONFIG = TEST_CONFIG_LEGACY.config
 
 
-async def test_abort_if_single_instance_allowed(hass):
+async def test_abort_if_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test we abort if Nest is already setup."""
     existing_entry = MockConfigEntry(domain=DOMAIN, data={})
     existing_entry.add_to_hass(hass)
@@ -28,7 +29,7 @@ async def test_abort_if_single_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_full_flow_implementation(hass):
+async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an implementation and finishing flow works."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
@@ -75,7 +76,7 @@ async def test_full_flow_implementation(hass):
         assert result["title"] == "Nest (via configuration.yaml)"
 
 
-async def test_not_pick_implementation_if_only_one(hass):
+async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
     """Test we pick the default implementation when registered."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
@@ -87,7 +88,7 @@ async def test_not_pick_implementation_if_only_one(hass):
     assert result["step_id"] == "link"
 
 
-async def test_abort_if_timeout_generating_auth_url(hass):
+async def test_abort_if_timeout_generating_auth_url(hass: HomeAssistant) -> None:
     """Test we abort if generating authorize url fails."""
     with patch(
         "homeassistant.components.nest.legacy.local_auth.generate_auth_url",
@@ -103,7 +104,7 @@ async def test_abort_if_timeout_generating_auth_url(hass):
         assert result["reason"] == "authorize_url_timeout"
 
 
-async def test_abort_if_exception_generating_auth_url(hass):
+async def test_abort_if_exception_generating_auth_url(hass: HomeAssistant) -> None:
     """Test we abort if generating authorize url blows up."""
     with patch(
         "homeassistant.components.nest.legacy.local_auth.generate_auth_url",
@@ -119,7 +120,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
     assert result["reason"] == "unknown_authorize_url_generation"
 
 
-async def test_verify_code_timeout(hass):
+async def test_verify_code_timeout(hass: HomeAssistant) -> None:
     """Test verify code timing out."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
@@ -142,7 +143,7 @@ async def test_verify_code_timeout(hass):
         assert result["errors"] == {"code": "timeout"}
 
 
-async def test_verify_code_invalid(hass):
+async def test_verify_code_invalid(hass: HomeAssistant) -> None:
     """Test verify code invalid."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
@@ -165,7 +166,7 @@ async def test_verify_code_invalid(hass):
         assert result["errors"] == {"code": "invalid_pin"}
 
 
-async def test_verify_code_unknown_error(hass):
+async def test_verify_code_unknown_error(hass: HomeAssistant) -> None:
     """Test verify code unknown error."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
@@ -188,7 +189,7 @@ async def test_verify_code_unknown_error(hass):
         assert result["errors"] == {"code": "unknown"}
 
 
-async def test_verify_code_exception(hass):
+async def test_verify_code_exception(hass: HomeAssistant) -> None:
     """Test verify code blows up."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
@@ -211,7 +212,7 @@ async def test_verify_code_exception(hass):
         assert result["errors"] == {"code": "internal_error"}
 
 
-async def test_step_import(hass):
+async def test_step_import(hass: HomeAssistant) -> None:
     """Test that we trigger import when configuring with client."""
     with patch("os.path.isfile", return_value=False):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
@@ -224,7 +225,7 @@ async def test_step_import(hass):
     assert result["step_id"] == "link"
 
 
-async def test_step_import_with_token_cache(hass):
+async def test_step_import_with_token_cache(hass: HomeAssistant) -> None:
     """Test that we import existing token cache."""
     with patch("os.path.isfile", return_value=True), patch(
         "homeassistant.components.nest.config_flow.load_json",

@@ -1,8 +1,8 @@
 """Tests for fan platforms."""
-
 import pytest
 
 from homeassistant.components.fan import FanEntity
+from homeassistant.core import HomeAssistant
 
 
 class BaseFan(FanEntity):
@@ -36,7 +36,7 @@ def test_fanentity() -> None:
         fan.turn_off()
 
 
-async def test_async_fanentity(hass):
+async def test_async_fanentity(hass: HomeAssistant) -> None:
     """Test async fan entity methods."""
     fan = BaseFan()
     fan.hass = hass

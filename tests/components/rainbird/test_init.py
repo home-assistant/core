@@ -109,6 +109,7 @@ async def test_rain_delay_service(
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
     config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test calling the rain delay service."""
 
@@ -131,7 +132,6 @@ async def test_rain_delay_service(
 
     assert len(aioclient_mock.mock_calls) == 1
 
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         domain=DOMAIN, issue_id="deprecated_raindelay"
     )

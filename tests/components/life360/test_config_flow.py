@@ -1,5 +1,4 @@
 """Test the Life360 config flow."""
-
 from unittest.mock import patch
 
 from life360 import Life360Error, LoginError
@@ -16,6 +15,7 @@ from homeassistant.components.life360.const import (
     SHOW_DRIVING,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -287,7 +287,7 @@ async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
 # ========== Option flow Tests =========================================================
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test an options flow."""
     config_entry = create_config_entry(hass)
 

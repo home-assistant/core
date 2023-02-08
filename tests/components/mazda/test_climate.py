@@ -1,5 +1,4 @@
 """The climate tests for the Mazda Connected Services integration."""
-
 import json
 from unittest.mock import patch
 
@@ -39,6 +38,7 @@ from homeassistant.const import (
     CONF_REGION,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -47,7 +47,7 @@ from . import init_integration
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_climate_setup(hass):
+async def test_climate_setup(hass: HomeAssistant) -> None:
     """Test the setup of the climate entity."""
     await init_integration(hass, electric_vehicle=True)
 
@@ -283,7 +283,7 @@ async def test_set_hvac_mode(hass, hvac_mode, api_method):
     getattr(client_mock, api_method).assert_called_once_with(12345)
 
 
-async def test_set_target_temperature(hass):
+async def test_set_target_temperature(hass: HomeAssistant) -> None:
     """Test setting the target temperature of the climate entity."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 

@@ -52,6 +52,15 @@ async def test_add_dataset_reordered(hass: HomeAssistant) -> None:
     assert list(store.datasets.values())[0].created == created
 
 
+async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
+    """Test get the preferred dataset."""
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+
+    assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_1
+
+
 async def test_dataset_properties(hass: HomeAssistant) -> None:
     """Test dataset entry properties."""
     datasets = [

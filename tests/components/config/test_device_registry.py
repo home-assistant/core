@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.config import device_registry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as helpers_dr
 from homeassistant.setup import async_setup_component
 
@@ -12,6 +13,7 @@ from tests.common import (
     mock_integration,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -166,7 +168,9 @@ async def test_update_device(hass, client, registry, payload_key, payload_value)
     assert isinstance(device.disabled_by, (helpers_dr.DeviceEntryDisabler, type(None)))
 
 
-async def test_remove_config_entry_from_device(hass, hass_ws_client):
+async def test_remove_config_entry_from_device(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test removing config entry from device."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -271,7 +275,9 @@ async def test_remove_config_entry_from_device(hass, hass_ws_client):
     assert not device_registry.async_get(device_entry.id)
 
 
-async def test_remove_config_entry_from_device_fails(hass, hass_ws_client):
+async def test_remove_config_entry_from_device_fails(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test removing config entry from device failing cases."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
