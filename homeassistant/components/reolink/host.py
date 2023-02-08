@@ -279,7 +279,6 @@ class ReolinkHost:
                 self._hass,
                 DOMAIN,
                 "https_webhook",
-                breaks_in_ha_version="2023.2.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="https_webhook",
