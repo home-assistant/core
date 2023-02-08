@@ -7,6 +7,7 @@ from requests.exceptions import HTTPError, Timeout
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture(name="mock_setup")
@@ -19,7 +20,7 @@ def mock_setups():
         yield
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
