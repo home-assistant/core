@@ -1,6 +1,7 @@
 """The tests for the State vacuum Mqtt platform."""
 from copy import deepcopy
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -715,7 +716,7 @@ async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN

@@ -1,5 +1,6 @@
 """The tests for mqtt number component."""
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -962,7 +963,7 @@ async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = number.DOMAIN
@@ -1012,7 +1013,7 @@ async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
 async def test_unload_entry(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test unloading the config entry."""
     domain = number.DOMAIN

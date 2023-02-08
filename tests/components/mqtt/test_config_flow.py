@@ -1,4 +1,5 @@
 """Test config flow."""
+from pathlib import Path
 from random import getrandbits
 from ssl import SSLError
 from unittest.mock import AsyncMock, patch
@@ -567,7 +568,7 @@ async def test_bad_certificate(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     mock_try_connection_success,
-    tmp_path,
+    tmp_path: Path,
     mock_ssl_context,
     test_error,
     mock_process_uploaded_file,
@@ -1156,7 +1157,7 @@ async def test_options_bad_will_message_fails(
 async def test_try_connection_with_advanced_parameters(
     hass: HomeAssistant,
     mock_try_connection_success,
-    tmp_path,
+    tmp_path: Path,
     mock_ssl_context,
     mock_process_uploaded_file,
 ) -> HomeAssistant:
@@ -1297,7 +1298,7 @@ async def test_try_connection_with_advanced_parameters(
 async def test_setup_with_advanced_settings(
     hass: HomeAssistant,
     mock_try_connection,
-    tmp_path,
+    tmp_path: Path,
     mock_ssl_context,
     mock_process_uploaded_file,
 ) -> None:
@@ -1455,7 +1456,7 @@ async def test_setup_with_advanced_settings(
 async def test_change_websockets_transport_to_tcp(
     hass: HomeAssistant,
     mock_try_connection,
-    tmp_path,
+    tmp_path: Path,
     mock_ssl_context,
     mock_process_uploaded_file,
 ) -> None:

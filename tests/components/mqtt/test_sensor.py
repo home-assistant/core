@@ -2,6 +2,7 @@
 import copy
 from datetime import datetime, timedelta
 import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -1254,7 +1255,7 @@ async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = sensor.DOMAIN
@@ -1268,7 +1269,7 @@ async def test_cleanup_triggers_and_restoring_state(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    tmp_path,
+    tmp_path: Path,
     freezer,
 ) -> None:
     """Test cleanup old triggers at reloading and restoring the state."""
@@ -1398,7 +1399,7 @@ async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
 async def test_unload_entry(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test unloading the config entry."""
     domain = sensor.DOMAIN

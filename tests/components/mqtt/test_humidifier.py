@@ -1,5 +1,6 @@
 """Test MQTT humidifiers."""
 import copy
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -1365,7 +1366,7 @@ async def test_reloadable(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = humidifier.DOMAIN
@@ -1396,7 +1397,7 @@ async def test_config_schema_validation(hass: HomeAssistant) -> None:
 async def test_unload_config_entry(
     hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test unloading the config entry."""
     domain = humidifier.DOMAIN
