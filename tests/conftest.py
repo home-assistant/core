@@ -45,7 +45,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
+    area_registry as ar,
     config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
     event,
     recorder as recorder_helper,
 )
@@ -1237,3 +1240,21 @@ def mock_bleak_scanner_start():
 @pytest.fixture(name="mock_bluetooth")
 def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
     """Mock out bluetooth from starting."""
+
+
+@pytest.fixture
+def area_registry(hass: HomeAssistant) -> ar.AreaRegistry:
+    """Return the area registry."""
+    return ar.async_get(hass)
+
+
+@pytest.fixture
+def device_registry(hass: HomeAssistant) -> dr.DeviceRegistry:
+    """Return the device registry."""
+    return dr.async_get(hass)
+
+
+@pytest.fixture
+def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
+    """Return the entity registry."""
+    return er.async_get(hass)
