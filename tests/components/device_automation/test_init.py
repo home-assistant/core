@@ -29,6 +29,7 @@ from tests.common import (
     mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -813,7 +814,9 @@ async def test_websocket_get_trigger_capabilities_bad_trigger(
     module.async_get_trigger_capabilities.assert_called_once()
 
 
-async def test_automation_with_non_existing_integration(hass, caplog):
+async def test_automation_with_non_existing_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation trigger with non existing integration."""
     assert await async_setup_component(
         hass,
@@ -898,7 +901,9 @@ async def test_automation_with_dynamically_validated_action(
     module.async_validate_action_config.assert_awaited_once()
 
 
-async def test_automation_with_integration_without_device_action(hass, caplog):
+async def test_automation_with_integration_without_device_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation action with integration without device action support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
@@ -984,7 +989,9 @@ async def test_automation_with_dynamically_validated_condition(
     module.async_validate_condition_config.assert_awaited_once()
 
 
-async def test_automation_with_integration_without_device_condition(hass, caplog):
+async def test_automation_with_integration_without_device_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation condition with integration without device condition support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
@@ -1079,7 +1086,9 @@ async def test_automation_with_dynamically_validated_trigger(
     module.async_attach_trigger.assert_awaited_once()
 
 
-async def test_automation_with_integration_without_device_trigger(hass, caplog):
+async def test_automation_with_integration_without_device_trigger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation trigger with integration without device trigger support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
@@ -1103,7 +1112,9 @@ async def test_automation_with_integration_without_device_trigger(hass, caplog):
     )
 
 
-async def test_automation_with_bad_action(hass, caplog):
+async def test_automation_with_bad_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device action."""
     assert await async_setup_component(
         hass,
@@ -1120,7 +1131,9 @@ async def test_automation_with_bad_action(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_condition_action(hass, caplog):
+async def test_automation_with_bad_condition_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device action."""
     assert await async_setup_component(
         hass,
@@ -1137,7 +1150,9 @@ async def test_automation_with_bad_condition_action(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_condition_missing_domain(hass, caplog):
+async def test_automation_with_bad_condition_missing_domain(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device condition."""
     assert await async_setup_component(
         hass,
@@ -1155,7 +1170,9 @@ async def test_automation_with_bad_condition_missing_domain(hass, caplog):
     assert "required key not provided @ data['condition'][0]['domain']" in caplog.text
 
 
-async def test_automation_with_bad_condition(hass, caplog):
+async def test_automation_with_bad_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device condition."""
     assert await async_setup_component(
         hass,
@@ -1289,7 +1306,9 @@ async def test_automation_with_sub_condition(hass, calls, enable_custom_integrat
     )
 
 
-async def test_automation_with_bad_sub_condition(hass, caplog):
+async def test_automation_with_bad_sub_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device condition under and/or conditions."""
     assert await async_setup_component(
         hass,
@@ -1310,7 +1329,9 @@ async def test_automation_with_bad_sub_condition(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_trigger(hass, caplog):
+async def test_automation_with_bad_trigger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device trigger."""
     assert await async_setup_component(
         hass,
@@ -1327,7 +1348,9 @@ async def test_automation_with_bad_trigger(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_websocket_device_not_found(hass, hass_ws_client):
+async def test_websocket_device_not_found(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test calling command with unknown device."""
     await async_setup_component(hass, "device_automation", {})
     client = await hass_ws_client(hass)

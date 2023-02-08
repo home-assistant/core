@@ -58,6 +58,7 @@ from tests.common import (
     async_mock_service,
     get_test_instance_port,
 )
+from tests.typing import ClientSessionGenerator
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -331,7 +332,9 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     assert light_without_brightness_json["type"] == "On/Off light"
 
 
-async def test_lights_all_dimmable(hass, hass_client_no_auth):
+async def test_lights_all_dimmable(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test CONF_LIGHTS_ALL_DIMMABLE."""
     # create a lamp without brightness support
     hass.states.async_set("light.no_brightness", "on", {})
