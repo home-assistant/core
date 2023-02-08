@@ -9,6 +9,7 @@ import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dsmr import DOMAIN, config_flow
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -530,7 +531,7 @@ async def test_setup_serial_wrong_telegram(
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options flow."""
 
     entry_data = {

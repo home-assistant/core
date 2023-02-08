@@ -20,6 +20,7 @@ from homeassistant.components.deconz.services import (
     SUPPORTED_SERVICES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
@@ -32,9 +33,12 @@ from .test_gateway import (
 )
 
 from tests.common import async_capture_events
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_service_setup_and_unload(hass, aioclient_mock):
+async def test_service_setup_and_unload(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify service setup works."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
     for service in SUPPORTED_SERVICES:
@@ -63,7 +67,9 @@ async def test_service_setup_and_unload_not_called_if_multiple_integrations_dete
     assert remove_service_mock.call_count == 3
 
 
-async def test_configure_service_with_field(hass, aioclient_mock):
+async def test_configure_service_with_field(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service invokes pydeconz with the correct path and data."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
@@ -81,7 +87,9 @@ async def test_configure_service_with_field(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
 
-async def test_configure_service_with_entity(hass, aioclient_mock):
+async def test_configure_service_with_entity(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service invokes pydeconz with the correct path and data."""
     data = {
         "lights": {
@@ -109,7 +117,9 @@ async def test_configure_service_with_entity(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
 
-async def test_configure_service_with_entity_and_field(hass, aioclient_mock):
+async def test_configure_service_with_entity_and_field(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service invokes pydeconz with the correct path and data."""
     data = {
         "lights": {
@@ -138,7 +148,9 @@ async def test_configure_service_with_entity_and_field(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
 
-async def test_configure_service_with_faulty_bridgeid(hass, aioclient_mock):
+async def test_configure_service_with_faulty_bridgeid(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service fails on a bad bridge id."""
     await setup_deconz_integration(hass, aioclient_mock)
     aioclient_mock.clear_requests()
@@ -157,7 +169,9 @@ async def test_configure_service_with_faulty_bridgeid(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 0
 
 
-async def test_configure_service_with_faulty_field(hass, aioclient_mock):
+async def test_configure_service_with_faulty_field(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service fails on a bad field."""
     await setup_deconz_integration(hass, aioclient_mock)
 
@@ -170,7 +184,9 @@ async def test_configure_service_with_faulty_field(hass, aioclient_mock):
         await hass.async_block_till_done()
 
 
-async def test_configure_service_with_faulty_entity(hass, aioclient_mock):
+async def test_configure_service_with_faulty_entity(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service on a non existing entity."""
     await setup_deconz_integration(hass, aioclient_mock)
     aioclient_mock.clear_requests()
@@ -188,7 +204,9 @@ async def test_configure_service_with_faulty_entity(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 0
 
 
-async def test_calling_service_with_no_master_gateway_fails(hass, aioclient_mock):
+async def test_calling_service_with_no_master_gateway_fails(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service call fails when no master gateway exist."""
     await setup_deconz_integration(
         hass, aioclient_mock, options={CONF_MASTER_GATEWAY: False}
@@ -208,7 +226,9 @@ async def test_calling_service_with_no_master_gateway_fails(hass, aioclient_mock
     assert len(aioclient_mock.mock_calls) == 0
 
 
-async def test_service_refresh_devices(hass, aioclient_mock):
+async def test_service_refresh_devices(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that service can refresh devices."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
@@ -258,7 +278,9 @@ async def test_service_refresh_devices(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 5
 
 
-async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_mock):
+async def test_service_refresh_devices_trigger_no_state_update(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify that gateway.ignore_state_updates are honored."""
     data = {
         "sensors": {
@@ -323,7 +345,9 @@ async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_m
     assert len(captured_events) == 0
 
 
-async def test_remove_orphaned_entries_service(hass, aioclient_mock):
+async def test_remove_orphaned_entries_service(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service works and also don't remove more than expected."""
     data = {
         "lights": {
