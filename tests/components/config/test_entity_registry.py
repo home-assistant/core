@@ -26,7 +26,7 @@ from tests.common import (
 def client(hass, hass_ws_client):
     """Fixture that can interact with the config manager API."""
     hass.loop.run_until_complete(entity_registry.async_setup(hass))
-    yield hass.loop.run_until_complete(hass_ws_client(hass))
+    return hass.loop.run_until_complete(hass_ws_client(hass))
 
 
 @pytest.fixture
@@ -70,6 +70,7 @@ async def test_list_entities(hass, client):
             "icon": None,
             "id": ANY,
             "name": "Hello World",
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
@@ -87,6 +88,7 @@ async def test_list_entities(hass, client):
             "icon": None,
             "id": ANY,
             "name": None,
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,
@@ -131,6 +133,7 @@ async def test_list_entities(hass, client):
             "icon": None,
             "id": ANY,
             "name": "Hello World",
+            "options": {},
             "original_name": None,
             "platform": "test_platform",
             "translation_key": None,

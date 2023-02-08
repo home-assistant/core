@@ -1,10 +1,10 @@
 {
   "domain": "file_upload",
   "name": "File Upload",
-  "documentation": "https://www.home-assistant.io/integrations/file_upload",
-  "requirements": ["janus==1.0.0"],
-  "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/file_upload",
+  "integration_type": "system",
   "quality_scale": "internal",
-  "integration_type": "system"
+  "requirements": ["janus==1.0.0"]
 }

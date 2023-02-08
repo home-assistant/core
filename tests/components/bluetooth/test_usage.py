@@ -1,6 +1,4 @@
 """Tests for the Bluetooth integration."""
-
-
 from unittest.mock import patch
 
 import bleak
@@ -15,6 +13,7 @@ from homeassistant.components.bluetooth.wrappers import (
     HaBleakClientWrapper,
     HaBleakScannerWrapper,
 )
+from homeassistant.core import HomeAssistant
 
 from . import _get_manager
 
@@ -23,7 +22,7 @@ MOCK_BLE_DEVICE = BLEDevice(
 )
 
 
-async def test_multiple_bleak_scanner_instances(hass):
+async def test_multiple_bleak_scanner_instances(hass: HomeAssistant) -> None:
     """Test creating multiple BleakScanners without an integration."""
     install_multiple_bleak_catcher()
 

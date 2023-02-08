@@ -139,8 +139,7 @@ AutomationTriggerInfo = TriggerInfo
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
-    """
-    Return true if specified automation entity_id is on.
+    """Return true if specified automation entity_id is on.
 
     Async friendly.
     """
@@ -870,7 +869,7 @@ async def _async_process_if(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["condition", str(index)]):
-                    if not check(hass, variables):
+                    if check(hass, variables) is False:
                         return False
             except ConditionError as ex:
                 errors.append(

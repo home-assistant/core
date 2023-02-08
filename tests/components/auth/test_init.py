@@ -8,12 +8,14 @@ import pytest
 from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import Credentials
 from homeassistant.components import auth
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -46,7 +48,9 @@ async def async_setup_user_refresh_token(hass):
     )
 
 
-async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
+async def test_login_new_user_and_trying_refresh_token(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in with new user and refreshing tokens."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post(
@@ -114,7 +118,9 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == HTTPStatus.OK
 
 
-async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
+async def test_auth_code_checks_local_only_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test local only user cannot exchange auth code for refresh tokens when external."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post(
@@ -188,7 +194,7 @@ def test_auth_code_store_requires_credentials(mock_credential):
     """Test we require credentials."""
     store, _retrieve = auth._create_auth_code_store()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         store(None, MockUser())
 
     store(None, mock_credential)
@@ -220,7 +226,9 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     assert "data" not in hass_cred
 
 
-async def test_cors_on_token(hass, aiohttp_client):
+async def test_cors_on_token(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in with new user and refreshing tokens."""
     client = await async_setup_auth(hass, aiohttp_client)
 
@@ -238,7 +246,9 @@ async def test_cors_on_token(hass, aiohttp_client):
     assert resp.headers["Access-Control-Allow-Origin"] == "http://example.com"
 
 
-async def test_refresh_token_system_generated(hass, aiohttp_client):
+async def test_refresh_token_system_generated(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test that we can get access tokens for system generated user."""
     client = await async_setup_auth(hass, aiohttp_client)
     user = await hass.auth.async_create_system_user("Test System")
@@ -269,7 +279,9 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
     )
 
 
-async def test_refresh_token_different_client_id(hass, aiohttp_client):
+async def test_refresh_token_different_client_id(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test that we verify client ID."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)
@@ -315,7 +327,9 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
     )
 
 
-async def test_refresh_token_checks_local_only_user(hass, aiohttp_client):
+async def test_refresh_token_checks_local_only_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test that we can't refresh token for a local only user when external."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)

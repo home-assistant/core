@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyisy.constants import COMMAND_FRIENDLY_NAME, PROTO_NETWORK_RESOURCE
+from pyisy.constants import COMMAND_FRIENDLY_NAME
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -23,15 +23,8 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import entity_service_call
 
-from .const import (
-    _LOGGER,
-    DOMAIN,
-    ISY994_ISY,
-    ISY_CONF_NAME,
-    ISY_CONF_NETWORKING,
-    ISY_CONF_UUID,
-)
-from .util import unique_ids_for_config_entry_id
+from .const import _LOGGER, CONF_NETWORK, DOMAIN, ISY_CONF_NAME
+from .util import _async_cleanup_registry_entries
 
 # Common Services for All Platforms:
 SERVICE_SYSTEM_QUERY = "system_query"
@@ -192,8 +185,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
         entity_registry = er.async_get(hass)
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and isy_name != isy.configuration["name"]:
+            isy_data = hass.data[DOMAIN][config_entry_id]
+            isy = isy_data.root
+            if isy_name and isy_name != isy.conf["name"]:
                 continue
             # If an address is provided, make sure we query the correct ISY.
             # Otherwise, query the whole system on all ISY's connected.
@@ -201,7 +195,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 _LOGGER.debug(
                     "Requesting query of device %s on ISY %s",
                     address,
-                    isy.configuration[ISY_CONF_UUID],
+                    isy.uuid,
                 )
                 await isy.query(address)
                 async_log_deprecated_service_call(
@@ -211,21 +205,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     alternate_target=entity_registry.async_get_entity_id(
                         Platform.BUTTON,
                         DOMAIN,
-                        f"{isy.configuration[ISY_CONF_UUID]}_{address}_query",
+                        f"{isy.uuid}_{address}_query",
                     ),
                     breaks_in_ha_version="2023.5.0",
                 )
                 return
-            _LOGGER.debug(
-                "Requesting system query of ISY %s", isy.configuration[ISY_CONF_UUID]
-            )
+            _LOGGER.debug("Requesting system query of ISY %s", isy.uuid)
             await isy.query()
             async_log_deprecated_service_call(
                 hass,
                 call=service,
                 alternate_service="button.press",
                 alternate_target=entity_registry.async_get_entity_id(
-                    Platform.BUTTON, DOMAIN, f"{isy.configuration[ISY_CONF_UUID]}_query"
+                    Platform.BUTTON, DOMAIN, f"{isy.uuid}_query"
                 ),
                 breaks_in_ha_version="2023.5.0",
             )
@@ -237,10 +229,11 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and isy_name != isy.configuration[ISY_CONF_NAME]:
+            isy_data = hass.data[DOMAIN][config_entry_id]
+            isy = isy_data.root
+            if isy_name and isy_name != isy.conf[ISY_CONF_NAME]:
                 continue
-            if isy.networking is None or not isy.configuration[ISY_CONF_NETWORKING]:
+            if isy.networking is None:
                 continue
             command = None
             if address:
@@ -257,7 +250,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     alternate_target=entity_registry.async_get_entity_id(
                         Platform.BUTTON,
                         DOMAIN,
-                        f"{isy.configuration[ISY_CONF_UUID]}_{PROTO_NETWORK_RESOURCE}_{address}",
+                        f"{isy.uuid}_{CONF_NETWORK}_{address}",
                     ),
                     breaks_in_ha_version="2023.5.0",
                 )
@@ -274,8 +267,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and isy_name != isy.configuration["name"]:
+            isy_data = hass.data[DOMAIN][config_entry_id]
+            isy = isy_data.root
+            if isy_name and isy_name != isy.conf["name"]:
                 continue
             program = None
             if address:
@@ -297,8 +291,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and isy_name != isy.configuration["name"]:
+            isy_data = hass.data[DOMAIN][config_entry_id]
+            isy = isy_data.root
+            if isy_name and isy_name != isy.conf["name"]:
                 continue
             variable = None
             if name:
@@ -307,50 +302,43 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 variable = isy.variables.vobjs[vtype].get(address)
             if variable is not None:
                 await variable.set_value(value, init)
+                entity_registry = er.async_get(hass)
+                async_log_deprecated_service_call(
+                    hass,
+                    call=service,
+                    alternate_service="number.set_value",
+                    alternate_target=entity_registry.async_get_entity_id(
+                        Platform.NUMBER,
+                        DOMAIN,
+                        f"{isy.uuid}_{address}{'_init' if init else ''}",
+                    ),
+                    breaks_in_ha_version="2023.5.0",
+                )
                 return
         _LOGGER.error("Could not set variable value; not found or enabled on the ISY")
 
     @callback
     def async_cleanup_registry_entries(service: ServiceCall) -> None:
         """Remove extra entities that are no longer part of the integration."""
-        entity_registry = er.async_get(hass)
-        config_ids = []
-        current_unique_ids: set[str] = set()
-
-        for config_entry_id in hass.data[DOMAIN]:
-            entries_for_this_config = er.async_entries_for_config_entry(
-                entity_registry, config_entry_id
-            )
-            config_ids.extend(
-                [
-                    (entity.unique_id, entity.entity_id)
-                    for entity in entries_for_this_config
-                ]
-            )
-            current_unique_ids |= unique_ids_for_config_entry_id(hass, config_entry_id)
-
-        extra_entities = [
-            entity_id
-            for unique_id, entity_id in config_ids
-            if unique_id not in current_unique_ids
-        ]
-
-        for entity_id in extra_entities:
-            if entity_registry.async_is_registered(entity_id):
-                entity_registry.async_remove(entity_id)
-
-        _LOGGER.debug(
-            (
-                "Cleaning up ISY Entities and devices: Config Entries: %s, Current"
-                " Entries: %s, Extra Entries Removed: %s"
-            ),
-            len(config_ids),
-            len(current_unique_ids),
-            len(extra_entities),
+        async_log_deprecated_service_call(
+            hass,
+            call=service,
+            alternate_service="homeassistant.reload_core_config",
+            alternate_target=None,
+            breaks_in_ha_version="2023.5.0",
         )
+        for config_entry_id in hass.data[DOMAIN]:
+            _async_cleanup_registry_entries(hass, config_entry_id)
 
     async def async_reload_config_entries(service: ServiceCall) -> None:
         """Trigger a reload of all ISY config entries."""
+        async_log_deprecated_service_call(
+            hass,
+            call=service,
+            alternate_service="homeassistant.reload_core_config",
+            alternate_target=None,
+            breaks_in_ha_version="2023.5.0",
+        )
         for config_entry_id in hass.data[DOMAIN]:
             hass.async_create_task(hass.config_entries.async_reload(config_entry_id))
 
@@ -518,13 +506,17 @@ def async_log_deprecated_service_call(
         },
     )
 
+    alternate_text = ""
+    if alternate_target:
+        alternate_text = f' and pass it a target entity ID of "{alternate_target}"'
+
     _LOGGER.warning(
         (
             'The "%s" service is deprecated and will be removed in %s; use the "%s" '
-            'service and pass it a target entity ID of "%s"'
+            "service %s"
         ),
         deprecated_service,
         breaks_in_ha_version,
         alternate_service,
-        alternate_target,
+        alternate_text,
     )

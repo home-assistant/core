@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -23,22 +23,8 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -84,8 +70,8 @@ def calls(hass):
 )
 async def test_get_conditions(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     set_state,
     features_reg,
     features_state,
@@ -94,11 +80,11 @@ async def test_get_conditions(
     """Test we get the expected conditions from a cover."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -140,19 +126,19 @@ async def test_get_conditions(
 )
 async def test_get_conditions_hidden_auxiliary(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     hidden_by,
     entity_category,
 ):
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -179,7 +165,7 @@ async def test_get_conditions_hidden_auxiliary(
 
 
 async def test_get_condition_capabilities(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass, device_registry, entity_registry, enable_custom_integrations
 ):
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -190,11 +176,11 @@ async def test_get_condition_capabilities(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
 
@@ -210,7 +196,7 @@ async def test_get_condition_capabilities(
 
 
 async def test_get_condition_capabilities_set_pos(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass, device_registry, entity_registry, enable_custom_integrations
 ):
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -221,11 +207,11 @@ async def test_get_condition_capabilities_set_pos(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
 
@@ -264,7 +250,7 @@ async def test_get_condition_capabilities_set_pos(
 
 
 async def test_get_condition_capabilities_set_tilt_pos(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass, device_registry, entity_registry, enable_custom_integrations
 ):
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -275,11 +261,11 @@ async def test_get_condition_capabilities_set_tilt_pos(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
 
@@ -340,7 +326,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_open - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_open "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -358,7 +348,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_closed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_closed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -376,7 +370,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_opening - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_opening "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -394,7 +392,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_closing - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_closing "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -457,14 +459,22 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                             "sequence": {
                                 "service": "test.automation",
                                 "data_template": {
-                                    "some": "is_pos_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                    "some": (
+                                        "is_pos_gt_45 "
+                                        "- {{ trigger.platform }} "
+                                        "- {{ trigger.event.event_type }}"
+                                    )
                                 },
                             },
                         },
                         "default": {
                             "service": "test.automation",
                             "data_template": {
-                                "some": "is_pos_not_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                "some": (
+                                    "is_pos_not_gt_45 "
+                                    "- {{ trigger.platform }} "
+                                    "- {{ trigger.event.event_type }}"
+                                )
                             },
                         },
                     },
@@ -484,7 +494,11 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -504,7 +518,11 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_gt_45_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -586,14 +604,22 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                             "sequence": {
                                 "service": "test.automation",
                                 "data_template": {
-                                    "some": "is_pos_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                    "some": (
+                                        "is_pos_gt_45 "
+                                        "- {{ trigger.platform }} "
+                                        "- {{ trigger.event.event_type }}"
+                                    )
                                 },
                             },
                         },
                         "default": {
                             "service": "test.automation",
                             "data_template": {
-                                "some": "is_pos_not_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                "some": (
+                                    "is_pos_not_gt_45 "
+                                    "- {{ trigger.platform }} "
+                                    "- {{ trigger.event.event_type }}"
+                                )
                             },
                         },
                     },
@@ -613,7 +639,11 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -633,7 +663,11 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_gt_45_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

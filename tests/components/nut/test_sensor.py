@@ -1,5 +1,4 @@
 """The sensor tests for the nut platform."""
-
 from unittest.mock import patch
 
 from homeassistant.components.nut.const import DOMAIN
@@ -10,6 +9,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .util import _get_mock_pynutclient, async_init_integration
@@ -17,7 +17,7 @@ from .util import _get_mock_pynutclient, async_init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_pr3000rt2u(hass):
+async def test_pr3000rt2u(hass: HomeAssistant) -> None:
     """Test creation of PR3000RT2U sensors."""
 
     await async_init_integration(hass, "PR3000RT2U")
@@ -41,7 +41,7 @@ async def test_pr3000rt2u(hass):
     )
 
 
-async def test_cp1350c(hass):
+async def test_cp1350c(hass: HomeAssistant) -> None:
     """Test creation of CP1350C sensors."""
 
     config_entry = await async_init_integration(hass, "CP1350C")
@@ -66,7 +66,7 @@ async def test_cp1350c(hass):
     )
 
 
-async def test_5e850i(hass):
+async def test_5e850i(hass: HomeAssistant) -> None:
     """Test creation of 5E850I sensors."""
 
     config_entry = await async_init_integration(hass, "5E850I")
@@ -90,7 +90,7 @@ async def test_5e850i(hass):
     )
 
 
-async def test_5e650i(hass):
+async def test_5e650i(hass: HomeAssistant) -> None:
     """Test creation of 5E650I sensors."""
 
     config_entry = await async_init_integration(hass, "5E650I")
@@ -114,7 +114,7 @@ async def test_5e650i(hass):
     )
 
 
-async def test_backupsses600m1(hass):
+async def test_backupsses600m1(hass: HomeAssistant) -> None:
     """Test creation of BACKUPSES600M1 sensors."""
 
     await async_init_integration(hass, "BACKUPSES600M1")
@@ -141,7 +141,7 @@ async def test_backupsses600m1(hass):
     )
 
 
-async def test_cp1500pfclcd(hass):
+async def test_cp1500pfclcd(hass: HomeAssistant) -> None:
     """Test creation of CP1500PFCLCD sensors."""
 
     config_entry = await async_init_integration(hass, "CP1500PFCLCD")
@@ -165,7 +165,7 @@ async def test_cp1500pfclcd(hass):
     )
 
 
-async def test_dl650elcd(hass):
+async def test_dl650elcd(hass: HomeAssistant) -> None:
     """Test creation of DL650ELCD sensors."""
 
     config_entry = await async_init_integration(hass, "DL650ELCD")
@@ -189,7 +189,31 @@ async def test_dl650elcd(hass):
     )
 
 
-async def test_blazer_usb(hass):
+async def test_eaton5p1550(hass: HomeAssistant) -> None:
+    """Test creation of EATON5P1550 sensors."""
+
+    config_entry = await async_init_integration(hass, "EATON5P1550")
+    registry = er.async_get(hass)
+    entry = registry.async_get("sensor.ups1_battery_charge")
+    assert entry
+    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
+
+    state = hass.states.get("sensor.ups1_battery_charge")
+    assert state.state == "100"
+
+    expected_attributes = {
+        "device_class": "battery",
+        "friendly_name": "Ups1 Battery Charge",
+        "unit_of_measurement": PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
+    )
+
+
+async def test_blazer_usb(hass: HomeAssistant) -> None:
     """Test creation of blazer_usb sensors."""
 
     config_entry = await async_init_integration(hass, "blazer_usb")
@@ -213,7 +237,7 @@ async def test_blazer_usb(hass):
     )
 
 
-async def test_state_sensors(hass):
+async def test_state_sensors(hass: HomeAssistant) -> None:
     """Test creation of status display sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -238,7 +262,7 @@ async def test_state_sensors(hass):
         assert state2.state == "OL"
 
 
-async def test_unknown_state_sensors(hass):
+async def test_unknown_state_sensors(hass: HomeAssistant) -> None:
     """Test creation of unknown status display sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -263,7 +287,7 @@ async def test_unknown_state_sensors(hass):
         assert state2.state == "OQ"
 
 
-async def test_stale_options(hass):
+async def test_stale_options(hass: HomeAssistant) -> None:
     """Test creation of sensors with stale options to remove."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

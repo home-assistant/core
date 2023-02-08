@@ -58,6 +58,7 @@ from tests.common import (
     async_mock_service,
     get_test_instance_port,
 )
+from tests.typing import ClientSessionGenerator
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -301,6 +302,7 @@ async def test_discover_lights(hass, hue_client):
     await hass.async_block_till_done()
 
     result_json = await async_get_lights(hue_client)
+    assert "1" not in result_json.keys()
     devices = {val["uniqueid"] for val in result_json.values()}
     assert "00:2f:d2:31:ce:c5:55:cc-ee" not in devices  # light.ceiling_lights
 
@@ -308,8 +310,16 @@ async def test_discover_lights(hass, hue_client):
     hass.states.async_set("light.ceiling_lights", STATE_ON)
     await hass.async_block_till_done()
     result_json = await async_get_lights(hue_client)
-    devices = {val["uniqueid"] for val in result_json.values()}
-    assert "00:2f:d2:31:ce:c5:55:cc-ee" in devices  # light.ceiling_lights
+    device = result_json["1"]  # Test that light ID did not change
+    assert device["uniqueid"] == "00:2f:d2:31:ce:c5:55:cc-ee"  # light.ceiling_lights
+    assert device["state"][HUE_API_STATE_ON] is True
+
+    # Test that returned value is fresh and not cached
+    hass.states.async_set("light.ceiling_lights", STATE_OFF)
+    await hass.async_block_till_done()
+    result_json = await async_get_lights(hue_client)
+    device = result_json["1"]
+    assert device["state"][HUE_API_STATE_ON] is False
 
 
 async def test_light_without_brightness_supported(hass_hue, hue_client):
@@ -322,7 +332,9 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     assert light_without_brightness_json["type"] == "On/Off light"
 
 
-async def test_lights_all_dimmable(hass, hass_client_no_auth):
+async def test_lights_all_dimmable(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test CONF_LIGHTS_ALL_DIMMABLE."""
     # create a lamp without brightness support
     hass.states.async_set("light.no_brightness", "on", {})
@@ -379,7 +391,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     assert len(turn_off_calls) == 1
     call = turn_off_calls[-1]
 
-    assert light.DOMAIN == call.domain
+    assert call.domain == light.DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
@@ -421,7 +433,7 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
     assert len(turn_on_calls) == 1
     call = turn_on_calls[-1]
 
-    assert light.DOMAIN == call.domain
+    assert call.domain == light.DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
@@ -465,8 +477,9 @@ async def test_discover_full_state(hue_client):
 
     # Make sure array is correct size
     assert len(result_json) == 2
-    assert len(config_json) == 6
+    assert len(config_json) == 7
     assert len(lights_json) >= 1
+    assert "name" in config_json
 
     # Make sure the config wrapper added to the config is there
     assert "mac" in config_json
@@ -505,7 +518,8 @@ async def test_discover_config(hue_client):
     config_json = await result.json()
 
     # Make sure array is correct size
-    assert len(config_json) == 6
+    assert len(config_json) == 7
+    assert "name" in config_json
 
     # Make sure the config wrapper added to the config is there
     assert "mac" in config_json

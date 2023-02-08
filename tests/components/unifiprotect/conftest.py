@@ -1,5 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -356,7 +356,9 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_listen_error_late_discovery(hass, caplog):
+async def test_async_listen_error_late_discovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the async listen error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -381,7 +383,9 @@ async def test_async_listen_error_late_discovery(hass, caplog):
     assert config_entry.data[CONF_DETECTED_MODEL] == MODEL
 
 
-async def test_fail_to_fetch_initial_state(hass, caplog):
+async def test_fail_to_fetch_initial_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test failing to fetch initial state results in a retry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
@@ -409,7 +413,9 @@ async def test_fail_to_fetch_initial_state(hass, caplog):
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_unload_before_discovery(hass, caplog):
+async def test_unload_before_discovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test unloading before discovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)

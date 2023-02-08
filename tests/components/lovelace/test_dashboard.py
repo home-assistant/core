@@ -5,9 +5,11 @@ import pytest
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import const, dashboard
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
+from tests.typing import WebSocketGenerator
 
 
 async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
@@ -107,7 +109,9 @@ async def test_lovelace_from_storage_delete(hass, hass_ws_client, hass_storage):
     assert response["error"]["code"] == "config_not_found"
 
 
-async def test_lovelace_from_yaml(hass, hass_ws_client):
+async def test_lovelace_from_yaml(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we load lovelace config from yaml."""
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
@@ -263,7 +267,7 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
     assert len(events) == 1
 
 
-async def test_wrong_key_dashboard_from_yaml(hass):
+async def test_wrong_key_dashboard_from_yaml(hass: HomeAssistant) -> None:
     """Test we don't load lovelace dashboard without hyphen config from yaml."""
     with assert_setup_component(0):
         assert not await async_setup_component(
@@ -480,7 +484,9 @@ async def test_storage_dashboard_migrate(hass, hass_ws_client, hass_storage):
     )
 
 
-async def test_websocket_list_dashboards(hass, hass_ws_client):
+async def test_websocket_list_dashboards(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test listing dashboards both storage + YAML."""
     assert await async_setup_component(
         hass,

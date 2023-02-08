@@ -149,7 +149,7 @@ async def test_washer_sensor_values(
     state_id = f"{entity_id.split('_')[0]}_detergent_level"
     state = hass.states.get(state_id)
     assert state is not None
-    assert state.state == "50%"
+    assert state.state == "50"
 
     # Test the washer cycle states
     mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle

@@ -7,8 +7,8 @@ import logging
 from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient
-from AIOAladdinConnect.session_manager import InvalidPasswordError
-from aiohttp.client_exceptions import ClientConnectionError
+import AIOAladdinConnect.session_manager as Aladdin
+from aiohttp.client_exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -45,10 +45,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     )
     try:
         await acc.login()
-    except (ClientConnectionError, asyncio.TimeoutError) as ex:
+    except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError) as ex:
         raise ex
 
-    except InvalidPasswordError as ex:
+    except Aladdin.InvalidPasswordError as ex:
         raise InvalidAuth from ex
 
 
@@ -84,11 +84,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except (ClientConnectionError, asyncio.TimeoutError):
+            except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
                 errors["base"] = "cannot_connect"
 
             else:
-
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
@@ -121,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
-        except (ClientConnectionError, asyncio.TimeoutError):
+        except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
             errors["base"] = "cannot_connect"
 
         else:

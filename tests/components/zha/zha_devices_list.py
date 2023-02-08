@@ -562,7 +562,9 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-2-1030"): {
                 DEV_SIG_CHANNELS: ["occupancy"],
                 DEV_SIG_ENT_MAP_CLASS: "Occupancy",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_motion_sensor_a_occupancy",
+                DEV_SIG_ENT_MAP_ID: (
+                    "binary_sensor.centralite_motion_sensor_a_occupancy"
+                ),
             },
         },
     },
@@ -600,22 +602,30 @@ DEVICES = [
             ("switch", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
-                DEV_SIG_ENT_MAP_ID: "switch.climaxtechnology_psmp5_00_00_02_02tc_switch",
+                DEV_SIG_ENT_MAP_ID: (
+                    "switch.climaxtechnology_psmp5_00_00_02_02tc_switch"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_psmp5_00_00_02_02tc_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.climaxtechnology_psmp5_00_00_02_02tc_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergyMetering",
-                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_instantaneous_demand",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.climaxtechnology_psmp5_00_00_02_02tc_instantaneous_demand"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
-                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_delivered",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.climaxtechnology_psmp5_00_00_02_02tc_summation_delivered"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -659,12 +669,16 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CHANNELS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_iaszone",
+                DEV_SIG_ENT_MAP_ID: (
+                    "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_iaszone"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_sd8sc_00_00_03_12tc_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.climaxtechnology_sd8sc_00_00_03_12tc_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -679,22 +693,30 @@ DEVICES = [
             ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_tone",
+                DEV_SIG_ENT_MAP_ID: (
+                    "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_tone"
+                ),
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_level",
+                DEV_SIG_ENT_MAP_ID: (
+                    "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_level"
+                ),
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe_level",
+                DEV_SIG_ENT_MAP_ID: (
+                    "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe_level"
+                ),
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe",
+                DEV_SIG_ENT_MAP_ID: (
+                    "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe"
+                ),
             },
             ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
@@ -728,12 +750,16 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CHANNELS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_iaszone",
+                DEV_SIG_ENT_MAP_ID: (
+                    "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_iaszone"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_ws15_00_00_03_03tc_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.climaxtechnology_ws15_00_00_03_03tc_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1090,22 +1116,30 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_light",
+                DEV_SIG_ENT_MAP_ID: (
+                    "light.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_light"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_rssi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_rssi"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_lqi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_lqi"
+                ),
             },
         },
     },
@@ -1134,22 +1168,30 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_light",
+                DEV_SIG_ENT_MAP_ID: (
+                    "light.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_light"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_rssi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_rssi"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_lqi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_lqi"
+                ),
             },
         },
     },
@@ -1178,22 +1220,30 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_light",
+                DEV_SIG_ENT_MAP_ID: (
+                    "light.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_light"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_rssi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_rssi"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_lqi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_lqi"
+                ),
             },
         },
     },
@@ -1222,22 +1272,30 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_light",
+                DEV_SIG_ENT_MAP_ID: (
+                    "light.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_light"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_rssi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_rssi"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_lqi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_lqi"
+                ),
             },
         },
     },
@@ -1266,22 +1324,30 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_light",
+                DEV_SIG_ENT_MAP_ID: (
+                    "light.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_light"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_rssi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_rssi"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_lqi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_lqi"
+                ),
             },
         },
     },
@@ -1310,12 +1376,16 @@ DEVICES = [
             ("switch", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
-                DEV_SIG_ENT_MAP_ID: "switch.ikea_of_sweden_tradfri_control_outlet_switch",
+                DEV_SIG_ENT_MAP_ID: (
+                    "switch.ikea_of_sweden_tradfri_control_outlet_switch"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_control_outlet_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_control_outlet_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1355,12 +1425,16 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_motion_sensor_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_motion_sensor_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_motion_sensor_battery",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_motion_sensor_battery"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1375,7 +1449,9 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Motion",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.ikea_of_sweden_tradfri_motion_sensor_motion",
+                DEV_SIG_ENT_MAP_ID: (
+                    "binary_sensor.ikea_of_sweden_tradfri_motion_sensor_motion"
+                ),
             },
         },
     },
@@ -1404,12 +1480,16 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_on_off_switch_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_on_off_switch_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_on_off_switch_battery",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_on_off_switch_battery"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1448,12 +1528,16 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_remote_control_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_remote_control_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_remote_control_battery",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_remote_control_battery"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1498,12 +1582,16 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_signal_repeater_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_signal_repeater_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_signal_repeater_rssi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_signal_repeater_rssi"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1537,17 +1625,23 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_wireless_dimmer_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.ikea_of_sweden_tradfri_wireless_dimmer_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_wireless_dimmer_battery",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_wireless_dimmer_battery"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
-                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_wireless_dimmer_rssi",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.ikea_of_sweden_tradfri_wireless_dimmer_rssi"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -1962,7 +2056,9 @@ DEVICES = [
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
-                DEV_SIG_ENT_MAP_ID: "button.king_of_fans_inc_hbuniversalcfremote_identify",
+                DEV_SIG_ENT_MAP_ID: (
+                    "button.king_of_fans_inc_hbuniversalcfremote_identify"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -2245,8 +2341,6 @@ DEVICES = [
             "sensor.lumi_lumi_plug_maus01_rms_voltage",
             "sensor.lumi_lumi_plug_maus01_ac_frequency",
             "sensor.lumi_lumi_plug_maus01_power_factor",
-            "sensor.lumi_lumi_plug_maus01_analoginput",
-            "sensor.lumi_lumi_plug_maus01_analoginput_2",
             "binary_sensor.lumi_lumi_plug_maus01_binaryinput",
             "switch.lumi_lumi_plug_maus01_switch",
             "sensor.lumi_lumi_plug_maus01_rssi",
@@ -2308,16 +2402,6 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_lqi",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
-                DEV_SIG_CHANNELS: ["analog_input"],
-                DEV_SIG_ENT_MAP_CLASS: "AnalogInput",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_analoginput",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
-                DEV_SIG_CHANNELS: ["analog_input"],
-                DEV_SIG_ENT_MAP_CLASS: "AnalogInput",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_analoginput_2",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-100-15"): {
                 DEV_SIG_CHANNELS: ["binary_input"],
@@ -3288,7 +3372,9 @@ DEVICES = [
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1030"): {
                 DEV_SIG_CHANNELS: ["occupancy"],
                 DEV_SIG_ENT_MAP_CLASS: "Occupancy",
-                DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_sensor_motion_aq2_occupancy",
+                DEV_SIG_ENT_MAP_ID: (
+                    "binary_sensor.lumi_lumi_sensor_motion_aq2_occupancy"
+                ),
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CHANNELS: ["ias_zone"],
@@ -3524,7 +3610,9 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CHANNELS: ["device_temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_device_temperature",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.lumi_lumi_sensor_wleak_aq1_device_temperature"
+                ),
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -3989,32 +4077,44 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-3-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_active_power",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.osram_lightify_rt_tunable_white_active_power"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_apparent_power",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.osram_lightify_rt_tunable_white_apparent_power"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_rms_current",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.osram_lightify_rt_tunable_white_rms_current"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_voltage"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_rms_voltage",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.osram_lightify_rt_tunable_white_rms_voltage"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_ac_frequency",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.osram_lightify_rt_tunable_white_ac_frequency"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-power_factor"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_power_factor",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.osram_lightify_rt_tunable_white_power_factor"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CHANNELS: ["basic"],
@@ -4770,7 +4870,9 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_apparent_power",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.sinope_technologies_rm3250zb_apparent_power"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -4864,7 +4966,9 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_apparent_power",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.sinope_technologies_th1123zb_apparent_power"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -4963,7 +5067,9 @@ DEVICES = [
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_apparent_power",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.sinope_technologies_th1124zb_apparent_power"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],

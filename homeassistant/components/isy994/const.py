@@ -1,6 +1,8 @@
 """Constants for the ISY Platform."""
 import logging
 
+from pyisy.constants import PROP_ON_LEVEL, PROP_RAMP_RATE
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -58,6 +60,7 @@ DOMAIN = "isy994"
 
 MANUFACTURER = "Universal Devices, Inc"
 
+CONF_NETWORK = "network"
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
 CONF_VAR_SENSOR_STRING = "variable_sensor_string"
@@ -74,14 +77,19 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-PLATFORMS = [
+NODE_PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+NODE_AUX_PROP_PLATFORMS = [
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -92,6 +100,17 @@ PROGRAM_PLATFORMS = [
     Platform.LOCK,
     Platform.SWITCH,
 ]
+ROOT_NODE_PLATFORMS = [Platform.BUTTON]
+VARIABLE_PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
+
+# Set of all platforms used by integration
+PLATFORMS = {
+    *NODE_PLATFORMS,
+    *NODE_AUX_PROP_PLATFORMS,
+    *PROGRAM_PLATFORMS,
+    *ROOT_NODE_PLATFORMS,
+    *VARIABLE_PLATFORMS,
+}
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
@@ -99,12 +118,6 @@ SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 # (they can turn off, and report their state)
 ISY_GROUP_PLATFORM = Platform.SWITCH
 
-ISY994_ISY = "isy"
-ISY994_NODES = "isy994_nodes"
-ISY994_PROGRAMS = "isy994_programs"
-ISY994_VARIABLES = "isy994_variables"
-
-ISY_CONF_NETWORKING = "Networking Module"
 ISY_CONF_UUID = "uuid"
 ISY_CONF_NAME = "name"
 ISY_CONF_MODEL = "model"
@@ -173,8 +186,6 @@ UOM_INDEX = "25"
 UOM_ON_OFF = "2"
 UOM_PERCENTAGE = "51"
 
-SENSOR_AUX = "sensor_aux"
-
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
@@ -199,14 +210,6 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
             TYPE_CATEGORY_SAFETY,
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
-    },
-    Platform.BUTTON: {
-        # No devices automatically sorted as buttons at this time. Query buttons added elsewhere.
-        FILTER_UOM: [],
-        FILTER_STATES: [],
-        FILTER_NODE_DEF_ID: [],
-        FILTER_INSTEON_TYPE: [],
-        FILTER_ZWAVE_CAT: [],
     },
     Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
@@ -251,7 +254,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
         FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
-        FILTER_ZWAVE_CAT: [],
+        FILTER_ZWAVE_CAT: ["106", "107"],
     },
     Platform.LIGHT: {
         FILTER_UOM: ["51"],
@@ -307,6 +310,10 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
         FILTER_ZWAVE_CAT: ["140"],
     },
+}
+NODE_AUX_FILTERS: dict[str, Platform] = {
+    PROP_ON_LEVEL: Platform.NUMBER,
+    PROP_RAMP_RATE: Platform.SELECT,
 }
 
 UOM_FRIENDLY_NAME = {

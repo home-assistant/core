@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.energy import data, is_configured
 from homeassistant.components.recorder.statistics import async_add_external_statistics
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -13,6 +14,7 @@ from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
 )
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +43,9 @@ def mock_energy_platform(hass):
     )
 
 
-async def test_get_preferences_no_data(hass, hass_ws_client) -> None:
+async def test_get_preferences_no_data(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we get error if no preferences set."""
     client = await hass_ws_client(hass)
 
@@ -163,7 +167,9 @@ async def test_save_preferences(
     assert msg["result"] == {
         "cost_sensors": {
             "sensor.heat_pump_meter_2": "sensor.heat_pump_meter_2_cost",
-            "sensor.return_to_grid_offpeak": "sensor.return_to_grid_offpeak_compensation",
+            "sensor.return_to_grid_offpeak": (
+                "sensor.return_to_grid_offpeak_compensation"
+            ),
         },
         "solar_forecast_domains": ["some_domain"],
     }
@@ -201,7 +207,9 @@ async def test_save_preferences(
     assert msg["result"] == {**new_prefs, **new_prefs_2}
 
 
-async def test_handle_duplicate_from_stat(hass, hass_ws_client) -> None:
+async def test_handle_duplicate_from_stat(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we handle duplicate from stats."""
     client = await hass_ws_client(hass)
 
@@ -240,7 +248,9 @@ async def test_handle_duplicate_from_stat(hass, hass_ws_client) -> None:
     assert msg["error"]["code"] == "invalid_format"
 
 
-async def test_validate(hass, hass_ws_client) -> None:
+async def test_validate(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can validate the preferences."""
     client = await hass_ws_client(hass)
 
@@ -952,7 +962,9 @@ async def test_fossil_energy_consumption(recorder_mock, hass, hass_ws_client):
     }
 
 
-async def test_fossil_energy_consumption_checks(hass, hass_ws_client):
+async def test_fossil_energy_consumption_checks(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test fossil_energy_consumption parameter validation."""
     client = await hass_ws_client(hass)
     now = dt_util.utcnow()

@@ -13,33 +13,26 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    _LOGGER,
-    DOMAIN as ISY994_DOMAIN,
-    ISY994_NODES,
-    ISY994_PROGRAMS,
-    UOM_8_BIT_RANGE,
-    UOM_BARRIER,
-)
+from .const import _LOGGER, DOMAIN, UOM_8_BIT_RANGE, UOM_BARRIER
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY cover platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYCoverEntity | ISYCoverProgramEntity] = []
-    for node in hass_isy_data[ISY994_NODES][Platform.COVER]:
-        entities.append(ISYCoverEntity(node))
+    devices: dict[str, DeviceInfo] = isy_data.devices
+    for node in isy_data.nodes[Platform.COVER]:
+        entities.append(ISYCoverEntity(node, devices.get(node.primary_node)))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.COVER]:
+    for name, status, actions in isy_data.programs[Platform.COVER]:
         entities.append(ISYCoverProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, Platform.COVER, entities)
     async_add_entities(entities)
 
 

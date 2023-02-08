@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
@@ -108,14 +109,14 @@ MOCK_GAMES = {MOCK_ID: MOCK_GAMES_DATA}
 MOCK_GAMES_LOCKED = {MOCK_ID: MOCK_GAMES_DATA_LOCKED}
 
 
-async def test_ps4_integration_setup(hass):
+async def test_ps4_integration_setup(hass: HomeAssistant) -> None:
     """Test PS4 integration is setup."""
     await ps4.async_setup(hass, {})
     await hass.async_block_till_done()
     assert hass.data[PS4_DATA].protocol is not None
 
 
-async def test_creating_entry_sets_up_media_player(hass):
+async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up PS4 loads the media player."""
     mock_flow = "homeassistant.components.ps4.PlayStation4FlowHandler.async_step_user"
     with patch(
@@ -132,7 +133,7 @@ async def test_creating_entry_sets_up_media_player(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_config_flow_entry_migrate(hass):
+async def test_config_flow_entry_migrate(hass: HomeAssistant) -> None:
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
     manager = hass.config_entries
@@ -181,7 +182,7 @@ async def test_config_flow_entry_migrate(hass):
     assert mock_entry.data["devices"][0][CONF_REGION] == DEFAULT_REGION
 
 
-async def test_media_player_is_setup(hass):
+async def test_media_player_is_setup(hass: HomeAssistant) -> None:
     """Test media_player is setup correctly."""
     await setup_mock_component(hass)
     assert len(hass.data[PS4_DATA].devices) == 1
@@ -195,7 +196,7 @@ async def setup_mock_component(hass):
     await hass.async_block_till_done()
 
 
-def test_games_reformat_to_dict(hass):
+def test_games_reformat_to_dict(hass: HomeAssistant) -> None:
     """Test old data format is converted to new format."""
     with patch(
         "homeassistant.components.ps4.load_json",
@@ -218,7 +219,7 @@ def test_games_reformat_to_dict(hass):
         assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
-def test_load_games(hass):
+def test_load_games(hass: HomeAssistant) -> None:
     """Test that games are loaded correctly."""
     with patch(
         "homeassistant.components.ps4.load_json", return_value=MOCK_GAMES
@@ -237,7 +238,7 @@ def test_load_games(hass):
     assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
-def test_loading_games_returns_dict(hass):
+def test_loading_games_returns_dict(hass: HomeAssistant) -> None:
     """Test that loading games always returns a dict."""
     with patch(
         "homeassistant.components.ps4.load_json", side_effect=HomeAssistantError
@@ -268,7 +269,7 @@ def test_loading_games_returns_dict(hass):
     assert not mock_games
 
 
-async def test_send_command(hass):
+async def test_send_command(hass: HomeAssistant) -> None:
     """Test send_command service."""
     await setup_mock_component(hass)
 

@@ -3,8 +3,10 @@ import pytest
 
 from homeassistant.auth import models as auth_models
 from homeassistant.components.config import auth as auth_config
+from homeassistant.core import HomeAssistant
 
 from tests.common import CLIENT_ID, MockGroup, MockUser
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -224,7 +226,7 @@ async def test_create_requires_admin(hass, hass_ws_client, hass_read_only_access
     assert result["error"]["code"] == "unauthorized"
 
 
-async def test_update(hass, hass_ws_client):
+async def test_update(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
     """Test update command works."""
     client = await hass_ws_client(hass)
 
@@ -272,7 +274,9 @@ async def test_update_requires_admin(hass, hass_ws_client, hass_read_only_access
     assert user.name == "Test user"
 
 
-async def test_update_system_generated(hass, hass_ws_client):
+async def test_update_system_generated(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test update command cannot update a system generated."""
     client = await hass_ws_client(hass)
 
@@ -293,7 +297,9 @@ async def test_update_system_generated(hass, hass_ws_client):
     assert user.name == "Test user"
 
 
-async def test_deactivate(hass, hass_ws_client):
+async def test_deactivate(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test deactivation and reactivation of regular user."""
     client = await hass_ws_client(hass)
 
@@ -331,7 +337,9 @@ async def test_deactivate(hass, hass_ws_client):
     assert data_user["is_active"] is True
 
 
-async def test_deactivate_owner(hass, hass_ws_client):
+async def test_deactivate_owner(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that owner cannot be deactivated."""
     user = MockUser(id="abc", name="Test Owner", is_owner=True).add_to_hass(hass)
 
@@ -348,7 +356,9 @@ async def test_deactivate_owner(hass, hass_ws_client):
     assert result["error"]["code"] == "cannot_deactivate_owner"
 
 
-async def test_deactivate_system_generated(hass, hass_ws_client):
+async def test_deactivate_system_generated(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that owner cannot be deactivated."""
     client = await hass_ws_client(hass)
 

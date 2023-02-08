@@ -331,7 +331,7 @@ async def test_sensor_unavailable(hass, utcnow):
     assert state.state == "unavailable"
 
 
-def test_thread_node_caps_to_str():
+def test_thread_node_caps_to_str() -> None:
     """Test all values of this enum get a translatable string."""
     assert (
         thread_node_capability_to_str(ThreadNodeCapabilities.BORDER_ROUTER_CAPABLE)
@@ -347,7 +347,7 @@ def test_thread_node_caps_to_str():
     assert thread_node_capability_to_str(ThreadNodeCapabilities(128)) == "none"
 
 
-def test_thread_status_to_str():
+def test_thread_status_to_str() -> None:
     """Test all values of this enum get a translatable string."""
     assert thread_status_to_str(ThreadStatus.BORDER_ROUTER) == "border_router"
     assert thread_status_to_str(ThreadStatus.LEADER) == "leader"

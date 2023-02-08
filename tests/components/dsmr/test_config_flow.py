@@ -9,6 +9,7 @@ import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dsmr import DOMAIN, config_flow
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -530,7 +531,7 @@ async def test_setup_serial_wrong_telegram(
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options flow."""
 
     entry_data = {
@@ -569,7 +570,7 @@ async def test_options_flow(hass):
     assert entry.options == {"time_between_update": 15}
 
 
-def test_get_serial_by_id_no_dir():
+def test_get_serial_by_id_no_dir() -> None:
     """Test serial by id conversion if there's no /dev/serial/by-id."""
     p1 = patch("os.path.isdir", MagicMock(return_value=False))
     p2 = patch("os.scandir")
@@ -580,7 +581,7 @@ def test_get_serial_by_id_no_dir():
         assert scan_mock.call_count == 0
 
 
-def test_get_serial_by_id():
+def test_get_serial_by_id() -> None:
     """Test serial by id conversion."""
     p1 = patch("os.path.isdir", MagicMock(return_value=True))
     p2 = patch("os.scandir")

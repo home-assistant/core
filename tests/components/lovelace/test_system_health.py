@@ -2,12 +2,13 @@
 from unittest.mock import patch
 
 from homeassistant.components.lovelace import dashboard
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info
 
 
-async def test_system_health_info_autogen(hass):
+async def test_system_health_info_autogen(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "lovelace", {})
     assert await async_setup_component(hass, "system_health", {})
@@ -29,7 +30,7 @@ async def test_system_health_info_storage(hass, hass_storage):
     assert info == {"dashboards": 1, "mode": "storage", "resources": 0, "views": 0}
 
 
-async def test_system_health_info_yaml(hass):
+async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
@@ -42,7 +43,7 @@ async def test_system_health_info_yaml(hass):
     assert info == {"dashboards": 1, "mode": "yaml", "resources": 0, "views": 1}
 
 
-async def test_system_health_info_yaml_not_found(hass):
+async def test_system_health_info_yaml_not_found(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})

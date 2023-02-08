@@ -1,8 +1,6 @@
 """Support for BTHome sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 
 from homeassistant import config_entries
@@ -233,7 +231,10 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # UV index (-)
-    (BTHomeSensorDeviceClass.UV_INDEX, None,): SensorEntityDescription(
+    (
+        BTHomeSensorDeviceClass.UV_INDEX,
+        None,
+    ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.UV_INDEX}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -258,7 +259,10 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Volume (L)
-    (BTHomeSensorDeviceClass.VOLUME, Units.VOLUME_LITERS,): SensorEntityDescription(
+    (
+        BTHomeSensorDeviceClass.VOLUME,
+        Units.VOLUME_LITERS,
+    ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.VOLUME}_{Units.VOLUME_LITERS}",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -332,9 +336,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a BTHome BLE sensor."""
