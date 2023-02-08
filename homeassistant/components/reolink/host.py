@@ -140,20 +140,11 @@ class ReolinkHost:
         """Disconnect from the API, so the connection will be released."""
         try:
             await self._api.unsubscribe()
-        except aiohttp.ClientConnectorError as err:
-            _LOGGER.error(
-                "Reolink connection error while unsubscribing from host %s:%s: %s",
-                self._api.host,
-                self._api.port,
-                str(err),
-            )
-        except asyncio.TimeoutError:
-            _LOGGER.error(
-                "Reolink connection timeout while unsubscribing from host %s:%s",
-                self._api.host,
-                self._api.port,
-            )
-        except ReolinkError as err:
+        except (
+            aiohttp.ClientConnectorError,
+            asyncio.TimeoutError,
+            ReolinkError,
+        ) as err:
             _LOGGER.error(
                 "Reolink error while unsubscribing from host %s:%s: %s",
                 self._api.host,
@@ -163,20 +154,11 @@ class ReolinkHost:
 
         try:
             await self._api.logout()
-        except aiohttp.ClientConnectorError as err:
-            _LOGGER.error(
-                "Reolink connection error while logging out for host %s:%s: %s",
-                self._api.host,
-                self._api.port,
-                str(err),
-            )
-        except asyncio.TimeoutError:
-            _LOGGER.error(
-                "Reolink connection timeout while logging out for host %s:%s",
-                self._api.host,
-                self._api.port,
-            )
-        except ReolinkError as err:
+        except (
+            aiohttp.ClientConnectorError,
+            asyncio.TimeoutError,
+            ReolinkError,
+        ) as err:
             _LOGGER.error(
                 "Reolink error while logging out for host %s:%s: %s",
                 self._api.host,
