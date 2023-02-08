@@ -127,7 +127,7 @@ async def test_nx584_sensor_setup_with_exceptions(hass, exception_type):
 
 
 @pytest.mark.usefixtures("client")
-async def test_nx584_sensor_setup_version_too_old(hass):
+async def test_nx584_sensor_setup_version_too_old(hass: HomeAssistant) -> None:
     """Test if version is too old."""
     nx584_client.Client.return_value.get_version.return_value = "1.0"
     await _test_assert_graceful_fail(hass, {})
