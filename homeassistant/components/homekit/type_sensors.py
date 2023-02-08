@@ -285,7 +285,7 @@ class NitrogenDioxideSensor(AirQualitySensor):
 @TYPES.register("VolatileOrganicCompoundsSensor")
 class VolatileOrganicCompoundsSensor(AirQualitySensor):
     """Generate a VolatileOrganicCompoundsSensor accessory as VOCs sensor.
-    
+
     Sensor entity must return VOC in µg/m3.
     """
 
