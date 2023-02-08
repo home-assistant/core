@@ -287,6 +287,8 @@ class ReolinkHost:
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
 
         _LOGGER.debug("Registered webhook: %s", event_id)
 
