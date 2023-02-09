@@ -1083,11 +1083,6 @@ def recorder_db_url(pytestconfig):
                 raise RuntimeError(
                     f"Unable to drop database {db} because it is in use by {rows}"
                 )
-            for row in rows:
-                _LOGGER.warning(
-                    "Killing MySQL connection to temporary database %s", row.id
-                )
-                connection.execute(sa.text("KILL :id"), parameters={"id": row.id})
         engine.dispose()
         sqlalchemy_utils.drop_database(db_url)
     elif db_url.startswith("postgresql://"):
