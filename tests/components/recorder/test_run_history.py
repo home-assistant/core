@@ -5,7 +5,12 @@ from datetime import timedelta
 from homeassistant.components import recorder
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import recorder as recorder_helper
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .common import async_wait_recording_done
 
 
 async def test_run_history(recorder_mock, hass):
@@ -47,12 +52,21 @@ async def test_run_history(recorder_mock, hass):
     )
 
 
-async def test_run_history_during_schema_migration(recorder_mock, hass):
-    """Test the run history during schema migration."""
+async def test_run_history_while_recorder_is_not_yet_started(
+    recorder_db_url: str, hass: HomeAssistant
+) -> None:
+    """Test the run history while recorder is not yet started.
+
+    This usually happens during schema migration because
+    we do not start right away.
+    """
+    recorder_helper.async_initialize_recorder(hass)
+    await async_setup_component(
+        hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
+    )
     instance = recorder.get_instance(hass)
     run_history = instance.run_history
     assert run_history.current.start == run_history.recording_start
-    with instance.get_session() as session:
-        run_history.start(session)
+    await async_wait_recording_done(hass)
     assert run_history.current.start == run_history.recording_start
     assert run_history.current.created >= run_history.recording_start
