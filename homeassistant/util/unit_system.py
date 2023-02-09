@@ -256,6 +256,7 @@ METRIC_SYSTEM = UnitSystem(
         ): UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         # Convert non-metric pressure
         ("pressure", UnitOfPressure.PSI): UnitOfPressure.KPA,
+        ("pressure", UnitOfPressure.INH2O): UnitOfPressure.PA,
         ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -294,7 +295,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         **{
             ("atmospheric_pressure", unit): UnitOfPressure.INHG
             for unit in UnitOfPressure
-            if unit != UnitOfPressure.INHG
+            if unit not in (UnitOfPressure.INHG, UnitOfPressure.INH2O)
         },
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,

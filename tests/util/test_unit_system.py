@@ -350,6 +350,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         ),
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INH2O,
+            UnitOfPressure.HPA,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
             UnitOfPressure.INHG,
             UnitOfPressure.HPA,
         ),
@@ -670,7 +675,7 @@ def test_get_us_converted_unit(
 
 
 UNCONVERTED_UNITS_US_SYSTEM = {
-    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.INHG,),
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.INH2O, UnitOfPressure.INHG),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.FEET,
         UnitOfLength.INCHES,
@@ -683,7 +688,11 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfVolumetricFlux.INCHES_PER_DAY,
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
     ),
-    SensorDeviceClass.PRESSURE: (UnitOfPressure.INHG, UnitOfPressure.PSI),
+    SensorDeviceClass.PRESSURE: (
+        UnitOfPressure.INH2O,
+        UnitOfPressure.INHG,
+        UnitOfPressure.PSI,
+    ),
     SensorDeviceClass.SPEED: (
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KNOTS,
