@@ -8,11 +8,9 @@ from homeassistant.components.broadlink.device import get_domains
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
-
-from tests.common import mock_device_registry, mock_registry
 
 DEVICE_FACTORY = "homeassistant.components.broadlink.device.blk.gendevice"
 
@@ -248,12 +246,13 @@ async def test_device_setup_get_fwversion_os_error(hass: HomeAssistant) -> None:
     assert forward_entries == domains
 
 
-async def test_device_setup_registry(hass: HomeAssistant) -> None:
+async def test_device_setup_registry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we register the device and the entries correctly."""
     device = get_device("Office")
-
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
 
     mock_setup = await device.setup_entry(hass)
     await hass.async_block_till_done()
@@ -269,7 +268,7 @@ async def test_device_setup_registry(hass: HomeAssistant) -> None:
     assert device_entry.manufacturer == device.manufacturer
     assert device_entry.sw_version == device.fwversion
 
-    for entry in async_entries_for_device(entity_registry, device_entry.id):
+    for entry in er.async_entries_for_device(entity_registry, device_entry.id):
         assert (
             hass.states.get(entry.entity_id)
             .attributes[ATTR_FRIENDLY_NAME]
@@ -334,12 +333,13 @@ async def test_device_unload_update_failed(hass: HomeAssistant) -> None:
     assert mock_forward.call_count == 0
 
 
-async def test_device_update_listener(hass: HomeAssistant) -> None:
+async def test_device_update_listener(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we update device and entity registry when the entry is renamed."""
     device = get_device("Office")
-
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
 
     mock_setup = await device.setup_entry(hass)
     await hass.async_block_till_done()
@@ -352,7 +352,7 @@ async def test_device_update_listener(hass: HomeAssistant) -> None:
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     assert device_entry.name == "New Name"
-    for entry in async_entries_for_device(entity_registry, device_entry.id):
+    for entry in er.async_entries_for_device(entity_registry, device_entry.id):
         assert (
             hass.states.get(entry.entity_id)
             .attributes[ATTR_FRIENDLY_NAME]
