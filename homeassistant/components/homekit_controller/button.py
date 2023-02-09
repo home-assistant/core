@@ -6,7 +6,10 @@ characteristics that don't map to a Home Assistant feature.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
+from aiohomekit.controller import TransportType
+from aiohomekit.exceptions import AccessoryNotFoundError
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.button import (
@@ -14,15 +17,20 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import CONTROLLER
 from .entity import CharacteristicEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -151,6 +159,64 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
             await self.async_put_characteristics({key: val})
 
 
+class HomeKitProvisionPreferredThreadCrentials(CharacteristicEntity, ButtonEntity):
+    """Representation of a Button control for Ecobee clear hold request."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity is tracking."""
+        return []
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = name
+        return f"{prefix} Provision Preferred Thread Credentials"
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        if not (dataset := await async_get_preferred_dataset(self.hass)):
+            raise HomeAssistantError("No thread network credentials available")
+
+        await self._accessory.pairing.thread_provision(dataset)
+
+        try:
+            discovery = (
+                await self.hass.data[CONTROLLER]
+                .transports[TransportType.COAP]
+                .async_find(self._accessory.unique_id, timeout=30)
+            )
+            self.hass.config_entries.async_update_entry(
+                self._accessory.config_entry,
+                data={
+                    **self._accessory.config_entry.data,
+                    "Connection": "CoAP",
+                    "AccessoryIP": discovery.description.address,
+                    "AccessoryPort": discovery.description.port,
+                },
+            )
+            _LOGGER.debug(
+                "%s: Found device on local network, migrating integration to Thread",
+                self._accessory.unique_id,
+            )
+
+        except AccessoryNotFoundError as exc:
+            _LOGGER.debug(
+                "%s: Failed to appear on local network as a Thread device, reverting to BLE",
+                self._accessory.unique_id,
+            )
+            raise HomeAssistantError("Could not migrate device to Thread") from exc
+
+        finally:
+            await self.hass.config_entries.async_reload(
+                self._accessory.config_entry.entry_id
+            )
+
+
 BUTTON_ENTITY_CLASSES: dict[str, type] = {
     CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
+    CharacteristicsTypes.THREAD_CONTROL_POINT: HomeKitProvisionPreferredThreadCrentials,
 }

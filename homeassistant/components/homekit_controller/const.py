@@ -24,8 +24,6 @@ IDENTIFIER_ACCESSORY_ID = "homekit_controller:accessory-id"
 IDENTIFIER_LEGACY_SERIAL_NUMBER = "serial-number"
 IDENTIFIER_LEGACY_ACCESSORY_ID = "accessory-id"
 
-ATTR_HKID = "hkid"
-
 SERVICE_THREAD_PROVISION = "thread_provision"
 
 # Mapping from Homekit type to component.
@@ -98,6 +96,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.DENSITY_VOC: "sensor",
     CharacteristicsTypes.IDENTIFY: "button",
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
+    CharacteristicsTypes.THREAD_CONTROL_POINT: "button",
 }
 
 STARTUP_EXCEPTIONS = (

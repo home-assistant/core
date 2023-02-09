@@ -6,32 +6,22 @@ import contextlib
 import logging
 
 import aiohomekit
-from aiohomekit.controller import TransportType
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
     EncryptionError,
 )
-import voluptuous as vol
 
-from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import (
-    ATTR_HKID,
-    CONTROLLER,
-    DOMAIN,
-    KNOWN_DEVICES,
-    SERVICE_THREAD_PROVISION,
-)
+from .const import KNOWN_DEVICES
 from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,60 +69,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
-
-    async def thread_provision(service: ServiceCall) -> None:
-        hkid: str = service.data[ATTR_HKID]
-
-        if hkid not in hass.data[KNOWN_DEVICES]:
-            _LOGGER.warning("Unknown HKID")
-            return
-
-        dataset = await async_get_preferred_dataset(hass)
-
-        connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
-        await connection.pairing.thread_provision(dataset)
-
-        try:
-            discovery = (
-                await hass.data[CONTROLLER]
-                .transports[TransportType.COAP]
-                .async_find(connection.unique_id, timeout=30)
-            )
-            hass.config_entries.async_update_entry(
-                connection.config_entry,
-                data={
-                    **connection.config_entry.data,
-                    "Connection": "CoAP",
-                    "AccessoryIP": discovery.description.address,
-                    "AccessoryPort": discovery.description.port,
-                },
-            )
-            _LOGGER.debug(
-                "%s: Found device on local network, migrating integration to Thread",
-                hkid,
-            )
-
-        except AccessoryNotFoundError as exc:
-            _LOGGER.debug(
-                "%s: Failed to appear on local network as a Thread device, reverting to BLE",
-                hkid,
-            )
-            raise HomeAssistantError("Could not migrate device to Thread") from exc
-
-        finally:
-            await hass.config_entries.async_reload(connection.config_entry.entry_id)
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_THREAD_PROVISION,
-        thread_provision,
-        schema=vol.Schema(
-            {
-                vol.Required(ATTR_HKID): cv.string,
-            }
-        ),
-    )
 
     return True
 
