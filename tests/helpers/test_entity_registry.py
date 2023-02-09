@@ -5,11 +5,14 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry, flush_store
 
