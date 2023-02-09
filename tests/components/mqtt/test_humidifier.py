@@ -131,7 +131,9 @@ async def async_set_humidity(
     await hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
 
 
-async def test_fail_setup_if_no_command_topic(hass: HomeAssistant, caplog) -> None:
+async def test_fail_setup_if_no_command_topic(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if command fails with command topic."""
     assert not await async_setup_component(
         hass,
@@ -1133,7 +1135,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique_id option only creates one fan per id."""
     config = {
         mqtt.DOMAIN: {
