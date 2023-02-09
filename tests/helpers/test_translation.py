@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
@@ -20,7 +21,7 @@ def mock_config_flows():
         yield flows
 
 
-def test_recursive_flatten():
+def test_recursive_flatten() -> None:
     """Test the flatten function."""
     data = {"parent1": {"child1": "data1", "child2": "data2"}, "parent2": "data3"}
 
@@ -75,7 +76,7 @@ async def test_component_translation_path(hass, enable_custom_integrations):
     )
 
 
-def test_load_translations_files(hass):
+def test_load_translations_files(hass: HomeAssistant) -> None:
     """Test the load translation files function."""
     # Test one valid and one invalid file
     file1 = hass.config.path(
@@ -194,7 +195,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     assert "component2" not in hass.config.components
 
 
-async def test_get_translations_while_loading_components(hass):
+async def test_get_translations_while_loading_components(hass: HomeAssistant) -> None:
     """Test the get translations helper loads config flow translations."""
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
@@ -230,7 +231,7 @@ async def test_get_translations_while_loading_components(hass):
     assert load_count == 1
 
 
-async def test_get_translation_categories(hass):
+async def test_get_translation_categories(hass: HomeAssistant) -> None:
     """Test the get translations helper loads config flow translations."""
     with patch.object(translation, "async_get_config_flows", return_value={"light"}):
         translations = await translation.async_get_translations(
@@ -350,7 +351,7 @@ async def test_translation_merging_loaded_together(hass, caplog):
     assert translations == hue_translations | homekit_translations
 
 
-async def test_caching(hass):
+async def test_caching(hass: HomeAssistant) -> None:
     """Test we cache data."""
     hass.config.components.add("sensor")
     hass.config.components.add("light")

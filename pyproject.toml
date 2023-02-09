@@ -41,7 +41,7 @@ dependencies    = [
     "lru-dict==1.1.8",
     "PyJWT==2.5.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==39.0.0",
+    "cryptography==39.0.1",
     # pyOpenSSL 23.0.0 is required to work with cryptography 39+
     "pyOpenSSL==23.0.0",
     "orjson==3.8.5",
@@ -244,6 +244,7 @@ select = [
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
+    "ICN001", # import concentions; {name} should be imported as {asname} 
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
@@ -267,6 +268,10 @@ ignore = [
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
 ]
+
+[tool.ruff.flake8-import-conventions.extend-aliases]
+voluptuous = "vol"
+"homeassistant.helpers.config_validation" = "cv"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

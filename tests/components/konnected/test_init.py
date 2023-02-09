@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -42,7 +43,7 @@ async def mock_panel_fixture():
         yield konn_client
 
 
-async def test_config_schema(hass):
+async def test_config_schema(hass: HomeAssistant) -> None:
     """Test that config schema is imported properly."""
     config = {
         konnected.DOMAIN: {
@@ -219,7 +220,7 @@ async def test_config_schema(hass):
     }
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that we do not discover anything or try to set up a Konnected panel."""
     assert await async_setup_component(hass, konnected.DOMAIN, {})
 
@@ -272,7 +273,7 @@ async def test_setup_defined_hosts_known_auth(hass, mock_panel):
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_setup_defined_hosts_no_known_auth(hass):
+async def test_setup_defined_hosts_no_known_auth(hass: HomeAssistant) -> None:
     """Test we initiate config entry if config panel is not known."""
     assert (
         await async_setup_component(
@@ -292,7 +293,7 @@ async def test_setup_defined_hosts_no_known_auth(hass):
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
-async def test_setup_multiple(hass):
+async def test_setup_multiple(hass: HomeAssistant) -> None:
     """Test we initiate config entry for multiple panels."""
     assert (
         await async_setup_component(
@@ -356,7 +357,7 @@ async def test_setup_multiple(hass):
     )
 
 
-async def test_config_passed_to_config_entry(hass):
+async def test_config_passed_to_config_entry(hass: HomeAssistant) -> None:
     """Test that configured options for a host are loaded via config entry."""
     entry = MockConfigEntry(
         domain=konnected.DOMAIN,

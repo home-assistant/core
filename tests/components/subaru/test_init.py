@@ -10,6 +10,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.subaru.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .api_responses import (
@@ -28,7 +29,7 @@ from .conftest import (
 )
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test DOMAIN is empty if there is no config."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()

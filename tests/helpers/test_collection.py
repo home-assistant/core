@@ -6,6 +6,7 @@ import logging
 import pytest
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     collection,
     entity_component,
@@ -99,7 +100,7 @@ class MockStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-def test_id_manager():
+def test_id_manager() -> None:
     """Test the ID manager."""
     id_manager = collection.IDManager()
     assert not id_manager.has_id("some_id")
@@ -188,7 +189,7 @@ async def test_yaml_collection_skipping_duplicate_ids() -> None:
     )
 
 
-async def test_storage_collection(hass):
+async def test_storage_collection(hass: HomeAssistant) -> None:
     """Test storage collection."""
     store = storage.Store(hass, 1, "test-data")
     await store.async_save(
@@ -251,7 +252,7 @@ async def test_storage_collection(hass):
     }
 
 
-async def test_attach_entity_component_collection(hass):
+async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = MockObservableCollection(_LOGGER)
@@ -290,7 +291,7 @@ async def test_attach_entity_component_collection(hass):
     assert hass.states.get("test.mock_1") is None
 
 
-async def test_entity_component_collection_abort(hass):
+async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
     """Test aborted entity adding is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = MockObservableCollection(_LOGGER)
@@ -356,7 +357,7 @@ async def test_entity_component_collection_abort(hass):
     assert len(async_remove_calls) == 0
 
 
-async def test_entity_component_collection_entity_removed(hass):
+async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -> None:
     """Test entity removal is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = MockObservableCollection(_LOGGER)

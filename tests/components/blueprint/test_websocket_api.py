@@ -4,8 +4,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import parse_yaml
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -30,7 +33,9 @@ async def setup_bp(hass, automation_config, script_config):
     await async_setup_component(hass, "script", script_config)
 
 
-async def test_list_blueprints(hass, hass_ws_client):
+async def test_list_blueprints(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test listing blueprints."""
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "blueprint/list", "domain": "automation"})
@@ -62,7 +67,9 @@ async def test_list_blueprints(hass, hass_ws_client):
     }
 
 
-async def test_list_blueprints_non_existing_domain(hass, hass_ws_client):
+async def test_list_blueprints_non_existing_domain(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test listing blueprints."""
     client = await hass_ws_client(hass)
     await client.send_json(

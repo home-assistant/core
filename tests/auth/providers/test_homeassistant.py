@@ -11,6 +11,7 @@ from homeassistant.auth.providers import (
     auth_provider_from_config,
     homeassistant as hass_auth,
 )
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -273,7 +274,7 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
     assert credentials1 is not credentials3
 
 
-async def test_race_condition_in_data_loading(hass):
+async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
     """Test race condition in the hass_auth.Data loading.
 
     Ref issue: https://github.com/home-assistant/core/issues/21569

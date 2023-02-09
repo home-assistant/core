@@ -167,6 +167,7 @@ class RegistryEntry:
             "icon": self.icon,
             "id": self.id,
             "name": self.name,
+            "options": self.options,
             "original_name": self.original_name,
             "platform": self.platform,
             "translation_key": self.translation_key,

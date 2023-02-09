@@ -25,7 +25,7 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
     assert "use unit_conversion.DistanceConverter instead" in caplog.text
 
 
-def test_convert_same_unit():
+def test_convert_same_unit() -> None:
     """Test conversion from any unit to same unit."""
     assert distance_util.convert(5, LENGTH_KILOMETERS, LENGTH_KILOMETERS) == 5
     assert distance_util.convert(2, LENGTH_METERS, LENGTH_METERS) == 2
@@ -37,7 +37,7 @@ def test_convert_same_unit():
     assert distance_util.convert(7, LENGTH_INCHES, LENGTH_INCHES) == 7
 
 
-def test_convert_invalid_unit():
+def test_convert_invalid_unit() -> None:
     """Test exception is thrown for invalid units."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         distance_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
@@ -46,7 +46,7 @@ def test_convert_invalid_unit():
         distance_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 
-def test_convert_nonnumeric_value():
+def test_convert_nonnumeric_value() -> None:
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
         distance_util.convert("a", LENGTH_KILOMETERS, LENGTH_METERS)

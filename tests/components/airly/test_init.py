@@ -1,4 +1,5 @@
 """Test init of Airly integration."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -8,20 +9,19 @@ from homeassistant.components.airly import set_update_interval
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import API_POINT_URL, init_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_fixture,
-    mock_device_registry,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_async_setup_entry(hass, aioclient_mock):
+async def test_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test a successful setup entry."""
     await init_integration(hass, aioclient_mock)
 
@@ -31,7 +31,9 @@ async def test_async_setup_entry(hass, aioclient_mock):
     assert state.state == "4.37"
 
 
-async def test_config_not_ready(hass, aioclient_mock):
+async def test_config_not_ready(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test for setup failure if connection to Airly is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -52,7 +54,9 @@ async def test_config_not_ready(hass, aioclient_mock):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_without_unique_id(hass, aioclient_mock):
+async def test_config_without_unique_id(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test for setup entry without unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -72,7 +76,9 @@ async def test_config_without_unique_id(hass, aioclient_mock):
     assert entry.unique_id == "123-456"
 
 
-async def test_config_with_turned_off_station(hass, aioclient_mock):
+async def test_config_with_turned_off_station(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test for setup entry for a turned off measuring station."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -92,7 +98,9 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_update_interval(hass, aioclient_mock):
+async def test_update_interval(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test correct update interval when the number of configured instances changes."""
     REMAINING_REQUESTS = 15
     HEADERS = {
@@ -173,7 +181,9 @@ async def test_update_interval(hass, aioclient_mock):
         assert aioclient_mock.call_count == 5
 
 
-async def test_unload_entry(hass, aioclient_mock):
+async def test_unload_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass, aioclient_mock)
 
@@ -188,7 +198,12 @@ async def test_unload_entry(hass, aioclient_mock):
 
 
 @pytest.mark.parametrize("old_identifier", ((DOMAIN, 123, 456), (DOMAIN, "123", "456")))
-async def test_migrate_device_entry(hass, aioclient_mock, old_identifier):
+async def test_migrate_device_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    old_identifier: tuple[str, Any, Any],
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test device_info identifiers migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -205,21 +220,22 @@ async def test_migrate_device_entry(hass, aioclient_mock, old_identifier):
     aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
     config_entry.add_to_hass(hass)
 
-    device_reg = mock_device_registry(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={old_identifier}
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    migrated_device_entry = device_reg.async_get_or_create(
+    migrated_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123-456")}
     )
     assert device_entry.id == migrated_device_entry.id
 
 
-async def test_remove_air_quality_entities(hass, aioclient_mock):
+async def test_remove_air_quality_entities(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test remove air_quality entities from registry."""
     registry = er.async_get(hass)
 

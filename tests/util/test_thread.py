@@ -5,12 +5,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.util import thread
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
 
-async def test_thread_with_exception_invalid(hass):
+async def test_thread_with_exception_invalid(hass: HomeAssistant) -> None:
     """Test throwing an invalid thread exception."""
 
     finish_event = asyncio.Event()
@@ -27,7 +28,7 @@ async def test_thread_with_exception_invalid(hass):
     test_thread.join()
 
 
-async def test_thread_not_started(hass):
+async def test_thread_not_started(hass: HomeAssistant) -> None:
     """Test throwing when the thread is not started."""
 
     test_thread = ThreadWithException(target=lambda *_: None)
@@ -36,7 +37,7 @@ async def test_thread_not_started(hass):
         test_thread.raise_exc(TimeoutError)
 
 
-async def test_thread_fails_raise(hass):
+async def test_thread_fails_raise(hass: HomeAssistant) -> None:
     """Test throwing after already ended."""
 
     finish_event = asyncio.Event()
