@@ -103,7 +103,6 @@ async def test_shutdown_before_startup_finishes(
     tmp_path,
 ):
     """Test shutdown before recorder starts is clean."""
-
     if recorder_db_url == "sqlite://":
         # On-disk database because this test does not play nice with the
         # MutexPool
@@ -325,7 +324,7 @@ async def test_saving_state_with_intermixed_time_changes(
         assert db_states[0].event_id is None
 
 
-def test_saving_state_with_exception(hass, hass_recorder, caplog):
+def test_saving_state_with_exception(hass_recorder, hass, caplog):
     """Test saving and restoring a state."""
     hass = hass_recorder()
 
@@ -363,7 +362,7 @@ def test_saving_state_with_exception(hass, hass_recorder, caplog):
     assert "Error saving events" not in caplog.text
 
 
-def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
+def test_saving_state_with_sqlalchemy_exception(hass_recorder, hass, caplog):
     """Test saving state when there is an SQLAlchemyError."""
     hass = hass_recorder()
 
@@ -431,7 +430,7 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
     assert "Error saving events" not in caplog.text
 
 
-def test_saving_event(hass, hass_recorder):
+def test_saving_event(hass_recorder):
     """Test saving and restoring an event."""
     hass = hass_recorder()
 
@@ -691,7 +690,7 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
     assert _state_with_context(hass, "test.ok").state == "state2"
 
 
-def test_saving_state_and_removing_entity(hass, hass_recorder):
+def test_saving_state_and_removing_entity(hass_recorder):
     """Test saving the state of a removed entity."""
     hass = hass_recorder()
     entity_id = "lock.mine"
@@ -1256,7 +1255,7 @@ def test_has_services(hass_recorder):
     assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
 
 
-def test_service_disable_events_not_recording(hass, hass_recorder):
+def test_service_disable_events_not_recording(hass_recorder):
     """Test that events are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
@@ -1331,7 +1330,7 @@ def test_service_disable_events_not_recording(hass, hass_recorder):
     )
 
 
-def test_service_disable_states_not_recording(hass, hass_recorder):
+def test_service_disable_states_not_recording(hass_recorder):
     """Test that state changes are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
@@ -1529,6 +1528,10 @@ async def test_database_lock_and_unlock(
     tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # Database locking is only used for SQLite
+        return
+
     if recorder_db_url == "sqlite://":
         # Use file DB, in memory DB cannot do write locks.
         recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
@@ -1574,6 +1577,10 @@ async def test_database_lock_and_overflow(
     tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # Database locking is only used for SQLite
+        return
+
     # Use file DB, in memory DB cannot do write locks.
     if recorder_db_url == "sqlite://":
         # Use file DB, in memory DB cannot do write locks.

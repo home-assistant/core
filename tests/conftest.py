@@ -1034,8 +1034,13 @@ def recorder_config():
 
 
 @pytest.fixture
-def recorder_db_url(pytestconfig):
+def recorder_db_url(
+    pytestconfig,
+    hass_fixture_setup,
+):
     """Prepare a default database for tests and return a connection URL."""
+    assert not hass_fixture_setup
+
     db_url: str = pytestconfig.getoption("dburl")
     if db_url.startswith(("postgresql://", "mysql://")):
         import sqlalchemy_utils
@@ -1066,7 +1071,26 @@ def recorder_db_url(pytestconfig):
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding="utf8")
     yield db_url
-    if db_url.startswith("mysql://") or db_url.startswith("postgresql://"):
+    if db_url.startswith("mysql://"):
+        import sqlalchemy as sa
+
+        made_url = sa.make_url(db_url)
+        db = made_url.database
+        engine = sa.create_engine(db_url)
+        # Kill any open connections to the database before dropping it
+        # to ensure that InnoDB does not deadlock.
+        with engine.begin() as connection:
+            query = sa.text(
+                "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
+            )
+            for row in connection.execute(query, parameters={"db": db}).fetchall():
+                _LOGGER.warning(
+                    "Killing MySQL connection to temporary database %s", row.id
+                )
+                connection.execute(sa.text("KILL :id"), parameters={"id": row.id})
+        engine.dispose()
+        sqlalchemy_utils.drop_database(db_url)
+    elif db_url.startswith("postgresql://"):
         sqlalchemy_utils.drop_database(db_url)
 
 
@@ -1150,14 +1174,11 @@ async def _async_init_recorder_component(hass, add_config=None, db_url=None):
 @pytest.fixture
 async def async_setup_recorder_instance(
     recorder_db_url,
-    hass_fixture_setup,
     enable_nightly_purge,
     enable_statistics,
     enable_statistics_table_validation,
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
-    assert not hass_fixture_setup
-
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
