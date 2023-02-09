@@ -24,8 +24,6 @@ IDENTIFIER_ACCESSORY_ID = "homekit_controller:accessory-id"
 IDENTIFIER_LEGACY_SERIAL_NUMBER = "serial-number"
 IDENTIFIER_LEGACY_ACCESSORY_ID = "accessory-id"
 
-SERVICE_THREAD_PROVISION = "thread_provision"
-
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
     ServicesTypes.LIGHTBULB: "light",
