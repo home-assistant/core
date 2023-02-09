@@ -16,10 +16,10 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AirVisualProData, AirVisualProEntity

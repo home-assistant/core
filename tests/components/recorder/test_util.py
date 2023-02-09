@@ -203,9 +203,10 @@ def test_setup_connection_for_dialect_mysql(mysql_version):
 
     util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
 
-    assert len(execute_args) == 2
+    assert len(execute_args) == 3
     assert execute_args[0] == "SET session wait_timeout=28800"
     assert execute_args[1] == "SELECT VERSION()"
+    assert execute_args[2] == "SET time_zone = '+00:00'"
 
 
 @pytest.mark.parametrize(

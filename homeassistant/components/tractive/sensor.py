@@ -10,10 +10,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_LEVEL, PERCENTAGE, UnitOfTime
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables

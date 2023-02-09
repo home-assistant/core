@@ -6,11 +6,10 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.update import DOMAIN
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util

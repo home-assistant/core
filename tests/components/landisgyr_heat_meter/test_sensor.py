@@ -19,12 +19,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, State
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
