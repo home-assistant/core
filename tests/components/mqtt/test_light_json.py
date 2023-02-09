@@ -154,11 +154,11 @@ def light_platform_only():
 class JsonValidator:
     """Helper to compare JSON."""
 
-    def __init__(self, jsondata):
+    def __init__(self, jsondata) -> None:
         """Initialize JSON validator."""
         self.jsondata = jsondata
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Compare JSON data."""
         return json.loads(self.jsondata) == json.loads(other)
 

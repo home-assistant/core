@@ -1,6 +1,7 @@
 """The tests for the MQTT siren platform."""
 import copy
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -66,7 +67,11 @@ def siren_platform_only():
         yield
 
 
-async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL, parameters={}) -> None:
+async def async_turn_on(
+    hass: HomeAssistant,
+    entity_id: str = ENTITY_MATCH_ALL,
+    parameters: dict[str, Any] = {},
+) -> None:
     """Turn all or specified siren on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     data.update(parameters)
@@ -74,7 +79,9 @@ async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL, parameters={}) -> None
     await hass.services.async_call(siren.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
-async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL) -> None:
+async def async_turn_off(
+    hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Turn all or specified siren off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
