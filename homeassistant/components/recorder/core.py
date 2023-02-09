@@ -638,10 +638,8 @@ class Recorder(threading.Thread):
             else:
                 persistent_notification.create(
                     self.hass,
-                    (
-                        "The database migration failed, check [the logs](/config/logs)."
-                        "Database Migration Failed"
-                    ),
+                    "The database migration failed, check [the logs](/config/logs).",
+                    "Database Migration Failed",
                     "recorder_database_migration",
                 )
                 self.hass.add_job(self.async_set_db_ready)
@@ -730,8 +728,10 @@ class Recorder(threading.Thread):
             (
                 "System performance will temporarily degrade during the database"
                 " upgrade. Do not power down or restart the system until the upgrade"
-                " completes. Integrations that read the database, such as logbook and"
-                " history, may return inconsistent results until the upgrade completes."
+                " completes. Integrations that read the database, such as logbook,"
+                " history, and statistics may return inconsistent results until the "
+                " upgrade completes. This notification will be automatically dismissed"
+                " when the upgrade completes."
             ),
             "Database upgrade in progress",
             "recorder_database_migration",
@@ -1027,11 +1027,7 @@ class Recorder(threading.Thread):
 
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
-        assert self.engine is not None
-        assert self.event_session is not None
-        migration.post_schema_migration(
-            self.engine, self.event_session, old_version, new_version
-        )
+        migration.post_schema_migration(self, old_version, new_version)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
