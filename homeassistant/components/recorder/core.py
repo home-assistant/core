@@ -1213,13 +1213,18 @@ class Recorder(threading.Thread):
         """End the recorder session."""
         if self.event_session is None:
             return
-        try:
+        if self.run_history.active:
             self.run_history.end(self.event_session)
+        try:
             self._commit_event_session_or_retry()
-            self.event_session.close()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error saving the event session during shutdown: %s", err)
-
+        try:
+            self.event_session.close()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error closing the event session during shutdown: %s", err
+            )
         self.run_history.clear()
 
     def _shutdown(self) -> None:
