@@ -1,6 +1,7 @@
 {
   "domain": "homekit_controller",
   "name": "HomeKit Controller",
+  "after_dependencies": ["thread"],
   "bluetooth": [
     {
       "manufacturer_id": 76,

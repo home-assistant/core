@@ -14,6 +14,7 @@ from aiohomekit.exceptions import (
 )
 import voluptuous as vol
 
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall
@@ -87,38 +88,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def thread_provision(service: ServiceCall) -> None:
         hkid: str = service.data[ATTR_HKID]
-        network_name: str = service.data[ATTR_THREAD_NETWORK_NAME]
-        channel: int = service.data[ATTR_THREAD_CHANNEL]
-        pan_id: str = service.data[ATTR_THREAD_PAN_ID]
-        extended_pan_id: str = service.data[ATTR_THREAD_EXTENDED_PAN_ID]
-        network_key: str = service.data[ATTR_THREAD_NETWORK_KEY]
-        unknown: int = service.data[ATTR_THREAD_UNKNOWN_FLAG]
-        _LOGGER.warning(
-            "Provisioning Thread credentials: %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s",
-            ATTR_HKID,
-            hkid,
-            ATTR_THREAD_NETWORK_NAME,
-            network_name,
-            ATTR_THREAD_CHANNEL,
-            channel,
-            ATTR_THREAD_PAN_ID,
-            pan_id,
-            ATTR_THREAD_EXTENDED_PAN_ID,
-            extended_pan_id,
-            ATTR_THREAD_NETWORK_KEY,
-            "REDACTED",
-            ATTR_THREAD_UNKNOWN_FLAG,
-            unknown,
-        )
 
         if hkid not in hass.data[KNOWN_DEVICES]:
             _LOGGER.warning("Unknown HKID")
             return
 
+        dataset = await async_get_preferred_dataset(hass)
+
         connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
-        await connection.pairing.thread_provision(
-            network_name, channel, pan_id, extended_pan_id, network_key, unknown
-        )
+        await connection.pairing.thread_provision(dataset)
 
         try:
             discovery = (
@@ -158,24 +136,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required(ATTR_HKID): cv.string,
-                vol.Required(ATTR_THREAD_NETWORK_NAME): vol.All(
-                    cv.string, vol.Length(max=16)
-                ),
-                vol.Required(ATTR_THREAD_CHANNEL): vol.All(
-                    cv.positive_int, vol.Range(min=11, max=26)
-                ),
-                vol.Required(ATTR_THREAD_PAN_ID): vol.All(
-                    cv.string, vol.Length(min=1, max=4)
-                ),
-                vol.Required(ATTR_THREAD_EXTENDED_PAN_ID): vol.All(
-                    cv.string, vol.Length(min=1, max=16)
-                ),
-                vol.Required(ATTR_THREAD_NETWORK_KEY): vol.All(
-                    cv.string, vol.Length(min=1, max=32)
-                ),
-                vol.Required(ATTR_THREAD_UNKNOWN_FLAG): vol.All(
-                    cv.positive_int, vol.Range(min=0, max=255)
-                ),
             }
         ),
     )
