@@ -1,6 +1,7 @@
 """Test run history."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.db_schema import RecorderRuns
@@ -61,9 +62,10 @@ async def test_run_history_while_recorder_is_not_yet_started(
     we do not start right away.
     """
     recorder_helper.async_initialize_recorder(hass)
-    await async_setup_component(
-        hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
-    )
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
+        assert await async_setup_component(
+            hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
+        )
     instance = recorder.get_instance(hass)
     run_history = instance.run_history
     assert run_history.current.start == run_history.recording_start
