@@ -271,11 +271,11 @@ async def websocket_notify_on_aldb_status(
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
     @callback
-    def aldb_loaded():
+    def aldb_loaded(status):
         """Forward ALDB loaded event to websocket."""
         forward_data = {
             "type": "status_changed",
-            "is_loading": device.aldb.status == ALDBStatus.LOADING,
+            "is_loading": status == ALDBStatus.LOADING,
         }
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
