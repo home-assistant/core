@@ -112,6 +112,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mqtt_mock_entry_with_yaml_config": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
+    "requests_mock": "requests_mock.Mocker",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
