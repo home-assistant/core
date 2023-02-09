@@ -9,7 +9,7 @@ from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import API_POINT_URL, init_integration
@@ -198,8 +198,11 @@ async def test_unload_entry(
 
 @pytest.mark.parametrize("old_identifier", ((DOMAIN, 123, 456), (DOMAIN, "123", "456")))
 async def test_migrate_device_entry(
-    hass, aioclient_mock, old_identifier, device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    old_identifier,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test device_info identifiers migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

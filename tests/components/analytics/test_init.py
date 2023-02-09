@@ -5,6 +5,9 @@ from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
+
 MOCK_VERSION = "1970.1.0"
 
 
@@ -16,7 +19,11 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert DOMAIN in hass.data
 
 
-async def test_websocket(hass, hass_ws_client, aioclient_mock):
+async def test_websocket(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test WebSocket commands."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

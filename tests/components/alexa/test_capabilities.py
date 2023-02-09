@@ -34,7 +34,7 @@ from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize("adjust", ["-5", "5", "-80"])
-async def test_api_adjust_brightness(hass, adjust):
+async def test_api_adjust_brightness(hass: HomeAssistant, adjust) -> None:
     """Test api adjust brightness process."""
     request = get_new_request(
         "Alexa.BrightnessController", "AdjustBrightness", "light#test"
@@ -119,7 +119,7 @@ async def test_api_set_color_temperature(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("result,initial", [(383, "333"), (500, "500")])
-async def test_api_decrease_color_temp(hass, result, initial):
+async def test_api_decrease_color_temp(hass: HomeAssistant, result, initial) -> None:
     """Test api decrease color temp process."""
     request = get_new_request(
         "Alexa.ColorTemperatureController", "DecreaseColorTemperature", "light#test"
@@ -147,7 +147,7 @@ async def test_api_decrease_color_temp(hass, result, initial):
 
 
 @pytest.mark.parametrize("result,initial", [(283, "333"), (142, "142")])
-async def test_api_increase_color_temp(hass, result, initial):
+async def test_api_increase_color_temp(hass: HomeAssistant, result, initial) -> None:
     """Test api increase color temp process."""
     request = get_new_request(
         "Alexa.ColorTemperatureController", "IncreaseColorTemperature", "light#test"
@@ -183,7 +183,9 @@ async def test_api_increase_color_temp(hass, result, initial):
         ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),
     ],
 )
-async def test_api_select_input(hass, domain, payload, source_list, idx):
+async def test_api_select_input(
+    hass: HomeAssistant, domain, payload, source_list, idx
+) -> None:
     """Test api set input process."""
     hass.states.async_set(
         "media_player.test",
@@ -249,7 +251,9 @@ async def test_report_lock_state(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
 )
-async def test_report_dimmable_light_state(hass, supported_color_modes):
+async def test_report_dimmable_light_state(
+    hass: HomeAssistant, supported_color_modes
+) -> None:
     """Test BrightnessController reports brightness correctly."""
     hass.states.async_set(
         "light.test_on",
@@ -277,7 +281,9 @@ async def test_report_dimmable_light_state(hass, supported_color_modes):
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
-async def test_report_colored_light_state(hass, supported_color_modes):
+async def test_report_colored_light_state(
+    hass: HomeAssistant, supported_color_modes
+) -> None:
     """Test ColorController reports color correctly."""
     hass.states.async_set(
         "light.test_on",
@@ -934,7 +940,7 @@ async def test_report_image_processing(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("domain", ["button", "input_button"])
-async def test_report_button_pressed(hass, domain):
+async def test_report_button_pressed(hass: HomeAssistant, domain) -> None:
     """Test button presses report human presence detection events.
 
     For use to trigger routines.
@@ -952,7 +958,9 @@ async def test_report_button_pressed(hass, domain):
 
 
 @pytest.mark.parametrize("domain", ["switch", "input_boolean"])
-async def test_toggle_entities_report_contact_events(hass, domain):
+async def test_toggle_entities_report_contact_events(
+    hass: HomeAssistant, domain
+) -> None:
     """Test toggles and switches report contact sensor events to trigger routines."""
     hass.states.async_set(
         f"{domain}.test_toggle", "on", {"friendly_name": "Test toggle"}

@@ -159,7 +159,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
 
 
 @freeze_time("2022-04-19 07:53:05")
-async def test_switch(hass, events):
+async def test_switch(hass: HomeAssistant, events) -> None:
     """Test switch discovery."""
     device = ("switch.test", "on", {"friendly_name": "Test switch"})
     appliance = await discovery_test(device, hass)
@@ -191,7 +191,7 @@ async def test_switch(hass, events):
     assert {"name": "detectionState"} in properties["supported"]
 
 
-async def test_outlet(hass, events):
+async def test_outlet(hass: HomeAssistant, events) -> None:
     """Test switch with device class outlet discovery."""
     device = (
         "switch.test",
@@ -274,7 +274,7 @@ async def test_dimmable_light(hass: HomeAssistant) -> None:
     "supported_color_modes",
     [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
 )
-async def test_color_light(hass, supported_color_modes):
+async def test_color_light(hass: HomeAssistant, supported_color_modes) -> None:
     """Test color light discovery."""
     device = (
         "light.test_3",
@@ -2614,7 +2614,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert scene["description"] == "Config description via Home Assistant (Scene)"
 
 
-async def test_logging_request(hass, events):
+async def test_logging_request(hass: HomeAssistant, events) -> None:
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.Discovery", "Discover")
@@ -2636,7 +2636,7 @@ async def test_logging_request(hass, events):
     assert event.context == context
 
 
-async def test_logging_request_with_entity(hass, events):
+async def test_logging_request_with_entity(hass: HomeAssistant, events) -> None:
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
@@ -3348,7 +3348,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("domain", ["input_number", "number"])
-async def test_input_number(hass, domain: str):
+async def test_input_number(hass: HomeAssistant, domain: str) -> None:
     """Test input_number and number discovery."""
     device = (
         f"{domain}.test_slider",
@@ -3434,7 +3434,7 @@ async def test_input_number(hass, domain: str):
 
 
 @pytest.mark.parametrize("domain", ["input_number", "number"])
-async def test_input_number_float(hass, domain: str):
+async def test_input_number_float(hass: HomeAssistant, domain: str) -> None:
     """Test input_number and number discovery."""
     device = (
         f"{domain}.test_slider_float",
@@ -4065,7 +4065,7 @@ async def test_vacuum_discovery_no_turn_on_or_off(hass: HomeAssistant) -> None:
     )
 
 
-async def test_camera_discovery(hass, mock_stream):
+async def test_camera_discovery(hass: HomeAssistant, mock_stream) -> None:
     """Test camera discovery."""
     device = (
         "camera.test",
@@ -4125,7 +4125,7 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
         ("https://correctschemaandport.org", 3),
     ],
 )
-async def test_camera_hass_urls(hass, mock_stream, url, result):
+async def test_camera_hass_urls(hass: HomeAssistant, mock_stream, url, result) -> None:
     """Test camera discovery with unsupported urls."""
     device = (
         "camera.test",
@@ -4138,7 +4138,9 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
     assert len(appliance["capabilities"]) == result
 
 
-async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
+async def test_initialize_camera_stream(
+    hass: HomeAssistant, mock_camera, mock_stream
+) -> None:
     """Test InitializeCameraStreams handler."""
     request = get_new_request(
         "Alexa.CameraStreamController", "InitializeCameraStreams", "camera#demo_camera"
@@ -4180,7 +4182,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     "domain",
     ["button", "input_button"],
 )
-async def test_button(hass, domain):
+async def test_button(hass: HomeAssistant, domain) -> None:
     """Test button discovery."""
     device = (
         f"{domain}.ring_doorbell",

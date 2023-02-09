@@ -52,7 +52,11 @@ async def test_report_state(
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_contact"
 
 
-async def test_report_state_fail(hass, aioclient_mock, caplog):
+async def test_report_state_fail(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -94,7 +98,11 @@ async def test_report_state_fail(hass, aioclient_mock, caplog):
     ) in caplog.text
 
 
-async def test_report_state_timeout(hass, aioclient_mock, caplog):
+async def test_report_state_timeout(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -191,8 +199,8 @@ async def test_report_state_unsets_authorized_on_error(
 
 @pytest.mark.parametrize("exc", [errors.NoTokenAvailable, errors.RequireRelink])
 async def test_report_state_unsets_authorized_on_access_token_error(
-    hass, aioclient_mock, exc
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, exc
+) -> None:
     """Test proactive state unsets authorized on error."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
@@ -383,7 +391,9 @@ async def test_report_state_humidifier(
         ),
     ],
 )
-async def test_report_state_number(hass, aioclient_mock, domain, value, unit, label):
+async def test_report_state_number(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, domain, value, unit, label
+) -> None:
     """Test proactive state reports with number or input_number instance."""
     aioclient_mock.post(TEST_URL, text="", status=202)
     state = {
@@ -603,7 +613,11 @@ async def test_doorbell_event_from_unknown(
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_doorbell"
 
 
-async def test_doorbell_event_fail(hass, aioclient_mock, caplog):
+async def test_doorbell_event_fail(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -646,7 +660,11 @@ async def test_doorbell_event_fail(hass, aioclient_mock, caplog):
     ) in caplog.text
 
 
-async def test_doorbell_event_timeout(hass, aioclient_mock, caplog):
+async def test_doorbell_event_timeout(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,

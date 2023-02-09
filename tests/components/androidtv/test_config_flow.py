@@ -92,7 +92,7 @@ class MockConfigDevice:
         (CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
     ],
 )
-async def test_user(hass, config, eth_mac, wifi_mac):
+async def test_user(hass: HomeAssistant, config, eth_mac, wifi_mac) -> None:
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
@@ -206,7 +206,7 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
         (CONFIG_PYTHON_ADB, None, INVALID_MAC),
     ],
 )
-async def test_invalid_mac(hass, config, eth_mac, wifi_mac):
+async def test_invalid_mac(hass: HomeAssistant, config, eth_mac, wifi_mac) -> None:
     """Test for invalid mac address."""
     with patch(
         CONNECT_METHOD,
