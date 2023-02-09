@@ -296,7 +296,7 @@ async def test_switching_adapters_based_on_stale(
 
 
 async def test_restore_history_from_dbus(
-    hass: HomeAssistant, one_adapte: None, disable_new_discovery_flows
+    hass: HomeAssistant, one_adapter: None, disable_new_discovery_flows
 ) -> None:
     """Test we can restore history from dbus."""
     address = "AA:BB:CC:CC:CC:FF"
