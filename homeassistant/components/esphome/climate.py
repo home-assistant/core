@@ -64,6 +64,7 @@ from . import (
 # climate doesn't support (yet?) the quiet fan mode but esphome does
 FAN_QUIET = "quiet"
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
