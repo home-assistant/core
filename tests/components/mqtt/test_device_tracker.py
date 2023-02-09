@@ -1,5 +1,4 @@
 """The tests for the MQTT device_tracker platform."""
-
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +7,7 @@ from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -225,8 +225,8 @@ async def test_device_tracker_discovery_update(
 async def test_cleanup_device_tracker(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_registry,
-    entity_registry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovered device is cleaned up when removed from registry."""
