@@ -1631,6 +1631,7 @@ async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
         return
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
     instance = get_instance(hass)
 
     class BlockQueue(recorder.tasks.RecorderTask):
