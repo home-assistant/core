@@ -130,10 +130,6 @@ async def test_shutdown_before_startup_finishes(
     assert run_info.run_id == 1
     assert run_info.start is not None
     assert run_info.end is not None
-    # We patched out engine to prevent the close from happening
-    # so we need to manually close the session
-    session.close()
-    await hass.async_add_executor_job(instance._shutdown)
 
 
 async def test_canceled_before_startup_finishes(
@@ -1628,6 +1624,7 @@ async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
         return
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
     instance = get_instance(hass)
 
     class BlockQueue(recorder.tasks.RecorderTask):
