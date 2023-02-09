@@ -92,14 +92,14 @@ async def test_create_entry_by_import(hass):
     assert result["data"][CONF_NAME] == VALID_CONFIG.get(CONF_NAME)
     assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG.get(CONF_SERIAL_PORT)
 
-    # Test the import step without a name (the name is optional in the old schema)
+    # Test the import step with an empty string as name (the name is optional in the old schema and defaults to "")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={CONF_SERIAL_PORT: "/dev/ttyUSB1"},
+        data={CONF_SERIAL_PORT: "/dev/ttyUSB1", CONF_NAME: ""},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["data"][CONF_NAME] == ""
     assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG.get(CONF_SERIAL_PORT)
-    assert CONF_NAME not in result["data"]

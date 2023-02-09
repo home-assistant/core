@@ -20,7 +20,7 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         title = (
             import_config[CONF_NAME]
-            if CONF_NAME in import_config
+            if import_config[CONF_NAME] != ""
             else DEFAULT_DEVICE_NAME
         )
         return self.async_create_entry(

@@ -302,7 +302,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
-    hass.data[DOMAIN] = EDL21(hass, config_entry.data, async_add_entities)
+    hass.data[DOMAIN] = EDL21(hass, config_entry, async_add_entities)
     await hass.data[DOMAIN].connect()
 
 
@@ -326,16 +326,16 @@ class EDL21:
     def __init__(
         self,
         hass: HomeAssistant,
-        config: Mapping[str, Any],
+        config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._name = config[CONF_NAME]
-        self._device_name = config[CONF_NAME] or DEFAULT_DEVICE_NAME
-        self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
+        self._name = config_entry.data[CONF_NAME]
+        self._device_name = config_entry.data[CONF_NAME] or DEFAULT_DEVICE_NAME
+        self._proto = SmlProtocol(config_entry.data[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
     async def connect(self) -> None:
