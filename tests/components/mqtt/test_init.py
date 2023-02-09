@@ -47,6 +47,7 @@ from tests.common import (
     mock_restore_cache,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+from tests.typing import WebSocketGenerator
 
 
 class RecordCallsPartial(partial):
@@ -600,7 +601,9 @@ async def test_service_call_with_ascii_qos_retain_flags(
 
 
 async def test_publish_function_with_bad_encoding_conditions(
-    hass: HomeAssistant, caplog, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test internal publish function with basic use cases."""
     await mqtt_mock_entry_no_yaml_config()
@@ -785,7 +788,11 @@ def test_entity_device_info_schema() -> None:
 
 
 async def test_receiving_non_utf8_message_gets_logged(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, calls, record_calls, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config,
+    calls,
+    record_calls,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test receiving a non utf8 encoded message."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1339,7 +1346,10 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 
 
 async def test_initial_setup_logs_error(
-    hass: HomeAssistant, caplog, mqtt_client_mock, empty_mqtt_config
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_client_mock,
+    empty_mqtt_config,
 ) -> None:
     """Test for setup failure if initial client connection fails."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
@@ -1354,7 +1364,10 @@ async def test_initial_setup_logs_error(
 
 
 async def test_logs_error_if_no_connect_broker(
-    hass: HomeAssistant, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config,
+    mqtt_client_mock,
 ) -> None:
     """Test for setup failure if connection to broker is missing."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1369,7 +1382,10 @@ async def test_logs_error_if_no_connect_broker(
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
 async def test_handle_mqtt_on_callback(
-    hass: HomeAssistant, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config,
+    mqtt_client_mock,
 ) -> None:
     """Test receiving an ACK callback before waiting for it."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1406,7 +1422,10 @@ async def test_publish_error(
 
 
 async def test_subscribe_error(
-    hass: HomeAssistant, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config,
+    mqtt_client_mock,
 ) -> None:
     """Test publish error."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1444,7 +1463,7 @@ async def test_handle_message_callback(
 
 
 async def test_setup_override_configuration(
-    hass: HomeAssistant, caplog, tmp_path: Path
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test override setup from configuration entry."""
     calls_username_password_set = []
@@ -1955,7 +1974,10 @@ async def test_setup_entry_with_config_override(
 
 
 async def test_update_incomplete_entry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mqtt_client_mock, caplog
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_client_mock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if the MQTT component loads when config entry data is incomplete."""
     data = (
@@ -1993,7 +2015,10 @@ async def test_update_incomplete_entry(
 
 
 async def test_fail_no_broker(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mqtt_client_mock, caplog
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_client_mock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if the MQTT component loads when broker configuration is missing."""
     # Config entry data is incomplete
@@ -2005,7 +2030,9 @@ async def test_fail_no_broker(
 
 @pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(
-    hass: HomeAssistant, caplog, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test exception raised by message handler."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2026,7 +2053,9 @@ async def test_message_callback_exception_gets_logged(
 
 
 async def test_mqtt_ws_subscription(
-    hass: HomeAssistant, hass_ws_client, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test MQTT websocket subscription."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2090,7 +2119,7 @@ async def test_mqtt_ws_subscription(
 
 async def test_mqtt_ws_subscription_not_admin(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry_no_yaml_config,
     hass_read_only_access_token,
 ) -> None:
@@ -2130,7 +2159,7 @@ async def test_dump_service(
 async def test_mqtt_ws_remove_discovered_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test MQTT websocket device removal."""
@@ -2172,7 +2201,7 @@ async def test_mqtt_ws_remove_discovered_device(
 async def test_mqtt_ws_get_device_debug_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test MQTT websocket device debug info."""
@@ -2238,7 +2267,7 @@ async def test_mqtt_ws_get_device_debug_info(
 async def test_mqtt_ws_get_device_debug_info_binary(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test MQTT websocket device debug info."""
@@ -2818,7 +2847,9 @@ async def test_subscribe_connection_status(
 # Test existence of removed YAML configuration under the platform key
 # This warning and test is to be removed from HA core 2023.6
 async def test_one_deprecation_warning_per_platform(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a deprecation warning is is logged once per platform."""
     platform = "light"
@@ -2849,7 +2880,11 @@ async def test_config_schema_validation(hass: HomeAssistant) -> None:
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_unload_config_entry(
-    hass: HomeAssistant, mqtt_mock, mqtt_client_mock, tmp_path: Path, caplog
+    hass: HomeAssistant,
+    mqtt_mock,
+    mqtt_client_mock,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unloading the MQTT entry."""
     assert hass.services.has_service(mqtt.DOMAIN, "dump")
@@ -2929,7 +2964,7 @@ async def test_reload_entry_with_new_config(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_disabling_and_enabling_entry(
-    hass: HomeAssistant, tmp_path: Path, caplog
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test disabling and enabling the config entry."""
     config_old = {
@@ -3020,7 +3055,11 @@ async def test_disabling_and_enabling_entry(
     ],
 )
 async def test_setup_manual_items_with_unique_ids(
-    hass: HomeAssistant, tmp_path: Path, caplog, config, unique
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    config,
+    unique,
 ) -> None:
     """Test setup manual items is generating unique id's."""
     await help_test_setup_manual_entity_from_yaml(
@@ -3043,7 +3082,7 @@ async def test_setup_manual_items_with_unique_ids(
 
 
 async def test_remove_unknown_conf_entry_options(
-    hass: HomeAssistant, mqtt_client_mock, caplog
+    hass: HomeAssistant, mqtt_client_mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unknown keys in config entry data is removed."""
     mqtt_config_entry_data = {
@@ -3070,7 +3109,9 @@ async def test_remove_unknown_conf_entry_options(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
-async def test_link_config_entry(hass: HomeAssistant, tmp_path: Path, caplog) -> None:
+async def test_link_config_entry(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test manual and dynamically setup entities are linked to the config entry."""
     config_manual = {
         "mqtt": {
