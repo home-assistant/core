@@ -494,7 +494,9 @@ async def _test_select_source(
         ("!com.app.test3", "com.app.test3", patchers.PATCH_STOP_APP),
     ],
 )
-async def test_select_source_androidtv(hass, source, expected_arg, method_patch):
+async def test_select_source_androidtv(
+    hass: HomeAssistant, source, expected_arg, method_patch
+) -> None:
     """Test that an app can be launched for AndroidTV."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -536,7 +538,9 @@ async def test_androidtv_select_source_overridden_app_name(hass: HomeAssistant) 
         ("!com.app.test3", "com.app.test3", patchers.PATCH_STOP_APP),
     ],
 )
-async def test_select_source_firetv(hass, source, expected_arg, method_patch):
+async def test_select_source_firetv(
+    hass: HomeAssistant, source, expected_arg, method_patch
+) -> None:
     """Test that an app can be launched for FireTV."""
     conf_apps = {
         "com.app.test1": "TEST 1",
