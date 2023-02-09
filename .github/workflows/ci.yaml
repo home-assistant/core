@@ -814,7 +814,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
       - lint-isort
       - lint-other
       - lint-ruff
@@ -939,7 +938,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
       - lint-isort
       - lint-other
       - lint-ruff
@@ -1040,7 +1038,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
       - lint-other
       - lint-isort
       - mypy
