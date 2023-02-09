@@ -21,7 +21,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_atatistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
     """Test setup southern_company."""
     await async_init_integration(hass)
     await async_wait_recording_done(hass)
