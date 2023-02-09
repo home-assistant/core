@@ -824,7 +824,9 @@ async def test_current_cover_position_inverted(
     assert hass.states.get("cover.test").state == STATE_CLOSED
 
 
-async def test_optimistic_position(hass: HomeAssistant, caplog) -> None:
+async def test_optimistic_position(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test optimistic position is not supported."""
     assert not await async_setup_component(
         hass,
@@ -2567,7 +2569,9 @@ async def test_valid_device_class(
     assert state.attributes.get("device_class") == "garage"
 
 
-async def test_invalid_device_class(hass: HomeAssistant, caplog) -> None:
+async def test_invalid_device_class(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the setting of an invalid device class."""
     assert not await async_setup_component(
         hass,
@@ -2661,7 +2665,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique_id option only creates one cover per id."""
     config = {
         mqtt.DOMAIN: {
@@ -3296,7 +3302,7 @@ async def test_position_via_position_topic_template_return_invalid_json(
 
 
 async def test_set_position_topic_without_get_position_topic_error(
-    hass: HomeAssistant, caplog
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test error when set_position_topic is used without position_topic."""
     assert not await async_setup_component(
@@ -3342,7 +3348,7 @@ async def test_value_template_without_state_topic_error(
 
 
 async def test_position_template_without_position_topic_error(
-    hass: HomeAssistant, caplog
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test error when position_template is used and position_topic is missing."""
     assert not await async_setup_component(
@@ -3389,7 +3395,7 @@ async def test_set_position_template_without_set_position_topic(
 
 
 async def test_tilt_command_template_without_tilt_command_topic(
-    hass: HomeAssistant, caplog
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test error when tilt_command_template is used and tilt_command_topic is missing."""
     assert not await async_setup_component(
@@ -3412,7 +3418,7 @@ async def test_tilt_command_template_without_tilt_command_topic(
 
 
 async def test_tilt_status_template_without_tilt_status_topic_topic(
-    hass: HomeAssistant, caplog
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test error when tilt_status_template is used and tilt_status_topic is missing."""
     assert not await async_setup_component(
