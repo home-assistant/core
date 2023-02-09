@@ -14,7 +14,7 @@ from . import ENTRY_CONFIG, MOCK_MAC
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -70,7 +70,7 @@ async def test_invalid_login(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_dhcp(hass):
+async def test_form_dhcp(hass: HomeAssistant) -> None:
     """Test we can setup from dhcp."""
 
     result = await hass.config_entries.flow.async_init(
@@ -109,7 +109,7 @@ async def test_form_dhcp(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_single_instance_allowed(hass):
+async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -130,7 +130,7 @@ async def test_dhcp_single_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_input_single_instance_allowed(hass):
+async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

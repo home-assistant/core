@@ -40,7 +40,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -954,7 +954,9 @@ async def test_service_sensor_update(hass, mock_modbus, mock_ha):
     assert hass.states.get(ENTITY_ID).state == "32"
 
 
-async def test_no_discovery_info_sensor(hass, caplog):
+async def test_no_discovery_info_sensor(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert SENSOR_DOMAIN not in hass.config.components
     assert await async_setup_component(

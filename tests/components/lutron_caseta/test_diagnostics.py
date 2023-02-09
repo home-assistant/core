@@ -1,5 +1,4 @@
 """Test the Lutron Caseta diagnostics."""
-
 from unittest.mock import ANY, patch
 
 from homeassistant.components.lutron_caseta import DOMAIN
@@ -9,14 +8,18 @@ from homeassistant.components.lutron_caseta.const import (
     CONF_KEYFILE,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from . import MockBridge
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client) -> None:
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for lutron_caseta."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

@@ -134,7 +134,7 @@ def mock_process_uploaded_file(tmp_path):
     file_id_cert = str(uuid4())
     file_id_key = str(uuid4())
 
-    def _mock_process_uploaded_file(hass, file_id):
+    def _mock_process_uploaded_file(hass: HomeAssistant, file_id) -> None:
         if file_id == file_id_ca:
             with open(tmp_path / "ca.crt", "wb") as cafile:
                 cafile.write(b"## mock CA certificate file ##")
@@ -167,8 +167,8 @@ def mock_process_uploaded_file(tmp_path):
 
 
 async def test_user_connection_works(
-    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
-):
+    hass: HomeAssistant, mock_try_connection, mock_finish_setup, mqtt_client_mock
+) -> None:
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
@@ -195,8 +195,8 @@ async def test_user_connection_works(
 
 
 async def test_user_v5_connection_works(
-    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
-):
+    hass: HomeAssistant, mock_try_connection, mock_finish_setup, mqtt_client_mock
+) -> None:
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
@@ -234,8 +234,8 @@ async def test_user_v5_connection_works(
 
 
 async def test_user_connection_fails(
-    hass, mock_try_connection_time_out, mock_finish_setup
-):
+    hass: HomeAssistant, mock_try_connection_time_out, mock_finish_setup
+) -> None:
     """Test if connection cannot be made."""
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -256,8 +256,8 @@ async def test_user_connection_fails(
 
 
 async def test_manual_config_starts_discovery_flow(
-    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
-):
+    hass: HomeAssistant, mock_try_connection, mock_finish_setup, mqtt_client_mock
+) -> None:
     """Test manual config initiates a discovery flow."""
     # No flows in progress
     assert hass.config_entries.flow.async_progress() == []
@@ -276,11 +276,11 @@ async def test_manual_config_starts_discovery_flow(
 
 
 async def test_manual_config_set(
-    hass,
+    hass: HomeAssistant,
     mock_try_connection,
     mock_finish_setup,
     mqtt_client_mock,
-):
+) -> None:
     """Test manual config does not create an entry, and entry can be setup late."""
     # MQTT config present in yaml config
     assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
@@ -322,7 +322,7 @@ async def test_manual_config_set(
     assert config_entry.title == "127.0.0.1"
 
 
-async def test_user_single_instance(hass):
+async def test_user_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
 
@@ -333,7 +333,7 @@ async def test_user_single_instance(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_hassio_already_configured(hass):
+async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
 
@@ -369,7 +369,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
-async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_setup):
+async def test_hassio_confirm(
+    hass: HomeAssistant, mock_try_connection_success, mock_finish_setup
+) -> None:
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
@@ -415,8 +417,8 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
 
 
 async def test_hassio_cannot_connect(
-    hass, mock_try_connection_time_out, mock_finish_setup
-):
+    hass: HomeAssistant, mock_try_connection_time_out, mock_finish_setup
+) -> None:
     """Test a config flow is aborted when a connection was not successful."""
     mock_try_connection.return_value = True
 
@@ -455,10 +457,10 @@ async def test_hassio_cannot_connect(
 
 
 async def test_option_flow(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection,
-):
+) -> None:
     """Test config flow options."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value={})
@@ -552,14 +554,14 @@ async def test_option_flow(
     ],
 )
 async def test_bad_certificate(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection_success,
     tmp_path,
     mock_ssl_context,
     test_error,
     mock_process_uploaded_file,
-):
+) -> None:
     """Test bad certificate tests."""
     # Mock certificate files
     file_id = mock_process_uploaded_file.file_id
@@ -649,13 +651,13 @@ async def test_bad_certificate(
     ],
 )
 async def test_keepalive_validation(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection,
     mock_reload_after_entry_update,
     input_value,
     error,
-):
+) -> None:
     """Test validation of the keep alive option."""
 
     test_input = {
@@ -695,11 +697,11 @@ async def test_keepalive_validation(
 
 
 async def test_disable_birth_will(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection,
     mock_reload_after_entry_update,
-):
+) -> None:
     """Test disabling birth and will."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_try_connection.return_value = True
@@ -766,11 +768,11 @@ async def test_disable_birth_will(
 
 
 async def test_invalid_discovery_prefix(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection,
     mock_reload_after_entry_update,
-):
+) -> HomeAssistant:
     """Test setting an invalid discovery prefix."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_try_connection.return_value = True
@@ -842,11 +844,11 @@ def get_suggested(schema, key):
 
 
 async def test_option_flow_default_suggested_values(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection_success,
     mock_reload_after_entry_update,
-):
+) -> None:
     """Test config flow options has default/suggested values."""
     await mqtt_mock_entry_no_yaml_config()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
@@ -997,13 +999,13 @@ async def test_option_flow_default_suggested_values(
     "advanced_options, step_id", [(False, "options"), (True, "broker")]
 )
 async def test_skipping_advanced_options(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection,
     mock_reload_after_entry_update,
     advanced_options,
     step_id,
-):
+) -> None:
     """Test advanced options option."""
 
     test_input = {
@@ -1034,7 +1036,9 @@ async def test_skipping_advanced_options(
     assert result["step_id"] == step_id
 
 
-async def test_options_user_connection_fails(hass, mock_try_connection_time_out):
+async def test_options_user_connection_fails(
+    hass: HomeAssistant, mock_try_connection_time_out
+) -> None:
     """Test if connection cannot be made."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)
@@ -1063,7 +1067,9 @@ async def test_options_user_connection_fails(hass, mock_try_connection_time_out)
     }
 
 
-async def test_options_bad_birth_message_fails(hass, mock_try_connection):
+async def test_options_bad_birth_message_fails(
+    hass: HomeAssistant, mock_try_connection
+) -> None:
     """Test bad birth message."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)
@@ -1099,7 +1105,9 @@ async def test_options_bad_birth_message_fails(hass, mock_try_connection):
     }
 
 
-async def test_options_bad_will_message_fails(hass, mock_try_connection):
+async def test_options_bad_will_message_fails(
+    hass: HomeAssistant, mock_try_connection
+) -> None:
     """Test bad will message."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)
@@ -1136,12 +1144,12 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
 
 
 async def test_try_connection_with_advanced_parameters(
-    hass,
+    hass: HomeAssistant,
     mock_try_connection_success,
     tmp_path,
     mock_ssl_context,
     mock_process_uploaded_file,
-):
+) -> HomeAssistant:
     """Test config flow with advanced parameters from config."""
 
     with open(tmp_path / "client.crt", "wb") as certfile:
@@ -1277,8 +1285,12 @@ async def test_try_connection_with_advanced_parameters(
 
 
 async def test_setup_with_advanced_settings(
-    hass, mock_try_connection, tmp_path, mock_ssl_context, mock_process_uploaded_file
-):
+    hass: HomeAssistant,
+    mock_try_connection,
+    tmp_path,
+    mock_ssl_context,
+    mock_process_uploaded_file,
+) -> None:
     """Test config flow setup with advanced parameters."""
     file_id = mock_process_uploaded_file.file_id
 
@@ -1431,8 +1443,12 @@ async def test_setup_with_advanced_settings(
 
 
 async def test_change_websockets_transport_to_tcp(
-    hass, mock_try_connection, tmp_path, mock_ssl_context, mock_process_uploaded_file
-):
+    hass: HomeAssistant,
+    mock_try_connection,
+    tmp_path,
+    mock_ssl_context,
+    mock_process_uploaded_file,
+) -> None:
     """Test option flow setup with websockets transport settings."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)

@@ -1,10 +1,10 @@
 """Test the Qingping config flow."""
-
 import asyncio
 from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.qingping.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
@@ -16,7 +16,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_async_step_bluetooth_valid_device(hass):
+async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -37,7 +37,9 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_async_step_bluetooth_not_enough_info_at_start(hass):
+async def test_async_step_bluetooth_not_enough_info_at_start(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery via bluetooth with only a partial adv at the start."""
     with patch(
         "homeassistant.components.qingping.config_flow.async_process_advertisements",
@@ -62,7 +64,7 @@ async def test_async_step_bluetooth_not_enough_info_at_start(hass):
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_async_step_bluetooth_not_qingping(hass):
+async def test_async_step_bluetooth_not_qingping(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth not qingping."""
     with patch(
         "homeassistant.components.qingping.config_flow.async_process_advertisements",
@@ -77,7 +79,7 @@ async def test_async_step_bluetooth_not_qingping(hass):
     assert result["reason"] == "not_supported"
 
 
-async def test_async_step_user_no_devices_found(hass):
+async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
     """Test setup from service info cache with no devices found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -87,7 +89,7 @@ async def test_async_step_user_no_devices_found(hass):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_user_with_found_devices(hass):
+async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.qingping.config_flow.async_discovered_service_info",
@@ -112,7 +114,7 @@ async def test_async_step_user_with_found_devices(hass):
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_async_step_user_device_added_between_steps(hass):
+async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -> None:
     """Test the device gets added via another flow between steps."""
     with patch(
         "homeassistant.components.qingping.config_flow.async_discovered_service_info",
@@ -142,7 +144,9 @@ async def test_async_step_user_device_added_between_steps(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_async_step_user_with_found_devices_already_setup(hass):
+async def test_async_step_user_with_found_devices_already_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -162,7 +166,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_bluetooth_devices_already_setup(hass):
+async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -> None:
     """Test we can't start a flow if there is already a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -179,7 +183,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_async_step_bluetooth_already_in_progress(hass):
+async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> None:
     """Test we can't start a flow for the same device twice."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -198,7 +202,9 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_async_step_user_takes_precedence_over_discovery(hass):
+async def test_async_step_user_takes_precedence_over_discovery(
+    hass: HomeAssistant,
+) -> None:
     """Test manual setup takes precedence over discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

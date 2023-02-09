@@ -1,9 +1,9 @@
 {
   "domain": "magicseaweed",
   "name": "Magicseaweed",
-  "documentation": "https://www.home-assistant.io/integrations/magicseaweed",
-  "requirements": ["magicseaweed==1.0.3"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/magicseaweed",
   "iot_class": "cloud_polling",
-  "loggers": ["magicseaweed"]
+  "loggers": ["magicseaweed"],
+  "requirements": ["magicseaweed==1.0.3"]
 }
