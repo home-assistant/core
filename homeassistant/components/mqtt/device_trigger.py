@@ -21,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -35,7 +34,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .discovery import MQTT_DISCOVERY_DONE, MQTTDiscoveryPayload
+from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
@@ -268,12 +267,9 @@ async def async_setup_trigger(
 ) -> None:
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
-    discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+    device_id = update_device(hass, config_entry, config)
 
-    if (device_id := update_device(hass, config_entry, config)) is None:
-        async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
-        return
-
+    assert isinstance(device_id, str)
     mqtt_device_trigger = MqttDeviceTrigger(
         hass, config, device_id, discovery_data, config_entry
     )
