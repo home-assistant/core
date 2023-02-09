@@ -16,7 +16,7 @@ from homeassistant import config as hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONFIG_SCHEMA, debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
-from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -85,19 +85,19 @@ def mock_mqtt():
 
 
 @pytest.fixture
-def calls():
+def calls() -> list[ReceiveMessage]:
     """Fixture to record calls."""
     return []
 
 
 @pytest.fixture
-def record_calls(calls):
+def record_calls(calls: list[ReceiveMessage]) -> MessageCallbackType:
     """Fixture to record calls."""
 
     @callback
-    def record_calls(*args) -> None:
+    def record_calls(msg: ReceiveMessage) -> None:
         """Record calls."""
-        calls.append(args)
+        calls.append(msg)
 
     return record_calls
 
@@ -800,8 +800,8 @@ def test_entity_device_info_schema() -> None:
 async def test_receiving_non_utf8_message_gets_logged(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test receiving a non utf8 encoded message."""
@@ -819,8 +819,8 @@ async def test_receiving_non_utf8_message_gets_logged(
 async def test_all_subscriptions_run_when_decode_fails(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test all other subscriptions still run when decode fails for one."""
     await mqtt_mock_entry_no_yaml_config()
@@ -836,8 +836,8 @@ async def test_all_subscriptions_run_when_decode_fails(
 async def test_subscribe_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of a topic."""
     await mqtt_mock_entry_no_yaml_config()
@@ -847,8 +847,8 @@ async def test_subscribe_topic(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "test-topic"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
 
     unsub()
 
@@ -865,8 +865,8 @@ async def test_subscribe_topic(
 async def test_subscribe_topic_non_async(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of a topic using the non-async function."""
     await mqtt_mock_entry_no_yaml_config()
@@ -879,8 +879,8 @@ async def test_subscribe_topic_non_async(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "test-topic"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
 
     await hass.async_add_executor_job(unsub)
 
@@ -893,8 +893,8 @@ async def test_subscribe_topic_non_async(
 async def test_subscribe_bad_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of a topic."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1007,8 +1007,8 @@ async def test_subscribe_deprecated_async(
 async def test_subscribe_topic_not_match(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test if subscribed topic is not a match."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1023,8 +1023,8 @@ async def test_subscribe_topic_not_match(
 async def test_subscribe_topic_level_wildcard(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1034,15 +1034,15 @@ async def test_subscribe_topic_level_wildcard(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "test-topic/bier/on"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "test-topic/bier/on"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_topic_level_wildcard_no_subtree_match(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1057,8 +1057,8 @@ async def test_subscribe_topic_level_wildcard_no_subtree_match(
 async def test_subscribe_topic_level_wildcard_root_topic_no_subtree_match(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1073,8 +1073,8 @@ async def test_subscribe_topic_level_wildcard_root_topic_no_subtree_match(
 async def test_subscribe_topic_subtree_wildcard_subtree_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1084,15 +1084,15 @@ async def test_subscribe_topic_subtree_wildcard_subtree_topic(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "test-topic/bier/on"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "test-topic/bier/on"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_topic_subtree_wildcard_root_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1102,15 +1102,15 @@ async def test_subscribe_topic_subtree_wildcard_root_topic(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "test-topic"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_topic_subtree_wildcard_no_match(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1125,8 +1125,8 @@ async def test_subscribe_topic_subtree_wildcard_no_match(
 async def test_subscribe_topic_level_wildcard_and_wildcard_root_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1136,15 +1136,15 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_root_topic(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "hi/test-topic"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "hi/test-topic"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1154,15 +1154,15 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "hi/test-topic/here-iam"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "hi/test-topic/here-iam"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_topic_level_wildcard_and_wildcard_level_no_match(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1177,8 +1177,8 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_level_no_match(
 async def test_subscribe_topic_level_wildcard_and_wildcard_no_match(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1193,8 +1193,8 @@ async def test_subscribe_topic_level_wildcard_and_wildcard_no_match(
 async def test_subscribe_topic_sys_root(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of $ root topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1204,15 +1204,15 @@ async def test_subscribe_topic_sys_root(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "$test-topic/subtree/on"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "$test-topic/subtree/on"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_topic_sys_root_and_wildcard_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of $ root and wildcard topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1222,15 +1222,15 @@ async def test_subscribe_topic_sys_root_and_wildcard_topic(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "$test-topic/some-topic"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "$test-topic/some-topic"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_topic_sys_root_and_wildcard_subtree_topic(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription of $ root and wildcard subtree topics."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1240,15 +1240,15 @@ async def test_subscribe_topic_sys_root_and_wildcard_subtree_topic(
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == "$test-topic/subtree/some-topic"
-    assert calls[0][0].payload == "test-payload"
+    assert calls[0].topic == "$test-topic/subtree/some-topic"
+    assert calls[0].payload == "test-payload"
 
 
 async def test_subscribe_special_characters(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    calls,
-    record_calls,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
     """Test the subscription to topics with special characters."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1260,8 +1260,8 @@ async def test_subscribe_special_characters(
     async_fire_mqtt_message(hass, topic, payload)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0][0].topic == topic
-    assert calls[0][0].payload == payload
+    assert calls[0].topic == topic
+    assert calls[0].payload == payload
 
 
 async def test_subscribe_same_topic(
