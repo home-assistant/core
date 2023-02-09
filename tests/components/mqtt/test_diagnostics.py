@@ -9,7 +9,7 @@ from homeassistant.components import mqtt
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_fire_mqtt_message, mock_device_registry
+from tests.common import async_fire_mqtt_message
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -47,15 +47,9 @@ def device_tracker_sensor_only():
         yield
 
 
-@pytest.fixture
-def device_reg(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    device_reg,
+    device_registry,
     hass_client,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
@@ -95,7 +89,7 @@ async def test_entry_diagnostics(
     )
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [
@@ -178,7 +172,7 @@ async def test_entry_diagnostics(
 )
 async def test_redact_diagnostics(
     hass: HomeAssistant,
-    device_reg,
+    device_registry,
     hass_client,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
@@ -210,7 +204,7 @@ async def test_redact_diagnostics(
     async_fire_mqtt_message(hass, "attributes-topic", location_data)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [
