@@ -444,7 +444,7 @@ def _find_duplicates(
     def columns_to_dict(duplicate: Row) -> dict:
         """Convert a SQLAlchemy row to dict."""
         dict_ = {}
-        for key in duplicate.__mapper__.c.keys():
+        for key in duplicate.__mapper__.c:
             dict_[key] = getattr(duplicate, key)
         return dict_
 
