@@ -35,16 +35,13 @@ from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    SetupRecorderInstanceT,
-    async_fire_time_changed,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import (
     async_block_recorder,
     async_recorder_block_till_done,
     async_wait_recording_done,
 )
+from tests.typing import RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -2047,7 +2044,7 @@ async def test_event_stream_bad_end_time(recorder_mock, hass, hass_ws_client):
 
 
 async def test_live_stream_with_one_second_commit_interval(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     hass_ws_client,
 ):

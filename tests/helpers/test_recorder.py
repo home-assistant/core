@@ -5,11 +5,11 @@ from unittest.mock import patch
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder
 
-from tests.common import SetupRecorderInstanceT
+from tests.typing import RecorderInstanceGenerator
 
 
 async def test_async_migration_in_progress(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ):
     """Test async_migration_in_progress wraps the recorder."""
     with patch(

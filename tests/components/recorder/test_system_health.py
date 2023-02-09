@@ -11,7 +11,8 @@ from homeassistant.setup import async_setup_component
 
 from .common import async_wait_recording_done
 
-from tests.common import SetupRecorderInstanceT, get_system_health_info
+from tests.common import get_system_health_info
+from tests.typing import RecorderInstanceGenerator
 
 
 async def test_recorder_system_health(recorder_mock, hass, recorder_db_url):
@@ -89,7 +90,7 @@ async def test_recorder_system_health_db_url_missing_host(
 
 
 async def test_recorder_system_health_crashed_recorder_runs_table(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
 ):

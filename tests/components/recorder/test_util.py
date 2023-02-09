@@ -33,7 +33,8 @@ from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file, run_information_with_session, wait_recording_done
 
-from tests.common import SetupRecorderInstanceT, async_test_home_assistant
+from tests.common import async_test_home_assistant
+from tests.typing import RecorderInstanceGenerator
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -113,7 +114,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 
 async def test_last_run_was_recently_clean(
-    event_loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    event_loop, async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path
 ):
     """Test we can check if the last recorder run was recently clean."""
     config = {
@@ -818,7 +819,7 @@ def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
 @patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
     skip_check_loop,
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     tmp_path,
 ):

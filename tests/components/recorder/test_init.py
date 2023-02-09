@@ -72,11 +72,11 @@ from .common import (
 )
 
 from tests.common import (
-    SetupRecorderInstanceT,
     async_fire_time_changed,
     fire_time_changed,
     get_test_home_assistant,
 )
+from tests.typing import RecorderInstanceGenerator
 
 
 def _default_recorder(hass):
@@ -97,7 +97,7 @@ def _default_recorder(hass):
 
 
 async def test_shutdown_before_startup_finishes(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     tmp_path,
@@ -137,7 +137,7 @@ async def test_shutdown_before_startup_finishes(
 
 
 async def test_canceled_before_startup_finishes(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
@@ -187,7 +187,7 @@ async def test_shutdown_closes_connections(recorder_mock, hass):
 
 
 async def test_state_gets_saved_when_set_before_start_event(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ):
     """Test we can record an event when starting with not running."""
 
@@ -280,7 +280,7 @@ async def test_saving_state_with_nul(
 
 
 async def test_saving_many_states(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
@@ -1529,7 +1529,7 @@ def test_entity_id_filter(hass_recorder):
 
 
 async def test_database_lock_and_unlock(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     tmp_path,
@@ -1578,7 +1578,7 @@ async def test_database_lock_and_unlock(
 
 
 async def test_database_lock_and_overflow(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
     tmp_path,
@@ -1674,7 +1674,7 @@ async def test_in_memory_database(
 
 
 async def test_database_connection_keep_alive(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
@@ -1694,7 +1694,7 @@ async def test_database_connection_keep_alive(
 
 
 async def test_database_connection_keep_alive_disabled_on_sqlite(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,

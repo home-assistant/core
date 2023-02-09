@@ -39,7 +39,8 @@ from .common import (
     wait_recording_done,
 )
 
-from tests.common import SetupRecorderInstanceT, mock_state_change_event
+from tests.common import mock_state_change_event
+from tests.typing import RecorderInstanceGenerator
 
 
 async def _async_get_states(
@@ -745,7 +746,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
 
 
 async def test_state_changes_during_period_query_during_migration_to_schema_25(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: ha.HomeAssistant,
     recorder_db_url: str,
 ):
@@ -800,7 +801,7 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: ha.HomeAssistant,
     recorder_db_url: str,
 ):
@@ -851,7 +852,7 @@ async def test_get_states_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: ha.HomeAssistant,
     recorder_db_url: str,
 ):
@@ -905,7 +906,7 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
 
 
 async def test_get_full_significant_states_handles_empty_last_changed(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: ha.HomeAssistant,
 ):
     """Test getting states when last_changed is null."""
@@ -1026,7 +1027,7 @@ def test_state_changes_during_period_multiple_entities_single_test(hass_recorder
 
 @pytest.mark.freeze_time("2039-01-19 03:14:07.555555-00:00")
 async def test_get_full_significant_states_past_year_2038(
-    async_setup_recorder_instance: SetupRecorderInstanceT,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: ha.HomeAssistant,
 ):
     """Test we can store times past year 2038."""
