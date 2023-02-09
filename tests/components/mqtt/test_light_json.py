@@ -79,7 +79,6 @@ light:
   brightness_scale: 99
 """
 import copy
-import json
 from pathlib import Path
 from unittest.mock import call, patch
 
@@ -98,6 +97,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.json import JsonValueType, json_loads
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -154,13 +154,13 @@ def light_platform_only():
 class JsonValidator:
     """Helper to compare JSON."""
 
-    def __init__(self, jsondata):
+    def __init__(self, jsondata: JsonValueType) -> None:
         """Initialize JSON validator."""
         self.jsondata = jsondata
 
-    def __eq__(self, other):
+    def __eq__(self, other: JsonValueType) -> bool:
         """Compare JSON data."""
-        return json.loads(self.jsondata) == json.loads(other)
+        return json_loads(self.jsondata) == json_loads(other)
 
 
 async def test_fail_setup_if_no_command_topic(
