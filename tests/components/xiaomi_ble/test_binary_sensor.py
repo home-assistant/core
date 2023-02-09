@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -297,7 +297,7 @@ async def test_unavailable(hass):
     with patch(
         "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now,
-    ), patch_all_discovered_devices([MagicMock(address="A4:C1:38:66:E5:67")]):
+    ), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -348,7 +348,7 @@ async def test_sleepy_device(hass):
     with patch(
         "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now,
-    ), patch_all_discovered_devices([MagicMock(address="A4:C1:38:66:E5:67")]):
+    ), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
