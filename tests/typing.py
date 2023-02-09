@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
 
-If TYPE_CHECKING:
+if TYPE_CHECKING:
     from homeassistant.components.recorder import Recorder
 
 ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
