@@ -50,6 +50,7 @@ from homeassistant.util import yaml
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockUser,
     assert_setup_component,
     async_capture_events,
     async_fire_time_changed,
@@ -529,7 +530,7 @@ async def test_services(hass: HomeAssistant, calls) -> None:
 
 
 async def test_reload_config_service(
-    hass: HomeAssistant, calls, hass_admin_user, hass_read_only_user
+    hass: HomeAssistant, calls, hass_admin_user: MockUser, hass_read_only_user: MockUser
 ) -> None:
     """Test the reload config service."""
     assert await async_setup_component(

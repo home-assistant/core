@@ -201,7 +201,7 @@ def test_auth_code_store_requires_credentials(mock_credential) -> None:
 
 
 async def test_ws_current_user(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test the current user command with Home Assistant creds."""
     assert await async_setup_component(hass, "auth", {})
@@ -358,8 +358,8 @@ async def test_refresh_token_checks_local_only_user(
 async def test_refresh_token_provider_rejected(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
-    hass_admin_user,
-    hass_admin_credential,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
 ) -> None:
     """Test that we verify client ID."""
     client = await async_setup_auth(hass, aiohttp_client)
@@ -432,7 +432,7 @@ async def test_revoking_refresh_token(
 
 
 async def test_ws_long_lived_access_token(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test generate long-lived access token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
@@ -462,7 +462,7 @@ async def test_ws_long_lived_access_token(
 
 
 async def test_ws_refresh_tokens(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test fetching refresh token metadata."""
     assert await async_setup_component(hass, "auth", {"http": {}})
@@ -490,10 +490,10 @@ async def test_ws_refresh_tokens(
 
 async def test_ws_delete_refresh_token(
     hass: HomeAssistant,
-    hass_admin_user,
-    hass_admin_credential,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
-    hass_access_token,
+    hass_access_token: str,
 ) -> None:
     """Test deleting a refresh token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
@@ -520,7 +520,7 @@ async def test_ws_delete_refresh_token(
 
 
 async def test_ws_sign_path(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
     """Test signing a path."""
     assert await async_setup_component(hass, "auth", {"http": {}})
