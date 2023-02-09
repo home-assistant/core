@@ -310,13 +310,13 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     # Load the registries
     if load_registries:
-        await asyncio.gather(
-            area_registry.async_load(hass),
-            device_registry.async_load(hass),
-            entity_registry.async_load(hass),
-            issue_registry.async_load(hass),
-        )
-        await hass.async_block_till_done()
+        with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
+            await asyncio.gather(
+                area_registry.async_load(hass),
+                device_registry.async_load(hass),
+                entity_registry.async_load(hass),
+                issue_registry.async_load(hass),
+            )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = CoreState.running
