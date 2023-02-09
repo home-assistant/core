@@ -28,7 +28,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, template
+from homeassistant.helpers import device_registry as dr, entity_registry as er, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
@@ -1925,7 +1925,9 @@ async def test_mqtt_subscribes_topics_on_connect(
 
 
 async def test_setup_entry_with_config_override(
-    hass: HomeAssistant, device_registry, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry_with_yaml_config,
 ) -> None:
     """Test if the MQTT component loads with no config and config entry can be setup."""
     data = (
@@ -1953,7 +1955,7 @@ async def test_setup_entry_with_config_override(
 
 
 async def test_update_incomplete_entry(
-    hass: HomeAssistant, device_registry, mqtt_client_mock, caplog
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mqtt_client_mock, caplog
 ) -> None:
     """Test if the MQTT component loads when config entry data is incomplete."""
     data = (
@@ -1991,7 +1993,7 @@ async def test_update_incomplete_entry(
 
 
 async def test_fail_no_broker(
-    hass: HomeAssistant, device_registry, mqtt_client_mock, caplog
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mqtt_client_mock, caplog
 ) -> None:
     """Test if the MQTT component loads when broker configuration is missing."""
     # Config entry data is incomplete
@@ -2126,7 +2128,10 @@ async def test_dump_service(
 
 
 async def test_mqtt_ws_remove_discovered_device(
-    hass: HomeAssistant, device_registry, hass_ws_client, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client,
+    mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test MQTT websocket device removal."""
     assert await async_setup_component(hass, "config", {})
@@ -2165,7 +2170,10 @@ async def test_mqtt_ws_remove_discovered_device(
 
 
 async def test_mqtt_ws_get_device_debug_info(
-    hass: HomeAssistant, device_registry, hass_ws_client, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client,
+    mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test MQTT websocket device debug info."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2228,7 +2236,10 @@ async def test_mqtt_ws_get_device_debug_info(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
 async def test_mqtt_ws_get_device_debug_info_binary(
-    hass: HomeAssistant, device_registry, hass_ws_client, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client,
+    mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test MQTT websocket device debug info."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2461,8 +2472,8 @@ async def test_debug_info_multiple_entities_triggers(
 
 async def test_debug_info_non_mqtt(
     hass: HomeAssistant,
-    device_registry,
-    entity_registry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry_no_yaml_config,
 ) -> None:
     """Test we get empty debug_info for a device with non MQTT entities."""
