@@ -1983,11 +1983,13 @@ def _sorted_statistics_to_dict(
     start_time_ts = start_time.timestamp() if start_time else None
     # Identify metadata IDs for which no data was available at the requested start time
     stats_by_meta_id: dict[int, list[Row]] = {}
+    seen_statistic_ids: set[str] = set()
     for meta_id, group in groupby(
         stats,
         lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
     ):
         stats_list = stats_by_meta_id[meta_id] = list(group)
+        seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
         first_start_time_ts = stats_list[0].start_ts
         if start_time_ts and first_start_time_ts > start_time_ts:
             need_stat_at_start_time.add(meta_id)
@@ -1998,7 +2000,7 @@ def _sorted_statistics_to_dict(
             # Only set the statistic ID if it is in the data to
             # avoid having to do a second loop to remove the
             # statistic IDs that are not in the data at the end
-            if stat_id in stats_by_meta_id:
+            if stat_id in seen_statistic_ids:
                 result[stat_id] = []
 
     # Fetch last known statistics for the needed metadata IDs
@@ -2013,7 +2015,7 @@ def _sorted_statistics_to_dict(
     # Append all statistic entries, and optionally do unit conversion
     table_duration = table.duration
     timestamp_to_datetime = dt_util.utc_from_timestamp
-    for meta_id, group in stats_by_meta_id.items():
+    for meta_id, stats_list in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
@@ -2024,7 +2026,7 @@ def _sorted_statistics_to_dict(
         else:
             convert = None
         ent_results = result[statistic_id]
-        for db_state in group:
+        for db_state in stats_list:
             start = timestamp_to_datetime(db_state.start_ts)
             row: dict[str, Any] = {
                 "start": start,
