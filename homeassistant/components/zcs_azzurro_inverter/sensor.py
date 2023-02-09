@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import realtime_data_request
 from .const import (
     REALTIME_BATTERY_CYCLES_KEY,
     REALTIME_BATTERY_SOC_KEY,
@@ -49,6 +48,7 @@ from .const import (
     SCHEMA_CLIENT_KEY,
     SCHEMA_THINGS_KEY,
 )
+from .zcs_azzurro_api import ZcsAzzurroApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,19 +282,18 @@ async def async_setup_entry(
     """Set up the Azzurro sensor."""
     _LOGGER.debug("Received data during setup is %s", entry.data)
     data = entry.data
-    realtime_sensors_available = await realtime_data_request(
-        hass,
-        data[SCHEMA_CLIENT_KEY],
-        data[SCHEMA_THINGS_KEY],
+
+    zcs_api = ZcsAzzurroApi(data[SCHEMA_CLIENT_KEY], data[SCHEMA_THINGS_KEY])
+
+    realtime_sensors_available = await hass.async_add_executor_job(
+        zcs_api.realtime_data_request
     )
     available_realtime_keys = list(realtime_sensors_available.keys())
     _LOGGER.debug("available realtime keys are %s", ", ".join(available_realtime_keys))
     async_add_entities(
         ZcsAzzurroSensor(
-            hass=hass,
             description=description,
-            client=data[SCHEMA_CLIENT_KEY],
-            thing=data[SCHEMA_THINGS_KEY],
+            api=zcs_api,
             available_realtime_keys=available_realtime_keys,
         )
         for description in SENSOR_TYPES
@@ -310,20 +309,16 @@ class ZcsAzzurroSensor(SensorEntity):
     def __init__(
         self,
         *,
-        hass: HomeAssistant,
         description: ZcsAzzurroSensorEntityDescription,
-        client: str,
-        thing: str,
+        api: ZcsAzzurroApi,
         available_realtime_keys: list,
     ) -> None:
         """Initialize the sensor."""
         super().__init__()
         self.entity_description = description
-        self.hass = hass
-        self.client = client
-        self.thing = thing
-        self._attr_unique_id = f"{self.client}_{self.thing}_{description.key}"
-        self.entity_description.name = f"{self.thing} {self.entity_description.name}"
+        self.api = api
+        self._attr_unique_id = f"{self.api.identifier}_{description.key}"
+        self.entity_description.name = f"{self.api.name} {self.entity_description.name}"
         self.fetched_data: dict[str, Any] = {}
         self.available_realtime_keys = available_realtime_keys
         _LOGGER.debug("element initialized")
@@ -339,7 +334,7 @@ class ZcsAzzurroSensor(SensorEntity):
                     str_val,
                 )
                 return dateutil.parser.isoparse(str_val)
-            except TypeError:
+            except ValueError:
                 return None
         elif self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING:
             try:
@@ -350,10 +345,8 @@ class ZcsAzzurroSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update sensor values."""
-        self.fetched_data = await realtime_data_request(
-            self.hass,
-            self.client,
-            self.thing,
+        self.fetched_data = await self.hass.async_add_executor_job(
+            self.api.realtime_data_request,
             self.available_realtime_keys,
         )
         _LOGGER.debug("fetched data %s", self.fetched_data)
