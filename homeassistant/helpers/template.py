@@ -733,10 +733,21 @@ class AllStates:
         self._collect_all_lifecycle()
         return self._hass.states.async_entity_ids_count()
 
-    def __call__(self, entity_id: str) -> str:
+    def __call__(
+        self,
+        entity_id: str,
+        rounded: bool | object = _SENTINEL,
+        with_unit: bool = False,
+    ) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
-        return STATE_UNKNOWN if state is None else state.state
+        if state is None:
+            return STATE_UNKNOWN
+        if rounded is _SENTINEL:
+            rounded = with_unit
+        if rounded or with_unit:
+            return state.format_state(rounded, with_unit)  # type: ignore[arg-type]
+        return state.state
 
     def __repr__(self) -> str:
         """Representation of All States."""
@@ -792,7 +803,7 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id")
+    __slots__ = ("_hass", "_collect", "_entity_id", "__dict__")
 
     _state: State
 
@@ -886,9 +897,24 @@ class TemplateStateBase(State):
     @property
     def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
+        return self.format_state(rounded=True, with_unit=True)
+
+    def format_state(self, rounded: bool, with_unit: bool) -> str:
+        """Return a formatted version of the state."""
+        # Import here, not at top-level, to avoid circular import
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.sensor import (
+            DOMAIN as SENSOR_DOMAIN,
+            async_rounded_state,
+        )
+
         self._collect_state()
         unit = self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        return f"{self._state.state} {unit}" if unit else self._state.state
+        if rounded and split_entity_id(self._entity_id)[0] == SENSOR_DOMAIN:
+            state = async_rounded_state(self._hass, self._entity_id, self._state)
+        else:
+            state = self._state.state
+        return f"{state} {unit}" if with_unit and unit else state
 
     def __eq__(self, other: Any) -> bool:
         """Ensure we collect on equality check."""

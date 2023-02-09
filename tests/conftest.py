@@ -410,7 +410,7 @@ def hass(
     event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
-    request,
+    request: pytest.FixtureRequest,
 ) -> Generator[HomeAssistant, None, None]:
     """Fixture to provide a test instance of Home Assistant."""
 
@@ -744,7 +744,9 @@ def hass_ws_client(
 
 
 @pytest.fixture(autouse=True)
-def fail_on_log_exception(request, monkeypatch):
+def fail_on_log_exception(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
     if "no_fail_on_log_exception" in request.keywords:
         return
@@ -1064,7 +1066,26 @@ def recorder_db_url(pytestconfig):
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding="utf8")
     yield db_url
-    if db_url.startswith("mysql://") or db_url.startswith("postgresql://"):
+    if db_url.startswith("mysql://"):
+        import sqlalchemy as sa
+
+        made_url = sa.make_url(db_url)
+        db = made_url.database
+        engine = sa.create_engine(db_url)
+        # Kill any open connections to the database before dropping it
+        # to ensure that InnoDB does not deadlock.
+        with engine.begin() as connection:
+            query = sa.text(
+                "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
+            )
+            for row in connection.execute(query, parameters={"db": db}).fetchall():
+                _LOGGER.warning(
+                    "Killing MySQL connection to temporary database %s", row.id
+                )
+                connection.execute(sa.text("KILL :id"), parameters={"id": row.id})
+        engine.dispose()
+        sqlalchemy_utils.drop_database(db_url)
+    elif db_url.startswith("postgresql://"):
         sqlalchemy_utils.drop_database(db_url)
 
 
@@ -1205,7 +1226,7 @@ async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
 
 
 @pytest.fixture
-def mock_integration_frame():
+def mock_integration_frame() -> Generator[Mock, None, None]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
         filename="/home/paulus/homeassistant/components/hue/light.py",
@@ -1233,8 +1254,10 @@ def mock_integration_frame():
 
 @pytest.fixture(name="enable_bluetooth")
 async def mock_enable_bluetooth(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> AsyncGenerator[None, None]:
     """Fixture to mock starting the bleak scanner."""
     entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
@@ -1245,8 +1268,8 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(name="mock_bluetooth_adapters")
-def mock_bluetooth_adapters():
+@pytest.fixture
+def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -1268,15 +1291,14 @@ def mock_bluetooth_adapters():
         yield
 
 
-@pytest.fixture(name="mock_bleak_scanner_start")
-def mock_bleak_scanner_start():
+@pytest.fixture
+def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     """Fixture to mock starting the bleak scanner."""
 
     # Late imports to avoid loading bleak unless we need it
 
-    from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
-        scanner as bluetooth_scanner,
-    )
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.bluetooth import scanner as bluetooth_scanner
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
@@ -1288,8 +1310,10 @@ def mock_bleak_scanner_start():
         yield mock_bleak_scanner_start
 
 
-@pytest.fixture(name="mock_bluetooth")
-def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
+@pytest.fixture
+def mock_bluetooth(
+    mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters
+) -> None:
     """Mock out bluetooth from starting."""
 
 
