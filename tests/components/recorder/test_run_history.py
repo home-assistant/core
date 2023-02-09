@@ -62,9 +62,22 @@ async def test_run_history_while_recorder_is_not_yet_started(
     we do not start right away.
     """
     recorder_helper.async_initialize_recorder(hass)
-    # We do not use recorder_mock here because we want to test
-    # what happens with run_history while the recorder is not yet started.
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
+    # We do not use recorder_mock or async_setup_recorder_instance
+    # here because we want to test what happens with run_history while
+    # the recorder is not yet started and both of these
+    # functions call async_recorder_block_till_done and async_block_till_done.
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ):
         assert await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
         )
