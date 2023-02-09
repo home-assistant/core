@@ -10,22 +10,8 @@ from tests.common import (
     MockConfigEntry,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -34,15 +20,15 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_reg, entity_reg):
+async def test_get_triggers(hass, device_registry, entity_registry):
     """Test we get the expected triggers from a arcam_fmj."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "host", 1234)},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "media_player", DOMAIN, "5678", device_id=device_entry.id
     )
     expected_triggers = [
