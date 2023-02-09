@@ -44,7 +44,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="dollars_to_date",
         name="Monthly cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="total_kwh_used",
@@ -57,7 +57,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="average_daily_cost",
         name="Average daily cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="average_daily_usage",
@@ -84,13 +84,13 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="projected_bill_amount_low",
         name="Lower projected monthly cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="projected_bill_amount_high",
         name="Higher projected monthly cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
 )
 
@@ -265,7 +265,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                     last_stats_time is not None and from_time <= last_stats_time
                 ):
                     continue
-
+                from_time = from_time.replace(minute=0, second=0, microsecond=0)
                 _cost_sum += data.cost
                 _usage_sum += data.cost
 
