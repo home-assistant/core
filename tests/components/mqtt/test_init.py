@@ -47,7 +47,11 @@ from tests.common import (
     mock_restore_cache,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
+from tests.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 
 class RecordCallsPartial(partial):
@@ -112,7 +116,7 @@ def empty_mqtt_config(hass: HomeAssistant, tmp_path: Path):
 
 async def test_mqtt_connects_on_home_assistant_mqtt_setup(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test if client is connected after mqtt init on bootstrap."""
@@ -123,7 +127,7 @@ async def test_mqtt_connects_on_home_assistant_mqtt_setup(
 async def test_mqtt_disconnects_on_home_assistant_stop(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test if client stops on HA stop."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1262,7 +1266,7 @@ async def test_subscribe_special_characters(
 
 async def test_subscribe_same_topic(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test subscring to same topic twice and simulate retained messages.
@@ -1299,7 +1303,7 @@ async def test_subscribe_same_topic(
 
 async def test_not_calling_unsubscribe_with_active_subscribers(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test not calling unsubscribe() when other subscribers are active."""
@@ -1319,7 +1323,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
 
 async def test_unsubscribe_race(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test not calling unsubscribe() when other subscribers are active."""
@@ -1360,7 +1364,7 @@ async def test_unsubscribe_race(
 )
 async def test_restore_subscriptions_on_reconnect(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test subscriptions are restored on reconnect."""
@@ -1385,7 +1389,7 @@ async def test_restore_subscriptions_on_reconnect(
 )
 async def test_restore_all_active_subscriptions_on_reconnect(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test active subscriptions are restored correctly on reconnect."""
@@ -1421,7 +1425,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 async def test_initial_setup_logs_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     empty_mqtt_config,
 ) -> None:
     """Test for setup failure if initial client connection fails."""
@@ -1440,7 +1444,7 @@ async def test_logs_error_if_no_connect_broker(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test for setup failure if connection to broker is missing."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1458,7 +1462,7 @@ async def test_handle_mqtt_on_callback(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test receiving an ACK callback before waiting for it."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1498,7 +1502,7 @@ async def test_subscribe_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test publish error."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1514,7 +1518,7 @@ async def test_subscribe_error(
 async def test_handle_message_callback(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test for handling an incoming message callback."""
     callbacks = []
@@ -1804,7 +1808,7 @@ async def test_tls_version(
 )
 async def test_custom_birth_message(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test sending birth message."""
@@ -1839,7 +1843,7 @@ async def test_custom_birth_message(
 )
 async def test_default_birth_message(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test sending birth message."""
@@ -1866,7 +1870,7 @@ async def test_default_birth_message(
 )
 async def test_no_birth_message(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test disabling birth message."""
@@ -1894,7 +1898,7 @@ async def test_no_birth_message(
 )
 async def test_delayed_birth_message(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
@@ -1958,7 +1962,7 @@ async def test_delayed_birth_message(
 )
 async def test_custom_will_message(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test will message."""
@@ -1971,7 +1975,7 @@ async def test_custom_will_message(
 
 async def test_default_will_message(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test will message."""
@@ -1988,7 +1992,7 @@ async def test_default_will_message(
 )
 async def test_no_will_message(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test will message."""
@@ -2009,7 +2013,7 @@ async def test_no_will_message(
 )
 async def test_mqtt_subscribes_topics_on_connect(
     hass: HomeAssistant,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test subscription to topic on connect."""
@@ -2068,7 +2072,7 @@ async def test_setup_entry_with_config_override(
 async def test_update_incomplete_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if the MQTT component loads when config entry data is incomplete."""
@@ -2109,7 +2113,7 @@ async def test_update_incomplete_entry(
 async def test_fail_no_broker(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if the MQTT component loads when broker configuration is missing."""
@@ -2901,7 +2905,7 @@ async def test_publish_json_from_template(
 async def test_subscribe_connection_status(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -2976,7 +2980,7 @@ async def test_config_schema_validation(hass: HomeAssistant) -> None:
 async def test_unload_config_entry(
     hass: HomeAssistant,
     mqtt_mock,
-    mqtt_client_mock,
+    mqtt_client_mock: MqttMockPahoClient,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -3176,7 +3180,9 @@ async def test_setup_manual_items_with_unique_ids(
 
 
 async def test_remove_unknown_conf_entry_options(
-    hass: HomeAssistant, mqtt_client_mock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unknown keys in config entry data is removed."""
     mqtt_config_entry_data = {
