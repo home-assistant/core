@@ -1550,7 +1550,11 @@ async def test_purge_many_old_events(
 
     await _add_test_events(hass, MAX_ROWS_TO_PURGE)
 
-    with session_scope(hass=hass) as session:
+    # Patch _process_non_state_changed_event_into_session to prevent any new events from being
+    # added to the database.
+    with patch(
+        "homeassistant.components.recorder.Recorder._process_non_state_changed_event_into_session",
+    ), session_scope(hass=hass) as session:
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         event_datas = session.query(EventData)
         assert events.count() == MAX_ROWS_TO_PURGE * 6
