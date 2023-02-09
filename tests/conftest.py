@@ -410,7 +410,7 @@ def hass(
     event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
-    request,
+    request: pytest.FixtureRequest,
 ) -> Generator[HomeAssistant, None, None]:
     """Fixture to provide a test instance of Home Assistant."""
 
@@ -744,7 +744,9 @@ def hass_ws_client(
 
 
 @pytest.fixture(autouse=True)
-def fail_on_log_exception(request, monkeypatch):
+def fail_on_log_exception(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
     if "no_fail_on_log_exception" in request.keywords:
         return
@@ -1205,7 +1207,7 @@ async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
 
 
 @pytest.fixture
-def mock_integration_frame():
+def mock_integration_frame() -> Generator[Mock, None, None]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
         filename="/home/paulus/homeassistant/components/hue/light.py",
@@ -1233,8 +1235,10 @@ def mock_integration_frame():
 
 @pytest.fixture(name="enable_bluetooth")
 async def mock_enable_bluetooth(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> AsyncGenerator[None, None]:
     """Fixture to mock starting the bleak scanner."""
     entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
@@ -1245,8 +1249,8 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(name="mock_bluetooth_adapters")
-def mock_bluetooth_adapters():
+@pytest.fixture
+def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -1268,15 +1272,14 @@ def mock_bluetooth_adapters():
         yield
 
 
-@pytest.fixture(name="mock_bleak_scanner_start")
-def mock_bleak_scanner_start():
+@pytest.fixture
+def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     """Fixture to mock starting the bleak scanner."""
 
     # Late imports to avoid loading bleak unless we need it
 
-    from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
-        scanner as bluetooth_scanner,
-    )
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.bluetooth import scanner as bluetooth_scanner
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
@@ -1288,8 +1291,10 @@ def mock_bleak_scanner_start():
         yield mock_bleak_scanner_start
 
 
-@pytest.fixture(name="mock_bluetooth")
-def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
+@pytest.fixture
+def mock_bluetooth(
+    mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters
+) -> None:
     """Mock out bluetooth from starting."""
 
 
