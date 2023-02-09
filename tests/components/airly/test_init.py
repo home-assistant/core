@@ -1,4 +1,5 @@
 """Test init of Airly integration."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -9,17 +10,12 @@ from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import API_POINT_URL, init_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_fixture,
-    mock_device_registry,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -202,7 +198,12 @@ async def test_unload_entry(
 
 
 @pytest.mark.parametrize("old_identifier", ((DOMAIN, 123, 456), (DOMAIN, "123", "456")))
-async def test_migrate_device_entry(hass, aioclient_mock, old_identifier):
+async def test_migrate_device_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    old_identifier: tuple[str, Any, Any],
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test device_info identifiers migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -219,15 +220,14 @@ async def test_migrate_device_entry(hass, aioclient_mock, old_identifier):
     aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
     config_entry.add_to_hass(hass)
 
-    device_reg = mock_device_registry(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={old_identifier}
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    migrated_device_entry = device_reg.async_get_or_create(
+    migrated_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123-456")}
     )
     assert device_entry.id == migrated_device_entry.id
