@@ -17,6 +17,7 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import (
@@ -26,7 +27,6 @@ from homeassistant.helpers import (
     template,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (

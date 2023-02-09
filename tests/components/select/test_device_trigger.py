@@ -10,9 +10,9 @@ from homeassistant.components.select import DOMAIN
 from homeassistant.components.select.device_trigger import (
     async_get_trigger_capabilities,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
