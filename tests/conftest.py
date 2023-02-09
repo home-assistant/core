@@ -410,7 +410,7 @@ def hass(
     event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
-    request,
+    request: pytest.FixtureRequest,
 ) -> Generator[HomeAssistant, None, None]:
     """Fixture to provide a test instance of Home Assistant."""
 
@@ -744,7 +744,9 @@ def hass_ws_client(
 
 
 @pytest.fixture(autouse=True)
-def fail_on_log_exception(request, monkeypatch):
+def fail_on_log_exception(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
     if "no_fail_on_log_exception" in request.keywords:
         return
