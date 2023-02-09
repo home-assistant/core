@@ -1,8 +1,10 @@
 """Test config flow."""
+from collections.abc import Generator
 from pathlib import Path
 from random import getrandbits
 from ssl import SSLError
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -23,7 +25,7 @@ MOCK_CLIENT_KEY = b"## mock key file ##"
 
 
 @pytest.fixture(autouse=True)
-def mock_finish_setup():
+def mock_finish_setup() -> Generator[MagicMock, None, None]:
     """Mock out the finish setup method."""
     with patch(
         "homeassistant.components.mqtt.MQTT.async_connect", return_value=True
@@ -32,7 +34,7 @@ def mock_finish_setup():
 
 
 @pytest.fixture
-def mock_client_cert_check_fail():
+def mock_client_cert_check_fail() -> Generator[MagicMock, None, None]:
     """Mock the client certificate check."""
     with patch(
         "homeassistant.components.mqtt.config_flow.load_pem_x509_certificate",
@@ -42,7 +44,7 @@ def mock_client_cert_check_fail():
 
 
 @pytest.fixture
-def mock_client_key_check_fail():
+def mock_client_key_check_fail() -> Generator[MagicMock, None, None]:
     """Mock the client key file check."""
     with patch(
         "homeassistant.components.mqtt.config_flow.load_pem_private_key",
@@ -52,7 +54,7 @@ def mock_client_key_check_fail():
 
 
 @pytest.fixture
-def mock_ssl_context():
+def mock_ssl_context() -> Generator[dict[str, MagicMock], None, None]:
     """Mock the SSL context used to load the cert chain and to load verify locations."""
     with patch(
         "homeassistant.components.mqtt.config_flow.SSLContext"
@@ -69,7 +71,7 @@ def mock_ssl_context():
 
 
 @pytest.fixture
-def mock_reload_after_entry_update():
+def mock_reload_after_entry_update() -> Generator[MagicMock, None, None]:
     """Mock out the reload after updating the entry."""
     with patch(
         "homeassistant.components.mqtt._async_config_entry_updated"
@@ -78,14 +80,14 @@ def mock_reload_after_entry_update():
 
 
 @pytest.fixture
-def mock_try_connection():
+def mock_try_connection() -> Generator[MagicMock, None, None]:
     """Mock the try connection method."""
     with patch("homeassistant.components.mqtt.config_flow.try_connection") as mock_try:
         yield mock_try
 
 
 @pytest.fixture
-def mock_try_connection_success():
+def mock_try_connection_success() -> Generator[MqttMockPahoClient, None, None]:
     """Mock the try connection method with success."""
 
     _mid = 1
@@ -118,7 +120,7 @@ def mock_try_connection_success():
 
 
 @pytest.fixture
-def mock_try_connection_time_out():
+def mock_try_connection_time_out() -> Generator[MagicMock, None, None]:
     """Mock the try connection method with a time out."""
 
     # Patch prevent waiting 5 sec for a timeout
@@ -130,7 +132,7 @@ def mock_try_connection_time_out():
 
 
 @pytest.fixture
-def mock_process_uploaded_file(tmp_path):
+def mock_process_uploaded_file(tmp_path: Path) -> Generator[MagicMock, None, None]:
     """Mock upload certificate files."""
     file_id_ca = str(uuid4())
     file_id_cert = str(uuid4())
@@ -170,8 +172,8 @@ def mock_process_uploaded_file(tmp_path):
 
 async def test_user_connection_works(
     hass: HomeAssistant,
-    mock_try_connection,
-    mock_finish_setup,
+    mock_try_connection: MagicMock,
+    mock_finish_setup: MagicMock,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test we can finish a config flow."""
@@ -201,8 +203,8 @@ async def test_user_connection_works(
 
 async def test_user_v5_connection_works(
     hass: HomeAssistant,
-    mock_try_connection,
-    mock_finish_setup,
+    mock_try_connection: MagicMock,
+    mock_finish_setup: MagicMock,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test we can finish a config flow."""
@@ -242,7 +244,9 @@ async def test_user_v5_connection_works(
 
 
 async def test_user_connection_fails(
-    hass: HomeAssistant, mock_try_connection_time_out, mock_finish_setup
+    hass: HomeAssistant,
+    mock_try_connection_time_out: MagicMock,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test if connection cannot be made."""
     result = await hass.config_entries.flow.async_init(
@@ -265,9 +269,8 @@ async def test_user_connection_fails(
 
 async def test_manual_config_starts_discovery_flow(
     hass: HomeAssistant,
-    mock_try_connection,
-    mock_finish_setup,
-    mqtt_client_mock: MqttMockPahoClient,
+    mock_try_connection: MqttMockPahoClient,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test manual config initiates a discovery flow."""
     # No flows in progress
@@ -288,9 +291,8 @@ async def test_manual_config_starts_discovery_flow(
 
 async def test_manual_config_set(
     hass: HomeAssistant,
-    mock_try_connection,
-    mock_finish_setup,
-    mqtt_client_mock: MqttMockPahoClient,
+    mock_try_connection: MqttMockPahoClient,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test manual config does not create an entry, and entry can be setup late."""
     # MQTT config present in yaml config
@@ -381,7 +383,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
 
 async def test_hassio_confirm(
-    hass: HomeAssistant, mock_try_connection_success, mock_finish_setup
+    hass: HomeAssistant,
+    mock_try_connection_success: MqttMockPahoClient,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
@@ -428,7 +432,9 @@ async def test_hassio_confirm(
 
 
 async def test_hassio_cannot_connect(
-    hass: HomeAssistant, mock_try_connection_time_out, mock_finish_setup
+    hass: HomeAssistant,
+    mock_try_connection_time_out: MagicMock,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test a config flow is aborted when a connection was not successful."""
     mock_try_connection.return_value = True
@@ -470,7 +476,7 @@ async def test_hassio_cannot_connect(
 async def test_option_flow(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mock_try_connection,
+    mock_try_connection: MagicMock,
 ) -> None:
     """Test config flow options."""
     with patch(
@@ -567,11 +573,10 @@ async def test_option_flow(
 async def test_bad_certificate(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mock_try_connection_success,
-    tmp_path: Path,
-    mock_ssl_context,
-    test_error,
-    mock_process_uploaded_file,
+    mock_try_connection_success: MqttMockPahoClient,
+    mock_ssl_context: dict[str, MagicMock],
+    mock_process_uploaded_file: MagicMock,
+    test_error: str | None,
 ) -> None:
     """Test bad certificate tests."""
     # Mock certificate files
@@ -664,10 +669,10 @@ async def test_bad_certificate(
 async def test_keepalive_validation(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mock_try_connection,
-    mock_reload_after_entry_update,
-    input_value,
-    error,
+    mock_try_connection: MagicMock,
+    mock_reload_after_entry_update: MagicMock,
+    input_value: str,
+    error: bool,
 ) -> None:
     """Test validation of the keep alive option."""
 
@@ -710,8 +715,8 @@ async def test_keepalive_validation(
 async def test_disable_birth_will(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mock_try_connection,
-    mock_reload_after_entry_update,
+    mock_try_connection: MagicMock,
+    mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test disabling birth and will."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -781,8 +786,8 @@ async def test_disable_birth_will(
 async def test_invalid_discovery_prefix(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mock_try_connection,
-    mock_reload_after_entry_update,
+    mock_try_connection: MagicMock,
+    mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test setting an invalid discovery prefix."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -836,29 +841,32 @@ async def test_invalid_discovery_prefix(
     assert mock_reload_after_entry_update.call_count == 0
 
 
-def get_default(schema, key):
+def get_default(schema: vol.Schema, key: str) -> Any:
     """Get default value for key in voluptuous schema."""
-    for k in schema.keys():
-        if k == key:
-            if k.default == vol.UNDEFINED:
+    for schema_key in schema.keys():
+        if schema_key == key:
+            if schema_key.default == vol.UNDEFINED:
                 return None
-            return k.default()
+            return schema_key.default()
 
 
-def get_suggested(schema, key):
+def get_suggested(schema: vol.Schema, key: str) -> Any:
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
+    for schema_key in schema.keys():
+        if schema_key == key:
+            if (
+                schema_key.description is None
+                or "suggested_value" not in schema_key.description
+            ):
                 return None
-            return k.description["suggested_value"]
+            return schema_key.description["suggested_value"]
 
 
 async def test_option_flow_default_suggested_values(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mock_try_connection_success,
-    mock_reload_after_entry_update,
+    mock_try_connection_success: MqttMockPahoClient,
+    mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test config flow options has default/suggested values."""
     await mqtt_mock_entry_no_yaml_config()
@@ -895,10 +903,10 @@ async def test_option_flow_default_suggested_values(
         mqtt.CONF_USERNAME: "user",
         mqtt.CONF_PASSWORD: "pass",
     }
-    for k, v in defaults.items():
-        assert get_default(result["data_schema"].schema, k) == v
-    for k, v in suggested.items():
-        assert get_suggested(result["data_schema"].schema, k) == v
+    for key, value in defaults.items():
+        assert get_default(result["data_schema"].schema, key) == value
+    for key, value in suggested.items():
+        assert get_suggested(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -924,10 +932,10 @@ async def test_option_flow_default_suggested_values(
         "will_topic": "ha_state/offline",
         "will_payload": "offline",
     }
-    for k, v in defaults.items():
-        assert get_default(result["data_schema"].schema, k) == v
-    for k, v in suggested.items():
-        assert get_suggested(result["data_schema"].schema, k) == v
+    for key, value in defaults.items():
+        assert get_default(result["data_schema"].schema, key) == value
+    for key, value in suggested.items():
+        assert get_suggested(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -957,10 +965,10 @@ async def test_option_flow_default_suggested_values(
         mqtt.CONF_USERNAME: "us3r",
         mqtt.CONF_PASSWORD: "p4ss",
     }
-    for k, v in defaults.items():
-        assert get_default(result["data_schema"].schema, k) == v
-    for k, v in suggested.items():
-        assert get_suggested(result["data_schema"].schema, k) == v
+    for key, value in defaults.items():
+        assert get_default(result["data_schema"].schema, key) == value
+    for key, value in suggested.items():
+        assert get_suggested(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -981,10 +989,10 @@ async def test_option_flow_default_suggested_values(
         "will_topic": "ha_state/offl1ne",
         "will_payload": "offl1ne",
     }
-    for k, v in defaults.items():
-        assert get_default(result["data_schema"].schema, k) == v
-    for k, v in suggested.items():
-        assert get_suggested(result["data_schema"].schema, k) == v
+    for key, value in defaults.items():
+        assert get_default(result["data_schema"].schema, key) == value
+    for key, value in suggested.items():
+        assert get_suggested(result["data_schema"].schema, key) == value
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1012,10 +1020,10 @@ async def test_option_flow_default_suggested_values(
 async def test_skipping_advanced_options(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    mock_try_connection,
-    mock_reload_after_entry_update,
-    advanced_options,
-    step_id,
+    mock_try_connection: MagicMock,
+    mock_reload_after_entry_update: MagicMock,
+    advanced_options: bool,
+    step_id: str,
 ) -> None:
     """Test advanced options option."""
 
@@ -1048,7 +1056,7 @@ async def test_skipping_advanced_options(
 
 
 async def test_options_user_connection_fails(
-    hass: HomeAssistant, mock_try_connection_time_out
+    hass: HomeAssistant, mock_try_connection_time_out: MagicMock
 ) -> None:
     """Test if connection cannot be made."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
@@ -1079,7 +1087,7 @@ async def test_options_user_connection_fails(
 
 
 async def test_options_bad_birth_message_fails(
-    hass: HomeAssistant, mock_try_connection
+    hass: HomeAssistant, mock_try_connection: MqttMockPahoClient
 ) -> None:
     """Test bad birth message."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
@@ -1117,7 +1125,7 @@ async def test_options_bad_birth_message_fails(
 
 
 async def test_options_bad_will_message_fails(
-    hass: HomeAssistant, mock_try_connection
+    hass: HomeAssistant, mock_try_connection: MagicMock
 ) -> None:
     """Test bad will message."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
@@ -1156,10 +1164,10 @@ async def test_options_bad_will_message_fails(
 
 async def test_try_connection_with_advanced_parameters(
     hass: HomeAssistant,
-    mock_try_connection_success,
+    mock_try_connection_success: MqttMockPahoClient,
     tmp_path: Path,
-    mock_ssl_context,
-    mock_process_uploaded_file,
+    mock_ssl_context: dict[str, MagicMock],
+    mock_process_uploaded_file: MagicMock,
 ) -> None:
     """Test config flow with advanced parameters from config."""
 
@@ -1297,10 +1305,9 @@ async def test_try_connection_with_advanced_parameters(
 
 async def test_setup_with_advanced_settings(
     hass: HomeAssistant,
-    mock_try_connection,
-    tmp_path: Path,
-    mock_ssl_context,
-    mock_process_uploaded_file,
+    mock_try_connection: MagicMock,
+    mock_ssl_context: dict[str, MagicMock],
+    mock_process_uploaded_file: MagicMock,
 ) -> None:
     """Test config flow setup with advanced parameters."""
     file_id = mock_process_uploaded_file.file_id
@@ -1456,9 +1463,8 @@ async def test_setup_with_advanced_settings(
 async def test_change_websockets_transport_to_tcp(
     hass: HomeAssistant,
     mock_try_connection,
-    tmp_path: Path,
-    mock_ssl_context,
-    mock_process_uploaded_file,
+    mock_ssl_context: dict[str, MagicMock],
+    mock_process_uploaded_file: MagicMock,
 ) -> None:
     """Test option flow setup with websockets transport settings."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
