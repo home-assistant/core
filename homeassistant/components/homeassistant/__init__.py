@@ -286,7 +286,20 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         Additionally, it also calls the `homeasssitant.reload_core_config`
         service, as that reloads the core YAML configuration, and the
         `frontend.reload_themes` service, as that reloads the themes.
+
+        We only do so, if there are no configuration errors.
         """
+
+        if errors := await conf_util.async_check_ha_config_file(hass):
+            _LOGGER.error(
+                "The system cannot reload because the configuration is not valid: %s",
+                errors,
+            )
+            raise HomeAssistantError(
+                "Cannot quick reload all YAML configurations because the "
+                f"configuration is not valid: {errors}"
+            )
+
         services = hass.services.async_services()
         tasks = [
             hass.services.async_call(
