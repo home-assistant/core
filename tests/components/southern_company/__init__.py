@@ -1,8 +1,9 @@
 """Tests for the Southern Company integration."""
+import datetime
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from southern_company_api.account import MonthlyUsage
+from southern_company_api.account import HourlyEnergyUsage, MonthlyUsage
 
 from homeassistant.components.southern_company import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +23,39 @@ MONTH_DATA = MonthlyUsage(
     projected_bill_amount_low=7.0,
     projected_bill_amount_high=8.0,
 )
+
+HOURLY_DATA = [
+    HourlyEnergyUsage(
+        datetime.datetime(
+            2023,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            datetime.timezone(datetime.timedelta(hours=-5), "EST"),
+        ),
+        usage=1.0,
+        cost=2.0,
+        temp=3.0,
+    ),
+    HourlyEnergyUsage(
+        datetime.datetime(
+            2023,
+            1,
+            1,
+            2,
+            0,
+            0,
+            0,
+            datetime.timezone(datetime.timedelta(hours=-5), "EST"),
+        ),
+        usage=2.0,
+        cost=3.0,
+        temp=4.0,
+    ),
+]
 
 
 def create_entry(hass: HomeAssistant) -> ConfigEntry:
@@ -46,6 +80,7 @@ async def async_init_integration(
         account_mock = AsyncMock()
         account_mock.number = "1"
         account_mock.get_month_data.return_value = MONTH_DATA
+        account_mock.get_hourly_data.return_value = HOURLY_DATA
         api_mock.return_value.accounts = [account_mock]
         api_mock.return_value.get_accounts = AsyncMock()
         api_mock.return_value.get_accounts.return_value = [account_mock]

@@ -5,7 +5,6 @@ import datetime
 from datetime import timedelta
 import logging
 
-import pytz
 import southern_company_api
 
 from homeassistant.components.recorder import get_instance
@@ -38,9 +37,6 @@ from .const import DOMAIN as SOUTHERN_COMPANY_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:currency-usd"
-SCAN_INTERVAL = timedelta(minutes=1)
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-PARALLEL_UPDATES = 0
 
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -211,8 +207,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                         self._southern_company_connection.jwt,
                     )
                 else:
-                    # Needs exception
-                    pass
+                    raise InvalidAuth("No jwt token")
 
                 _cost_sum = 0.0
                 _usage_sum = 0.0
@@ -229,16 +224,11 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                         self._southern_company_connection.jwt,
                     )
                 else:
-                    # Needs exception
-                    pass
+                    raise InvalidAuth("No jwt token")
 
                 from_time = hourly_data[0].time
                 if from_time is None:
                     continue
-                # This should be handled in the api
-                time_zone = pytz.timezone("America/New_York")
-                from_time = time_zone.localize(from_time)
-
                 start = from_time - timedelta(hours=1)
                 cost_stat = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
@@ -271,10 +261,6 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                 if data.cost is None or data.usage is None:
                     continue
                 from_time = data.time
-                time_zone = pytz.timezone("America/New_York")
-                from_time = time_zone.localize(from_time)
-                from_time = from_time.replace(second=0, microsecond=0, minute=0)
-
                 if from_time is None or (
                     last_stats_time is not None and from_time <= last_stats_time
                 ):

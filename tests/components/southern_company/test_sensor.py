@@ -1,9 +1,11 @@
 """Test sensors for Southern Company."""
 
+from homeassistant.core import HomeAssistant
+
 from tests.components.southern_company import async_init_integration
 
 
-async def test_sensors(recorder_mock, hass):
+async def test_sensors(recorder_mock, hass: HomeAssistant):
     """Test setting up the sensors."""
     await async_init_integration(hass)
     assert len(hass.states.async_all("sensor")) == 8
