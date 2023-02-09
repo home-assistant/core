@@ -249,6 +249,7 @@ select = [
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117", # Merge with-statements that use the same scope
+    "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
     "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
     "SIM401", # Use get from dict with default instead of an if block
     "T20",  # flake8-print
