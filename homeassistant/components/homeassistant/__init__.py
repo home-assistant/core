@@ -15,6 +15,7 @@ from homeassistant.const import (
     RESTART_EXIT_CODE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -40,6 +41,7 @@ SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
+SERVICE_RELOAD_ALL = "reload_all"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     vol.Schema(
@@ -273,6 +275,23 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,
         schema=SCHEMA_RELOAD_CONFIG_ENTRY,
+    )
+
+    async def async_handle_reload_all(call: ha.ServiceCall) -> None:
+        """Service handler for calling all integration reload services."""
+        services = hass.services.async_services()
+        await asyncio.gather(
+            *(
+                hass.services.async_call(
+                    domain, SERVICE_RELOAD, context=call.context, blocking=True
+                )
+                for domain, domain_services in services.items()
+                if domain != "notify" and SERVICE_RELOAD in domain_services
+            )
+        )
+
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
     )
 
     return True

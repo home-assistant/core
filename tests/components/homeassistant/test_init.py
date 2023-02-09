@@ -12,6 +12,7 @@ import homeassistant.components as comps
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
     SERVICE_CHECK_CONFIG,
+    SERVICE_RELOAD_ALL,
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_SET_LOCATION,
 )
@@ -565,3 +566,23 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
             blocking=True,
         )
         assert mock_save.called
+
+
+async def test_reload_all(hass: HomeAssistant) -> None:
+    """Test reload_all service."""
+    await async_setup_component(hass, "homeassistant", {})
+    test1 = async_mock_service(hass, "test1", "reload")
+    test2 = async_mock_service(hass, "test2", "reload")
+    test3 = async_mock_service(hass, "test3", "not_reload")
+    test4 = async_mock_service(hass, "notify", "reload")
+
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_RELOAD_ALL,
+        blocking=True,
+    )
+
+    assert len(test1) == 1
+    assert len(test2) == 1
+    assert len(test3) == 0
+    assert len(test4) == 0
