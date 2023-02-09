@@ -81,8 +81,6 @@ TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 
-# Order is important here, as we expect statistics to have
-# more rows than statistics_short_term
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
 MAX_STATE_ATTRS_BYTES = 16384

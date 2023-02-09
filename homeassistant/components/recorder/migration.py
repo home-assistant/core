@@ -778,7 +778,6 @@ def _apply_update(  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        # There may be duplicated statistics entries, delete duplicated statistics
         # and try again
         _LOGGER.debug("Deleting duplicated statistics entries")
         with session_scope(session=session_maker()) as session:
