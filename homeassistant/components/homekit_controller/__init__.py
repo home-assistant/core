@@ -27,12 +27,6 @@ from .config_flow import normalize_hkid
 from .connection import HKDevice
 from .const import (
     ATTR_HKID,
-    ATTR_THREAD_CHANNEL,
-    ATTR_THREAD_EXTENDED_PAN_ID,
-    ATTR_THREAD_NETWORK_KEY,
-    ATTR_THREAD_NETWORK_NAME,
-    ATTR_THREAD_PAN_ID,
-    ATTR_THREAD_UNKNOWN_FLAG,
     CONTROLLER,
     DOMAIN,
     KNOWN_DEVICES,
