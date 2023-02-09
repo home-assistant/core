@@ -30,7 +30,7 @@ def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def filled_device_registry(
+async def filled_device_registry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dr.DeviceRegistry:
     """Fill device registry with mock devices."""
