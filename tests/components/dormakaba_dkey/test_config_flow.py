@@ -36,9 +36,9 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
             CONF_ADDRESS: DKEY_DISCOVERY_INFO.address,
         },
     )
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "bluetooth_connect"
-    assert result["progress_action"] == "wait_for_bluetooth_connect"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "associate"
+    assert result["errors"] is None
 
     await _test_common_success(hass, result)
 
@@ -53,7 +53,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
@@ -74,7 +74,7 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
@@ -94,31 +94,15 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "bluetooth_connect"
-    assert result["progress_action"] == "wait_for_bluetooth_connect"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "associate"
+    assert result["errors"] is None
 
     await _test_common_success(hass, result)
 
 
 async def _test_common_success(hass: HomeAssistant, result: FlowResult) -> None:
     """Test bluetooth and user flow success paths."""
-
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.connect"
-    ) as mock_connect, patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.disconnect"
-    ) as mock_disconnect:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "associate"
-    mock_connect.assert_awaited_once()
-    mock_disconnect.assert_awaited_once()
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "associate"
-    assert result["errors"] is None
 
     with patch(
         "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
@@ -156,8 +140,14 @@ async def test_bluetooth_step_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("exc", (BleakError, Exception))
-async def test_bluetooth_step_cannot_connect(hass: HomeAssistant, exc) -> None:
+@pytest.mark.parametrize(
+    "exc, error",
+    (
+        (BleakError, "cannot_connect"),
+        (Exception, "unknown"),
+    ),
+)
+async def test_bluetooth_step_cannot_connect(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth step and we cannot connect."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -174,27 +164,19 @@ async def test_bluetooth_step_cannot_connect(hass: HomeAssistant, exc) -> None:
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "bluetooth_connect"
-    assert result["progress_action"] == "wait_for_bluetooth_connect"
-
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.connect",
-        side_effect=exc,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "could_not_connect"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "could_not_connect"
+    assert result["step_id"] == "associate"
     assert result["errors"] is None
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "bluetooth_connect"
-    assert result["progress_action"] == "wait_for_bluetooth_connect"
+    with patch(
+        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
+        side_effect=exc,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"activation_code": "1234-1234"}
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == error
 
 
 @pytest.mark.parametrize(
@@ -202,7 +184,6 @@ async def test_bluetooth_step_cannot_connect(hass: HomeAssistant, exc) -> None:
     (
         (dkey_errors.InvalidActivationCode, "invalid_code"),
         (dkey_errors.WrongActivationCode, "wrong_code"),
-        (Exception, "unknown"),
     ),
 )
 async def test_bluetooth_step_cannot_associate(hass: HomeAssistant, exc, error) -> None:
@@ -222,19 +203,6 @@ async def test_bluetooth_step_cannot_associate(hass: HomeAssistant, exc, error) 
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "bluetooth_connect"
-    assert result["progress_action"] == "wait_for_bluetooth_connect"
-
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.connect"
-    ) as mock_connect:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "associate"
-    mock_connect.assert_awaited_once()
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "associate"
     assert result["errors"] is None

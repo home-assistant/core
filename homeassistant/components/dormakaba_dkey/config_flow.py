@@ -1,7 +1,6 @@
 """Config flow for Dormakaba dKey integration."""
 from __future__ import annotations
 
-from asyncio import Task
 import logging
 from typing import Any
 
@@ -32,11 +31,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dormakaba dKey."""
 
     VERSION = 1
-    _lock: DKEYLock
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._connect_task: Task | None = None
+        self._lock: DKEYLock | None = None
         # Populated by user step
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
         # Populated by bluetooth and user steps
@@ -53,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             self._discovery_info = self._discovered_devices[address]
-            return await self.async_step_bluetooth_connect()
+            return await self.async_step_associate()
 
         current_addresses = self._async_current_ids()
         for discovery in async_discovered_service_info(self.hass):
@@ -111,45 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": name},
             )
 
-        return await self.async_step_bluetooth_connect()
-
-    async def async_step_bluetooth_connect(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle bluetooth confirm step."""
-        # mypy is not aware that we can't get here without having these set already
-        assert self._discovery_info is not None
-
-        async def _connect() -> None:
-            try:
-                await self._lock.connect()
-                # Disconnect again so the user can use the admin app to create a new key
-                await self._lock.disconnect()
-            finally:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-                )
-
-        if not self._connect_task:
-            self._lock = DKEYLock(self._discovery_info.device)
-            self._connect_task = self.hass.async_create_task(_connect())
-            return self.async_show_progress(
-                step_id="bluetooth_connect",
-                progress_action="wait_for_bluetooth_connect",
-            )
-
-        try:
-            await self._connect_task
-        except BleakError as err:
-            _LOGGER.info("Could not connect to lock", exc_info=err)
-            return self.async_show_progress_done(next_step_id="could_not_connect")
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Unknown error when connecting to lock", exc_info=err)
-            return self.async_show_progress_done(next_step_id="could_not_connect")
-        finally:
-            self._connect_task = None
-
-        return self.async_show_progress_done(next_step_id="associate")
+        return await self.async_step_associate()
 
     async def async_step_associate(
         self, user_input: dict[str, Any] | None = None
@@ -164,17 +124,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+        if not self._lock:
+            self._lock = DKEYLock(self._discovery_info.device)
         lock = self._lock
 
         try:
             association_data = await lock.associate(user_input["activation_code"])
+        except BleakError:
+            return self.async_abort(reason="cannot_connect")
         except dkey_errors.InvalidActivationCode:
             errors["base"] = "invalid_code"
         except dkey_errors.WrongActivationCode:
             errors["base"] = "wrong_code"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            return self.async_abort(reason="unknown")
         else:
             return self.async_create_entry(
                 title=lock.device_info.device_name
@@ -189,12 +153,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="associate", data_schema=STEP_ASSOCIATE_SCHEMA, errors=errors
         )
-
-    async def async_step_could_not_connect(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle connection failure."""
-        if user_input is None:
-            return self.async_show_form(step_id="could_not_connect")
-
-        return await self.async_step_bluetooth_connect()
