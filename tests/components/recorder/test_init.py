@@ -1532,6 +1532,10 @@ async def test_database_lock_and_unlock(
     tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # Database locking is only used for SQLite
+        return
+
     if recorder_db_url == "sqlite://":
         # Use file DB, in memory DB cannot do write locks.
         recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
@@ -1577,6 +1581,10 @@ async def test_database_lock_and_overflow(
     tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # Database locking is only used for SQLite
+        return
+
     # Use file DB, in memory DB cannot do write locks.
     if recorder_db_url == "sqlite://":
         # Use file DB, in memory DB cannot do write locks.
