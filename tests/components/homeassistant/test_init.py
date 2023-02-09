@@ -575,6 +575,7 @@ async def test_reload_all(hass: HomeAssistant) -> None:
     test2 = async_mock_service(hass, "test2", "reload")
     test3 = async_mock_service(hass, "test3", "not_reload")
     test4 = async_mock_service(hass, "notify", "reload")
+    test5 = async_mock_service(hass, "homeassistant", "reload_core_config")
 
     await hass.services.async_call(
         "homeassistant",
@@ -586,3 +587,4 @@ async def test_reload_all(hass: HomeAssistant) -> None:
     assert len(test2) == 1
     assert len(test3) == 0
     assert len(test4) == 0
+    assert len(test5) == 1

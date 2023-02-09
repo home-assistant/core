@@ -278,17 +278,33 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     )
 
     async def async_handle_reload_all(call: ha.ServiceCall) -> None:
-        """Service handler for calling all integration reload services."""
+        """Service handler for calling all integration reload services.
+
+        Calls all reload services on all active domains, which triggers the
+        reload of YAML configurations for the domain that support it.
+
+        Additionally, it also calls the `homeasssitant.reload_core_config`
+        service, as that reloads the core YAML configuration.
+        """
         services = hass.services.async_services()
-        await asyncio.gather(
-            *(
-                hass.services.async_call(
-                    domain, SERVICE_RELOAD, context=call.context, blocking=True
-                )
-                for domain, domain_services in services.items()
-                if domain != "notify" and SERVICE_RELOAD in domain_services
+        tasks = {
+            hass.services.async_call(
+                domain, SERVICE_RELOAD, context=call.context, blocking=True
+            )
+            for domain, domain_services in services.items()
+            if domain != "notify" and SERVICE_RELOAD in domain_services
+        }
+
+        tasks.add(
+            hass.services.async_call(
+                ha.DOMAIN,
+                SERVICE_RELOAD_CORE_CONFIG,
+                context=call.context,
+                blocking=True,
             )
         )
+
+        await asyncio.gather(*tasks)
 
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
