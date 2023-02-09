@@ -1,5 +1,6 @@
 """Tests for the Southern Company integration."""
 import datetime
+import typing
 from unittest.mock import AsyncMock, patch
 
 from southern_company_api.account import HourlyEnergyUsage, MonthlyUsage
@@ -125,6 +126,7 @@ async def async_init_integration(
     hass: HomeAssistant,
     hourly_data: list[HourlyEnergyUsage] = HOURLY_DATA,
     skip_setup: bool = False,
+    jwt: typing.Optional[str] = "sample_jwt",
 ) -> ConfigEntry:
     """Set up the Southern Company integration in Home Assistant."""
     with patch(
@@ -141,7 +143,8 @@ async def async_init_integration(
         api_mock.return_value.authenticate = AsyncMock()
         api_mock.return_value.authenticate.return_value = True
         api_mock.return_value.get_jwt = AsyncMock()
-        api_mock.return_value.get_jwt.return_value = "sample_jwt"
+        api_mock.return_value.get_jwt.return_value = jwt
+        api_mock.return_value.jwt = jwt
 
         entry = create_entry(hass)
         if not skip_setup:

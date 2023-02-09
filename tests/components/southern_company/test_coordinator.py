@@ -1,10 +1,17 @@
 """Test adding external statistics from southern_company."""
 
 from datetime import timedelta
+from unittest.mock import AsyncMock
+
+import pytest
 
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.southern_company import DOMAIN
+from homeassistant.components.southern_company.coordinator import (
+    SouthernCompanyCoordinator,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed
@@ -12,7 +19,7 @@ from tests.components.recorder.common import async_wait_recording_done
 from tests.components.southern_company import HOURLY_DATA, async_init_integration
 
 
-async def test_async_setup_entry(recorder_mock, hass: HomeAssistant):
+async def test_atatistic_insert(recorder_mock, hass: HomeAssistant):
     """Test setup southern_company."""
     await async_init_integration(hass)
     await async_wait_recording_done(hass)
@@ -72,3 +79,21 @@ async def test_async_setup_entry(recorder_mock, hass: HomeAssistant):
     # Check that everything works correctly when last_stats does exist.
     async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=61))
     await hass.async_block_till_done()
+
+
+async def test_update_coordinator_no_jwt(recorder_mock, hass: HomeAssistant):
+    """Ensure if a coordinator update happens, and there is no jwt, then we report update failed."""
+    api_mock = AsyncMock()
+    api_mock.jwt = None
+    coordinator = SouthernCompanyCoordinator(hass, api_mock)
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
+async def test_statistics_no_jwt(recorder_mock, hass: HomeAssistant):
+    """Ensure if a statistic update happens, and there is no jwt, then we report update failed."""
+    api_mock = AsyncMock()
+    api_mock.jwt = None
+    coordinator = SouthernCompanyCoordinator(hass, api_mock)
+    with pytest.raises(UpdateFailed):
+        await coordinator._insert_statistics()

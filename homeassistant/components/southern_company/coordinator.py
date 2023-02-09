@@ -62,6 +62,8 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
 
     async def _insert_statistics(self) -> None:
         """Insert Southern Company statistics."""
+        if self._southern_company_connection.jwt is None:
+            raise UpdateFailed("Jwt is None")
         for account in self._southern_company_connection.accounts:
             cost_statistic_id = f"{DOMAIN}:energy_" f"cost_" f"{account.number}"
             usage_statistic_id = f"{DOMAIN}:energy_" f"usage_" f"{account.number}"
@@ -71,14 +73,11 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
             )
             if not last_stats:
                 # First time we insert 1 year of data (if available)
-                if self._southern_company_connection.jwt is not None:
-                    hourly_data = await account.get_hourly_data(
-                        datetime.datetime.now() - timedelta(days=365),
-                        datetime.datetime.now(),
-                        self._southern_company_connection.jwt,
-                    )
-                else:
-                    raise UpdateFailed("No jwt token")
+                hourly_data = await account.get_hourly_data(
+                    datetime.datetime.now() - timedelta(days=365),
+                    datetime.datetime.now(),
+                    self._southern_company_connection.jwt,
+                )
 
                 _cost_sum = 0.0
                 _usage_sum = 0.0
@@ -88,18 +87,13 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                 # of consumption/production data.
                 # We update the statistics with the last 30 days
                 # of data to handle corrections in the data.
-                if self._southern_company_connection.jwt is not None:
-                    hourly_data = await account.get_hourly_data(
-                        datetime.datetime.now() - timedelta(days=31),
-                        datetime.datetime.now(),
-                        self._southern_company_connection.jwt,
-                    )
-                else:
-                    raise UpdateFailed("No jwt token")
+                hourly_data = await account.get_hourly_data(
+                    datetime.datetime.now() - timedelta(days=31),
+                    datetime.datetime.now(),
+                    self._southern_company_connection.jwt,
+                )
 
                 from_time = hourly_data[0].time
-                if from_time is None:
-                    continue
                 start = from_time - timedelta(hours=1)
                 cost_stat = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
