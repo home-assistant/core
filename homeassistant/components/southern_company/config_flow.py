@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-import typing
 from typing import Any
 
 from southern_company_api.parser import (
@@ -36,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_authenticate(
         self, user_input: Mapping[str, Any], errors: dict[str, str]
-    ) -> typing.Optional[FlowResult]:
+    ) -> FlowResult | None:
         """Handle authentication for all flows to reduce repetition of code."""
         sca = SouthernCompanyAPI(user_input["username"], user_input["password"])
         try:
