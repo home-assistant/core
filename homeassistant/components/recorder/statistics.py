@@ -2004,10 +2004,9 @@ def _sorted_statistics_to_dict(
     # Fetch last known statistics for the needed metadata IDs
     if need_stat_at_start_time:
         assert start_time  # Can not be None if need_stat_at_start_time is not empty
-        tmp = _statistics_at_time(
+        if tmp := _statistics_at_time(
             session, need_stat_at_start_time, table, start_time, types
-        )
-        if tmp:
+        ):
             for stat in tmp:
                 stats_by_meta_id[stat.metadata_id].insert(0, stat)
 
@@ -2016,11 +2015,11 @@ def _sorted_statistics_to_dict(
     timestamp_to_datetime = dt_util.utc_from_timestamp
     for meta_id, group in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
-        state_unit = unit = metadata_by_id["unit_of_measurement"]
         statistic_id = metadata_by_id["statistic_id"]
-        if state := hass.states.get(statistic_id):
-            state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if convert_units:
+            state_unit = unit = metadata_by_id["unit_of_measurement"]
+            if state := hass.states.get(statistic_id):
+                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
