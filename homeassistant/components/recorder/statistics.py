@@ -1977,33 +1977,29 @@ def _sorted_statistics_to_dict(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
-    result: dict[str, list[dict]] = {}
+    result: dict = defaultdict(list)
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     start_time_ts = start_time.timestamp() if start_time else None
     # Identify metadata IDs for which no data was available at the requested start time
     stats_by_meta_id: dict[int, list[Row]] = {}
-    seen_statistic_ids: set[str] = set()
     for meta_id, group in groupby(
         stats,
         lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
     ):
         stats_list = stats_by_meta_id[meta_id] = list(group)
         first_start_time_ts = stats_list[0].start_ts
-        seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
         if start_time_ts and first_start_time_ts > start_time_ts:
             need_stat_at_start_time.add(meta_id)
 
+    # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
-        # Set all statistic IDs to empty lists in result set to maintain the order
-        # Only set the statistic ID if it is in the data to
-        # avoid having to do a second loop to remove the
-        # statistic IDs that are not in the data at the end
-        result: dict[str, list[dict]] = {
-            stat_id: [] for stat_id in statistic_ids if stat_id in seen_statistic_ids
-        }
-    else:
-        result = {stat_id: [] for stat_id in seen_statistic_ids}
+        for stat_id in statistic_ids:
+            # Only set the statistic ID if it is in the data to
+            # avoid having to do a second loop to remove the
+            # statistic IDs that are not in the data at the end
+            if stat_id in stats_by_meta_id:
+                result[stat_id] = []
 
     # Fetch last known statistics for the needed metadata IDs
     if need_stat_at_start_time:
