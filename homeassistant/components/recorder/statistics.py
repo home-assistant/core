@@ -1980,7 +1980,6 @@ def _sorted_statistics_to_dict(
     result: dict = defaultdict(list)
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
-    stats_at_start_time = {}
     start_time_ts = start_time.timestamp() if start_time else None
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
@@ -1988,11 +1987,13 @@ def _sorted_statistics_to_dict(
             result[stat_id] = []
 
     # Identify metadata IDs for which no data was available at the requested start time
+    stats_by_meta_id: dict[int, list[Row]] = {}
     for meta_id, group in groupby(
         stats,
         lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
     ):
-        first_start_time_ts = next(group).start_ts
+        stats_list = stats_by_meta_id[meta_id] = list(group)
+        first_start_time_ts = stats_list[0].start_ts
         if start_time_ts and first_start_time_ts > start_time_ts:
             need_stat_at_start_time.add(meta_id)
 
@@ -2004,17 +2005,15 @@ def _sorted_statistics_to_dict(
         )
         if tmp:
             for stat in tmp:
-                stats_at_start_time[stat.metadata_id] = (stat,)
+                stats_by_meta_id[stat.metadata_id].insert(0, stat)
 
     # Append all statistic entries, and optionally do unit conversion
     table_duration = table.duration
     timestamp_to_datetime = dt_util.utc_from_timestamp
-    for meta_id, group in groupby(
-        stats,
-        lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
-    ):
-        state_unit = unit = metadata[meta_id]["unit_of_measurement"]
-        statistic_id = metadata[meta_id]["statistic_id"]
+    for meta_id, group in stats_by_meta_id.items():
+        metadata_by_id = metadata[meta_id]
+        state_unit = unit = metadata_by_id["unit_of_measurement"]
+        statistic_id = metadata_by_id["statistic_id"]
         if state := hass.states.get(statistic_id):
             state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if convert_units:
@@ -2022,7 +2021,7 @@ def _sorted_statistics_to_dict(
         else:
             convert = None
         ent_results = result[meta_id]
-        for db_state in chain(stats_at_start_time.get(meta_id, ()), group):
+        for db_state in group:
             start = timestamp_to_datetime(db_state.start_ts)
             row: dict[str, Any] = {
                 "start": start,
