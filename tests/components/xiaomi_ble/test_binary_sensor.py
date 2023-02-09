@@ -1,7 +1,12 @@
 """Test Xiaomi binary sensors."""
 
 from datetime import timedelta
+import time
+from unittest.mock import MagicMock, patch
 
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -15,7 +20,10 @@ from homeassistant.util import dt as dt_util
 from . import make_advertisement
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
+from tests.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+)
 
 
 async def test_door_problem_sensors(hass: HomeAssistant) -> None:
@@ -256,8 +264,7 @@ async def test_smoke(hass: HomeAssistant) -> None:
 
 async def test_unavailable(hass):
     """Test normal device goes to unavailable after 60 minutes."""
-    now = dt_util.utcnow()
-    future_interval = timedelta(minutes=60)
+    start_monotonic = time.monotonic()
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -285,9 +292,17 @@ async def test_unavailable(hass):
     assert opening_sensor.state == STATE_ON
 
     # Fastforward time without BLE advertisements
-    for i in range(1, 3):
-        future = now + (future_interval * i)
-        async_fire_time_changed(hass, future)
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="A4:C1:38:66:E5:67")]):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
         await hass.async_block_till_done()
 
     opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
@@ -301,8 +316,7 @@ async def test_unavailable(hass):
 
 async def test_sleepy_device(hass):
     """Test sleepy device does not go to unavailable after 60 minutes."""
-    now = dt_util.utcnow()
-    future_interval = timedelta(minutes=60)
+    start_monotonic = time.monotonic()
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -329,9 +343,17 @@ async def test_sleepy_device(hass):
     assert opening_sensor.state == STATE_ON
 
     # Fastforward time without BLE advertisements
-    for i in range(1, 3):
-        future = now + (future_interval * i)
-        async_fire_time_changed(hass, future)
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="A4:C1:38:66:E5:67")]):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
         await hass.async_block_till_done()
 
     opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
