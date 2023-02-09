@@ -120,6 +120,8 @@ async def test_user_options_clear(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Test clearing the options."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     # Verify that first config step comes back with a selection list of all the 28-family devices
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["data_schema"].schema["device_selection"].options == {
@@ -142,6 +144,8 @@ async def test_user_options_empty_selection(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Test leaving the selection of devices empty."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     # Verify that first config step comes back with a selection list of all the 28-family devices
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["data_schema"].schema["device_selection"].options == {
@@ -168,6 +172,8 @@ async def test_user_options_set_single(
     # Clear config options to certify functionality when starting from scratch
     config_entry.options = {}
 
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     # Verify that first config step comes back with a selection list of all the 28-family devices
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["data_schema"].schema["device_selection"].options == {
@@ -202,6 +208,8 @@ async def test_user_options_set_multiple(
     filled_device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test configuring multiple consecutive devices in a row."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     # Verify that first config step comes back with a selection list of all the 28-family devices
     for entry in dr.async_entries_for_config_entry(
         filled_device_registry, config_entry.entry_id
@@ -262,6 +270,8 @@ async def test_user_options_no_devices(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Test that options does not change when no devices are available."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     # Verify that first config step comes back with an empty list of possible devices to choose from
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
