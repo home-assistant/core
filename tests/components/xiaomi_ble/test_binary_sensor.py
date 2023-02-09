@@ -258,6 +258,7 @@ async def test_unavailable(hass):
     """Test normal device goes to unavailable after 60 minutes."""
     now = dt_util.utcnow()
     future = now + timedelta(minutes=60)
+    later = future + timedelta(seconds=1)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -288,9 +289,13 @@ async def test_unavailable(hass):
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
+    # Wait a second to let the state change to unavailable
+    async_fire_time_changed(hass, later)
+    await hass.async_block_till_done()
+
     opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
 
-    # Normal devices should go to unavailable after a while
+    # Normal devices should go to unavailable
     assert opening_sensor.state == STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -301,6 +306,7 @@ async def test_sleepy_device(hass):
     """Test sleepy device does not go to unavailable after 60 minutes."""
     now = dt_util.utcnow()
     future = now + timedelta(minutes=60)
+    later = future + timedelta(seconds=1)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -328,6 +334,10 @@ async def test_sleepy_device(hass):
 
     # Fastforward time without BLE advertisements
     async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    # Wait a second to let the state change to unavailable
+    async_fire_time_changed(hass, later)
     await hass.async_block_till_done()
 
     opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
