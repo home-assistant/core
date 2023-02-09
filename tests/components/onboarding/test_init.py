@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components import onboarding
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
@@ -23,7 +24,7 @@ async def test_not_setup_views_if_onboarded(hass, hass_storage):
     assert onboarding.async_is_onboarded(hass)
 
 
-async def test_setup_views_if_not_onboarded(hass):
+async def test_setup_views_if_not_onboarded(hass: HomeAssistant) -> None:
     """Test if onboarding is not done, we setup views."""
     with patch(
         "homeassistant.components.onboarding.views.async_setup",
@@ -37,7 +38,7 @@ async def test_setup_views_if_not_onboarded(hass):
     assert not onboarding.async_is_onboarded(hass)
 
 
-async def test_is_onboarded():
+async def test_is_onboarded() -> None:
     """Test the is onboarded function."""
     hass = Mock()
     hass.data = {}
@@ -51,7 +52,7 @@ async def test_is_onboarded():
     assert not onboarding.async_is_onboarded(hass)
 
 
-async def test_is_user_onboarded():
+async def test_is_user_onboarded() -> None:
     """Test the is onboarded function."""
     hass = Mock()
     hass.data = {}

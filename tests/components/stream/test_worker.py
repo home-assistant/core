@@ -12,7 +12,6 @@ creates a packet sequence, with a mocked output buffer to capture the segments
 pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
-
 import asyncio
 import fractions
 import io
@@ -46,6 +45,7 @@ from homeassistant.components.stream.worker import (
     StreamWorkerError,
     stream_worker,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import dynamic_stream_settings, generate_h264_video, generate_h265_video
@@ -326,7 +326,7 @@ async def async_decode_stream(hass, packets, py_av=None, stream_settings=None):
     return py_av.capture_buffer
 
 
-async def test_stream_open_fails(hass):
+async def test_stream_open_fails(hass: HomeAssistant) -> None:
     """Test failure on stream open."""
     stream = Stream(
         hass,
@@ -343,7 +343,7 @@ async def test_stream_open_fails(hass):
         av_open.assert_called_once()
 
 
-async def test_stream_worker_success(hass):
+async def test_stream_worker_success(hass: HomeAssistant) -> None:
     """Test a short stream that ends and outputs everything correctly."""
     decoded_stream = await async_decode_stream(
         hass, PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -363,7 +363,7 @@ async def test_stream_worker_success(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_skip_out_of_order_packet(hass):
+async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
     """Skip a single out of order packet."""
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
     # for this test, make sure the out of order index doesn't happen on a keyframe
@@ -403,7 +403,7 @@ async def test_skip_out_of_order_packet(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_discard_old_packets(hass):
+async def test_discard_old_packets(hass: HomeAssistant) -> None:
     """Skip a series of out of order packets."""
 
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
@@ -427,7 +427,7 @@ async def test_discard_old_packets(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_packet_overflow(hass):
+async def test_packet_overflow(hass: HomeAssistant) -> None:
     """Packet is too far out of order, and looks like overflow, ending stream early."""
 
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
@@ -452,7 +452,7 @@ async def test_packet_overflow(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_skip_initial_bad_packets(hass):
+async def test_skip_initial_bad_packets(hass: HomeAssistant) -> None:
     """Tests a small number of initial "bad" packets with missing dts."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -482,7 +482,7 @@ async def test_skip_initial_bad_packets(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_too_many_initial_bad_packets_fails(hass):
+async def test_too_many_initial_bad_packets_fails(hass: HomeAssistant) -> None:
     """Test initial bad packets are too high, causing it to never start."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -501,7 +501,7 @@ async def test_too_many_initial_bad_packets_fails(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_skip_missing_dts(hass):
+async def test_skip_missing_dts(hass: HomeAssistant) -> None:
     """Test packets in the middle of the stream missing DTS are skipped."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -525,7 +525,7 @@ async def test_skip_missing_dts(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_too_many_bad_packets(hass):
+async def test_too_many_bad_packets(hass: HomeAssistant) -> None:
     """Test bad packets are too many, causing it to end."""
 
     num_packets = LONGER_TEST_SEQUENCE_LENGTH
@@ -545,7 +545,7 @@ async def test_too_many_bad_packets(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_no_video_stream(hass):
+async def test_no_video_stream(hass: HomeAssistant) -> None:
     """Test no video stream in the container means no resulting output."""
     py_av = MockPyAv(video=False)
 
@@ -561,7 +561,7 @@ async def test_no_video_stream(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_audio_packets_not_found(hass):
+async def test_audio_packets_not_found(hass: HomeAssistant) -> None:
     """Set up an audio stream, but no audio packets are found."""
     py_av = MockPyAv(audio=True)
 
@@ -575,7 +575,7 @@ async def test_audio_packets_not_found(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_audio_is_first_packet(hass):
+async def test_audio_is_first_packet(hass: HomeAssistant) -> None:
     """Set up an audio stream and audio packet is the first packet in the stream."""
     py_av = MockPyAv(audio=True)
 
@@ -598,7 +598,7 @@ async def test_audio_is_first_packet(hass):
     assert len(decoded_stream.audio_packets) == 1
 
 
-async def test_audio_packets_found(hass):
+async def test_audio_packets_found(hass: HomeAssistant) -> None:
     """Set up an audio stream and audio packets are found at the start of the stream."""
     py_av = MockPyAv(audio=True)
 
@@ -616,7 +616,7 @@ async def test_audio_packets_found(hass):
     assert len(decoded_stream.audio_packets) == 1
 
 
-async def test_pts_out_of_order(hass):
+async def test_pts_out_of_order(hass: HomeAssistant) -> None:
     """Test pts can be out of order and still be valid."""
 
     # Create a sequence of packets with some out of order pts
@@ -641,7 +641,7 @@ async def test_pts_out_of_order(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_stream_stopped_while_decoding(hass):
+async def test_stream_stopped_while_decoding(hass: HomeAssistant) -> None:
     """Tests that worker quits when stop() is called while decodign."""
     # Add some synchronization so that the test can pause the background
     # worker. When the worker is stopped, the test invokes stop() which
@@ -681,7 +681,7 @@ async def test_stream_stopped_while_decoding(hass):
     assert stream.available
 
 
-async def test_update_stream_source(hass):
+async def test_update_stream_source(hass: HomeAssistant) -> None:
     """Tests that the worker is re-invoked when the stream source is updated."""
     worker_open = threading.Event()
     worker_wake = threading.Event()
@@ -981,7 +981,7 @@ async def test_get_image(hass, h264_video, filename):
     await stream.stop()
 
 
-async def test_worker_disable_ll_hls(hass):
+async def test_worker_disable_ll_hls(hass: HomeAssistant) -> None:
     """Test that the worker disables ll-hls for hls inputs."""
     stream_settings = StreamSettings(
         ll_hls=True,

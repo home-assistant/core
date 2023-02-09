@@ -11,6 +11,8 @@ from math import floor, log10
 import re
 from typing import Any, Final, cast, final
 
+from typing_extensions import Self
+
 from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable=[hass-deprecated-import]
@@ -767,7 +769,7 @@ class SensorExtraStoredData(ExtraStoredData):
         }
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         try:
             native_value = restored["native_value"]

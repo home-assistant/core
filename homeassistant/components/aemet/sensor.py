@@ -262,7 +262,7 @@ class AbstractAemetSensor(CoordinatorEntity[WeatherUpdateCoordinator], SensorEnt
         unique_id,
         coordinator: WeatherUpdateCoordinator,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -279,7 +279,7 @@ class AemetSensor(AbstractAemetSensor):
         unique_id_prefix,
         weather_coordinator: WeatherUpdateCoordinator,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             name=name,
@@ -304,7 +304,7 @@ class AemetForecastSensor(AbstractAemetSensor):
         weather_coordinator: WeatherUpdateCoordinator,
         forecast_mode,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             name=name,

@@ -567,10 +567,15 @@ def test_saving_state_include_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
-    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
+    state_map = {state.entity_id: state for state in states}
+
+    assert (
+        _state_with_context(hass, "test2.recorder").as_dict()
+        == state_map["test2.recorder"].as_dict()
+    )
     assert (
         _state_with_context(hass, "test3.included_entity").as_dict()
-        == states[1].as_dict()
+        == state_map["test3.included_entity"].as_dict()
     )
 
 
@@ -729,7 +734,7 @@ def test_saving_state_with_oversized_attributes(hass_recorder, caplog):
     assert states[1].attributes == {}
 
 
-def test_recorder_setup_failure(hass):
+def test_recorder_setup_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
@@ -744,7 +749,7 @@ def test_recorder_setup_failure(hass):
     hass.stop()
 
 
-def test_recorder_validate_schema_failure(hass):
+def test_recorder_validate_schema_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with patch(
@@ -761,7 +766,7 @@ def test_recorder_validate_schema_failure(hass):
     hass.stop()
 
 
-def test_recorder_setup_failure_without_event_listener(hass):
+def test_recorder_setup_failure_without_event_listener(hass: HomeAssistant) -> None:
     """Test recorder setup failure when the event listener is not setup."""
     recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
@@ -775,7 +780,7 @@ def test_recorder_setup_failure_without_event_listener(hass):
     hass.stop()
 
 
-async def test_defaults_set(hass):
+async def test_defaults_set(hass: HomeAssistant) -> None:
     """Test the config defaults are set."""
     recorder_config = None
 
@@ -1595,7 +1600,7 @@ async def test_database_lock_and_overflow(
 
 async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
     """Test locking database timeout when recorder stopped."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
@@ -1632,7 +1637,9 @@ async def test_database_lock_without_instance(recorder_mock, hass):
             assert instance.unlock_database()
 
 
-async def test_in_memory_database(hass, caplog):
+async def test_in_memory_database(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test connecting to an in-memory recorder is not allowed."""
     assert not await async_setup_component(
         hass, recorder.DOMAIN, {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}}
@@ -1667,7 +1674,7 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
     recorder_db_url: str,
 ):
     """Test we do not do keep alive for sqlite."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite, keepalive runs on other engines
         return
 
@@ -1898,6 +1905,9 @@ async def test_connect_args_priority(hass, config_url):
 
         def on_connect_url(self, url):
             return False
+
+        def _builtin_onconnect(self):
+            ...
 
     class MockEntrypoint:
         def engine_created(*_):

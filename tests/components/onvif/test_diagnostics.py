@@ -1,4 +1,5 @@
 """Test ONVIF diagnostics."""
+from homeassistant.core import HomeAssistant
 
 from . import (
     FIRMWARE_VERSION,
@@ -10,9 +11,12 @@ from . import (
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client):
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for a config entry."""
 
     entry, _, _ = await setup_onvif_integration(hass)

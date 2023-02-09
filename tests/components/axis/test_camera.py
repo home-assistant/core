@@ -1,5 +1,4 @@
 """Axis camera platform tests."""
-
 from unittest.mock import patch
 
 import pytest
@@ -11,12 +10,13 @@ from homeassistant.components.axis.const import (
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import STATE_IDLE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import NAME
 
 
-async def test_platform_manually_configured(hass):
+async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     """Test that nothing happens when platform is manually configured."""
     assert (
         await async_setup_component(

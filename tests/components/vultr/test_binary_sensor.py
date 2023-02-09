@@ -74,7 +74,7 @@ def test_binary_sensor(hass: HomeAssistant):
             assert device_attrs[ATTR_SUBSCRIPTION_ID] == "123456"
 
 
-def test_invalid_sensor_config():
+def test_invalid_sensor_config() -> None:
     """Test config type failures."""
     with pytest.raises(vol.Invalid):  # No subs
         vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})

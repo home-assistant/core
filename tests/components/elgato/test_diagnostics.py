@@ -11,7 +11,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
@@ -21,8 +21,10 @@ async def test_diagnostics(
             "firmware_build_number": 192,
             "firmware_version": "1.0.3",
             "hardware_board_type": 53,
+            "mac_address": None,
             "product_name": "Elgato Key Light",
             "serial_number": "CN11A1A00001",
+            "wifi": None,
             "features": ["lights"],
         },
         "state": {

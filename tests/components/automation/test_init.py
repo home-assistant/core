@@ -58,6 +58,7 @@ from tests.common import (
 )
 from tests.components.logbook.common import MockRow, mock_humanify
 from tests.components.repairs import get_repairs
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -1098,7 +1099,7 @@ async def test_reload_automation_when_blueprint_changes(hass, calls, extra_confi
         assert len(calls) == 3
 
 
-async def test_automation_restore_state(hass):
+async def test_automation_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     time = dt_util.utcnow()
 
@@ -1153,7 +1154,7 @@ async def test_automation_restore_state(hass):
     assert len(calls) == 1
 
 
-async def test_initial_value_off(hass):
+async def test_initial_value_off(hass: HomeAssistant) -> None:
     """Test initial value off."""
     calls = async_mock_service(hass, "test", "automation")
 
@@ -1176,7 +1177,7 @@ async def test_initial_value_off(hass):
     assert len(calls) == 0
 
 
-async def test_initial_value_on(hass):
+async def test_initial_value_on(hass: HomeAssistant) -> None:
     """Test initial value on."""
     hass.state = CoreState.not_running
     calls = async_mock_service(hass, "test", "automation")
@@ -1205,7 +1206,7 @@ async def test_initial_value_on(hass):
     assert len(calls) == 1
 
 
-async def test_initial_value_off_but_restore_on(hass):
+async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
     hass.state = CoreState.not_running
     calls = async_mock_service(hass, "test", "automation")
@@ -1231,7 +1232,7 @@ async def test_initial_value_off_but_restore_on(hass):
     assert len(calls) == 0
 
 
-async def test_initial_value_on_but_restore_off(hass):
+async def test_initial_value_on_but_restore_off(hass: HomeAssistant) -> None:
     """Test initial value on and restored state is turned off."""
     calls = async_mock_service(hass, "test", "automation")
     mock_restore_cache(hass, (State("automation.hello", STATE_OFF),))
@@ -1255,7 +1256,7 @@ async def test_initial_value_on_but_restore_off(hass):
     assert len(calls) == 1
 
 
-async def test_no_initial_value_and_restore_off(hass):
+async def test_no_initial_value_and_restore_off(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
     calls = async_mock_service(hass, "test", "automation")
     mock_restore_cache(hass, (State("automation.hello", STATE_OFF),))
@@ -1278,7 +1279,9 @@ async def test_no_initial_value_and_restore_off(hass):
     assert len(calls) == 0
 
 
-async def test_automation_is_on_if_no_initial_state_or_restore(hass):
+async def test_automation_is_on_if_no_initial_state_or_restore(
+    hass: HomeAssistant,
+) -> None:
     """Test initial value is on when no initial state or restored state."""
     calls = async_mock_service(hass, "test", "automation")
 
@@ -1300,7 +1303,7 @@ async def test_automation_is_on_if_no_initial_state_or_restore(hass):
     assert len(calls) == 1
 
 
-async def test_automation_not_trigger_on_bootstrap(hass):
+async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     """Test if automation is not trigger on bootstrap."""
     hass.state = CoreState.not_running
     calls = async_mock_service(hass, "test", "automation")
@@ -1438,7 +1441,9 @@ async def test_automation_with_error_in_script(
     assert issues[0]["issue_id"] == "automation.hello_service_not_found_test.automation"
 
 
-async def test_automation_with_error_in_script_2(hass, caplog):
+async def test_automation_with_error_in_script_2(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with an error in script."""
     assert await async_setup_component(
         hass,
@@ -1457,7 +1462,9 @@ async def test_automation_with_error_in_script_2(hass, caplog):
     assert "string value is None" in caplog.text
 
 
-async def test_automation_restore_last_triggered_with_initial_state(hass):
+async def test_automation_restore_last_triggered_with_initial_state(
+    hass: HomeAssistant,
+) -> None:
     """Ensure last_triggered is restored, even when initial state is set."""
     time = dt_util.utcnow()
 
@@ -1511,7 +1518,7 @@ async def test_automation_restore_last_triggered_with_initial_state(hass):
     assert state.attributes["last_triggered"] == time
 
 
-async def test_extraction_functions(hass):
+async def test_extraction_functions(hass: HomeAssistant) -> None:
     """Test extraction functions."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     assert await async_setup_component(
@@ -1682,7 +1689,7 @@ async def test_extraction_functions(hass):
     }
 
 
-async def test_logbook_humanify_automation_triggered_event(hass):
+async def test_logbook_humanify_automation_triggered_event(hass: HomeAssistant) -> None:
     """Test humanifying Automation Trigger event."""
     hass.config.components.add("recorder")
     await async_setup_component(hass, automation.DOMAIN, {})
@@ -1717,7 +1724,9 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     assert event2["entity_id"] == "automation.bye"
 
 
-async def test_automation_variables(hass, caplog):
+async def test_automation_variables(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation variables."""
     calls = async_mock_service(hass, "test", "automation")
 
@@ -1798,7 +1807,9 @@ async def test_automation_variables(hass, caplog):
     assert len(calls) == 3
 
 
-async def test_automation_trigger_variables(hass, caplog):
+async def test_automation_trigger_variables(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation trigger variables."""
     calls = async_mock_service(hass, "test", "automation")
 
@@ -1864,7 +1875,9 @@ async def test_automation_trigger_variables(hass, caplog):
     assert "Error rendering variables" not in caplog.text
 
 
-async def test_automation_bad_trigger_variables(hass, caplog):
+async def test_automation_bad_trigger_variables(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation trigger variables accessing hass is rejected."""
     calls = async_mock_service(hass, "test", "automation")
 
@@ -1892,7 +1905,9 @@ async def test_automation_bad_trigger_variables(hass, caplog):
     assert len(calls) == 0
 
 
-async def test_automation_this_var_always(hass, caplog):
+async def test_automation_this_var_always(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation always has reference to this, even with no variable or trigger variables configured."""
     calls = async_mock_service(hass, "test", "automation")
 
@@ -1997,7 +2012,9 @@ async def test_blueprint_automation_bad_config(
     assert details in caplog.text
 
 
-async def test_blueprint_automation_fails_substitution(hass, caplog):
+async def test_blueprint_automation_fails_substitution(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test blueprint automation with bad inputs."""
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
@@ -2335,7 +2352,9 @@ async def test_recursive_automation(hass: HomeAssistant, automation_mode, caplog
         assert "Disallowed recursion detected" not in caplog.text
 
 
-async def test_websocket_config(hass, hass_ws_client):
+async def test_websocket_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test config command."""
     config = {
         "alias": "hello",

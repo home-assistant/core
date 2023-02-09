@@ -1,5 +1,4 @@
 """UniFi Network sensor platform tests."""
-
 from copy import deepcopy
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -18,6 +17,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -26,6 +26,7 @@ import homeassistant.util.dt as dt_util
 from .test_controller import setup_unifi_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_1 = {
     "board_rev": 2,
@@ -96,7 +97,9 @@ DEVICE_1 = {
 }
 
 
-async def test_no_clients(hass, aioclient_mock):
+async def test_no_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(
         hass,
@@ -193,6 +196,7 @@ async def test_uptime_sensors(
     hass,
     aioclient_mock,
     mock_unifi_websocket,
+    entity_registry_enabled_by_default,
     initial_uptime,
     event_uptime,
     new_uptime,
@@ -263,7 +267,9 @@ async def test_uptime_sensors(
     assert hass.states.get("sensor.client1_uptime") is None
 
 
-async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
+async def test_remove_sensors(
+    hass, aioclient_mock, mock_unifi_websocket, entity_registry_enabled_by_default
+):
     """Verify removing of clients work as expected."""
     wired_client = {
         "hostname": "Wired client",
