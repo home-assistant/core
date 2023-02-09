@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
 from aiohttp import ClientWebSocketResponse
