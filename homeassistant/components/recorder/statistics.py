@@ -2013,7 +2013,7 @@ def _sorted_statistics_to_dict(
                 stats_by_meta_id[stat.metadata_id].insert(0, stat)
 
     # Append all statistic entries, and optionally do unit conversion
-    table_duration = table.duration
+    table_duration_seconds = table.duration.total_seconds()
     timestamp_to_datetime = dt_util.utc_from_timestamp
     for meta_id, stats_list in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
@@ -2027,10 +2027,10 @@ def _sorted_statistics_to_dict(
             convert = None
         ent_results = result[statistic_id]
         for db_state in stats_list:
-            start = timestamp_to_datetime(db_state.start_ts)
+            start_ts = db_state.start_ts
             row: dict[str, Any] = {
-                "start": start,
-                "end": start + table_duration,
+                "start": timestamp_to_datetime(start_ts),
+                "end": timestamp_to_datetime(start_ts + table_duration_seconds),
             }
             if "mean" in types:
                 row["mean"] = convert(db_state.mean) if convert else db_state.mean
