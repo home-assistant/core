@@ -91,10 +91,18 @@ def _update_route53(
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
     )
+    ipv6_address = None
 
     # Get the IP Address and build an array of changes
     try:
-        ipaddress = requests.get("https://api.ipify.org/", timeout=5).text
+        ipv64_address = requests.get("https://api64.ipify.org/", timeout=5).text
+        # Check if it's IPv6
+        if ":" in ipv64_address:
+            # And get IPv4 address
+            ipv6_address = ipv64_address
+            ipaddress = requests.get("https://api.ipify.org/", timeout=5).text
+        else:
+            ipaddress = ipv64_address
 
     except requests.RequestException:
         _LOGGER.warning("Unable to reach the ipify service")
@@ -115,6 +123,18 @@ def _update_route53(
                 },
             }
         )
+        if ipv6_address:
+            changes.append(
+                {
+                    "Action": "UPSERT",
+                    "ResourceRecordSet": {
+                        "Name": _get_fqdn(record, domain),
+                        "Type": "AAAA",
+                        "TTL": ttl,
+                        "ResourceRecords": [{"Value": ipv6_address}],
+                    },
+                }
+            )
 
     _LOGGER.debug("Submitting the following changes to Route53")
     _LOGGER.debug(changes)
