@@ -1034,8 +1034,9 @@ def recorder_config():
 
 
 @pytest.fixture
-def recorder_db_url(pytestconfig):
+def recorder_db_url(pytestconfig, hass_fixture_setup):
     """Prepare a default database for tests and return a connection URL."""
+    assert not hass_fixture_setup
     db_url: str = pytestconfig.getoption("dburl")
     if db_url.startswith(("postgresql://", "mysql://")):
         import sqlalchemy_utils
@@ -1169,14 +1170,11 @@ async def _async_init_recorder_component(hass, add_config=None, db_url=None):
 @pytest.fixture
 async def async_setup_recorder_instance(
     recorder_db_url,
-    hass_fixture_setup,
     enable_nightly_purge,
     enable_statistics,
     enable_statistics_table_validation,
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
-    assert not hass_fixture_setup
-
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
