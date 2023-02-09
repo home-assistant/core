@@ -1,13 +1,10 @@
 {
   "domain": "southern_company",
   "name": "Southern Company",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/southern_company",
-  "requirements": ["southern-company-api==0.2.4"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": ["recorder"],
   "codeowners": ["@Lash-L"],
-  "iot_class": "cloud_polling"
+  "config_flow": true,
+  "dependencies": ["recorder"],
+  "documentation": "https://www.home-assistant.io/integrations/southern_company",
+  "iot_class": "cloud_polling",
+  "requirements": ["southern-company-api==0.2.4"]
 }
