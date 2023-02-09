@@ -97,14 +97,19 @@ def _default_recorder(hass):
 
 
 async def test_shutdown_before_startup_finishes(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant, tmp_path
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path,
 ):
     """Test shutdown before recorder starts is clean."""
 
-    # On-disk database because this test does not play nice with the
-    # MutexPool
+    if recorder_db_url == "sqlite://":
+        # On-disk database because this test does not play nice with the
+        # MutexPool
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_DB_URL: recorder_db_url,
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
     hass.state = CoreState.not_running
@@ -1520,13 +1525,16 @@ def test_entity_id_filter(hass_recorder):
 async def test_database_lock_and_unlock(
     async_setup_recorder_instance: SetupRecorderInstanceT,
     hass: HomeAssistant,
+    recorder_db_url: str,
     tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
-    # Use file DB, in memory DB cannot do write locks.
+    if recorder_db_url == "sqlite://":
+        # Use file DB, in memory DB cannot do write locks.
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     config = {
         recorder.CONF_COMMIT_INTERVAL: 0,
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_DB_URL: recorder_db_url,
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
@@ -1562,13 +1570,17 @@ async def test_database_lock_and_unlock(
 async def test_database_lock_and_overflow(
     async_setup_recorder_instance: SetupRecorderInstanceT,
     hass: HomeAssistant,
+    recorder_db_url: str,
     tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     # Use file DB, in memory DB cannot do write locks.
+    if recorder_db_url == "sqlite://":
+        # Use file DB, in memory DB cannot do write locks.
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
     config = {
         recorder.CONF_COMMIT_INTERVAL: 0,
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_DB_URL: recorder_db_url,
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
