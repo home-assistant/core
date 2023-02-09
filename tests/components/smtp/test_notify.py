@@ -9,6 +9,7 @@ import homeassistant.components.notify as notify
 from homeassistant.components.smtp import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -22,7 +23,7 @@ class MockSMTP(MailNotificationService):
         return msg.as_string(), recipients
 
 
-async def test_reload_notify(hass):
+async def test_reload_notify(hass: HomeAssistant) -> None:
     """Verify we can reload the notify service."""
 
     with patch(
@@ -78,7 +79,7 @@ def message():
         0,
         True,
     )
-    yield mailer
+    return mailer
 
 
 HTML = """

@@ -7,7 +7,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import State
 
@@ -46,7 +46,7 @@ async def test_one_sensor(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 05:02 Temperature"
     )
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
 
 @pytest.mark.parametrize(
@@ -88,7 +88,7 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("friendly_name") == f"{base_name} Temperature"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(f"{base_id}_humidity")
     assert state
@@ -141,7 +141,7 @@ async def test_several_sensors(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 05:02 Temperature"
     )
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_temperature")
     assert state
@@ -150,7 +150,7 @@ async def test_several_sensors(hass, rfxtrx):
         state.attributes.get("friendly_name")
         == "WT260,WT260H,WT440H,WT450,WT450H 06:01 Temperature"
     )
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_humidity")
     assert state
@@ -191,7 +191,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_temperature")
     assert state
     assert state.state == "18.4"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(f"{base_id}_battery")
     assert state
@@ -223,7 +223,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_temperature")
     assert state
     assert state.state == "14.9"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(f"{base_id}_battery")
     assert state
@@ -255,7 +255,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     state = hass.states.get(f"{base_id}_temperature")
     assert state
     assert state.state == "17.9"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     state = hass.states.get(f"{base_id}_battery")
     assert state

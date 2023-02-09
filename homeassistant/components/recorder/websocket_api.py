@@ -15,13 +15,18 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
@@ -46,6 +51,24 @@ from .util import (
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+UNIT_SCHEMA = vol.Schema(
+    {
+        vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
+        vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
+        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
+        vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+        vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
+        vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
+        vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
+        vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
+        vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
+    }
+)
 
 
 @callback
@@ -93,18 +116,7 @@ def _ws_get_statistic_during_period(
         vol.Optional("types"): vol.All(
             [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
         ),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
         **PERIOD_SCHEMA.schema,
     }
 )
@@ -211,18 +223,7 @@ async def ws_handle_get_statistics_during_period(
         vol.Optional("end_time"): str,
         vol.Optional("statistic_ids"): [str],
         vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
             [vol.Any("last_reset", "max", "mean", "min", "state", "sum")],
             vol.Coerce(set),
@@ -242,7 +243,10 @@ def _ws_get_list_statistic_ids(
     msg_id: int,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> str:
-    """Fetch a list of available statistic_id and convert them to json in the executor."""
+    """Fetch a list of available statistic_id and convert them to JSON.
+
+    Runs in the executor.
+    """
     return JSON_DUMP(
         messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
     )

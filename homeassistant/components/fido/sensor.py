@@ -1,5 +1,4 @@
-"""
-Support for Fido.
+"""Support for Fido.
 
 Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
@@ -215,7 +214,9 @@ async def async_setup_platform(
 class FidoSensor(SensorEntity):
     """Implementation of a Fido sensor."""
 
-    def __init__(self, fido_data, name, number, description: SensorEntityDescription):
+    def __init__(
+        self, fido_data, name, number, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.fido_data = fido_data

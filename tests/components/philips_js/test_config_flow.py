@@ -2,10 +2,11 @@
 from unittest.mock import ANY, patch
 
 from haphilipsjs import PairingFailure
-from pytest import fixture
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_CONFIG,
@@ -19,7 +20,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-@fixture(autouse=True, name="mock_setup_entry")
+@pytest.fixture(autouse=True, name="mock_setup_entry")
 def mock_setup_entry_fixture():
     """Disable component setup."""
     with patch(
@@ -30,7 +31,7 @@ def mock_setup_entry_fixture():
         yield mock_setup_entry
 
 
-@fixture
+@pytest.fixture
 async def mock_tv_pairable(mock_tv):
     """Return a mock tv that is pariable."""
     mock_tv.system = MOCK_SYSTEM_UNPAIRED
@@ -206,7 +207,7 @@ async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup_entry):
     }
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

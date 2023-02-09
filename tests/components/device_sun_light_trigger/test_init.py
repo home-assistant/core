@@ -1,5 +1,4 @@
 """The tests device sun light trigger component."""
-# pylint: disable=protected-access
 from datetime import datetime
 from unittest.mock import patch
 
@@ -21,7 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -220,7 +219,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
         assert hass.states.get("person.me").state == "home"
 
 
-async def test_initialize_start(hass):
+async def test_initialize_start(hass: HomeAssistant) -> None:
     """Test we initialize when HA starts."""
     hass.state = CoreState.not_running
     assert await async_setup_component(

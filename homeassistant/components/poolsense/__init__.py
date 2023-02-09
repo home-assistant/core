@@ -64,7 +64,7 @@ class PoolSenseEntity(CoordinatorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, coordinator, email, description: EntityDescription):
+    def __init__(self, coordinator, email, description: EntityDescription) -> None:
         """Initialize poolsense sensor."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -93,7 +93,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
         async with async_timeout.timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data()
-            except (PoolSenseError) as error:
+            except PoolSenseError as error:
                 _LOGGER.error("PoolSense query did not complete")
                 raise UpdateFailed(error) from error
 

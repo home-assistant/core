@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import aiohttp.client_exceptions
 from iaqualink.client import AqualinkClient
@@ -18,7 +18,6 @@ from iaqualink.device import (
     AqualinkThermostat,
 )
 from iaqualink.exception import AqualinkServiceException
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN

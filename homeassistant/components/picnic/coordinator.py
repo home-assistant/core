@@ -1,4 +1,5 @@
 """Coordinator to fetch data from the Picnic API."""
+from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
@@ -120,13 +121,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         #  Get the next order's position details if there is an undelivered order
         delivery_position = {}
         if next_delivery and not next_delivery.get("delivery_time"):
-            try:
+            # ValueError: If no information yet can mean an empty response
+            with suppress(ValueError):
                 delivery_position = self.picnic_api_client.get_delivery_position(
                     next_delivery["delivery_id"]
                 )
-            except ValueError:
-                # No information yet can mean an empty response
-                pass
 
         # Determine the ETA, if available, the one from the delivery position API is more precise
         # but, it's only available shortly before the actual delivery.

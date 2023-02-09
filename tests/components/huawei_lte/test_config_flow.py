@@ -1,5 +1,4 @@
 """Tests for the Huawei LTE config flow."""
-
 from unittest.mock import patch
 
 from huawei_lte_api.enums.client import ResponseCodeEnum
@@ -19,6 +18,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +36,7 @@ FIXTURE_USER_INPUT_OPTIONS = {
 }
 
 
-async def test_show_set_form(hass):
+async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -211,9 +211,14 @@ async def test_success(hass, login_requests_mock):
 
 
 @pytest.mark.parametrize(
-    ("upnp_data", "expected_result"),
+    ("requests_mock_request_kwargs", "upnp_data", "expected_result"),
     (
         (
+            {
+                "method": ANY,
+                "url": f"{FIXTURE_USER_INPUT[CONF_URL]}api/device/basic_information",
+                "text": "<response><devicename>Mock device</devicename></response>",
+            },
             {
                 ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
                 ssdp.ATTR_UPNP_SERIAL: "00000000",
@@ -226,6 +231,11 @@ async def test_success(hass, login_requests_mock):
         ),
         (
             {
+                "method": ANY,
+                "url": f"{FIXTURE_USER_INPUT[CONF_URL]}api/device/basic_information",
+                "text": "<error><code>100002</code><message/></error>",
+            },
+            {
                 ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
                 # No ssdp.ATTR_UPNP_SERIAL
             },
@@ -235,19 +245,36 @@ async def test_success(hass, login_requests_mock):
                 "errors": {},
             },
         ),
+        (
+            {
+                "method": ANY,
+                "url": f"{FIXTURE_USER_INPUT[CONF_URL]}api/device/basic_information",
+                "exc": Exception("Something unexpected"),
+            },
+            {
+                # Does not matter
+            },
+            {
+                "type": data_entry_flow.FlowResultType.ABORT,
+                "reason": "unsupported_device",
+            },
+        ),
     ),
 )
-async def test_ssdp(hass, upnp_data, expected_result):
+async def test_ssdp(
+    hass, login_requests_mock, requests_mock_request_kwargs, upnp_data, expected_result
+):
     """Test SSDP discovery initiates config properly."""
-    url = "http://192.168.100.1/"
+    url = FIXTURE_USER_INPUT[CONF_URL][:-1]  # strip trailing slash for appending port
     context = {"source": config_entries.SOURCE_SSDP}
+    login_requests_mock.request(**requests_mock_request_kwargs)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=context,
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="upnp:rootdevice",
-            ssdp_location="http://192.168.100.1:60957/rootDesc.xml",
+            ssdp_location=f"{url}:60957/rootDesc.xml",
             upnp={
                 ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
                 ssdp.ATTR_UPNP_MANUFACTURER: "Huawei",
@@ -264,7 +291,7 @@ async def test_ssdp(hass, upnp_data, expected_result):
     for k, v in expected_result.items():
         assert result[k] == v
     if result.get("data_schema"):
-        result["data_schema"]({})[CONF_URL] == url
+        assert result["data_schema"]({})[CONF_URL] == url + "/"
 
 
 @pytest.mark.parametrize(
@@ -339,7 +366,7 @@ async def test_reauth(
         assert entry.data[k] == v
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options produce expected data."""
 
     config_entry = MockConfigEntry(

@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -28,22 +28,8 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -89,8 +75,8 @@ def calls(hass):
 )
 async def test_get_triggers(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     set_state,
     features_reg,
     features_state,
@@ -99,11 +85,11 @@ async def test_get_triggers(
     """Test we get the expected triggers from an alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -146,19 +132,19 @@ async def test_get_triggers(
 )
 async def test_get_triggers_hidden_auxiliary(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     hidden_by,
     entity_category,
 ):
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -183,15 +169,17 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities(hass, device_registry, entity_registry):
     """Test we get the expected capabilities from an alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     hass.states.async_set(
         "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
     )
@@ -232,9 +220,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "triggered - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "triggered "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -251,9 +242,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "disarmed - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "disarmed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -270,9 +264,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_home - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_home "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -289,9 +286,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_away - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_away "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -308,9 +308,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_night - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_night "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -327,9 +330,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_vacation - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_vacation "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -344,7 +350,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 1
     assert (
         calls[0].data["some"]
-        == "triggered - device - alarm_control_panel.entity - pending - triggered - None"
+        == "triggered - device - alarm_control_panel.entity - pending - triggered -"
+        " None"
     )
 
     # Fake that the entity is disarmed.
@@ -353,7 +360,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 2
     assert (
         calls[1].data["some"]
-        == "disarmed - device - alarm_control_panel.entity - triggered - disarmed - None"
+        == "disarmed - device - alarm_control_panel.entity - triggered - disarmed -"
+        " None"
     )
 
     # Fake that the entity is armed home.
@@ -362,7 +370,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 3
     assert (
         calls[2].data["some"]
-        == "armed_home - device - alarm_control_panel.entity - disarmed - armed_home - None"
+        == "armed_home - device - alarm_control_panel.entity - disarmed - armed_home -"
+        " None"
     )
 
     # Fake that the entity is armed away.
@@ -371,7 +380,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 4
     assert (
         calls[3].data["some"]
-        == "armed_away - device - alarm_control_panel.entity - armed_home - armed_away - None"
+        == "armed_away - device - alarm_control_panel.entity - armed_home - armed_away"
+        " - None"
     )
 
     # Fake that the entity is armed night.
@@ -380,7 +390,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 5
     assert (
         calls[4].data["some"]
-        == "armed_night - device - alarm_control_panel.entity - armed_away - armed_night - None"
+        == "armed_night - device - alarm_control_panel.entity - armed_away -"
+        " armed_night - None"
     )
 
     # Fake that the entity is armed vacation.
@@ -389,7 +400,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 6
     assert (
         calls[5].data["some"]
-        == "armed_vacation - device - alarm_control_panel.entity - armed_night - armed_vacation - None"
+        == "armed_vacation - device - alarm_control_panel.entity - armed_night -"
+        " armed_vacation - None"
     )
 
 

@@ -60,7 +60,7 @@ def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
         if effect.name.lower() == effect_str:
             return effect
     # unreachable due to schema validation
-    assert False  # pragma: no cover
+    raise RuntimeError  # pragma: no cover
 
 
 def _is_zero_rgb_brightness(rgb: tuple[int, int, int]) -> bool:

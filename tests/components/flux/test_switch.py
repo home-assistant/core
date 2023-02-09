@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ON,
     SUN_EVENT_SUNRISE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -30,7 +30,7 @@ def set_utc(hass):
     hass.config.set_time_zone("UTC")
 
 
-async def test_valid_config(hass):
+async def test_valid_config(hass: HomeAssistant) -> None:
     """Test configuration."""
     assert await async_setup_component(
         hass,
@@ -49,7 +49,7 @@ async def test_valid_config(hass):
     assert state.state == "off"
 
 
-async def test_restore_state_last_on(hass):
+async def test_restore_state_last_on(hass: HomeAssistant) -> None:
     """Test restoring state when the last state is on."""
     mock_restore_cache(hass, [State("switch.flux", "on")])
 
@@ -71,7 +71,7 @@ async def test_restore_state_last_on(hass):
     assert state.state == "on"
 
 
-async def test_restore_state_last_off(hass):
+async def test_restore_state_last_off(hass: HomeAssistant) -> None:
     """Test restoring state when the last state is off."""
     mock_restore_cache(hass, [State("switch.flux", "off")])
 
@@ -93,7 +93,7 @@ async def test_restore_state_last_off(hass):
     assert state.state == "off"
 
 
-async def test_valid_config_with_info(hass):
+async def test_valid_config_with_info(hass: HomeAssistant) -> None:
     """Test configuration."""
     assert await async_setup_component(
         hass,
@@ -114,7 +114,7 @@ async def test_valid_config_with_info(hass):
     await hass.async_block_till_done()
 
 
-async def test_valid_config_no_name(hass):
+async def test_valid_config_no_name(hass: HomeAssistant) -> None:
     """Test configuration."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -125,7 +125,7 @@ async def test_valid_config_no_name(hass):
         await hass.async_block_till_done()
 
 
-async def test_invalid_config_no_lights(hass):
+async def test_invalid_config_no_lights(hass: HomeAssistant) -> None:
     """Test configuration."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -591,8 +591,7 @@ async def test_flux_before_sunrise_stop_next_day(hass, enable_custom_integration
 async def test_flux_after_sunrise_before_sunset_stop_next_day(
     hass, enable_custom_integrations
 ):
-    """
-    Test the flux switch after sunrise and before sunset.
+    """Test the flux switch after sunrise and before sunset.
 
     This test has the stop_time on the next day (after midnight).
     """

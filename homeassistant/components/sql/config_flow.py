@@ -7,7 +7,7 @@ from typing import Any
 import sqlalchemy
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -47,7 +47,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
 
     engine = sqlalchemy.create_engine(db_url, future=True)
     sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
-    sess: scoped_session = sessmaker()
+    sess: Session = sessmaker()
 
     try:
         result: Result = sess.execute(sqlalchemy.text(query))
@@ -80,12 +80,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SQLOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        self._async_abort_entries_match(config)
-        return await self.async_step_user(user_input=config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -96,7 +90,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-
             db_url = user_input.get(CONF_DB_URL, db_url_default)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]

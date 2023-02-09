@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -228,14 +227,7 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# The use of PLATFORM_SCHEMA was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA_BASIC = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-)
-
 DISCOVERY_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
     # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
     cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
     cv.removed(CONF_WHITE_VALUE_SCALE),
@@ -245,8 +237,6 @@ DISCOVERY_SCHEMA_BASIC = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
     # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
     cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
     cv.removed(CONF_WHITE_VALUE_SCALE),
@@ -311,9 +301,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
         self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
-
-        if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
-            config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
 
         topic: dict[str, str | None] = {
             key: config.get(key)

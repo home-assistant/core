@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -31,8 +31,8 @@ from .const import ATTR_MANUFACTURER
 if TYPE_CHECKING:
     from .controller import UniFiController
 
-DataT = TypeVar("DataT", bound=Union[APIItem, Outlet, Port])
-HandlerT = TypeVar("HandlerT", bound=Union[APIHandler, Outlets, Ports])
+DataT = TypeVar("DataT", bound=APIItem | Outlet | Port)
+HandlerT = TypeVar("HandlerT", bound=APIHandler | Outlets | Ports)
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
@@ -190,12 +190,13 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             await self.async_remove(force_remove=True)
 
     @callback
-    @abstractmethod
     def async_initiate_state(self) -> None:
         """Initiate entity state.
 
         Perform additional actions setting up platform entity child class state.
+        Defaults to using async_update_state to set initial state.
         """
+        self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
     @callback
     @abstractmethod

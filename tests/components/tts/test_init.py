@@ -16,11 +16,13 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.network import normalize_url
 
 from tests.common import assert_setup_component, async_mock_service
+from tests.typing import ClientSessionGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 
@@ -176,7 +178,9 @@ async def test_setup_component_and_test_service_with_config_language_special(
     ).is_file()
 
 
-async def test_setup_component_and_test_service_with_wrong_conf_language(hass):
+async def test_setup_component_and_test_service_with_wrong_conf_language(
+    hass: HomeAssistant,
+) -> None:
     """Set up the demo platform and call service with wrong config."""
     config = {tts.DOMAIN: {"platform": "demo", "language": "ru"}}
 
@@ -352,7 +356,9 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
     ).is_file()
 
 
-async def test_setup_component_and_test_service_with_base_url_set(hass):
+async def test_setup_component_and_test_service_with_base_url_set(
+    hass: HomeAssistant,
+) -> None:
     """Set up the demo platform with ``base_url`` set and call service."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -498,7 +504,9 @@ async def test_setup_component_and_test_service_with_receive_voice_german(
     assert await req.read() == demo_data
 
 
-async def test_setup_component_and_web_view_wrong_file(hass, hass_client):
+async def test_setup_component_and_web_view_wrong_file(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Set up the demo platform and receive wrong file from web."""
     config = {tts.DOMAIN: {"platform": "demo"}}
 
@@ -513,7 +521,9 @@ async def test_setup_component_and_web_view_wrong_file(hass, hass_client):
     assert req.status == HTTPStatus.NOT_FOUND
 
 
-async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
+async def test_setup_component_and_web_view_wrong_filename(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Set up the demo platform and receive wrong filename from web."""
     config = {tts.DOMAIN: {"platform": "demo"}}
 
@@ -620,7 +630,7 @@ async def test_setup_component_test_with_cache_dir(
     )
 
 
-async def test_setup_component_test_with_error_on_get_tts(hass):
+async def test_setup_component_test_with_error_on_get_tts(hass: HomeAssistant) -> None:
     """Set up demo platform with wrong get_tts_audio."""
     config = {tts.DOMAIN: {"platform": "demo"}}
 
@@ -657,7 +667,9 @@ async def test_setup_component_load_cache_retrieve_without_mem_cache(
     assert await req.read() == demo_data
 
 
-async def test_setup_component_and_web_get_url(hass, hass_client):
+async def test_setup_component_and_web_get_url(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Set up the demo platform and receive file from web."""
     config = {tts.DOMAIN: {"platform": "demo"}}
 
@@ -677,7 +689,9 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     }
 
 
-async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
+async def test_setup_component_and_web_get_url_bad_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Set up the demo platform and receive wrong file from web."""
     config = {tts.DOMAIN: {"platform": "demo"}}
 

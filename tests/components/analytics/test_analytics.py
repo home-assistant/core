@@ -14,8 +14,11 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
 )
 from homeassistant.const import ATTR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
@@ -38,7 +41,7 @@ async def test_no_send(hass, caplog, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 0
 
 
-async def test_load_with_supervisor_diagnostics(hass):
+async def test_load_with_supervisor_diagnostics(hass: HomeAssistant) -> None:
     """Test loading with a supervisor that has diagnostics enabled."""
     analytics = Analytics(hass)
     assert not analytics.preferences[ATTR_DIAGNOSTICS]
@@ -53,7 +56,7 @@ async def test_load_with_supervisor_diagnostics(hass):
     assert analytics.preferences[ATTR_DIAGNOSTICS]
 
 
-async def test_load_with_supervisor_without_diagnostics(hass):
+async def test_load_with_supervisor_without_diagnostics(hass: HomeAssistant) -> None:
     """Test loading with a supervisor that has not diagnostics enabled."""
     analytics = Analytics(hass)
     analytics._data.preferences[ATTR_DIAGNOSTICS] = True
@@ -233,9 +236,9 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
     ):
         await analytics.send_analytics()
     assert (
-        "'addons': [{'slug': 'test_addon', 'protected': True, 'version': '1', 'auto_update': False}]"
-        in caplog.text
-    )
+        "'addons': [{'slug': 'test_addon', 'protected': True, 'version': '1',"
+        " 'auto_update': False}]"
+    ) in caplog.text
     assert "'addon_count':" not in caplog.text
 
 
@@ -251,9 +254,9 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
     with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
     assert (
-        "'state_count': 0, 'automation_count': 0, 'integration_count': 1, 'user_count': 0"
-        in caplog.text
-    )
+        "'state_count': 0, 'automation_count': 0, 'integration_count': 1,"
+        " 'user_count': 0"
+    ) in caplog.text
     assert "'integrations':" not in caplog.text
 
 
@@ -343,7 +346,9 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
     assert "'integrations':" not in caplog.text
 
 
-async def test_reusing_uuid(hass, aioclient_mock):
+async def test_reusing_uuid(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test reusing the stored UUID."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
@@ -376,7 +381,9 @@ async def test_custom_integrations(hass, aioclient_mock, enable_custom_integrati
     assert payload["custom_integrations"][0][ATTR_DOMAIN] == "test_package"
 
 
-async def test_dev_url(hass, aioclient_mock):
+async def test_dev_url(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sending payload to dev url."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
@@ -400,18 +407,19 @@ async def test_dev_url_error(hass, aioclient_mock, caplog):
     with patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
     ):
-
         await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
     assert str(payload[1]) == ANALYTICS_ENDPOINT_URL_DEV
     assert (
-        f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL_DEV}"
-        in caplog.text
-    )
+        "Sending analytics failed with statuscode 400 from"
+        f" {ANALYTICS_ENDPOINT_URL_DEV}"
+    ) in caplog.text
 
 
-async def test_nightly_endpoint(hass, aioclient_mock):
+async def test_nightly_endpoint(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sending payload to production url when running nightly."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
@@ -420,14 +428,15 @@ async def test_nightly_endpoint(hass, aioclient_mock):
     with patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_NIGHTLY
     ):
-
         await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
     assert str(payload[1]) == ANALYTICS_ENDPOINT_URL
 
 
-async def test_send_with_no_energy(hass, aioclient_mock):
+async def test_send_with_no_energy(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)

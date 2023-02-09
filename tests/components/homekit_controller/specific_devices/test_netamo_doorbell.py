@@ -1,5 +1,4 @@
-"""
-Regression tests for Netamo Doorbell.
+"""Regression tests for Netamo Doorbell.
 
 https://github.com/home-assistant/core/issues/44596
 """

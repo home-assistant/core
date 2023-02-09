@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
@@ -287,7 +287,7 @@ def config_children_and_attr(mock_states):
     }
 
 
-async def test_config_children_only(hass):
+async def test_config_children_only(hass: HomeAssistant) -> None:
     """Check config with only children."""
     config_start = copy(CONFIG_CHILDREN_ONLY)
     del config_start["platform"]
@@ -308,7 +308,7 @@ async def test_config_children_and_attr(hass, config_children_and_attr):
     assert config_start == config
 
 
-async def test_config_no_name(hass):
+async def test_config_no_name(hass: HomeAssistant) -> None:
     """Check config with no Name entry."""
     response = True
     try:
@@ -318,7 +318,7 @@ async def test_config_no_name(hass):
     assert not response
 
 
-async def test_config_bad_children(hass):
+async def test_config_bad_children(hass: HomeAssistant) -> None:
     """Check config with bad children entry."""
     config_no_children = {"name": "test", "platform": "universal"}
     config_bad_children = {"name": "test", "children": {}, "platform": "universal"}
@@ -330,7 +330,7 @@ async def test_config_bad_children(hass):
     assert [] == config_bad_children["children"]
 
 
-async def test_config_bad_commands(hass):
+async def test_config_bad_commands(hass: HomeAssistant) -> None:
     """Check config with bad commands entry."""
     config = {"name": "test", "platform": "universal"}
 
@@ -338,7 +338,7 @@ async def test_config_bad_commands(hass):
     assert {} == config["commands"]
 
 
-async def test_config_bad_attributes(hass):
+async def test_config_bad_attributes(hass: HomeAssistant) -> None:
     """Check config with bad attributes."""
     config = {"name": "test", "platform": "universal"}
 
@@ -346,7 +346,7 @@ async def test_config_bad_attributes(hass):
     assert {} == config["attributes"]
 
 
-async def test_config_bad_key(hass):
+async def test_config_bad_key(hass: HomeAssistant) -> None:
     """Check config with bad key."""
     config = {"name": "test", "asdf": 5, "platform": "universal"}
 
@@ -354,7 +354,7 @@ async def test_config_bad_key(hass):
     assert "asdf" not in config
 
 
-async def test_platform_setup(hass):
+async def test_platform_setup(hass: HomeAssistant) -> None:
     """Test platform setup."""
     config = {"name": "test", "platform": "universal"}
     bad_config = {"platform": "universal"}
@@ -380,7 +380,7 @@ async def test_platform_setup(hass):
     assert entities[0].name == "test"
 
 
-async def test_master_state(hass):
+async def test_master_state(hass: HomeAssistant) -> None:
     """Test master state property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -452,7 +452,7 @@ async def test_active_child_state(hass, mock_states):
     assert mock_states.mock_mp_2.entity_id == ump._child_state.entity_id
 
 
-async def test_name(hass):
+async def test_name(hass: HomeAssistant) -> None:
     """Test name property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -461,7 +461,7 @@ async def test_name(hass):
     assert config["name"] == ump.name
 
 
-async def test_polling(hass):
+async def test_polling(hass: HomeAssistant) -> None:
     """Test should_poll property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -1060,7 +1060,7 @@ async def test_service_call_to_command(hass, mock_states):
     assert len(service) == 1
 
 
-async def test_state_template(hass):
+async def test_state_template(hass: HomeAssistant) -> None:
     """Test with a simple valid state template."""
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
@@ -1086,7 +1086,7 @@ async def test_state_template(hass):
     assert hass.states.get("media_player.tv").state == STATE_OFF
 
 
-async def test_browse_media(hass):
+async def test_browse_media(hass: HomeAssistant):
     """Test browse media."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -1116,7 +1116,7 @@ async def test_browse_media(hass):
         assert result == MOCK_BROWSE_MEDIA
 
 
-async def test_browse_media_override(hass):
+async def test_browse_media_override(hass: HomeAssistant):
     """Test browse media override."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
@@ -1147,7 +1147,7 @@ async def test_browse_media_override(hass):
         assert result == MOCK_BROWSE_MEDIA
 
 
-async def test_device_class(hass):
+async def test_device_class(hass: HomeAssistant) -> None:
     """Test device_class property."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1166,7 +1166,7 @@ async def test_device_class(hass):
     assert hass.states.get("media_player.tv").attributes["device_class"] == "tv"
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id property."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1186,7 +1186,7 @@ async def test_unique_id(hass):
     assert er.async_get("media_player.tv").unique_id == "universal_master_bed_tv"
 
 
-async def test_invalid_state_template(hass):
+async def test_invalid_state_template(hass: HomeAssistant) -> None:
     """Test invalid state template sets state to None."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1212,7 +1212,7 @@ async def test_invalid_state_template(hass):
     assert hass.states.get("media_player.tv").state == STATE_UNKNOWN
 
 
-async def test_master_state_with_template(hass):
+async def test_master_state_with_template(hass: HomeAssistant) -> None:
     """Test the state_template option."""
     hass.states.async_set("input_boolean.test", STATE_OFF)
     hass.states.async_set("media_player.mock1", STATE_OFF)
@@ -1255,7 +1255,7 @@ async def test_master_state_with_template(hass):
     assert events[0].context == context
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test reloading the media player from yaml."""
     hass.states.async_set("input_boolean.test", STATE_OFF)
     hass.states.async_set("media_player.mock1", STATE_OFF)

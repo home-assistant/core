@@ -4,8 +4,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import parse_yaml
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -30,7 +33,9 @@ async def setup_bp(hass, automation_config, script_config):
     await async_setup_component(hass, "script", script_config)
 
 
-async def test_list_blueprints(hass, hass_ws_client):
+async def test_list_blueprints(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test listing blueprints."""
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "blueprint/list", "domain": "automation"})
@@ -62,7 +67,9 @@ async def test_list_blueprints(hass, hass_ws_client):
     }
 
 
-async def test_list_blueprints_non_existing_domain(hass, hass_ws_client):
+async def test_list_blueprints_non_existing_domain(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test listing blueprints."""
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -150,9 +157,21 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
         output_yaml = write_mock.call_args[0][0]
         assert output_yaml in (
             # pure python dumper will quote the value after !input
-            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\n  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input 'trigger_event'\naction:\n  service: !input 'service_to_call'\n  entity_id: light.kitchen\n"
+            "blueprint:\n  name: Call service based on event\n  domain: automation\n "
+            " input:\n    trigger_event:\n      selector:\n        text: {}\n   "
+            " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
+            "    mode: box\n          step: 1.0\n  source_url:"
+            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n"
+            "  platform: event\n  event_type: !input 'trigger_event'\naction:\n "
+            " service: !input 'service_to_call'\n  entity_id: light.kitchen\n"
             # c dumper will not quote the value after !input
-            "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\n  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n  platform: event\n  event_type: !input trigger_event\naction:\n  service: !input service_to_call\n  entity_id: light.kitchen\n"
+            "blueprint:\n  name: Call service based on event\n  domain: automation\n "
+            " input:\n    trigger_event:\n      selector:\n        text: {}\n   "
+            " service_to_call:\n    a_number:\n      selector:\n        number:\n      "
+            "    mode: box\n          step: 1.0\n  source_url:"
+            " https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\ntrigger:\n"
+            "  platform: event\n  event_type: !input trigger_event\naction:\n  service:"
+            " !input service_to_call\n  entity_id: light.kitchen\n"
         )
         # Make sure ita parsable and does not raise
         assert len(parse_yaml(output_yaml)) > 1

@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import patch
 import urllib
 
-from aiohttp import ClientSession, ClientWebSocketResponse
+from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.local_calendar import LocalCalendarStore
@@ -20,6 +20,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 CALENDAR_NAME = "Light Schedule"
 FRIENDLY_NAME = "Light schedule"
@@ -90,9 +91,7 @@ GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 
 @pytest.fixture(name="get_events")
-def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]]
-) -> GetEventsFn:
+def get_events_fixture(hass_client: ClientSessionGenerator) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 
     async def _fetch(start: str, end: str) -> None:
@@ -960,3 +959,39 @@ async def test_update_invalid_event_id(
     assert not resp.get("success")
     assert "error" in resp
     assert resp.get("error").get("code") == "failed"
+
+
+async def test_create_event_service(
+    hass: HomeAssistant, setup_integration: None, get_events: GetEventsFn
+):
+    """Test creating an event using the create_event service."""
+
+    await hass.services.async_call(
+        "calendar",
+        "create_event",
+        {
+            "start_date_time": "1997-07-14T17:00:00+00:00",
+            "end_date_time": "1997-07-15T04:00:00+00:00",
+            "summary": "Bastille Day Party",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+
+    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]

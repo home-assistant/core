@@ -18,9 +18,11 @@ from homeassistant.components.microsoft_face import (
     SERVICE_TRAIN_GROUP,
 )
 from homeassistant.const import ATTR_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def create_group(hass, name):
@@ -120,7 +122,9 @@ async def test_setup_component_test_service(hass, mock_update):
     assert hass.services.has_service(mf.DOMAIN, "face_person")
 
 
-async def test_setup_component_test_entities(hass, aioclient_mock):
+async def test_setup_component_test_entities(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up component."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
@@ -184,7 +188,9 @@ async def test_service_groups(hass, mock_update, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 2
 
 
-async def test_service_person(hass, aioclient_mock):
+async def test_service_person(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up component, test person services."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
@@ -252,7 +258,9 @@ async def test_service_train(hass, mock_update, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_face(hass, aioclient_mock):
+async def test_service_face(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up component, test person face services."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),

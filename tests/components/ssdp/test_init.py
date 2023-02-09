@@ -1,5 +1,5 @@
 """Test the SSDP integration."""
-# pylint: disable=protected-access
+
 
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address

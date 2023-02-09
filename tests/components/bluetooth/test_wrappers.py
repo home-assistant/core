@@ -1,8 +1,7 @@
 """Tests for the Bluetooth integration."""
-
+from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Union
 from unittest.mock import patch
 
 import bleak
@@ -66,14 +65,14 @@ class FakeScanner(BaseHaRemoteScanner):
 class BaseFakeBleakClient:
     """Base class for fake bleak clients."""
 
-    def __init__(self, address_or_ble_device: Union[BLEDevice, str], **kwargs):
+    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs):
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
         self._device = address_or_ble_device
         self._address = address_or_ble_device.address
 
     async def disconnect(self, *args, **kwargs):
-        """Disconnect.""" ""
+        """Disconnect."""
 
     async def get_services(self, *args, **kwargs):
         """Get services."""
@@ -181,10 +180,10 @@ def _generate_scanners_with_fake_devices(hass):
         hass, "00:00:00:00:00:02", "hci1", new_info_callback, None, True
     )
 
-    for (device, adv_data) in hci0_device_advs.values():
+    for device, adv_data in hci0_device_advs.values():
         scanner_hci0.inject_advertisement(device, adv_data)
 
-    for (device, adv_data) in hci1_device_advs.values():
+    for device, adv_data in hci1_device_advs.values():
         scanner_hci1.inject_advertisement(device, adv_data)
 
     cancel_hci0 = manager.async_register_scanner(scanner_hci0, True, 2)

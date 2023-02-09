@@ -2,15 +2,16 @@
 import asyncio
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from kostal.plenticore import PlenticoreAuthenticationException
+from pykoplenti import AuthenticationException
 
 from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_formx(hass):
+async def test_formx(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -20,7 +21,7 @@ async def test_formx(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class, patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
         return_value=True,
@@ -32,7 +33,7 @@ async def test_formx(hass):
             return_value={"scb:network": {"Hostname": "scb"}}
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__ = AsyncMock()
@@ -63,22 +64,22 @@ async def test_formx(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
         mock_api_ctx.login = AsyncMock(
-            side_effect=PlenticoreAuthenticationException(404, "invalid user"),
+            side_effect=AuthenticationException(404, "invalid user"),
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__.return_value = None
@@ -97,14 +98,14 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
@@ -112,7 +113,7 @@ async def test_form_cannot_connect(hass):
             side_effect=asyncio.TimeoutError(),
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__.return_value = None
@@ -131,14 +132,14 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"host": "cannot_connect"}
 
 
-async def test_form_unexpected_error(hass):
+async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
+        "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
     ) as mock_api_class:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
@@ -146,7 +147,7 @@ async def test_form_unexpected_error(hass):
             side_effect=Exception(),
         )
 
-        # mock of the return instance of PlenticoreApiClient
+        # mock of the return instance of ApiClient
         mock_api = MagicMock()
         mock_api.__aenter__.return_value = mock_api_ctx
         mock_api.__aexit__.return_value = None
@@ -165,7 +166,7 @@ async def test_form_unexpected_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_already_configured(hass):
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured error."""
     MockConfigEntry(
         domain="kostal_plenticore",

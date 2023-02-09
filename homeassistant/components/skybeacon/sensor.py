@@ -158,7 +158,7 @@ class Monitor(threading.Thread, SensorEntity):
                     )
                 if SKIP_HANDLE_LOOKUP:
                     # HACK: inject handle mapping collected offline
-                    # pylint: disable=protected-access
+                    # pylint: disable-next=protected-access
                     device._characteristics[UUID(BLE_TEMP_UUID)] = cached_char
                 # Magic: writing this makes device happy
                 device.char_write_handle(0x1B, bytearray([255]), False)

@@ -19,7 +19,7 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPOR
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -37,14 +37,25 @@ from .const import (
     CONF_EVENT,
     EVENT_DESCRIPTION,
     EVENT_END,
+    EVENT_END_DATE,
+    EVENT_END_DATETIME,
+    EVENT_IN,
+    EVENT_IN_DAYS,
+    EVENT_IN_WEEKS,
     EVENT_RECURRENCE_ID,
     EVENT_RECURRENCE_RANGE,
     EVENT_RRULE,
     EVENT_START,
+    EVENT_START_DATE,
+    EVENT_START_DATETIME,
     EVENT_SUMMARY,
+    EVENT_TIME_FIELDS,
+    EVENT_TYPES,
     EVENT_UID,
     CalendarEntityFeature,
 )
+
+# mypy: disallow-any-generics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,8 +66,39 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
-
-# mypy: disallow-any-generics
+CREATE_EVENT_SERVICE = "create_event"
+CREATE_EVENT_SCHEMA = vol.All(
+    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.make_entity_service_schema(
+        {
+            vol.Required(EVENT_SUMMARY): cv.string,
+            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+            vol.Inclusive(
+                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_START_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Inclusive(
+                EVENT_END_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Optional(EVENT_IN): vol.Schema(
+                {
+                    vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES): cv.positive_int,
+                    vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES): cv.positive_int,
+                }
+            ),
+        },
+    ),
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -75,6 +117,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, handle_calendar_event_create)
     websocket_api.async_register_command(hass, handle_calendar_event_delete)
     websocket_api.async_register_command(hass, handle_calendar_event_update)
+
+    component.async_register_entity_service(
+        CREATE_EVENT_SERVICE,
+        CREATE_EVENT_SCHEMA,
+        async_create_event,
+        required_features=[CalendarEntityFeature.CREATE_EVENT],
+    )
 
     await component.async_setup(config)
     return True
@@ -569,3 +618,43 @@ async def handle_calendar_event_update(
         connection.send_error(msg["id"], "failed", str(ex))
     else:
         connection.send_result(msg["id"])
+
+
+def _validate_timespan(
+    values: dict[str, Any]
+) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
+    """Parse a create event service call and convert the args ofr a create event entity call.
+
+    This converts the input service arguments into a `start` and `end` date or date time. This
+    exists because service calls use `start_date` and `start_date_time` whereas the
+    normal entity methods can take either a `datetim` or `date` as a single `start` argument.
+    It also handles the other service call variations like "in days" as well.
+    """
+
+    if event_in := values.get(EVENT_IN):
+        days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
+        today = datetime.date.today()
+        return (
+            today + datetime.timedelta(days=days),
+            today + datetime.timedelta(days=days + 1),
+        )
+
+    if EVENT_START_DATE in values and EVENT_END_DATE in values:
+        return (values[EVENT_START_DATE], values[EVENT_END_DATE])
+
+    if EVENT_START_DATETIME in values and EVENT_END_DATETIME in values:
+        return (values[EVENT_START_DATETIME], values[EVENT_END_DATETIME])
+
+    raise ValueError("Missing required fields to set start or end date/datetime")
+
+
+async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
+    """Add a new event to calendar."""
+    # Convert parameters to format used by async_create_event
+    (start, end) = _validate_timespan(call.data)
+    params = {
+        **{k: v for k, v in call.data.items() if k not in EVENT_TIME_FIELDS},
+        EVENT_START: start,
+        EVENT_END: end,
+    }
+    await entity.async_create_event(**params)

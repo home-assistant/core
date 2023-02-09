@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
@@ -312,7 +312,9 @@ async def test_service_light_update(hass, mock_modbus, mock_ha):
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_no_discovery_info_light(hass, caplog):
+async def test_no_discovery_info_light(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert LIGHT_DOMAIN not in hass.config.components
     assert await async_setup_component(
