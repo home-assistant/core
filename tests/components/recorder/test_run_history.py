@@ -69,10 +69,14 @@ async def test_run_history_while_recorder_is_not_yet_started(
         instance = await async_setup_recorder_instance(hass)
     run_history = instance.run_history
     assert run_history.current.start == run_history.recording_start
-    with instance.get_session() as session:
-        # Ideally we would run run_history.start in the recorder thread
-        # but since we mocked it out above, we run it directly here
-        # via the database executor to avoid blocking the event loop.
-        await instance.async_add_executor_job(run_history.start, session)
+
+    def _start_run_history():
+        with instance.get_session() as session:
+            run_history.start(session)
+
+    # Ideally we would run run_history.start in the recorder thread
+    # but since we mocked it out above, we run it directly here
+    # via the database executor to avoid blocking the event loop.
+    await instance.async_add_executor_job(_start_run_history)
     assert run_history.current.start == run_history.recording_start
     assert run_history.current.created >= run_history.recording_start
