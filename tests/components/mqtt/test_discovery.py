@@ -35,27 +35,13 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_fire_mqtt_message,
-    mock_device_registry,
     mock_entity_platform,
-    mock_registry,
 )
 from tests.typing import (
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
     WebSocketGenerator,
 )
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant) -> dr.DeviceRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass: HomeAssistant) -> er.EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.mark.parametrize(
@@ -723,8 +709,8 @@ async def test_duplicate_removal(
 async def test_cleanup_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_reg: dr.DeviceRegistry,
-    entity_reg: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test discvered device is cleaned up when entry removed from device."""
@@ -742,9 +728,9 @@ async def test_cleanup_device(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
     state = hass.states.get("sensor.mqtt_sensor")
@@ -766,9 +752,9 @@ async def test_cleanup_device(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is None
 
     # Verify state is removed
@@ -785,8 +771,8 @@ async def test_cleanup_device(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_cleanup_device_mqtt(
     hass: HomeAssistant,
-    device_reg: dr.DeviceRegistry,
-    entity_reg: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test discvered device is cleaned up when removed through MQTT."""
@@ -801,9 +787,9 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
     state = hass.states.get("sensor.mqtt_sensor")
@@ -814,9 +800,9 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is None
 
     # Verify state is removed
@@ -832,8 +818,8 @@ async def test_cleanup_device_mqtt(
 async def test_cleanup_device_multiple_config_entries(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_reg: dr.DeviceRegistry,
-    entity_reg: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovered device is cleaned up when entry removed from device."""
@@ -844,7 +830,7 @@ async def test_cleanup_device_multiple_config_entries(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry: dr.DeviceEntry | None = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
@@ -880,13 +866,15 @@ async def test_cleanup_device_multiple_config_entries(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    device_entry = device_registry.async_get_device(
+        set(), {("mac", "12:34:56:AB:CD:EF")}
+    )
     assert device_entry is not None
     assert device_entry.config_entries == {
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
     state = hass.states.get("sensor.mqtt_sensor")
@@ -909,9 +897,11 @@ async def test_cleanup_device_multiple_config_entries(
     await hass.async_block_till_done()
 
     # Verify device is still there but entity is cleared
-    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    device_entry = device_registry.async_get_device(
+        set(), {("mac", "12:34:56:AB:CD:EF")}
+    )
     assert device_entry is not None
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
@@ -933,15 +923,15 @@ async def test_cleanup_device_multiple_config_entries(
 
 async def test_cleanup_device_multiple_config_entries_mqtt(
     hass: HomeAssistant,
-    device_reg: dr.DeviceRegistry,
-    entity_reg: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovered device is cleaned up when removed through MQTT."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry: dr.DeviceEntry | None = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
@@ -976,13 +966,15 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    device_entry = device_registry.async_get_device(
+        set(), {("mac", "12:34:56:AB:CD:EF")}
+    )
     assert device_entry is not None
     assert device_entry.config_entries == {
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
     state = hass.states.get("sensor.mqtt_sensor")
@@ -997,9 +989,11 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     await hass.async_block_till_done()
 
     # Verify device is still there but entity is cleared
-    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    device_entry = device_registry.async_get_device(
+        set(), {("mac", "12:34:56:AB:CD:EF")}
+    )
     assert device_entry is not None
-    entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
@@ -1467,7 +1461,7 @@ async def test_mqtt_discovery_unsubscribe_once(
 async def test_clear_config_topic_disabled_entity(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    device_reg: dr.DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the discovery topic is removed when a disabled entity is removed."""
@@ -1517,11 +1511,13 @@ async def test_clear_config_topic_disabled_entity(
     assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
 
     # Verify device is created
-    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    device_entry = device_registry.async_get_device(
+        set(), {("mac", "12:34:56:AB:CD:EF")}
+    )
     assert device_entry is not None
 
     # Remove the device from the registry
-    device_reg.async_remove_device(device_entry.id)
+    device_registry.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -1541,7 +1537,7 @@ async def test_clear_config_topic_disabled_entity(
 async def test_clean_up_registry_monitoring(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    device_reg: dr.DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
     tmp_path: Path,
 ) -> None:
     """Test registry monitoring hook is removed after a reload."""
@@ -1581,7 +1577,9 @@ async def test_clean_up_registry_monitoring(
     assert len(hooks) == 1
 
     # Verify device is created
-    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    device_entry = device_registry.async_get_device(
+        set(), {("mac", "12:34:56:AB:CD:EF")}
+    )
     assert device_entry is not None
 
     # Enload the entry
@@ -1594,7 +1592,7 @@ async def test_clean_up_registry_monitoring(
 async def test_unique_id_collission_has_priority(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    entity_reg: er.EntityRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the unique_id collision detection has priority over registry disabled items."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1633,9 +1631,9 @@ async def test_unique_id_collission_has_priority(
     assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
 
     # Verify the first entity is created
-    assert entity_reg.async_get("sensor.sbfspot_12345_1") is not None
+    assert entity_registry.async_get("sensor.sbfspot_12345_1") is not None
     # Verify the second entity is not created because it is not unique
-    assert entity_reg.async_get("sensor.sbfspot_12345_2") is None
+    assert entity_registry.async_get("sensor.sbfspot_12345_2") is None
 
 
 @pytest.mark.xfail(raises=MultipleInvalid)
