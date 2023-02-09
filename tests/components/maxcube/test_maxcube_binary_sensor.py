@@ -10,9 +10,9 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
+    EntityCategory,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed

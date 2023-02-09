@@ -12,10 +12,10 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockConsumption, HomeControlMockSensor

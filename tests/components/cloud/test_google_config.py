@@ -8,10 +8,9 @@ import pytest
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import CoreState, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
