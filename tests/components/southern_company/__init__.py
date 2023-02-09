@@ -62,7 +62,7 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
     """Add config entry in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Southern_Company",
+        title="Southern Company",
         data={CONF_USERNAME: "sample_user", CONF_PASSWORD: "sample_pass"},
     )
     entry.add_to_hass(hass)

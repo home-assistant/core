@@ -34,7 +34,7 @@ async def test_form(recorder_mock, hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Southern_Company"
+    assert result2["title"] == "Southern Company"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
