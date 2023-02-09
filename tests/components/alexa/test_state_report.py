@@ -199,7 +199,7 @@ async def test_report_state_unsets_authorized_on_error(
 
 @pytest.mark.parametrize("exc", [errors.NoTokenAvailable, errors.RequireRelink])
 async def test_report_state_unsets_authorized_on_access_token_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, exc
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, exc: Exception
 ) -> None:
     """Test proactive state unsets authorized on error."""
     aioclient_mock.post(TEST_URL, text="", status=202)
@@ -392,7 +392,12 @@ async def test_report_state_humidifier(
     ],
 )
 async def test_report_state_number(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, domain, value, unit, label
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    domain: str,
+    value: float,
+    unit: str | None,
+    label: AlexaGlobalCatalog,
 ) -> None:
     """Test proactive state reports with number or input_number instance."""
     aioclient_mock.post(TEST_URL, text="", status=202)

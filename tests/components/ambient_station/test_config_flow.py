@@ -8,7 +8,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.ambient_station import CONF_APP_KEY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
@@ -19,8 +18,8 @@ from homeassistant.core import HomeAssistant
     ],
 )
 async def test_create_entry(
-    hass: HomeAssistant, api, config, devices_response, errors, mock_aioambient
-) -> None:
+    hass, api, config, devices_response, errors, mock_aioambient
+):
     """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -48,9 +47,7 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(
-    hass: HomeAssistant, config, config_entry, setup_config_entry
-) -> None:
+async def test_duplicate_error(hass, config, config_entry, setup_config_entry):
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
