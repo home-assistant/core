@@ -82,6 +82,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             auth = await self.async_authenticate(user_input, errors)
             if auth is not None:
                 return auth
+        else:
+            data_schema = STEP_USER_DATA_SCHEMA
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=data_schema, errors=errors
         )
