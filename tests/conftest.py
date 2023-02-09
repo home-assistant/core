@@ -65,6 +65,7 @@ from .typing import (
     MqttMockHAClient,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
+    RecorderInstanceGenerator,
     WebSocketGenerator,
 )
 
@@ -75,7 +76,6 @@ from .common import (  # noqa: E402, isort:skip
     INSTANCES,
     MockConfigEntry,
     MockUser,
-    SetupRecorderInstanceT,
     async_fire_mqtt_message,
     async_test_home_assistant,
     get_test_home_assistant,
@@ -1177,7 +1177,7 @@ async def async_setup_recorder_instance(
     enable_nightly_purge,
     enable_statistics,
     enable_statistics_table_validation,
-) -> AsyncGenerator[SetupRecorderInstanceT, None]:
+) -> AsyncGenerator[RecorderInstanceGenerator, None]:
     """Yield callable to setup recorder instance."""
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
