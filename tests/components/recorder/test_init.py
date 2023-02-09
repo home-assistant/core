@@ -103,6 +103,7 @@ async def test_shutdown_before_startup_finishes(
     tmp_path,
 ):
     """Test shutdown before recorder starts is clean."""
+
     if recorder_db_url == "sqlite://":
         # On-disk database because this test does not play nice with the
         # MutexPool
