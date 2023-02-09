@@ -5,7 +5,7 @@
         "data": {
           "client": "Client",
           "thing_serial": "Thing serial",
-          "friendly_name": "Friendly name"
+          "name": "Friendly name"
         }
       }
     },
