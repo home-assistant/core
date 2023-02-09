@@ -34,6 +34,7 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -103,12 +104,12 @@ dt_util.utcnow = _utcnow
 event.time_tracker_utcnow = _utcnow
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     """Register marker for tests that log exceptions."""
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
@@ -120,7 +121,7 @@ def pytest_configure(config):
     logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
-def pytest_runtest_setup():
+def pytest_runtest_setup() -> None:
     """Prepare pytest_socket and freezegun.
 
     pytest_socket:
@@ -216,14 +217,14 @@ util.get_local_ip = lambda: "127.0.0.1"
 
 
 @pytest.fixture(name="caplog")
-def caplog_fixture(caplog):
+def caplog_fixture(caplog: pytest.LogCaptureFixture) -> pytest.LogCaptureFixture:
     """Set log level to debug for tests using the caplog fixture."""
     caplog.set_level(logging.DEBUG)
     return caplog
 
 
 @pytest.fixture(autouse=True, scope="module")
-def garbage_collection():
+def garbage_collection() -> None:
     """Run garbage collection at known locations.
 
     This is to mimic the behavior of pytest-aiohttp, and is
@@ -236,7 +237,9 @@ def garbage_collection():
 
 
 @pytest.fixture(autouse=True)
-def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
+def verify_cleanup(
+    event_loop: asyncio.AbstractEventLoop,
+) -> Generator[None, None, None]:
     """Verify that the test has cleaned up resources correctly."""
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
@@ -273,7 +276,7 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
 
 
 @pytest.fixture(autouse=True)
-def bcrypt_cost():
+def bcrypt_cost() -> Generator[None, None, None]:
     """Run with reduced rounds during tests, to speed up uses."""
     import bcrypt
 
@@ -295,7 +298,7 @@ def hass_storage():
 
 
 @pytest.fixture
-def load_registries():
+def load_registries() -> bool:
     """Fixture to control the loading of registries when setting up the hass fixture.
 
     To avoid loading the registries, tests can be marked with:
@@ -338,7 +341,7 @@ class CoalescingClient(TestClient):
 
 
 @pytest.fixture
-def aiohttp_client_cls():
+def aiohttp_client_cls() -> type[CoalescingClient]:
     """Override the test class for aiohttp."""
     return CoalescingClient
 
@@ -396,13 +399,19 @@ def aiohttp_client(
 
 
 @pytest.fixture
-def hass_fixture_setup():
-    """Fixture whichis truthy if the hass fixture has been setup."""
+def hass_fixture_setup() -> list[bool]:
+    """Fixture which is truthy if the hass fixture has been setup."""
     return []
 
 
 @pytest.fixture
-def hass(hass_fixture_setup, event_loop, load_registries, hass_storage, request):
+def hass(
+    hass_fixture_setup: list[bool],
+    event_loop: asyncio.AbstractEventLoop,
+    load_registries: bool,
+    hass_storage: dict[str, Any],
+    request: pytest.FixtureRequest,
+) -> Generator[HomeAssistant, None, None]:
     """Fixture to provide a test instance of Home Assistant."""
 
     loop = event_loop
@@ -450,7 +459,9 @@ def hass(hass_fixture_setup, event_loop, load_registries, hass_storage, request)
 
 
 @pytest.fixture
-async def stop_hass(event_loop):
+async def stop_hass(
+    event_loop: asyncio.AbstractEventLoop,
+) -> AsyncGenerator[None, None]:
     """Make sure all hass are stopped."""
     orig_hass = ha.HomeAssistant
 
@@ -489,11 +500,11 @@ def aioclient_mock() -> Generator[AiohttpClientMocker, None, None]:
 
 
 @pytest.fixture
-def mock_device_tracker_conf():
+def mock_device_tracker_conf() -> Generator[list[Device], None, None]:
     """Prevent device tracker from reading/writing data."""
-    devices = []
+    devices: list[Device] = []
 
-    async def mock_update_config(path, id, entity):
+    async def mock_update_config(path: str, dev_id: str, entity: Device) -> None:
         devices.append(entity)
 
     with patch(
@@ -510,7 +521,9 @@ def mock_device_tracker_conf():
 
 
 @pytest.fixture
-async def hass_admin_credential(hass, local_auth):
+async def hass_admin_credential(
+    hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
+) -> Credentials:
     """Provide credentials for admin user."""
     return Credentials(
         id="mock-credential-id",
@@ -522,7 +535,9 @@ async def hass_admin_credential(hass, local_auth):
 
 
 @pytest.fixture
-async def hass_access_token(hass, hass_admin_user, hass_admin_credential):
+async def hass_access_token(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_admin_credential: Credentials
+) -> str:
     """Return an access token to access Home Assistant."""
     await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
 
@@ -533,13 +548,17 @@ async def hass_access_token(hass, hass_admin_user, hass_admin_credential):
 
 
 @pytest.fixture
-def hass_owner_user(hass, local_auth):
+def hass_owner_user(
+    hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
+) -> MockUser:
     """Return a Home Assistant admin user."""
     return MockUser(is_owner=True).add_to_hass(hass)
 
 
 @pytest.fixture
-def hass_admin_user(hass, local_auth):
+def hass_admin_user(
+    hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
+) -> MockUser:
     """Return a Home Assistant admin user."""
     admin_group = hass.loop.run_until_complete(
         hass.auth.async_get_group(GROUP_ID_ADMIN)
@@ -548,7 +567,9 @@ def hass_admin_user(hass, local_auth):
 
 
 @pytest.fixture
-def hass_read_only_user(hass, local_auth):
+def hass_read_only_user(
+    hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
+) -> MockUser:
     """Return a Home Assistant read only user."""
     read_only_group = hass.loop.run_until_complete(
         hass.auth.async_get_group(GROUP_ID_READ_ONLY)
@@ -557,7 +578,11 @@ def hass_read_only_user(hass, local_auth):
 
 
 @pytest.fixture
-def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
+def hass_read_only_access_token(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    local_auth: homeassistant.HassAuthProvider,
+) -> str:
     """Return a Home Assistant read only user."""
     credential = Credentials(
         id="mock-readonly-credential-id",
@@ -577,7 +602,9 @@ def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
 
 
 @pytest.fixture
-def hass_supervisor_user(hass, local_auth):
+def hass_supervisor_user(
+    hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
+) -> MockUser:
     """Return the Home Assistant Supervisor user."""
     admin_group = hass.loop.run_until_complete(
         hass.auth.async_get_group(GROUP_ID_ADMIN)
@@ -588,7 +615,11 @@ def hass_supervisor_user(hass, local_auth):
 
 
 @pytest.fixture
-def hass_supervisor_access_token(hass, hass_supervisor_user, local_auth):
+def hass_supervisor_access_token(
+    hass: HomeAssistant,
+    hass_supervisor_user,
+    local_auth: homeassistant.HassAuthProvider,
+) -> str:
     """Return a Home Assistant Supervisor access token."""
     refresh_token = hass.loop.run_until_complete(
         hass.auth.async_create_refresh_token(hass_supervisor_user)
@@ -597,7 +628,9 @@ def hass_supervisor_access_token(hass, hass_supervisor_user, local_auth):
 
 
 @pytest.fixture
-def legacy_auth(hass):
+def legacy_auth(
+    hass: HomeAssistant,
+) -> legacy_api_password.LegacyApiPasswordAuthProvider:
     """Load legacy API password provider."""
     prv = legacy_api_password.LegacyApiPasswordAuthProvider(
         hass,
@@ -609,7 +642,7 @@ def legacy_auth(hass):
 
 
 @pytest.fixture
-def local_auth(hass):
+def local_auth(hass: HomeAssistant) -> homeassistant.HassAuthProvider:
     """Load local auth provider."""
     prv = homeassistant.HassAuthProvider(
         hass, hass.auth._store, {"type": "homeassistant"}
@@ -711,7 +744,9 @@ def hass_ws_client(
 
 
 @pytest.fixture(autouse=True)
-def fail_on_log_exception(request, monkeypatch):
+def fail_on_log_exception(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
     if "no_fail_on_log_exception" in request.keywords:
         return
@@ -793,7 +828,7 @@ async def _mqtt_mock_entry(
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
-    from homeassistant.components import mqtt
+    from homeassistant.components import mqtt  # pylint: disable=import-outside-toplevel
 
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {
@@ -999,8 +1034,13 @@ def recorder_config():
 
 
 @pytest.fixture
-def recorder_db_url(pytestconfig):
+def recorder_db_url(
+    pytestconfig,
+    hass_fixture_setup,
+):
     """Prepare a default database for tests and return a connection URL."""
+    assert not hass_fixture_setup
+
     db_url: str = pytestconfig.getoption("dburl")
     if db_url.startswith(("postgresql://", "mysql://")):
         import sqlalchemy_utils
@@ -1031,7 +1071,26 @@ def recorder_db_url(pytestconfig):
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding="utf8")
     yield db_url
-    if db_url.startswith("mysql://") or db_url.startswith("postgresql://"):
+    if db_url.startswith("mysql://"):
+        import sqlalchemy as sa
+
+        made_url = sa.make_url(db_url)
+        db = made_url.database
+        engine = sa.create_engine(db_url)
+        # Kill any open connections to the database before dropping it
+        # to ensure that InnoDB does not deadlock.
+        with engine.begin() as connection:
+            query = sa.text(
+                "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
+            )
+            for row in connection.execute(query, parameters={"db": db}).fetchall():
+                _LOGGER.warning(
+                    "Killing MySQL connection to temporary database %s", row.id
+                )
+                connection.execute(sa.text("KILL :id"), parameters={"id": row.id})
+        engine.dispose()
+        sqlalchemy_utils.drop_database(db_url)
+    elif db_url.startswith("postgresql://"):
         sqlalchemy_utils.drop_database(db_url)
 
 
@@ -1115,14 +1174,11 @@ async def _async_init_recorder_component(hass, add_config=None, db_url=None):
 @pytest.fixture
 async def async_setup_recorder_instance(
     recorder_db_url,
-    hass_fixture_setup,
     enable_nightly_purge,
     enable_statistics,
     enable_statistics_table_validation,
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
-    assert not hass_fixture_setup
-
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
@@ -1172,7 +1228,7 @@ async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
 
 
 @pytest.fixture
-def mock_integration_frame():
+def mock_integration_frame() -> Generator[Mock, None, None]:
     """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
         filename="/home/paulus/homeassistant/components/hue/light.py",
@@ -1200,8 +1256,10 @@ def mock_integration_frame():
 
 @pytest.fixture(name="enable_bluetooth")
 async def mock_enable_bluetooth(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> AsyncGenerator[None, None]:
     """Fixture to mock starting the bleak scanner."""
     entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
@@ -1212,8 +1270,8 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(name="mock_bluetooth_adapters")
-def mock_bluetooth_adapters():
+@pytest.fixture
+def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
     with patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
@@ -1235,15 +1293,14 @@ def mock_bluetooth_adapters():
         yield
 
 
-@pytest.fixture(name="mock_bleak_scanner_start")
-def mock_bleak_scanner_start():
+@pytest.fixture
+def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     """Fixture to mock starting the bleak scanner."""
 
     # Late imports to avoid loading bleak unless we need it
 
-    from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
-        scanner as bluetooth_scanner,
-    )
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.bluetooth import scanner as bluetooth_scanner
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
@@ -1255,8 +1312,10 @@ def mock_bleak_scanner_start():
         yield mock_bleak_scanner_start
 
 
-@pytest.fixture(name="mock_bluetooth")
-def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
+@pytest.fixture
+def mock_bluetooth(
+    mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters
+) -> None:
     """Mock out bluetooth from starting."""
 
 

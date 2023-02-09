@@ -17,10 +17,10 @@ from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.components.homekit_controller.storage import async_get_entity_storage
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 PAIRING_START_FORM_ERRORS = [
     (KeyError, "pairing_failed"),
@@ -351,19 +351,18 @@ async def test_discovery_ignored_model(hass, controller):
     assert result["reason"] == "ignored_model"
 
 
-async def test_discovery_ignored_hk_bridge(hass, controller):
+async def test_discovery_ignored_hk_bridge(hass, controller, device_registry):
     """Ensure we ignore homekit bridges and accessories created by the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
     config_entry.add_to_hass(hass)
-    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
     discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
@@ -378,19 +377,18 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
     assert result["reason"] == "ignored_model"
 
 
-async def test_discovery_does_not_ignore_non_homekit(hass, controller):
+async def test_discovery_does_not_ignore_non_homekit(hass, controller, device_registry):
     """Do not ignore devices that are not from the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain="not_homekit", data={})
     config_entry.add_to_hass(hass)
-    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
     discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
@@ -17,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable=[hass-deprecated-import]
 from homeassistant.const import (  # noqa: F401
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
@@ -48,7 +50,7 @@ from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_VOLTAGE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
@@ -828,3 +830,31 @@ def async_update_suggested_units(hass: HomeAssistant) -> None:
             f"{DOMAIN}.private",
             sensor_private_options,
         )
+
+
+@callback
+def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> str:
+    """Return the state rounded for presentation."""
+
+    def display_precision() -> int | None:
+        """Return the display precision."""
+        if not (entry := er.async_get(hass).async_get(entity_id)) or not (
+            sensor_options := entry.options.get(DOMAIN)
+        ):
+            return None
+        if (display_precision := sensor_options.get("display_precision")) is not None:
+            return cast(int, display_precision)
+        return sensor_options.get("suggested_display_precision")
+
+    value = state.state
+    if (precision := display_precision()) is None:
+        return value
+
+    with suppress(TypeError, ValueError):
+        numerical_value = float(value)
+        value = f"{numerical_value:.{precision}f}"
+        # This can be replaced with adding the z option when we drop support for
+        # Python 3.10
+        value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+
+    return value

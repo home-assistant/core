@@ -1573,10 +1573,10 @@ radiotherm==2.1.0
 regenmaschine==2022.11.0
 
 # homeassistant.components.renault
-renault-api==0.1.11
+renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.3.4
+reolink-aio==0.4.0
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -1826,7 +1826,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.3.2
 
 # homeassistant.components.volvooncall
-volvooncall==0.10.1
+volvooncall==0.10.2
 
 # homeassistant.components.verisure
 vsure==1.8.1

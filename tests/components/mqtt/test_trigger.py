@@ -180,7 +180,9 @@ async def test_if_fires_on_payload_template(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_non_allowed_templates(hass: HomeAssistant, calls, caplog) -> None:
+async def test_non_allowed_templates(
+    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test non allowed function in template."""
     assert await async_setup_component(
         hass,

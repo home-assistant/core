@@ -30,10 +30,12 @@ on:
 env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
-  MYPY_CACHE_VERSION: 3
+  MYPY_CACHE_VERSION: 4
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
+  MARIADB_VERSIONS: "['mariadb:10.9.3']"
+  POSTGRESQL_VERSIONS: "['postgres:15.0']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -56,6 +58,8 @@ jobs:
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
+      mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
+      postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
@@ -103,6 +107,8 @@ jobs:
         run: |
           # Defaults
           integrations_glob=""
+          mariadb_groups=${MARIADB_VERSIONS}
+          postgresql_groups=${POSTGRESQL_VERSIONS}
           test_full_suite="true"
           test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
           test_group_count=10
@@ -136,6 +142,8 @@ jobs:
             tests_glob=$(echo "${tests}" | jq -cSr '. | join(",")')
             [[ "${tests_glob}" == *","* ]] && tests_glob="{${tests_glob}}"
 
+            mariadb_groups="[]"
+            postgresql_groups="[]"
             test_full_suite="false"
           fi
 
@@ -148,12 +156,18 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
+            mariadb_groups=${MARIADB_VERSIONS}
+            postgresql_groups=${POSTGRESQL_VERSIONS}
             test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
             test_group_count=10
             test_full_suite="true"
           fi
 
           # Output & sent to GitHub Actions
+          echo "mariadb_groups: ${mariadb_groups}"
+          echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
+          echo "postgresql_groups: ${postgresql_groups}"
+          echo "postgresql_groups=${postgresql_groups}" >> $GITHUB_OUTPUT
           echo "python_versions: ${ALL_PYTHON_VERSIONS}"
           echo "python_versions=${ALL_PYTHON_VERSIONS}" >> $GITHUB_OUTPUT
           echo "test_full_suite: ${test_full_suite}"
@@ -800,7 +814,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
       - lint-isort
       - lint-other
       - lint-ruff
@@ -909,7 +922,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       mariadb:
-        image: mariadb:10.9.3
+        image: ${{ matrix.mariadb-group }}
         ports:
           - 3306:3306
         env:
@@ -920,13 +933,11 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
-      && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
       - lint-isort
       - lint-other
       - lint-ruff
@@ -935,8 +946,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     name: >-
-      Run tests Python ${{ matrix.python-version }} (mariadb)
+      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.mariadb-group }})
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -1010,7 +1022,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       postgres:
-        image: postgres:15.0
+        image: ${{ matrix.postgresql-group }}
         ports:
           - 5432:5432
         env:
@@ -1019,7 +1031,6 @@ jobs:
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
-      && needs.info.outputs.test_full_suite == 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
     needs:
@@ -1027,7 +1038,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
       - lint-other
       - lint-isort
       - mypy
@@ -1035,8 +1045,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     name: >-
-      Run tests Python ${{ matrix.python-version }} (postgresql)
+      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.postgresql-group }})
     steps:
       - name: Install additional OS dependencies
         run: |
