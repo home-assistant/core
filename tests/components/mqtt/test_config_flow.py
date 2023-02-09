@@ -783,7 +783,7 @@ async def test_invalid_discovery_prefix(
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     mock_try_connection,
     mock_reload_after_entry_update,
-) -> HomeAssistant:
+) -> None:
     """Test setting an invalid discovery prefix."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_try_connection.return_value = True
@@ -1160,7 +1160,7 @@ async def test_try_connection_with_advanced_parameters(
     tmp_path: Path,
     mock_ssl_context,
     mock_process_uploaded_file,
-) -> HomeAssistant:
+) -> None:
     """Test config flow with advanced parameters from config."""
 
     with open(tmp_path / "client.crt", "wb") as certfile:
