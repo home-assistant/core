@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.southern_company.coordinator import (
     SouthernCompanyCoordinator,
 )
@@ -11,10 +12,10 @@ from homeassistant.components.southern_company.sensor import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.components.southern_company import async_init_integration
+from . import async_init_integration
 
 
-async def test_sensors(recorder_mock, hass: HomeAssistant):
+async def test_sensors(recorder_mock: Recorder, hass: HomeAssistant):
     """Test setting up the sensors."""
     await async_init_integration(hass)
     assert len(hass.states.async_all("sensor")) == 8
@@ -28,7 +29,7 @@ async def test_sensors(recorder_mock, hass: HomeAssistant):
     assert hass.states.get("sensor.higher_projected_monthly_cost").state == "8.0"
 
 
-async def test_empty_sensor(recorder_mock, hass: HomeAssistant):
+async def test_empty_sensor(recorder_mock: Recorder, hass: HomeAssistant):
     """Test that when the coordinator has not been setup, sensor has None for its value."""
     api_mock = AsyncMock()
     coordinator = SouthernCompanyCoordinator(hass, api_mock)

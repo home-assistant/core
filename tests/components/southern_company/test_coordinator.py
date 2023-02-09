@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.southern_company import DOMAIN
 from homeassistant.components.southern_company.coordinator import (
@@ -14,12 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt
 
+from . import HOURLY_DATA, async_init_integration
+
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
-from tests.components.southern_company import HOURLY_DATA, async_init_integration
 
 
-async def test_atatistic_insert(recorder_mock, hass: HomeAssistant):
+async def test_atatistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
     """Test setup southern_company."""
     await async_init_integration(hass)
     await async_wait_recording_done(hass)
@@ -81,7 +83,7 @@ async def test_atatistic_insert(recorder_mock, hass: HomeAssistant):
     await hass.async_block_till_done()
 
 
-async def test_update_coordinator_no_jwt(recorder_mock, hass: HomeAssistant):
+async def test_update_coordinator_no_jwt(recorder_mock: Recorder, hass: HomeAssistant):
     """Ensure if a coordinator update happens, and there is no jwt, then we report update failed."""
     api_mock = AsyncMock()
     api_mock.jwt = None
@@ -90,7 +92,7 @@ async def test_update_coordinator_no_jwt(recorder_mock, hass: HomeAssistant):
         await coordinator._async_update_data()
 
 
-async def test_statistics_no_jwt(recorder_mock, hass: HomeAssistant):
+async def test_statistics_no_jwt(recorder_mock: Recorder, hass: HomeAssistant):
     """Ensure if a statistic update happens, and there is no jwt, then we report update failed."""
     api_mock = AsyncMock()
     api_mock.jwt = None
