@@ -4,6 +4,7 @@ import copy
 from datetime import datetime, timedelta
 from functools import partial
 import json
+from pathlib import Path
 import ssl
 from unittest.mock import ANY, AsyncMock, MagicMock, call, mock_open, patch
 
@@ -97,7 +98,7 @@ def record_calls(calls):
 
 
 @pytest.fixture
-def empty_mqtt_config(hass: HomeAssistant, tmp_path):
+def empty_mqtt_config(hass: HomeAssistant, tmp_path: Path):
     """Fixture to provide an empty config from yaml."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
     new_yaml_config_file.write_text("")
@@ -1443,7 +1444,7 @@ async def test_handle_message_callback(
 
 
 async def test_setup_override_configuration(
-    hass: HomeAssistant, caplog, tmp_path
+    hass: HomeAssistant, caplog, tmp_path: Path
 ) -> None:
     """Test override setup from configuration entry."""
     calls_username_password_set = []
@@ -2837,7 +2838,7 @@ async def test_config_schema_validation(hass: HomeAssistant) -> None:
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_unload_config_entry(
-    hass: HomeAssistant, mqtt_mock, mqtt_client_mock, tmp_path, caplog
+    hass: HomeAssistant, mqtt_mock, mqtt_client_mock, tmp_path: Path, caplog
 ) -> None:
     """Test unloading the MQTT entry."""
     assert hass.services.has_service(mqtt.DOMAIN, "dump")
@@ -2895,7 +2896,9 @@ async def test_publish_or_subscribe_without_valid_config_entry(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
-async def test_reload_entry_with_new_config(hass: HomeAssistant, tmp_path) -> None:
+async def test_reload_entry_with_new_config(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
     """Test reloading the config entry with a new yaml config."""
     config_old = {
         "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
@@ -2915,7 +2918,7 @@ async def test_reload_entry_with_new_config(hass: HomeAssistant, tmp_path) -> No
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_disabling_and_enabling_entry(
-    hass: HomeAssistant, tmp_path, caplog
+    hass: HomeAssistant, tmp_path: Path, caplog
 ) -> None:
     """Test disabling and enabling the config entry."""
     config_old = {
@@ -3006,7 +3009,7 @@ async def test_disabling_and_enabling_entry(
     ],
 )
 async def test_setup_manual_items_with_unique_ids(
-    hass: HomeAssistant, tmp_path, caplog, config, unique
+    hass: HomeAssistant, tmp_path: Path, caplog, config, unique
 ) -> None:
     """Test setup manual items is generating unique id's."""
     await help_test_setup_manual_entity_from_yaml(
@@ -3056,7 +3059,7 @@ async def test_remove_unknown_conf_entry_options(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
-async def test_link_config_entry(hass: HomeAssistant, tmp_path, caplog) -> None:
+async def test_link_config_entry(hass: HomeAssistant, tmp_path: Path, caplog) -> None:
     """Test manual and dynamically setup entities are linked to the config entry."""
     config_manual = {
         "mqtt": {
