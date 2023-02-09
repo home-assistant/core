@@ -1,9 +1,13 @@
 """Test adding external statistics from southern_company."""
 
+from datetime import timedelta
+
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.southern_company import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt
 
+from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 from tests.components.southern_company import HOURLY_DATA, async_init_integration
 
@@ -64,3 +68,7 @@ async def test_async_setup_entry(recorder_mock, hass: HomeAssistant):
 
         _sum += hourly_data[k].cost
         assert stat["sum"] == _sum
+    await hass.async_block_till_done()
+    # Check that everything works correctly when last_stats does exist.
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=61))
+    await hass.async_block_till_done()
