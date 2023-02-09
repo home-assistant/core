@@ -14,6 +14,7 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import MqttMockHAClientGenerator
 
 default_config = {
     "birth_message": {},
@@ -53,7 +54,10 @@ def device_reg(hass: HomeAssistant):
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    device_reg,
+    hass_client,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test config entry diagnostics."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -173,7 +177,10 @@ async def test_entry_diagnostics(
     ],
 )
 async def test_redact_diagnostics(
-    hass: HomeAssistant, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant,
+    device_reg,
+    hass_client,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test redacting diagnostics."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
