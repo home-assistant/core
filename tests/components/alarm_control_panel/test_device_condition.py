@@ -1,7 +1,10 @@
 """The tests for Alarm control panel device conditions."""
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN, const
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
+)
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
@@ -38,35 +41,35 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
     "set_state,features_reg,features_state,expected_condition_types",
     [
         (False, 0, 0, []),
-        (False, const.AlarmControlPanelEntityFeature.ARM_AWAY, 0, ["is_armed_away"]),
-        (False, const.AlarmControlPanelEntityFeature.ARM_HOME, 0, ["is_armed_home"]),
-        (False, const.AlarmControlPanelEntityFeature.ARM_NIGHT, 0, ["is_armed_night"]),
+        (False, AlarmControlPanelEntityFeature.ARM_AWAY, 0, ["is_armed_away"]),
+        (False, AlarmControlPanelEntityFeature.ARM_HOME, 0, ["is_armed_home"]),
+        (False, AlarmControlPanelEntityFeature.ARM_NIGHT, 0, ["is_armed_night"]),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_VACATION,
+            AlarmControlPanelEntityFeature.ARM_VACATION,
             0,
             ["is_armed_vacation"],
         ),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
             0,
             ["is_armed_custom_bypass"],
         ),
         (True, 0, 0, []),
-        (True, 0, const.AlarmControlPanelEntityFeature.ARM_AWAY, ["is_armed_away"]),
-        (True, 0, const.AlarmControlPanelEntityFeature.ARM_HOME, ["is_armed_home"]),
-        (True, 0, const.AlarmControlPanelEntityFeature.ARM_NIGHT, ["is_armed_night"]),
+        (True, 0, AlarmControlPanelEntityFeature.ARM_AWAY, ["is_armed_away"]),
+        (True, 0, AlarmControlPanelEntityFeature.ARM_HOME, ["is_armed_home"]),
+        (True, 0, AlarmControlPanelEntityFeature.ARM_NIGHT, ["is_armed_night"]),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_VACATION,
+            AlarmControlPanelEntityFeature.ARM_VACATION,
             ["is_armed_vacation"],
         ),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
             ["is_armed_custom_bypass"],
         ),
     ],
@@ -76,8 +79,8 @@ async def test_get_conditions(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     set_state: bool,
-    features_reg: const.AlarmControlPanelEntityFeature,
-    features_state: const.AlarmControlPanelEntityFeature,
+    features_reg: AlarmControlPanelEntityFeature,
+    features_state: AlarmControlPanelEntityFeature,
     expected_condition_types: list[str],
 ) -> None:
     """Test we get the expected conditions from a alarm_control_panel."""

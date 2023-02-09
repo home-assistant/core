@@ -1,7 +1,10 @@
 """The tests for Alarm control panel device actions."""
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN, const
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
+)
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
@@ -35,49 +38,49 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
         (False, 0, 0, ["disarm"]),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_AWAY,
+            AlarmControlPanelEntityFeature.ARM_AWAY,
             0,
             ["disarm", "arm_away"],
         ),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_HOME,
+            AlarmControlPanelEntityFeature.ARM_HOME,
             0,
             ["disarm", "arm_home"],
         ),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_NIGHT,
+            AlarmControlPanelEntityFeature.ARM_NIGHT,
             0,
             ["disarm", "arm_night"],
         ),
-        (False, const.AlarmControlPanelEntityFeature.TRIGGER, 0, ["disarm", "trigger"]),
+        (False, AlarmControlPanelEntityFeature.TRIGGER, 0, ["disarm", "trigger"]),
         (True, 0, 0, ["disarm"]),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_AWAY,
+            AlarmControlPanelEntityFeature.ARM_AWAY,
             ["disarm", "arm_away"],
         ),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_HOME,
+            AlarmControlPanelEntityFeature.ARM_HOME,
             ["disarm", "arm_home"],
         ),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_NIGHT,
+            AlarmControlPanelEntityFeature.ARM_NIGHT,
             ["disarm", "arm_night"],
         ),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_VACATION,
+            AlarmControlPanelEntityFeature.ARM_VACATION,
             ["disarm", "arm_vacation"],
         ),
-        (True, 0, const.AlarmControlPanelEntityFeature.TRIGGER, ["disarm", "trigger"]),
+        (True, 0, AlarmControlPanelEntityFeature.TRIGGER, ["disarm", "trigger"]),
     ],
 )
 async def test_get_actions(
@@ -85,8 +88,8 @@ async def test_get_actions(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     set_state: bool,
-    features_reg: const.AlarmControlPanelEntityFeature,
-    features_state: const.AlarmControlPanelEntityFeature,
+    features_reg: AlarmControlPanelEntityFeature,
+    features_state: AlarmControlPanelEntityFeature,
     expected_action_types: list[str],
 ) -> None:
     """Test we get the expected actions from a alarm_control_panel."""
@@ -154,7 +157,7 @@ async def test_get_actions_hidden_auxiliary(
         device_id=device_entry.id,
         entity_category=entity_category,
         hidden_by=hidden_by,
-        supported_features=const.AlarmControlPanelEntityFeature.ARM_AWAY,
+        supported_features=AlarmControlPanelEntityFeature.ARM_AWAY,
     )
     expected_actions = []
     expected_actions += [

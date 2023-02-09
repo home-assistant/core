@@ -3,7 +3,10 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN, const
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
+)
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
@@ -79,8 +82,8 @@ async def test_get_triggers(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     set_state: bool,
-    features_reg: const.AlarmControlPanelEntityFeature,
-    features_state: const.AlarmControlPanelEntityFeature,
+    features_reg: AlarmControlPanelEntityFeature,
+    features_state: AlarmControlPanelEntityFeature,
     expected_trigger_types: list[str],
 ) -> None:
     """Test we get the expected triggers from an alarm_control_panel."""
