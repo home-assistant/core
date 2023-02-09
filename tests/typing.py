@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from unittest.mock import MagicMock
 
 from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
+
+If TYPE_CHECKING:
+    from homeassistant.components.recorder import Recorder
 
 ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
 MqttMockPahoClient = MagicMock
@@ -15,4 +18,6 @@ MqttMockHAClient = MagicMock
 """MagicMock for `homeassistant.components.mqtt.MQTT`."""
 MqttMockHAClientGenerator = Callable[..., Coroutine[Any, Any, MqttMockHAClient]]
 """MagicMock generator for `homeassistant.components.mqtt.MQTT`."""
+RecorderInstanceGenerator = Callable[..., Coroutine[Any, Any, "Recorder"]]
+"""Instance generator for `homeassistant.components.recorder.Recorder`."""
 WebSocketGenerator = Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]
