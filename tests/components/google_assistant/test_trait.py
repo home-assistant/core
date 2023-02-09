@@ -54,7 +54,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE, State
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    EVENT_CALL_SERVICE,
+    HomeAssistant,
+    State,
+)
 from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
@@ -113,7 +118,7 @@ async def test_brightness_light(hass, supported_color_modes):
     }
 
 
-async def test_camera_stream(hass):
+async def test_camera_stream(hass: HomeAssistant) -> None:
     """Test camera stream trait support for camera domain."""
     await async_process_ha_core_config(
         hass,
@@ -148,7 +153,7 @@ async def test_camera_stream(hass):
     }
 
 
-async def test_onoff_group(hass):
+async def test_onoff_group(hass: HomeAssistant) -> None:
     """Test OnOff trait support for group domain."""
     assert helpers.get_google_type(group.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(group.DOMAIN, 0, None, None)
@@ -174,7 +179,7 @@ async def test_onoff_group(hass):
     assert off_calls[0].data == {ATTR_ENTITY_ID: "group.bla"}
 
 
-async def test_onoff_input_boolean(hass):
+async def test_onoff_input_boolean(hass: HomeAssistant) -> None:
     """Test OnOff trait support for input_boolean domain."""
     assert helpers.get_google_type(input_boolean.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(input_boolean.DOMAIN, 0, None, None)
@@ -202,7 +207,7 @@ async def test_onoff_input_boolean(hass):
     assert off_calls[0].data == {ATTR_ENTITY_ID: "input_boolean.bla"}
 
 
-async def test_onoff_switch(hass):
+async def test_onoff_switch(hass: HomeAssistant) -> None:
     """Test OnOff trait support for switch domain."""
     assert helpers.get_google_type(switch.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(switch.DOMAIN, 0, None, None)
@@ -233,7 +238,7 @@ async def test_onoff_switch(hass):
     assert off_calls[0].data == {ATTR_ENTITY_ID: "switch.bla"}
 
 
-async def test_onoff_fan(hass):
+async def test_onoff_fan(hass: HomeAssistant) -> None:
     """Test OnOff trait support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(fan.DOMAIN, 0, None, None)
@@ -258,7 +263,7 @@ async def test_onoff_fan(hass):
     assert off_calls[0].data == {ATTR_ENTITY_ID: "fan.bla"}
 
 
-async def test_onoff_light(hass):
+async def test_onoff_light(hass: HomeAssistant) -> None:
     """Test OnOff trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(light.DOMAIN, 0, None, None)
@@ -284,7 +289,7 @@ async def test_onoff_light(hass):
     assert off_calls[0].data == {ATTR_ENTITY_ID: "light.bla"}
 
 
-async def test_onoff_media_player(hass):
+async def test_onoff_media_player(hass: HomeAssistant) -> None:
     """Test OnOff trait support for media_player domain."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(media_player.DOMAIN, 0, None, None)
@@ -311,7 +316,7 @@ async def test_onoff_media_player(hass):
     assert off_calls[0].data == {ATTR_ENTITY_ID: "media_player.bla"}
 
 
-async def test_onoff_humidifier(hass):
+async def test_onoff_humidifier(hass: HomeAssistant) -> None:
     """Test OnOff trait support for humidifier domain."""
     assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(humidifier.DOMAIN, 0, None, None)
@@ -338,7 +343,7 @@ async def test_onoff_humidifier(hass):
     assert off_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
 
 
-async def test_dock_vacuum(hass):
+async def test_dock_vacuum(hass: HomeAssistant) -> None:
     """Test dock trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0, None, None)
@@ -355,7 +360,7 @@ async def test_dock_vacuum(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
 
-async def test_locate_vacuum(hass):
+async def test_locate_vacuum(hass: HomeAssistant) -> None:
     """Test locate trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.LocatorTrait.supported(
@@ -386,7 +391,7 @@ async def test_locate_vacuum(hass):
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
 
-async def test_energystorage_vacuum(hass):
+async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
     """Test EnergyStorage trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.EnergyStorageTrait.supported(
@@ -454,7 +459,7 @@ async def test_energystorage_vacuum(hass):
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
 
-async def test_startstop_vacuum(hass):
+async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     """Test startStop trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.StartStopTrait.supported(vacuum.DOMAIN, 0, None, None)
@@ -494,7 +499,7 @@ async def test_startstop_vacuum(hass):
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
 
-async def test_startstop_cover(hass):
+async def test_startstop_cover(hass: HomeAssistant) -> None:
     """Test startStop trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.StartStopTrait.supported(cover.DOMAIN, cover.SUPPORT_STOP, None, None)
@@ -539,7 +544,7 @@ async def test_startstop_cover(hass):
         await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
 
 
-async def test_startstop_cover_assumed(hass):
+async def test_startstop_cover_assumed(hass: HomeAssistant) -> None:
     """Test startStop trait support for cover domain of assumed state."""
     trt = trait.StartStopTrait(
         hass,
@@ -618,7 +623,7 @@ async def test_color_setting_color_light(hass, supported_color_modes):
     }
 
 
-async def test_color_setting_temperature_light(hass):
+async def test_color_setting_temperature_light(hass: HomeAssistant) -> None:
     """Test ColorTemperature trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None, {})
@@ -672,7 +677,7 @@ async def test_color_setting_temperature_light(hass):
     }
 
 
-async def test_color_light_temperature_light_bad_temp(hass):
+async def test_color_light_temperature_light_bad_temp(hass: HomeAssistant) -> None:
     """Test ColorTemperature trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None, {})
@@ -697,7 +702,7 @@ async def test_color_light_temperature_light_bad_temp(hass):
     assert trt.query_attributes() == {}
 
 
-async def test_light_modes(hass):
+async def test_light_modes(hass: HomeAssistant) -> None:
     """Test Light Mode trait."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(light.DOMAIN, light.SUPPORT_EFFECT, None, None)
@@ -791,7 +796,7 @@ async def test_scene_button(hass, component):
     assert calls[0].data == {ATTR_ENTITY_ID: f"{component.DOMAIN}.bla"}
 
 
-async def test_scene_scene(hass):
+async def test_scene_scene(hass: HomeAssistant) -> None:
     """Test Scene trait support for scene domain."""
     assert helpers.get_google_type(scene.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(scene.DOMAIN, 0, None, None)
@@ -807,7 +812,7 @@ async def test_scene_scene(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "scene.bla"}
 
 
-async def test_scene_script(hass):
+async def test_scene_script(hass: HomeAssistant) -> None:
     """Test Scene trait support for script domain."""
     assert helpers.get_google_type(script.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(script.DOMAIN, 0, None, None)
@@ -827,7 +832,7 @@ async def test_scene_script(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "script.bla"}
 
 
-async def test_temperature_setting_climate_onoff(hass):
+async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
     """Test TemperatureSetting trait support for climate domain - range."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
@@ -872,7 +877,7 @@ async def test_temperature_setting_climate_onoff(hass):
     assert len(calls) == 1
 
 
-async def test_temperature_setting_climate_no_modes(hass):
+async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None:
     """Test TemperatureSetting trait support for climate domain not supporting any modes."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
@@ -898,7 +903,7 @@ async def test_temperature_setting_climate_no_modes(hass):
     }
 
 
-async def test_temperature_setting_climate_range(hass):
+async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
     """Test TemperatureSetting trait support for climate domain - range."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
@@ -980,7 +985,7 @@ async def test_temperature_setting_climate_range(hass):
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
-async def test_temperature_setting_climate_setpoint(hass):
+async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None:
     """Test TemperatureSetting trait support for climate domain - setpoint."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
@@ -1034,7 +1039,7 @@ async def test_temperature_setting_climate_setpoint(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
 
 
-async def test_temperature_setting_climate_setpoint_auto(hass):
+async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) -> None:
     """Test TemperatureSetting trait support for climate domain.
 
     Setpoint in auto mode.
@@ -1084,7 +1089,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
 
 
-async def test_temperature_control(hass):
+async def test_temperature_control(hass: HomeAssistant) -> None:
     """Test TemperatureControl trait support for sensor domain."""
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -1107,7 +1112,7 @@ async def test_temperature_control(hass):
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
-async def test_humidity_setting_humidifier_setpoint(hass):
+async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None:
     """Test HumiditySetting trait support for humidifier domain - setpoint."""
     assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
     assert trait.HumiditySettingTrait.supported(humidifier.DOMAIN, 0, None, None)
@@ -1143,7 +1148,7 @@ async def test_humidity_setting_humidifier_setpoint(hass):
     }
 
 
-async def test_lock_unlock_lock(hass):
+async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
@@ -1167,7 +1172,7 @@ async def test_lock_unlock_lock(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
 
 
-async def test_lock_unlock_unlocking(hass):
+async def test_lock_unlock_unlocking(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
@@ -1182,7 +1187,7 @@ async def test_lock_unlock_unlocking(hass):
     assert trt.query_attributes() == {"isLocked": True}
 
 
-async def test_lock_unlock_lock_jammed(hass):
+async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
     """Test LockUnlock trait locking support for lock domain that jams."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
@@ -1206,7 +1211,7 @@ async def test_lock_unlock_lock_jammed(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
 
 
-async def test_lock_unlock_unlock(hass):
+async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     """Test LockUnlock trait unlocking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
@@ -1266,7 +1271,7 @@ async def test_lock_unlock_unlock(hass):
     assert len(calls) == 2
 
 
-async def test_arm_disarm_arm_away(hass):
+async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     """Test ArmDisarm trait Arming support for alarm_control_panel domain."""
     assert helpers.get_google_type(alarm_control_panel.DOMAIN, None) is not None
     assert trait.ArmDisArmTrait.supported(alarm_control_panel.DOMAIN, 0, None, None)
@@ -1429,7 +1434,7 @@ async def test_arm_disarm_arm_away(hass):
         )
 
 
-async def test_arm_disarm_disarm(hass):
+async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
     """Test ArmDisarm trait Disarming support for alarm_control_panel domain."""
     assert helpers.get_google_type(alarm_control_panel.DOMAIN, None) is not None
     assert trait.ArmDisArmTrait.supported(alarm_control_panel.DOMAIN, 0, None, None)
@@ -1575,7 +1580,7 @@ async def test_arm_disarm_disarm(hass):
     assert len(calls) == 2
 
 
-async def test_fan_speed(hass):
+async def test_fan_speed(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
@@ -1613,7 +1618,7 @@ async def test_fan_speed(hass):
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
 
 
-async def test_fan_speed_without_percentage_step(hass):
+async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control percentage step for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
@@ -1799,7 +1804,7 @@ async def test_fan_reverse(hass, direction_state, direction_call):
     }
 
 
-async def test_climate_fan_speed(hass):
+async def test_climate_fan_speed(hass: HomeAssistant) -> None:
     """Test FanSpeed trait speed control support for climate domain."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
@@ -1860,7 +1865,7 @@ async def test_climate_fan_speed(hass):
     }
 
 
-async def test_inputselector(hass):
+async def test_inputselector(hass: HomeAssistant) -> None:
     """Test input selector trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.InputSelectorTrait.supported(
@@ -2021,7 +2026,7 @@ async def test_inputselector_nextprev_invalid(hass, sources, source):
         )
 
 
-async def test_modes_input_select(hass):
+async def test_modes_input_select(hass: HomeAssistant) -> None:
     """Test Input Select Mode trait."""
     assert helpers.get_google_type(input_select.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(input_select.DOMAIN, None, None, None)
@@ -2097,7 +2102,7 @@ async def test_modes_input_select(hass):
     assert calls[0].data == {"entity_id": "input_select.bla", "option": "xyz"}
 
 
-async def test_modes_select(hass):
+async def test_modes_select(hass: HomeAssistant) -> None:
     """Test Select Mode trait."""
     assert helpers.get_google_type(select.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(select.DOMAIN, None, None, None)
@@ -2171,7 +2176,7 @@ async def test_modes_select(hass):
     assert calls[0].data == {"entity_id": "select.bla", "option": "xyz"}
 
 
-async def test_modes_humidifier(hass):
+async def test_modes_humidifier(hass: HomeAssistant) -> None:
     """Test Humidifier Mode trait."""
     assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
@@ -2250,7 +2255,7 @@ async def test_modes_humidifier(hass):
     }
 
 
-async def test_sound_modes(hass):
+async def test_sound_modes(hass: HomeAssistant) -> None:
     """Test Mode trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
@@ -2327,7 +2332,7 @@ async def test_sound_modes(hass):
     }
 
 
-async def test_preset_modes(hass):
+async def test_preset_modes(hass: HomeAssistant) -> None:
     """Test Mode trait for fan preset modes."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(fan.DOMAIN, fan.SUPPORT_PRESET_MODE, None, None)
@@ -2396,7 +2401,9 @@ async def test_preset_modes(hass):
     }
 
 
-async def test_traits_unknown_domains(hass, caplog):
+async def test_traits_unknown_domains(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test Mode trait for unsupported domain."""
     trt = trait.ModesTrait(
         hass,
@@ -2418,7 +2425,7 @@ async def test_traits_unknown_domains(hass, caplog):
     caplog.clear()
 
 
-async def test_openclose_cover(hass):
+async def test_openclose_cover(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
@@ -2455,7 +2462,7 @@ async def test_openclose_cover(hass):
     assert calls_open[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
 
-async def test_openclose_cover_unknown_state(hass):
+async def test_openclose_cover_unknown_state(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain with unknown state."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
@@ -2485,7 +2492,7 @@ async def test_openclose_cover_unknown_state(hass):
         trt.query_attributes()
 
 
-async def test_openclose_cover_assumed_state(hass):
+async def test_openclose_cover_assumed_state(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
@@ -2515,7 +2522,7 @@ async def test_openclose_cover_assumed_state(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 40}
 
 
-async def test_openclose_cover_query_only(hass):
+async def test_openclose_cover_query_only(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(cover.DOMAIN, 0, None, None)
@@ -2538,7 +2545,7 @@ async def test_openclose_cover_query_only(hass):
     assert trt.query_attributes() == {"openPercent": 100}
 
 
-async def test_openclose_cover_no_position(hass):
+async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(
@@ -2699,7 +2706,7 @@ async def test_openclose_binary_sensor(hass, device_class):
     assert trt.query_attributes() == {"openPercent": 0}
 
 
-async def test_volume_media_player(hass):
+async def test_volume_media_player(hass: HomeAssistant) -> None:
     """Test volume trait support for media player domain."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
@@ -2754,7 +2761,7 @@ async def test_volume_media_player(hass):
     }
 
 
-async def test_volume_media_player_relative(hass):
+async def test_volume_media_player_relative(hass: HomeAssistant) -> None:
     """Test volume trait support for relative-volume-only media players."""
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
@@ -2822,7 +2829,7 @@ async def test_volume_media_player_relative(hass):
         await trt.execute(trait.COMMAND_MUTE, BASIC_DATA, {"mute": True}, {})
 
 
-async def test_media_player_mute(hass):
+async def test_media_player_mute(hass: HomeAssistant) -> None:
     """Test volume trait support for muting."""
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
@@ -2886,7 +2893,7 @@ async def test_media_player_mute(hass):
     }
 
 
-async def test_temperature_control_sensor(hass):
+async def test_temperature_control_sensor(hass: HomeAssistant) -> None:
     """Test TemperatureControl trait support for temperature sensor."""
     assert (
         helpers.get_google_type(sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE)
@@ -2939,7 +2946,7 @@ async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, a
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
-async def test_humidity_setting_sensor(hass):
+async def test_humidity_setting_sensor(hass: HomeAssistant) -> None:
     """Test HumiditySetting trait support for humidity sensor."""
     assert (
         helpers.get_google_type(sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY)
@@ -2977,7 +2984,7 @@ async def test_humidity_setting_sensor_data(hass, state, ambient):
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
-async def test_transport_control(hass):
+async def test_transport_control(hass: HomeAssistant) -> None:
     """Test the TransportControlTrait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 
@@ -3143,7 +3150,7 @@ async def test_media_state(hass, state):
     }
 
 
-async def test_channel(hass):
+async def test_channel(hass: HomeAssistant) -> None:
     """Test Channel trait support."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ChannelTrait.supported(
@@ -3195,7 +3202,7 @@ async def test_channel(hass):
     assert len(media_player_calls) == 1
 
 
-async def test_sensorstate(hass):
+async def test_sensorstate(hass: HomeAssistant) -> None:
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),

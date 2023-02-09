@@ -28,7 +28,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import device_registry as dr, entity, template
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import TemplateVarsType
@@ -36,12 +42,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
-from tests.common import (
-    MockConfigEntry,
-    mock_area_registry,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import MockConfigEntry
 
 
 def _set_up_units(hass: HomeAssistant) -> None:
@@ -2509,11 +2510,13 @@ async def test_expand(hass: HomeAssistant) -> None:
     )
 
 
-async def test_device_entities(hass: HomeAssistant) -> None:
+async def test_device_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test device_entities function."""
     config_entry = MockConfigEntry(domain="light")
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
 
     # Test non existing device ids
     info = render_to_info(hass, "{{ device_entities('abc123') }}")
@@ -2591,10 +2594,10 @@ async def test_device_entities(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_integration_entities(hass: HomeAssistant) -> None:
+async def test_integration_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test integration_entities function."""
-    entity_registry = mock_registry(hass)
-
     # test entities for given config entry title
     config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
     config_entry.add_to_hass(hass)
@@ -2629,11 +2632,12 @@ async def test_integration_entities(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_config_entry_id(hass: HomeAssistant) -> None:
+async def test_config_entry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test config_entry_id function."""
     config_entry = MockConfigEntry(domain="light", title="Some integration")
     config_entry.add_to_hass(hass)
-    entity_registry = mock_registry(hass)
     entity_entry = entity_registry.async_get_or_create(
         "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
     )
@@ -2655,11 +2659,13 @@ async def test_config_entry_id(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_device_id(hass: HomeAssistant) -> None:
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test device_id function."""
     config_entry = MockConfigEntry(domain="light")
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -2698,11 +2704,13 @@ async def test_device_id(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_device_attr(hass: HomeAssistant) -> None:
+async def test_device_attr(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test device_attr and is_device_attr functions."""
     config_entry = MockConfigEntry(domain="light")
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
 
     # Test non existing device ids (device_attr)
     info = render_to_info(hass, "{{ device_attr('abc123', 'id') }}")
@@ -2821,12 +2829,14 @@ async def test_device_attr(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_area_id(hass: HomeAssistant) -> None:
+async def test_area_id(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test area_id function."""
     config_entry = MockConfigEntry(domain="light")
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
-    area_registry = mock_area_registry(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_id('sensor.fake') }}")
@@ -2925,12 +2935,14 @@ async def test_area_id(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_area_name(hass: HomeAssistant) -> None:
+async def test_area_name(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test area_name function."""
     config_entry = MockConfigEntry(domain="light")
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
-    area_registry = mock_area_registry(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_name('sensor.fake') }}")
@@ -3004,12 +3016,14 @@ async def test_area_name(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_area_entities(hass: HomeAssistant) -> None:
+async def test_area_entities(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test area_entities function."""
     config_entry = MockConfigEntry(domain="light")
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-    area_registry = mock_area_registry(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
@@ -3057,11 +3071,13 @@ async def test_area_entities(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
 
 
-async def test_area_devices(hass: HomeAssistant) -> None:
+async def test_area_devices(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test area_devices function."""
     config_entry = MockConfigEntry(domain="light")
-    device_registry = mock_device_registry(hass)
-    area_registry = mock_area_registry(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_devices('deadbeef') }}")

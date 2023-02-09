@@ -7,6 +7,7 @@ from iaqualink.exception import (
 )
 
 from homeassistant.components.iaqualink import config_flow
+from homeassistant.core import HomeAssistant
 
 
 async def test_already_configured(hass, config_entry, config_data):
@@ -22,7 +23,7 @@ async def test_already_configured(hass, config_entry, config_data):
     assert result["type"] == "abort"
 
 
-async def test_without_config(hass):
+async def test_without_config(hass: HomeAssistant) -> None:
     """Test config flow with no configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass

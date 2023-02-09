@@ -34,7 +34,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init config flow."""
         self._hosts = [CLOUD_NAME]
         self._host = None

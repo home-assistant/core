@@ -2,7 +2,10 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.google_assistant import error, report_state
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -11,7 +14,9 @@ from . import BASIC_CONFIG
 from tests.common import async_fire_time_changed
 
 
-async def test_report_state(hass, caplog):
+async def test_report_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test report state works."""
     assert await async_setup_component(hass, "switch", {})
     hass.states.async_set("light.ceiling", "off")

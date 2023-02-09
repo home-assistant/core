@@ -1,5 +1,4 @@
 """Test config flow."""
-
 from ipaddress import IPv4Address
 from unittest.mock import ANY, patch
 
@@ -15,6 +14,7 @@ from homeassistant.components.apple_tv.const import (
     CONF_START_OFF,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import airplay_service, create_conf, mrp_service, raop_service
 
@@ -526,7 +526,7 @@ async def test_ignores_disabled_service(hass, airplay_with_disabled_mrp, pairing
 # Zeroconf
 
 
-async def test_zeroconf_unsupported_service_aborts(hass):
+async def test_zeroconf_unsupported_service_aborts(hass: HomeAssistant) -> None:
     """Test discovering unsupported zeroconf service."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1050,7 +1050,7 @@ async def test_reconfigure_update_credentials(hass, mrp_device, pairing):
 # Options
 
 
-async def test_option_start_off(hass):
+async def test_option_start_off(hass: HomeAssistant) -> None:
     """Test start off-option flag."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, unique_id="dmapid", options={"start_off": False}
@@ -1068,7 +1068,7 @@ async def test_option_start_off(hass):
     assert config_entry.options[CONF_START_OFF]
 
 
-async def test_zeroconf_rejects_ipv6(hass):
+async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     """Test zeroconf discovery rejects ipv6."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
