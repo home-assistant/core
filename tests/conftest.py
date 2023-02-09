@@ -1083,6 +1083,7 @@ def recorder_db_url(pytestconfig):
                 raise RuntimeError(
                     f"Unable to drop database {db} because it is in use by {rows}"
                 )
+        engine.dispose()
         sqlalchemy_utils.drop_database(db_url)
     elif db_url.startswith("postgresql://"):
         sqlalchemy_utils.drop_database(db_url)
