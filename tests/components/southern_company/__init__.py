@@ -57,7 +57,16 @@ HOURLY_DATA = [
 
 HOURLY_DATA_MISSING = [
     HourlyEnergyUsage(
-        None,
+        datetime.datetime(
+            2023,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            datetime.timezone(datetime.timedelta(hours=-5), "EST"),
+        ),
         usage=1.0,
         cost=2.0,
         temp=3.0,
