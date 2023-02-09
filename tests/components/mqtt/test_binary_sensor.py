@@ -526,7 +526,9 @@ async def test_valid_device_class(
     assert state.attributes.get("device_class") == "motion"
 
 
-async def test_invalid_device_class(hass: HomeAssistant, caplog) -> None:
+async def test_invalid_device_class(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the setting of an invalid sensor class."""
     assert not await async_setup_component(
         hass,
@@ -671,7 +673,9 @@ async def test_force_update_enabled(
     assert len(events) == 2
 
 
-async def test_off_delay(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_off_delay(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test off_delay option."""
     assert await async_setup_component(
         hass,
@@ -789,7 +793,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         mqtt.DOMAIN: {

@@ -760,7 +760,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one lock per unique_id."""
     config = {
         mqtt.DOMAIN: {
@@ -1010,7 +1012,7 @@ async def test_encoding_subscribable_topics(
 
 
 async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test setup manual configured MQTT entity."""
     platform = lock.DOMAIN
