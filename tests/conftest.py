@@ -1078,7 +1078,12 @@ def recorder_db_url(pytestconfig):
             query = sa.text(
                 "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
             )
-            for row in connection.execute(query, parameters={"db": db}).fetchall():
+            rows = connection.execute(query, parameters={"db": db}).fetchall()
+            if rows:
+                raise RuntimeError(
+                    f"Unable to drop database {db} because it is in use by {rows}"
+                )
+            for row in rows:
                 _LOGGER.warning(
                     "Killing MySQL connection to temporary database %s", row.id
                 )
