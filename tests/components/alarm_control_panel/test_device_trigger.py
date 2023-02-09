@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN
+from homeassistant.components.alarm_control_panel import DOMAIN, const
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -34,7 +34,7 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -78,10 +78,10 @@ async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    set_state,
-    features_reg,
-    features_state,
-    expected_trigger_types,
+    set_state: bool,
+    features_reg: const.AlarmControlPanelEntityFeature,
+    features_state: const.AlarmControlPanelEntityFeature,
+    expected_trigger_types: list[str],
 ) -> None:
     """Test we get the expected triggers from an alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -135,8 +135,8 @@ async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    hidden_by,
-    entity_category,
+    hidden_by: RegistryEntryHider | None,
+    entity_category: EntityCategory | None,
 ) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -204,7 +204,9 @@ async def test_get_trigger_capabilities(
         }
 
 
-async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_state_change(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
 
@@ -410,7 +412,9 @@ async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     )
 
 
-async def test_if_fires_on_state_change_with_for(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_state_change_with_for(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for triggers firing with delay."""
     entity_id = f"{DOMAIN}.entity"
     hass.states.async_set(entity_id, STATE_ALARM_DISARMED)

@@ -55,7 +55,7 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
-async def test_setups(hass: HomeAssistant, protocol, connection, title) -> None:
+async def test_setups(hass: HomeAssistant, protocol, connection, title):
     """Test flow for setting up the available AlarmDecoder protocols."""
 
     result = await hass.config_entries.flow.async_init(
@@ -412,7 +412,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_one_device_allowed(hass: HomeAssistant, protocol, connection) -> None:
+async def test_one_device_allowed(hass, protocol, connection):
     """Test that only one AlarmDecoder device is allowed."""
     flow = config_flow.AlarmDecoderFlowHandler()
     flow.hass = hass

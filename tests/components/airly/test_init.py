@@ -1,4 +1,5 @@
 """Test init of Airly integration."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -200,7 +201,7 @@ async def test_unload_entry(
 async def test_migrate_device_entry(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    old_identifier,
+    old_identifier: tuple[str, Any, Any],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device_info identifiers migration."""

@@ -84,10 +84,10 @@ async def test_get_actions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    set_state,
-    features_reg,
-    features_state,
-    expected_action_types,
+    set_state: bool,
+    features_reg: const.AlarmControlPanelEntityFeature,
+    features_state: const.AlarmControlPanelEntityFeature,
+    expected_action_types: list[str],
 ) -> None:
     """Test we get the expected actions from a alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -137,8 +137,8 @@ async def test_get_actions_hidden_auxiliary(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    hidden_by,
-    entity_category,
+    hidden_by: RegistryEntryHider | None,
+    entity_category: EntityCategory | None,
 ) -> None:
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
