@@ -440,6 +440,7 @@ def test_forgiving_add_column(recorder_db_url: str) -> None:
         migration._add_columns(
             instance.get_session, "hello", ["context_id CHARACTER(36)"]
         )
+    engine.dispose()
 
 
 def test_forgiving_add_index(recorder_db_url: str) -> None:
@@ -450,6 +451,7 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
         migration._create_index(instance.get_session, "states", "ix_states_context_id")
+    engine.dispose()
 
 
 @pytest.mark.parametrize(
