@@ -627,7 +627,7 @@ async def test_options_override_bad_data(hass: HomeAssistant):
     assert result["errors"] == {"base": "input_error"}
 
 
-async def test_discovery_via_usb(hass):
+async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     """Test usb flow."""
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyINSTEON",
@@ -656,7 +656,7 @@ async def test_discovery_via_usb(hass):
     assert result2["data"] == {"device": "/dev/ttyINSTEON"}
 
 
-async def test_discovery_via_usb_already_setup(hass):
+async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
     """Test usb flow -- already setup."""
 
     MockConfigEntry(

@@ -1,8 +1,0 @@
-{
-    "config": {
-        "error": {
-            "invalid_api_token": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "unknown_error": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
-        }
-    }
-}

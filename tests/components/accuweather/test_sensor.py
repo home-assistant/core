@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolumetricFlux,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -37,14 +38,14 @@ from . import init_integration
 from tests.common import async_fire_time_changed, load_fixture
 
 
-async def test_sensor_without_forecast(hass):
+async def test_sensor_without_forecast(hass: HomeAssistant) -> None:
     """Test states of the sensor without forecast."""
     await init_integration(hass)
     registry = er.async_get(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "3200"
+    assert state.state == "3200.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.METERS
@@ -54,6 +55,7 @@ async def test_sensor_without_forecast(hass):
     entry = registry.async_get("sensor.home_cloud_ceiling")
     assert entry
     assert entry.unique_id == "0123456-ceiling"
+    assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
     state = hass.states.get("sensor.home_precipitation")
     assert state
@@ -114,7 +116,7 @@ async def test_sensor_without_forecast(hass):
     assert entry.unique_id == "0123456-uvindex"
 
 
-async def test_sensor_with_forecast(hass):
+async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
     """Test states of the sensor with forecast."""
     await init_integration(hass, forecast=True)
     registry = er.async_get(hass)
@@ -192,7 +194,7 @@ async def test_sensor_with_forecast(hass):
     assert entry.unique_id == "0123456-uvindex-0"
 
 
-async def test_sensor_disabled(hass):
+async def test_sensor_disabled(hass: HomeAssistant) -> None:
     """Test sensor disabled by default."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -212,7 +214,7 @@ async def test_sensor_disabled(hass):
     assert updated_entry.disabled is False
 
 
-async def test_sensor_enabled_without_forecast(hass):
+async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
     """Test enabling an advanced sensor."""
     registry = er.async_get(hass)
 
@@ -658,14 +660,14 @@ async def test_sensor_enabled_without_forecast(hass):
     assert entry.unique_id == "0123456-windgustnight-0"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
@@ -696,10 +698,10 @@ async def test_availability(hass):
         state = hass.states.get("sensor.home_cloud_ceiling")
         assert state
         assert state.state != STATE_UNAVAILABLE
-        assert state.state == "3200"
+        assert state.state == "3200.0"
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, forecast=True)
 
@@ -729,27 +731,27 @@ async def test_manual_update_entity(hass):
         assert mock_forecast.call_count == 1
 
 
-async def test_sensor_imperial_units(hass):
+async def test_sensor_imperial_units(hass: HomeAssistant) -> None:
     """Test states of the sensor without forecast."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "10500"
+    assert state.state == "10500.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.FEET
 
 
-async def test_state_update(hass):
+async def test_state_update(hass: HomeAssistant) -> None:
     """Ensure the sensor state changes after updating the data."""
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
 

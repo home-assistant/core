@@ -42,7 +42,7 @@ async def test_invalid_json(caplog):
     )
 
 
-async def test_nan_serialized_to_null():
+async def test_nan_serialized_to_null() -> None:
     """Test nan serialized to null JSON."""
     response = HomeAssistantView.json(float("NaN"))
     assert json.loads(response.body.decode("utf-8")) is None

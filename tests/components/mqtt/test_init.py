@@ -43,8 +43,6 @@ from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
     async_fire_time_changed,
-    mock_device_registry,
-    mock_registry,
     mock_restore_cache,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
@@ -69,18 +67,6 @@ def sensor_platforms_only():
 @pytest.fixture(autouse=True)
 def mock_storage(hass_storage):
     """Autouse hass_storage for the TestCase tests."""
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -635,7 +621,7 @@ async def test_publish_function_with_bad_encoding_conditions(
     )
 
 
-def test_validate_topic():
+def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
     with pytest.raises(vol.Invalid):
@@ -679,7 +665,7 @@ def test_validate_topic():
         mqtt.util.valid_topic("\U0001ffff")
 
 
-def test_validate_subscribe_topic():
+def test_validate_subscribe_topic() -> None:
     """Test invalid subscribe topics."""
     mqtt.valid_subscribe_topic("#")
     mqtt.valid_subscribe_topic("sport/#")
@@ -708,7 +694,7 @@ def test_validate_subscribe_topic():
     mqtt.valid_subscribe_topic("$SYS/#")
 
 
-def test_validate_publish_topic():
+def test_validate_publish_topic() -> None:
     """Test invalid publish topics."""
     with pytest.raises(vol.Invalid):
         mqtt.valid_publish_topic("pub+")
@@ -724,7 +710,7 @@ def test_validate_publish_topic():
     mqtt.valid_publish_topic("$SYS/")
 
 
-def test_entity_device_info_schema():
+def test_entity_device_info_schema() -> None:
     """Test MQTT entity device info validation."""
     # just identifier
     MQTT_ENTITY_DEVICE_INFO_SCHEMA({"identifiers": ["abcd"]})
@@ -1897,7 +1883,7 @@ async def test_mqtt_subscribes_topics_on_connect(
 
 
 async def test_setup_entry_with_config_override(
-    hass, device_reg, mqtt_mock_entry_with_yaml_config
+    hass, device_registry, mqtt_mock_entry_with_yaml_config
 ):
     """Test if the MQTT component loads with no config and config entry can be setup."""
     data = (
@@ -1920,12 +1906,12 @@ async def test_setup_entry_with_config_override(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
 
 async def test_update_incomplete_entry(
-    hass: HomeAssistant, device_reg, mqtt_client_mock, caplog
+    hass: HomeAssistant, device_registry, mqtt_client_mock, caplog
 ):
     """Test if the MQTT component loads when config entry data is incomplete."""
     data = (
@@ -1958,11 +1944,11 @@ async def test_update_incomplete_entry(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
 
-async def test_fail_no_broker(hass, device_reg, mqtt_client_mock, caplog):
+async def test_fail_no_broker(hass, device_registry, mqtt_client_mock, caplog):
     """Test if the MQTT component loads when broker configuration is missing."""
     # Config entry data is incomplete
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={})
@@ -2091,7 +2077,7 @@ async def test_dump_service(hass, mqtt_mock_entry_no_yaml_config):
 
 
 async def test_mqtt_ws_remove_discovered_device(
-    hass, device_reg, entity_reg, hass_ws_client, mqtt_mock_entry_no_yaml_config
+    hass, device_registry, hass_ws_client, mqtt_mock_entry_no_yaml_config
 ):
     """Test MQTT websocket device removal."""
     assert await async_setup_component(hass, "config", {})
@@ -2108,7 +2094,7 @@ async def test_mqtt_ws_remove_discovered_device(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -2125,12 +2111,12 @@ async def test_mqtt_ws_remove_discovered_device(
     assert response["success"]
 
     # Verify device entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
 
 
 async def test_mqtt_ws_get_device_debug_info(
-    hass, device_reg, hass_ws_client, mqtt_mock_entry_no_yaml_config
+    hass, device_registry, hass_ws_client, mqtt_mock_entry_no_yaml_config
 ):
     """Test MQTT websocket device debug info."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2157,7 +2143,7 @@ async def test_mqtt_ws_get_device_debug_info(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -2193,7 +2179,7 @@ async def test_mqtt_ws_get_device_debug_info(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
 async def test_mqtt_ws_get_device_debug_info_binary(
-    hass, device_reg, hass_ws_client, mqtt_mock_entry_no_yaml_config
+    hass, device_registry, hass_ws_client, mqtt_mock_entry_no_yaml_config
 ):
     """Test MQTT websocket device debug info."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2209,7 +2195,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
 
     small_png = (
@@ -2423,7 +2409,7 @@ async def test_debug_info_multiple_entities_triggers(
 
 
 async def test_debug_info_non_mqtt(
-    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+    hass, device_registry, entity_registry, mqtt_mock_entry_no_yaml_config
 ):
     """Test we get empty debug_info for a device with non MQTT entities."""
     await mqtt_mock_entry_no_yaml_config()
@@ -2433,12 +2419,12 @@ async def test_debug_info_non_mqtt(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     for device_class in DEVICE_CLASSES:
-        entity_reg.async_get_or_create(
+        entity_registry.async_get_or_create(
             DOMAIN,
             "test",
             platform.ENTITIES[device_class].unique_id,

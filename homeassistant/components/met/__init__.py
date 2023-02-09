@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Any
 
 import metno
+from typing_extensions import Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -181,7 +182,7 @@ class MetWeatherData:
         )
         return True
 
-    async def fetch_data(self) -> MetWeatherData:
+    async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         resp = await self._weather_data.fetching_data()
         if not resp:

@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -398,7 +398,9 @@ async def test_delay_switch(hass, mock_modbus):
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_no_discovery_info_switch(hass, caplog):
+async def test_no_discovery_info_switch(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert SWITCH_DOMAIN not in hass.config.components
     assert await async_setup_component(

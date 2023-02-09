@@ -59,87 +59,87 @@ NEED_ATTRIBUTE_DOMAINS = {
 }
 
 
-_BASE_STATES = [
+_BASE_STATES = (
     States.entity_id,
     States.state,
     States.last_changed_ts,
     States.last_updated_ts,
-]
-_BASE_STATES_NO_LAST_CHANGED = [
+)
+_BASE_STATES_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
     States.entity_id,
     States.state,
     literal(value=None).label("last_changed_ts"),
     States.last_updated_ts,
-]
-_QUERY_STATE_NO_ATTR = [
+)
+_QUERY_STATE_NO_ATTR = (
     *_BASE_STATES,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = [
+)
+_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (
     *_BASE_STATES_NO_LAST_CHANGED,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_BASE_STATES_PRE_SCHEMA_31 = [
+)
+_BASE_STATES_PRE_SCHEMA_31 = (
     States.entity_id,
     States.state,
     States.last_changed,
     States.last_updated,
-]
-_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = [
+)
+_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = (
     States.entity_id,
     States.state,
     literal(value=None, type_=Text).label("last_changed"),
     States.last_updated,
-]
-_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31 = [
+)
+_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31 = (
     *_BASE_STATES_PRE_SCHEMA_31,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31 = [
+)
+_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31 = (
     *_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
+)
 # Remove QUERY_STATES_PRE_SCHEMA_25
 # and the migration_in_progress check
 # once schema 26 is created
-_QUERY_STATES_PRE_SCHEMA_25 = [
+_QUERY_STATES_PRE_SCHEMA_25 = (
     *_BASE_STATES_PRE_SCHEMA_31,
     States.attributes,
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED = [
+)
+_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED = (
     *_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31,
     States.attributes,
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATES_PRE_SCHEMA_31 = [
+)
+_QUERY_STATES_PRE_SCHEMA_31 = (
     *_BASE_STATES_PRE_SCHEMA_31,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
-_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = [
+)
+_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = (
     *_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
-_QUERY_STATES = [
+)
+_QUERY_STATES = (
     *_BASE_STATES,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
-_QUERY_STATES_NO_LAST_CHANGED = [
+)
+_QUERY_STATES_NO_LAST_CHANGED = (
     *_BASE_STATES_NO_LAST_CHANGED,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
+)
 
 
 def _schema_version(hass: HomeAssistant) -> int:
@@ -305,7 +305,10 @@ def _significant_states_stmt(
             )
 
     if entity_ids:
-        stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
+        stmt += lambda q: q.filter(
+            # https://github.com/python/mypy/issues/2608
+            States.entity_id.in_(entity_ids)  # type:ignore[arg-type]
+        )
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
@@ -518,48 +521,52 @@ def state_changes_during_period(
 
 
 def _get_last_state_changes_stmt(
-    schema_version: int, number_of_states: int, entity_id: str | None
+    schema_version: int, number_of_states: int, entity_id: str
 ) -> StatementLambdaElement:
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
     )
     if schema_version >= 31:
-        stmt += lambda q: q.filter(
-            (States.last_changed_ts == States.last_updated_ts)
-            | States.last_changed_ts.is_(None)
+        stmt += lambda q: q.where(
+            States.state_id
+            == (
+                select(States.state_id)
+                .filter(States.entity_id == entity_id)
+                .order_by(States.last_updated_ts.desc())
+                .limit(number_of_states)
+                .subquery()
+            ).c.state_id
         )
     else:
-        stmt += lambda q: q.filter(
-            (States.last_changed == States.last_updated) | States.last_changed.is_(None)
+        stmt += lambda q: q.where(
+            States.state_id
+            == (
+                select(States.state_id)
+                .filter(States.entity_id == entity_id)
+                .order_by(States.last_updated.desc())
+                .limit(number_of_states)
+                .subquery()
+            ).c.state_id
         )
-    if entity_id:
-        stmt += lambda q: q.filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    if schema_version >= 31:
-        stmt += lambda q: q.order_by(
-            States.entity_id, States.last_updated_ts.desc()
-        ).limit(number_of_states)
-    else:
-        stmt += lambda q: q.order_by(
-            States.entity_id, States.last_updated.desc()
-        ).limit(number_of_states)
+
+    stmt += lambda q: q.order_by(States.state_id.desc())
     return stmt
 
 
 def get_last_state_changes(
-    hass: HomeAssistant, number_of_states: int, entity_id: str | None
+    hass: HomeAssistant, number_of_states: int, entity_id: str
 ) -> MutableMapping[str, list[State]]:
     """Return the last number_of_states."""
-    start_time = dt_util.utcnow()
-    entity_id = entity_id.lower() if entity_id is not None else None
-    entity_ids = [entity_id] if entity_id is not None else None
+    entity_id_lower = entity_id.lower()
+    entity_ids = [entity_id_lower]
 
     with session_scope(hass=hass) as session:
         stmt = _get_last_state_changes_stmt(
-            _schema_version(hass), number_of_states, entity_id
+            _schema_version(hass), number_of_states, entity_id_lower
         )
         states = list(execute_stmt_lambda_element(session, stmt))
         return cast(
@@ -568,7 +575,7 @@ def get_last_state_changes(
                 hass,
                 session,
                 reversed(states),
-                start_time,
+                dt_util.utcnow(),
                 entity_ids,
                 include_start_time_state=False,
             ),
@@ -594,6 +601,8 @@ def _get_states_for_entites_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .filter(
                     (States.last_updated_ts >= run_start_ts)
@@ -608,6 +617,8 @@ def _get_states_for_entites_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .filter(
                     (States.last_updated >= run_start)
@@ -637,6 +648,8 @@ def _generate_most_recent_states_by_date(
         return (
             select(
                 States.entity_id.label("max_entity_id"),
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 func.max(States.last_updated_ts).label("max_last_updated"),
             )
             .filter(
@@ -649,6 +662,8 @@ def _generate_most_recent_states_by_date(
     return (
         select(
             States.entity_id.label("max_entity_id"),
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+            # pylint: disable-next=not-callable
             func.max(States.last_updated).label("max_last_updated"),
         )
         .filter(
@@ -682,6 +697,8 @@ def _get_states_for_all_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .join(
                     most_recent_states_by_date,
@@ -699,6 +716,8 @@ def _get_states_for_all_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .join(
                     most_recent_states_by_date,
@@ -872,11 +891,11 @@ def _sorted_states_to_dict(
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
     if entity_ids and len(entity_ids) == 1:
-        states_iter: Iterable[tuple[str | Column, Iterator[States]]] = (
+        states_iter: Iterable[tuple[str, Iterator[Row]]] = (
             (entity_ids[0], iter(states)),
         )
     else:
-        states_iter = groupby(states, lambda state: state.entity_id)
+        states_iter = groupby(states, lambda state: state.entity_id)  # type: ignore[no-any-return]
 
     # Append all changes to it
     for ent_id, group in states_iter:

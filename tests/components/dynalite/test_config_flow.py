@@ -1,11 +1,11 @@
 """Test Dynalite config flow."""
-
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -38,7 +38,7 @@ async def test_flow(hass, first_con, second_con, exp_type, exp_result, exp_reaso
         assert result["reason"] == exp_reason
 
 
-async def test_existing(hass):
+async def test_existing(hass: HomeAssistant) -> None:
     """Test when the entry exists with the same config."""
     host = "1.2.3.4"
     MockConfigEntry(
@@ -57,7 +57,7 @@ async def test_existing(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_existing_update(hass):
+async def test_existing_update(hass: HomeAssistant) -> None:
     """Test when the entry exists with a different config."""
     host = "1.2.3.4"
     port1 = 7777
@@ -87,7 +87,7 @@ async def test_existing_update(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_two_entries(hass):
+async def test_two_entries(hass: HomeAssistant) -> None:
     """Test when two different entries exist with different hosts."""
     host1 = "1.2.3.4"
     host2 = "5.6.7.8"

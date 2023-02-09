@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.select import (
@@ -268,14 +269,14 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> InputSelect:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_select = cls(config)
         input_select.editable = True
         return input_select
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> InputSelect:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

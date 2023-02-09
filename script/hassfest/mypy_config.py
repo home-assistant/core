@@ -37,17 +37,25 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
+    "plugins": ", ".join(["pydantic.mypy"]),
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
     "ignore_missing_imports": "true",
+    "local_partial_types": "true",
     "strict_equality": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": ", ".join(["ignore-without-code"]),
+    "enable_error_code": ", ".join(
+        [
+            "ignore-without-code",
+            "redundant-self",
+            "truthy-iterable",
+        ]
+    ),
     "disable_error_code": ", ".join(["annotation-unchecked"]),
     # Strict_concatenate breaks passthrough ParamSpec typing
     "strict_concatenate": "false",
@@ -76,6 +84,18 @@ STRICT_SETTINGS: Final[list[str]] = [
 STRICT_SETTINGS_CORE: Final[list[str]] = [
     "disallow_any_generics",
 ]
+
+# Plugin specific settings
+# Bump mypy cache when updating! Some plugins don't invalidate the cache properly.
+# pydantic: https://docs.pydantic.dev/mypy_plugin/#plugin-settings
+PLUGIN_CONFIG: Final[dict[str, dict[str, str]]] = {
+    "pydantic-mypy": {
+        "init_forbid_extra": "true",
+        "init_typed": "true",
+        "warn_required_dynamic_aliases": "true",
+        "warn_untyped_fields": "true",
+    }
+}
 
 
 def _strict_module_in_ignore_list(
@@ -125,7 +145,7 @@ def _generate_and_validate_strict_typing(config: Config) -> str:
     return "\n".join(_sort_within_sections(lines)) + "\n"
 
 
-def _generate_and_validate_mypy_config(config: Config) -> str:
+def _generate_and_validate_mypy_config(config: Config) -> str:  # noqa: C901
     """Validate and generate mypy config."""
 
     # Filter empty and commented lines.
@@ -191,6 +211,13 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         mypy_config.set(general_section, key, value)
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
+
+    for plugin_name, plugin_config in PLUGIN_CONFIG.items():
+        if not plugin_config:
+            continue
+        mypy_config.add_section(plugin_name)
+        for key, value in plugin_config.items():
+            mypy_config.set(plugin_name, key, value)
 
     # By default enable no_implicit_reexport only for homeassistant.*
     # Disable it afterwards for all components
