@@ -4,6 +4,8 @@ import pytest
 from homeassistant.components.arcam_fmj.const import DOMAIN
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -20,7 +22,11 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_registry, entity_registry):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a arcam_fmj."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
@@ -55,7 +61,9 @@ async def test_get_triggers(hass, device_registry, entity_registry):
         assert trigger in expected_triggers or trigger["domain"] == "media_player"
 
 
-async def test_if_fires_on_turn_on_request(hass, calls, player_setup, state):
+async def test_if_fires_on_turn_on_request(
+    hass: HomeAssistant, calls, player_setup, state
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     state.get_power.return_value = None
 
