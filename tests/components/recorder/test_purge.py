@@ -1427,7 +1427,7 @@ async def _add_test_statistics(hass: HomeAssistant):
 
             session.add(
                 StatisticsShortTerm(
-                    start=timestamp,
+                    start_ts=timestamp.timestamp(),
                     state=state,
                 )
             )

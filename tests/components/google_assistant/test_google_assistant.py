@@ -18,9 +18,12 @@ from homeassistant.components import (
     media_player,
     switch,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, UnitOfTemperature
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from . import DEMO_DEVICES
 
