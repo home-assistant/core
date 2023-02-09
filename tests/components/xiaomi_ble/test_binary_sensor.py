@@ -257,8 +257,7 @@ async def test_smoke(hass: HomeAssistant) -> None:
 async def test_unavailable(hass):
     """Test normal device goes to unavailable after 60 minutes."""
     now = dt_util.utcnow()
-    future = now + timedelta(minutes=60)
-    later = future + timedelta(seconds=1)
+    future_interval = timedelta(minutes=60)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -286,12 +285,10 @@ async def test_unavailable(hass):
     assert opening_sensor.state == STATE_ON
 
     # Fastforward time without BLE advertisements
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    # Wait a second to let the state change to unavailable
-    async_fire_time_changed(hass, later)
-    await hass.async_block_till_done()
+    for i in range(1, 3):
+        future = now + (future_interval * i)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
     opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
 
@@ -305,8 +302,7 @@ async def test_unavailable(hass):
 async def test_sleepy_device(hass):
     """Test sleepy device does not go to unavailable after 60 minutes."""
     now = dt_util.utcnow()
-    future = now + timedelta(minutes=60)
-    later = future + timedelta(seconds=1)
+    future_interval = timedelta(minutes=60)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -333,12 +329,10 @@ async def test_sleepy_device(hass):
     assert opening_sensor.state == STATE_ON
 
     # Fastforward time without BLE advertisements
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
-
-    # Wait a second to let the state change to unavailable
-    async_fire_time_changed(hass, later)
-    await hass.async_block_till_done()
+    for i in range(1, 3):
+        future = now + (future_interval * i)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
     opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
 
