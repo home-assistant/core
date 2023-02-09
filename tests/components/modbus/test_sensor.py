@@ -855,7 +855,7 @@ async def test_wrap_sensor(hass, mock_do_cycle, expected):
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, "117"), State(f"{ENTITY_ID}_1", "119"))],
+    [(State(ENTITY_ID, "unknown"), State(f"{ENTITY_ID}_1", "119"))],
     indirect=True,
 )
 @pytest.mark.parametrize(
