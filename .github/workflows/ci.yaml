@@ -34,7 +34,7 @@ env:
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
-  MARIADB_VERSIONS: "['mariadb:10.6.10','mariadb:10.9.3']"
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10']"
   POSTGRESQL_VERSIONS: "['postgres:15.0']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
