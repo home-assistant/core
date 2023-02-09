@@ -7,11 +7,9 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import recorder as recorder_helper
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import async_wait_recording_done
+from tests.common import SetupRecorderInstanceT
 
 
 async def test_run_history(recorder_mock, hass):
@@ -54,36 +52,24 @@ async def test_run_history(recorder_mock, hass):
 
 
 async def test_run_history_while_recorder_is_not_yet_started(
-    recorder_db_url: str, hass: HomeAssistant
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
+    recorder_db_url: str,
 ) -> None:
     """Test the run history while recorder is not yet started.
 
     This usually happens during schema migration because
     we do not start right away.
     """
-    recorder_helper.async_initialize_recorder(hass)
-    # We do not use recorder_mock or async_setup_recorder_instance
-    # here because we want to test what happens with run_history while
-    # the recorder is not yet started and both of these
-    # functions call async_recorder_block_till_done and async_block_till_done.
+    # Prevent the run history from starting to ensure
+    # we can test run_history.current.start returns the expected value
     with patch(
-        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+        "homeassistant.components.recorder.run_history.RunHistory.start",
     ):
-        assert await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": recorder_db_url}}
-        )
-    instance = recorder.get_instance(hass)
+        instance = await async_setup_recorder_instance(hass)
     run_history = instance.run_history
     assert run_history.current.start == run_history.recording_start
-    await async_wait_recording_done(hass)
+    with instance.get_session() as session:
+        run_history.start(session)
     assert run_history.current.start == run_history.recording_start
     assert run_history.current.created >= run_history.recording_start
