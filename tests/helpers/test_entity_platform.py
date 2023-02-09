@@ -508,13 +508,14 @@ async def test_using_prescribed_entity_id_with_unique_id(hass: HomeAssistant) ->
 
 
 async def test_using_prescribed_entity_id_which_is_registered(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test not allowing predefined entity ID that already registered."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    registry = mock_registry(hass)
     # Register test_domain.world
-    registry.async_get_or_create(DOMAIN, "test", "1234", suggested_object_id="world")
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "1234", suggested_object_id="world"
+    )
 
     # This entity_id will be rewritten
     await component.async_add_entities([MockEntity(entity_id="test_domain.world")])
@@ -522,13 +523,16 @@ async def test_using_prescribed_entity_id_which_is_registered(
     assert "test_domain.world_2" in hass.states.async_entity_ids()
 
 
-async def test_name_which_conflict_with_registered(hass: HomeAssistant) -> None:
+async def test_name_which_conflict_with_registered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test not generating conflicting entity ID based on name."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    registry = mock_registry(hass)
 
     # Register test_domain.world
-    registry.async_get_or_create(DOMAIN, "test", "1234", suggested_object_id="world")
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "1234", suggested_object_id="world"
+    )
 
     await component.async_add_entities([MockEntity(name="world")])
 
@@ -570,9 +574,10 @@ async def test_overriding_name_from_registry(hass: HomeAssistant) -> None:
     assert state.name == "Overridden"
 
 
-async def test_registry_respect_entity_namespace(hass: HomeAssistant) -> None:
+async def test_registry_respect_entity_namespace(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that the registry respects entity namespace."""
-    mock_registry(hass)
     platform = MockEntityPlatform(hass, entity_namespace="ns")
     entity = MockEntity(unique_id="1234", name="Device Name")
     await platform.async_add_entities([entity])
@@ -652,9 +657,10 @@ async def test_entity_registry_updates_name(hass: HomeAssistant) -> None:
     assert state.name == "after update"
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we can setup an entry."""
-    registry = mock_registry(hass)
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -672,8 +678,10 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     full_name = f"{entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 1
-    assert len(registry.entities) == 1
-    assert registry.entities["test_domain.test1"].config_entry_id == "super-mock-id"
+    assert len(entity_registry.entities) == 1
+    assert (
+        entity_registry.entities["test_domain.test1"].config_entry_id == "super-mock-id"
+    )
 
 
 async def test_setup_entry_platform_not_ready(hass, caplog):
@@ -1275,10 +1283,11 @@ async def test_entity_info_added_to_entity_registry(hass: HomeAssistant) -> None
     )
 
 
-async def test_override_restored_entities(hass: HomeAssistant) -> None:
+async def test_override_restored_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that we allow overriding restored entities."""
-    registry = mock_registry(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "test_domain", "test_domain", "1234", suggested_object_id="world"
     )
 
@@ -1369,9 +1378,10 @@ class MockBlockingEntity(MockEntity):
         await asyncio.sleep(1000)
 
 
-async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
+async def test_setup_entry_with_entities_that_block_forever(
+    hass, caplog, entity_registry
+):
     """Test we cancel adding entities when we reach the timeout."""
-    registry = mock_registry(hass)
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -1392,7 +1402,7 @@ async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
     full_name = f"{mock_entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0
-    assert len(registry.entities) == 1
+    assert len(entity_registry.entities) == 1
     assert "Timed out adding entities" in caplog.text
     assert "test_domain.test1" in caplog.text
     assert "test_domain" in caplog.text
