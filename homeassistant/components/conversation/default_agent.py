@@ -392,7 +392,7 @@ class DefaultAgent(AbstractConversationAgent):
         return self._areas_list
 
     def _make_names_list(self) -> TextSlotList:
-        """Create slot list mapping entity names/aliases to entity ids."""
+        """Create slot list with entity names/aliases."""
         if self._names_list is not None:
             return self._names_list
         states = self.hass.states.async_all()
@@ -409,14 +409,14 @@ class DefaultAgent(AbstractConversationAgent):
 
                 if entity.aliases:
                     for alias in entity.aliases:
-                        names.append((alias, state.entity_id, context))
+                        names.append((alias, alias, context))
 
                 # Default name
-                names.append((state.name, state.entity_id, context))
+                names.append((state.name, state.name, context))
 
             else:
                 # Default name
-                names.append((state.name, state.entity_id, context))
+                names.append((state.name, state.name, context))
 
         self._names_list = TextSlotList.from_tuples(names, allow_template=False)
         return self._names_list
