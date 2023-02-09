@@ -1077,17 +1077,17 @@ def recorder_db_url(
         made_url = sa.make_url(db_url)
         db = made_url.database
         engine = sa.create_engine(db_url)
-        # Kill any open connections to the database before dropping it
+        # Check for any open connections to the database before dropping it
         # to ensure that InnoDB does not deadlock.
         with engine.begin() as connection:
             query = sa.text(
                 "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
             )
-            for row in connection.execute(query, parameters={"db": db}).fetchall():
-                _LOGGER.warning(
-                    "Killing MySQL connection to temporary database %s", row.id
+            rows = connection.execute(query, parameters={"db": db}).fetchall()
+            if rows:
+                raise RuntimeError(
+                    f"Unable to drop database {db} because it is in use by {rows}"
                 )
-                connection.execute(sa.text("KILL :id"), parameters={"id": row.id})
         engine.dispose()
         sqlalchemy_utils.drop_database(db_url)
     elif db_url.startswith("postgresql://"):
