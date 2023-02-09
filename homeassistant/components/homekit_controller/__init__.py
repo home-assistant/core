@@ -4,19 +4,20 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-import voluptuous as vol
 
 import aiohomekit
+from aiohomekit.controller import TransportType
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
     EncryptionError,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -31,9 +32,10 @@ from .const import (
     ATTR_THREAD_NETWORK_NAME,
     ATTR_THREAD_PAN_ID,
     ATTR_THREAD_UNKNOWN_FLAG,
+    CONTROLLER,
     DOMAIN,
     KNOWN_DEVICES,
-    SERVICE_THREAD_PROVISION
+    SERVICE_THREAD_PROVISION,
 )
 from .utils import async_get_controller
 
@@ -91,24 +93,62 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         extended_pan_id: str = service.data[ATTR_THREAD_EXTENDED_PAN_ID]
         network_key: str = service.data[ATTR_THREAD_NETWORK_KEY]
         unknown: int = service.data[ATTR_THREAD_UNKNOWN_FLAG]
-        _LOGGER.warning("Provisioning Thread credentials: %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s" % (
-            ATTR_HKID, hkid,
-            ATTR_THREAD_NETWORK_NAME, network_name,
-            ATTR_THREAD_CHANNEL, channel,
-            ATTR_THREAD_PAN_ID, pan_id,
-            ATTR_THREAD_EXTENDED_PAN_ID, extended_pan_id,
-            ATTR_THREAD_NETWORK_KEY, 'REDACTED',
-            ATTR_THREAD_UNKNOWN_FLAG, unknown,
-        ))
+        _LOGGER.warning(
+            "Provisioning Thread credentials: %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s",
+            ATTR_HKID,
+            hkid,
+            ATTR_THREAD_NETWORK_NAME,
+            network_name,
+            ATTR_THREAD_CHANNEL,
+            channel,
+            ATTR_THREAD_PAN_ID,
+            pan_id,
+            ATTR_THREAD_EXTENDED_PAN_ID,
+            extended_pan_id,
+            ATTR_THREAD_NETWORK_KEY,
+            "REDACTED",
+            ATTR_THREAD_UNKNOWN_FLAG,
+            unknown,
+        )
 
         if hkid not in hass.data[KNOWN_DEVICES]:
             _LOGGER.warning("Unknown HKID")
             return
 
         connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
-        await connection.pairing.thread_provision(network_name, channel, pan_id, extended_pan_id, network_key, unknown)
+        await connection.pairing.thread_provision(
+            network_name, channel, pan_id, extended_pan_id, network_key, unknown
+        )
 
-        return
+        try:
+            discovery = (
+                await hass.data[CONTROLLER]
+                .transports[TransportType.COAP]
+                .async_find(connection.unique_id, timeout=30)
+            )
+            hass.config_entries.async_update_entry(
+                connection.config_entry,
+                data={
+                    **connection.config_entry.data,
+                    "Connection": "CoAP",
+                    "AccessoryIP": discovery.description.address,
+                    "AccessoryPort": discovery.description.port,
+                },
+            )
+            _LOGGER.debug(
+                "%s: Found device on local network, migrating integration to Thread",
+                hkid,
+            )
+
+        except AccessoryNotFoundError as exc:
+            _LOGGER.debug(
+                "%s: Failed to appear on local network as a Thread device, reverting to BLE",
+                hkid,
+            )
+            raise HomeAssistantError("Could not migrate device to Thread") from exc
+
+        finally:
+            await hass.config_entries.async_reload(connection.config_entry.entry_id)
 
     async_register_admin_service(
         hass,
@@ -118,14 +158,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required(ATTR_HKID): cv.string,
-                vol.Required(ATTR_THREAD_NETWORK_NAME): vol.All(cv.string, vol.Length(max=16)),
-                vol.Required(ATTR_THREAD_CHANNEL): vol.All(cv.positive_int, vol.Range(min=11, max=26)),
-                vol.Required(ATTR_THREAD_PAN_ID): vol.All(cv.string, vol.Length(min=1, max=4)),
-                vol.Required(ATTR_THREAD_EXTENDED_PAN_ID): vol.All(cv.string, vol.Length(min=1, max=16)),
-                vol.Required(ATTR_THREAD_NETWORK_KEY): vol.All(cv.string, vol.Length(min=1, max=32)),
-                vol.Required(ATTR_THREAD_UNKNOWN_FLAG): vol.All(cv.positive_int, vol.Range(min=0, max=255)),
+                vol.Required(ATTR_THREAD_NETWORK_NAME): vol.All(
+                    cv.string, vol.Length(max=16)
+                ),
+                vol.Required(ATTR_THREAD_CHANNEL): vol.All(
+                    cv.positive_int, vol.Range(min=11, max=26)
+                ),
+                vol.Required(ATTR_THREAD_PAN_ID): vol.All(
+                    cv.string, vol.Length(min=1, max=4)
+                ),
+                vol.Required(ATTR_THREAD_EXTENDED_PAN_ID): vol.All(
+                    cv.string, vol.Length(min=1, max=16)
+                ),
+                vol.Required(ATTR_THREAD_NETWORK_KEY): vol.All(
+                    cv.string, vol.Length(min=1, max=32)
+                ),
+                vol.Required(ATTR_THREAD_UNKNOWN_FLAG): vol.All(
+                    cv.positive_int, vol.Range(min=0, max=255)
+                ),
             }
-        )
+        ),
     )
 
     return True
