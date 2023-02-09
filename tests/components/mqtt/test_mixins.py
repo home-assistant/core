@@ -44,7 +44,7 @@ async def test_availability_with_shared_state_topic(
     events = []
 
     @callback
-    def test_callback(event):
+    def test_callback(event) -> None:
         events.append(event)
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, test_callback)

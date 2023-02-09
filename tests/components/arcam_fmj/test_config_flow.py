@@ -60,7 +60,7 @@ def dummy_client_fixture(hass):
         yield client.return_value
 
 
-async def test_ssdp(hass, dummy_client):
+async def test_ssdp(hass: HomeAssistant, dummy_client) -> None:
     """Test a ssdp import flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -92,7 +92,7 @@ async def test_ssdp_abort(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_unable_to_connect(hass, dummy_client):
+async def test_ssdp_unable_to_connect(hass: HomeAssistant, dummy_client) -> None:
     """Test a ssdp import flow."""
     dummy_client.start.side_effect = AsyncMock(side_effect=ConnectionFailed)
 
@@ -109,7 +109,7 @@ async def test_ssdp_unable_to_connect(hass, dummy_client):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_ssdp_invalid_id(hass, dummy_client):
+async def test_ssdp_invalid_id(hass: HomeAssistant, dummy_client) -> None:
     """Test a ssdp with invalid  UDN."""
     discover = replace(
         MOCK_DISCOVER, upnp=MOCK_DISCOVER.upnp | {ssdp.ATTR_UPNP_UDN: "invalid"}

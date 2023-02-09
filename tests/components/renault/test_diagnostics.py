@@ -5,8 +5,8 @@ from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.renault import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import mock_device_registry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -187,11 +187,12 @@ async def test_entry_diagnostics(
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, hass_client
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_client,
 ):
     """Test config entry diagnostics."""
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

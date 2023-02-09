@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, mock_registry
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
@@ -278,10 +278,10 @@ async def test_sync_google_on_home_assistant_start(hass, mock_cloud_login, cloud
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
+async def test_google_config_expose_entity_prefs(
+    hass, mock_conf, cloud_prefs, entity_registry
+):
     """Test Google config should expose using prefs."""
-    entity_registry = mock_registry(hass)
-
     entity_entry1 = entity_registry.async_get_or_create(
         "light",
         "test",
