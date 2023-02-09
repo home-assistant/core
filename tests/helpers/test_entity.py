@@ -776,19 +776,21 @@ async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_get_supported_features_entity_registry(hass: HomeAssistant) -> None:
+async def test_get_supported_features_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test get_supported_features falls back to entity registry."""
-    entity_reg = mock_registry(hass)
-    entity_id = entity_reg.async_get_or_create(
+    entity_id = entity_registry.async_get_or_create(
         "hello", "world", "5678", supported_features=456
     ).entity_id
     assert entity.get_supported_features(hass, entity_id) == 456
 
 
-async def test_get_supported_features_prioritize_state(hass: HomeAssistant) -> None:
+async def test_get_supported_features_prioritize_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test get_supported_features gives priority to state."""
-    entity_reg = mock_registry(hass)
-    entity_id = entity_reg.async_get_or_create(
+    entity_id = entity_registry.async_get_or_create(
         "hello", "world", "5678", supported_features=456
     ).entity_id
     assert entity.get_supported_features(hass, entity_id) == 456
