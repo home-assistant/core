@@ -14,6 +14,7 @@ from reolink_aio.exceptions import ReolinkError, SubscriptionError
 from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -272,6 +273,22 @@ class ReolinkHost:
 
         webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{base_url}{webhook_path}"
+
+        if base_url.startswith("https"):
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                "https_webhook",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="https_webhook",
+                translation_placeholders={
+                    "base_url": base_url,
+                    "network_link": "https://my.home-assistant.io/redirect/network/",
+                },
+            )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
 
         _LOGGER.debug("Registered webhook: %s", event_id)
 
