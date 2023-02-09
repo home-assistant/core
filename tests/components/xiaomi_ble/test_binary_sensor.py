@@ -297,7 +297,7 @@ async def test_unavailable(hass):
     with patch(
         "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    ), patch_all_discovered_devices([MagicMock(address="A4:C1:38:66:E5:67")]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
