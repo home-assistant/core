@@ -72,6 +72,11 @@ class RunHistory:
             start=self.recording_start, created=dt_util.utcnow()
         )
 
+    @property
+    def active(self) -> bool:
+        """Return if a run is active."""
+        return self._current_run_info is not None
+
     def get(self, start: datetime) -> RecorderRuns | None:
         """Return the recorder run that started before or at start.
 
@@ -142,6 +147,5 @@ class RunHistory:
 
         Must run in the recorder thread.
         """
-        assert self._current_run_info is not None
-        assert self._current_run_info.end is not None
-        self._current_run_info = None
+        if self._current_run_info:
+            self._current_run_info = None

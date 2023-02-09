@@ -6,9 +6,9 @@ import pytest
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.const import EntityCategory
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import async_fire_time_changed
 

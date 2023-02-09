@@ -36,13 +36,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType

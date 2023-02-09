@@ -14,10 +14,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from . import configure_integration
