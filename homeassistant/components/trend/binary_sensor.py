@@ -29,10 +29,12 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.dt import utcnow
 
 from . import PLATFORMS
 from .const import (
@@ -114,6 +116,7 @@ class SensorTrend(BinarySensorEntity):
     """Representation of a trend Sensor."""
 
     _attr_should_poll = False
+    _unsub = None
 
     def __init__(
         self,
@@ -141,6 +144,13 @@ class SensorTrend(BinarySensorEntity):
         self._gradient = None
         self._state = None
         self.samples = deque(maxlen=max_samples)
+
+        def unsub():
+            if self._unsub:
+                self._unsub()
+                self._unsub = None
+
+        self.async_on_remove(unsub)
 
     @property
     def name(self):
@@ -174,6 +184,19 @@ class SensorTrend(BinarySensorEntity):
         """Complete device setup after being added to hass."""
 
         @callback
+        def remove_stale_sample(remove_time):
+            self.samples.popleft()
+            if self.samples:
+                self._unsub = async_track_point_in_utc_time(
+                    self.hass,
+                    remove_stale_sample,
+                    self.samples[0][0] + self._sample_duration,
+                )
+            else:
+                self._unsub = None
+            self.async_schedule_update_ha_state(True)
+
+        @callback
         def trend_sensor_state_listener(event):
             """Handle state changes on the observed device."""
             if (new_state := event.data.get("new_state")) is None:
@@ -184,8 +207,23 @@ class SensorTrend(BinarySensorEntity):
                 else:
                     state = new_state.state
                 if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                    sample = (new_state.last_updated.timestamp(), float(state))
+                    len_was = len(self.samples)
+
+                    sample = (new_state.last_updated, float(state))
                     self.samples.append(sample)
+
+                    if self._sample_duration > 0 and len_was in [
+                        0,
+                        self.samples.maxlen,
+                    ]:
+                        if self._unsub:
+                            self._unsub()
+                        self._unsub = async_track_point_in_utc_time(
+                            self.hass,
+                            remove_stale_sample,
+                            self.samples[0][0] + self._sample_duration,
+                        )
+
                     self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(ex)
@@ -198,13 +236,9 @@ class SensorTrend(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and update the states."""
-        # Remove outdated samples
-        if self._sample_duration > 0:
-            cutoff = utcnow().timestamp() - self._sample_duration
-            while self.samples and self.samples[0][0] < cutoff:
-                self.samples.popleft()
-
         if len(self.samples) < 2:
+            self._gradient = None
+            self._state = None
             return
 
         # Calculate gradient of linear trend
@@ -224,7 +258,7 @@ class SensorTrend(BinarySensorEntity):
 
         This need run inside executor.
         """
-        timestamps = np.array([t for t, _ in self.samples])
+        timestamps = np.array([u.timestamp() for u, _ in self.samples])
         values = np.array([s for _, s in self.samples])
         coeffs = np.polyfit(timestamps, values, 1)
         self._gradient = coeffs[0]
