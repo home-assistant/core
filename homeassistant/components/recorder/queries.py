@@ -604,9 +604,10 @@ def find_short_term_statistics_to_purge(
     purge_before: datetime,
 ) -> StatementLambdaElement:
     """Find short term statistics to purge."""
+    purge_before_ts = purge_before.timestamp()
     return lambda_stmt(
         lambda: select(StatisticsShortTerm.id)
-        .filter(StatisticsShortTerm.start < purge_before)
+        .filter(StatisticsShortTerm.start_ts < purge_before_ts)
         .limit(MAX_ROWS_TO_PURGE)
     )
 
