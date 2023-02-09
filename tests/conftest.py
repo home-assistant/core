@@ -1072,7 +1072,7 @@ def recorder_db_url(pytestconfig):
         made_url = sa.make_url(db_url)
         db = made_url.database
         engine = sa.create_engine(db_url)
-        # Kill any open connections to the database before dropping it
+        # Check for any open connections to the database before dropping it
         # to ensure that InnoDB does not deadlock.
         with engine.begin() as connection:
             query = sa.text(
