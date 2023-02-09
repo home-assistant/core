@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_DEVICE_ID, DEFAULT_ARGUMENTS, DEFAULT_PORT, DOMAIN, LOGGER
 from .device import get_device
@@ -45,7 +45,7 @@ def wsdiscovery() -> list[Service]:
     return services
 
 
-async def async_discovery(hass) -> list[dict[str, Any]]:
+async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
     """Return if there are devices that can be discovered."""
     LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
@@ -108,8 +108,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         If no device is found allow user to manually input configuration.
         """
         if user_input:
-
-            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
+            if user_input[CONF_HOST] == CONF_MANUAL_INPUT:
                 return await self.async_step_configure()
 
             for device in self.devices:
@@ -213,7 +212,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         raise fault
 
                     LOGGER.debug(
-                        "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                        (
+                            "Couldn't get network interfaces from ONVIF deivice '%s'."
+                            " Error: %s"
+                        ),
                         self.onvif_config[CONF_NAME],
                         fault,
                     )

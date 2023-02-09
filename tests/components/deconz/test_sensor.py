@@ -1,5 +1,4 @@
 """deCONZ sensor platform tests."""
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -16,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
@@ -23,9 +23,12 @@ from homeassistant.util import dt
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_sensors(hass, aioclient_mock):
+async def test_no_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no sensor entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
@@ -62,9 +65,8 @@ TEST_DATA = [
             "state": "poor",
             "entity_category": None,
             "device_class": None,
-            "state_class": SensorStateClass.MEASUREMENT,
+            "state_class": None,
             "attributes": {
-                "state_class": "measurement",
                 "friendly_name": "BOSCH Air quality sensor",
             },
             "websocket_event": {"state": {"airquality": "excellent"}},
@@ -100,10 +102,9 @@ TEST_DATA = [
             "old_unique_id": "00:12:4b:00:14:4d:00:07-ppb",
             "state": "809",
             "entity_category": None,
-            "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            "device_class": None,
             "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
-                "device_class": "volatile_organic_compounds",
                 "friendly_name": "BOSCH Air quality sensor PPB",
                 "state_class": "measurement",
                 "unit_of_measurement": "ppb",
@@ -695,7 +696,9 @@ async def test_sensors(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_not_allow_clip_sensor(hass, aioclient_mock):
+async def test_not_allow_clip_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP sensors are not allowed."""
     data = {
         "sensors": {
@@ -717,7 +720,9 @@ async def test_not_allow_clip_sensor(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_allow_clip_sensors(hass, aioclient_mock):
+async def test_allow_clip_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP sensors can be allowed."""
     data = {
         "sensors": {
@@ -841,7 +846,9 @@ async def test_dont_add_sensor_if_state_is_none(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_air_quality_sensor_without_ppb(hass, aioclient_mock):
+async def test_air_quality_sensor_without_ppb(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sensor with scaled data is not created if state is None."""
     data = {
         "sensors": {
@@ -1067,7 +1074,9 @@ async def test_special_danfoss_battery_creation(hass, aioclient_mock, model_id):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
 
 
-async def test_unsupported_sensor(hass, aioclient_mock):
+async def test_unsupported_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that unsupported sensors doesn't break anything."""
     data = {
         "sensors": {

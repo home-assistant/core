@@ -1,7 +1,9 @@
 """PyTest fixtures and test helpers."""
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Coroutine
 import time
+from typing import Any
 
+from google.oauth2.credentials import Credentials
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -18,6 +20,7 @@ ComponentSetup = Callable[[], Awaitable[None]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+ACCESS_TOKEN = "mock-access-token"
 
 
 @pytest.fixture
@@ -51,7 +54,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
         data={
             "auth_implementation": DOMAIN,
             "token": {
-                "access_token": "mock-access-token",
+                "access_token": ACCESS_TOKEN,
                 "refresh_token": "mock-refresh-token",
                 "expires_at": expires_at,
                 "scope": " ".join(scopes),
@@ -63,7 +66,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Generator[ComponentSetup, None, None]:
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
@@ -79,4 +82,16 @@ async def mock_setup_integration(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    yield func
+    return func
+
+
+class ExpectedCredentials:
+    """Assert credentials have the expected access token."""
+
+    def __init__(self, expected_access_token: str = ACCESS_TOKEN) -> None:
+        """Initialize ExpectedCredentials."""
+        self.expected_access_token = expected_access_token
+
+    def __eq__(self, other: Credentials):
+        """Return true if credentials have the expected access token."""
+        return other.token == self.expected_access_token

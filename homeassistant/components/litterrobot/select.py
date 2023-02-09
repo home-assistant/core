@@ -8,19 +8,15 @@ from typing import Any, Generic, TypeVar
 
 from pylitterbot import FeederRobot, LitterRobot
 
-from homeassistant.components.select import (
-    DOMAIN as PLATFORM,
-    SelectEntity,
-    SelectEntityDescription,
-)
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotEntity, _RobotT, async_update_unique_id
+from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 _CastTypeT = TypeVar("_CastTypeT", int, float)
@@ -46,9 +42,9 @@ class RobotSelectEntityDescription(
 
 LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot, int](
     key="cycle_delay",
-    name="Clean Cycle Wait Time Minutes",
+    name="Clean cycle wait time minutes",
     icon="mdi:timer-outline",
-    unit_of_measurement=TIME_MINUTES,
+    unit_of_measurement=UnitOfTime.MINUTES,
     current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
     options_fn=lambda robot: robot.VALID_WAIT_TIMES,
     select_fn=lambda robot, option: robot.set_wait_time(int(option)),
@@ -83,7 +79,6 @@ async def async_setup_entry(
             ),
         )
     )
-    async_update_unique_id(hass, PLATFORM, entities)
     async_add_entities(entities)
 
 

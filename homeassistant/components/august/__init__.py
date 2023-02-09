@@ -341,7 +341,7 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def async_status_async(self, device_id, hyper_bridge):
-        """Request status of the the device but do not wait for a response since it will come via pubnub."""
+        """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_status_async,
@@ -400,7 +400,10 @@ class AugustData(AugustSubscriberMixin):
             if self._device_detail_by_id.get(device_id):
                 continue
             _LOGGER.info(
-                "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
+                (
+                    "The doorbell %s could not be setup because the system could not"
+                    " fetch details about the doorbell"
+                ),
                 doorbell.device_name,
             )
             del self._doorbells_by_id[device_id]
@@ -414,12 +417,18 @@ class AugustData(AugustSubscriberMixin):
             lock_detail = self._device_detail_by_id.get(device_id)
             if lock_detail is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because the system could not fetch details about the lock",
+                    (
+                        "The lock %s could not be setup because the system could not"
+                        " fetch details about the lock"
+                    ),
                     lock.device_name,
                 )
             elif lock_detail.bridge is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because it does not have a bridge (Connect)",
+                    (
+                        "The lock %s could not be setup because it does not have a"
+                        " bridge (Connect)"
+                    ),
                     lock.device_name,
                 )
                 del self._device_detail_by_id[device_id]

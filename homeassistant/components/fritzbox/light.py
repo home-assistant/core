@@ -149,7 +149,8 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                 if err.response.status_code != 400:
                     raise
                 LOGGER.debug(
-                    "fritzbox does not support method 'setunmappedcolor', fallback to 'setcolor'"
+                    "fritzbox does not support method 'setunmappedcolor', fallback to"
+                    " 'setcolor'"
                 )
                 # find supported hs values closest to what user selected
                 hue = min(

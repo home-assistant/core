@@ -1,15 +1,17 @@
 """The test for the threshold sensor platform."""
+import pytest
 
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_sensor_upper(hass):
+async def test_sensor_upper(hass: HomeAssistant) -> None:
     """Test if source is above threshold."""
     config = {
         "binary_sensor": {
@@ -23,7 +25,9 @@ async def test_sensor_upper(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -53,7 +57,7 @@ async def test_sensor_upper(hass):
     assert state.state == "off"
 
 
-async def test_sensor_lower(hass):
+async def test_sensor_lower(hass: HomeAssistant) -> None:
     """Test if source is below threshold."""
     config = {
         "binary_sensor": {
@@ -86,7 +90,7 @@ async def test_sensor_lower(hass):
     assert state.state == "on"
 
 
-async def test_sensor_hysteresis(hass):
+async def test_sensor_hysteresis(hass: HomeAssistant) -> None:
     """Test if source is above threshold using hysteresis."""
     config = {
         "binary_sensor": {
@@ -141,7 +145,7 @@ async def test_sensor_hysteresis(hass):
     assert state.state == "on"
 
 
-async def test_sensor_in_range_no_hysteresis(hass):
+async def test_sensor_in_range_no_hysteresis(hass: HomeAssistant) -> None:
     """Test if source is within the range."""
     config = {
         "binary_sensor": {
@@ -156,7 +160,9 @@ async def test_sensor_in_range_no_hysteresis(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -189,7 +195,7 @@ async def test_sensor_in_range_no_hysteresis(hass):
     assert state.state == "off"
 
 
-async def test_sensor_in_range_with_hysteresis(hass):
+async def test_sensor_in_range_with_hysteresis(hass: HomeAssistant) -> None:
     """Test if source is within the range."""
     config = {
         "binary_sensor": {
@@ -205,7 +211,9 @@ async def test_sensor_in_range_with_hysteresis(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -288,7 +296,9 @@ async def test_sensor_in_range_with_hysteresis(hass):
     assert state.state == "on"
 
 
-async def test_sensor_in_range_unknown_state(hass, caplog):
+async def test_sensor_in_range_unknown_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if source is within the range."""
     config = {
         "binary_sensor": {
@@ -303,7 +313,9 @@ async def test_sensor_in_range_unknown_state(hass, caplog):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -338,7 +350,7 @@ async def test_sensor_in_range_unknown_state(hass, caplog):
     assert "State is not numerical" not in caplog.text
 
 
-async def test_sensor_lower_zero_threshold(hass):
+async def test_sensor_lower_zero_threshold(hass: HomeAssistant) -> None:
     """Test if a lower threshold of zero is set."""
     config = {
         "binary_sensor": {
@@ -369,7 +381,7 @@ async def test_sensor_lower_zero_threshold(hass):
     assert state.state == "on"
 
 
-async def test_sensor_upper_zero_threshold(hass):
+async def test_sensor_upper_zero_threshold(hass: HomeAssistant) -> None:
     """Test if an upper threshold of zero is set."""
     config = {
         "binary_sensor": {

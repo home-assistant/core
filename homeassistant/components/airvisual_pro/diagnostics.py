@@ -7,8 +7,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import AirVisualProData
 from .const import DOMAIN
 
 CONF_MAC_ADDRESS = "mac_address"
@@ -25,12 +25,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id]
 
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "data": coordinator.data,
+            "data": data.coordinator.data,
         },
         TO_REDACT,
     )

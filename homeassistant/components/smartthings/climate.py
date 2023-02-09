@@ -236,7 +236,10 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
                     modes.add(state)
                 else:
                     _LOGGER.debug(
-                        "Device %s (%s) returned an invalid supported thermostat mode: %s",
+                        (
+                            "Device %s (%s) returned an invalid supported thermostat"
+                            " mode: %s"
+                        ),
                         self._device.label,
                         self._device.device_id,
                         mode,
@@ -410,8 +413,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     @property
     def extra_state_attributes(self):
-        """
-        Return device specific state attributes.
+        """Return device specific state attributes.
 
         Include attributes from the Demand Response Load Control (drlc)
         and Power Consumption capabilities.

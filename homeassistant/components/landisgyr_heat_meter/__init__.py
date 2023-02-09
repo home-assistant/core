@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 
 import ultraheat_api
+from ultraheat_api.response import HeatMeterResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
@@ -26,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
     api = ultraheat_api.HeatMeterService(reader)
 
-    async def async_update_data():
+    async def async_update_data() -> HeatMeterResponse:
         """Fetch data from the API."""
         _LOGGER.debug("Polling on %s", entry.data[CONF_DEVICE])
         return await hass.async_add_executor_job(api.read)
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -61,7 +62,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     # Removing domain name and config entry id from entity unique id's, replacing it with device number
     if config_entry.version == 1:
-
         config_entry.version = 2
 
         device_number = config_entry.data["device_number"]

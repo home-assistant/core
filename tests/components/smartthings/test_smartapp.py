@@ -10,6 +10,7 @@ from homeassistant.components.smartthings.const import (
     DATA_MANAGER,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -73,7 +74,7 @@ async def test_smartapp_uninstall(hass, config_entry):
         assert remove.call_count == 1
 
 
-async def test_smartapp_webhook(hass):
+async def test_smartapp_webhook(hass: HomeAssistant) -> None:
     """Test the smartapp webhook calls the manager."""
     manager = Mock()
     manager.handle_request = AsyncMock(return_value={})

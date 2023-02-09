@@ -24,6 +24,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
+from tests.typing import WebSocketGenerator
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -1768,7 +1769,10 @@ async def test_validate_config_works(websocket_client, key, config):
                 "entity_id": "hello.world",
                 "state": "paulus",
             },
-            "Unexpected value for condition: 'non_existing'. Expected and, device, not, numeric_state, or, state, sun, template, time, trigger, zone",
+            (
+                "Unexpected value for condition: 'non_existing'. Expected and, device,"
+                " not, numeric_state, or, state, sun, template, time, trigger, zone"
+            ),
         ),
         (
             "action",
@@ -1971,7 +1975,9 @@ async def test_client_message_coalescing(hass, websocket_client, hass_admin_user
     await hass.async_block_till_done()
 
 
-async def test_integration_descriptions(hass, hass_ws_client):
+async def test_integration_descriptions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can get integration descriptions."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)

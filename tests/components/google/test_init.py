@@ -7,6 +7,7 @@ import http
 import time
 from typing import Any
 from unittest.mock import Mock, patch
+import zoneinfo
 
 from aiohttp.client_exceptions import ClientError
 import pytest
@@ -56,28 +57,36 @@ def assert_state(actual: State | None, expected: State | None) -> None:
 @pytest.fixture(
     params=[
         (
+            DOMAIN,
             SERVICE_ADD_EVENT,
             {"calendar_id": CALENDAR_ID},
             None,
         ),
         (
+            DOMAIN,
+            SERVICE_CREATE_EVENT,
+            {},
+            {"entity_id": TEST_API_ENTITY},
+        ),
+        (
+            "calendar",
             SERVICE_CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
         ),
     ],
-    ids=("add_event", "create_event"),
+    ids=("google.add_event", "google.create_event", "calendar.create_event"),
 )
 def add_event_call_service(
     hass: HomeAssistant,
     request: Any,
 ) -> Callable[dict[str, Any], Awaitable[None]]:
     """Fixture for calling the add or create event service."""
-    (service_call, data, target) = request.param
+    (domain, service_call, data, target) = request.param
 
     async def call_service(params: dict[str, Any]) -> None:
         await hass.services.async_call(
-            DOMAIN,
+            domain,
             service_call,
             {
                 **data,
@@ -187,6 +196,26 @@ async def test_calendar_yaml_error(
 
     with patch("homeassistant.components.google.open", side_effect=FileNotFoundError()):
         assert await component_setup()
+
+    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert hass.states.get(TEST_API_ENTITY)
+
+
+@pytest.mark.parametrize("calendars_config", [None])
+async def test_empty_calendar_yaml(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    calendars_config: list[dict[str, Any]],
+    mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+) -> None:
+    """Test an empty yaml file is equivalent to a missing yaml file."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+
+    assert await component_setup()
 
     assert not hass.states.get(TEST_YAML_ENTITY)
     assert hass.states.get(TEST_API_ENTITY)
@@ -516,7 +545,7 @@ async def test_add_event_date_time(
     mock_events_list({})
     assert await component_setup()
 
-    start_datetime = datetime.datetime.now()
+    start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 

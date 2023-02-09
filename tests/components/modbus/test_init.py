@@ -90,6 +90,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -115,10 +116,10 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     await hass.async_block_till_done()
     assert DOMAIN in hass.config.components
     assert caplog.text == ""
-    yield mock_pymodbus
+    return mock_pymodbus
 
 
-async def test_number_validator():
+async def test_number_validator() -> None:
     """Test number validator."""
 
     for value, value_type in (
@@ -135,7 +136,7 @@ async def test_number_validator():
 
     try:
         number_validator("x15.1")
-    except (vol.Invalid):
+    except vol.Invalid:
         return
     pytest.fail("Number_validator not throwing exception")
 
@@ -582,7 +583,7 @@ async def mock_modbus_read_pymodbus_fixture(
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    yield mock_pymodbus
+    return mock_pymodbus
 
 
 @pytest.mark.parametrize(
@@ -626,7 +627,9 @@ async def test_pb_read(
     assert state == do_expect
 
 
-async def test_pymodbus_constructor_fail(hass, caplog):
+async def test_pymodbus_constructor_fail(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Run test for failing pymodbus constructor."""
     config = {
         DOMAIN: [
@@ -862,3 +865,20 @@ async def test_integration_reload(
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
     assert "Modbus reloading" in caplog.text
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_integration_reload_failed(hass, caplog, mock_modbus) -> None:
+    """Run test for integration connect failure on reload."""
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+
+    yaml_path = get_fixture_path("configuration.yaml", "modbus")
+    with mock.patch.object(
+        hass_config, "YAML_CONFIG_FILE", yaml_path
+    ), mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    assert "Modbus reloading" in caplog.text
+    assert "connect failed, retry in pymodbus" in caplog.text

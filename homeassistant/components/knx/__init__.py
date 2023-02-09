@@ -224,7 +224,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    # `config` is None when reloading the integration or no `knx` key in configuration.yaml
+    # `config` is None when reloading the integration
+    # or no `knx` key in configuration.yaml
     if (config := hass.data.get(DATA_KNX_CONFIG)) is None:
         _conf = await async_integration_yaml_config(hass, DOMAIN)
         if not _conf or DOMAIN not in _conf:
@@ -495,7 +496,10 @@ class KNXModule:
                         value = transcoder.from_knx(data)
                     except ConversionError as err:
                         _LOGGER.warning(
-                            "Error in `knx_event` at decoding type '%s' from telegram %s\n%s",
+                            (
+                                "Error in `knx_event` at decoding type '%s' from"
+                                " telegram %s\n%s"
+                            ),
                             transcoder.__name__,
                             telegram,
                             err,
@@ -523,7 +527,10 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {_filter: transcoder for _filter in _filters}  # type: ignore[type-abstract]
+                    {
+                        _filter: transcoder  # type: ignore[type-abstract]
+                        for _filter in _filters
+                    }
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(
@@ -555,7 +562,10 @@ class KNXModule:
             transcoder := DPTBase.parse_transcoder(dpt)
         ):
             self._group_address_transcoder.update(
-                {_address: transcoder for _address in group_addresses}  # type: ignore[type-abstract]
+                {
+                    _address: transcoder  # type: ignore[type-abstract]
+                    for _address in group_addresses
+                }
             )
         for group_address in group_addresses:
             if group_address in self._knx_event_callback.group_addresses:
@@ -577,14 +587,17 @@ class KNXModule:
                 raise HomeAssistantError(
                     f"Could not find exposure for '{group_address}' to remove."
                 ) from err
-            else:
-                removed_exposure.shutdown()
+
+            removed_exposure.shutdown()
             return
 
         if group_address in self.service_exposures:
             replaced_exposure = self.service_exposures.pop(group_address)
             _LOGGER.warning(
-                "Service exposure_register replacing already registered exposure for '%s' - %s",
+                (
+                    "Service exposure_register replacing already registered exposure"
+                    " for '%s' - %s"
+                ),
                 group_address,
                 replaced_exposure.device.name,
             )

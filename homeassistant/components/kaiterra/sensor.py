@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -71,7 +71,7 @@ class KaiterraSensor(SensorEntity):
 
     def __init__(
         self, api, name, device_id, description: KaiterraSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._api = api
         self._device_id = device_id
@@ -105,9 +105,9 @@ class KaiterraSensor(SensorEntity):
         value = self._sensor["units"].value
 
         if value == "F":
-            return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
         if value == "C":
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         return value
 
     async def async_added_to_hass(self) -> None:

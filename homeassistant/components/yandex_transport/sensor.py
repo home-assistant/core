@@ -71,7 +71,7 @@ class DiscoverYandexTransport(SensorEntity):
 
     _attr_attribution = "Data provided by maps.yandex.ru"
 
-    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name):
+    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name) -> None:
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
@@ -96,7 +96,10 @@ class DiscoverYandexTransport(SensorEntity):
             data = yandex_reply["data"]
         except KeyError as key_error:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is %s. Yandex returned: %s",
+                (
+                    "Exception KeyError was captured, missing key is %s. Yandex"
+                    " returned: %s"
+                ),
                 key_error,
                 yandex_reply,
             )

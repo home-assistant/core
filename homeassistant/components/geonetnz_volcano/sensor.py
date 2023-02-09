@@ -5,12 +5,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -115,7 +110,9 @@ class GeonetnzVolcanoSensor(SensorEntity):
         if self._unit_system == IMPERIAL_UNITS:
             self._distance = round(
                 DistanceConverter.convert(
-                    feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
+                    feed_entry.distance_to_home,
+                    UnitOfLength.KILOMETERS,
+                    UnitOfLength.MILES,
                 ),
                 1,
             )

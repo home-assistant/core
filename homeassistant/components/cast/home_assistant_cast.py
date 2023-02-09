@@ -16,7 +16,11 @@ from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 SERVICE_SHOW_VIEW = "show_lovelace_view"
 ATTR_VIEW_PATH = "view_path"
 ATTR_URL_PATH = "dashboard_path"
-NO_URL_AVAILABLE_ERROR = "Home Assistant Cast requires your instance to be reachable via HTTPS. Enable Home Assistant Cloud or set up an external URL with valid SSL certificates"
+CAST_USER_NAME = "Home Assistant Cast"
+NO_URL_AVAILABLE_ERROR = (
+    "Home Assistant Cast requires your instance to be reachable via HTTPS. Enable Home"
+    " Assistant Cloud or set up an external URL with valid SSL certificates"
+)
 
 
 async def async_setup_ha_cast(
@@ -31,7 +35,7 @@ async def async_setup_ha_cast(
 
     if user is None:
         user = await hass.auth.async_create_system_user(
-            "Home Assistant Cast", group_ids=[auth.const.GROUP_ID_ADMIN]
+            CAST_USER_NAME, group_ids=[auth.const.GROUP_ID_ADMIN]
         )
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "user_id": user.id}
@@ -52,7 +56,8 @@ async def async_setup_ha_cast(
         hass_uuid = await instance_id.async_get(hass)
 
         controller = HomeAssistantController(
-            # If you are developing Home Assistant Cast, uncomment and set to your dev app id.
+            # If you are developing Home Assistant Cast, uncomment and set to
+            # your dev app id.
             # app_id="5FE44367",
             hass_url=hass_url,
             hass_uuid=hass_uuid,

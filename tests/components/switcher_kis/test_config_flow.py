@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.switcher_kis.const import DATA_DISCOVERY, DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE
@@ -12,7 +13,7 @@ from .consts import DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE
 from tests.common import MockConfigEntry
 
 
-async def test_import(hass):
+async def test_import(hass: HomeAssistant) -> None:
     """Test import step."""
     with patch(
         "homeassistant.components.switcher_kis.async_setup_entry", return_value=True

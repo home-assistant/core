@@ -167,7 +167,10 @@ async def async_setup_entry(
         detail = data.get_device_detail(door.device_id)
         if not detail.doorsense:
             _LOGGER.debug(
-                "Not adding sensor class door for lock %s because it does not have doorsense",
+                (
+                    "Not adding sensor class door for lock %s because it does not have"
+                    " doorsense"
+                ),
                 door.device_name,
             )
             continue
@@ -192,7 +195,9 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
-    def __init__(self, data, device, description: BinarySensorEntityDescription):
+    def __init__(
+        self, data, device, description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
@@ -232,7 +237,9 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     entity_description: AugustBinarySensorEntityDescription
 
-    def __init__(self, data, device, description: AugustBinarySensorEntityDescription):
+    def __init__(
+        self, data, device, description: AugustBinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description

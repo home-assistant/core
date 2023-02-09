@@ -20,8 +20,6 @@ ATTR_TOTAL_ENERGY_TODAY = "total_energy_today"
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
 
-CONF_UUID = "uuid"
-
 KEY_MAC = "mac"
 KEY_IP = "ip"
 

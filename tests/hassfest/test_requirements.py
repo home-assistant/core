@@ -12,7 +12,7 @@ def integration():
     """Fixture for hassfest integration model."""
     integration = Integration(
         path=Path("homeassistant/components/test"),
-        manifest={
+        _manifest={
             "domain": "test",
             "documentation": "https://example.com",
             "name": "test",
@@ -20,7 +20,7 @@ def integration():
             "requirements": [],
         },
     )
-    yield integration
+    return integration
 
 
 def test_validate_requirements_format_with_space(integration: Integration):

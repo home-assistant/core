@@ -25,7 +25,7 @@ from .const import (
 )
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     with patch(
         "coinbase.wallet.client.Client.get_current_user",

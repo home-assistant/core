@@ -15,13 +15,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    TEMP_CELSIUS,
+    UnitOfElectricPotential,
     UnitOfFrequency,
     UnitOfInformation,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -147,7 +147,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda data: data.cpu.temperature,
     ),
     SystemBridgeSensorEntityDescription(
@@ -156,7 +156,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: data.cpu.voltage,
     ),
     SystemBridgeSensorEntityDescription(
@@ -474,7 +474,7 @@ async def async_setup_entry(
                     entity_registry_enabled_default=False,
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=TEMP_CELSIUS,
+                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                     value=lambda data, k=gpu["key"]: getattr(
                         data.gpu, f"{k}_temperature"
                     ),

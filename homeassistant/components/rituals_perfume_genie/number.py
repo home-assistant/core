@@ -56,6 +56,7 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
         """Set the perfume amount."""
         if not value.is_integer():
             raise ValueError(
-                f"Can't set the perfume amount to {value}. Perfume amount must be an integer."
+                f"Can't set the perfume amount to {value}. Perfume amount must be an"
+                " integer."
             )
         await self._diffuser.set_perfume_amount(int(value))

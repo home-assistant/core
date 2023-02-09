@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -48,7 +49,7 @@ class RingSensor(RingEntityMixin, SensorEntity):
         config_entry_id,
         device,
         description: RingSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(config_entry_id, device)
         self.entity_description = description
@@ -123,7 +124,7 @@ class HealthDataRingSensor(RingSensor):
 class HistoryRingSensor(RingSensor):
     """Ring sensor that relies on history data."""
 
-    _latest_event = None
+    _latest_event: dict[str, Any] | None = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

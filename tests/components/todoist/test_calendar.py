@@ -1,70 +1,70 @@
 """Unit tests for the Todoist calendar platform."""
-from datetime import datetime
-from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from todoist_api_python.models import Due, Label, Project, Task
 
 from homeassistant import setup
-from homeassistant.components.todoist.calendar import DOMAIN, _parse_due_date
-from homeassistant.components.todoist.types import DueDate
+from homeassistant.components.todoist.calendar import DOMAIN
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import entity_registry
-from homeassistant.util import dt
 
 
-def test_parse_due_date_invalid():
-    """Test None is returned if the due date can't be parsed."""
-    data: DueDate = {
-        "date": "invalid",
-        "is_recurring": False,
-        "lang": "en",
-        "string": "",
-        "timezone": None,
-    }
-    assert _parse_due_date(data, timezone_offset=-8) is None
+@pytest.fixture(name="task")
+def mock_task() -> Task:
+    """Mock a todoist Task instance."""
+    return Task(
+        assignee_id="1",
+        assigner_id="1",
+        comment_count=0,
+        is_completed=False,
+        content="A task",
+        created_at="2021-10-01T00:00:00",
+        creator_id="1",
+        description="A task",
+        due=Due(is_recurring=False, date="2022-01-01", string="today"),
+        id="1",
+        labels=[],
+        order=1,
+        parent_id=None,
+        priority=1,
+        project_id="12345",
+        section_id=None,
+        url="https://todoist.com",
+        sync_id=None,
+    )
 
 
-def test_parse_due_date_with_no_time_data():
-    """Test due date is parsed correctly when it has no time data."""
-    data: DueDate = {
-        "date": "2022-02-02",
-        "is_recurring": False,
-        "lang": "en",
-        "string": "Feb 2 2:00 PM",
-        "timezone": None,
-    }
-    actual = _parse_due_date(data, timezone_offset=-8)
-    assert datetime(2022, 2, 2, 8, 0, 0, tzinfo=dt.UTC) == actual
-
-
-def test_parse_due_date_without_timezone_uses_offset():
-    """Test due date uses user local timezone offset when it has no timezone."""
-    data: DueDate = {
-        "date": "2022-02-02T14:00:00",
-        "is_recurring": False,
-        "lang": "en",
-        "string": "Feb 2 2:00 PM",
-        "timezone": None,
-    }
-    actual = _parse_due_date(data, timezone_offset=-8)
-    assert datetime(2022, 2, 2, 22, 0, 0, tzinfo=dt.UTC) == actual
-
-
-@pytest.fixture(name="state")
-def mock_state() -> dict[str, Any]:
+@pytest.fixture(name="api")
+def mock_api() -> AsyncMock:
     """Mock the api state."""
-    return {
-        "collaborators": [],
-        "labels": [{"name": "label1", "id": 1}],
-        "projects": [{"id": 12345, "name": "Name"}],
-    }
+    api = AsyncMock()
+    api.get_projects.return_value = [
+        Project(
+            id="12345",
+            color="blue",
+            comment_count=0,
+            is_favorite=False,
+            name="Name",
+            is_shared=False,
+            url="",
+            is_inbox_project=False,
+            is_team_inbox=False,
+            order=1,
+            parent_id=None,
+            view_style="list",
+        )
+    ]
+    api.get_labels.return_value = [
+        Label(id="1", name="label1", color="1", order=1, is_favorite=False)
+    ]
+    api.get_collaborators.return_value = []
+    return api
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPI")
-async def test_calendar_entity_unique_id(todoist_api, hass, state):
+@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+async def test_calendar_entity_unique_id(todoist_api, hass, api):
     """Test unique id is set to project id."""
-    api = Mock(state=state)
     todoist_api.return_value = api
     assert await setup.async_setup_component(
         hass,
@@ -80,13 +80,12 @@ async def test_calendar_entity_unique_id(todoist_api, hass, state):
 
     registry = entity_registry.async_get(hass)
     entity = registry.async_get("calendar.name")
-    assert 12345 == entity.unique_id
+    assert entity.unique_id == "12345"
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPI")
-async def test_calendar_custom_project_unique_id(todoist_api, hass, state):
+@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+async def test_calendar_custom_project_unique_id(todoist_api, hass, api):
     """Test unique id is None for any custom projects."""
-    api = Mock(state=state)
     todoist_api.return_value = api
     assert await setup.async_setup_component(
         hass,

@@ -4,12 +4,13 @@ from __future__ import annotations
 from datetime import timedelta
 
 from aiopurpleair import API
-from aiopurpleair.errors import PurpleAirError
+from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 from aiopurpleair.models.sensors import GetSensorsResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -66,6 +67,8 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
                 SENSOR_FIELDS_TO_RETRIEVE,
                 sensor_indices=self._entry.options[CONF_SENSOR_INDICES],
             )
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed("Invalid API key") from err
         except PurpleAirError as err:
             raise UpdateFailed(f"Error while fetching data: {err}") from err
 

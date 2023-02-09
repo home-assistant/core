@@ -2,13 +2,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime as dt
 
-import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
-from sqlalchemy.orm import Query
+from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import CTE, CompoundSelect
+from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
 from homeassistant.components.recorder.db_schema import EventData, Events, States
 
@@ -24,18 +22,18 @@ from .devices import apply_event_device_id_matchers
 from .entities import (
     apply_entities_hints,
     apply_event_entity_id_matchers,
-    states_query_for_entity_ids,
+    states_select_for_entity_ids,
 )
 
 
 def _select_entities_device_id_context_ids_sub_query(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
     json_quoted_device_ids: list[str],
-) -> CompoundSelect:
+) -> Select:
     """Generate a subquery to find context ids for multiple entities and multiple devices."""
     union = union_all(
         select_events_context_id_subquery(start_day, end_day, event_types).where(
@@ -44,16 +42,18 @@ def _select_entities_device_id_context_ids_sub_query(
             )
         ),
         apply_entities_hints(select(States.context_id))
-        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .filter(
+            (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
+        )
         .where(States.entity_id.in_(entity_ids)),
     )
     return select(union.c.context_id).group_by(union.c.context_id)
 
 
 def _apply_entities_devices_context_union(
-    query: Query,
-    start_day: dt,
-    end_day: dt,
+    sel: Select,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -72,8 +72,8 @@ def _apply_entities_devices_context_union(
     # query much slower on MySQL, and since we already filter them away
     # in the python code anyways since they will have context_only
     # set on them the impact is minimal.
-    return query.union_all(
-        states_query_for_entity_ids(start_day, end_day, entity_ids),
+    return sel.union_all(
+        states_select_for_entity_ids(start_day, end_day, entity_ids),
         apply_events_context_hints(
             select_events_context_only()
             .select_from(devices_entities_cte)
@@ -88,8 +88,8 @@ def _apply_entities_devices_context_union(
 
 
 def entities_devices_stmt(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -109,14 +109,14 @@ def entities_devices_stmt(
             entity_ids,
             json_quoted_entity_ids,
             json_quoted_device_ids,
-        ).order_by(Events.time_fired)
+        ).order_by(Events.time_fired_ts)
     )
     return stmt
 
 
 def _apply_event_entity_id_device_id_matchers(
     json_quoted_entity_ids: Iterable[str], json_quoted_device_ids: Iterable[str]
-) -> sqlalchemy.or_:
+) -> ColumnElement[bool]:
     """Create matchers for the device_id and entity_id in the event_data."""
     return apply_event_entity_id_matchers(
         json_quoted_entity_ids

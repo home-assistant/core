@@ -1,5 +1,4 @@
 """The tests for the Input text component."""
-# pylint: disable=protected-access
 from unittest.mock import patch
 
 import pytest
@@ -23,7 +22,7 @@ from homeassistant.const import (
     ATTR_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -79,7 +78,7 @@ async def async_set_value(hass, entity_id, value):
     )
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [
         None,
@@ -91,7 +90,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_set_value(hass):
+async def test_set_value(hass: HomeAssistant) -> None:
     """Test set_value method."""
     assert await async_setup_component(
         hass,
@@ -121,7 +120,7 @@ async def test_set_value(hass):
     assert hass.states.get(entity_id_2).state == ""
 
 
-async def test_mode(hass):
+async def test_mode(hass: HomeAssistant) -> None:
     """Test mode settings."""
     assert await async_setup_component(
         hass,
@@ -158,7 +157,7 @@ async def test_mode(hass):
     assert state.attributes["mode"] == "password"
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -180,7 +179,7 @@ async def test_restore_state(hass):
     assert str(state.state) == "unknown"
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -209,7 +208,7 @@ async def test_initial_state_overrules_restore_state(hass):
     assert str(state.state) == "test"
 
 
-async def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
@@ -243,7 +242,7 @@ async def test_input_text_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_config_none(hass):
+async def test_config_none(hass: HomeAssistant) -> None:
     """Set up input_text without any config."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": None}})
 

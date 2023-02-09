@@ -13,7 +13,13 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry, entity_registry, singleton
+from homeassistant.helpers import singleton
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as dr_async_get,
+    format_mac,
+)
+from homeassistant.helpers.entity_registry import async_get as er_async_get
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -36,27 +42,15 @@ def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""
-    entity_reg = entity_registry.async_get(hass)
+    entity_reg = er_async_get(hass)
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
 
 
-def get_block_device_name(device: BlockDevice) -> str:
-    """Naming for device."""
-    return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
-
-
-def get_rpc_device_name(device: RpcDevice) -> str:
-    """Naming for device."""
-    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
-
-
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     """Get number of channels for block type."""
-    assert isinstance(device.shelly, dict)
-
     channels = None
 
     if block.type == "input":
@@ -84,14 +78,14 @@ def get_block_entity_name(
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        return f"{channel_name} {description}"
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
 
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
-    entity_name = get_block_device_name(device)
+    entity_name = device.name
 
     if (
         not block
@@ -290,9 +284,10 @@ def get_model_name(info: dict[str, Any]) -> str:
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
+    key = key.replace("emdata", "em")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
-    device_name = get_rpc_device_name(device)
+    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
         entity_name = device.config[key].get("name", device_name)
@@ -312,7 +307,7 @@ def get_rpc_entity_name(
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        return f"{channel_name} {description}"
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
@@ -330,12 +325,12 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
 
-    return [k for k in keys_dict if k.startswith(key)]
+    return [k for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
-    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(key)]
+    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def is_rpc_momentary_input(
@@ -385,19 +380,12 @@ def device_update_info(
 
     assert entry.unique_id
 
-    dev_registry = device_registry.async_get(hass)
-    if device := dev_registry.async_get_device(
+    dev_reg = dr_async_get(hass)
+    if device := dev_reg.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)},
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(entry.unique_id),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
-        dev_registry.async_update_device(
-            device.id, sw_version=shellydevice.firmware_version
-        )
+        dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 
 def brightness_to_percentage(brightness: int) -> int:
@@ -408,3 +396,9 @@ def brightness_to_percentage(brightness: int) -> int:
 def percentage_to_brightness(percentage: int) -> int:
     """Convert percentage to brightness level."""
     return round(255 * percentage / 100)
+
+
+def mac_address_from_name(name: str) -> str | None:
+    """Convert a name to a mac address."""
+    mac = name.partition(".")[0].partition("-")[-1]
+    return mac.upper() if len(mac) == 12 else None

@@ -9,6 +9,7 @@ from homeassistant.components.fibaro import DOMAIN
 from homeassistant.components.fibaro.config_flow import _normalize_url
 from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -55,7 +56,7 @@ def fibaro_client_fixture():
         yield
 
 
-async def test_config_flow_user_initiated_success(hass):
+async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -91,7 +92,7 @@ async def test_config_flow_user_initiated_success(hass):
         }
 
 
-async def test_config_flow_user_initiated_connect_failure(hass):
+async def test_config_flow_user_initiated_connect_failure(hass: HomeAssistant) -> None:
     """Connect failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -119,7 +120,7 @@ async def test_config_flow_user_initiated_connect_failure(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_config_flow_user_initiated_auth_failure(hass):
+async def test_config_flow_user_initiated_auth_failure(hass: HomeAssistant) -> None:
     """Authentication failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -148,7 +149,9 @@ async def test_config_flow_user_initiated_auth_failure(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_config_flow_user_initiated_unknown_failure_1(hass):
+async def test_config_flow_user_initiated_unknown_failure_1(
+    hass: HomeAssistant,
+) -> None:
     """Unknown failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -177,7 +180,9 @@ async def test_config_flow_user_initiated_unknown_failure_1(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_config_flow_user_initiated_unknown_failure_2(hass):
+async def test_config_flow_user_initiated_unknown_failure_2(
+    hass: HomeAssistant,
+) -> None:
     """Unknown failure in flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -206,7 +211,7 @@ async def test_config_flow_user_initiated_unknown_failure_2(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_config_flow_import(hass):
+async def test_config_flow_import(hass: HomeAssistant) -> None:
     """Test for importing config from configuration.yaml."""
     with patch(
         "homeassistant.components.fibaro.FibaroClient.connect", return_value=True
@@ -235,7 +240,7 @@ async def test_config_flow_import(hass):
         }
 
 
-async def test_reauth_success(hass):
+async def test_reauth_success(hass: HomeAssistant) -> None:
     """Successful reauth flow initialized by the user."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -276,7 +281,7 @@ async def test_reauth_success(hass):
         assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_connect_failure(hass):
+async def test_reauth_connect_failure(hass: HomeAssistant) -> None:
     """Successful reauth flow initialized by the user."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -317,7 +322,7 @@ async def test_reauth_connect_failure(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth_auth_failure(hass):
+async def test_reauth_auth_failure(hass: HomeAssistant) -> None:
     """Successful reauth flow initialized by the user."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,

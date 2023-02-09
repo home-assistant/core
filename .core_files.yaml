@@ -114,6 +114,7 @@ tests: &tests
   - tests/auth/**
   - tests/backports/**
   - tests/common.py
+  - tests/components/recorder/**
   - tests/conftest.py
   - tests/hassfest/**
   - tests/helpers/**

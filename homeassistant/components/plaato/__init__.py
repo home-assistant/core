@@ -29,11 +29,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
     Platform,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -68,8 +66,12 @@ WEBHOOK_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_DEVICE_ID): cv.positive_int,
-        vol.Required(ATTR_TEMP_UNIT): vol.Any(TEMP_CELSIUS, TEMP_FAHRENHEIT),
-        vol.Required(ATTR_VOLUME_UNIT): vol.Any(VOLUME_LITERS, VOLUME_GALLONS),
+        vol.Required(ATTR_TEMP_UNIT): vol.In(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+        ),
+        vol.Required(ATTR_VOLUME_UNIT): vol.In(
+            UnitOfVolume.LITERS, UnitOfVolume.GALLONS
+        ),
         vol.Required(ATTR_BPM): cv.positive_int,
         vol.Required(ATTR_TEMP): vol.Coerce(float),
         vol.Required(ATTR_SG): vol.Coerce(float),
@@ -211,11 +213,11 @@ class PlaatoCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
-        auth_token,
+        hass: HomeAssistant,
+        auth_token: str,
         device_type: PlaatoDeviceType,
         update_interval: timedelta,
-    ):
+    ) -> None:
         """Initialize."""
         self.api = Plaato(auth_token=auth_token)
         self.hass = hass

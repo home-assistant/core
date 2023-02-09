@@ -1,11 +1,8 @@
 """Support for MQTT message handling."""
-# pylint: disable=deprecated-typing-alias
-#   In Python 3.9.0 and 3.9.1 collections.abc.Callable
-#   can't be used inside typing.Union or typing.Optional
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -13,7 +10,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import TYPE_CHECKING, Any, Callable, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 import uuid
 
 import attr
@@ -88,7 +85,7 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 10
 
-SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
+SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(
@@ -121,7 +118,10 @@ async def async_publish(
     if not isinstance(payload, bytes):
         if not encoding:
             _LOGGER.error(
-                "Can't pass-through payload for publishing %s on %s with no encoding set, need 'bytes' got %s",
+                (
+                    "Can't pass-through payload for publishing %s on %s with no"
+                    " encoding set, need 'bytes' got %s"
+                ),
                 payload,
                 topic,
                 type(payload),
@@ -129,7 +129,8 @@ async def async_publish(
             return
         outgoing_payload = str(payload)
         if encoding != DEFAULT_ENCODING:
-            # a string is encoded as utf-8 by default, other encoding requires bytes as payload
+            # A string is encoded as utf-8 by default, other encoding
+            # requires bytes as payload
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
             except (AttributeError, LookupError, UnicodeEncodeError):
@@ -150,9 +151,9 @@ AsyncDeprecatedMessageCallbackType = Callable[
     [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
 ]
 DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
-DeprecatedMessageCallbackTypes = Union[
-    AsyncDeprecatedMessageCallbackType, DeprecatedMessageCallbackType
-]
+DeprecatedMessageCallbackTypes = (
+    AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType
+)
 
 
 # Support for a deprecated callback type will be removed from HA core 2023.2.0
@@ -221,8 +222,10 @@ async def async_subscribe(
     if non_default == 3:
         module = inspect.getmodule(msg_callback)
         _LOGGER.warning(
-            "Signature of MQTT msg_callback '%s.%s' is deprecated, "
-            "this will stop working with HA core 2023.2",
+            (
+                "Signature of MQTT msg_callback '%s.%s' is deprecated, "
+                "this will stop working with HA core 2023.2"
+            ),
             module.__name__ if module else "<unknown>",
             msg_callback.__name__,
         )
@@ -663,7 +666,6 @@ class MQTT:
         subscriptions = self._matching_subscriptions(msg.topic)
 
         for subscription in subscriptions:
-
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:

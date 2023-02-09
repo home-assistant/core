@@ -11,7 +11,7 @@ from homeassistant.components.select.device_trigger import (
     async_get_trigger_capabilities,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -21,21 +21,7 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass: HomeAssistant) -> EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -46,17 +32,19 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 async def test_get_triggers(
     hass: HomeAssistant,
-    device_reg: device_registry.DeviceRegistry,
-    entity_reg: EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test we get the expected triggers from a select."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_triggers = [
         {
             "platform": "device",
@@ -84,19 +72,19 @@ async def test_get_triggers(
 )
 async def test_get_triggers_hidden_auxiliary(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     hidden_by,
     entity_category,
 ):
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -258,7 +246,6 @@ async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
             "name": "for",
             "optional": True,
             "type": "positive_time_period_dict",
-            "optional": True,
         },
     ]
 
@@ -288,6 +275,5 @@ async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
             "name": "for",
             "optional": True,
             "type": "positive_time_period_dict",
-            "optional": True,
         },
     ]

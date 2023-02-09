@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, UnitOfDataRate, UnitOfInformation
+from homeassistant.const import UnitOfDataRate, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,7 +36,6 @@ class AsusWrtSensorEntityDescription(SensorEntityDescription):
     """A class that describes AsusWrt sensor entities."""
 
     factor: int | None = None
-    precision: int = 2
 
 
 UNIT_DEVICES = "Devices"
@@ -57,6 +56,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
         factor=125000,
     ),
     AsusWrtSensorEntityDescription(
@@ -67,6 +67,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
         factor=125000,
     ),
     AsusWrtSensorEntityDescription(
@@ -77,6 +78,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
         factor=1000000000,
     ),
     AsusWrtSensorEntityDescription(
@@ -87,6 +89,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
+        suggested_display_precision=2,
         factor=1000000000,
     ),
     AsusWrtSensorEntityDescription(
@@ -96,8 +99,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[1],
@@ -106,8 +108,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[2],
@@ -116,41 +117,37 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[0],
         name="2.4GHz Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[1],
         name="5GHz Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[2],
         name="CPU Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        factor=1,
-        precision=1,
+        suggested_display_precision=1,
     ),
 )
 
@@ -203,5 +200,5 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         descr = self.entity_description
         state: float | int | str | None = self.coordinator.data.get(descr.key)
         if state is not None and descr.factor and isinstance(state, (float, int)):
-            return round(state / descr.factor, descr.precision)
+            return state / descr.factor
         return state

@@ -54,5 +54,5 @@ class UniFiClient(UniFiClientBase):
         return DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self.client.mac)},
             default_manufacturer=self.client.oui,
-            default_name=self.name,
+            default_name=self.client.name or self.client.hostname,
         )
