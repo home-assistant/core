@@ -21,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -128,8 +127,8 @@ async def test_get_triggers(
 @pytest.mark.parametrize(
     "hidden_by,entity_category",
     (
-        (RegistryEntryHider.INTEGRATION, None),
-        (RegistryEntryHider.USER, None),
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
     ),
@@ -138,7 +137,7 @@ async def test_get_triggers_hidden_auxiliary(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    hidden_by: RegistryEntryHider | None,
+    hidden_by: er.RegistryEntryHider | None,
     entity_category: EntityCategory | None,
 ) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
