@@ -38,7 +38,6 @@ from .common import (
     mock_coro,
     mock_entity_platform,
     mock_integration,
-    mock_registry,
 )
 
 
@@ -1443,15 +1442,14 @@ async def test_support_entry_unload(hass: HomeAssistant) -> None:
 
 
 async def test_reload_entry_entity_registry_ignores_no_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test reloading entry in entity registry skips if no config entry linked."""
     handler = config_entries.EntityRegistryDisabledHandler(hass)
-    registry = mock_registry(hass)
 
     # Test we ignore entities without config entry
-    entry = registry.async_get_or_create("light", "hue", "123")
-    registry.async_update_entity(
+    entry = entity_registry.async_get_or_create("light", "hue", "123")
+    entity_registry.async_update_entity(
         entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
@@ -1459,11 +1457,12 @@ async def test_reload_entry_entity_registry_ignores_no_entry(
     assert handler._remove_call_later is None
 
 
-async def test_reload_entry_entity_registry_works(hass: HomeAssistant) -> None:
+async def test_reload_entry_entity_registry_works(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we schedule an entry to be reloaded if disabled_by is updated."""
     handler = config_entries.EntityRegistryDisabledHandler(hass)
     handler.async_setup()
-    registry = mock_registry(hass)
 
     config_entry = MockConfigEntry(
         domain="comp", state=config_entries.ConfigEntryState.LOADED
@@ -1483,16 +1482,16 @@ async def test_reload_entry_entity_registry_works(hass: HomeAssistant) -> None:
     mock_entity_platform(hass, "config_flow.comp", None)
 
     # Only changing disabled_by should update trigger
-    entity_entry = registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "light", "hue", "123", config_entry=config_entry
     )
-    registry.async_update_entity(entity_entry.entity_id, name="yo")
+    entity_registry.async_update_entity(entity_entry.entity_id, name="yo")
     await hass.async_block_till_done()
     assert not handler.changed
     assert handler._remove_call_later is None
 
     # Disable entity, we should not do anything, only act when enabled.
-    registry.async_update_entity(
+    entity_registry.async_update_entity(
         entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
@@ -1500,7 +1499,7 @@ async def test_reload_entry_entity_registry_works(hass: HomeAssistant) -> None:
     assert handler._remove_call_later is None
 
     # Enable entity, check we are reloading config entry.
-    registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
     await hass.async_block_till_done()
     assert handler.changed == {config_entry.entry_id}
     assert handler._remove_call_later is not None
