@@ -31,10 +31,9 @@ def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture
 async def filled_device_registry(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_registry: dr.DeviceRegistry
 ) -> dr.DeviceRegistry:
     """Fill device registry with mock devices."""
-    device_registry = dr.async_get(hass)
     for device_details in MOCK_OWPROXY_DEVICES.values():
         if infos := device_details.get("device_info"):
             for info in ensure_list(infos):
