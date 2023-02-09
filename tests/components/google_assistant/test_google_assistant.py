@@ -24,8 +24,6 @@ from homeassistant.helpers.entity import EntityCategory
 
 from . import DEMO_DEVICES
 
-from tests.common import mock_registry
-
 API_PASSWORD = "test1234"
 
 PROJECT_ID = "hasstest-1234"
@@ -125,11 +123,10 @@ def hass_fixture(event_loop, hass):
     return hass
 
 
-async def test_sync_request(hass_fixture, assistant_client, auth_header):
+async def test_sync_request(
+    hass_fixture, assistant_client, auth_header, entity_registry
+):
     """Test a sync request."""
-
-    entity_registry = mock_registry(hass_fixture)
-
     entity_entry1 = entity_registry.async_get_or_create(
         "switch",
         "test",
