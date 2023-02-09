@@ -350,8 +350,7 @@ class TodoistProjectEntity(CalendarEntity):
 
 
 class TodoistProjectData:
-    """
-    Class used by the Task Entity service object to hold all Todoist Tasks.
+    """Class used by the Task Entity service object to hold all Todoist Tasks.
 
     This is analogous to the GoogleCalendarData found in the Google Calendar
     component.
@@ -440,8 +439,7 @@ class TodoistProjectData:
         )
 
     def create_todoist_task(self, data: Task):
-        """
-        Create a dictionary based on a Task passed from the Todoist API.
+        """Create a dictionary based on a Task passed from the Todoist API.
 
         Will return 'None' if the task is to be filtered out.
         """
@@ -516,8 +514,7 @@ class TodoistProjectData:
 
     @staticmethod
     def select_best_task(project_tasks: list[TodoistEvent]) -> TodoistEvent:
-        """
-        Search through a list of events for the "best" event to select.
+        """Search through a list of events for the "best" event to select.
 
         The "best" event is determined by the following criteria:
           * A proposed event must not be completed

@@ -13,6 +13,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -54,7 +55,7 @@ def _mock_config_entry():
     )
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test data coming back from inverter."""
     mock_entry = _mock_config_entry()
 
@@ -94,7 +95,7 @@ async def test_sensors(hass):
         assert energy.state == "12.35"
 
 
-async def test_sensor_dark(hass):
+async def test_sensor_dark(hass: HomeAssistant) -> None:
     """Test that darkness (no comms) is handled correctly."""
     mock_entry = _mock_config_entry()
 
@@ -152,7 +153,7 @@ async def test_sensor_dark(hass):
         assert power.state == "unknown"  # should this be 'available'?
 
 
-async def test_sensor_unknown_error(hass):
+async def test_sensor_unknown_error(hass: HomeAssistant) -> None:
     """Test other comms error is handled correctly."""
     mock_entry = _mock_config_entry()
 

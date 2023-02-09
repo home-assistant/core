@@ -8,7 +8,7 @@ An overview of the areas and the devices in this smart home:
 {%- for area in areas %}
   {%- set area_info = namespace(printed=false) %}
   {%- for device in area_devices(area.name) -%}
-    {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") %}
+    {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") and device_attr(device, "name") %}
       {%- if not area_info.printed %}
 
 {{ area.name }}:

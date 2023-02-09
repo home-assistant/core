@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.bosch_shc.config_flow import write_tls_asset
 from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -117,7 +118,7 @@ async def test_form_get_info_connection_error(hass, mock_zeroconf):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_get_info_exception(hass):
+async def test_form_get_info_exception(hass: HomeAssistant) -> None:
     """Test we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -618,7 +619,7 @@ async def test_reauth(hass, mock_zeroconf):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_tls_assets_writer(hass):
+async def test_tls_assets_writer(hass: HomeAssistant) -> None:
     """Test we write tls assets to correct location."""
     assets = {
         "token": "abc:123",

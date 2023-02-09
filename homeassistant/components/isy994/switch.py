@@ -51,8 +51,8 @@ async def async_setup_entry(
         entities.append(ISYSwitchProgramEntity(name, status, actions))
 
     for node, control in isy_data.aux_properties[Platform.SWITCH]:
-        # Currently only used for enable switches, will need to be updated for NS support
-        # by making sure control == TAG_ENABLED
+        # Currently only used for enable switches, will need to be updated for
+        # NS support by making sure control == TAG_ENABLED
         description = SwitchEntityDescription(
             key=control,
             device_class=SwitchDeviceClass.SWITCH,

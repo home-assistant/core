@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceCla
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -21,22 +21,8 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -45,7 +31,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integrations):
+async def test_get_conditions(
+    hass, device_registry, entity_registry, enable_custom_integrations
+):
     """Test we get the expected conditions from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -54,12 +42,12 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     for device_class in BinarySensorDeviceClass:
-        entity_reg.async_get_or_create(
+        entity_registry.async_get_or_create(
             DOMAIN,
             "test",
             platform.ENTITIES[device_class].unique_id,
@@ -95,19 +83,19 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
 )
 async def test_get_conditions_hidden_auxiliary(
     hass,
-    device_reg,
-    entity_reg,
+    device_registry,
+    entity_registry,
     hidden_by,
     entity_category,
 ):
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -132,17 +120,17 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_get_conditions_no_state(hass, device_reg, entity_reg):
+async def test_get_conditions_no_state(hass, device_registry, entity_registry):
     """Test we get the expected conditions from a binary_sensor."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_ids = {}
     for device_class in BinarySensorDeviceClass:
-        entity_ids[device_class] = entity_reg.async_get_or_create(
+        entity_ids[device_class] = entity_registry.async_get_or_create(
             DOMAIN,
             "test",
             f"5678_{device_class}",
@@ -170,15 +158,17 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
     assert conditions == expected_conditions
 
 
-async def test_get_condition_capabilities(hass, device_reg, entity_reg):
+async def test_get_condition_capabilities(hass, device_registry, entity_registry):
     """Test we get the expected capabilities from a binary_sensor condition."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_capabilities = {
         "extra_fields": [
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}

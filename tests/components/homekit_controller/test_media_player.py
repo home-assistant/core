@@ -12,8 +12,7 @@ from .common import get_next_aid, setup_test_component
 
 
 def create_tv_service(accessory):
-    """
-    Define tv characteristics.
+    """Define tv characteristics.
 
     The TV is not currently documented publicly - this is based on observing really TV's that have HomeKit support.
     """

@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -40,9 +40,11 @@ from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
-from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
 from .typing import StateType
+
+if TYPE_CHECKING:
+    from .entity_platform import EntityPlatform
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -957,7 +959,7 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<Entity {self.name}: {self.state}>"
+        return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
     async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Process request batched."""

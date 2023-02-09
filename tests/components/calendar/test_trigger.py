@@ -446,7 +446,9 @@ async def test_overlap_events(hass, calls, fake_schedule):
     ]
 
 
-async def test_invalid_calendar_id(hass, caplog):
+async def test_invalid_calendar_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test creating a trigger with an invalid calendar id."""
     assert await async_setup_component(
         hass,
@@ -465,7 +467,9 @@ async def test_invalid_calendar_id(hass, caplog):
     assert "Entity ID invalid-calendar-id is an invalid entity ID" in caplog.text
 
 
-async def test_legacy_entity_type(hass, caplog):
+async def test_legacy_entity_type(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test creating a trigger with an invalid calendar id."""
     assert await async_setup_component(
         hass,

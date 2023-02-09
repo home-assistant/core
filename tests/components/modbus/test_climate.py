@@ -33,7 +33,7 @@ from homeassistant.const import (
     CONF_SLAVE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
@@ -538,7 +538,9 @@ async def test_wrong_unpack_climate(hass, mock_do_cycle):
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_no_discovery_info_climate(hass, caplog):
+async def test_no_discovery_info_climate(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert CLIMATE_DOMAIN not in hass.config.components
     assert await async_setup_component(

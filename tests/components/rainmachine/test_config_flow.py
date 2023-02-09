@@ -12,6 +12,7 @@ from homeassistant.components.rainmachine import (
     DOMAIN,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
@@ -113,7 +114,7 @@ async def test_options_flow(hass, config, config_entry):
         }
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

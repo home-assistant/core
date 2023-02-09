@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
+from .config_flow import normalize_hkid
 from .const import (
     CHARACTERISTIC_PLATFORMS,
     CONTROLLER,
@@ -464,9 +465,22 @@ class HKDevice:
             device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
     @callback
+    def async_migrate_ble_unique_id(self) -> None:
+        """Config entries from step_bluetooth used incorrect identifier for unique_id."""
+        unique_id = normalize_hkid(self.unique_id)
+        if unique_id != self.config_entry.unique_id:
+            _LOGGER.debug(
+                "Fixing incorrect unique_id: %s -> %s",
+                self.config_entry.unique_id,
+                unique_id,
+            )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, unique_id=unique_id
+            )
+
+    @callback
     def async_create_devices(self) -> None:
-        """
-        Build device registry entries for all accessories paired with the bridge.
+        """Build device registry entries for all accessories paired with the bridge.
 
         This is done as well as by the entities for 2 reasons. First, the bridge
         might not have any entities attached to it. Secondly there are stateless
@@ -536,8 +550,7 @@ class HKDevice:
         self.unreliable_serial_numbers = unreliable_serial_numbers
 
     async def async_process_entity_map(self) -> None:
-        """
-        Process the entity map and load any platforms or entities that need adding.
+        """Process the entity map and load any platforms or entities that need adding.
 
         This is idempotent and will be called at startup and when we detect metadata changes
         via the c# counter on the zeroconf record.
@@ -552,6 +565,8 @@ class HKDevice:
 
         # Remove any of the legacy serial numbers from the device registry
         self.async_remove_legacy_device_serial_numbers()
+
+        self.async_migrate_ble_unique_id()
 
         self.async_create_devices()
 
@@ -759,8 +774,7 @@ class HKDevice:
 
     @property
     def unique_id(self) -> str:
-        """
-        Return a unique id for this accessory or bridge.
+        """Return a unique id for this accessory or bridge.
 
         This id is random and will change if a device undergoes a hard reset.
         """

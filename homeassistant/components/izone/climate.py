@@ -223,8 +223,7 @@ class ControllerDevice(ClimateEntity):
 
     @callback
     def set_available(self, available: bool, ex: Exception | None = None) -> None:
-        """
-        Set availability for the controller.
+        """Set availability for the controller.
 
         Also sets zone availability as they follow the same availability.
         """
@@ -274,8 +273,9 @@ class ControllerDevice(ClimateEntity):
             ),
             "control_zone": self._controller.zone_ctrl,
             "control_zone_name": self.control_zone_name,
-            # Feature ClimateEntityFeature.TARGET_TEMPERATURE controls both displaying target temp & setting it
-            # As the feature is turned off for zone control, report target temp as extra state attribute
+            # Feature ClimateEntityFeature.TARGET_TEMPERATURE controls both displaying
+            # target temp & setting it as the feature is turned off for zone control,
+            # report target temp as extra state attribute
             "control_zone_setpoint": show_temp(
                 self.hass,
                 self.control_zone_setpoint,

@@ -363,8 +363,8 @@ class NestFlowHandler(
     ) -> FlowResult:
         """Verify any last pre-requisites before sending user through OAuth flow."""
         if user_input is None and self._upgrade:
-            # During app auth upgrade we need the user to update their device access project
-            # before we redirect to the authentication flow.
+            # During app auth upgrade we need the user to update their device
+            # access project before we redirect to the authentication flow.
             return await self.async_step_device_project_upgrade()
         return await super().async_step_auth(user_input)
 

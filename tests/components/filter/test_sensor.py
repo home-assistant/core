@@ -359,8 +359,7 @@ async def test_outlier(values: list[State]) -> None:
 
 
 def test_outlier_step(values: list[State]) -> None:
-    """
-    Test step-change handling in outlier.
+    """Test step-change handling in outlier.
 
     Test if outlier filter handles long-running step-changes correctly.
     It should converge to no longer filter once just over half the

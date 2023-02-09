@@ -9,6 +9,7 @@ from unittest.mock import DEFAULT, patch
 from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +51,7 @@ def setup_mock_temescal(
     tmock.side_effect = temescal_side_effect
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -88,7 +89,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_mac_info_response_empty(hass):
+async def test_form_mac_info_response_empty(hass: HomeAssistant) -> None:
     """Test we get the form, but response from the initial get_mac_info function call is empty."""
 
     result = await hass.config_entries.flow.async_init(
@@ -126,7 +127,9 @@ async def test_form_mac_info_response_empty(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
+async def test_form_uuid_present_in_both_functions_uuid_q_empty(
+    hass: HomeAssistant,
+) -> None:
     """Get the form, uuid present in both get_mac_info and get_product_info calls.
 
     Value from get_mac_info is not added to uuid_q before get_product_info is run.
@@ -169,7 +172,9 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
+async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(
+    hass: HomeAssistant,
+) -> None:
     """Get the form, uuid present in both get_mac_info and get_product_info calls.
 
     Value from get_mac_info is added to uuid_q before get_product_info is run.
@@ -215,7 +220,7 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_uuid_missing_from_mac_info(hass):
+async def test_form_uuid_missing_from_mac_info(hass: HomeAssistant) -> None:
     """Test we get the form, but uuid is missing from the initial get_mac_info function call."""
 
     result = await hass.config_entries.flow.async_init(
@@ -254,7 +259,7 @@ async def test_form_uuid_missing_from_mac_info(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_uuid_not_provided_by_api(hass):
+async def test_form_uuid_not_provided_by_api(hass: HomeAssistant) -> None:
     """Test we get the form, but uuid is missing from the all API messages."""
 
     result = await hass.config_entries.flow.async_init(
@@ -295,7 +300,7 @@ async def test_form_uuid_not_provided_by_api(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_both_queues_empty(hass):
+async def test_form_both_queues_empty(hass: HomeAssistant) -> None:
     """Test we get the form, but none of the data we want is provided by the API."""
 
     result = await hass.config_entries.flow.async_init(
@@ -327,7 +332,7 @@ async def test_form_both_queues_empty(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_no_uuid_host_already_configured(hass):
+async def test_no_uuid_host_already_configured(hass: HomeAssistant) -> None:
     """Test we handle if the device has no UUID and the host has already been configured."""
 
     mock_entry = MockConfigEntry(
@@ -366,7 +371,7 @@ async def test_no_uuid_host_already_configured(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_socket_timeout(hass):
+async def test_form_socket_timeout(hass: HomeAssistant) -> None:
     """Test we handle socket.timeout error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -387,7 +392,7 @@ async def test_form_socket_timeout(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_os_error(hass):
+async def test_form_os_error(hass: HomeAssistant) -> None:
     """Test we handle OSError."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -408,7 +413,7 @@ async def test_form_os_error(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured error."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
