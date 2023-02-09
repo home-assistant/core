@@ -11,6 +11,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
@@ -963,6 +964,10 @@ async def test_attach_remove_late2(
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+    # Try to remove the trigger twice
+    with pytest.raises(HomeAssistantError):
+        remove()
 
 
 async def test_entity_device_info_with_connection(
