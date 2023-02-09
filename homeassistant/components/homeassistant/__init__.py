@@ -284,25 +284,25 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         reload of YAML configurations for the domain that support it.
 
         Additionally, it also calls the `homeasssitant.reload_core_config`
-        service, as that reloads the core YAML configuration.
+        service, as that reloads the core YAML configuration, and the
+        `frontend.reload_themes` service, as that reloads the themes.
         """
         services = hass.services.async_services()
-        tasks = {
+        tasks = [
             hass.services.async_call(
                 domain, SERVICE_RELOAD, context=call.context, blocking=True
             )
             for domain, domain_services in services.items()
             if domain != "notify" and SERVICE_RELOAD in domain_services
-        }
-
-        tasks.add(
+        ] + [
             hass.services.async_call(
-                ha.DOMAIN,
-                SERVICE_RELOAD_CORE_CONFIG,
-                context=call.context,
-                blocking=True,
+                domain, service, context=call.context, blocking=True
             )
-        )
+            for domain, service in {
+                ha.DOMAIN: SERVICE_RELOAD_CORE_CONFIG,
+                "frontend": "reload_themes",
+            }.items()
+        ]
 
         await asyncio.gather(*tasks)
 

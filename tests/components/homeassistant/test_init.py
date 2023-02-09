@@ -573,9 +573,10 @@ async def test_reload_all(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
     test1 = async_mock_service(hass, "test1", "reload")
     test2 = async_mock_service(hass, "test2", "reload")
-    test3 = async_mock_service(hass, "test3", "not_reload")
-    test4 = async_mock_service(hass, "notify", "reload")
-    test5 = async_mock_service(hass, "homeassistant", "reload_core_config")
+    no_reload = async_mock_service(hass, "test3", "not_reload")
+    notify = async_mock_service(hass, "notify", "reload")
+    core_config = async_mock_service(hass, "homeassistant", "reload_core_config")
+    themes = async_mock_service(hass, "frontend", "reload_themes")
 
     await hass.services.async_call(
         "homeassistant",
@@ -585,6 +586,7 @@ async def test_reload_all(hass: HomeAssistant) -> None:
 
     assert len(test1) == 1
     assert len(test2) == 1
-    assert len(test3) == 0
-    assert len(test4) == 0
-    assert len(test5) == 1
+    assert len(no_reload) == 0
+    assert len(notify) == 0
+    assert len(core_config) == 1
+    assert len(themes) == 1
