@@ -9,8 +9,8 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_RETURNING,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 

@@ -12,9 +12,9 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    EntityCategory,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util

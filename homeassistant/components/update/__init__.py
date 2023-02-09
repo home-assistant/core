@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -20,7 +20,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import EntityCategory, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
