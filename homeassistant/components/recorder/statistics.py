@@ -1981,11 +1981,6 @@ def _sorted_statistics_to_dict(
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     start_time_ts = start_time.timestamp() if start_time else None
-    # Set all statistic IDs to empty lists in result set to maintain the order
-    if statistic_ids is not None:
-        for stat_id in statistic_ids:
-            result[stat_id] = []
-
     # Identify metadata IDs for which no data was available at the requested start time
     stats_by_meta_id: dict[int, list[Row]] = {}
     for meta_id, group in groupby(
@@ -1996,6 +1991,15 @@ def _sorted_statistics_to_dict(
         first_start_time_ts = stats_list[0].start_ts
         if start_time_ts and first_start_time_ts > start_time_ts:
             need_stat_at_start_time.add(meta_id)
+
+    # Set all statistic IDs to empty lists in result set to maintain the order
+    if statistic_ids is not None:
+        for stat_id in statistic_ids:
+            # Only set the statistic ID if it is in the data to
+            # avoid having to do a second loop to remove the
+            # statistic IDs that are not in the data at the end
+            if stat_id in stats_by_meta_id:
+                result[stat_id] = []
 
     # Fetch last known statistics for the needed metadata IDs
     if need_stat_at_start_time:
@@ -2020,7 +2024,7 @@ def _sorted_statistics_to_dict(
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
-        ent_results = result[meta_id]
+        ent_results = result[statistic_id]
         for db_state in group:
             start = timestamp_to_datetime(db_state.start_ts)
             row: dict[str, Any] = {
@@ -2044,8 +2048,7 @@ def _sorted_statistics_to_dict(
 
             ent_results.append(row)
 
-    # Filter out the empty lists if some states had 0 results.
-    return {metadata[key]["statistic_id"]: val for key, val in result.items() if val}
+    return result
 
 
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
