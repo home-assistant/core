@@ -17,7 +17,13 @@ from home_assistant_intents import get_intents
 import yaml
 
 from homeassistant import core, setup
-from homeassistant.helpers import area_registry, entity_registry, intent, template
+from homeassistant.helpers import (
+    area_registry,
+    entity_registry,
+    intent,
+    template,
+    translation,
+)
 from homeassistant.helpers.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -178,22 +184,14 @@ class DefaultAgent(AbstractConversationAgent):
             and (response_key := result.response)
         ):
             # Use response template, if available
-            response_str = lang_intents.intent_responses.get(
+            response_template_str = lang_intents.intent_responses.get(
                 result.intent.name, {}
             ).get(response_key)
-            if response_str:
-                response_template = template.Template(response_str, self.hass)
-                speech = response_template.async_render(
-                    {
-                        "slots": {
-                            entity_name: entity_value.text or entity_value.value
-                            for entity_name, entity_value in result.entities.items()
-                        }
-                    }
+            if response_template_str:
+                response_template = template.Template(response_template_str, self.hass)
+                speech = await self._build_speech(
+                    language, response_template, intent_response, result
                 )
-
-                # Normalize whitespace
-                speech = " ".join(speech.strip().split())
                 intent_response.async_set_speech(speech)
 
         return ConversationResult(
@@ -219,6 +217,67 @@ class DefaultAgent(AbstractConversationAgent):
             maybe_result = result
 
         return maybe_result
+
+    async def _build_speech(
+        self,
+        language: str,
+        response_template: template.Template,
+        intent_response: intent.IntentResponse,
+        recognize_result: RecognizeResult,
+    ) -> str:
+        all_states = intent_response.matched_states + intent_response.unmatched_states
+        domains = {state.domain for state in all_states}
+        translations = await translation.async_get_translations(
+            self.hass, language, "state", domains
+        )
+
+        # Use translated state names
+        for state in all_states:
+            device_class = state.attributes.get("device_class", "_")
+            key = f"component.{state.domain}.state.{device_class}.{state.state}"
+            state.state = translations.get(key, state.state)
+
+        # Get first matched or unmatched state.
+        # This is available in the response template as "state".
+        state1: core.State | None = None
+        if intent_response.matched_states:
+            state1 = intent_response.matched_states[0]
+        elif intent_response.unmatched_states:
+            state1 = intent_response.unmatched_states[0]
+
+        # Render response template
+        speech = response_template.async_render(
+            {
+                # Slots from intent recognizer
+                "slots": {
+                    entity_name: entity_value.text or entity_value.value
+                    for entity_name, entity_value in recognize_result.entities.items()
+                },
+                # First matched or unmatched state
+                "state": template.TemplateState(self.hass, state1)
+                if state1 is not None
+                else None,
+                "query": {
+                    # Entity states that matched the query (e.g, "on")
+                    "matched": [
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.matched_states
+                    ],
+                    # Entity states that did not match the query
+                    "unmatched": [
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.unmatched_states
+                    ],
+                },
+            }
+        )
+
+        # Normalize whitespace
+        if speech is not None:
+            speech = str(speech)
+            speech = " ".join(speech.strip().split())
+
+        return speech
 
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""

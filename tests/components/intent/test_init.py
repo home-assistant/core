@@ -2,9 +2,15 @@
 import pytest
 
 from homeassistant.components.cover import SERVICE_OPEN_COVER
-from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import area_registry, entity_registry, intent
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -175,3 +181,132 @@ async def test_turn_on_multiple_intent(hass: HomeAssistant) -> None:
     assert call.domain == "light"
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.test_lights_2"]}
+
+
+async def test_get_state_intent(hass: HomeAssistant) -> None:
+    """Test HassGetState intent.
+
+    This tests name, area, domain, device class, and state constraints.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    areas = area_registry.async_get(hass)
+    bedroom = areas.async_get_or_create("bedroom")
+    kitchen = areas.async_get_or_create("kitchen")
+
+    # 1 light in bedroom (off)
+    # 1 binary sensor (problem, on)
+    # 1 light in kitchen (on)
+    # 1 sensor in kitchen (50)
+    entities = entity_registry.async_get(hass)
+    bedroom_light = entities.async_get_or_create("light", "demo", "1")
+    entities.async_update_entity(bedroom_light.entity_id, area_id=bedroom.id)
+
+    bedroom_sensor = entities.async_get_or_create("binary_sensor", "demo", "2")
+    entities.async_update_entity(bedroom_sensor.entity_id, area_id=bedroom.id)
+
+    kitchen_sensor = entities.async_get_or_create("sensor", "demo", "3")
+    entities.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
+
+    kitchen_light = entities.async_get_or_create("light", "demo", "4")
+    entities.async_update_entity(kitchen_light.entity_id, area_id=kitchen.id)
+
+    kitchen_sensor = entities.async_get_or_create("sensor", "demo", "5")
+    entities.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
+
+    hass.states.async_set(
+        bedroom_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+    )
+    hass.states.async_set(
+        bedroom_sensor.entity_id,
+        "on",
+        attributes={ATTR_FRIENDLY_NAME: "bedroom sensor", ATTR_DEVICE_CLASS: "problem"},
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+    hass.states.async_set(
+        kitchen_sensor.entity_id,
+        50.0,
+        attributes={ATTR_FRIENDLY_NAME: "kitchen sensor"},
+    )
+
+    # is bedroom light off?
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "HassGetState",
+        {"name": {"value": "bedroom light"}, "state": {"value": "off"}},
+    )
+
+    # yes
+    assert result.matched_states and (
+        result.matched_states[0].entity_id == bedroom_light.entity_id
+    )
+    assert not result.unmatched_states
+
+    # is light in kitchen off?
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "HassGetState",
+        {
+            "area": {"value": "kitchen"},
+            "domain": {"value": "light"},
+            "state": {"value": "off"},
+        },
+    )
+
+    # no, it's on
+    assert not result.matched_states
+    assert result.unmatched_states and (
+        result.unmatched_states[0].entity_id == kitchen_light.entity_id
+    )
+
+    # what is the value of the kitchen sensor?
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "HassGetState",
+        {
+            "name": {"value": "kitchen sensor"},
+        },
+    )
+
+    assert result.matched_states and (
+        result.matched_states[0].entity_id == kitchen_sensor.entity_id
+    )
+    assert not result.unmatched_states
+
+    # is there a problem in the bedroom?
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "HassGetState",
+        {
+            "area": {"value": "bedroom"},
+            "device_class": {"value": "problem"},
+            "state": {"value": "on"},
+        },
+    )
+
+    # yes
+    assert result.matched_states and (
+        result.matched_states[0].entity_id == bedroom_sensor.entity_id
+    )
+    assert not result.unmatched_states
+
+    # are there any binary sensors in the kitchen?
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "HassGetState",
+        {
+            "area": {"value": "kitchen"},
+            "domain": {"value": "binary_sensor"},
+        },
+    )
+
+    # no
+    assert not result.matched_states and not result.unmatched_states
