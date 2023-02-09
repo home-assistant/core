@@ -57,6 +57,60 @@ HOURLY_DATA = [
     ),
 ]
 
+HOURLY_DATA_MISSING = [
+    HourlyEnergyUsage(
+        None,
+        usage=1.0,
+        cost=2.0,
+        temp=3.0,
+    ),
+    HourlyEnergyUsage(
+        datetime.datetime(
+            2023,
+            1,
+            1,
+            2,
+            0,
+            0,
+            0,
+            datetime.timezone(datetime.timedelta(hours=-5), "EST"),
+        ),
+        usage=None,
+        cost=3.0,
+        temp=4.0,
+    ),
+    HourlyEnergyUsage(
+        datetime.datetime(
+            2023,
+            1,
+            1,
+            1,
+            0,
+            0,
+            0,
+            datetime.timezone(datetime.timedelta(hours=-5), "EST"),
+        ),
+        usage=1.0,
+        cost=None,
+        temp=3.0,
+    ),
+    HourlyEnergyUsage(
+        datetime.datetime(
+            2023,
+            1,
+            1,
+            2,
+            0,
+            0,
+            0,
+            datetime.timezone(datetime.timedelta(hours=-5), "EST"),
+        ),
+        usage=2.0,
+        cost=3.0,
+        temp=4.0,
+    ),
+]
+
 
 def create_entry(hass: HomeAssistant) -> ConfigEntry:
     """Add config entry in Home Assistant."""
@@ -70,8 +124,7 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 async def async_init_integration(
-    hass: HomeAssistant,
-    error: str | None = None,
+    hass: HomeAssistant, error: str | None = None, hourly_data=HOURLY_DATA
 ) -> ConfigEntry:
     """Set up the Southern Company integration in Home Assistant."""
     with patch(
@@ -80,7 +133,7 @@ async def async_init_integration(
         account_mock = AsyncMock()
         account_mock.number = "1"
         account_mock.get_month_data.return_value = MONTH_DATA
-        account_mock.get_hourly_data.return_value = HOURLY_DATA
+        account_mock.get_hourly_data.return_value = hourly_data
         api_mock.return_value.accounts = [account_mock]
         api_mock.return_value.get_accounts = AsyncMock()
         api_mock.return_value.get_accounts.return_value = [account_mock]
