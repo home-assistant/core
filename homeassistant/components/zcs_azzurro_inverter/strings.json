@@ -3,8 +3,9 @@
     "step": {
       "user": {
         "data": {
-          "client": "[%key:common::config_flow::data::host%]",
-          "thing_serial": "[%key:common::config_flow::data::password%]"
+          "client": "Client",
+          "thing_serial": "Thing serial",
+          "friendly_name": "[%key:common::config_flow::data::friendly_name]"
         }
       }
     },

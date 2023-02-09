@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_THINGS_KEY
+from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
 from .zcs_azzurro_api import ZcsAzzurroApi
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = ZcsAzzurroApi(
-        client=entry.data[SCHEMA_CLIENT_KEY], thing_serial=entry.data[SCHEMA_THINGS_KEY]
+        client=entry.data[SCHEMA_CLIENT_KEY],
+        thing_serial=entry.data[SCHEMA_THINGS_KEY],
+        name=entry.data[SCHEMA_FRIENDLY_NAME],
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

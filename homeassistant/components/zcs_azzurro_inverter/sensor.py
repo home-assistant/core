@@ -46,6 +46,7 @@ from .const import (
     REALTIME_POWER_GENERATING_KEY,
     REALTIME_POWER_IMPORTING_KEY,
     SCHEMA_CLIENT_KEY,
+    SCHEMA_FRIENDLY_NAME,
     SCHEMA_THINGS_KEY,
 )
 from .zcs_azzurro_api import ZcsAzzurroApi
@@ -283,7 +284,11 @@ async def async_setup_entry(
     _LOGGER.debug("Received data during setup is %s", entry.data)
     data = entry.data
 
-    zcs_api = ZcsAzzurroApi(data[SCHEMA_CLIENT_KEY], data[SCHEMA_THINGS_KEY])
+    zcs_api = ZcsAzzurroApi(
+        data[SCHEMA_CLIENT_KEY],
+        data[SCHEMA_THINGS_KEY],
+        name=data[SCHEMA_FRIENDLY_NAME],
+    )
 
     realtime_sensors_available = await hass.async_add_executor_job(
         zcs_api.realtime_data_request

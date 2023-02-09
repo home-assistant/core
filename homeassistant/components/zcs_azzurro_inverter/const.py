@@ -4,6 +4,7 @@ DOMAIN = "zcs_azzurro_inverter"
 
 SCHEMA_CLIENT_KEY = "client"
 SCHEMA_THINGS_KEY = "thing_serial"
+SCHEMA_FRIENDLY_NAME = "name"
 
 # Value keys returned by Realtime Data
 REALTIME_LAST_UPDATE_KEY = "lastUpdate"
