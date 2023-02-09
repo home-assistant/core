@@ -46,23 +46,41 @@ from .const import (
     CONF_INVERT,
     CONF_MAX_SAMPLES,
     CONF_MIN_GRADIENT,
+    CONF_MIN_SAMPLES,
     CONF_SAMPLE_DURATION,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_INVERT, default=False): cv.boolean,
-        vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
-        vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
-        vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
-    }
+
+def _check_sample_params(config):
+    if config[CONF_MAX_SAMPLES] < config[CONF_MIN_SAMPLES]:
+        raise vol.Invalid(
+            f"{CONF_MAX_SAMPLES} must not be smaller than {CONF_MIN_SAMPLES}"
+        )
+    return config
+
+
+SENSOR_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_ATTRIBUTE): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_INVERT, default=False): cv.boolean,
+            vol.Optional(CONF_MAX_SAMPLES, default=2): vol.All(
+                vol.Coerce(int), vol.Range(min=2)
+            ),
+            vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
+            vol.Optional(CONF_MIN_SAMPLES, default=2): vol.All(
+                vol.Coerce(int), vol.Range(min=2)
+            ),
+            vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_time_period,
+        }
+    ),
+    _check_sample_params,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -89,6 +107,7 @@ async def async_setup_platform(
         invert = device_config[CONF_INVERT]
         max_samples = device_config[CONF_MAX_SAMPLES]
         min_gradient = device_config[CONF_MIN_GRADIENT]
+        min_samples = device_config[CONF_MIN_SAMPLES]
         sample_duration = device_config[CONF_SAMPLE_DURATION]
 
         sensors.append(
@@ -102,6 +121,7 @@ async def async_setup_platform(
                 invert,
                 max_samples,
                 min_gradient,
+                min_samples,
                 sample_duration,
             )
         )
@@ -129,6 +149,7 @@ class SensorTrend(BinarySensorEntity):
         invert,
         max_samples,
         min_gradient,
+        min_samples,
         sample_duration,
     ):
         """Initialize the sensor."""
@@ -141,6 +162,7 @@ class SensorTrend(BinarySensorEntity):
         self._invert = invert
         self._sample_duration = sample_duration
         self._min_gradient = min_gradient
+        self._min_samples = min_samples
         self._gradient = None
         self._state = None
         self.samples = deque(maxlen=max_samples)
@@ -177,7 +199,7 @@ class SensorTrend(BinarySensorEntity):
             ATTR_INVERT: self._invert,
             ATTR_MIN_GRADIENT: self._min_gradient,
             ATTR_SAMPLE_COUNT: len(self.samples),
-            ATTR_SAMPLE_DURATION: self._sample_duration,
+            ATTR_SAMPLE_DURATION: self._sample_duration.total_seconds(),
         }
 
     async def async_added_to_hass(self) -> None:
@@ -212,7 +234,7 @@ class SensorTrend(BinarySensorEntity):
                     sample = (new_state.last_updated, float(state))
                     self.samples.append(sample)
 
-                    if self._sample_duration > 0 and len_was in [
+                    if self._sample_duration and len_was in [
                         0,
                         self.samples.maxlen,
                     ]:
@@ -236,7 +258,7 @@ class SensorTrend(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and update the states."""
-        if len(self.samples) < 2:
+        if len(self.samples) < self._min_samples:
             self._gradient = None
             self._state = None
             return
