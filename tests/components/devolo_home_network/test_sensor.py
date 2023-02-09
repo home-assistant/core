@@ -9,10 +9,9 @@ from homeassistant.components.devolo_home_network.const import (
     SHORT_UPDATE_INTERVAL,
 )
 from homeassistant.components.sensor import DOMAIN, SensorStateClass
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from . import configure_integration
