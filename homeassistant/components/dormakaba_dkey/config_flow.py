@@ -140,6 +140,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=lock.device_info.device_name
                 or lock.device_info.device_id
