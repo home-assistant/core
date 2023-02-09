@@ -269,8 +269,9 @@ async def async_setup_trigger(
     config = TRIGGER_DISCOVERY_SCHEMA(config)
     device_id = update_device(hass, config_entry, config)
 
+    assert isinstance(device_id, str)
     mqtt_device_trigger = MqttDeviceTrigger(
-        hass, config, str(device_id), discovery_data, config_entry
+        hass, config, device_id, discovery_data, config_entry
     )
     await mqtt_device_trigger.async_setup()
     send_discovery_done(hass, discovery_data)
