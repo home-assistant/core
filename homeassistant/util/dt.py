@@ -147,7 +147,7 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 
 def utc_from_timestamp(timestamp: float) -> dt.datetime:
     """Return a UTC time from a timestamp."""
-    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
+    return dt.datetime.fromtimestamp(timestamp, UTC)
 
 
 def utc_to_timestamp(utc_dt: dt.datetime) -> float:
