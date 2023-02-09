@@ -11,8 +11,7 @@ from homeassistant.components.homekit.const import (
     SHORT_BRIDGE_NAME,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntry, RegistryEntryHider
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component

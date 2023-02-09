@@ -1,7 +1,7 @@
 """Make sure that a H.A.A. fan can be setup."""
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

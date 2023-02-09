@@ -11,9 +11,9 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 

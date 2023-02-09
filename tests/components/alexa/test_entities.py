@@ -4,10 +4,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.alexa import smart_home
-from homeassistant.const import __version__
+from homeassistant.const import EntityCategory, __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .test_common import get_default_config, get_new_request
 

@@ -7,10 +7,9 @@ from homeassistant.components.select import (
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_integration
 
