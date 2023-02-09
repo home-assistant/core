@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ASSOCIATION_DATA, DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
+from .const import CONF_ASSOCIATION_DATA, DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
 from .models import DormakabaDkeyData
 
 PLATFORMS: list[Platform] = [Platform.LOCK]
@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Could not find dKey device with address {address}")
 
     lock = DKEYLock(ble_device)
-    lock.set_association_data(AssociationData.from_json(entry.data[ASSOCIATION_DATA]))
+    lock.set_association_data(
+        AssociationData.from_json(entry.data[CONF_ASSOCIATION_DATA])
+    )
 
     @callback
     def _async_update_ble(

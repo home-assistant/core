@@ -17,7 +17,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import ASSOCIATION_DATA, DOMAIN
+from .const import CONF_ASSOCIATION_DATA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
-            await self.async_set_unique_id(address)
+            await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             self._discovery_info = self._discovered_devices[address]
             return await self.async_step_bluetooth_connect()
@@ -66,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._discovered_devices[discovery.address] = discovery
 
         if not self._discovered_devices:
-            return self.async_abort(reason="no_unconfigured_devices")
+            return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {
@@ -182,7 +182,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 or lock.name,
                 data={
                     CONF_ADDRESS: self._discovery_info.device.address,
-                    ASSOCIATION_DATA: association_data.to_json(),
+                    CONF_ASSOCIATION_DATA: association_data.to_json(),
                 },
             )
 
