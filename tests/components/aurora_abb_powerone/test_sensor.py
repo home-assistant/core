@@ -14,6 +14,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
