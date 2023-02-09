@@ -1,7 +1,11 @@
 """Test EDL21 config flow."""
 
 from homeassistant import data_entry_flow
-from homeassistant.components.edl21.const import CONF_SERIAL_PORT, DOMAIN
+from homeassistant.components.edl21.const import (
+    CONF_SERIAL_PORT,
+    DEFAULT_DEVICE_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME
 
@@ -87,3 +91,15 @@ async def test_create_entry_by_import(hass):
     assert result["title"] == VALID_CONFIG.get(CONF_NAME)
     assert result["data"][CONF_NAME] == VALID_CONFIG.get(CONF_NAME)
     assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG.get(CONF_SERIAL_PORT)
+
+    # Test the import step without a name (the name is optional in the old schema)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_SERIAL_PORT: "/dev/ttyUSB1"},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG.get(CONF_SERIAL_PORT)
+    assert CONF_NAME not in result["data"]

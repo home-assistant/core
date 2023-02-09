@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_SERIAL_PORT, DOMAIN
+from .const import CONF_SERIAL_PORT, DEFAULT_DEVICE_NAME, DOMAIN
 
 
 class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -17,7 +17,16 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+
+        title = (
+            import_config[CONF_NAME]
+            if CONF_NAME in import_config
+            else DEFAULT_DEVICE_NAME
+        )
+        return self.async_create_entry(
+            title=title,
+            data=import_config,
+        )
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the user setup step."""

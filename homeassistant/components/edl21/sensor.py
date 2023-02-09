@@ -38,7 +38,13 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_SERIAL_PORT, DOMAIN, LOGGER, SIGNAL_EDL21_TELEGRAM
+from .const import (
+    CONF_SERIAL_PORT,
+    DEFAULT_DEVICE_NAME,
+    DOMAIN,
+    LOGGER,
+    SIGNAL_EDL21_TELEGRAM,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -328,6 +334,7 @@ class EDL21:
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._name = config[CONF_NAME]
+        self._device_name = config[CONF_NAME] or DEFAULT_DEVICE_NAME
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
@@ -369,7 +376,7 @@ class EDL21:
                         EDL21Entity(
                             electricity_id,
                             obis,
-                            self._name,
+                            self._device_name,
                             name,
                             entity_description,
                             telegram,
