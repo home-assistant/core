@@ -1,6 +1,5 @@
 """Tests for the Southern Company integration."""
 import datetime
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from southern_company_api.account import HourlyEnergyUsage, MonthlyUsage
@@ -9,9 +8,8 @@ from homeassistant.components.southern_company import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 MONTH_DATA = MonthlyUsage(
     dollars_to_date=1.0,
@@ -124,7 +122,9 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 async def async_init_integration(
-    hass: HomeAssistant, error: str | None = None, hourly_data=HOURLY_DATA
+    hass: HomeAssistant,
+    hourly_data: list[HourlyEnergyUsage] = HOURLY_DATA,
+    skip_setup: bool = False,
 ) -> ConfigEntry:
     """Set up the Southern Company integration in Home Assistant."""
     with patch(
@@ -144,10 +144,8 @@ async def async_init_integration(
         api_mock.return_value.get_jwt.return_value = "sample_jwt"
 
         entry = create_entry(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=61))
-        await hass.async_block_till_done()
+        if not skip_setup:
+            await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
 
         return entry
