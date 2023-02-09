@@ -1034,9 +1034,13 @@ def recorder_config():
 
 
 @pytest.fixture
-def recorder_db_url(pytestconfig, hass_fixture_setup):
+def recorder_db_url(
+    pytestconfig,
+    hass_fixture_setup,
+):
     """Prepare a default database for tests and return a connection URL."""
     assert not hass_fixture_setup
+
     db_url: str = pytestconfig.getoption("dburl")
     if db_url.startswith(("postgresql://", "mysql://")):
         import sqlalchemy_utils
