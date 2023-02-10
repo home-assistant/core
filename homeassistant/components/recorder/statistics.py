@@ -1186,8 +1186,9 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _boundries: tuple[float, float] = (0, 0)
+
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
     )
@@ -1211,11 +1212,11 @@ def reduce_month_ts_factory() -> (
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         return (
-            start_local.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE).timestamp(),
-            end_local.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE).timestamp(),
+            start_local.astimezone(dt_util.UTC).timestamp(),
+            end_local.astimezone(dt_util.UTC).timestamp(),
         )
 
-    # We create _as_local_cached in the closure in case the timezone changes
+    # We create _month_start_end_ts_cached in the closure in case the timezone changes
     _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
 
     return _same_month_ts, _month_start_end_ts_cached
