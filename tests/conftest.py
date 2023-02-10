@@ -28,7 +28,7 @@ import freezegun
 import multidict
 import pytest
 import pytest_socket
-import requests_mock as _requests_mock
+import requests_mock
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -490,10 +490,10 @@ async def stop_hass(
             await event_loop.shutdown_default_executor()
 
 
-@pytest.fixture
-def requests_mock():
+@pytest.fixture(name="requests_mock")
+def requests_mock_fixture() -> Generator[requests_mock.Mocker, None, None]:
     """Fixture to provide a requests mocker."""
-    with _requests_mock.mock() as m:
+    with requests_mock.mock() as m:
         yield m
 
 
