@@ -53,7 +53,9 @@ async def setup_notify(hass):
         await hass.async_block_till_done()
 
 
-async def test_no_notify_service(hass, mock_clicksend_tts_notify, caplog):
+async def test_no_notify_service(
+    hass: HomeAssistant, mock_clicksend_tts_notify, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test missing platform notify service instance."""
     caplog.set_level(logging.ERROR)
     mock_clicksend_tts_notify.return_value = None

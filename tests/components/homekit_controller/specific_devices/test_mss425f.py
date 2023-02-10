@@ -1,8 +1,7 @@
 """Tests for the Meross MSS425f power strip."""
 
 
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

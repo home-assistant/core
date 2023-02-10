@@ -488,7 +488,7 @@ async def test_homekit_entity_glob_filter_with_config_entities(
     """Test the entity filter with configuration entities."""
     entry = await async_init_integration(hass)
 
-    from homeassistant.helpers.entity import EntityCategory
+    from homeassistant.const import EntityCategory
     from homeassistant.helpers.entity_registry import RegistryEntry
 
     select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
