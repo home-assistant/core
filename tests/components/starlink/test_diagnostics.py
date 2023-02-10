@@ -1,4 +1,6 @@
 """Tests for Starlink diagnostics."""
+import json
+
 import aiohttp
 
 from homeassistant.components.starlink.const import DOMAIN
@@ -7,11 +9,11 @@ from homeassistant.core import HomeAssistant
 
 from .patchers import COORDINATOR_SUCCESS_PATCHER
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_diagnostics(hass: HomeAssistant, hass_client: aiohttp.client):
+async def test_diagnostics(hass: HomeAssistant, hass_client: aiohttp.client) -> None:
     """Test generating diagnostics for a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -26,4 +28,4 @@ async def test_diagnostics(hass: HomeAssistant, hass_client: aiohttp.client):
 
         diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-        assert diag["status"]["id"] == "**REDACTED**"
+        assert diag == json.loads(load_fixture("diagnostics_expected.json", "starlink"))
