@@ -1571,7 +1571,7 @@ async def test_setup_override_configuration(
     """Test override setup from configuration entry."""
     calls_username_password_set = []
 
-    def mock_usename_password_set(username, password) -> None:
+    def mock_usename_password_set(username: str, password: str) -> None:
         calls_username_password_set.append((username, password))
 
     # Mock password setup from config
