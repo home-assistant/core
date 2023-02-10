@@ -36,6 +36,7 @@ def get_mock_info(error=None, user_level="admin"):
         host_mock.get_host_data = AsyncMock(return_value=None)
     else:
         host_mock.get_host_data = AsyncMock(side_effect=error)
+    host_mock.check_new_firmware = AsyncMock(return_value=False)
     host_mock.unsubscribe = AsyncMock(return_value=True)
     host_mock.logout = AsyncMock(return_value=True)
     host_mock.mac_address = TEST_MAC
