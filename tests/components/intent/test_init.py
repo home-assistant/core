@@ -310,3 +310,15 @@ async def test_get_state_intent(hass: HomeAssistant) -> None:
 
     # no
     assert not result.matched_states and not result.unmatched_states
+
+    # Test unknown area failure
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "HassGetState",
+            {
+                "area": {"value": "does-not-exist"},
+                "domain": {"value": "light"},
+            },
+        )
