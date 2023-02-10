@@ -268,6 +268,21 @@ def subscribe(
     return remove
 
 
+def _is_simple_subscription(topic: str) -> bool:
+    """Return if a topic is a simple subscription."""
+    return not any(
+        (
+            "+" in topic,
+            "#" in topic,
+            "$" in topic,
+            "{" in topic,
+            "}" in topic,
+            "[" in topic,
+            "]" in topic,
+        )
+    )
+
+
 @attr.s(slots=True, frozen=True)
 class Subscription:
     """Class to hold data about an active subscription."""
@@ -358,6 +373,8 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
         self.subscriptions: list[Subscription] = []
+        self.simple_subscriptions: dict[str, Subscription] = {}
+        self.complex_subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -498,6 +515,11 @@ class MQTT:
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
         self.subscriptions.append(subscription)
+        _is_simple = _is_simple_subscription(topic)
+        if _is_simple:
+            self.simple_subscriptions[topic] = subscription
+        else:
+            self.complex_subscriptions.append(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
@@ -510,6 +532,10 @@ class MQTT:
             """Remove subscription."""
             if subscription not in self.subscriptions:
                 raise HomeAssistantError("Can't remove subscription twice")
+            if _is_simple:
+                self.simple_subscriptions[topic] = subscription
+            else:
+                self.complex_subscriptions.append(subscription)
             self.subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
@@ -647,7 +673,9 @@ class MQTT:
     @lru_cache(2048)
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
         subscriptions: list[Subscription] = []
-        for subscription in self.subscriptions:
+        if topic in self.simple_subscriptions:
+            subscriptions.append(self.simple_subscriptions[topic])
+        for subscription in self.complex_subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
