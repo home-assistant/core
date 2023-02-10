@@ -1215,7 +1215,7 @@ def reduce_month_ts_factory() -> (
             end_local.astimezone(dt_util.UTC).timestamp(),
         )
 
-    # We create _as_local_cached in the closure in case the timezone changes
+    # We create _month_start_end_ts_cached in the closure in case the timezone changes
     _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
 
     return _same_month_ts, _month_start_end_ts_cached
