@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 import contextlib
 import dataclasses
-from datetime import datetime, timedelta
+from datetime import _IsoCalendarDate, date, datetime, timedelta
 from functools import lru_cache, partial
 from itertools import chain, groupby
 import json
@@ -1090,9 +1090,15 @@ def reduce_day_factory() -> (
     # We create _as_local_cached in the closure in case the timezone changes
     _as_local_cached = lru_cache(maxsize=6)(dt_util.as_local)
 
+    def _as_local_date(time: datetime) -> date:
+        """Return the local date of a datetime."""
+        return dt_util.as_local(time).date()
+
+    _as_local_date_cached = lru_cache(maxsize=6)(_as_local_date)
+
     def _same_day(time1: datetime, time2: datetime) -> bool:
         """Return True if time1 and time2 are in the same date."""
-        return _as_local_cached(time1).date() == _as_local_cached(time2).date()
+        return _as_local_date_cached(time1) == _as_local_date_cached(time2)
 
     def _day_start_end(time: datetime) -> tuple[datetime, datetime]:
         """Return the start and end of the period (day) time is within."""
@@ -1126,10 +1132,16 @@ def reduce_week_factory() -> (
     # We create _as_local_cached in the closure in case the timezone changes
     _as_local_cached = lru_cache(maxsize=6)(dt_util.as_local)
 
+    def _as_local_isocalendar(time: datetime) -> _IsoCalendarDate:
+        """Return the local isocalendar of a datetime."""
+        return dt_util.as_local(time).isocalendar()
+
+    _as_local_isocalendar_cached = lru_cache(maxsize=6)(_as_local_isocalendar)
+
     def _same_week(time1: datetime, time2: datetime) -> bool:
         """Return True if time1 and time2 are in the same year and week."""
-        date1 = _as_local_cached(time1).isocalendar()
-        date2 = _as_local_cached(time2).isocalendar()
+        date1 = _as_local_isocalendar_cached(time1)
+        date2 = _as_local_isocalendar_cached(time2)
         return (date1.year, date1.week) == (date2.year, date2.week)
 
     def _week_start_end(time: datetime) -> tuple[datetime, datetime]:
