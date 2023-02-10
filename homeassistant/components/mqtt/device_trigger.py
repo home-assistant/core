@@ -134,7 +134,7 @@ class Trigger:
 
     async def add_trigger(
         self, action: TriggerActionType, trigger_info: TriggerInfo
-    ) -> Callable:
+    ) -> Callable[[], None]:
         """Add MQTT trigger."""
         instance = TriggerInstance(action, trigger_info, self)
         self.trigger_instances.append(instance)
