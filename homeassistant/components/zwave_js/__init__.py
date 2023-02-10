@@ -518,7 +518,7 @@ class NodeEvents:
         # Create a firmware update entity for each non-controller device that
         # supports firmware updates
         if not node.is_controller_node and any(
-            CommandClass.FIRMWARE_UPDATE_MD.value == cc.id
+            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
             for cc in node.command_classes
         ):
             await self.controller_events.driver_events.async_setup_platform(
