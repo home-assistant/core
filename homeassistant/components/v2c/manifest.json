@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/v2c",
   "codeowners": ["@V2Charge", "@jesusllorens79"],
   "config_flow": true,
-  "requirements": ["v2ctrydan==0.2.1", "pymodbus==3.1.2"],
+  "requirements": ["v2ctrydan==0.2.1"],
   "iot_class": "local_push",
   "loggers": ["v2cpython"]
 }
