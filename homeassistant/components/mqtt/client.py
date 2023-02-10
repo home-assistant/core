@@ -533,9 +533,9 @@ class MQTT:
             if subscription not in self.subscriptions:
                 raise HomeAssistantError("Can't remove subscription twice")
             if _is_simple:
-                self._simple_subscriptions[topic] = subscription
+                del self._simple_subscriptions[topic]
             else:
-                self._complex_subscriptions.append(subscription)
+                self._complex_subscriptions.remove(subscription)
             self.subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
