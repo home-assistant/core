@@ -81,6 +81,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not zcs_api:
         _LOGGER.debug("auth_result was %s", zcs_api)
         raise InvalidAuth
+
     return {"title": zcs_api.name}
 
 
@@ -98,31 +99,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             SCHEMA_THINGS_KEY: "Thing serial",
             SCHEMA_FRIENDLY_NAME: "Friendly name",
         }
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
 
         errors = {}
-
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            _LOGGER.debug(
-                "before create entity info is %s and data is %s", info, user_input
-            )
-            return self.async_create_entry(
-                title=info["title"],
-                data=user_input,
-                description_placeholders=placeholders,
-            )
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                _LOGGER.debug(
+                    "before create entity info is %s and data is %s", info, user_input
+                )
+                return self.async_create_entry(
+                    title=info["title"],
+                    data=user_input,
+                    description_placeholders=placeholders,
+                )
 
         return self.async_show_form(
             step_id="user",

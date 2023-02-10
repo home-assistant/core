@@ -1,17 +1,12 @@
 """The zcs_azzurro integration."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
-from .zcs_azzurro_api import ZcsAzzurroApi
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -20,11 +15,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up zcs_azzurro from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = ZcsAzzurroApi(
-        client=entry.data[SCHEMA_CLIENT_KEY],
-        thing_serial=entry.data[SCHEMA_THINGS_KEY],
-        name=entry.data[SCHEMA_FRIENDLY_NAME],
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -49,3 +39,11 @@ class InvalidAuth(HomeAssistantError):
 
 class ResponseError(HomeAssistantError):
     """Error to indicate there was a not ok response."""
+
+
+class ConfigEntryNotReady(HomeAssistantError):
+    """Error to indicate the entry is unreachable."""
+
+
+class ConfigEntryAuthFailed(HomeAssistantError):
+    """Error to indicate the auth to the entry failed."""

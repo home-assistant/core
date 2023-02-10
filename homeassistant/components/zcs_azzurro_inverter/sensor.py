@@ -17,10 +17,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    DOMAIN,
     REALTIME_BATTERY_CYCLES_KEY,
     REALTIME_BATTERY_SOC_KEY,
     REALTIME_ENERGY_AUTOCONSUMING_TOTAL_KEY,
@@ -65,7 +65,6 @@ SENSOR_TYPES = (
         name="Battery cycles",
         icon="mdi:solar-power-variant",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_BATTERY_SOC_KEY,
@@ -74,7 +73,6 @@ SENSOR_TYPES = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_AUTOCONSUMING_TOTAL_KEY,
@@ -82,7 +80,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -91,7 +88,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -100,7 +96,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -109,7 +104,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -118,7 +112,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -127,7 +120,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -136,7 +128,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -145,7 +136,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -154,7 +144,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -163,7 +152,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -172,7 +160,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -181,7 +168,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -190,7 +176,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -199,7 +184,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=None,
         state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -208,7 +192,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=None,
         state_class=None,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -217,7 +200,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -226,7 +208,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -235,7 +216,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -244,7 +224,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -253,7 +232,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -262,7 +240,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -271,7 +248,6 @@ SENSOR_TYPES = (
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
     ),
 )
@@ -295,6 +271,12 @@ async def async_setup_entry(
     )
     available_realtime_keys = list(realtime_sensors_available.keys())
     _LOGGER.debug("available realtime keys are %s", ", ".join(available_realtime_keys))
+
+    hass.data[DOMAIN][entry.entry_id] = ZcsAzzurroApi(
+        client=entry.data[SCHEMA_CLIENT_KEY],
+        thing_serial=entry.data[SCHEMA_THINGS_KEY],
+        name=entry.data[SCHEMA_FRIENDLY_NAME],
+    )
     async_add_entities(
         ZcsAzzurroSensor(
             description=description,
