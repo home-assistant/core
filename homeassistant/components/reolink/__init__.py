@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass,
         _LOGGER,
         name=f"reolink.{host.api.nvr_name}.firmware",
-        update_method=async_device_config_update,
+        update_method=async_check_firmware_update,
         update_interval=FIRMWARE_UPDATE_INTERVAL,
     )
     # Fetch initial data so we have data when entities subscribe

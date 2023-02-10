@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -12,7 +15,9 @@ from .const import DOMAIN
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
     """Parent class for Reolink hardware camera entities."""
 
-    def __init__(self, reolink_data: ReolinkData, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, reolink_data: ReolinkData, coordinator: DataUpdateCoordinator
+    ) -> None:
         """Initialize ReolinkCoordinatorEntity for a hardware camera."""
         super().__init__(coordinator)
 
@@ -28,7 +33,7 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
             manufacturer=self._host.api.manufacturer,
             hw_version=self._host.api.hardware_version,
             sw_version=self._host.api.sw_version,
-            configuration_url=conf_url,
+            configuration_url=self._conf_url,
         )
 
     @property

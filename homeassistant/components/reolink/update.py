@@ -10,9 +10,8 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -63,7 +62,7 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
 
     @property
     def release_url(self) -> str:
-        """Reolink firmware dowload page."""
+        """Reolink firmware download page."""
         return "https://reolink.com/download-center/"
 
     async def async_install(
