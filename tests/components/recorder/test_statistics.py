@@ -32,7 +32,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
@@ -47,6 +47,7 @@ from .common import (
 )
 
 from tests.common import get_test_home_assistant, mock_registry
+from tests.typing import RecorderInstanceGenerator
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -1492,8 +1493,11 @@ def test_delete_metadata_duplicates_no_duplicates(hass_recorder, caplog):
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
 @pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
 async def test_validate_db_schema(
-    async_setup_recorder_instance, hass, caplog, db_engine
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    db_engine: str,
+) -> None:
     """Test validating DB schema with MySQL and PostgreSQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
@@ -1510,8 +1514,10 @@ async def test_validate_db_schema(
 
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
 async def test_validate_db_schema_fix_utf8_issue(
-    async_setup_recorder_instance, hass, caplog
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test validating DB schema with MySQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
@@ -1550,15 +1556,15 @@ async def test_validate_db_schema_fix_utf8_issue(
     (("max", 1.0), ("mean", 1.0), ("min", 1.0), ("state", 1.0), ("sum", 1.0)),
 )
 async def test_validate_db_schema_fix_float_issue(
-    async_setup_recorder_instance,
-    hass,
-    caplog,
-    db_engine,
-    table,
-    replace_index,
-    column,
-    value,
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    db_engine: str,
+    table: str,
+    replace_index: int,
+    column: str,
+    value: float,
+) -> None:
     """Test validating DB schema with MySQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
@@ -1636,16 +1642,16 @@ async def test_validate_db_schema_fix_float_issue(
     ),
 )
 async def test_validate_db_schema_fix_statistics_datetime_issue(
-    async_setup_recorder_instance,
-    hass,
-    caplog,
-    db_engine,
-    modification,
-    table,
-    replace_index,
-    column,
-    value,
-):
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    db_engine: str,
+    modification: list[str],
+    table: str,
+    replace_index: int,
+    column: str,
+    value: str,
+) -> None:
     """Test validating DB schema with MySQL.
 
     Note: The test uses SQLite, the purpose is only to exercise the code.
