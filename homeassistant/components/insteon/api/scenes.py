@@ -110,7 +110,7 @@ async def websocket_delete_scene(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Save an Insteon scene."""
+    """Delete an Insteon scene."""
     scene_id = msg["scene_id"]
 
     result = await async_delete_scene(
