@@ -670,7 +670,7 @@ class MQTT:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
 
-    @lru_cache(2048)
+    @lru_cache(16384)
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
         subscriptions: list[Subscription] = []
         if topic in self._simple_subscriptions:
