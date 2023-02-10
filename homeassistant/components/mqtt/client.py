@@ -268,11 +268,6 @@ def subscribe(
     return remove
 
 
-def _is_simple_subscription(topic: str) -> bool:
-    """Return if a topic is a simple subscription."""
-    return "+" not in topic and "#" not in topic
-
-
 @attr.s(slots=True, frozen=True)
 class Subscription:
     """Class to hold data about an active subscription."""
@@ -505,8 +500,7 @@ class MQTT:
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
         self.subscriptions.append(subscription)
-        _is_simple = _is_simple_subscription(topic)
-        if _is_simple:
+        if _is_simple := "+" not in topic and "#" not in topic:
             self._simple_subscriptions.setdefault(topic, []).append(subscription)
         else:
             self._wildcard_subscriptions.append(subscription)
