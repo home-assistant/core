@@ -14,11 +14,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_UNLOCKED,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
 

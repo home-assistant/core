@@ -79,7 +79,6 @@ light:
   brightness_scale: 99
 """
 import copy
-import json
 from pathlib import Path
 from unittest.mock import call, patch
 
@@ -98,6 +97,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.json import JsonValueType, json_loads
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -154,16 +154,18 @@ def light_platform_only():
 class JsonValidator:
     """Helper to compare JSON."""
 
-    def __init__(self, jsondata):
+    def __init__(self, jsondata: JsonValueType) -> None:
         """Initialize JSON validator."""
         self.jsondata = jsondata
 
-    def __eq__(self, other):
+    def __eq__(self, other: JsonValueType) -> bool:
         """Compare JSON data."""
-        return json.loads(self.jsondata) == json.loads(other)
+        return json_loads(self.jsondata) == json_loads(other)
 
 
-async def test_fail_setup_if_no_command_topic(hass: HomeAssistant, caplog) -> None:
+async def test_fail_setup_if_no_command_topic(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if setup fails with no command topic."""
     assert not await async_setup_component(
         hass,
@@ -1459,7 +1461,9 @@ async def test_sending_xy_color(
     )
 
 
-async def test_effect(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_effect(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test for effect being sent when included."""
     assert await async_setup_component(
         hass,
@@ -1985,7 +1989,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one light per unique_id."""
     config = {
         mqtt.DOMAIN: {

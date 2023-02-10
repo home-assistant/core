@@ -140,7 +140,9 @@ async def test_setup_fails(
     assert "Invalid config for [mqtt]" in caplog.text
 
 
-async def test_rgb_light(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_rgb_light(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test RGB light flags brightness support."""
     assert await async_setup_component(
         hass,
@@ -602,7 +604,9 @@ async def test_sending_mqtt_commands_non_optimistic_brightness_template(
     state = hass.states.get("light.test")
 
 
-async def test_effect(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_effect(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test effect sent over MQTT in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -655,7 +659,9 @@ async def test_effect(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> 
     assert state.attributes.get("effect") == "colorloop"
 
 
-async def test_flash(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_flash(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test flash sent over MQTT in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -957,7 +963,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one light per unique_id."""
     config = {
         mqtt.DOMAIN: {

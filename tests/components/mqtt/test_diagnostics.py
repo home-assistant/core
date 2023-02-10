@@ -1,5 +1,4 @@
 """Test MQTT diagnostics."""
-
 import json
 from unittest.mock import ANY, patch
 
@@ -8,13 +7,14 @@ import pytest
 from homeassistant.components import mqtt
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import async_fire_mqtt_message
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
 default_config = {
     "birth_message": {},
@@ -49,8 +49,8 @@ def device_tracker_sensor_only():
 
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    device_registry,
-    hass_client,
+    device_registry: dr.DeviceRegistry,
+    hass_client: ClientSessionGenerator,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test config entry diagnostics."""
@@ -172,8 +172,8 @@ async def test_entry_diagnostics(
 )
 async def test_redact_diagnostics(
     hass: HomeAssistant,
-    device_registry,
-    hass_client,
+    device_registry: dr.DeviceRegistry,
+    hass_client: ClientSessionGenerator,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test redacting diagnostics."""

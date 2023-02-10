@@ -1,6 +1,7 @@
 """The tests for MQTT tag scanner."""
 import copy
 import json
+from pathlib import Path
 from unittest.mock import ANY, patch
 
 import pytest
@@ -63,7 +64,7 @@ def tag_mock():
 @pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_tag(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -90,7 +91,7 @@ async def test_discover_bad_tag(
 
 async def test_if_fires_on_mqtt_message_with_device(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -110,7 +111,7 @@ async def test_if_fires_on_mqtt_message_with_device(
 
 async def test_if_fires_on_mqtt_message_without_device(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -129,7 +130,7 @@ async def test_if_fires_on_mqtt_message_without_device(
 
 async def test_if_fires_on_mqtt_message_with_template(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -167,7 +168,7 @@ async def test_strip_tag_id(
 
 async def test_if_fires_on_mqtt_message_after_update_with_device(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -263,7 +264,7 @@ async def test_if_fires_on_mqtt_message_after_update_without_device(
 
 async def test_if_fires_on_mqtt_message_after_update_with_template(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -312,7 +313,7 @@ async def test_if_fires_on_mqtt_message_after_update_with_template(
 
 async def test_no_resubscribe_same_topic(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test subscription to topics without change."""
@@ -331,7 +332,7 @@ async def test_no_resubscribe_same_topic(
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_with_device(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -404,7 +405,7 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_without_device(
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -552,7 +553,7 @@ async def test_entity_device_info_update(
 async def test_cleanup_tag(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test tag discovery topic is cleaned when device is removed from registry."""
@@ -635,7 +636,7 @@ async def test_cleanup_tag(
 
 async def test_cleanup_device(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal from device registry when tag is removed."""
@@ -663,7 +664,7 @@ async def test_cleanup_device(
 
 async def test_cleanup_device_several_tags(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     tag_mock,
 ) -> None:
@@ -711,7 +712,7 @@ async def test_cleanup_device_several_tags(
 
 async def test_cleanup_device_with_entity_and_trigger_1(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal from device registry for device with tag, entity and trigger.
@@ -778,7 +779,7 @@ async def test_cleanup_device_with_entity_and_trigger_1(
 
 async def test_cleanup_device_with_entity2(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal from device registry for device with tag, entity and trigger.
@@ -889,10 +890,10 @@ async def test_update_with_bad_config_not_breaks_discovery(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    device_registry,
+    device_registry: dr.DeviceRegistry,
     mqtt_mock: MqttMockHAClient,
     tag_mock,
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     """Test unloading the MQTT entry."""
 
