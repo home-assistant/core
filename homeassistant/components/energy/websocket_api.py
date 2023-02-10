@@ -356,17 +356,19 @@ async def ws_get_fossil_energy_consumption(
         ]
 
     elif msg["period"] == "day":
+        _same_day, _day_start_end = recorder.statistics.reduce_day_factory()
         reduced_fossil_energy = _reduce_deltas(
             fossil_energy,
-            recorder.statistics.same_day,
-            recorder.statistics.day_start_end,
+            _same_day,
+            _day_start_end,
             timedelta(days=1),
         )
     else:
+        _same_month, _month_start_end = recorder.statistics.reduce_month_factory()
         reduced_fossil_energy = _reduce_deltas(
             fossil_energy,
-            recorder.statistics.same_month,
-            recorder.statistics.month_start_end,
+            _same_month,
+            _month_start_end,
             timedelta(days=1),
         )
 
