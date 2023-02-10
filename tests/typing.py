@@ -9,7 +9,7 @@ from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
 
 if TYPE_CHECKING:
-    # Local import to avoid processing recorder and SQLite modules when running a
+    # Local import to avoid processing recorder module when running a
     # testcase which does not use the recorder.
     from homeassistant.components.recorder import Recorder
 
