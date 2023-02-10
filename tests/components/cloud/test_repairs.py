@@ -21,7 +21,7 @@ from tests.typing import ClientSessionGenerator
 
 async def test_do_not_create_repair_issues_at_startup_if_not_logged_in(
     hass: HomeAssistant,
-):
+) -> None:
     """Test that we create repair issue at startup if we are logged in."""
     issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
@@ -61,7 +61,7 @@ async def test_create_repair_issues_at_startup_if_logged_in(
 
 async def test_legacy_subscription_delete_issue_if_no_longer_legacy(
     hass: HomeAssistant,
-):
+) -> None:
     """Test that we delete the legacy subscription issue if no longer legacy."""
     issue_registry: ir.IssueRegistry = ir.async_get(hass)
     cloud_repairs.async_manage_legacy_subscription_issue(hass, {"provider": "legacy"})

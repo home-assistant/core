@@ -107,7 +107,7 @@ SCALE_TEST_EXPECTED = [
 )
 def test_find_supported_scaling_factor(
     image_width, image_height, input_width, input_height, scaling_factor
-):
+) -> None:
     """Test we always get an image of at least the size we ask if its big enough."""
 
     assert (

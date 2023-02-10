@@ -199,7 +199,7 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
         (BraviaConnectionError, "cannot_connect"),
     ],
 )
-async def test_pin_form_error(hass, side_effect, error_message):
+async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test that PIN form errors are correct."""
     with patch(
         "pybravia.BraviaClient.connect",
@@ -226,7 +226,7 @@ async def test_pin_form_error(hass, side_effect, error_message):
         (BraviaConnectionError, "cannot_connect"),
     ],
 )
-async def test_psk_form_error(hass, side_effect, error_message):
+async def test_psk_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test that PSK form errors are correct."""
     with patch(
         "pybravia.BraviaClient.connect",
@@ -382,7 +382,7 @@ async def test_create_entry_psk(hass: HomeAssistant) -> None:
         (False, "newpsk"),
     ],
 )
-async def test_reauth_successful(hass, use_psk, new_pin):
+async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
     """Test that the reauthorization is successful."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

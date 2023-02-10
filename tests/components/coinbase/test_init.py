@@ -49,7 +49,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert not hass.data.get(DOMAIN)
 
 
-async def test_option_updates(hass: HomeAssistant):
+async def test_option_updates(hass: HomeAssistant) -> None:
     """Test handling option updates."""
 
     with patch(
@@ -127,7 +127,7 @@ async def test_option_updates(hass: HomeAssistant):
         assert rates == [GOOD_EXCHANGE_RATE]
 
 
-async def test_ignore_vaults_wallets(hass: HomeAssistant):
+async def test_ignore_vaults_wallets(hass: HomeAssistant) -> None:
     """Test vaults are ignored in wallet sensors."""
 
     with patch(

@@ -13,6 +13,7 @@ from homeassistant.components.analytics.const import (
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
+from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import IntegrationNotFound
@@ -509,7 +510,7 @@ async def test_send_with_no_energy(
 
 
 async def test_send_with_no_energy_config(
-    recorder_mock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    recorder_mock: Recorder, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -533,7 +534,7 @@ async def test_send_with_no_energy_config(
 
 
 async def test_send_with_energy_config(
-    recorder_mock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    recorder_mock: Recorder, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
