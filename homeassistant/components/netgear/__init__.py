@@ -220,8 +220,8 @@ async def async_remove_config_entry_device(
     if device_mac is None:
         return False
 
-    if device_mac in router.devices:
-        return False
+    if device_mac not in router.devices:
+        return True
 
-    return True
+    return not router.devices[device_mac]["active"]
 
