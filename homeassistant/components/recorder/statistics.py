@@ -1186,8 +1186,9 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
-    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _boundries: tuple[float, float] = (0, 0)
+
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
     )
