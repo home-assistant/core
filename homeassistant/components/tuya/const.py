@@ -254,6 +254,8 @@ class DPCode(StrEnum):
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
+    # JMC
+    POWER_SWITCH = "Power"
     POWER = "power"
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
