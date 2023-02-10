@@ -169,11 +169,11 @@ def _ws_get_statistics_during_period(
     for statistic_id in result:
         for item in result[statistic_id]:
             if (start := item.get("start")) is not None:
-                item["start"] = int(start.timestamp() * 1000)
+                item["start"] = int(start * 1000)
             if (end := item.get("end")) is not None:
-                item["end"] = int(end.timestamp() * 1000)
+                item["end"] = int(end * 1000)
             if (last_reset := item.get("last_reset")) is not None:
-                item["last_reset"] = int(last_reset.timestamp() * 1000)
+                item["last_reset"] = int(last_reset * 1000)
     return JSON_DUMP(messages.result_message(msg_id, result))
 
 

@@ -2446,8 +2446,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": (period1 + timedelta(hours=1)),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2456,8 +2456,8 @@ async def test_import_statistics(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2504,8 +2504,8 @@ async def test_import_statistics(
     assert last_stats == {
         statistic_id: [
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2541,8 +2541,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2551,8 +2551,8 @@ async def test_import_statistics(
                 "sum": pytest.approx(6.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2591,8 +2591,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(1.0),
                 "mean": pytest.approx(2.0),
                 "min": pytest.approx(3.0),
@@ -2601,8 +2601,8 @@ async def test_import_statistics(
                 "sum": pytest.approx(5.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2673,8 +2673,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2683,8 +2683,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2741,8 +2741,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2751,8 +2751,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2782,8 +2782,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2792,8 +2792,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2864,8 +2864,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2874,8 +2874,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2932,8 +2932,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2942,8 +2942,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2973,8 +2973,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2983,8 +2983,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -3070,8 +3070,8 @@ async def test_adjust_sum_statistics_errors(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -3080,8 +3080,8 @@ async def test_adjust_sum_statistics_errors(
                 "sum": pytest.approx(2.0 * factor),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
