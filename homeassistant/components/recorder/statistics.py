@@ -1187,29 +1187,38 @@ def reduce_month_ts_factory() -> (
 ):
     """Return functions to match same month and month start end."""
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _boundries: tuple[float, float] = (0, 0)
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
     )
-    # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
     def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
-        date1 = _as_local_cached(time1)
-        date2 = _as_local_cached(time2)
-        return (date1.year, date1.month) == (date2.year, date2.month)
+        nonlocal _boundries
+        if not _boundries[0] <= time1 < _boundries[1]:
+            _boundries = _month_start_end_ts_cached(time1)
+        return _boundries[0] <= time2 < _boundries[1]
 
     def _month_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (month) time is within."""
-        start_local = _as_local_cached(time).replace(
+        nonlocal _boundries
+        if _boundries[0] <= time < _boundries[1]:
+            return _boundries
+        start_local = _local_from_timestamp(time).replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
-        start = dt_util.as_utc(start_local)
-        end_local = (start_local + timedelta(days=31)).replace(day=1)
-        end = dt_util.as_utc(end_local)
-        return (start.timestamp(), end.timestamp())
+        end_local = (start_local.replace(day=28) + timedelta(days=4)).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        return (
+            start_local.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE).timestamp(),
+            end_local.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE).timestamp(),
+        )
 
-    return _same_month_ts, _month_start_end_ts
+    # We create _as_local_cached in the closure in case the timezone changes
+    _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
+
+    return _same_month_ts, _month_start_end_ts_cached
 
 
 def _reduce_statistics_per_month(
