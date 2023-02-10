@@ -248,7 +248,7 @@ class ReceiverZone:
         self._zone: str = zone
         self._identifier: str = identifier
         self._volume: int = 0
-        self._max_volume: int = max_volume
+        self._config: dict[str, int] = {CONF_MAX_VOLUME: max_volume}
 
         self.receiver: OnkyoNetworkReceiver = receiver
         self.name: str = name
@@ -269,15 +269,27 @@ class ReceiverZone:
         self._query_timer: asyncio.TimerHandle | None = None
         self._callbacks: set = set()
 
+    def get_config_value(self, key: str) -> int | None:
+        """Get a config value of the receiver zone."""
+        return self._config.get(key, None)
+
+    def set_config_value(self, key: str, value: int) -> None:
+        """Set a config value of the receiver zone."""
+        if key in self._config:
+            self._config[key] = value
+
+        if key == CONF_MAX_VOLUME and self._volume > self._config[CONF_MAX_VOLUME]:
+            self.receiver.update_property(
+                self._zone, "volume", str(self._config[CONF_MAX_VOLUME])
+            )
+
+        for update_callback in self._callbacks:
+            update_callback()
+
     @property
     def volume(self) -> float:
         """Get the normalized volume of the receiver zone."""
-        return min(self._volume / self._max_volume, 1)
-
-    @property
-    def max_volume(self) -> float:
-        """Get the maximum volume of the receiver zone."""
-        return self._max_volume
+        return min(self._volume / self._config[CONF_MAX_VOLUME], 1)
 
     @property
     def zone_identifier(self) -> str:
@@ -297,15 +309,6 @@ class ReceiverZone:
     def supports_set_volume(self) -> bool:
         """Return whether the zone supports setting its volume."""
         return self.supported_features & MediaPlayerEntityFeature.VOLUME_SET != 0
-
-    def set_max_volume(self, max_volume: int) -> None:
-        """Set the max volume of the receiver zone."""
-        self._max_volume = max_volume
-        if self._volume > self._max_volume:
-            self.receiver.update_property(self._zone, "volume", str(self._max_volume))
-
-        for update_callback in self._callbacks:
-            update_callback()
 
     def set_source(self, source: str) -> None:
         """Change receiver zone to the designated source (by name)."""
@@ -327,7 +330,7 @@ class ReceiverZone:
 
     def increase_volume(self) -> None:
         """Increment volume by 1 step."""
-        if self._volume < self._max_volume:
+        if self._volume < self._config[CONF_MAX_VOLUME]:
             self.receiver.update_property(self._zone, "volume", "level-up")
 
     def decrease_volume(self) -> None:
@@ -337,7 +340,7 @@ class ReceiverZone:
     def set_volume(self, volume: float) -> None:
         """Set the receiver zone volume level."""
         self.receiver.update_property(
-            self._zone, "volume", str(int(volume * self._max_volume))
+            self._zone, "volume", str(int(volume * self._config[CONF_MAX_VOLUME]))
         )
 
     def set_mute(self, is_muted: bool) -> None:

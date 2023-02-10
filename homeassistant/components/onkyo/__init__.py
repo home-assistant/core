@@ -5,8 +5,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity import DeviceInfo
 
-from .const import CONF_RECEIVER, DOMAIN
+from .const import CONF_DEVICE_INFO, CONF_RECEIVER, DOMAIN
 from .receiver import OnkyoNetworkReceiver
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.NUMBER]
@@ -19,13 +20,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not receiver.online and not await receiver.async_connect():
         raise ConfigEntryNotReady(f"Failed to connect to {receiver.name}")
 
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, receiver.identifier)},
+        name=receiver.name,
+        manufacturer=receiver.manufacturer,
+        model=receiver.name,
+    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         CONF_RECEIVER: receiver,
+        CONF_DEVICE_INFO: device_info,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 

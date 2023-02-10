@@ -17,6 +17,7 @@ CONF_SOURCES = "sources"
 CONF_ENABLED_SOURCES = "enabled_sources"
 CONF_MAX_VOLUME = "max_volume"
 CONF_RECEIVER = "receiver"
+CONF_DEVICE_INFO = "device_info"
 
 SERVICE_SELECT_HDMI_OUTPUT = "select_hdmi_output"
 

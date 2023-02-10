@@ -26,6 +26,7 @@ from .const import (
     ATTR_PRESET,
     ATTR_VIDEO_INFORMATION,
     ATTR_VIDEO_OUT,
+    CONF_DEVICE_INFO,
     CONF_MAX_VOLUME,
     CONF_RECEIVER,
     CONF_SOURCES,
@@ -101,6 +102,7 @@ async def async_setup_entry(
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
     """Set up MediaPlayer platform for passed config_entry."""
+    device_info: DeviceInfo = hass.data[DOMAIN][config_entry.entry_id][CONF_DEVICE_INFO]
     receiver: OnkyoNetworkReceiver = hass.data[DOMAIN][config_entry.entry_id][
         CONF_RECEIVER
     ]
@@ -111,7 +113,7 @@ async def async_setup_entry(
 
     new_zones: list[OnkyoMediaPlayer] = []
     for zone in receiver.zones.values():
-        zone_entity = OnkyoMediaPlayer(zone, source_mapping)
+        zone_entity = OnkyoMediaPlayer(zone, source_mapping, device_info)
         new_zones.append(zone_entity)
 
     # Register additional services
@@ -131,16 +133,25 @@ async def async_setup_entry(
 class OnkyoMediaPlayer(MediaPlayerEntity):
     """MediaPlayer entity for Onkyo network receiver zone."""
 
-    should_poll: bool = False
+    _attr_should_poll: bool = False
+    _attr_sound_mode_list: list[str] = list(SOUND_MODE_MAPPING)
 
     def __init__(
         self,
         receiver_zone: ReceiverZone,
         source_mapping: dict[str, str],
+        device_info: DeviceInfo,
     ) -> None:
         """Initialize the MediaPlayer."""
+        self._attr_device_info: DeviceInfo = device_info
+        self._attr_name: str = receiver_zone.name
+        self._attr_source_list: list[str] = list(source_mapping.values())
+        self._attr_supported_features: MediaPlayerEntityFeature = (
+            receiver_zone.supported_features
+        )
+        self._attr_unique_id: str = f"{receiver_zone.zone_identifier}_media_player"
+
         self._receiver_zone: ReceiverZone = receiver_zone
-        self._source_list: list[str] = list(source_mapping.values())
         self._source_mapping: dict[str, str] = source_mapping
         self._reverse_source_mapping: dict[str, str] = {
             value: key for key, value in source_mapping.items()
@@ -153,31 +164,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._receiver_zone.remove_callback(self.async_write_ha_state)
-
-    @property
-    def unique_id(self) -> str:
-        """Return Unique ID string."""
-        return f"{self._receiver_zone.zone_identifier}_media_player"
-
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Flag media player features that are supported."""
-        return self._receiver_zone.supported_features
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Information about this entity/device."""
-        return {
-            "identifiers": {(DOMAIN, self._receiver_zone.receiver.identifier)},
-            "name": self._receiver_zone.receiver.name,
-            "model": self._receiver_zone.receiver.name,
-            "manufacturer": self._receiver_zone.receiver.manufacturer,
-        }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the receiver zone."""
-        return self._receiver_zone.name
 
     @property
     def available(self) -> bool:
@@ -209,19 +195,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         return self._parse_unmapped_source(self._receiver_zone.source)
 
     @property
-    def source_list(self) -> list[str]:
-        """Return all active, configured inputs."""
-        return self._source_list
-
-    @property
     def sound_mode(self) -> str | None:
         """Return the current sound mode."""
         return self._receiver_zone.sound_mode
-
-    @property
-    def sound_mode_list(self) -> list[str]:
-        """Return a list of available sound modes."""
-        return list(SOUND_MODE_MAPPING)
 
     @property
     def extra_state_attributes(self) -> dict[str, str | dict[str, str] | None]:
@@ -239,7 +215,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Change receiver zone to the designated source (by name)."""
-        if source in self._source_list:
+        if source in self._attr_source_list:
             mapped_source = self._reverse_source_mapping[source]
         self._receiver_zone.set_source(mapped_source)
 

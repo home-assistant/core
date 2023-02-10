@@ -15,8 +15,7 @@
                 "data": {
                     "host": "IP Address"
                 },
-                "description": "No receivers discovered, please set the IP manually",
-                "title": "Onkyo & Pioneer Network Receivers"
+                "description": "No receivers discovered, please set the IP manually"
             },
             "select": {
                 "data": {
@@ -34,8 +33,7 @@
                     "enabled_sources": "Select which sources to enable/disable",
                     "max_volume": "Max volume. Older receivers use 80, newer 200"
                 },
-                "description": "Optional receiver settings",
-                "title": "Onkyo & Pioneer Network Receivers"
+                "description": "Optional receiver settings"
             },
             "source_names": {
                 "data": {
@@ -76,8 +74,7 @@
                     "video7": "VIDEO7 custon name",
                     "xm": "XM custon name"
                 },
-                "description": "Set custom names for receiver sources",
-                "title": "Onkyo & Pioneer Network Receivers"
+                "description": "Set custom names for receiver sources"
             }
         }
     }

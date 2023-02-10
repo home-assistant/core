@@ -1,15 +1,19 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.components.number import NumberEntity, RestoreNumber
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    RestoreNumber,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
+    CONF_DEVICE_INFO,
     CONF_MAX_VOLUME,
     CONF_RECEIVER,
     DEFAULT_MAX_VOLUME,
@@ -19,6 +23,15 @@ from .const import (
 )
 from .receiver import OnkyoNetworkReceiver, ReceiverZone
 
+MAX_VOLUME_DESCRIPTION: NumberEntityDescription = NumberEntityDescription(
+    key=CONF_MAX_VOLUME,
+    name="Maximum Volume",
+    icon="mdi:volume-high",
+    entity_category=EntityCategory.CONFIG,
+    native_min_value=MAX_VOLUME_MIN_VALUE,
+    native_max_value=MAX_VOLUME_MAX_VALUE,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -26,98 +39,76 @@ async def async_setup_entry(
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
     """Set up Number platform for passed config_entry."""
+    device_info: DeviceInfo = hass.data[DOMAIN][config_entry.entry_id][CONF_DEVICE_INFO]
     receiver: OnkyoNetworkReceiver = hass.data[DOMAIN][config_entry.entry_id][
         CONF_RECEIVER
     ]
 
-    new_devices: list[NumberBase] = []
+    new_devices: list[OnkyoNumberEntity] = []
     for zone in receiver.zones.values():
         if zone.supports_set_volume:
-            new_devices.append(OnkyoMaxVolumeNumber(zone))
+            new_devices.append(
+                OnkyoRestoreNumberEntity(
+                    zone, MAX_VOLUME_DESCRIPTION, device_info, DEFAULT_MAX_VOLUME
+                )
+            )
 
     # Add all new devices to HA.
     if new_devices:
         async_add_entities(new_devices)
 
 
-class NumberBase(NumberEntity):
-    """Base representation of any Onkyo Number Entity."""
+class OnkyoNumberEntity(NumberEntity):
+    """Representation of any Onkyo Number Entity."""
 
-    should_poll: bool = False
+    _attr_should_poll: bool = False
 
-    def __init__(self, receiver_zone: ReceiverZone) -> None:
+    def __init__(
+        self,
+        receiver_zone: ReceiverZone,
+        description: NumberEntityDescription,
+        device_info: DeviceInfo,
+    ) -> None:
         """Initialize the base number."""
+        self.entity_description: NumberEntityDescription = description
+        self._attr_unique_id: str = f"{receiver_zone.zone_identifier}_{description.key}"
+        self._attr_device_info: DeviceInfo = device_info
+        self._attr_name: str = f"{receiver_zone.name} {description.name}"
         self._receiver_zone: ReceiverZone = receiver_zone
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Information about this entity/device."""
-        return {
-            "identifiers": {(DOMAIN, self._receiver_zone.receiver.identifier)},
-            "name": self._receiver_zone.receiver.name,
-            "model": self._receiver_zone.receiver.name,
-            "manufacturer": self._receiver_zone.receiver.manufacturer,
-        }
-
-    @property
-    def available(self) -> bool:
-        """Return True if receiver is online."""
-        return self._receiver_zone.receiver.online
-
-    async def async_added_to_hass(self) -> None:
-        """Run when this Entity has been added to HA."""
-        self._receiver_zone.register_callback(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Entity being removed from hass."""
-        self._receiver_zone.remove_callback(self.async_write_ha_state)
-
-
-class OnkyoMaxVolumeNumber(NumberBase, RestoreNumber):
-    """Representation of the max volume on an Onkyo network receiver zone."""
-
-    async def async_added_to_hass(self) -> None:
-        """Run when this Entity has been added to HA."""
-        if number_data := await self.async_get_last_number_data():
-            # Get the last stored value and set the zone's max volume to it.
-            self._receiver_zone.set_max_volume(
-                int(number_data.native_value)
-                if number_data.native_value is not None
-                else DEFAULT_MAX_VOLUME
-            )
-
-        await super().async_added_to_hass()
-
-    @property
-    def unique_id(self) -> str:
-        """Return Unique ID string."""
-        return f"{self._receiver_zone.zone_identifier}_max_volume"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return entity specific state attributes."""
-        return {CONF_MAX_VOLUME: self.value}
-
-    @property
-    def name(self) -> str:
-        """Return the name of the receiver zone."""
-        return f"{self._receiver_zone.name} Maximum Volume"
-
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        return MAX_VOLUME_MIN_VALUE
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        return MAX_VOLUME_MAX_VALUE
-
-    @property
-    def native_value(self) -> float:
-        """Return the current max volume."""
-        return float(self._receiver_zone.max_volume)
+    def native_value(self) -> int | None:
+        """Return the value of the number entity."""
+        return self._receiver_zone.get_config_value(self.entity_description.key)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set the max volume to this value."""
-        self._receiver_zone.set_max_volume(int(value))
+        """Set the value of the entity."""
+        self._receiver_zone.set_config_value(self.entity_description.key, int(value))
+        self.async_write_ha_state()
+
+
+class OnkyoRestoreNumberEntity(OnkyoNumberEntity, RestoreNumber):
+    """Representation of an Onkyo Restore Number Entity."""
+
+    def __init__(
+        self,
+        receiver_zone: ReceiverZone,
+        description: NumberEntityDescription,
+        device_info: DeviceInfo,
+        default_value: int,
+    ) -> None:
+        """Initialize the restore number."""
+        super().__init__(receiver_zone, description, device_info)
+        self._default_value = default_value
+
+    async def async_added_to_hass(self) -> None:
+        """Run when this Entity has been added to HA."""
+        await super().async_added_to_hass()
+        if number_data := await self.async_get_last_number_data():
+            # Get the last stored value and set the zone's config to it.
+            self._receiver_zone.set_config_value(
+                self.entity_description.key,
+                int(number_data.native_value)
+                if number_data.native_value is not None
+                else self._default_value,
+            )
