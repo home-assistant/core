@@ -270,17 +270,7 @@ def subscribe(
 
 def _is_simple_subscription(topic: str) -> bool:
     """Return if a topic is a simple subscription."""
-    return not any(
-        (
-            "+" in topic,
-            "#" in topic,
-            "$" in topic,
-            "{" in topic,
-            "}" in topic,
-            "[" in topic,
-            "]" in topic,
-        )
-    )
+    return "+" not in topic and "#" not in topic
 
 
 @attr.s(slots=True, frozen=True)
@@ -374,7 +364,7 @@ class MQTT:
         self.conf = conf
         self.subscriptions: list[Subscription] = []
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
-        self._complex_subscriptions: list[Subscription] = []
+        self._wildcard_subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -519,7 +509,7 @@ class MQTT:
         if _is_simple:
             self._simple_subscriptions.setdefault(topic, []).append(subscription)
         else:
-            self._complex_subscriptions.append(subscription)
+            self._wildcard_subscriptions.append(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
@@ -538,7 +528,7 @@ class MQTT:
                 if not self._simple_subscriptions[topic]:
                     del self._simple_subscriptions[topic]
             else:
-                self._complex_subscriptions.remove(subscription)
+                self._wildcard_subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
@@ -677,7 +667,7 @@ class MQTT:
         subscriptions: list[Subscription] = []
         if topic in self._simple_subscriptions:
             subscriptions.extend(self._simple_subscriptions[topic])
-        for subscription in self._complex_subscriptions:
+        for subscription in self._wildcard_subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
