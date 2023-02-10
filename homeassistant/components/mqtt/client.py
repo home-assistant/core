@@ -373,7 +373,7 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
         self.subscriptions: list[Subscription] = []
-        self._simple_subscriptions: dict[str, Subscription] = {}
+        self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._complex_subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
@@ -517,7 +517,7 @@ class MQTT:
         self.subscriptions.append(subscription)
         _is_simple = _is_simple_subscription(topic)
         if _is_simple:
-            self._simple_subscriptions[topic] = subscription
+            self._simple_subscriptions.setdefault(topic, []).append(subscription)
         else:
             self._complex_subscriptions.append(subscription)
         self._matching_subscriptions.cache_clear()
@@ -532,11 +532,13 @@ class MQTT:
             """Remove subscription."""
             if subscription not in self.subscriptions:
                 raise HomeAssistantError("Can't remove subscription twice")
+            self.subscriptions.remove(subscription)
             if _is_simple:
-                del self._simple_subscriptions[topic]
+                self._simple_subscriptions[topic].remove(subscription)
+                if not self._simple_subscriptions[topic]:
+                    del self._simple_subscriptions[topic]
             else:
                 self._complex_subscriptions.remove(subscription)
-            self.subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
@@ -674,7 +676,7 @@ class MQTT:
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
         subscriptions: list[Subscription] = []
         if topic in self._simple_subscriptions:
-            subscriptions.append(self._simple_subscriptions[topic])
+            subscriptions.extend(self._simple_subscriptions[topic])
         for subscription in self._complex_subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
