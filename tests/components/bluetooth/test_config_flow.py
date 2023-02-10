@@ -411,4 +411,4 @@ async def test_async_step_user_linux_adapter_is_ignored(hass, one_adapter):
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
-    assert result["description_placeholders"] == {"ignored_adapters": 1}
+    assert result["description_placeholders"] == {"ignored_adapters": "1"}
