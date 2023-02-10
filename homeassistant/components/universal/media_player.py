@@ -46,6 +46,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
@@ -301,6 +302,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def name(self):
         """Return the name of universal player."""
         return self._name
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self._child_attr(ATTR_ASSUMED_STATE)
 
     @property
     def state(self):
