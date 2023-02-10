@@ -2643,7 +2643,7 @@ async def test_debug_info_non_mqtt(
     )
     for device_class in DEVICE_CLASSES:
         entity_registry.async_get_or_create(
-            mqtt.DOMAIN,
+            domain,
             "test",
             platform.ENTITIES[device_class].unique_id,
             device_id=device_entry.id,
