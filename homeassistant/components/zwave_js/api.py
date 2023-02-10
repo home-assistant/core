@@ -643,6 +643,7 @@ async def websocket_node_comments(
             QR_PROVISIONING_INFORMATION, "options"
         ): QR_PROVISIONING_INFORMATION_SCHEMA,
         vol.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
+        vol.Exclusive(DSK, "options"): str,
     }
 )
 @websocket_api.async_response
@@ -665,6 +666,7 @@ async def websocket_add_node(
         or msg.get(QR_PROVISIONING_INFORMATION)
         or msg.get(QR_CODE_STRING)
     )
+    dsk = msg.get(DSK)
 
     @callback
     def async_cleanup() -> None:
@@ -761,6 +763,7 @@ async def websocket_add_node(
             INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
             force_security=force_security,
             provisioning=provisioning,
+            dsk=dsk,
         )
     except ValueError as err:
         connection.send_error(
