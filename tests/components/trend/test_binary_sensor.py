@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config as hass_config, setup
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
@@ -10,6 +12,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component,
+    fire_time_changed,
     get_fixture_path,
     get_test_home_assistant,
 )
@@ -377,6 +380,151 @@ class TestTrendBinarySensor:
                 self.hass, "binary_sensor", {"binary_sensor": {"platform": "trend"}}
             )
         assert self.hass.states.all("binary_sensor") == []
+
+    @pytest.mark.parametrize(
+        "sample_duration,min_samples,max_samples",
+        [
+            (-1, 2, 2),
+            (0, 1, 2),
+            (0, 2, 1),
+            (0, 3, 2),
+            (0, 2, 0),
+        ],
+    )
+    def test_invalid_samples_parameters(
+        self, sample_duration, min_samples, max_samples
+    ):
+        """Test invalid samples parameters."""
+        config = {
+            "binary_sensor": {
+                "platform": "trend",
+                "sensors": {
+                    "test_trend_sensor": {
+                        "entity_id": "sensor.test_state",
+                        "sample_duration": timedelta(seconds=sample_duration),
+                        "min_samples": min_samples,
+                        "max_samples": max_samples,
+                    }
+                },
+            }
+        }
+
+        with assert_setup_component(0):
+            assert setup.setup_component(self.hass, "binary_sensor", config)
+        assert self.hass.states.all("binary_sensor") == []
+
+    @pytest.mark.parametrize(
+        "max_samples,data",
+        [
+            (
+                3,
+                [
+                    (0, 1, "unknown"),
+                    (10, 2, "on"),
+                    (20, 3, "on"),  # Do not exceed either limit
+                    (None, 3, "on"),
+                    (None, 3, "on"),
+                    (None, 2, "on"),
+                    (None, 1, "unknown"),
+                    (None, 0, "unknown"),
+                    (0, 1, "unknown"),
+                    (10, 2, "on"),
+                    (20, 3, "on"),
+                    (30, 3, "on"),  # Exceed max_samples
+                    (None, 3, "on"),
+                    (None, 3, "on"),
+                    (None, 2, "on"),
+                    (None, 1, "unknown"),
+                    (None, 0, "unknown"),
+                    (0, 1, "unknown"),
+                    (None, 1, "unknown"),
+                    (10, 2, "on"),
+                    (None, 2, "on"),
+                    (20, 3, "on"),
+                    (None, 2, "on"),  # Exceed sample_duration
+                    (None, 2, "on"),
+                    (None, 1, "unknown"),
+                    (None, 1, "unknown"),
+                    (None, 0, "unknown"),
+                ],
+            ),
+            (
+                0,
+                [
+                    (0, 1, "unknown"),
+                    (10, 2, "on"),
+                    (20, 3, "on"),  # Do not exceed sample_duration
+                    (None, 3, "on"),
+                    (None, 3, "on"),
+                    (None, 2, "on"),
+                    (None, 1, "unknown"),
+                    (None, 0, "unknown"),
+                    (0, 1, "unknown"),
+                    (None, 1, "unknown"),
+                    (10, 2, "on"),
+                    (None, 2, "on"),
+                    (20, 3, "on"),
+                    (None, 2, "on"),  # Exceed sample_duration
+                    (None, 2, "on"),
+                    (None, 1, "unknown"),
+                    (None, 1, "unknown"),
+                    (None, 0, "unknown"),
+                ],
+            ),
+        ],
+    )
+    def test_stale_samples_removed(self, max_samples, data) -> None:
+        """Test samples outside of max_samples or sample_duration are dropped."""
+        assert setup.setup_component(
+            self.hass,
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": "trend",
+                    "sensors": {
+                        "test_trend_sensor": {
+                            "entity_id": "sensor.test_state",
+                            "sample_duration": 9,
+                            "min_gradient": 2,
+                            "max_samples": max_samples,
+                        }
+                    },
+                }
+            },
+        )
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_trend_sensor")
+        assert state.state == "unknown"
+        assert state.attributes["sample_count"] == 0
+
+        now = dt_util.utcnow()
+
+        value, expected_count, expected_state = data[0]
+        if value is not None:
+            with patch("homeassistant.util.dt.utcnow", return_value=now):
+                self.hass.states.set("sensor.test_state", value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_trend_sensor")
+        assert state.attributes["sample_count"] == expected_count
+        assert state.state == expected_state
+
+        for idx in range(1, len(data)):
+            value, expected_count, expected_state = data[idx]
+
+            now += timedelta(seconds=2)
+            fire_time_changed(self.hass, now)
+            self.hass.block_till_done()
+
+            if value is not None:
+                with patch("homeassistant.util.dt.utcnow", return_value=now):
+                    self.hass.states.set("sensor.test_state", value)
+                self.hass.block_till_done()
+
+            state = self.hass.states.get("binary_sensor.test_trend_sensor")
+            assert state.attributes["sample_count"] == expected_count
+            assert state.state == expected_state
 
 
 async def test_reload(hass: HomeAssistant) -> None:
