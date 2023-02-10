@@ -1028,13 +1028,14 @@ def list_statistic_ids(
 
 def _reduce_statistics(
     stats: dict[str, list[dict[str, Any]]],
-    same_period: Callable[[datetime, datetime], bool],
-    period_start_end: Callable[[datetime], tuple[datetime, datetime]],
+    same_period: Callable[[float, float], bool],
+    period_start_end: Callable[[float], tuple[float, float]],
     period: timedelta,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    period_seconds = period.total_seconds()
     for statistic_id, stat_list in stats.items():
         max_values: list[float] = []
         mean_values: list[float] = []
@@ -1043,7 +1044,7 @@ def _reduce_statistics(
 
         # Loop over the hourly statistics + a fake entry to end the period
         for statistic in chain(
-            stat_list, ({"start": stat_list[-1]["start"] + period},)
+            stat_list, ({"start": stat_list[-1]["start"] + period_seconds},)
         ):
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, end = period_start_end(prev_stat["start"])
@@ -1080,35 +1081,39 @@ def _reduce_statistics(
     return result
 
 
-def reduce_day_factory() -> (
+def reduce_day_ts_factory() -> (
     tuple[
-        Callable[[datetime, datetime], bool],
-        Callable[[datetime], tuple[datetime, datetime]],
+        Callable[[float, float], bool],
+        Callable[[float], tuple[float, float]],
     ]
 ):
     """Return functions to match same day and day start end."""
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+    )
     # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(dt_util.as_local)
+    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
-    def _as_local_date(time: datetime) -> date:
+    def _as_local_date(time: float) -> date:
         """Return the local date of a datetime."""
-        return dt_util.as_local(time).date()
+        return _local_from_timestamp(time).date()
 
     _as_local_date_cached = lru_cache(maxsize=6)(_as_local_date)
 
-    def _same_day(time1: datetime, time2: datetime) -> bool:
+    def _same_day_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same date."""
         return _as_local_date_cached(time1) == _as_local_date_cached(time2)
 
-    def _day_start_end(time: datetime) -> tuple[datetime, datetime]:
+    def _day_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (day) time is within."""
         start = dt_util.as_utc(
             _as_local_cached(time).replace(hour=0, minute=0, second=0, microsecond=0)
         )
         end = start + timedelta(days=1)
-        return (start, end)
+        return (start.timestamp(), end.timestamp())
 
-    return _same_day, _day_start_end
+    return _same_day_ts, _day_start_end_ts
 
 
 def _reduce_statistics_per_day(
@@ -1116,37 +1121,41 @@ def _reduce_statistics_per_day(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to daily statistics."""
-    _same_day, _day_start_end = reduce_day_factory()
+    _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
     return _reduce_statistics(
-        stats, _same_day, _day_start_end, timedelta(days=1), types
+        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types
     )
 
 
-def reduce_week_factory() -> (
+def reduce_week_ts_factory() -> (
     tuple[
-        Callable[[datetime, datetime], bool],
-        Callable[[datetime], tuple[datetime, datetime]],
+        Callable[[float, float], bool],
+        Callable[[float], tuple[float, float]],
     ]
 ):
     """Return functions to match same week and week start end."""
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+    )
     # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(dt_util.as_local)
+    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
     def _as_local_isocalendar(
-        time: datetime,
+        time: float,
     ) -> tuple:  # Need python3.11 for isocalendar typing
         """Return the local isocalendar of a datetime."""
-        return dt_util.as_local(time).isocalendar()
+        return _local_from_timestamp(time).isocalendar()
 
     _as_local_isocalendar_cached = lru_cache(maxsize=6)(_as_local_isocalendar)
 
-    def _same_week(time1: datetime, time2: datetime) -> bool:
+    def _same_week_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and week."""
         date1 = _as_local_isocalendar_cached(time1)
         date2 = _as_local_isocalendar_cached(time2)
         return (date1.year, date1.week) == (date2.year, date2.week)  # type: ignore[attr-defined]
 
-    def _week_start_end(time: datetime) -> tuple[datetime, datetime]:
+    def _week_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (week) time is within."""
         time_local = _as_local_cached(time)
         start_local = time_local.replace(
@@ -1154,9 +1163,9 @@ def reduce_week_factory() -> (
         ) - timedelta(days=time_local.weekday())
         start = dt_util.as_utc(start_local)
         end = dt_util.as_utc(start_local + timedelta(days=7))
-        return (start, end)
+        return (start.timestamp(), end.timestamp())
 
-    return _same_week, _week_start_end
+    return _same_week_ts, _week_start_end_ts
 
 
 def _reduce_statistics_per_week(
@@ -1164,34 +1173,33 @@ def _reduce_statistics_per_week(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to weekly statistics."""
-    _same_week, _week_start_end = reduce_week_factory()
+    _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
     return _reduce_statistics(
-        stats, _same_week, _week_start_end, timedelta(days=7), types
+        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types
     )
 
 
-def reduce_month_factory() -> (
+def reduce_month_ts_factory() -> (
     tuple[
-        Callable[[datetime, datetime], bool],
-        Callable[[datetime], tuple[datetime, datetime]],
+        Callable[[float, float], bool],
+        Callable[[float], tuple[float, float]],
     ]
 ):
     """Return functions to match same month and month start end."""
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+    )
     # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(dt_util.as_local)
+    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
-    def _same_month(time1: datetime, time2: datetime) -> bool:
+    def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
-        if 2 < time1.day < 26 and 2 < time2.day < 26:
-            # No need to convert to local time if both dates are far
-            # enough from possible start or end of the month as time zones
-            # can't change more than 24 hours in a month.
-            return (time1.year, time1.month) == (time1.year, time1.month)
         date1 = _as_local_cached(time1)
         date2 = _as_local_cached(time2)
         return (date1.year, date1.month) == (date2.year, date2.month)
 
-    def _month_start_end(time: datetime) -> tuple[datetime, datetime]:
+    def _month_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (month) time is within."""
         start_local = _as_local_cached(time).replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
@@ -1199,9 +1207,9 @@ def reduce_month_factory() -> (
         start = dt_util.as_utc(start_local)
         end_local = (start_local + timedelta(days=31)).replace(day=1)
         end = dt_util.as_utc(end_local)
-        return (start, end)
+        return (start.timestamp(), end.timestamp())
 
-    return _same_month, _month_start_end
+    return _same_month_ts, _month_start_end_ts
 
 
 def _reduce_statistics_per_month(
@@ -1209,9 +1217,9 @@ def _reduce_statistics_per_month(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to monthly statistics."""
-    _same_month, _month_start_end = reduce_month_factory()
+    _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
-        stats, _same_month, _month_start_end, timedelta(days=31), types
+        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types
     )
 
 
@@ -2028,7 +2036,6 @@ def _sorted_statistics_to_dict(
 
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
-    timestamp_to_datetime = dt_util.utc_from_timestamp
     for meta_id, stats_list in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
@@ -2043,8 +2050,8 @@ def _sorted_statistics_to_dict(
         for db_state in stats_list:
             start_ts = db_state.start_ts
             row: dict[str, Any] = {
-                "start": timestamp_to_datetime(start_ts),
-                "end": timestamp_to_datetime(start_ts + table_duration_seconds),
+                "start": start_ts,
+                "end": start_ts + table_duration_seconds,
             }
             if "mean" in types:
                 row["mean"] = convert(db_state.mean) if convert else db_state.mean
@@ -2053,9 +2060,7 @@ def _sorted_statistics_to_dict(
             if "max" in types:
                 row["max"] = convert(db_state.max) if convert else db_state.max
             if "last_reset" in types:
-                row["last_reset"] = timestamp_to_datetime_or_none(
-                    db_state.last_reset_ts
-                )
+                row["last_reset"] = db_state.last_reset_ts
             if "state" in types:
                 row["state"] = convert(db_state.state) if convert else db_state.state
             if "sum" in types:
@@ -2509,8 +2514,10 @@ def _validate_db_schema(
                     schema_errors,
                     stored_statistic[0],
                     {
-                        "last_reset": statistics["last_reset"],
-                        "start": statistics["start"],
+                        "last_reset": datetime_to_timestamp_or_none(
+                            statistics["last_reset"]
+                        ),
+                        "start": datetime_to_timestamp_or_none(statistics["start"]),
                     },
                     ("start", "last_reset"),
                     table.__tablename__,
