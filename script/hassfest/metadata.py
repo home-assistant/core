@@ -1,7 +1,7 @@
 """Package metadata validation."""
 import sys
 
-from homeassistant.const import REQUIRED_PYTHON_VER, __version__
+from homeassistant.const import DISALLOWED_PYTHON_VER, REQUIRED_PYTHON_VER, __version__
 
 from .model import Config, Integration
 
@@ -26,6 +26,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         config.add_error("metadata", "No 'metadata.version' key found!")
 
     required_py_version = f">={'.'.join(map(str, REQUIRED_PYTHON_VER))}"
+    if DISALLOWED_PYTHON_VER:
+        required_py_version += f",<{'.'.join(map(str,DISALLOWED_PYTHON_VER))}"
     try:
         if data["project"]["requires-python"] != required_py_version:
             config.add_error(
