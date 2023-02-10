@@ -16,7 +16,7 @@ import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import ClientWebSocketResponse, client
+from aiohttp import client
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
@@ -62,6 +62,7 @@ from homeassistant.util import dt as dt_util, location
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 from .typing import (
     ClientSessionGenerator,
+    MockHAClientWebSocket,
     MqttMockHAClient,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
@@ -725,7 +726,7 @@ def hass_ws_client(
 
     async def create_client(
         hass: HomeAssistant = hass, access_token: str | None = hass_access_token
-    ) -> ClientWebSocketResponse:
+    ) -> MockHAClientWebSocket:
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
@@ -741,9 +742,22 @@ def hass_ws_client(
         auth_ok = await websocket.receive_json()
         assert auth_ok["type"] == TYPE_AUTH_OK
 
+        def _get_next_id() -> Generator[int, None, None]:
+            i = 0
+            while True:
+                yield (i := i + 1)
+
+        id_generator = _get_next_id()
+
+        def _send_json_auto_id(data: dict[str, Any]):
+            data["id"] = next(id_generator)
+            return websocket.send_json(data)
+
         # wrap in client
-        websocket.client = client
-        return websocket
+        wrapped_websocket = cast(MockHAClientWebSocket, websocket)
+        wrapped_websocket.client = client
+        wrapped_websocket.send_json_auto_id = _send_json_auto_id
+        return wrapped_websocket
 
     return create_client
 
