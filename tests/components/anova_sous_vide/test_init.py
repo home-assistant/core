@@ -7,11 +7,12 @@ from anova_wifi import AnovaOffline
 from homeassistant.components.anova_sous_vide import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, create_entry
 
 
-async def test_async_setup_entry(hass):
+async def test_async_setup_entry(hass: HomeAssistant):
     """Test a successful setup entry."""
     await async_init_integration(hass)
     state = hass.states.get("sensor.mode")
@@ -20,7 +21,7 @@ async def test_async_setup_entry(hass):
     assert state.state == "Low water"
 
 
-async def test_config_not_ready(hass):
+async def test_config_not_ready(hass: HomeAssistant):
     """Test for setup failure if connection to Anova is missing."""
     entry = create_entry(hass)
     with patch(
@@ -32,7 +33,7 @@ async def test_config_not_ready(hass):
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant):
     """Test successful unload of entry."""
     entry = await async_init_integration(hass)
 
