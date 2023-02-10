@@ -164,6 +164,11 @@ def utc_to_timestamp(utc_dt: dt.datetime) -> float:
     )
 
 
+def local_from_timestamp(timestamp: float) -> dt.datetime:
+    """Return a local time from a timestamp."""
+    return dt.datetime.fromtimestamp(timestamp, DEFAULT_TIME_ZONE)
+
+
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
