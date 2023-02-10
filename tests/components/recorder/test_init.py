@@ -130,6 +130,10 @@ async def test_shutdown_before_startup_finishes(
     assert run_info.run_id == 1
     assert run_info.start is not None
     assert run_info.end is not None
+    # We patched out engine to prevent the close from happening
+    # so we need to manually close the session
+    session.close()
+    await hass.async_add_executor_job(instance._shutdown)
 
 
 async def test_canceled_before_startup_finishes(
@@ -152,6 +156,9 @@ async def test_canceled_before_startup_finishes(
         "Recorder startup was externally canceled before it could complete"
         in caplog.text
     )
+    # We patched out engine to prevent the close from happening
+    # so we need to manually close the session
+    await hass.async_add_executor_job(instance._shutdown)
 
 
 async def test_shutdown_closes_connections(recorder_mock, hass):

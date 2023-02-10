@@ -394,3 +394,21 @@ async def test_options_flow_enabled_linux(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is True
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_async_step_user_linux_adapter_is_ignored(hass, one_adapter):
+    """Test we give a hint that the adapter is ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="00:00:00:00:00:01",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_adapters"
+    assert result["description_placeholders"] == {"ignored_adapters": "1"}
