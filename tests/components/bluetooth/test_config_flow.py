@@ -412,7 +412,9 @@ async def test_options_flow_enabled_linux(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_async_step_user_linux_adapter_is_ignored(hass, one_adapter):
+async def test_async_step_user_linux_adapter_is_ignored(
+    hass: HomeAssistant, one_adapter: None
+) -> None:
     """Test we give a hint that the adapter is ignored."""
     entry = MockConfigEntry(
         domain=DOMAIN,
