@@ -1088,12 +1088,16 @@ def reduce_day_ts_factory() -> (
     ]
 ):
     """Return functions to match same day and day start end."""
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+    )
     # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(dt_util.local_from_timestamp)
+    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
     def _as_local_date(time: float) -> date:
         """Return the local date of a datetime."""
-        return dt_util.local_from_timestamp(time).date()
+        return _local_from_timestamp(time).date()
 
     _as_local_date_cached = lru_cache(maxsize=6)(_as_local_date)
 
@@ -1130,14 +1134,18 @@ def reduce_week_ts_factory() -> (
     ]
 ):
     """Return functions to match same week and week start end."""
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+    )
     # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(dt_util.local_from_timestamp)
+    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
     def _as_local_isocalendar(
         time: float,
     ) -> tuple:  # Need python3.11 for isocalendar typing
         """Return the local isocalendar of a datetime."""
-        return dt_util.local_from_timestamp(time).isocalendar()
+        return _local_from_timestamp(time).isocalendar()
 
     _as_local_isocalendar_cached = lru_cache(maxsize=6)(_as_local_isocalendar)
 
@@ -1178,8 +1186,12 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
+    )
     # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(dt_util.local_from_timestamp)
+    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
     def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
