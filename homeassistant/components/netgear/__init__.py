@@ -206,7 +206,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     router = hass.data[DOMAIN][config_entry.entry_id][KEY_ROUTER]
@@ -224,4 +224,3 @@ async def async_remove_config_entry_device(
         return True
 
     return not router.devices[device_mac]["active"]
-
