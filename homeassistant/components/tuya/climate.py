@@ -286,6 +286,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             commands = [
                 {"code": DPCode.POWER_SWITCH, "value": hvac_mode != HVACMode.OFF}
             ]
+
         if hvac_mode in self._hvac_to_tuya:
             commands.append(
                 {"code": DPCode.MODE, "value": self._hvac_to_tuya[hvac_mode]}
