@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_events_http_api(
@@ -158,7 +158,9 @@ async def test_calendars_http_api(
         ),
     ],
 )
-async def test_unsupported_websocket(hass, hass_ws_client, payload, code):
+async def test_unsupported_websocket(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload, code
+) -> None:
     """Test unsupported websocket command."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()

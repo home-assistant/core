@@ -16,13 +16,17 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import mock_device, mock_location, mock_mode
 
 
-async def test_alarm_control_panel(hass, canary, entity_registry) -> None:
+async def test_alarm_control_panel(
+    hass: HomeAssistant, canary, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the alarm_control_panel for Canary."""
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
@@ -104,7 +108,7 @@ async def test_alarm_control_panel(hass, canary, entity_registry) -> None:
     assert state.state == STATE_ALARM_ARMED_NIGHT
 
 
-async def test_alarm_control_panel_services(hass, canary) -> None:
+async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None:
     """Test the services of the alarm_control_panel for Canary."""
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
