@@ -55,7 +55,9 @@ def flow_feature_mock_fixture():
     )
 
 
-async def test_flow_works(hass, valid_feature_mock, flow_feature_mock):
+async def test_flow_works(
+    hass: HomeAssistant, valid_feature_mock, flow_feature_mock
+) -> None:
     """Test that config flow works."""
 
     result = await hass.config_entries.flow.async_init(
@@ -87,7 +89,9 @@ def product_class_mock_fixture():
     return patcher
 
 
-async def test_flow_with_connection_failure(hass, product_class_mock):
+async def test_flow_with_connection_failure(
+    hass: HomeAssistant, product_class_mock
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -102,7 +106,7 @@ async def test_flow_with_connection_failure(hass, product_class_mock):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_with_api_failure(hass, product_class_mock):
+async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -117,7 +121,9 @@ async def test_flow_with_api_failure(hass, product_class_mock):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_with_unknown_failure(hass, product_class_mock):
+async def test_flow_with_unknown_failure(
+    hass: HomeAssistant, product_class_mock
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
@@ -129,7 +135,9 @@ async def test_flow_with_unknown_failure(hass, product_class_mock):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_flow_with_unsupported_version(hass, product_class_mock):
+async def test_flow_with_unsupported_version(
+    hass: HomeAssistant, product_class_mock
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -150,7 +158,7 @@ async def test_async_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_already_configured(hass, valid_feature_mock):
+async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> None:
     """Test that same device cannot be added twice."""
 
     config = mock_config("172.2.3.4")
@@ -168,7 +176,7 @@ async def test_already_configured(hass, valid_feature_mock):
     assert result["reason"] == "address_already_configured"
 
 
-async def test_async_setup_entry(hass, valid_feature_mock):
+async def test_async_setup_entry(hass: HomeAssistant, valid_feature_mock) -> None:
     """Test async_setup_entry (for coverage)."""
 
     config = mock_config()
@@ -181,7 +189,7 @@ async def test_async_setup_entry(hass, valid_feature_mock):
     assert config.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_async_remove_entry(hass, valid_feature_mock):
+async def test_async_remove_entry(hass: HomeAssistant, valid_feature_mock) -> None:
     """Test async_setup_entry (for coverage)."""
 
     config = mock_config()
