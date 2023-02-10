@@ -1,6 +1,25 @@
-"""Constants for the Trydan integration."""
+"""Constants for the V2C integration."""
 
 DOMAIN = "v2c"
+
+CHARGE_STATES = [
+    "A: Esperando Vehículo",
+    "B: Conectando Vehículo",
+    "C: Cargando Vehículo",
+]
+SLAVE_ERROR = ["No error", "Error message", "Communication error"]
+PAUSE_DAYNAMIC = [
+    "Dynamic Control Modulation Working",
+    "Dynamic Control Modulation Pause",
+]
+DYNAMIC_POWER_MODE = [
+    "Timed Power Enable",
+    "Timed Power Disabled",
+    "Timed Power Disable and Exclusive Mode Setted",
+    "Timed Power Disable and Min Power Mode Setted",
+    "Timed Power Disable and Grid+FV Mode Setted",
+    "Timed Power Disable and Stop Mode Setted",
+]
 
 # read
 CHARGE_STATE_KEY = "charge_state"
