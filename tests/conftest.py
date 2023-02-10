@@ -749,7 +749,7 @@ def hass_ws_client(
 
         id_generator = _get_next_id()
 
-        def _send_json_auto_id(data: dict[str, Any]):
+        def _send_json_auto_id(data: dict[str, Any]) -> Coroutine[Any, Any, None]:
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
