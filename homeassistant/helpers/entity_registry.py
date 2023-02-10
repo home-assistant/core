@@ -175,8 +175,6 @@ class RegistryEntry:
 
         This version only includes what's needed for display.
         """
-        if self.disabled_by is not None:
-            return None
         display_dict: dict[str, Any] = {
             "ei": self.entity_id,
             "hb": self.hidden_by is not None,
