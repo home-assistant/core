@@ -1,8 +1,9 @@
-"""Config flow for V2C Trydan integration."""
+"""Config flow for V2C integration."""
 from __future__ import annotations
 
 import ipaddress
 import logging
+import socket
 from typing import Any
 
 import voluptuous as vol
@@ -23,10 +24,17 @@ def host_validate(host):
     """Return if the hostname/ip address is valid."""
     try:
         ip = ipaddress.ip_address(host)
-        if ip.version in (4, 6):
-            return True
-        return False
-
+        if ip.version == 4 or ip.version == 6:
+            # Try to establish a socket connection to the host
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            result = sock.connect_ex((str(ip), 502))
+            if result == 0:
+                return True
+            else:
+                return False
+        else:
+            return False
     except ValueError:
         _LOGGER.error("Error, %s is not a valid hostname/ip address", host)
         return False
@@ -49,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the start of the configuration flow."""
         errors = {}
         id_entity = "trydan"
-        host = user_input.get(CONF_HOST)  # type: ignore[union-attr]
+        host = user_input.get(CONF_HOST)
         if host:
             self.data[CONF_HOST] = host
             validation = host_validate(host)
