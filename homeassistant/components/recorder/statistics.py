@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 import contextlib
 import dataclasses
-from datetime import _IsoCalendarDate, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from functools import lru_cache, partial
 from itertools import chain, groupby
 import json
@@ -1132,7 +1132,9 @@ def reduce_week_factory() -> (
     # We create _as_local_cached in the closure in case the timezone changes
     _as_local_cached = lru_cache(maxsize=6)(dt_util.as_local)
 
-    def _as_local_isocalendar(time: datetime) -> _IsoCalendarDate:
+    def _as_local_isocalendar(
+        time: datetime,
+    ) -> tuple:  # Need python3.11 for isocalendar typing
         """Return the local isocalendar of a datetime."""
         return dt_util.as_local(time).isocalendar()
 
@@ -1142,7 +1144,7 @@ def reduce_week_factory() -> (
         """Return True if time1 and time2 are in the same year and week."""
         date1 = _as_local_isocalendar_cached(time1)
         date2 = _as_local_isocalendar_cached(time2)
-        return (date1.year, date1.week) == (date2.year, date2.week)
+        return (date1.year, date1.week) == (date2.year, date2.week)  # type: ignore[attr-defined]
 
     def _week_start_end(time: datetime) -> tuple[datetime, datetime]:
         """Return the start and end of the period (week) time is within."""
