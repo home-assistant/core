@@ -126,6 +126,17 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
     ),
+    DeconzSensorDescription[AirQuality](
+        key="air_quality_formaldehyd",
+        supported_fn=lambda device: device.air_quality_formaldehyd is not None,
+        update_key="airqualityformaldehyd",
+        value_fn=lambda device: device.air_quality_formaldehyd,
+        instance_check=AirQuality,
+        name_suffix="CH2O",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
     DeconzSensorDescription[Consumption](
         key="consumption",
         supported_fn=lambda device: device.consumption is not None,
