@@ -388,8 +388,7 @@ class ServiceIntentHandler(IntentHandler):
 
         if not states:
             raise IntentHandleError(
-                "No entities matched for: " f"name={name}, " f"area={area}, ",
-                f"domains={domains}, " f"device_classes={device_classes}",
+                f"No entities matched for: name={name}, area={area}, domains={domains}, device_classes={device_classes}",
             )
 
         response = await self.async_handle_states(intent_obj, states, area)

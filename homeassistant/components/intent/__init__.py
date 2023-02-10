@@ -137,16 +137,17 @@ class GetStateIntentHandler(intent.IntentHandler):
         )
 
         _LOGGER.debug(
-            "Found %s state(s) that matched: "
-            f"name={name}, "
-            f"area={area}, "
-            f"domains={domains}, "
-            f"device_classes={device_classes}",
+            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s",
             len(states),
+            name,
+            area,
+            domains,
+            device_classes,
         )
 
         # Create response
         response = intent_obj.create_response()
+        response.response_type = intent.IntentResponseType.QUERY_ANSWER
 
         success_results: list[intent.IntentResponseTarget] = []
         if area is not None:
@@ -179,6 +180,7 @@ class GetStateIntentHandler(intent.IntentHandler):
             )
 
             if (not state_names) or (state.state in state_names):
+                # If no state constraint, then all states will be "matched"
                 matched_states.append(state)
             else:
                 unmatched_states.append(state)
