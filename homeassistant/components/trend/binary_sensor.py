@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_SENSORS,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -60,10 +61,17 @@ _LOGGER = logging.getLogger(__name__)
 
 def _check_sample_options(config: ConfigType) -> ConfigType:
     """Check min/max sample options."""
-    if config[CONF_MAX_SAMPLES] < config[CONF_MIN_SAMPLES]:
+    if config[CONF_MAX_SAMPLES]:
+        if config[CONF_MAX_SAMPLES] < config[CONF_MIN_SAMPLES]:
+            raise vol.Invalid(
+                f"{CONF_MAX_SAMPLES} must not be smaller than {CONF_MIN_SAMPLES}"
+            )
+    elif not config[CONF_SAMPLE_DURATION]:
         raise vol.Invalid(
-            f"{CONF_MAX_SAMPLES} must not be smaller than {CONF_MIN_SAMPLES}"
+            f"{CONF_MAX_SAMPLES} & {CONF_SAMPLE_DURATION} cannot both be zero"
         )
+    else:
+        config[CONF_MAX_SAMPLES] = None
     return config
 
 
@@ -71,12 +79,14 @@ SENSOR_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_ATTRIBUTE): cv.string,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_FRIENDLY_NAME): cv.string,
             vol.Optional(CONF_INVERT, default=False): cv.boolean,
             vol.Optional(CONF_MAX_SAMPLES, default=2): vol.All(
-                vol.Coerce(int), vol.Range(min=2)
+                vol.Coerce(int),
+                vol.Any(0, vol.Range(min=2), msg="must be 0 or 2 or larger"),
             ),
             vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
             vol.Optional(CONF_MIN_SAMPLES, default=2): vol.All(
@@ -141,6 +151,7 @@ class SensorTrend(BinarySensorEntity):
         config: ConfigType,
     ) -> None:
         """Initialize the sensor."""
+        self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self.entity_description = entity_description
         self.entity_id = entity_description.key
 
