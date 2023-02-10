@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     apc = AnovaPrecisionCooker()
     try:
         update = await apc.update(entry.data["device_id"])
-    except (AnovaOffline) as ex:
+    except AnovaOffline as ex:
         raise ConfigEntryNotReady("Can not connect to the sous vide") from ex
     hass.data[DOMAIN][entry.entry_id] = {
         ANOVA_CLIENT: AnovaPrecisionCooker(),
