@@ -1107,14 +1107,9 @@ def reduce_day_ts_factory() -> (
         start_local = _local_from_timestamp(time).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        # We need to add 4 hours to the end to make sure we are in the next week
-        # before 0ing out the the time in case there is a DST change
-        end_local = (start_local + timedelta(days=1, hours=4)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
         return (
             start_local.astimezone(dt_util.UTC).timestamp(),
-            end_local.astimezone(dt_util.UTC).timestamp(),
+            (start_local + timedelta(days=1)).astimezone(dt_util.UTC).timestamp(),
         )
 
     # We create _day_start_end_ts_cached in the closure in case the timezone changes
@@ -1162,14 +1157,9 @@ def reduce_week_ts_factory() -> (
         start_local = time_local.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=time_local.weekday())
-        # We need to add 4 hours to the end to make sure we are in the next week
-        # before 0ing out the the time in case there is a DST change
-        end_local = (start_local + timedelta(days=7, hours=4)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
         return (
             start_local.astimezone(dt_util.UTC).timestamp(),
-            end_local.astimezone(dt_util.UTC).timestamp(),
+            (start_local + timedelta(days=7)).astimezone(dt_util.UTC).timestamp(),
         )
 
     # We create _week_start_end_ts_cached in the closure in case the timezone changes
