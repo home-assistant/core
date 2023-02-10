@@ -3,7 +3,7 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.config import entity_registry
-from homeassistant.const import ATTR_ICON
+from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
@@ -152,10 +152,12 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
             "test_domain.test": RegistryEntry(
                 area_id="area52",
                 device_id="device123",
+                entity_category=EntityCategory.DIAGNOSTIC,
                 entity_id="test_domain.test",
                 has_entity_name=True,
                 original_name="Hello World",
                 platform="test_platform",
+                translation_key="translations_galore",
                 unique_id="1234",
             ),
             "test_domain.nameless": RegistryEntry(
@@ -165,7 +167,7 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
                 has_entity_name=True,
                 original_name=None,
                 platform="test_platform",
-                unique_id="1234",
+                unique_id="2345",
             ),
             "test_domain.renamed": RegistryEntry(
                 area_id="area52",
@@ -175,31 +177,31 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
                 name="User name",
                 original_name="Hello World",
                 platform="test_platform",
-                unique_id="1234",
+                unique_id="3456",
             ),
             "test_domain.boring": RegistryEntry(
                 entity_id="test_domain.boring",
                 platform="test_platform",
-                unique_id="2345",
+                unique_id="4567",
             ),
             "test_domain.disabled": RegistryEntry(
                 disabled_by=RegistryEntryDisabler.USER,
                 entity_id="test_domain.disabled",
                 hidden_by=RegistryEntryHider.USER,
                 platform="test_platform",
-                unique_id="4567",
+                unique_id="789A",
             ),
             "test_domain.hidden": RegistryEntry(
                 entity_id="test_domain.hidden",
                 hidden_by=RegistryEntryHider.USER,
                 platform="test_platform",
-                unique_id="3456",
+                unique_id="89AB",
             ),
             "sensor.default_precision": RegistryEntry(
                 entity_id="sensor.default_precision",
                 options={"sensor": {"suggested_display_precision": 0}},
                 platform="test_platform",
-                unique_id="5678",
+                unique_id="9ABC",
             ),
             "sensor.user_precision": RegistryEntry(
                 entity_id="sensor.user_precision",
@@ -207,7 +209,7 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
                     "sensor": {"display_precision": 0, "suggested_display_precision": 1}
                 },
                 platform="test_platform",
-                unique_id="6789",
+                unique_id="ABCD",
             ),
         },
     )
@@ -221,62 +223,42 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
             {
                 "ai": "area52",
                 "di": "device123",
-                "ec": None,
+                "ec": 1,
                 "ei": "test_domain.test",
                 "en": "Hello World",
                 "hb": False,
-                "tk": None,
+                "tk": "translations_galore",
             },
             {
                 "ai": "area52",
                 "di": "device123",
-                "ec": None,
                 "ei": "test_domain.nameless",
                 "en": None,
                 "hb": False,
-                "tk": None,
             },
             {
                 "ai": "area52",
                 "di": "device123",
-                "ec": None,
                 "ei": "test_domain.renamed",
                 "hb": False,
-                "tk": None,
             },
             {
-                "ai": None,
-                "di": None,
-                "ec": None,
                 "ei": "test_domain.boring",
                 "hb": False,
-                "tk": None,
             },
             {
-                "ai": None,
-                "di": None,
-                "ec": None,
                 "ei": "test_domain.hidden",
                 "hb": True,
-                "tk": None,
             },
             {
-                "ai": None,
-                "di": None,
                 "dp": 0,
-                "ec": None,
                 "ei": "sensor.default_precision",
                 "hb": False,
-                "tk": None,
             },
             {
-                "ai": None,
-                "di": None,
                 "dp": 0,
-                "ec": None,
                 "ei": "sensor.user_precision",
                 "hb": False,
-                "tk": None,
             },
         ],
     }
@@ -315,11 +297,9 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
             {
                 "ai": "area52",
                 "di": "device123",
-                "ec": None,
                 "ei": "test_domain.test",
                 "en": "Hello World",
                 "hb": False,
-                "tk": None,
             },
         ],
     }

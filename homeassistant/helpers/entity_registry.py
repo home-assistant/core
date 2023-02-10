@@ -107,6 +107,12 @@ class RegistryEntryHider(StrEnum):
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
 
+DISLAY_DICT_OPTIONAL = (
+    ("ai", "area_id"),
+    ("di", "device_id"),
+    ("tk", "translation_key"),
+)
+
 
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
@@ -172,13 +178,16 @@ class RegistryEntry:
         if self.disabled_by is not None:
             return None
         display_dict: dict[str, Any] = {
-            "ai": self.area_id,
-            "di": self.device_id,
-            "ec": ENTITY_CATEGORY_VALUE_TO_INDEX.get(self.entity_category),
             "ei": self.entity_id,
             "hb": self.hidden_by is not None,
-            "tk": self.translation_key,
         }
+        for key, attr_name in DISLAY_DICT_OPTIONAL:
+            if (attr_val := getattr(self, attr_name)) is not None:
+                display_dict[key] = attr_val
+        if (category := self.entity_category) is not None:
+            display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
+        if not self.name and self.has_entity_name:
+            display_dict["en"] = self.original_name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
             if (precision := sensor_options.get("display_precision")) is not None:
                 display_dict["dp"] = precision
@@ -186,8 +195,6 @@ class RegistryEntry:
                 precision := sensor_options.get("suggested_display_precision")
             ) is not None:
                 display_dict["dp"] = precision
-        if not self.name and self.has_entity_name:
-            display_dict["en"] = self.original_name
         return display_dict
 
     @property
