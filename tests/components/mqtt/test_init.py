@@ -2245,7 +2245,7 @@ async def test_mqtt_ws_subscription_not_admin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-    hass_read_only_access_token,
+    hass_read_only_access_token: str,
 ) -> None:
     """Test MQTT websocket user is not admin."""
     await mqtt_mock_entry_no_yaml_config()
