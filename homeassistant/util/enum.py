@@ -4,8 +4,6 @@ import contextlib
 from enum import Enum
 from typing import TYPE_CHECKING, Any, TypeVar
 
-_EnumT = TypeVar("_EnumT", bound=Enum)
-
 # https://github.com/python/mypy/issues/5107
 if TYPE_CHECKING:
     _LruCacheT = TypeVar("_LruCacheT", bound=Callable)
@@ -15,6 +13,8 @@ if TYPE_CHECKING:
 
 else:
     from functools import lru_cache
+
+_EnumT = TypeVar("_EnumT", bound=Enum)
 
 
 @lru_cache
