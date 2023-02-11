@@ -659,12 +659,11 @@ class BluetoothManager:
     def async_rediscover_address(self, address: str) -> None:
         """Trigger discovery of devices which have already been seen."""
         self._integration_matcher.async_clear_address(address)
-        for service_info in (
-            self._connectable_history.get(address),
-            self._all_history.get(address),
-        ):
-            if service_info:
-                self._async_trigger_matching_discovery(service_info)
+        if service_info := self._connectable_history.get(address):
+            self._async_trigger_matching_discovery(service_info)
+            return
+        if service_info := self._all_history.get(address):
+            self._async_trigger_matching_discovery(service_info)
 
     def _get_scanners_by_type(self, connectable: bool) -> list[BaseHaScanner]:
         """Return the scanners by type."""
