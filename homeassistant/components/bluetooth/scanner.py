@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import contextlib
 from datetime import datetime
 import logging
 import platform
@@ -135,6 +136,7 @@ class HaScanner(BaseHaScanner):
         self._start_stop_lock = asyncio.Lock()
         self._new_info_callback = new_info_callback
         self.scanning = False
+        self._restart_scanner_task: asyncio.Task | None = None
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -314,7 +316,7 @@ class HaScanner(BaseHaScanner):
         """Check if the scanner is running."""
         if not self._async_watchdog_triggered():
             return
-        if self._start_stop_lock.locked():
+        if self._restart_scanner_task and not self._restart_scanner_task.done():
             _LOGGER.debug(
                 "%s: Scanner is already restarting, deferring restart",
                 self.name,
@@ -325,7 +327,9 @@ class HaScanner(BaseHaScanner):
             self.name,
             SCANNER_WATCHDOG_TIMEOUT,
         )
-        self.hass.async_create_task(self._async_restart_scanner())
+        self._restart_scanner_task = self.hass.async_create_task(
+            self._async_restart_scanner()
+        )
 
     async def _async_restart_scanner(self) -> None:
         """Restart the scanner."""
@@ -351,6 +355,7 @@ class HaScanner(BaseHaScanner):
                     ex,
                     exc_info=True,
                 )
+            self._restart_scanner_task = None
 
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
@@ -363,6 +368,10 @@ class HaScanner(BaseHaScanner):
 
     async def async_stop(self) -> None:
         """Stop bluetooth scanner."""
+        if self._restart_scanner_task and not self._restart_scanner_task.done():
+            self._restart_scanner_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._restart_scanner_task
         async with self._start_stop_lock:
             self._async_stop_scanner_watchdog()
             await self._async_stop_scanner()
