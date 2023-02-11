@@ -1,0 +1,12 @@
+{
+  "vesync": {
+    "account_id": "9999999",
+    "bulb_count": 0,
+    "fan_count": 0,
+    "outlets_count": 0,
+    "switch_count": 0,
+    "timezone": "US/Pacific"
+  },
+  "home_assistant": { "disabled_by": null, "disabled_polling": false },
+  "devices": { "bulbs": [], "fans": [], "outlets": [], "switches": [] }
+}

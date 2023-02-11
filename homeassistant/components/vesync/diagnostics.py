@@ -23,23 +23,49 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
 
-    data = {
-        "account_id": manager.account_id,
-        "bulb_count": len(manager.bulbs),
-        "fan_count": len(manager.fans),
-        "outlets_count": len(manager.outlets),
-        "scale_count": len(manager.scales),
-        "switch_count": len(manager.switches),
-        "timezone": manager.time_zone,
-        "disabled_by": entry.disabled_by,
-        "disabled_polling": entry.pref_disable_polling,
-    }
-
-    device_dict = _build_device_dict(manager)
+    data = {}
     data.update(
-        devices=[
-            _async_device_as_dict(hass, None, device) for device in device_dict.values()
-        ]
+        {
+            DOMAIN: {
+                "account_id": manager.account_id,
+                "bulb_count": len(manager.bulbs),
+                "fan_count": len(manager.fans),
+                "outlets_count": len(manager.outlets),
+                "switch_count": len(manager.switches),
+                "timezone": manager.time_zone,
+            }
+        }
+    )
+
+    data.update(
+        {
+            "home_assistant": {
+                "disabled_by": entry.disabled_by,
+                "disabled_polling": entry.pref_disable_polling,
+            }
+        }
+    )
+
+    data.update(
+        {
+            "devices": {
+                "bulbs": [
+                    _async_device_as_dict(hass, None, device)
+                    for device in manager.bulbs
+                ],
+                "fans": [
+                    _async_device_as_dict(hass, None, device) for device in manager.fans
+                ],
+                "outlets": [
+                    _async_device_as_dict(hass, None, device)
+                    for device in manager.outlets
+                ],
+                "switches": [
+                    _async_device_as_dict(hass, None, device)
+                    for device in manager.switches
+                ],
+            }
+        }
     )
 
     return data
@@ -118,7 +144,7 @@ def _build_device_dict(manager: VeSync) -> dict:
     device_dict = {x.cid: x for x in manager.switches}
     device_dict.update({x.cid: x for x in manager.fans})
     device_dict.update({x.cid: x for x in manager.outlets})
-    device_dict.update({x.cid: x for x in manager.switches})
+    device_dict.update({x.cid: x for x in manager.bulbs})
     return device_dict
 
 
