@@ -177,13 +177,14 @@ class RegistryEntry:
         """
         display_dict: dict[str, Any] = {
             "ei": self.entity_id,
-            "hb": self.hidden_by is not None,
         }
         for key, attr_name in DISLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
                 display_dict[key] = attr_val
         if (category := self.entity_category) is not None:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
+        if self.hidden_by is not None:
+            display_dict["hb"] = True
         if not self.name and self.has_entity_name:
             display_dict["en"] = self.original_name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):

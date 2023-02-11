@@ -226,7 +226,6 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
                 "ec": 1,
                 "ei": "test_domain.test",
                 "en": "Hello World",
-                "hb": False,
                 "tk": "translations_galore",
             },
             {
@@ -234,17 +233,14 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
                 "di": "device123",
                 "ei": "test_domain.nameless",
                 "en": None,
-                "hb": False,
             },
             {
                 "ai": "area52",
                 "di": "device123",
                 "ei": "test_domain.renamed",
-                "hb": False,
             },
             {
                 "ei": "test_domain.boring",
-                "hb": False,
             },
             {
                 "ei": "test_domain.hidden",
@@ -253,12 +249,10 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
             {
                 "dp": 0,
                 "ei": "sensor.default_precision",
-                "hb": False,
             },
             {
                 "dp": 0,
                 "ei": "sensor.user_precision",
-                "hb": False,
             },
         ],
     }
@@ -299,7 +293,6 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
                 "di": "device123",
                 "ei": "test_domain.test",
                 "en": "Hello World",
-                "hb": False,
             },
         ],
     }
