@@ -703,9 +703,6 @@ fastdotcom==0.0.3
 # homeassistant.components.feedreader
 feedparser==6.0.10
 
-# homeassistant.components.fibaro
-fiblary3==0.1.8
-
 # homeassistant.components.file
 file-read-backwards==2.0.0
 
@@ -1619,6 +1616,9 @@ pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
 pyezviz==0.2.0.9
+
+# homeassistant.components.fibaro
+pyfibaro==0.6.6
 
 # homeassistant.components.fido
 pyfido==2.1.1
