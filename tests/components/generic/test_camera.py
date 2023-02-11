@@ -24,9 +24,11 @@ from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import AsyncMock, Mock, MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 @respx.mock
@@ -465,7 +467,9 @@ async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbyt
         assert await resp.read() == fakeimgbytes_png
 
 
-async def test_no_still_image_url(hass, hass_client):
+async def test_no_still_image_url(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the component can grab images from stream with no still_image_url."""
     assert await async_setup_component(
         hass,
@@ -486,7 +490,6 @@ async def test_no_still_image_url(hass, hass_client):
         "homeassistant.components.generic.camera.GenericCamera.stream_source",
         return_value=None,
     ) as mock_stream_source:
-
         # First test when there is no stream_source should fail
         resp = await client.get("/api/camera_proxy/camera.config_test")
         await hass.async_block_till_done()
@@ -494,7 +497,6 @@ async def test_no_still_image_url(hass, hass_client):
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     with patch("homeassistant.components.camera.create_stream") as mock_create_stream:
-
         # Now test when creating the stream succeeds
         mock_stream = Mock()
         mock_stream.async_get_image = AsyncMock()
@@ -510,7 +512,7 @@ async def test_no_still_image_url(hass, hass_client):
         assert await resp.read() == b"stream_keyframe_image"
 
 
-async def test_frame_interval_property(hass):
+async def test_frame_interval_property(hass: HomeAssistant) -> None:
     """Test that the frame interval is calculated and returned correctly."""
 
     await async_setup_component(

@@ -6,23 +6,23 @@ import pytest
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.const import EntityCategory
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import EntityCategory
 
-from tests.common import async_fire_time_changed, mock_registry
+from tests.common import async_fire_time_changed
 
 
-@pytest.fixture()
+@pytest.fixture
 def cloud_stub():
     """Stub the cloud."""
     return Mock(is_logged_in=True, subscription_expired=False)
 
 
-async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
+async def test_alexa_config_expose_entity_prefs(
+    hass, cloud_prefs, cloud_stub, entity_registry
+):
     """Test Alexa config should expose using prefs."""
-    entity_registry = mock_registry(hass)
-
     entity_entry1 = entity_registry.async_get_or_create(
         "light",
         "test",

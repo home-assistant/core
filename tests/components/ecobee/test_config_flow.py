@@ -12,11 +12,12 @@ from homeassistant.components.ecobee.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if ecobee is already setup."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -29,7 +30,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_step_without_user_input(hass):
+async def test_user_step_without_user_input(hass: HomeAssistant) -> None:
     """Test expected result if user step is called."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -40,7 +41,7 @@ async def test_user_step_without_user_input(hass):
     assert result["step_id"] == "user"
 
 
-async def test_pin_request_succeeds(hass):
+async def test_pin_request_succeeds(hass: HomeAssistant) -> None:
     """Test expected result if pin request succeeds."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -58,7 +59,7 @@ async def test_pin_request_succeeds(hass):
         assert result["description_placeholders"] == {"pin": "test-pin"}
 
 
-async def test_pin_request_fails(hass):
+async def test_pin_request_fails(hass: HomeAssistant) -> None:
     """Test expected result if pin request fails."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -75,7 +76,7 @@ async def test_pin_request_fails(hass):
         assert result["errors"]["base"] == "pin_request_failed"
 
 
-async def test_token_request_succeeds(hass):
+async def test_token_request_succeeds(hass: HomeAssistant) -> None:
     """Test expected result if token request succeeds."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -86,9 +87,8 @@ async def test_token_request_succeeds(hass):
         mock_ecobee.request_tokens.return_value = True
         mock_ecobee.api_key = "test-api-key"
         mock_ecobee.refresh_token = "test-token"
-        # pylint: disable=protected-access
+
         flow._ecobee = mock_ecobee
-        # pylint: enable=protected-access
 
         result = await flow.async_step_authorize(user_input={})
 
@@ -100,7 +100,7 @@ async def test_token_request_succeeds(hass):
         }
 
 
-async def test_token_request_fails(hass):
+async def test_token_request_fails(hass: HomeAssistant) -> None:
     """Test expected result if token request fails."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -110,9 +110,8 @@ async def test_token_request_fails(hass):
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_tokens.return_value = False
         mock_ecobee.pin = "test-pin"
-        # pylint: disable=protected-access
+
         flow._ecobee = mock_ecobee
-        # pylint: enable=protected-access
 
         result = await flow.async_step_authorize(user_input={})
 
@@ -123,7 +122,7 @@ async def test_token_request_fails(hass):
 
 
 @pytest.mark.skip(reason="Flaky/slow")
-async def test_import_flow_triggered_but_no_ecobee_conf(hass):
+async def test_import_flow_triggered_but_no_ecobee_conf(hass: HomeAssistant) -> None:
     """Test expected result if import flow triggers but ecobee.conf doesn't exist."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -163,7 +162,9 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_t
         }
 
 
-async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(hass):
+async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(
+    hass: HomeAssistant,
+) -> None:
     """Test expected result if import flow triggers and ecobee.conf exists with invalid data."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -177,7 +178,6 @@ async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(hass):
     ), patch.object(
         flow, "async_step_user", return_value=mock_coro()
     ) as mock_async_step_user:
-
         await flow.async_step_import(import_data=None)
 
         mock_async_step_user.assert_called_once_with(

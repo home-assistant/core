@@ -1,5 +1,5 @@
 """The tests for the Cast Media player platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import asyncio
@@ -446,14 +446,14 @@ async def test_stop_discovery_called_on_stop(hass, castbrowser_mock):
     assert castbrowser_mock.return_value.stop_discovery.call_count == 1
 
 
-async def test_create_cast_device_without_uuid(hass):
+async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast._async_create_cast_device(hass, info)
     assert cast_device is None
 
 
-async def test_create_cast_device_with_uuid(hass):
+async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
     added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
     info = get_fake_chromecast_info()
@@ -467,7 +467,7 @@ async def test_create_cast_device_with_uuid(hass):
     assert cast_device is None
 
 
-async def test_manual_cast_chromecasts_uuid(hass):
+async def test_manual_cast_chromecasts_uuid(hass: HomeAssistant) -> None:
     """Test only wanted casts are added for manual configuration."""
     cast_1 = get_fake_chromecast_info(host="host_1", uuid=FakeUUID)
     cast_2 = get_fake_chromecast_info(host="host_2", uuid=FakeUUID2)
@@ -507,7 +507,7 @@ async def test_manual_cast_chromecasts_uuid(hass):
     assert add_dev1.call_count == 1
 
 
-async def test_auto_cast_chromecasts(hass):
+async def test_auto_cast_chromecasts(hass: HomeAssistant) -> None:
     """Test all discovered casts are added for default configuration."""
     cast_1 = get_fake_chromecast_info(host="some_host")
     cast_2 = get_fake_chromecast_info(host="other_host", uuid=FakeUUID2)
@@ -665,7 +665,7 @@ async def test_discover_dynamic_group(
     assert "Disconnecting from chromecast" in caplog.text
 
 
-async def test_update_cast_chromecasts(hass):
+async def test_update_cast_chromecasts(hass: HomeAssistant) -> None:
     """Test discovery of same UUID twice only adds one cast."""
     cast_1 = get_fake_chromecast_info(host="old_host")
     cast_2 = get_fake_chromecast_info(host="new_host")
@@ -992,7 +992,9 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1048,7 +1050,9 @@ async def test_entity_browse_media_audio_only(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1254,10 +1258,17 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
         ),
         # Test HLS playlist is forwarded to the device
         (
-            "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
+            (
+                "http://a.files.bbci.co.uk/media/live/manifesto"
+                "/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8"
+            ),
             "bbc_radio_fourfm.m3u8",
             {
-                "media_id": "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
+                "media_id": (
+                    "http://a.files.bbci.co.uk/media/live/manifesto"
+                    "/audio/simulcast/hls/nonuk/sbr_low/ak"
+                    "/bbc_radio_fourfm.m3u8"
+                ),
                 "media_type": "audio",
             },
         ),
@@ -1808,7 +1819,9 @@ async def test_group_media_control(hass, mz_mock, quick_play_mock):
     )
 
 
-async def test_failed_cast_on_idle(hass, caplog):
+async def test_failed_cast_on_idle(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test no warning when unless player went idle with reason "ERROR"."""
     info = get_fake_chromecast_info()
     chromecast, _ = await async_setup_media_player_cast(hass, info)
@@ -1836,7 +1849,9 @@ async def test_failed_cast_on_idle(hass, caplog):
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
-async def test_failed_cast_other_url(hass, caplog):
+async def test_failed_cast_other_url(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning when casting from internal_url fails."""
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(
@@ -1857,7 +1872,9 @@ async def test_failed_cast_other_url(hass, caplog):
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
-async def test_failed_cast_internal_url(hass, caplog):
+async def test_failed_cast_internal_url(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning when casting from internal_url fails."""
     await async_process_ha_core_config(
         hass,
@@ -1883,7 +1900,9 @@ async def test_failed_cast_internal_url(hass, caplog):
     )
 
 
-async def test_failed_cast_external_url(hass, caplog):
+async def test_failed_cast_external_url(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning when casting from external_url fails."""
     await async_process_ha_core_config(
         hass,
@@ -1911,7 +1930,9 @@ async def test_failed_cast_external_url(hass, caplog):
     )
 
 
-async def test_failed_cast_tts_base_url(hass, caplog):
+async def test_failed_cast_tts_base_url(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning when casting from tts.base_url fails."""
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(
@@ -1975,7 +1996,7 @@ async def test_entry_setup_single_config(hass: HomeAssistant):
     assert config_entry.data["uuid"] == ["bla"]
     assert config_entry.data["ignore_cec"] == ["cast1"]
 
-    assert pychromecast.IGNORE_CEC == ["cast1"]
+    assert ["cast1"] == pychromecast.IGNORE_CEC
 
 
 async def test_entry_setup_list_config(hass: HomeAssistant):
@@ -2237,7 +2258,9 @@ async def test_cast_platform_play_media_local_media(
         {
             ATTR_ENTITY_ID: entity_id,
             media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
-            media_player.ATTR_MEDIA_CONTENT_ID: f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla",
+            media_player.ATTR_MEDIA_CONTENT_ID: (
+                f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
+            ),
         },
         blocking=True,
     )

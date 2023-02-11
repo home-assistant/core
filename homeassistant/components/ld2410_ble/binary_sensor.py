@@ -17,7 +17,7 @@ from . import LD2410BLE, LD2410BLECoordinator
 from .const import DOMAIN
 from .models import LD2410BLEData
 
-ENTITY_DESCRIPTIONS = [
+ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
         key="is_moving",
         device_class=BinarySensorDeviceClass.MOTION,
@@ -30,7 +30,7 @@ ENTITY_DESCRIPTIONS = [
         has_entity_name=True,
         name="Occupancy",
     ),
-]
+)
 
 
 async def async_setup_entry(
@@ -46,7 +46,9 @@ async def async_setup_entry(
     )
 
 
-class LD2410BLEBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class LD2410BLEBinarySensor(
+    CoordinatorEntity[LD2410BLECoordinator], BinarySensorEntity
+):
     """Moving/static sensor for LD2410BLE."""
 
     def __init__(

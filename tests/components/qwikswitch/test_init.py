@@ -7,9 +7,15 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.test_util.aiohttp import AiohttpClientMockResponse, MockLongPollSideEffect
+from tests.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+    MockLongPollSideEffect,
+)
 
 
 @pytest.fixture
@@ -105,7 +111,7 @@ async def test_sensor_device(hass, aioclient_mock, qs_devices):
     await hass.async_block_till_done()
 
     state_obj = hass.states.get("sensor.ss1")
-    assert state_obj.state == "None"
+    assert state_obj.state == STATE_UNKNOWN
 
     # receive command that sets the sensor value
     listen_mock.queue_response(
@@ -277,7 +283,9 @@ async def test_button(hass, aioclient_mock, qs_devices):
     listen_mock.stop()
 
 
-async def test_failed_update_devices(hass, aioclient_mock):
+async def test_failed_update_devices(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that code behaves correctly when unable to get the devices."""
 
     config = {"qwikswitch": {}}

@@ -6,12 +6,13 @@ import homeassistant.components.demo.notify as demo
 from homeassistant.components.group import SERVICE_RELOAD
 import homeassistant.components.group.notify as group
 import homeassistant.components.notify as notify
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_send_message_with_data(hass):
+async def test_send_message_with_data(hass: HomeAssistant) -> None:
     """Test sending a message with to a notify group."""
     service1 = demo.DemoNotificationService(hass)
     service2 = demo.DemoNotificationService(hass)
@@ -80,7 +81,7 @@ async def test_send_message_with_data(hass):
     }
 
 
-async def test_reload_notify(hass):
+async def test_reload_notify(hass: HomeAssistant) -> None:
     """Verify we can reload the notify service."""
 
     assert await async_setup_component(

@@ -8,18 +8,18 @@ import voluptuous as vol
 from homeassistant.components.cloud import const, tts
 
 
-@pytest.fixture()
+@pytest.fixture
 def cloud_with_prefs(cloud_prefs):
     """Return a cloud mock with prefs."""
     return Mock(client=Mock(prefs=cloud_prefs))
 
 
-def test_default_exists():
+def test_default_exists() -> None:
     """Test our default language exists."""
     assert const.DEFAULT_TTS_DEFAULT_VOICE in voice.MAP_VOICE
 
 
-def test_schema():
+def test_schema() -> None:
     """Test schema."""
     assert "nl-NL" in tts.SUPPORT_LANGUAGES
 

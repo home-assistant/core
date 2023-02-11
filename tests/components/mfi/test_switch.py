@@ -5,6 +5,7 @@ import pytest
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch_component
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -23,7 +24,7 @@ GOOD_CONFIG = {
 }
 
 
-async def test_setup_adds_proper_devices(hass):
+async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
     with mock.patch(
         "homeassistant.components.mfi.switch.MFiClient"
@@ -74,13 +75,13 @@ async def test_update(port, switch):
 
 async def test_update_with_target_state(port, switch):
     """Test update with target state."""
-    # pylint: disable=protected-access
+
     switch._target_state = True
     port.data = {}
     port.data["output"] = "stale"
     switch.update()
     assert port.data["output"] == 1.0
-    # pylint: disable=protected-access
+
     assert switch._target_state is None
     port.data["output"] = "untouched"
     switch.update()
@@ -92,7 +93,7 @@ async def test_turn_on(port, switch):
     switch.turn_on()
     assert port.control.call_count == 1
     assert port.control.call_args == mock.call(True)
-    # pylint: disable=protected-access
+
     assert switch._target_state
 
 
@@ -101,5 +102,5 @@ async def test_turn_off(port, switch):
     switch.turn_off()
     assert port.control.call_count == 1
     assert port.control.call_args == mock.call(False)
-    # pylint: disable=protected-access
+
     assert not switch._target_state

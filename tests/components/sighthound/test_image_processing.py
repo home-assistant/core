@@ -12,7 +12,7 @@ import simplehound.core as hound
 import homeassistant.components.image_processing as ip
 import homeassistant.components.sighthound.image_processing as sh
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 TEST_DIR = os.path.dirname(__file__)
@@ -82,7 +82,9 @@ def mock_now():
         yield now_dt
 
 
-async def test_bad_api_key(hass, caplog):
+async def test_bad_api_key(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Catch bad api key."""
     with mock.patch(
         "simplehound.core.cloud.detect", side_effect=hound.SimplehoundException

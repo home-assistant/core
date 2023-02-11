@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from typing import NamedTuple
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import loader
@@ -54,7 +55,7 @@ class HomeAssistantConfig(OrderedDict):
         message: str,
         domain: str | None = None,
         config: ConfigType | None = None,
-    ) -> HomeAssistantConfig:
+    ) -> Self:
         """Add a single error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self

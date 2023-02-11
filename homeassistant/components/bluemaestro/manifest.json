@@ -1,16 +1,16 @@
 {
   "domain": "bluemaestro",
   "name": "BlueMaestro",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/bluemaestro",
   "bluetooth": [
     {
       "manufacturer_id": 307,
       "connectable": false
     }
   ],
-  "requirements": ["bluemaestro-ble==0.2.0"],
-  "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
-  "iot_class": "local_push"
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/bluemaestro",
+  "iot_class": "local_push",
+  "requirements": ["bluemaestro-ble==0.2.3"]
 }

@@ -63,7 +63,7 @@ class ComfoConnectFan(FanEntity):
     _attr_should_poll = False
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attr_preset_modes = PRESET_MODES
-    current_speed = None
+    current_speed: float | None = None
 
     def __init__(self, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""

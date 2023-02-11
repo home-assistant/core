@@ -83,7 +83,7 @@ class MockAyla(AylaApi):
         """Get the list of devices."""
         shark = MockShark(self, SHARK_DEVICE_DICT)
         shark.properties_full = deepcopy(SHARK_PROPERTIES_DICT)
-        shark._update_metadata(SHARK_METADATA_DICT)  # pylint: disable=protected-access
+        shark._update_metadata(SHARK_METADATA_DICT)
         return [shark]
 
     async def async_request(self, http_method: str, url: str, **kwargs):
@@ -200,7 +200,7 @@ async def test_device_properties(
     assert getattr(device, device_property) == target_value
 
 
-async def test_locate(hass):
+async def test_locate(hass: HomeAssistant) -> None:
     """Test that the locate command works."""
     with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}

@@ -375,7 +375,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                # pylint: disable=[import-outside-toplevel]
+                # pylint: disable-next=[import-outside-toplevel]
                 from homeassistant.components import tts
 
                 with suppress(KeyError):  # base_url not configured
@@ -476,8 +476,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     # ========== Service Calls ==========
     def _media_controller(self):
-        """
-        Return media controller.
+        """Return media controller.
 
         First try from our own cast, then groups which our cast is a member in.
         """
@@ -753,8 +752,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     def _media_status(self):
-        """
-        Return media status.
+        """Return media status.
 
         First try from our own cast, then groups which our cast is a member in.
         """

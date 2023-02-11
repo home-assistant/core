@@ -1,7 +1,6 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import datetime
 import math
 
@@ -23,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
+from homeassistant.util.enum import try_parse_enum
 
 from . import (
     EsphomeEntity,
@@ -98,9 +98,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        with suppress(ValueError):
-            return SensorDeviceClass(self._static_info.device_class)
-        return None
+        return try_parse_enum(SensorDeviceClass, self._static_info.device_class)
 
     @property
     def state_class(self) -> SensorStateClass | None:
@@ -113,7 +111,8 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             state_class == EsphomeSensorStateClass.MEASUREMENT
             and reset_type == LastResetType.AUTO
         ):
-            # Legacy, last_reset_type auto was the equivalent to the TOTAL_INCREASING state class
+            # Legacy, last_reset_type auto was the equivalent to the
+            # TOTAL_INCREASING state class
             return SensorStateClass.TOTAL_INCREASING
         return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 

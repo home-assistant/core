@@ -108,7 +108,7 @@ async def test_manual_setup_unknown_exception(hass: HomeAssistant):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_discovered_zeroconf(hass):
+async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     with _patch_get_info():
@@ -152,7 +152,7 @@ async def test_discovered_zeroconf(hass):
     assert entry.data[CONF_HOST] == "127.0.0.2"
 
 
-async def test_discovered_zeroconf_cannot_connect(hass):
+async def test_discovered_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     """Test we abort if we cannot connect when discovered from zeroconf."""
 
     with _patch_get_info(exception=NoUsableService):
@@ -167,7 +167,7 @@ async def test_discovered_zeroconf_cannot_connect(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovered_zeroconf_unknown_exception(hass):
+async def test_discovered_zeroconf_unknown_exception(hass: HomeAssistant) -> None:
     """Test we abort if we get an unknown exception when discovered from zeroconf."""
 
     with _patch_get_info(exception=Exception):

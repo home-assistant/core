@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, cast
 
-from abodepy.devices import CONST, AbodeDevice as AbodeDev
-from abodepy.devices.camera import AbodeCamera as AbodeCam
-import abodepy.helpers.timeline as TIMELINE
+from jaraco.abode.devices.base import Device as AbodeDev
+from jaraco.abode.devices.camera import Camera as AbodeCam
+from jaraco.abode.helpers import constants as CONST, timeline as TIMELINE
 import requests
 from requests.models import Response
 
@@ -30,7 +30,7 @@ async def async_setup_entry(
     data: AbodeSystem = hass.data[DOMAIN]
 
     async_add_entities(
-        AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE)
+        AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE)  # pylint: disable=no-member
         for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA)
     )
 

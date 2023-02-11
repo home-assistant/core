@@ -1,5 +1,4 @@
 """Test the bluetooth config flow."""
-
 from unittest.mock import patch
 
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
@@ -11,6 +10,7 @@ from homeassistant.components.bluetooth.const import (
     CONF_PASSIVE,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
@@ -126,7 +126,7 @@ async def test_async_step_user_only_allows_one(hass, macos_adapter):
     assert result["reason"] == "no_adapters"
 
 
-async def test_async_step_integration_discovery(hass):
+async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
     """Test setting up from integration discovery."""
 
     details = AdapterDetails(
@@ -264,7 +264,9 @@ async def test_async_step_integration_discovery_during_onboarding(hass, macos_ad
     assert len(mock_onboarding.mock_calls) == 1
 
 
-async def test_async_step_integration_discovery_already_exists(hass):
+async def test_async_step_integration_discovery_already_exists(
+    hass: HomeAssistant,
+) -> None:
     """Test setting up from integration discovery when an entry already exists."""
     details = AdapterDetails(
         address="00:00:00:00:00:01",
@@ -392,3 +394,21 @@ async def test_options_flow_enabled_linux(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is True
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_async_step_user_linux_adapter_is_ignored(hass, one_adapter):
+    """Test we give a hint that the adapter is ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="00:00:00:00:00:01",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={},
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_adapters"
+    assert result["description_placeholders"] == {"ignored_adapters": "1"}

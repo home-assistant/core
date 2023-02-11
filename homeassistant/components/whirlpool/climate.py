@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiohttp import ClientSession
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
@@ -24,6 +25,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -79,6 +81,7 @@ async def async_setup_entry(
             ac_data["NAME"],
             whirlpool_data.backend_selector,
             whirlpool_data.auth,
+            async_get_clientsession(hass),
         )
         for ac_data in whirlpool_data.appliances_manager.aircons
     ]
@@ -103,9 +106,17 @@ class AirConEntity(ClimateEntity):
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        said: str,
+        name: str | None,
+        backend_selector: BackendSelector,
+        auth: Auth,
+        session: ClientSession,
+    ) -> None:
         """Initialize the entity."""
-        self._aircon = Aircon(backend_selector, auth, said)
+        self._aircon = Aircon(backend_selector, auth, said, session)
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
         self._attr_unique_id = said
 
@@ -123,6 +134,7 @@ class AirConEntity(ClimateEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
+        self._aircon.unregister_attr_callback(self.async_write_ha_state)
         await self._aircon.disconnect()
 
     @property

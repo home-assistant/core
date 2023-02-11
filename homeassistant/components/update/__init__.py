@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -20,7 +20,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import EntityCategory, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -60,6 +60,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
 
 __all__ = [
     "ATTR_BACKUP",
+    "ATTR_INSTALLED_VERSION",
+    "ATTR_LATEST_VERSION",
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
@@ -326,16 +328,16 @@ class UpdateEntity(RestoreEntity):
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         return await self.hass.async_add_executor_job(self.release_notes)
 
     def release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         raise NotImplementedError()
 

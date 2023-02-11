@@ -7,14 +7,14 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 2
+MINOR_VERSION: Final = 3
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2023.2"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -517,6 +517,7 @@ class UnitOfEnergy(StrEnum):
 
     GIGA_JOULE = "GJ"
     KILO_WATT_HOUR = "kWh"
+    MEGA_JOULE = "MJ"
     MEGA_WATT_HOUR = "MWh"
     WATT_HOUR = "Wh"
 
@@ -1031,6 +1032,13 @@ DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
 """Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
 
 
+# States
+COMPRESSED_STATE_STATE = "s"
+COMPRESSED_STATE_ATTRIBUTES = "a"
+COMPRESSED_STATE_CONTEXT = "c"
+COMPRESSED_STATE_LAST_CHANGED = "lc"
+COMPRESSED_STATE_LAST_UPDATED = "lu"
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP: Final = "stop"
 SERVICE_HOMEASSISTANT_RESTART: Final = "restart"
@@ -1154,3 +1162,19 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+
+class EntityCategory(StrEnum):
+    """Category of an entity.
+
+    An entity with a category will:
+    - Not be exposed to cloud, Alexa, or Google Assistant components
+    - Not be included in indirect service calls to devices or areas
+    """
+
+    # Config: An entity which allows changing the configuration of a device.
+    CONFIG = "config"
+
+    # Diagnostic: An entity exposing some configuration parameter,
+    # or diagnostics of a device.
+    DIAGNOSTIC = "diagnostic"

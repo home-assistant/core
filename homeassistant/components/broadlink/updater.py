@@ -76,17 +76,16 @@ class BroadlinkUpdateManager(ABC):
                 )
             raise UpdateFailed(err) from err
 
-        else:
-            if self.available is False:
-                _LOGGER.warning(
-                    "Connected to %s (%s at %s)",
-                    self.device.name,
-                    self.device.api.model,
-                    self.device.api.host[0],
-                )
-            self.available = True
-            self.last_update = dt.utcnow()
-            return data
+        if self.available is False:
+            _LOGGER.warning(
+                "Connected to %s (%s at %s)",
+                self.device.name,
+                self.device.api.model,
+                self.device.api.host[0],
+            )
+        self.available = True
+        self.last_update = dt.utcnow()
+        return data
 
     @abstractmethod
     async def async_fetch_data(self):

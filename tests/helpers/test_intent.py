@@ -3,8 +3,16 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import State
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import (
+    area_registry,
+    config_validation as cv,
+    device_registry,
+    entity_registry,
+    intent,
+)
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -15,16 +23,124 @@ class MockIntentHandler(intent.IntentHandler):
         self.slot_schema = slot_schema
 
 
-def test_async_match_state():
+async def test_async_match_states(hass: HomeAssistant) -> None:
     """Test async_match_state helper."""
-    state1 = State("light.kitchen", "on")
-    state2 = State("switch.kitchen", "on")
+    areas = area_registry.async_get(hass)
+    area_kitchen = areas.async_get_or_create("kitchen")
+    areas.async_update(area_kitchen.id, aliases={"food room"})
+    area_bedroom = areas.async_get_or_create("bedroom")
 
-    state = intent.async_match_state(None, "kitch", [state1, state2])
-    assert state is state1
+    state1 = State(
+        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+    state2 = State(
+        "switch.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom switch"}
+    )
+
+    # Put entities into different areas
+    entities = entity_registry.async_get(hass)
+    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
+    entities.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
+
+    entities.async_get_or_create(
+        "switch", "demo", "5678", suggested_object_id="bedroom"
+    )
+    entities.async_update_entity(
+        state2.entity_id,
+        area_id=area_bedroom.id,
+        device_class=SwitchDeviceClass.OUTLET,
+        aliases={"kill switch"},
+    )
+
+    # Match on name
+    assert list(
+        intent.async_match_states(hass, name="kitchen light", states=[state1, state2])
+    ) == [state1]
+
+    # Test alias
+    assert list(
+        intent.async_match_states(hass, name="kill switch", states=[state1, state2])
+    ) == [state2]
+
+    # Name + area
+    assert list(
+        intent.async_match_states(
+            hass, name="kitchen light", area_name="kitchen", states=[state1, state2]
+        )
+    ) == [state1]
+
+    # Test area alias
+    assert list(
+        intent.async_match_states(
+            hass, name="kitchen light", area_name="food room", states=[state1, state2]
+        )
+    ) == [state1]
+
+    # Wrong area
+    assert not list(
+        intent.async_match_states(
+            hass, name="kitchen light", area_name="bedroom", states=[state1, state2]
+        )
+    )
+
+    # Domain + area
+    assert list(
+        intent.async_match_states(
+            hass, domains={"switch"}, area_name="bedroom", states=[state1, state2]
+        )
+    ) == [state2]
+
+    # Device class + area
+    assert list(
+        intent.async_match_states(
+            hass,
+            device_classes={SwitchDeviceClass.OUTLET},
+            area_name="bedroom",
+            states=[state1, state2],
+        )
+    ) == [state2]
 
 
-def test_async_validate_slots():
+async def test_match_device_area(hass: HomeAssistant) -> None:
+    """Test async_match_state with a device in an area."""
+    areas = area_registry.async_get(hass)
+    area_kitchen = areas.async_get_or_create("kitchen")
+    area_bedroom = areas.async_get_or_create("bedroom")
+
+    devices = device_registry.async_get(hass)
+    kitchen_device = devices.async_get_or_create(
+        config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
+    )
+    devices.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
+
+    state1 = State(
+        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+    state2 = State(
+        "light.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+    )
+    state3 = State(
+        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+    )
+    entities = entity_registry.async_get(hass)
+    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
+    entities.async_update_entity(state1.entity_id, device_id=kitchen_device.id)
+
+    entities.async_get_or_create("light", "demo", "5678", suggested_object_id="bedroom")
+    entities.async_update_entity(state2.entity_id, area_id=area_bedroom.id)
+
+    # Match on area/domain
+    assert list(
+        intent.async_match_states(
+            hass,
+            domains={"light"},
+            area_name="kitchen",
+            states=[state1, state2, state3],
+        )
+    ) == [state1]
+
+
+def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
     handler1 = MockIntentHandler({vol.Required("name"): cv.string})
 
@@ -38,21 +154,3 @@ def test_async_validate_slots():
     handler1.async_validate_slots(
         {"name": {"value": "kitchen"}, "probability": {"value": "0.5"}}
     )
-
-
-def test_fuzzy_match():
-    """Test _fuzzymatch."""
-    state1 = State("light.living_room_northwest", "off")
-    state2 = State("light.living_room_north", "off")
-    state3 = State("light.living_room_northeast", "off")
-    state4 = State("light.living_room_west", "off")
-    state5 = State("light.living_room", "off")
-    states = [state1, state2, state3, state4, state5]
-
-    state = intent._fuzzymatch("Living Room", states, lambda state: state.name)
-    assert state == state5
-
-    state = intent._fuzzymatch(
-        "Living Room Northwest", states, lambda state: state.name
-    )
-    assert state == state1

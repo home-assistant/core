@@ -34,6 +34,8 @@ from .const import (
     DOMAIN,
     HTTP_PORT,
     HTTPS_PORT,
+    ISY_CONF_NAME,
+    ISY_CONF_UUID,
     ISY_URL_POSTFIX,
     SCHEME_HTTP,
     SCHEME_HTTPS,
@@ -106,11 +108,14 @@ async def validate_input(
         isy_conf = Configuration(xml=isy_conf_xml)
     except ISYResponseParseError as error:
         raise CannotConnect from error
-    if not isy_conf or "name" not in isy_conf or not isy_conf["name"]:
+    if not isy_conf or ISY_CONF_NAME not in isy_conf or not isy_conf[ISY_CONF_NAME]:
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{isy_conf['name']} ({host.hostname})", "uuid": isy_conf["uuid"]}
+    return {
+        "title": f"{isy_conf[ISY_CONF_NAME]} ({host.hostname})",
+        ISY_CONF_UUID: isy_conf[ISY_CONF_UUID],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -151,7 +156,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
+                await self.async_set_unique_id(
+                    info[ISY_CONF_UUID], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -227,10 +234,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert isinstance(url, str)
         parsed_url = urlparse(url)
         mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        if mac.startswith(UDN_UUID_PREFIX):
-            mac = mac[len(UDN_UUID_PREFIX) :]
-        if url.endswith(ISY_URL_POSTFIX):
-            url = url[: -len(ISY_URL_POSTFIX)]
+        mac = mac.removeprefix(UDN_UUID_PREFIX)
+        url = url.removesuffix(ISY_URL_POSTFIX)
 
         port = HTTP_PORT
         if parsed_url.port:
