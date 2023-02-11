@@ -9,9 +9,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     PERCENTAGE,
+    EntityCategory,
     Platform,
 )
-from homeassistant.helpers.entity import EntityCategory
 
 from .dataclass import AREntityDescription, ARSensorDescription
 
