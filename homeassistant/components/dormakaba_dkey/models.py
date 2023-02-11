@@ -12,6 +12,5 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 class DormakabaDkeyData:
     """Data for the Dormakaba dKey integration."""
 
-    title: str
     lock: DKEYLock
     coordinator: DataUpdateCoordinator[None]
