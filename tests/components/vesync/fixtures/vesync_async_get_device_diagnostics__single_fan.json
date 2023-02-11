@@ -1,0 +1,106 @@
+{
+  "manager": "**REDACTED**",
+  "device_name": "Fan",
+  "device_image": "",
+  "cid": "abcdefghabcdefghabcdefghabcdefgh",
+  "connection_status": "unknown",
+  "connection_type": "WiFi+BTOnboarding+BTNotify",
+  "device_type": "LV-PUR131S",
+  "type": "wifi-air",
+  "uuid": "00000000-1111-2222-3333-444444444444",
+  "config_module": "WFON_AHM_LV-PUR131S_US",
+  "mac_id": "00:00:00:00:00:00",
+  "mode": null,
+  "speed": null,
+  "extension": null,
+  "current_firm_version": null,
+  "sub_device_no": null,
+  "config": {},
+  "device_status": "unknown",
+  "details": {
+    "active_time": 0,
+    "filter_life": {},
+    "screen_status": "unknown",
+    "level": 0,
+    "air_quality": "unknown"
+  },
+  "home_assistant": {
+    "name": "Fan",
+    "name_by_user": null,
+    "disabled": false,
+    "disabled_by": null,
+    "entities": [
+      {
+        "domain": "fan",
+        "entity_id": "fan.fan",
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": null,
+        "name": null,
+        "original_name": "Fan",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "fan.fan",
+          "state": "unavailable",
+          "attributes": {
+            "preset_modes": ["auto", "sleep"],
+            "friendly_name": "Fan",
+            "supported_features": 1
+          },
+          "last_changed": "",
+          "last_updated": ""
+        },
+        "disabled": false,
+        "disabled_by": null
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.fan_filter_life",
+        "entity_category": "diagnostic",
+        "device_class": null,
+        "original_device_class": null,
+        "name": null,
+        "original_name": "Fan Filter Life",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": "%",
+        "state": {
+          "entity_id": "sensor.fan_filter_life",
+          "state": "unavailable",
+          "attributes": {
+            "state_class": "measurement",
+            "unit_of_measurement": "%",
+            "friendly_name": "Fan Filter Life"
+          },
+          "last_changed": "2023-02-11T16:17:06.231900+00:00",
+          "last_updated": "2023-02-11T16:17:06.231900+00:00"
+        },
+        "disabled": false,
+        "disabled_by": null
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.fan_air_quality",
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": null,
+        "name": null,
+        "original_name": "Fan Air Quality",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "sensor.fan_air_quality",
+          "state": "unavailable",
+          "attributes": { "friendly_name": "Fan Air Quality" },
+          "last_changed": "2023-02-11T16:17:06.236524+00:00",
+          "last_updated": "2023-02-11T16:17:06.236524+00:00"
+        },
+        "disabled": false,
+        "disabled_by": null
+      }
+    ]
+  }
+}

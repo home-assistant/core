@@ -1,11 +1,10 @@
 """Configuration for VeSync tests."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from pyvesync import VeSync
-from pyvesync.helpers import Helpers
 from pyvesync.vesyncbulb import VeSyncBulb
 from pyvesync.vesyncfan import VeSyncAirBypass
 from pyvesync.vesyncoutlet import VeSyncOutlet
@@ -69,27 +68,6 @@ def manager_fixture() -> VeSync:
         #     "pyvesync.vesync.VeSync", new=mock
         # ):
         yield mock_vesync
-
-
-# @pytest.fixture(name="manager2")
-# def manager2_fixture() -> VeSync:
-#     """Create a mock VeSync manager fixture."""
-#     vesync = VeSync("user", "pass", "America/New_York")
-#     # patch.object(vesync, "get_devices", return_value=True)
-#     # patch.object(vesync, "login", return_value=True)
-#     # patch.object(vesync, "update", return_value=True)
-#     #    mock = Mock(return_value=vesync)
-
-#     return patch("homeassistant.components.vesync.VeSync", new=vesync):
-#         yield vesync
-
-
-@pytest.fixture(name="helper")
-def helper_fixture() -> Helpers:
-    """Create a mock VeSync Helpers fixture."""
-    helper = MagicMock(Helpers)
-    helper.call_api = Mock(return_vale="Chuck")
-    return helper
 
 
 @pytest.fixture(name="fan")
