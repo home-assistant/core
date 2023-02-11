@@ -38,7 +38,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
         self.account = None
         self.keystore = None
@@ -218,7 +218,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(str(new_students[0].pupil.id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{new_students[0].pupil.first_name} {new_students[0].pupil.last_name}",
+                    title=(
+                        f"{new_students[0].pupil.first_name} {new_students[0].pupil.last_name}"
+                    ),
                     data={
                         "student_id": str(new_students[0].pupil.id),
                         "keystore": keystore.as_dict,
@@ -282,7 +284,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         if str(student.pupil.id) == str(entry.data["student_id"]):
                             self.hass.config_entries.async_update_entry(
                                 entry,
-                                title=f"{student.pupil.first_name} {student.pupil.last_name}",
+                                title=(
+                                    f"{student.pupil.first_name} {student.pupil.last_name}"
+                                ),
                                 data={
                                     "student_id": str(student.pupil.id),
                                     "keystore": keystore.as_dict,

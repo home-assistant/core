@@ -8,7 +8,6 @@ from pyatmo.modules.device_types import (
     DeviceType as NetatmoDeviceType,
 )
 
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -20,6 +19,8 @@ from .data_handler import PUBLIC, NetatmoDataHandler
 class NetatmoBase(Entity):
     """Netatmo entity base class."""
 
+    _attr_attribution = DEFAULT_ATTRIBUTION
+
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
@@ -28,10 +29,10 @@ class NetatmoBase(Entity):
         self._device_name: str = ""
         self._id: str = ""
         self._model: str = ""
-        self._config_url: str = ""
+        self._config_url: str | None = None
         self._attr_name = None
         self._attr_unique_id = None
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -62,9 +63,11 @@ class NetatmoBase(Entity):
                     publisher["name"], signal_name, self.async_update_callback
                 )
 
-            for sub in self.data_handler.publisher[signal_name].subscriptions:
-                if sub is None:
-                    await self.data_handler.unsubscribe(signal_name, None)
+            if any(
+                sub is None
+                for sub in self.data_handler.publisher[signal_name].subscriptions
+            ):
+                await self.data_handler.unsubscribe(signal_name, None)
 
         registry = dr.async_get(self.hass)
         if device := registry.async_get_device({(DOMAIN, self._id)}):

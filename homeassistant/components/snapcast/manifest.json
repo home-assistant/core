@@ -1,9 +1,9 @@
 {
   "domain": "snapcast",
   "name": "Snapcast",
-  "documentation": "https://www.home-assistant.io/integrations/snapcast",
-  "requirements": ["snapcast==2.1.3"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/snapcast",
   "iot_class": "local_polling",
-  "loggers": ["construct", "snapcast"]
+  "loggers": ["construct", "snapcast"],
+  "requirements": ["snapcast==2.3.0"]
 }

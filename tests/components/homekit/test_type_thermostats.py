@@ -68,8 +68,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry as er
@@ -743,6 +742,29 @@ async def test_thermostat_humidity(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] == "35%"
 
 
+async def test_thermostat_humidity_with_target_humidity(hass, hk_driver, events):
+    """Test if accessory and HA are updated accordingly with humidity without target hudmidity.
+
+    This test is for thermostats that do not support target humidity but
+    have a current humidity sensor.
+    """
+    entity_id = "climate.test"
+
+    # support_auto = True
+    hass.states.async_set(entity_id, HVACMode.OFF, {ATTR_CURRENT_HUMIDITY: 40})
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_current_humidity.value == 40
+    hass.states.async_set(entity_id, HVACMode.HEAT_COOL, {ATTR_CURRENT_HUMIDITY: 65})
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 65
+
+
 async def test_thermostat_power_state(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
@@ -877,7 +899,9 @@ async def test_thermostat_fahrenheit(hass, hk_driver, events):
         },
     )
     await hass.async_block_till_done()
-    with patch.object(hass.config.units, CONF_TEMPERATURE_UNIT, new=TEMP_FAHRENHEIT):
+    with patch.object(
+        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
+    ):
         acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
     hk_driver.add_accessory(acc)
     await acc.run()
@@ -986,7 +1010,7 @@ async def test_thermostat_get_temperature_range(hass, hk_driver):
     await hass.async_block_till_done()
     assert acc.get_temperature_range() == (20, 25)
 
-    acc._unit = TEMP_FAHRENHEIT
+    acc._unit = UnitOfTemperature.FAHRENHEIT
     hass.states.async_set(
         entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70}
     )
@@ -1045,7 +1069,7 @@ async def test_thermostat_restore(hass, hk_driver, events):
         "off",
     }
 
-    acc = Thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 2, None)
+    acc = Thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 3, None)
     assert acc.category == 9
     assert acc.get_temperature_range() == (60.0, 70.0)
     assert set(acc.char_target_heat_cool.properties["ValidValues"].keys()) == {
@@ -1761,7 +1785,7 @@ async def test_water_heater(hass, hk_driver, events):
     assert call_set_temperature[0].data[ATTR_TEMPERATURE] == 52.0
     assert acc.char_target_temp.value == 52.0
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == f"52.0{TEMP_CELSIUS}"
+    assert events[-1].data[ATTR_VALUE] == f"52.0{UnitOfTemperature.CELSIUS}"
 
     acc.char_target_heat_cool.client_update_value(1)
     await hass.async_block_till_done()
@@ -1779,7 +1803,9 @@ async def test_water_heater_fahrenheit(hass, hk_driver, events):
 
     hass.states.async_set(entity_id, HVACMode.HEAT)
     await hass.async_block_till_done()
-    with patch.object(hass.config.units, CONF_TEMPERATURE_UNIT, new=TEMP_FAHRENHEIT):
+    with patch.object(
+        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
+    ):
         acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
     await acc.run()
     await hass.async_block_till_done()
@@ -1819,7 +1845,7 @@ async def test_water_heater_get_temperature_range(hass, hk_driver):
     await hass.async_block_till_done()
     assert acc.get_temperature_range() == (20, 25)
 
-    acc._unit = TEMP_FAHRENHEIT
+    acc._unit = UnitOfTemperature.FAHRENHEIT
     hass.states.async_set(
         entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70}
     )
@@ -1859,7 +1885,7 @@ async def test_water_heater_restore(hass, hk_driver, events):
     }
 
     acc = WaterHeater(
-        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 2, None
+        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 3, None
     )
     assert acc.category == 9
     assert acc.get_temperature_range() == (60.0, 70.0)
@@ -2445,7 +2471,6 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
             ATTR_FAN_MODE: FAN_AUTO,
             ATTR_FAN_MODES: None,
             ATTR_HVAC_ACTION: HVACAction.IDLE,
-            ATTR_FAN_MODE: FAN_AUTO,
             ATTR_PRESET_MODE: "home",
             ATTR_FRIENDLY_NAME: "Rec Room",
             ATTR_HVAC_MODES: [

@@ -21,9 +21,12 @@ AsyncWebSocketCommandHandler = Callable[
 
 DOMAIN: Final = "websocket_api"
 URL: Final = "/api/websocket"
-PENDING_MSG_PEAK: Final = 512
+PENDING_MSG_PEAK: Final = 1024
 PENDING_MSG_PEAK_TIME: Final = 5
-MAX_PENDING_MSG: Final = 2048
+# Maximum number of messages that can be pending at any given time.
+# This is effectively the upper limit of the number of entities
+# that can fire state changes within ~1 second.
+MAX_PENDING_MSG: Final = 4096
 
 ERR_ID_REUSE: Final = "id_reuse"
 ERR_INVALID_FORMAT: Final = "invalid_format"
@@ -49,11 +52,5 @@ SIGNAL_WEBSOCKET_DISCONNECTED: Final = "websocket_disconnected"
 
 # Data used to store the current connection list
 DATA_CONNECTIONS: Final = f"{DOMAIN}.connections"
-
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
 
 FEATURE_COALESCE_MESSAGES = "coalesce_messages"

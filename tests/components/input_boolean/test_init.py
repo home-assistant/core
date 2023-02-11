@@ -1,5 +1,4 @@
 """The tests for the input_boolean component."""
-# pylint: disable=protected-access
 import logging
 from unittest.mock import patch
 
@@ -19,7 +18,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -52,7 +51,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [None, 1, {}, {"name with space": None}]
 
@@ -60,7 +59,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_methods(hass):
+async def test_methods(hass: HomeAssistant) -> None:
     """Test is_on, turn_on, turn_off methods."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test_1": None}})
     entity_id = "input_boolean.test_1"
@@ -86,7 +85,7 @@ async def test_methods(hass):
     assert is_on(hass, entity_id)
 
 
-async def test_config_options(hass):
+async def test_config_options(hass: HomeAssistant) -> None:
     """Test configuration options."""
     count_start = len(hass.states.async_entity_ids())
 
@@ -122,7 +121,7 @@ async def test_config_options(hass):
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -147,7 +146,7 @@ async def test_restore_state(hass):
     assert state.state == "off"
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_boolean.b1", "on"), State("input_boolean.b2", "off"))

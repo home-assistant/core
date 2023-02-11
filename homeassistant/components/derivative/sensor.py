@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -15,10 +16,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -53,10 +51,10 @@ UNIT_PREFIXES = {
 
 # SI Time prefixes
 UNIT_TIME = {
-    TIME_SECONDS: 1,
-    TIME_MINUTES: 60,
-    TIME_HOURS: 60 * 60,
-    TIME_DAYS: 24 * 60 * 60,
+    UnitOfTime.SECONDS: 1,
+    UnitOfTime.MINUTES: 60,
+    UnitOfTime.HOURS: 60 * 60,
+    UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
 ICON = "mdi:chart-line"
@@ -70,7 +68,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SOURCE): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+        vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }
@@ -137,20 +135,20 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     def __init__(
         self,
         *,
-        name,
-        round_digits,
-        source_entity,
-        time_window,
-        unit_of_measurement,
-        unit_prefix,
-        unit_time,
-        unique_id,
-    ):
+        name: str | None,
+        round_digits: int,
+        source_entity: str,
+        time_window: timedelta,
+        unit_of_measurement: str | None,
+        unit_prefix: str | None,
+        unit_time: UnitOfTime,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = 0
+        self._state: float | int | Decimal = 0
         # List of tuples with (timestamp_start, timestamp_end, derivative)
         self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
@@ -231,7 +229,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 (old_state.last_updated, new_state.last_updated, new_derivative)
             )
 
-            def calculate_weight(start, end, now):
+            def calculate_weight(
+                start: datetime, end: datetime, now: datetime
+            ) -> float:
                 window_start = now - timedelta(seconds=self._time_window)
                 if start < window_start:
                     weight = (end - window_start).total_seconds() / self._time_window
@@ -245,7 +245,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 derivative = new_derivative
             else:
                 derivative = Decimal(0)
-                for (start, end, value) in self._state_list:
+                for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
 
@@ -259,6 +259,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | int | Decimal:
         """Return the state of the sensor."""
-        return round(self._state, self._round_digits)
+        value = round(self._state, self._round_digits)
+        if TYPE_CHECKING:
+            assert isinstance(value, (float, int, Decimal))
+        return value

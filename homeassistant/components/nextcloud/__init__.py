@@ -100,6 +100,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
+        return False
 
     hass.data[DOMAIN] = get_data_points(ncm.data)
     hass.data[DOMAIN]["instance"] = conf[CONF_URL]

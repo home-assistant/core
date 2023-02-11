@@ -12,9 +12,9 @@ from nextdns import ApiError, Settings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -587,7 +587,8 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
             ClientError,
         ) as err:
             raise HomeAssistantError(
-                f"NextDNS API returned an error calling set_setting for {self.entity_id}: {err}"
+                "NextDNS API returned an error calling set_setting for"
+                f" {self.entity_id}: {err}"
             ) from err
 
         if result:

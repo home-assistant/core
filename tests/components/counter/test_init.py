@@ -1,5 +1,4 @@
 """The tests for the counter component."""
-# pylint: disable=protected-access
 import logging
 
 import pytest
@@ -20,7 +19,7 @@ from homeassistant.components.counter import (
     DOMAIN,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -67,7 +66,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [None, 1, {}, {"name with space": None}]
 
@@ -75,7 +74,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_config_options(hass):
+async def test_config_options(hass: HomeAssistant) -> None:
     """Test configuration options."""
     count_start = len(hass.states.async_entity_ids())
 
@@ -123,7 +122,7 @@ async def test_config_options(hass):
     assert state_3.attributes.get(ATTR_STEP) == DEFAULT_STEP
 
 
-async def test_methods(hass):
+async def test_methods(hass: HomeAssistant) -> None:
     """Test increment, decrement, and reset methods."""
     config = {DOMAIN: {"test_1": {}}}
 
@@ -159,7 +158,7 @@ async def test_methods(hass):
     assert int(state.state) == 0
 
 
-async def test_methods_with_config(hass):
+async def test_methods_with_config(hass: HomeAssistant) -> None:
     """Test increment, decrement, and reset methods with configuration."""
     config = {
         DOMAIN: {"test": {CONF_NAME: "Hello World", CONF_INITIAL: 10, CONF_STEP: 5}}
@@ -191,7 +190,7 @@ async def test_methods_with_config(hass):
     assert int(state.state) == 15
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
@@ -219,7 +218,7 @@ async def test_initial_state_overrules_restore_state(hass):
     assert int(state.state) == 10
 
 
-async def test_restore_state_overrules_initial_state(hass):
+async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
 
     attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
@@ -256,7 +255,7 @@ async def test_restore_state_overrules_initial_state(hass):
     assert state.attributes.get("step") == 2
 
 
-async def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 

@@ -9,9 +9,8 @@ from plugwise import Smile
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -49,10 +48,20 @@ SELECT_TYPES = (
         name="Regulation mode",
         icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
+        translation_key="regulation_mode",
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
         current_option_key="regulation_mode",
         options_key="regulation_modes",
-        device_class="plugwise__regulation_mode",
+    ),
+    PlugwiseSelectEntityDescription(
+        key="select_dhw_mode",
+        name="DHW mode",
+        icon="mdi:shower",
+        entity_category=EntityCategory.CONFIG,
+        translation_key="dhw_mode",
+        command=lambda api, loc, opt: api.set_dhw_mode(opt),
+        current_option_key="dhw_mode",
+        options_key="dhw_modes",
     ),
 )
 

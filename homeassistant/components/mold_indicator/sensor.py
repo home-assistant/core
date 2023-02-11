@@ -14,8 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -23,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ async def async_setup_platform(
         [
             MoldIndicator(
                 name,
-                hass.config.units.is_metric,
+                hass.config.units is METRIC_SYSTEM,
                 indoor_temp_sensor,
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
@@ -218,16 +218,18 @@ class MoldIndicator(SensorEntity):
             return None
 
         # convert to celsius if necessary
-        if unit == TEMP_FAHRENHEIT:
-            return TemperatureConverter.convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-        if unit == TEMP_CELSIUS:
+        if unit == UnitOfTemperature.FAHRENHEIT:
+            return TemperatureConverter.convert(
+                temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+            )
+        if unit == UnitOfTemperature.CELSIUS:
             return temp
         _LOGGER.error(
             "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
             state.entity_id,
             unit,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
         )
 
         return None
@@ -308,12 +310,11 @@ class MoldIndicator(SensorEntity):
                 * (alpha + math.log(self._indoor_hum / 100.0))
                 / (beta - math.log(self._indoor_hum / 100.0))
             )
-        _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, TEMP_CELSIUS)
+        _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, UnitOfTemperature.CELSIUS)
 
     def _calc_moldindicator(self):
         """Calculate the humidity at the (cold) calibration point."""
         if None in (self._dewpoint, self._calib_factor) or self._calib_factor == 0:
-
             _LOGGER.debug(
                 "Invalid inputs - dewpoint: %s, calibration-factor: %s",
                 self._dewpoint,
@@ -331,7 +332,9 @@ class MoldIndicator(SensorEntity):
         )
 
         _LOGGER.debug(
-            "Estimated Critical Temperature: %f %s", self._crit_temp, TEMP_CELSIUS
+            "Estimated Critical Temperature: %f %s",
+            self._crit_temp,
+            UnitOfTemperature.CELSIUS,
         )
 
         # Then calculate the humidity at this point
@@ -386,13 +389,17 @@ class MoldIndicator(SensorEntity):
             }
 
         dewpoint = (
-            TemperatureConverter.convert(self._dewpoint, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            TemperatureConverter.convert(
+                self._dewpoint, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
             if self._dewpoint is not None
             else None
         )
 
         crit_temp = (
-            TemperatureConverter.convert(self._crit_temp, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            TemperatureConverter.convert(
+                self._crit_temp, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
             if self._crit_temp is not None
             else None
         )

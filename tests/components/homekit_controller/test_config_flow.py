@@ -8,6 +8,7 @@ from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from bleak.exc import BleakError
 import pytest
 
 from homeassistant import config_entries
@@ -16,10 +17,10 @@ from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.components.homekit_controller.storage import async_get_entity_storage
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 PAIRING_START_FORM_ERRORS = [
     (KeyError, "pairing_failed"),
@@ -350,19 +351,18 @@ async def test_discovery_ignored_model(hass, controller):
     assert result["reason"] == "ignored_model"
 
 
-async def test_discovery_ignored_hk_bridge(hass, controller):
+async def test_discovery_ignored_hk_bridge(hass, controller, device_registry):
     """Ensure we ignore homekit bridges and accessories created by the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
     config_entry.add_to_hass(hass)
-    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
     discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
@@ -377,19 +377,18 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
     assert result["reason"] == "ignored_model"
 
 
-async def test_discovery_does_not_ignore_non_homekit(hass, controller):
+async def test_discovery_does_not_ignore_non_homekit(hass, controller, device_registry):
     """Do not ignore devices that are not from the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain="not_homekit", data={})
     config_entry.add_to_hass(hass)
-    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
     discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
@@ -404,8 +403,7 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
 
 
 async def test_discovery_broken_pairing_flag(hass, controller):
-    """
-    There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
+    """There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
 
     We have seen this particular implementation error in 2 different devices.
     """
@@ -734,6 +732,57 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     )
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == expected
+
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+        "pairing": True,
+    }
+
+
+async def test_pair_unknown_errors(hass, controller):
+    """Test describing unknown errors."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+    }
+
+    # User initiates pairing - this triggers the device to show a pairing code
+    # and then HA to show a pairing form
+    finish_pairing = unittest.mock.AsyncMock(
+        side_effect=BleakError("The bluetooth connection failed")
+    )
+    with patch.object(device, "async_start_pairing", return_value=finish_pairing):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "form"
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+    }
+
+    # User enters pairing code
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] == "form"
+    assert result["errors"]["pairing_code"] == "pairing_failed"
+    assert (
+        result["description_placeholders"]["error"] == "The bluetooth connection failed"
+    )
 
     assert get_flow_context(hass, result) == {
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
@@ -1083,7 +1132,7 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
 
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_BLUETOOTH,
-        "unique_id": "AA:BB:CC:DD:EE:FF",
+        "unique_id": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice", "category": "Other"},
     }
 

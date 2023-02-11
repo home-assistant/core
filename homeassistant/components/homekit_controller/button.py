@@ -1,5 +1,4 @@
-"""
-Support for Homekit buttons.
+"""Support for Homekit buttons.
 
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
@@ -16,8 +15,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -63,12 +62,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit buttons."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:
-        entities = []
+        entities: list[HomeKitButton | HomeKitEcobeeClearHoldButton] = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := BUTTON_ENTITIES.get(char.type):
@@ -78,7 +77,12 @@ async def async_setup_entry(
         else:
             return False
 
-        async_add_entities(entities, True)
+        for entity in entities:
+            conn.async_migrate_unique_id(
+                entity.old_unique_id, entity.unique_id, Platform.BUTTON
+            )
+
+        async_add_entities(entities)
         return True
 
     conn.add_char_factory(async_add_characteristic)

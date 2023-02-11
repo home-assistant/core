@@ -1,11 +1,10 @@
-"""
-Regression tests for Aqara Gateway V3.
+"""Regression tests for Aqara Gateway V3.
 
 https://github.com/home-assistant/core/issues/20957
 """
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.number import NumberMode
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -37,7 +36,7 @@ async def test_aqara_gateway_setup(hass):
                 EntityTestInfo(
                     "alarm_control_panel.aqara_hub_1563_security_system",
                     friendly_name="Aqara Hub-1563 Security System",
-                    unique_id="homekit-0000000123456789-66304",
+                    unique_id="00:00:00:00:00:00_1_66304",
                     supported_features=AlarmControlPanelEntityFeature.ARM_NIGHT
                     | AlarmControlPanelEntityFeature.ARM_HOME
                     | AlarmControlPanelEntityFeature.ARM_AWAY,
@@ -46,7 +45,7 @@ async def test_aqara_gateway_setup(hass):
                 EntityTestInfo(
                     "light.aqara_hub_1563_lightbulb_1563",
                     friendly_name="Aqara Hub-1563 Lightbulb-1563",
-                    unique_id="homekit-0000000123456789-65792",
+                    unique_id="00:00:00:00:00:00_1_65792",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",
@@ -54,7 +53,7 @@ async def test_aqara_gateway_setup(hass):
                 EntityTestInfo(
                     "number.aqara_hub_1563_volume",
                     friendly_name="Aqara Hub-1563 Volume",
-                    unique_id="homekit-0000000123456789-aid:1-sid:65536-cid:65541",
+                    unique_id="00:00:00:00:00:00_1_65536_65541",
                     capabilities={
                         "max": 100,
                         "min": 0,
@@ -67,7 +66,7 @@ async def test_aqara_gateway_setup(hass):
                 EntityTestInfo(
                     "switch.aqara_hub_1563_pairing_mode",
                     friendly_name="Aqara Hub-1563 Pairing Mode",
-                    unique_id="homekit-0000000123456789-aid:1-sid:65536-cid:65538",
+                    unique_id="00:00:00:00:00:00_1_65536_65538",
                     entity_category=EntityCategory.CONFIG,
                     state="off",
                 ),
@@ -96,7 +95,7 @@ async def test_aqara_gateway_e1_setup(hass):
                 EntityTestInfo(
                     "alarm_control_panel.aqara_hub_e1_00a0_security_system",
                     friendly_name="Aqara-Hub-E1-00A0 Security System",
-                    unique_id="homekit-00aa00000a0-16",
+                    unique_id="00:00:00:00:00:00_1_16",
                     supported_features=AlarmControlPanelEntityFeature.ARM_NIGHT
                     | AlarmControlPanelEntityFeature.ARM_HOME
                     | AlarmControlPanelEntityFeature.ARM_AWAY,
@@ -105,7 +104,7 @@ async def test_aqara_gateway_e1_setup(hass):
                 EntityTestInfo(
                     "number.aqara_hub_e1_00a0_volume",
                     friendly_name="Aqara-Hub-E1-00A0 Volume",
-                    unique_id="homekit-00aa00000a0-aid:1-sid:17-cid:1114116",
+                    unique_id="00:00:00:00:00:00_1_17_1114116",
                     capabilities={
                         "max": 100,
                         "min": 0,
@@ -118,7 +117,7 @@ async def test_aqara_gateway_e1_setup(hass):
                 EntityTestInfo(
                     "switch.aqara_hub_e1_00a0_pairing_mode",
                     friendly_name="Aqara-Hub-E1-00A0 Pairing Mode",
-                    unique_id="homekit-00aa00000a0-aid:1-sid:17-cid:1114117",
+                    unique_id="00:00:00:00:00:00_1_17_1114117",
                     entity_category=EntityCategory.CONFIG,
                     state="off",
                 ),

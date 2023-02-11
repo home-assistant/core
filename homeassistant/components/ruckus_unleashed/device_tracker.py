@@ -1,8 +1,7 @@
 """Support for Ruckus Unleashed devices."""
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -55,8 +54,7 @@ def add_new_entities(coordinator, async_add_entities, tracked):
         new_tracked.append(RuckusUnleashedDevice(coordinator, mac, device[API_NAME]))
         tracked.add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 @callback
@@ -77,8 +75,7 @@ def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
             )
             tracked.add(entity.unique_id)
 
-    if missing:
-        async_add_entities(missing)
+    async_add_entities(missing)
 
 
 class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):

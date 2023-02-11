@@ -1,5 +1,4 @@
-"""
-Make sure that existing Koogeek SW2 is enumerated correctly.
+"""Make sure that existing Koogeek SW2 is enumerated correctly.
 
 This Koogeek device has a custom power sensor that extra handling.
 
@@ -39,19 +38,19 @@ async def test_koogeek_sw2_setup(hass):
                 EntityTestInfo(
                     entity_id="switch.koogeek_sw2_187a91_switch_1",
                     friendly_name="Koogeek-SW2-187A91 Switch 1",
-                    unique_id="homekit-CNNT061751001372-8",
+                    unique_id="00:00:00:00:00:00_1_8",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="switch.koogeek_sw2_187a91_switch_2",
                     friendly_name="Koogeek-SW2-187A91 Switch 2",
-                    unique_id="homekit-CNNT061751001372-11",
+                    unique_id="00:00:00:00:00:00_1_11",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="sensor.koogeek_sw2_187a91_power",
                     friendly_name="Koogeek-SW2-187A91 Power",
-                    unique_id="homekit-CNNT061751001372-aid:1-sid:14-cid:18",
+                    unique_id="00:00:00:00:00:00_1_14_18",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="0",

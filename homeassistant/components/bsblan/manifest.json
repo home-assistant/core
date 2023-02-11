@@ -1,10 +1,10 @@
 {
   "domain": "bsblan",
   "name": "BSB-Lan",
+  "codeowners": ["@liudger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bsblan",
-  "requirements": ["bsblan==0.5.0"],
-  "codeowners": ["@liudger"],
   "iot_class": "local_polling",
-  "loggers": ["bsblan"]
+  "loggers": ["bsblan"],
+  "requirements": ["python-bsblan==0.5.9"]
 }

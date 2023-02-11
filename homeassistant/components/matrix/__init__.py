@@ -276,8 +276,7 @@ class MatrixBot:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
 
     def _get_auth_tokens(self):
-        """
-        Read sorted authentication tokens from disk.
+        """Read sorted authentication tokens from disk.
 
         Returns the auth_tokens dictionary.
         """

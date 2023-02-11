@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import logger
 from homeassistant.components.logger import LOGSEVERITY
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 HASS_NS = "unused.homeassistant"
@@ -15,17 +16,13 @@ ZONE_NS = f"{COMPONENTS_NS}.zone"
 GROUP_NS = f"{COMPONENTS_NS}.group"
 CONFIGED_NS = "otherlibx"
 UNCONFIG_NS = "unconfigurednamespace"
+INTEGRATION = "test_component"
+INTEGRATION_NS = f"homeassistant.components.{INTEGRATION}"
 
 
-@pytest.fixture(autouse=True)
-def restore_logging_class():
-    """Restore logging class."""
-    klass = logging.getLoggerClass()
-    yield
-    logging.setLoggerClass(klass)
-
-
-async def test_log_filtering(hass, caplog):
+async def test_log_filtering(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test logging filters."""
 
     assert await async_setup_component(
@@ -93,7 +90,7 @@ async def test_log_filtering(hass, caplog):
     )
 
 
-async def test_setting_level(hass):
+async def test_setting_level(hass: HomeAssistant) -> None:
     """Test we set log levels."""
     mocks = defaultdict(Mock)
 
@@ -158,7 +155,7 @@ async def test_setting_level(hass):
     )
 
 
-async def test_can_set_level(hass):
+async def test_can_set_level_from_yaml(hass: HomeAssistant) -> None:
     """Test logger propagation."""
 
     assert await async_setup_component(
@@ -178,7 +175,49 @@ async def test_can_set_level(hass):
             }
         },
     )
+    await _assert_log_levels(hass)
+    _reset_logging()
 
+
+async def test_can_set_level_from_store(hass, hass_storage):
+    """Test setting up logs from store."""
+    hass_storage["core.logger"] = {
+        "data": {
+            "logs": {
+                CONFIGED_NS: {
+                    "level": "WARNING",
+                    "persistence": "once",
+                    "type": "module",
+                },
+                f"{CONFIGED_NS}.info": {
+                    "level": "INFO",
+                    "persistence": "once",
+                    "type": "module",
+                },
+                f"{CONFIGED_NS}.debug": {
+                    "level": "DEBUG",
+                    "persistence": "once",
+                    "type": "module",
+                },
+                HASS_NS: {"level": "WARNING", "persistence": "once", "type": "module"},
+                COMPONENTS_NS: {
+                    "level": "INFO",
+                    "persistence": "once",
+                    "type": "module",
+                },
+                ZONE_NS: {"level": "DEBUG", "persistence": "once", "type": "module"},
+                GROUP_NS: {"level": "INFO", "persistence": "once", "type": "module"},
+            }
+        },
+        "key": "core.logger",
+        "version": 1,
+    }
+    assert await async_setup_component(hass, "logger", {})
+    await _assert_log_levels(hass)
+    _reset_logging()
+
+
+async def _assert_log_levels(hass):
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.CRITICAL) is True
     assert (
@@ -255,3 +294,113 @@ async def test_can_set_level(hass):
     assert logging.getLogger(CONFIGED_NS).level == logging.WARNING
 
     logging.getLogger("").setLevel(logging.NOTSET)
+
+
+def _reset_logging():
+    """Reset loggers."""
+    logging.getLogger(CONFIGED_NS).orig_setLevel(logging.NOTSET)
+    logging.getLogger(f"{CONFIGED_NS}.info").orig_setLevel(logging.NOTSET)
+    logging.getLogger(f"{CONFIGED_NS}.debug").orig_setLevel(logging.NOTSET)
+    logging.getLogger(HASS_NS).orig_setLevel(logging.NOTSET)
+    logging.getLogger(COMPONENTS_NS).orig_setLevel(logging.NOTSET)
+    logging.getLogger(ZONE_NS).orig_setLevel(logging.NOTSET)
+    logging.getLogger(GROUP_NS).orig_setLevel(logging.NOTSET)
+    logging.getLogger(INTEGRATION_NS).orig_setLevel(logging.NOTSET)
+
+
+async def test_can_set_integration_level_from_store(hass, hass_storage):
+    """Test setting up integration logs from store."""
+    hass_storage["core.logger"] = {
+        "data": {
+            "logs": {
+                INTEGRATION: {
+                    "level": "WARNING",
+                    "persistence": "once",
+                    "type": "integration",
+                },
+            }
+        },
+        "key": "core.logger",
+        "version": 1,
+    }
+    assert await async_setup_component(hass, "logger", {})
+
+    assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.DEBUG) is False
+    assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.WARNING) is True
+
+    _reset_logging()
+
+
+async def test_chattier_log_level_wins_1(hass, hass_storage):
+    """Test chattier log level in store takes precedence."""
+    hass_storage["core.logger"] = {
+        "data": {
+            "logs": {
+                INTEGRATION_NS: {
+                    "level": "DEBUG",
+                    "persistence": "once",
+                    "type": "module",
+                },
+            }
+        },
+        "key": "core.logger",
+        "version": 1,
+    }
+    assert await async_setup_component(
+        hass,
+        "logger",
+        {
+            "logger": {
+                "logs": {
+                    INTEGRATION_NS: "warning",
+                }
+            }
+        },
+    )
+
+    assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.DEBUG) is True
+    assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.WARNING) is True
+
+    _reset_logging()
+
+
+async def test_chattier_log_level_wins_2(hass, hass_storage):
+    """Test chattier log level in yaml takes precedence."""
+    hass_storage["core.logger"] = {
+        "data": {
+            "logs": {
+                INTEGRATION_NS: {
+                    "level": "WARNING",
+                    "persistence": "once",
+                    "type": "module",
+                },
+            }
+        },
+        "key": "core.logger",
+        "version": 1,
+    }
+    assert await async_setup_component(
+        hass, "logger", {"logger": {"logs": {INTEGRATION_NS: "debug"}}}
+    )
+
+    assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.DEBUG) is True
+    assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.WARNING) is True
+
+    _reset_logging()
+
+
+async def test_log_once_removed_from_store(hass, hass_storage):
+    """Test logs with persistence "once" are removed from the store at startup."""
+    hass_storage["core.logger"] = {
+        "data": {
+            "logs": {
+                ZONE_NS: {"type": "module", "level": "DEBUG", "persistence": "once"}
+            }
+        },
+        "key": "core.logger",
+        "version": 1,
+    }
+
+    assert await async_setup_component(hass, "logger", {})
+
+    assert hass_storage["core.logger"]["data"] == {"logs": {}}

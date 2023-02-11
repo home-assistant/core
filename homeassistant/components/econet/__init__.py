@@ -13,7 +13,7 @@ from pyeconet.errors import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -116,6 +116,8 @@ class EcoNetEntity(Entity):
     def __init__(self, econet):
         """Initialize."""
         self._econet = econet
+        self._attr_name = econet.device_name
+        self._attr_unique_id = f"{econet.device_id}_{econet.device_name}"
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -131,7 +133,7 @@ class EcoNetEntity(Entity):
 
     @property
     def available(self):
-        """Return if the the device is online or not."""
+        """Return if the device is online or not."""
         return self._econet.connected
 
     @property
@@ -144,16 +146,6 @@ class EcoNetEntity(Entity):
         )
 
     @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._econet.device_name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._econet.device_id}_{self._econet.device_name}"
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT

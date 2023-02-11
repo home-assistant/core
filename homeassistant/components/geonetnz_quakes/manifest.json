@@ -1,11 +1,12 @@
 {
   "domain": "geonetnz_quakes",
   "name": "GeoNet NZ Quakes",
+  "codeowners": ["@exxamalte"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geonetnz_quakes",
-  "requirements": ["aio_geojson_geonetnz_quakes==0.13"],
-  "codeowners": ["@exxamalte"],
-  "quality_scale": "platinum",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["aio_geojson_geonetnz_quakes"]
+  "loggers": ["aio_geojson_geonetnz_quakes"],
+  "quality_scale": "platinum",
+  "requirements": ["aio_geojson_geonetnz_quakes==0.15"]
 }

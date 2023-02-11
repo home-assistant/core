@@ -4,11 +4,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-)
+from homeassistant.const import UnitOfEnergy
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
@@ -48,7 +45,7 @@ def mock_get_metadata():
 
 
 @pytest.fixture(autouse=True)
-async def mock_energy_manager(hass, recorder_mock):
+async def mock_energy_manager(recorder_mock, hass):
     """Set up energy."""
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
@@ -56,7 +53,7 @@ async def mock_energy_manager(hass, recorder_mock):
     return manager
 
 
-async def test_validation_empty_config(hass):
+async def test_validation_empty_config(hass: HomeAssistant) -> None:
     """Test validating an empty config."""
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [],
@@ -67,12 +64,13 @@ async def test_validation_empty_config(hass):
 @pytest.mark.parametrize(
     "state_class, energy_unit, extra",
     [
-        ("total_increasing", ENERGY_KILO_WATT_HOUR, {}),
-        ("total_increasing", ENERGY_MEGA_WATT_HOUR, {}),
-        ("total_increasing", ENERGY_WATT_HOUR, {}),
-        ("total", ENERGY_KILO_WATT_HOUR, {}),
-        ("total", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
-        ("measurement", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", UnitOfEnergy.KILO_WATT_HOUR, {}),
+        ("total_increasing", UnitOfEnergy.MEGA_WATT_HOUR, {}),
+        ("total_increasing", UnitOfEnergy.WATT_HOUR, {}),
+        ("total", UnitOfEnergy.KILO_WATT_HOUR, {}),
+        ("total", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("measurement", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", UnitOfEnergy.GIGA_JOULE, {}),
     ],
 )
 async def test_validation(
@@ -121,13 +119,13 @@ async def test_validation_device_consumption_entity_missing(hass, mock_energy_ma
             [
                 {
                     "type": "statistics_not_defined",
-                    "identifier": "sensor.not_exist",
-                    "value": None,
+                    "affected_entities": {("sensor.not_exist", None)},
+                    "translation_placeholders": None,
                 },
                 {
                     "type": "entity_not_defined",
-                    "identifier": "sensor.not_exist",
-                    "value": None,
+                    "affected_entities": {("sensor.not_exist", None)},
+                    "translation_placeholders": None,
                 },
             ]
         ],
@@ -145,8 +143,8 @@ async def test_validation_device_consumption_stat_missing(hass, mock_energy_mana
             [
                 {
                     "type": "statistics_not_defined",
-                    "identifier": "external:not_exist",
-                    "value": None,
+                    "affected_entities": {("external:not_exist", None)},
+                    "translation_placeholders": None,
                 }
             ]
         ],
@@ -168,8 +166,8 @@ async def test_validation_device_consumption_entity_unavailable(
             [
                 {
                     "type": "entity_unavailable",
-                    "identifier": "sensor.unavailable",
-                    "value": "unavailable",
+                    "affected_entities": {("sensor.unavailable", "unavailable")},
+                    "translation_placeholders": None,
                 }
             ]
         ],
@@ -191,8 +189,8 @@ async def test_validation_device_consumption_entity_non_numeric(
             [
                 {
                     "type": "entity_state_non_numeric",
-                    "identifier": "sensor.non_numeric",
-                    "value": "123,123.10",
+                    "affected_entities": {("sensor.non_numeric", "123,123.10")},
+                    "translation_placeholders": None,
                 },
             ]
         ],
@@ -222,8 +220,10 @@ async def test_validation_device_consumption_entity_unexpected_unit(
             [
                 {
                     "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.unexpected_unit",
-                    "value": "beers",
+                    "affected_entities": {("sensor.unexpected_unit", "beers")},
+                    "translation_placeholders": {
+                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
+                    },
                 }
             ]
         ],
@@ -245,8 +245,8 @@ async def test_validation_device_consumption_recorder_not_tracked(
             [
                 {
                     "type": "recorder_untracked",
-                    "identifier": "sensor.not_recorded",
-                    "value": None,
+                    "affected_entities": {("sensor.not_recorded", None)},
+                    "translation_placeholders": None,
                 }
             ]
         ],
@@ -276,8 +276,8 @@ async def test_validation_device_consumption_no_last_reset(
             [
                 {
                     "type": "entity_state_class_measurement_no_last_reset",
-                    "identifier": "sensor.no_last_reset",
-                    "value": None,
+                    "affected_entities": {("sensor.no_last_reset", None)},
+                    "translation_placeholders": None,
                 }
             ]
         ],
@@ -308,8 +308,10 @@ async def test_validation_solar(hass, mock_energy_manager, mock_get_metadata):
             [
                 {
                     "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.solar_production",
-                    "value": "beers",
+                    "affected_entities": {("sensor.solar_production", "beers")},
+                    "translation_placeholders": {
+                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
+                    },
                 }
             ]
         ],
@@ -354,13 +356,13 @@ async def test_validation_battery(hass, mock_energy_manager, mock_get_metadata):
             [
                 {
                     "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.battery_import",
-                    "value": "beers",
-                },
-                {
-                    "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.battery_export",
-                    "value": "beers",
+                    "affected_entities": {
+                        ("sensor.battery_import", "beers"),
+                        ("sensor.battery_export", "beers"),
+                    },
+                    "translation_placeholders": {
+                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
+                    },
                 },
             ]
         ],
@@ -425,43 +427,37 @@ async def test_validation_grid(
             [
                 {
                     "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.grid_consumption_1",
-                    "value": "beers",
+                    "affected_entities": {
+                        ("sensor.grid_consumption_1", "beers"),
+                        ("sensor.grid_production_1", "beers"),
+                    },
+                    "translation_placeholders": {
+                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
+                    },
                 },
                 {
                     "type": "statistics_not_defined",
-                    "identifier": "sensor.grid_cost_1",
-                    "value": None,
+                    "affected_entities": {
+                        ("sensor.grid_cost_1", None),
+                        ("sensor.grid_compensation_1", None),
+                    },
+                    "translation_placeholders": None,
                 },
                 {
                     "type": "recorder_untracked",
-                    "identifier": "sensor.grid_cost_1",
-                    "value": None,
+                    "affected_entities": {
+                        ("sensor.grid_cost_1", None),
+                        ("sensor.grid_compensation_1", None),
+                    },
+                    "translation_placeholders": None,
                 },
                 {
                     "type": "entity_not_defined",
-                    "identifier": "sensor.grid_cost_1",
-                    "value": None,
-                },
-                {
-                    "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.grid_production_1",
-                    "value": "beers",
-                },
-                {
-                    "type": "statistics_not_defined",
-                    "identifier": "sensor.grid_compensation_1",
-                    "value": None,
-                },
-                {
-                    "type": "recorder_untracked",
-                    "identifier": "sensor.grid_compensation_1",
-                    "value": None,
-                },
-                {
-                    "type": "entity_not_defined",
-                    "identifier": "sensor.grid_compensation_1",
-                    "value": None,
+                    "affected_entities": {
+                        ("sensor.grid_cost_1", None),
+                        ("sensor.grid_compensation_1", None),
+                    },
+                    "translation_placeholders": None,
                 },
             ]
         ],
@@ -520,23 +516,21 @@ async def test_validation_grid_external_cost_compensation(
             [
                 {
                     "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.grid_consumption_1",
-                    "value": "beers",
+                    "affected_entities": {
+                        ("sensor.grid_consumption_1", "beers"),
+                        ("sensor.grid_production_1", "beers"),
+                    },
+                    "translation_placeholders": {
+                        "energy_units": "GJ, kWh, MJ, MWh, Wh"
+                    },
                 },
                 {
                     "type": "statistics_not_defined",
-                    "identifier": "external:grid_cost_1",
-                    "value": None,
-                },
-                {
-                    "type": "entity_unexpected_unit_energy",
-                    "identifier": "sensor.grid_production_1",
-                    "value": "beers",
-                },
-                {
-                    "type": "statistics_not_defined",
-                    "identifier": "external:grid_compensation_1",
-                    "value": None,
+                    "affected_entities": {
+                        ("external:grid_cost_1", None),
+                        ("external:grid_compensation_1", None),
+                    },
+                    "translation_placeholders": None,
                 },
             ]
         ],
@@ -602,18 +596,16 @@ async def test_validation_grid_price_not_exist(
             [
                 {
                     "type": "entity_not_defined",
-                    "identifier": "sensor.grid_price_1",
-                    "value": None,
+                    "affected_entities": {("sensor.grid_price_1", None)},
+                    "translation_placeholders": None,
                 },
                 {
                     "type": "recorder_untracked",
-                    "identifier": "sensor.grid_consumption_1_cost",
-                    "value": None,
-                },
-                {
-                    "type": "recorder_untracked",
-                    "identifier": "sensor.grid_production_1_compensation",
-                    "value": None,
+                    "affected_entities": {
+                        ("sensor.grid_consumption_1_cost", None),
+                        ("sensor.grid_production_1_compensation", None),
+                    },
+                    "translation_placeholders": None,
                 },
             ]
         ],
@@ -686,8 +678,8 @@ async def test_validation_grid_auto_cost_entity_errors(
             "$/kWh",
             {
                 "type": "entity_state_non_numeric",
-                "identifier": "sensor.grid_price_1",
-                "value": "123,123.12",
+                "affected_entities": {("sensor.grid_price_1", "123,123.12")},
+                "translation_placeholders": None,
             },
         ),
         (
@@ -695,8 +687,10 @@ async def test_validation_grid_auto_cost_entity_errors(
             "$/Ws",
             {
                 "type": "entity_unexpected_unit_energy_price",
-                "identifier": "sensor.grid_price_1",
-                "value": "$/Ws",
+                "affected_entities": {("sensor.grid_price_1", "$/Ws")},
+                "translation_placeholders": {
+                    "price_units": "EUR/GJ, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh"
+                },
             },
         ),
     ),
@@ -837,18 +831,21 @@ async def test_validation_gas(
             [
                 {
                     "type": "entity_unexpected_unit_gas",
-                    "identifier": "sensor.gas_consumption_1",
-                    "value": "beers",
+                    "affected_entities": {("sensor.gas_consumption_1", "beers")},
+                    "translation_placeholders": {
+                        "energy_units": "GJ, kWh, MJ, MWh, Wh",
+                        "gas_units": "CCF, ft³, m³",
+                    },
                 },
                 {
                     "type": "recorder_untracked",
-                    "identifier": "sensor.gas_cost_1",
-                    "value": None,
+                    "affected_entities": {("sensor.gas_cost_1", None)},
+                    "translation_placeholders": None,
                 },
                 {
                     "type": "entity_not_defined",
-                    "identifier": "sensor.gas_cost_1",
-                    "value": None,
+                    "affected_entities": {("sensor.gas_cost_1", None)},
+                    "translation_placeholders": None,
                 },
             ],
             [],
@@ -856,15 +853,19 @@ async def test_validation_gas(
             [
                 {
                     "type": "entity_unexpected_device_class",
-                    "identifier": "sensor.gas_consumption_4",
-                    "value": None,
+                    "affected_entities": {("sensor.gas_consumption_4", None)},
+                    "translation_placeholders": None,
                 },
             ],
             [
                 {
                     "type": "entity_unexpected_unit_gas_price",
-                    "identifier": "sensor.gas_price_2",
-                    "value": "EUR/invalid",
+                    "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
+                    "translation_placeholders": {
+                        "price_units": (
+                            "EUR/GJ, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³"
+                        )
+                    },
                 },
             ],
         ],
@@ -941,6 +942,167 @@ async def test_validation_grid_no_costs_tracking(
         {
             "device_class": "energy",
             "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [[]],
+        "device_consumption": [],
+    }
+
+
+async def test_validation_water(
+    hass, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+):
+    """Test validating water with sensors for energy and cost/compensation."""
+    mock_is_entity_recorded["sensor.water_cost_1"] = False
+    mock_is_entity_recorded["sensor.water_compensation_1"] = False
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_1",
+                    "stat_cost": "sensor.water_cost_1",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_2",
+                    "stat_cost": "sensor.water_cost_2",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_3",
+                    "stat_cost": "sensor.water_cost_2",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_4",
+                    "entity_energy_price": "sensor.water_price_1",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_3",
+                    "entity_energy_price": "sensor.water_price_2",
+                },
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "sensor.water_consumption_1",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_2",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "ft³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_3",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "m³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_4",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_cost_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/kWh", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_price_1",
+        "10.10",
+        {"unit_of_measurement": "EUR/m³", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_price_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/invalid", "state_class": "total_increasing"},
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_unexpected_unit_water",
+                    "affected_entities": {("sensor.water_consumption_1", "beers")},
+                    "translation_placeholders": {"water_units": "CCF, ft³, m³, gal, L"},
+                },
+                {
+                    "type": "recorder_untracked",
+                    "affected_entities": {("sensor.water_cost_1", None)},
+                    "translation_placeholders": None,
+                },
+                {
+                    "type": "entity_not_defined",
+                    "affected_entities": {("sensor.water_cost_1", None)},
+                    "translation_placeholders": None,
+                },
+            ],
+            [],
+            [],
+            [
+                {
+                    "type": "entity_unexpected_device_class",
+                    "affected_entities": {("sensor.water_consumption_4", None)},
+                    "translation_placeholders": None,
+                },
+            ],
+            [
+                {
+                    "type": "entity_unexpected_unit_water_price",
+                    "affected_entities": {("sensor.water_price_2", "EUR/invalid")},
+                    "translation_placeholders": {
+                        "price_units": "EUR/CCF, EUR/ft³, EUR/m³, EUR/gal, EUR/L"
+                    },
+                },
+            ],
+        ],
+        "device_consumption": [],
+    }
+
+
+async def test_validation_water_no_costs_tracking(
+    hass, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+):
+    """Test validating water with sensors without cost tracking."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_1",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": None,
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_1",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "m³",
             "state_class": "total_increasing",
         },
     )

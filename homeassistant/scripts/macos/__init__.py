@@ -32,10 +32,7 @@ def install_osx():
 
     os.popen(f"launchctl load -w -F {path}")
 
-    print(
-        "Home Assistant has been installed. \
-        Open it here: http://localhost:8123"
-    )
+    print("Home Assistant has been installed. Open it here: http://localhost:8123")
 
 
 def uninstall_osx():

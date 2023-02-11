@@ -17,8 +17,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_test_component
+from .common import get_next_aid, setup_test_component
 
 # Test thermostat devices
 
@@ -759,6 +760,41 @@ async def test_heater_cooler_change_thermostat_state(hass, utcnow):
     )
 
 
+async def test_can_turn_on_after_off(hass, utcnow):
+    """Test that we always force device from inactive to active when setting mode.
+
+    This is a regression test for #81863.
+    """
+    helper = await setup_test_component(hass, create_heater_cooler_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE,
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+        },
+    )
+
+
 async def test_heater_cooler_change_thermostat_temperature(hass, utcnow):
     """Test that we can change the target temperature."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
@@ -943,3 +979,19 @@ async def test_heater_cooler_turn_off(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "off"
     assert state.attributes["hvac_action"] == "off"
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a switch unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    climate_entry = entity_registry.async_get_or_create(
+        "climate",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_heater_cooler_service)
+    assert (
+        entity_registry.async_get(climate_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

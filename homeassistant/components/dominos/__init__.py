@@ -90,8 +90,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         order = DominosOrder(order_info, dominos)
         entities.append(order)
 
-    if entities:
-        component.add_entities(entities)
+    component.add_entities(entities)
 
     # Return boolean to indicate that initialization was successfully.
     return True

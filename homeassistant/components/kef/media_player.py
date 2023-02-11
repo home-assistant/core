@@ -321,15 +321,15 @@ class KefMediaPlayer(MediaPlayerEntity):
             return
 
         mode = await self._speaker.get_mode()
-        self._dsp = dict(
-            desk_db=await self._speaker.get_desk_db(),
-            wall_db=await self._speaker.get_wall_db(),
-            treble_db=await self._speaker.get_treble_db(),
-            high_hz=await self._speaker.get_high_hz(),
-            low_hz=await self._speaker.get_low_hz(),
-            sub_db=await self._speaker.get_sub_db(),
+        self._dsp = {
+            "desk_db": await self._speaker.get_desk_db(),
+            "wall_db": await self._speaker.get_wall_db(),
+            "treble_db": await self._speaker.get_treble_db(),
+            "high_hz": await self._speaker.get_high_hz(),
+            "low_hz": await self._speaker.get_low_hz(),
+            "sub_db": await self._speaker.get_sub_db(),
             **mode._asdict(),
-        )
+        }
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to DSP updates."""

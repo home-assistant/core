@@ -9,7 +9,6 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
-    IDENTIFIER_SERIAL_NUMBER,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -36,7 +35,6 @@ DEVICE_MIGRATION_TESTS = [
         manufacturer="RYSE Inc.",
         before={
             (DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, "00:00:00:00:00:00"),
-            (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, "0401.3521.0679"),
         },
         after={(IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1")},
     ),
@@ -55,11 +53,9 @@ DEVICE_MIGRATION_TESTS = [
         manufacturer="Philips Lighting",
         before={
             (DOMAIN, IDENTIFIER_LEGACY_ACCESSORY_ID, "00:00:00:00:00:00"),
-            (DOMAIN, IDENTIFIER_LEGACY_SERIAL_NUMBER, "123456"),
         },
         after={
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"),
-            (IDENTIFIER_SERIAL_NUMBER, "123456"),
         },
     ),
     # Test migrating a Hue remote - it has a valid serial number
@@ -72,7 +68,6 @@ DEVICE_MIGRATION_TESTS = [
         },
         after={
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:6623462389072572"),
-            (IDENTIFIER_SERIAL_NUMBER, "6623462389072572"),
         },
     ),
     # Test migrating a Koogeek LS1. This is just for completeness (testing hub and hub-less devices)
@@ -85,7 +80,6 @@ DEVICE_MIGRATION_TESTS = [
         },
         after={
             (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"),
-            (IDENTIFIER_SERIAL_NUMBER, "AAAA011111111111"),
         },
     ),
 ]
@@ -95,8 +89,7 @@ DEVICE_MIGRATION_TESTS = [
 async def test_migrate_device_id_no_serial_skip_if_other_owner(
     hass: HomeAssistant, variant: DeviceMigrationTest
 ):
-    """
-    Don't migrate unrelated devices.
+    """Don't migrate unrelated devices.
 
     Create a device registry entry that needs migrate, but belongs to a different
     config entry. It should be ignored.
@@ -159,3 +152,27 @@ async def test_migrate_device_id_no_serial(
 
     assert device.identifiers == variant.after
     assert device.manufacturer == variant.manufacturer
+
+
+async def test_migrate_ble_unique_id(hass: HomeAssistant):
+    """Test that a config entry with incorrect unique_id is repaired."""
+    accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
+
+    fake_controller = await setup_platform(hass)
+    await fake_controller.add_paired_device(accessories, "02:03:EF:02:03:EF")
+    config_entry = MockConfigEntry(
+        version=1,
+        domain="homekit_controller",
+        entry_id="TestData",
+        data={"AccessoryPairingID": "02:03:EF:02:03:EF"},
+        title="test",
+        unique_id="01:02:AB:01:02:AB",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.unique_id == "01:02:AB:01:02:AB"
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.unique_id == "02:03:ef:02:03:ef"

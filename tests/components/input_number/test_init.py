@@ -1,5 +1,4 @@
 """The tests for the Input number component."""
-# pylint: disable=protected-access
 from unittest.mock import patch
 
 import pytest
@@ -19,7 +18,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -96,7 +95,7 @@ async def decrement(hass, entity_id):
     )
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [
         None,
@@ -108,7 +107,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_set_value(hass, caplog):
+async def test_set_value(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test set_value method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_1": {"initial": 50, "min": 0, "max": 100}}}
@@ -139,7 +138,7 @@ async def test_set_value(hass, caplog):
     assert float(state.state) == 70
 
 
-async def test_increment(hass):
+async def test_increment(hass: HomeAssistant) -> None:
     """Test increment method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_2": {"initial": 50, "min": 0, "max": 51}}}
@@ -162,7 +161,7 @@ async def test_increment(hass):
     assert float(state.state) == 51
 
 
-async def test_rounding(hass):
+async def test_rounding(hass: HomeAssistant) -> None:
     """Test increment introducing floating point error is rounded."""
     assert await async_setup_component(
         hass,
@@ -182,7 +181,7 @@ async def test_rounding(hass):
     assert float(state.state) == 3.6
 
 
-async def test_decrement(hass):
+async def test_decrement(hass: HomeAssistant) -> None:
     """Test decrement method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_3": {"initial": 50, "min": 49, "max": 100}}}
@@ -205,7 +204,7 @@ async def test_decrement(hass):
     assert float(state.state) == 49
 
 
-async def test_mode(hass):
+async def test_mode(hass: HomeAssistant) -> None:
     """Test mode settings."""
     assert await async_setup_component(
         hass,
@@ -232,7 +231,7 @@ async def test_mode(hass):
     assert state.attributes["mode"] == "slider"
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -255,7 +254,7 @@ async def test_restore_state(hass):
     assert float(state.state) == 10
 
 
-async def test_restore_invalid_state(hass):
+async def test_restore_invalid_state(hass: HomeAssistant) -> None:
     """Ensure an invalid restore state is handled."""
     mock_restore_cache(
         hass, (State("input_number.b1", "="), State("input_number.b2", "200"))
@@ -278,7 +277,7 @@ async def test_restore_invalid_state(hass):
     assert float(state.state) == 10
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -306,7 +305,7 @@ async def test_initial_state_overrules_restore_state(hass):
     assert float(state.state) == 60
 
 
-async def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 

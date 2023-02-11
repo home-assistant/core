@@ -1,5 +1,4 @@
-"""
-Core components of Home Assistant.
+"""Core components of Home Assistant.
 
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
@@ -15,6 +14,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextlib import suppress
 from contextvars import ContextVar
 import datetime
 import enum
@@ -30,15 +30,14 @@ from typing import (
     Any,
     Generic,
     NamedTuple,
-    Optional,
+    ParamSpec,
     TypeVar,
-    Union,
     cast,
     overload,
 )
 from urllib.parse import urlparse
 
-from typing_extensions import ParamSpec
+from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
@@ -49,7 +48,11 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    CONF_UNIT_SYSTEM_IMPERIAL,
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_CONTEXT,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -82,7 +85,13 @@ from .util.async_ import (
 )
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from .util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    METRIC_SYSTEM,
+    UnitSystem,
+    get_unit_system,
+)
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -108,6 +117,7 @@ CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
+CORE_STORAGE_MINOR_VERSION = 3
 
 DOMAIN = "homeassistant"
 
@@ -323,7 +333,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
@@ -350,9 +360,12 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Something is blocking Home Assistant from wrapping up the "
-                "start up phase. We're going to continue anyway. Please "
-                "report the following info at https://github.com/home-assistant/core/issues: %s",
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                ),
                 ", ".join(self.config.components),
             )
 
@@ -433,7 +446,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -611,7 +624,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -698,7 +711,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 2
@@ -709,7 +723,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 3
@@ -728,7 +743,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                " continue"
             )
 
         self.exit_code = exit_code
@@ -797,11 +813,6 @@ class Event:
             id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
         )
 
-    def __hash__(self) -> int:
-        """Make hashable."""
-        # The only event type that shares context are the TIME_CHANGED
-        return hash((self.event_type, self.context.id, self.time_fired))
-
     def as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
@@ -818,20 +829,12 @@ class Event:
     def __repr__(self) -> str:
         """Return the representation."""
         if self.data:
-            return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
+            return (
+                f"<Event {self.event_type}[{str(self.origin)[0]}]:"
+                f" {util.repr_helper(self.data)}>"
+            )
 
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.event_type == other.event_type
-            and self.data == other.data
-            and self.origin == other.origin
-            and self.time_fired == other.time_fired
-            and self.context == other.context
-        )
 
 
 class _FilterableJob(NamedTuple):
@@ -1073,9 +1076,6 @@ class EventBus:
             )
 
 
-_StateT = TypeVar("_StateT", bound="State")
-
-
 class State:
     """Object to represent a state within the state machine.
 
@@ -1099,6 +1099,7 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
+        "_as_compressed_state",
     ]
 
     def __init__(
@@ -1134,13 +1135,7 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-
-    def __hash__(self) -> int:
-        """Make the state hashable.
-
-        State objects are effectively immutable.
-        """
-        return hash((id(self), self.last_updated))
+        self._as_compressed_state: dict[str, Any] | None = None
 
     @property
     def name(self) -> str:
@@ -1175,8 +1170,35 @@ class State:
             )
         return self._as_dict
 
+    def as_compressed_state(self) -> dict[str, Any]:
+        """Build a compressed dict of a state for adds.
+
+        Omits the lu (last_updated) if it matches (lc) last_changed.
+
+        Sends c (context) as a string if it only contains an id.
+        """
+        if self._as_compressed_state:
+            return self._as_compressed_state
+        state_context = self.context
+        if state_context.parent_id is None and state_context.user_id is None:
+            context: dict[str, Any] | str = state_context.id
+        else:
+            context = state_context.as_dict()
+        compressed_state = {
+            COMPRESSED_STATE_STATE: self.state,
+            COMPRESSED_STATE_ATTRIBUTES: self.attributes,
+            COMPRESSED_STATE_CONTEXT: context,
+            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+        }
+        if self.last_changed != self.last_updated:
+            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+                self.last_updated
+            )
+        self._as_compressed_state = compressed_state
+        return compressed_state
+
     @classmethod
-    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
+    def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -1224,16 +1246,6 @@ class State:
         """
         self.context = Context(
             self.context.user_id, self.context.parent_id, self.context.id
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison of the state."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-            and self.context == other.context
         )
 
     def __repr__(self) -> str:
@@ -1412,7 +1424,8 @@ class StateMachine:
         entity_id = entity_id.lower()
         if entity_id in self._states or entity_id in self._reservations:
             raise HomeAssistantError(
-                "async_reserve must not be called once the state is in the state machine."
+                "async_reserve must not be called once the state is in the state"
+                " machine."
             )
 
         self._reservations.add(entity_id)
@@ -1561,8 +1574,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
@@ -1578,8 +1590,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
 
@@ -1636,8 +1647,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         See description of async_call for details.
         """
@@ -1658,8 +1668,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         Specify blocking=True to wait until service is executed.
         Waits a maximum of limit, which may be None for no timeout.
@@ -1790,6 +1799,8 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
+        self._store = self._ConfigStore(self.hass)
+
         self.latitude: float = 0
         self.longitude: float = 0
         self.elevation: int = 0
@@ -1799,11 +1810,16 @@ class Config:
         self.internal_url: str | None = None
         self.external_url: str | None = None
         self.currency: str = "EUR"
+        self.country: str | None = None
+        self.language: str = "en"
 
         self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
+
+        # List of packages to skip when installing requirements on startup
+        self.skip_pip_packages: list[str] = []
 
         # List of loaded components
         self.components: set[str] = set()
@@ -1905,6 +1921,8 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1930,6 +1948,8 @@ class Config:
         external_url: str | dict[Any, Any] | None = _UNDEF,
         internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
+        country: str | dict[Any, Any] | None = _UNDEF,
+        language: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1940,46 +1960,47 @@ class Config:
         if elevation is not None:
             self.elevation = elevation
         if unit_system is not None:
-            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-                self.units = IMPERIAL_SYSTEM
-            else:
+            try:
+                self.units = get_unit_system(unit_system)
+            except ValueError:
                 self.units = METRIC_SYSTEM
         if location_name is not None:
             self.location_name = location_name
         if time_zone is not None:
             self.set_time_zone(time_zone)
         if external_url is not _UNDEF:
-            self.external_url = cast(Optional[str], external_url)
+            self.external_url = cast(str | None, external_url)
         if internal_url is not _UNDEF:
-            self.internal_url = cast(Optional[str], internal_url)
+            self.internal_url = cast(str | None, internal_url)
         if currency is not None:
             self.currency = currency
+        if country is not _UNDEF:
+            self.country = cast(str | None, country)
+        if language is not None:
+            self.language = language
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
+        # pylint: disable-next=import-outside-toplevel
+        from .config import (
+            _raise_issue_if_historic_currency,
+            _raise_issue_if_no_country,
+        )
+
         self._update(source=ConfigSource.STORAGE, **kwargs)
-        await self.async_store()
+        await self._async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
+
+        _raise_issue_if_historic_currency(self.hass, self.currency)
+        _raise_issue_if_no_country(self.hass, self.country)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        # Circular dep
-        # pylint: disable=import-outside-toplevel
-        from .helpers.storage import Store
-
-        store = Store[dict[str, Any]](
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
-
-        if not (data := await store.async_load()):
+        if not (data := await self._store.async_load()):
             return
 
-        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
-        # but this data still lives in storage, so we print a warning.
+        # In 2021.9 we fixed validation to disallow a path (because that's never
+        # correct) but this data still lives in storage, so we print a warning.
         if data.get("external_url") and urlparse(data["external_url"]).path not in (
             "",
             "/",
@@ -1997,37 +2018,104 @@ class Config:
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             elevation=data.get("elevation"),
-            unit_system=data.get("unit_system"),
+            unit_system=data.get("unit_system_v2"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
             external_url=data.get("external_url", _UNDEF),
             internal_url=data.get("internal_url", _UNDEF),
             currency=data.get("currency"),
+            country=data.get("country"),
+            language=data.get("language"),
         )
 
-    async def async_store(self) -> None:
+    async def _async_store(self) -> None:
         """Store [homeassistant] core config."""
-        # Circular dep
-        # pylint: disable=import-outside-toplevel
-        from .helpers.storage import Store
-
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
-            "unit_system": self.units.name,
+            # We don't want any integrations to use the name of the unit system
+            # so we are using the private attribute here
+            "unit_system_v2": self.units._name,  # pylint: disable=protected-access
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
-        store: Store[dict[str, Any]] = Store(
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
-        await store.async_save(data)
+        await self._store.async_save(data)
+
+    # Circular dependency prevents us from generating the class at top level
+    # pylint: disable-next=import-outside-toplevel
+    from .helpers.storage import Store
+
+    class _ConfigStore(Store[dict[str, Any]]):
+        """Class to help storing Config data."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            """Initialize storage class."""
+            super().__init__(
+                hass,
+                CORE_STORAGE_VERSION,
+                CORE_STORAGE_KEY,
+                private=True,
+                atomic_writes=True,
+                minor_version=CORE_STORAGE_MINOR_VERSION,
+            )
+            self._original_unit_system: str | None = None  # from old store 1.1
+
+        async def _async_migrate_func(
+            self,
+            old_major_version: int,
+            old_minor_version: int,
+            old_data: dict[str, Any],
+        ) -> dict[str, Any]:
+            """Migrate to the new version."""
+            data = old_data
+            if old_major_version == 1 and old_minor_version < 2:
+                # In 1.2, we remove support for "imperial", replaced by "us_customary"
+                # Using a new key to allow rollback
+                self._original_unit_system = data.get("unit_system")
+                data["unit_system_v2"] = self._original_unit_system
+                if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
+                    data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+            if old_major_version == 1 and old_minor_version < 3:
+                # In 1.3, we add the key "language", initialize it from the
+                # owner account.
+                data["language"] = "en"
+                try:
+                    owner = await self.hass.auth.async_get_owner()
+                    if owner is not None:
+                        # pylint: disable-next=import-outside-toplevel
+                        from .components.frontend import storage as frontend_store
+
+                        # pylint: disable-next=import-outside-toplevel
+                        from .helpers import config_validation as cv
+
+                        _, owner_data = await frontend_store.async_user_store(
+                            self.hass, owner.id
+                        )
+
+                        if (
+                            "language" in owner_data
+                            and "language" in owner_data["language"]
+                        ):
+                            with suppress(vol.InInvalid):
+                                data["language"] = cv.language(
+                                    owner_data["language"]["language"]
+                                )
+                # pylint: disable-next=broad-except
+                except Exception:
+                    _LOGGER.exception("Unexpected error during core config migration")
+
+            if old_major_version > 1:
+                raise NotImplementedError
+            return data
+
+        async def async_save(self, data: dict[str, Any]) -> None:
+            if self._original_unit_system:
+                data["unit_system"] = self._original_unit_system
+            return await super().async_save(data)

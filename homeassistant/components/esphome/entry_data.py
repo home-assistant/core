@@ -37,11 +37,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
+from .dashboard import async_get_dashboard
+
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
-INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
+INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     BinarySensorInfo: Platform.BINARY_SENSOR,
     ButtonInfo: Platform.BUTTON,
     CameraInfo: Platform.CAMERA,
@@ -84,7 +86,7 @@ class RuntimeEntryData:
     state_subscriptions: dict[
         tuple[type[EntityState], int], Callable[[], None]
     ] = field(default_factory=dict)
-    loaded_platforms: set[str] = field(default_factory=set)
+    loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
     ble_connections_free: int = 0
@@ -93,11 +95,39 @@ class RuntimeEntryData:
         default_factory=list
     )
 
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.device_info.name if self.device_info else self.entry_id
+
+    @property
+    def friendly_name(self) -> str:
+        """Return the friendly name of the device."""
+        if self.device_info and self.device_info.friendly_name:
+            return self.device_info.friendly_name
+        return self.name
+
+    @property
+    def signal_device_updated(self) -> str:
+        """Return the signal to listen to for core device state update."""
+        return f"esphome_{self.entry_id}_on_device_update"
+
+    @property
+    def signal_static_info_updated(self) -> str:
+        """Return the signal to listen to for updates on static info."""
+        return f"esphome_{self.entry_id}_on_list"
+
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""
-        name = self.device_info.name if self.device_info else self.entry_id
-        _LOGGER.debug("%s: BLE connection limits: %s/%s", name, free, limit)
+        _LOGGER.debug(
+            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
+            self.name,
+            self.device_info.mac_address if self.device_info else "unknown",
+            limit - free,
+            free,
+            limit,
+        )
         self.ble_connections_free = free
         self.ble_connections_limit = limit
         if free:
@@ -122,7 +152,7 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[str]
+        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
     ) -> None:
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
@@ -136,6 +166,10 @@ class RuntimeEntryData:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
         needed_platforms = set()
+
+        if async_get_dashboard(hass):
+            needed_platforms.add(Platform.UPDATE)
+
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
                 if isinstance(info, info_type):
@@ -144,8 +178,7 @@ class RuntimeEntryData:
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Then send dispatcher event
-        signal = f"esphome_{self.entry_id}_on_list"
-        async_dispatcher_send(hass, signal, infos)
+        async_dispatcher_send(hass, self.signal_static_info_updated, infos)
 
     @callback
     def async_subscribe_state_update(
@@ -168,7 +201,8 @@ class RuntimeEntryData:
         subscription_key = (type(state), state.key)
         self.state[type(state)][state.key] = state
         _LOGGER.debug(
-            "Dispatching update with key %s: %s",
+            "%s: dispatching update with key %s: %s",
+            self.name,
             subscription_key,
             state,
         )
@@ -178,8 +212,7 @@ class RuntimeEntryData:
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:
         """Distribute an update of a core device state like availability."""
-        signal = f"esphome_{self.entry_id}_on_device_update"
-        async_dispatcher_send(hass, signal)
+        async_dispatcher_send(hass, self.signal_device_updated)
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
         """Load the retained data from store and return de-serialized data."""

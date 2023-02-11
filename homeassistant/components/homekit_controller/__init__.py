@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import KNOWN_DEVICES, TRIGGERS
+from .const import KNOWN_DEVICES
 from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await conn.async_setup()
-    except (AccessoryNotFoundError, EncryptionError, AccessoryDisconnectedError) as ex:
+    except (
+        asyncio.TimeoutError,
+        AccessoryNotFoundError,
+        EncryptionError,
+        AccessoryDisconnectedError,
+    ) as ex:
         del hass.data[KNOWN_DEVICES][conn.unique_id]
         with contextlib.suppress(asyncio.TimeoutError):
             await conn.pairing.close()
@@ -54,7 +59,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_get_controller(hass)
 
     hass.data[KNOWN_DEVICES] = {}
-    hass.data[TRIGGERS] = {}
 
     async def _async_stop_homekit_controller(event: Event) -> None:
         await asyncio.gather(
@@ -93,9 +97,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await controller.remove_pairing(hkid)
     except aiohomekit.AccessoryDisconnectedError:
         _LOGGER.warning(
-            "Accessory %s was removed from HomeAssistant but was not reachable "
-            "to properly unpair. It may need resetting before you can use it with "
-            "HomeKit again",
+            (
+                "Accessory %s was removed from HomeAssistant but was not reachable "
+                "to properly unpair. It may need resetting before you can use it with "
+                "HomeKit again"
+            ),
             entry.title,
         )
 

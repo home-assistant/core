@@ -8,10 +8,11 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, Union
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import attr
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -23,16 +24,22 @@ if TYPE_CHECKING:
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
-    from .discovery import MQTTConfig
+    from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
 
-_SENTINEL = object()
+
+class PayloadSentinel(StrEnum):
+    """Sentinel for `async_render_with_possible_json_value`."""
+
+    NONE = "none"
+    DEFAULT = "default"
+
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_THIS = "this"
 
-PublishPayloadType = Union[str, bytes, int, float, None]
+PublishPayloadType = str | bytes | int | float | None
 
 
 @attr.s(slots=True, frozen=True)
@@ -86,7 +93,7 @@ class TriggerDebugInfo(TypedDict):
 class PendingDiscovered(TypedDict):
     """Pending discovered items."""
 
-    pending: deque[MQTTConfig]
+    pending: deque[MQTTDiscoveryPayload]
     unsub: CALLBACK_TYPE
 
 
@@ -143,9 +150,9 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state:
+            if not self._template_state and self._command_template.hass is not None:
                 self._template_state = template.TemplateStateFromEntityId(
-                    self._command_template.hass, self._entity.entity_id
+                    self._entity.hass, self._entity.entity_id
                 )
             values[ATTR_THIS] = self._template_state
 
@@ -189,10 +196,12 @@ class MqttValueTemplate:
     def async_render_with_possible_json_value(
         self,
         payload: ReceivePayloadType,
-        default: ReceivePayloadType | object = _SENTINEL,
+        default: ReceivePayloadType | PayloadSentinel = PayloadSentinel.NONE,
         variables: TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
+        rendered_payload: ReceivePayloadType
+
         if self._value_template is None:
             return payload
 
@@ -213,27 +222,54 @@ class MqttValueTemplate:
                 )
             values[ATTR_THIS] = self._template_state
 
-        if default == _SENTINEL:
+        if default is PayloadSentinel.NONE:
             _LOGGER.debug(
                 "Rendering incoming payload '%s' with variables %s and %s",
                 payload,
                 values,
                 self._value_template,
             )
-            return self._value_template.async_render_with_possible_json_value(
-                payload, variables=values
+            rendered_payload = (
+                self._value_template.async_render_with_possible_json_value(
+                    payload, variables=values
+                )
             )
+            return rendered_payload
 
         _LOGGER.debug(
-            "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
+            (
+                "Rendering incoming payload '%s' with variables %s with default value"
+                " '%s' and %s"
+            ),
             payload,
             values,
             default,
             self._value_template,
         )
-        return self._value_template.async_render_with_possible_json_value(
+        rendered_payload = self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
+        return rendered_payload
+
+
+class EntityTopicState:
+    """Manage entity state write requests for subscribed topics."""
+
+    def __init__(self) -> None:
+        """Register topic."""
+        self.subscribe_calls: dict[str, Entity] = {}
+
+    @callback
+    def process_write_state_requests(self) -> None:
+        """Process the write state requests."""
+        while self.subscribe_calls:
+            _, entity = self.subscribe_calls.popitem()
+            entity.async_write_ha_state()
+
+    @callback
+    def write_state_request(self, entity: Entity) -> None:
+        """Register write state request."""
+        self.subscribe_calls[entity.entity_id] = entity
 
 
 @dataclass
@@ -264,6 +300,7 @@ class MqttData:
         default_factory=dict
     )
     reload_needed: bool = False
+    state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
     updated_config: ConfigType = field(default_factory=dict)

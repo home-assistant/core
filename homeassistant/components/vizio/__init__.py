@@ -30,7 +30,8 @@ def validate_apps(config: ConfigType) -> ConfigType:
         and config[CONF_DEVICE_CLASS] != MediaPlayerDeviceClass.TV
     ):
         raise vol.Invalid(
-            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is '{MediaPlayerDeviceClass.TV}'"
+            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is"
+            f" '{MediaPlayerDeviceClass.TV}'"
         )
 
     return config
@@ -94,7 +95,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
+class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Define an object to hold Vizio app config data."""
 
     def __init__(self, hass: HomeAssistant) -> None:

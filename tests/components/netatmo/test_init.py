@@ -9,7 +9,7 @@ from pyatmo.const import ALL_SCOPES
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -110,7 +110,7 @@ async def test_setup_component_with_config(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 10
         mock_impl.assert_called_once()
         mock_webhook.assert_called_once()
 
@@ -222,7 +222,7 @@ async def test_setup_with_cloud(hass, config_entry):
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_with_cloudhook(hass):
+async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
     """Test if set up with active cloud subscription and cloud hook."""
     config_entry = MockConfigEntry(
         domain="netatmo",
@@ -304,7 +304,6 @@ async def test_setup_component_with_delay(hass, config_entry):
     ) as mock_post_api_request, patch(
         "homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]
     ):
-
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
@@ -342,7 +341,7 @@ async def test_setup_component_with_delay(hass, config_entry):
         mock_dropwebhook.assert_called_once()
 
 
-async def test_setup_component_invalid_token_scope(hass):
+async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
     """Test handling of invalid token scope."""
     config_entry = MockConfigEntry(
         domain="netatmo",

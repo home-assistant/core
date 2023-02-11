@@ -1,5 +1,5 @@
 """Test the UniFi Protect number platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -97,8 +97,10 @@ async def test_number_setup_camera_all(
 ):
     """Test number entity setup for camera devices (all features)."""
 
+    camera.feature_flags.has_chime = True
+    camera.chime_duration = timedelta(seconds=1)
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
+    assert_entity_counts(hass, Platform.NUMBER, 4, 4)
 
     entity_registry = er.async_get(hass)
 
@@ -113,7 +115,7 @@ async def test_number_setup_camera_all(
 
         state = hass.states.get(entity_id)
         assert state
-        assert state.state == "0"
+        assert state.state == "1"
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -203,15 +205,12 @@ async def test_number_camera_simple(
 
     camera.__fields__[description.ufp_set_method] = Mock(final=False)
     setattr(camera, description.ufp_set_method, AsyncMock())
-    set_method = getattr(camera, description.ufp_set_method)
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, camera, description)
 
     await hass.services.async_call(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 1.0}, blocking=True
     )
-
-    set_method.assert_called_once_with(1.0)
 
 
 async def test_number_lock_auto_close(

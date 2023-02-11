@@ -30,14 +30,20 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
-from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
+from homeassistant.core import (
+    DOMAIN as HASS_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     assert_setup_component,
@@ -62,7 +68,7 @@ HOT_TOLERANCE = 0.5
 TARGET_TEMP_STEP = 0.5
 
 
-async def test_setup_missing_conf(hass):
+async def test_setup_missing_conf(hass: HomeAssistant) -> None:
     """Test set up heat_control with missing config values."""
     config = {
         "platform": "generic_thermostat",
@@ -73,7 +79,7 @@ async def test_setup_missing_conf(hass):
         await async_setup_component(hass, "climate", {"climate": config})
 
 
-async def test_valid_conf(hass):
+async def test_valid_conf(hass: HomeAssistant) -> None:
     """Test set up generic_thermostat with valid config values."""
     assert await async_setup_component(
         hass,
@@ -222,7 +228,7 @@ async def setup_comp_2(hass):
     await hass.async_block_till_done()
 
 
-async def test_setup_defaults_to_unknown(hass):
+async def test_setup_defaults_to_unknown(hass: HomeAssistant) -> None:
     """Test the setting of defaults to unknown."""
     hass.config.units = METRIC_SYSTEM
     await async_setup_component(
@@ -244,7 +250,7 @@ async def test_setup_defaults_to_unknown(hass):
     assert hass.states.get(ENTITY).state == HVACMode.OFF
 
 
-async def test_setup_gets_current_temp_from_sensor(hass):
+async def test_setup_gets_current_temp_from_sensor(hass: HomeAssistant) -> None:
     """Test that current temperature is updated on entity addition."""
     hass.config.units = METRIC_SYSTEM
     _setup_sensor(hass, 18)
@@ -403,7 +409,7 @@ async def test_sensor_bad_value(hass, setup_comp_2):
     assert state.attributes.get("current_temperature") == temp
 
 
-async def test_sensor_unknown(hass):
+async def test_sensor_unknown(hass: HomeAssistant) -> None:
     """Test when target sensor is Unknown."""
     hass.states.async_set("sensor.unknown", STATE_UNKNOWN)
     assert await async_setup_component(
@@ -423,7 +429,7 @@ async def test_sensor_unknown(hass):
     assert state.attributes.get("current_temperature") is None
 
 
-async def test_sensor_unavailable(hass):
+async def test_sensor_unavailable(hass: HomeAssistant) -> None:
     """Test when target sensor is Unavailable."""
     hass.states.async_set("sensor.unavailable", STATE_UNAVAILABLE)
     assert await async_setup_component(
@@ -572,7 +578,7 @@ def _setup_switch(hass, is_on):
 @pytest.fixture
 async def setup_comp_3(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -717,7 +723,7 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
 @pytest.fixture
 async def setup_comp_4(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -823,7 +829,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
 @pytest.fixture
 async def setup_comp_5(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -929,7 +935,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
 @pytest.fixture
 async def setup_comp_6(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1034,7 +1040,7 @@ async def test_mode_change_heater_trigger_on_not_long_enough(hass, setup_comp_6)
 @pytest.fixture
 async def setup_comp_7(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1107,7 +1113,7 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
 @pytest.fixture
 async def setup_comp_8(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1201,7 +1207,7 @@ async def setup_comp_9(hass):
 
 async def test_precision(hass, setup_comp_9):
     """Test that setting precision to tenths works as intended."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23.3
@@ -1209,7 +1215,7 @@ async def test_precision(hass, setup_comp_9):
     assert state.attributes.get("target_temp_step") == 0.1
 
 
-async def test_custom_setup_params(hass):
+async def test_custom_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with custom parameters."""
     result = await async_setup_component(
         hass,
@@ -1272,7 +1278,7 @@ async def test_restore_state(hass, hvac_mode):
     assert state.state == hvac_mode
 
 
-async def test_no_restore_state(hass):
+async def test_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup if they exist.
 
     Allows for graceful reboot.
@@ -1309,7 +1315,7 @@ async def test_no_restore_state(hass):
     assert state.state == HVACMode.OFF
 
 
-async def test_initial_hvac_off_force_heater_off(hass):
+async def test_initial_hvac_off_force_heater_off(hass: HomeAssistant) -> None:
     """Ensure that restored state is coherent with real situation.
 
     'initial_hvac_mode: off' will force HVAC status, but we must be sure
@@ -1347,7 +1353,7 @@ async def test_initial_hvac_off_force_heater_off(hass):
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_restore_will_turn_off_(hass):
+async def test_restore_will_turn_off_(hass: HomeAssistant) -> None:
     """Ensure that restored state is coherent with real situation.
 
     Thermostat status must trigger heater event if temp raises the target .
@@ -1395,7 +1401,7 @@ async def test_restore_will_turn_off_(hass):
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
-async def test_restore_will_turn_off_when_loaded_second(hass):
+async def test_restore_will_turn_off_when_loaded_second(hass: HomeAssistant) -> None:
     """Ensure that restored state is coherent with real situation.
 
     Switch is not available until after component is loaded
@@ -1455,9 +1461,8 @@ async def test_restore_will_turn_off_when_loaded_second(hass):
     assert call.data["entity_id"] == "input_boolean.test"
 
 
-async def test_restore_state_uncoherence_case(hass):
-    """
-    Test restore from a strange state.
+async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
+    """Test restore from a strange state.
 
     - Turn the generic thermostat off
     - Restart HA and restore state from DB
@@ -1512,7 +1517,7 @@ def _mock_restore_cache(hass, temperature=20, hvac_mode=HVACMode.OFF):
     )
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test we can reload."""
 
     assert await async_setup_component(

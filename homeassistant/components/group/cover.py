@@ -324,7 +324,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             tilt_states, ATTR_CURRENT_TILT_POSITION
         )
 
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
         if self._covers[KEY_OPEN_CLOSE]:
             supported_features |= CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         supported_features |= CoverEntityFeature.STOP if self._covers[KEY_STOP] else 0

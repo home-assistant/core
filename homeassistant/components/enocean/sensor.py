@@ -19,10 +19,10 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     PERCENTAGE,
-    POWER_WATT,
     STATE_CLOSED,
     STATE_OPEN,
-    TEMP_CELSIUS,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,7 @@ class EnOceanSensorEntityDescription(
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     name="Temperature",
-    native_unit_of_measurement=TEMP_CELSIUS,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     icon="mdi:thermometer",
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
@@ -82,7 +82,7 @@ SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
 SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
-    native_unit_of_measurement=POWER_WATT,
+    native_unit_of_measurement=UnitOfPower.WATT,
     icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
@@ -148,14 +148,15 @@ def setup_platform(
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
 
-    if entities:
-        add_entities(entities)
+    add_entities(entities)
 
 
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
-    def __init__(self, dev_id, dev_name, description: EnOceanSensorEntityDescription):
+    def __init__(
+        self, dev_id, dev_name, description: EnOceanSensorEntityDescription
+    ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name)
         self.entity_description = description
@@ -224,7 +225,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         scale_max,
         range_from,
         range_to,
-    ):
+    ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, description)
         self._scale_min = scale_min

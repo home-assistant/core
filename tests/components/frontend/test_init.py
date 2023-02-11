@@ -17,6 +17,7 @@ from homeassistant.components.frontend import (
     THEMES_STORAGE_KEY,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -80,7 +81,7 @@ async def frontend_themes(hass):
 
 
 @pytest.fixture
-def aiohttp_client(loop, aiohttp_client, socket_enabled):
+def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
@@ -496,13 +497,13 @@ async def test_get_translations_for_single_integration(hass, ws_client):
     assert msg["result"] == {"resources": {"lang": "nl", "integration": ["http"]}}
 
 
-async def test_auth_load(hass):
+async def test_auth_load(hass: HomeAssistant) -> None:
     """Test auth component loaded by default."""
     frontend = await async_get_integration(hass, "frontend")
     assert "auth" in frontend.dependencies
 
 
-async def test_onboarding_load(hass):
+async def test_onboarding_load(hass: HomeAssistant) -> None:
     """Test onboarding component loaded by default."""
     frontend = await async_get_integration(hass, "frontend")
     assert "onboarding" in frontend.dependencies

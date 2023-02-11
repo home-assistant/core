@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
@@ -39,7 +39,7 @@ from .const import (
 from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-ProtectDeviceType = Union[ProtectAdoptableDeviceModel, NVR]
+ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 
 
 @callback
@@ -149,8 +149,7 @@ class ProtectData:
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
-        """
-        Add pending camera.
+        """Add pending camera.
 
         A "pending camera" is one that has been adopted by not had its camera channels
         initialized yet. Will cause Websocket code to check for channels to be
@@ -240,7 +239,8 @@ class ProtectData:
         # alert user viewport needs restart so voice clients can get new options
         elif len(self.api.bootstrap.viewers) > 0 and isinstance(obj, Liveview):
             _LOGGER.warning(
-                "Liveviews updated. Restart Home Assistant to update Viewport select options"
+                "Liveviews updated. Restart Home Assistant to update Viewport select"
+                " options"
             )
 
     @callback

@@ -785,7 +785,7 @@ async def test_websocket_disconnect(hass, mock_api_object):
     assert hass.states.get(TEST_MASTER_ENTITY_NAME).state != STATE_UNAVAILABLE
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state != STATE_UNAVAILABLE
     updater_disconnected = mock_api_object.start_websocket_handler.call_args[0][4]
-    updater_disconnected()
+    await updater_disconnected()
     await hass.async_block_till_done()
     assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state == STATE_UNAVAILABLE

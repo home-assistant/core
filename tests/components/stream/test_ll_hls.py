@@ -22,7 +22,12 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Part
 from homeassistant.setup import async_setup_component
 
-from .common import FAKE_TIME, DefaultSegment as Segment, generate_h264_video
+from .common import (
+    FAKE_TIME,
+    DefaultSegment as Segment,
+    dynamic_stream_settings,
+    generate_h264_video,
+)
 from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
 
 SEGMENT_DURATION = 6
@@ -30,7 +35,7 @@ TEST_PART_DURATION = 0.75
 NUM_PART_SEGMENTS = int(-(-SEGMENT_DURATION // TEST_PART_DURATION))
 PART_INDEPENDENT_PERIOD = int(1 / TEST_PART_DURATION) or 1
 BYTERANGE_LENGTH = 1
-INIT_BYTES = b"init"
+INIT_BYTES = b"\x00\x00\x00\x08moov"
 SEQUENCE_BYTES = bytearray(range(NUM_PART_SEGMENTS * BYTERANGE_LENGTH))
 ALT_SEQUENCE_BYTES = bytearray(range(20, 20 + NUM_PART_SEGMENTS * BYTERANGE_LENGTH))
 VERY_LARGE_LAST_BYTE_POS = 9007199254740991
@@ -110,8 +115,7 @@ def make_hint(segment, part):
 
 
 async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
-    """
-    Test hls stream.
+    """Test hls stream.
 
     Purposefully not mocking anything here to test full
     integration with the stream component.
@@ -135,7 +139,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
     num_playlist_segments = 3
     # Setup demo HLS track
     source = generate_h264_video(duration=num_playlist_segments * SEGMENT_DURATION + 2)
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, source, {}, dynamic_stream_settings())
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -259,7 +263,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
         },
     )
 
-    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
@@ -328,7 +332,7 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
         },
     )
 
-    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
 
     hls = stream.add_provider(HLS_PROVIDER)
@@ -393,7 +397,7 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
         },
     )
 
-    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
 
     hls = stream.add_provider(HLS_PROVIDER)
@@ -462,7 +466,7 @@ async def test_ll_hls_playlist_rollover_part(
         },
     )
 
-    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
 
     hls = stream.add_provider(HLS_PROVIDER)
@@ -541,7 +545,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
         },
     )
 
-    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
 
     hls = stream.add_provider(HLS_PROVIDER)
@@ -607,7 +611,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
         },
     )
 
-    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
 
     hls = stream.add_provider(HLS_PROVIDER)

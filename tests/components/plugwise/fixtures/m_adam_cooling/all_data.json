@@ -10,23 +10,29 @@
     "ad4838d7d35c4d6ea796ee12ae5aedf8": {
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
-      "model": "Anna",
+      "model": "ThermoTouch",
       "name": "Anna",
-      "vendor": "Plugwise B.V.",
+      "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 18.5,
+        "setpoint_low": 4.0,
+        "setpoint_high": 23.5,
         "lower_bound": 1.0,
         "upper_bound": 35.0,
         "resolution": 0.01
       },
-      "preset_modes": ["home", "asleep", "away", "no_frost"],
+      "available": true,
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "asleep",
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
       "selected_schedule": "None",
       "last_used": "Weekschema",
       "control_state": "cooling",
-      "mode": "cool",
-      "sensors": { "temperature": 18.1, "setpoint": 18.5 }
+      "mode": "heat_cool",
+      "sensors": {
+        "temperature": 25.8,
+        "setpoint_low": 4.0,
+        "setpoint_high": 23.5
+      }
     },
     "1772a4ea304041adb83f357b751341ff": {
       "dev_class": "thermo_sensor",
@@ -37,6 +43,7 @@
       "name": "Tom Badkamer",
       "zigbee_mac_address": "ABCD012345670A01",
       "vendor": "Plugwise",
+      "available": true,
       "sensors": {
         "temperature": 21.6,
         "battery": 99,
@@ -54,12 +61,14 @@
       "zigbee_mac_address": "ABCD012345670A04",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 15.0,
+        "setpoint_low": 19.0,
+        "setpoint_high": 25.0,
         "lower_bound": 0.0,
         "upper_bound": 99.9,
         "resolution": 0.01
       },
-      "preset_modes": ["home", "asleep", "away", "no_frost"],
+      "available": true,
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "home",
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
       "selected_schedule": "Badkamer",
@@ -67,9 +76,10 @@
       "control_state": "off",
       "mode": "auto",
       "sensors": {
-        "temperature": 17.9,
+        "temperature": 239,
         "battery": 56,
-        "setpoint": 15.0
+        "setpoint_low": 20.0,
+        "setpoint_high": 23.5
       }
     },
     "da224107914542988a88561b4452b0f6": {
@@ -78,10 +88,10 @@
       "hardware": "AME Smile 2.0 board",
       "location": "bc93488efab249e5bc54fd7e175a6f91",
       "mac_address": "012345670001",
-      "model": "Adam",
+      "model": "Gateway",
       "name": "Adam",
       "zigbee_mac_address": "ABCD012345670101",
-      "vendor": "Plugwise B.V.",
+      "vendor": "Plugwise",
       "regulation_mode": "cooling",
       "regulation_modes": [
         "cooling",
@@ -94,7 +104,7 @@
         "plugwise_notification": false
       },
       "sensors": {
-        "outdoor_temperature": -1.25
+        "outdoor_temperature": 29.65
       }
     },
     "056ee145a816487eaa69243c3280f8bf": {
@@ -108,7 +118,7 @@
         "upper_bound": 95.0,
         "resolution": 0.01
       },
-      "adam_cooling_enabled": true,
+      "available": true,
       "binary_sensors": {
         "cooling_state": true,
         "dhw_state": false,
@@ -116,8 +126,8 @@
         "flame_state": false
       },
       "sensors": {
-        "water_temperature": 37.0,
-        "intended_boiler_temperature": 38.1
+        "water_temperature": 19.0,
+        "intended_boiler_temperature": 17.5
       },
       "switches": {
         "dhw_cm_switch": false

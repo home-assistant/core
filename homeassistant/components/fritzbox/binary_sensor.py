@@ -13,11 +13,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity
+from . import FritzBoxDeviceEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 from .coordinator import FritzboxDataUpdateCoordinator
 from .model import FritzEntityDescriptionMixinBase
@@ -68,19 +68,21 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
+        entry.entry_id
+    ][CONF_COORDINATOR]
 
     async_add_entities(
         [
             FritzboxBinarySensor(coordinator, ain, description)
-            for ain, device in coordinator.data.items()
+            for ain, device in coordinator.data.devices.items()
             for description in BINARY_SENSOR_TYPES
             if description.suitable(device)
         ]
     )
 
 
-class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
+class FritzboxBinarySensor(FritzBoxDeviceEntity, BinarySensorEntity):
     """Representation of a binary FRITZ!SmartHome device."""
 
     entity_description: FritzBinarySensorEntityDescription
@@ -93,10 +95,10 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the FritzBox entity."""
         super().__init__(coordinator, ain, entity_description)
-        self._attr_name = f"{self.device.name} {entity_description.name}"
+        self._attr_name = f"{self.data.name} {entity_description.name}"
         self._attr_unique_id = f"{ain}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        return self.entity_description.is_on(self.device)
+        return self.entity_description.is_on(self.data)

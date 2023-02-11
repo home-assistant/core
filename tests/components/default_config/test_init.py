@@ -12,7 +12,9 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 @pytest.fixture(autouse=True)
 def mock_ssdp():
     """Mock ssdp."""
-    with patch("homeassistant.components.ssdp.Scanner.async_scan"):
+    with patch("homeassistant.components.ssdp.Scanner.async_scan"), patch(
+        "homeassistant.components.ssdp.Server.async_start"
+    ), patch("homeassistant.components.ssdp.Server.async_stop"):
         yield
 
 

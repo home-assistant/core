@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
 from unittest.mock import PropertyMock, patch
@@ -11,6 +10,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.daikin.const import KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -101,7 +101,7 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     assert result["step_id"] == "user"
 
 
-async def test_api_password_abort(hass):
+async def test_api_password_abort(hass: HomeAssistant) -> None:
     """Test device abort."""
     result = await hass.config_entries.flow.async_init(
         "daikin",

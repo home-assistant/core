@@ -69,7 +69,7 @@ from .const import (
 
 KEY_PRESS_TIMEOUT = 1.2
 
-ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400"}
+ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400", "H6410"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
@@ -280,7 +280,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
             CONF_PORT: None,
-            # We need this high timeout because waiting for auth popup is just an open socket
+            # We need this high timeout because waiting for auth popup
+            # is just an open socket
             CONF_TIMEOUT: TIMEOUT_REQUEST,
         }
         try:
@@ -310,7 +311,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 LOGGER.debug("Create SamsungTVLegacyBridge for %s", self.host)
                 self._remote = Remote(self.config.copy())
             # This is only happening when the auth was switched to DENY
-            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
+            # A removed auth will lead to socket timeout because waiting
+            # for auth popup is just an open socket
             except AccessDenied:
                 self._notify_reauth_callback()
                 raise
@@ -386,7 +388,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
         """Tells if the TV is on."""
         LOGGER.debug("Checking if TV %s is on using websocket", self.host)
         if remote := await self._async_get_remote():
-            return remote.is_alive()  # type: ignore[no-any-return]
+            return remote.is_alive()
         return False
 
     async def _async_send_commands(self, commands: list[_CommandT]) -> None:
@@ -397,7 +399,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        await remote.send_commands(commands)
+                        await remote.send_commands(commands)  # type: ignore[arg-type]
                     break
                 except (
                     BrokenPipeError,
@@ -414,7 +416,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
         """Create or return a remote control instance."""
         if (remote := self._remote) and remote.is_alive():
             # If we have one then try to use it
-            return remote  # type: ignore[no-any-return]
+            return remote
 
         async with self._remote_lock:
             # If we don't have one make sure we do it under the lock
@@ -483,7 +485,8 @@ class SamsungTVWSBridge(
                 CONF_HOST: self.host,
                 CONF_METHOD: self.method,
                 CONF_PORT: self.port,
-                # We need this high timeout because waiting for auth popup is just an open socket
+                # We need this high timeout because waiting for auth popup
+                # is just an open socket
                 CONF_TIMEOUT: TIMEOUT_REQUEST,
             }
 
@@ -503,9 +506,11 @@ class SamsungTVWSBridge(
                     return RESULT_SUCCESS
             except ConnectionClosedError as err:
                 LOGGER.info(
-                    "Working but unsupported config: %s, error: '%s'; this may "
-                    "be an indication that access to the TV has been denied. Please "
-                    "check the Device Connection Manager on your TV",
+                    (
+                        "Working but unsupported config: %s, error: '%s'; this may be"
+                        " an indication that access to the TV has been denied. Please"
+                        " check the Device Connection Manager on your TV"
+                    ),
                     config,
                     err,
                 )
@@ -520,7 +525,7 @@ class SamsungTVWSBridge(
                 return RESULT_AUTH_MISSING
             except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
-        # pylint: disable=useless-else-on-loop
+        # pylint: disable-next=useless-else-on-loop
         else:
             if result:
                 return result
@@ -590,8 +595,10 @@ class SamsungTVWSBridge(
                 self._remote = None
             except ConnectionFailure as err:
                 LOGGER.warning(
-                    "Unexpected ConnectionFailure trying to get remote for %s, "
-                    "please report this issue: %s",
+                    (
+                        "Unexpected ConnectionFailure trying to get remote for %s, "
+                        "please report this issue: %s"
+                    ),
                     self.host,
                     repr(err),
                 )
@@ -633,8 +640,10 @@ class SamsungTVWSBridge(
                 message := data.get("message")
             ) == "unrecognized method value : ms.remote.control":
                 LOGGER.error(
-                    "Your TV seems to be unsupported by SamsungTVWSBridge"
-                    " and needs a PIN: '%s'. Updating config entry",
+                    (
+                        "Your TV seems to be unsupported by SamsungTVWSBridge"
+                        " and needs a PIN: '%s'. Updating config entry"
+                    ),
                     message,
                 )
                 self._notify_update_config_entry(
@@ -780,7 +789,10 @@ class SamsungTVEncryptedBridge(
         else:
             if self._model and not self._power_off_warning_logged:
                 LOGGER.warning(
-                    "Unknown power_off command for %s (%s): sending KEY_POWEROFF and KEY_POWER",
+                    (
+                        "Unknown power_off command for %s (%s): sending KEY_POWEROFF"
+                        " and KEY_POWER"
+                    ),
                     self._model,
                     self.host,
                 )

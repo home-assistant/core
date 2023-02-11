@@ -1,6 +1,5 @@
 """The tests for the MQTT cover platform."""
-
-import copy
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -45,6 +44,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -67,7 +67,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
-    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -79,15 +78,11 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClientGenerator
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {cover.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[cover.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -97,7 +92,9 @@ def cover_platform_only():
         yield
 
 
-async def test_state_via_state_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_state_via_state_topic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -135,8 +132,8 @@ async def test_state_via_state_topic(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_opening_and_closing_state_via_custom_state_payload(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling opening and closing state via a custom payload."""
     assert await async_setup_component(
         hass,
@@ -181,8 +178,8 @@ async def test_opening_and_closing_state_via_custom_state_payload(
 
 
 async def test_open_closed_state_from_position_optimistic(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the state after setting the position using optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -231,7 +228,9 @@ async def test_open_closed_state_from_position_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_position_via_position_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_position_via_position_topic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -270,7 +269,9 @@ async def test_position_via_position_topic(hass, mqtt_mock_entry_with_yaml_confi
     assert state.state == STATE_OPEN
 
 
-async def test_state_via_template(hass, mqtt_mock_entry_with_yaml_config):
+async def test_state_via_template(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -309,7 +310,9 @@ async def test_state_via_template(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_CLOSED
 
 
-async def test_state_via_template_and_entity_id(hass, mqtt_mock_entry_with_yaml_config):
+async def test_state_via_template_and_entity_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -351,8 +354,10 @@ async def test_state_via_template_and_entity_id(hass, mqtt_mock_entry_with_yaml_
 
 
 async def test_state_via_template_with_json_value(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the controlling state via topic with JSON value."""
     assert await async_setup_component(
         hass,
@@ -394,8 +399,8 @@ async def test_state_via_template_with_json_value(
 
 
 async def test_position_via_template_and_entity_id(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -450,8 +455,11 @@ async def test_position_via_template_and_entity_id(
     ],
 )
 async def test_optimistic_flag(
-    hass, mqtt_mock_entry_with_yaml_config, config, assumed_state
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    config,
+    assumed_state,
+) -> None:
     """Test assumed_state is set correctly."""
     assert await async_setup_component(
         hass,
@@ -469,7 +477,9 @@ async def test_optimistic_flag(
         assert ATTR_ASSUMED_STATE not in state.attributes
 
 
-async def test_optimistic_state_change(hass, mqtt_mock_entry_with_yaml_config):
+async def test_optimistic_state_change(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test changing state optimistically."""
     assert await async_setup_component(
         hass,
@@ -528,8 +538,8 @@ async def test_optimistic_state_change(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_optimistic_state_change_with_position(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test changing state optimistically."""
     assert await async_setup_component(
         hass,
@@ -594,7 +604,9 @@ async def test_optimistic_state_change_with_position(
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
 
-async def test_send_open_cover_command(hass, mqtt_mock_entry_with_yaml_config):
+async def test_send_open_cover_command(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the sending of open_cover."""
     assert await async_setup_component(
         hass,
@@ -625,7 +637,9 @@ async def test_send_open_cover_command(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_send_close_cover_command(hass, mqtt_mock_entry_with_yaml_config):
+async def test_send_close_cover_command(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the sending of close_cover."""
     assert await async_setup_component(
         hass,
@@ -656,7 +670,9 @@ async def test_send_close_cover_command(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_send_stop__cover_command(hass, mqtt_mock_entry_with_yaml_config):
+async def test_send_stop__cover_command(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the sending of stop_cover."""
     assert await async_setup_component(
         hass,
@@ -687,7 +703,9 @@ async def test_send_stop__cover_command(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_current_cover_position(hass, mqtt_mock_entry_with_yaml_config):
+async def test_current_cover_position(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the current cover position."""
     assert await async_setup_component(
         hass,
@@ -740,7 +758,9 @@ async def test_current_cover_position(hass, mqtt_mock_entry_with_yaml_config):
     assert current_cover_position == 100
 
 
-async def test_current_cover_position_inverted(hass, mqtt_mock_entry_with_yaml_config):
+async def test_current_cover_position_inverted(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the current cover position."""
     assert await async_setup_component(
         hass,
@@ -804,7 +824,9 @@ async def test_current_cover_position_inverted(hass, mqtt_mock_entry_with_yaml_c
     assert hass.states.get("cover.test").state == STATE_CLOSED
 
 
-async def test_optimistic_position(hass, caplog):
+async def test_optimistic_position(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test optimistic position is not supported."""
     assert not await async_setup_component(
         hass,
@@ -825,7 +847,9 @@ async def test_optimistic_position(hass, caplog):
     )
 
 
-async def test_position_update(hass, mqtt_mock_entry_with_yaml_config):
+async def test_position_update(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test cover position update from received MQTT message."""
     assert await async_setup_component(
         hass,
@@ -869,8 +893,12 @@ async def test_position_update(hass, mqtt_mock_entry_with_yaml_config):
     [("{{position-1}}", 43, "42"), ("{{100-62}}", 100, "38")],
 )
 async def test_set_position_templated(
-    hass, mqtt_mock_entry_with_yaml_config, pos_template, pos_call, pos_message
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    pos_template,
+    pos_call,
+    pos_message,
+) -> None:
     """Test setting cover position via template."""
     assert await async_setup_component(
         hass,
@@ -908,8 +936,8 @@ async def test_set_position_templated(
 
 
 async def test_set_position_templated_and_attributes(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setting cover position via template and using entities attributes."""
     assert await async_setup_component(
         hass,
@@ -953,7 +981,9 @@ async def test_set_position_templated_and_attributes(
     mqtt_mock.async_publish.assert_called_once_with("set-position-topic", "5", 0, False)
 
 
-async def test_set_tilt_templated(hass, mqtt_mock_entry_with_yaml_config):
+async def test_set_tilt_templated(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setting cover tilt position via template."""
     assert await async_setup_component(
         hass,
@@ -993,8 +1023,8 @@ async def test_set_tilt_templated(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_set_tilt_templated_and_attributes(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setting cover tilt position via template and using entities attributes."""
     assert await async_setup_component(
         hass,
@@ -1082,7 +1112,9 @@ async def test_set_tilt_templated_and_attributes(
     )
 
 
-async def test_set_position_untemplated(hass, mqtt_mock_entry_with_yaml_config):
+async def test_set_position_untemplated(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setting cover position via template."""
     assert await async_setup_component(
         hass,
@@ -1115,8 +1147,8 @@ async def test_set_position_untemplated(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_set_position_untemplated_custom_percentage_range(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setting cover position via template."""
     assert await async_setup_component(
         hass,
@@ -1150,7 +1182,9 @@ async def test_set_position_untemplated_custom_percentage_range(
     mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
 
 
-async def test_no_command_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_no_command_topic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test with no command topic."""
     assert await async_setup_component(
         hass,
@@ -1175,7 +1209,9 @@ async def test_no_command_topic(hass, mqtt_mock_entry_with_yaml_config):
     assert hass.states.get("cover.test").attributes["supported_features"] == 240
 
 
-async def test_no_payload_close(hass, mqtt_mock_entry_with_yaml_config):
+async def test_no_payload_close(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test with no close payload."""
     assert await async_setup_component(
         hass,
@@ -1199,7 +1235,9 @@ async def test_no_payload_close(hass, mqtt_mock_entry_with_yaml_config):
     assert hass.states.get("cover.test").attributes["supported_features"] == 9
 
 
-async def test_no_payload_open(hass, mqtt_mock_entry_with_yaml_config):
+async def test_no_payload_open(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test with no open payload."""
     assert await async_setup_component(
         hass,
@@ -1223,7 +1261,9 @@ async def test_no_payload_open(hass, mqtt_mock_entry_with_yaml_config):
     assert hass.states.get("cover.test").attributes["supported_features"] == 10
 
 
-async def test_no_payload_stop(hass, mqtt_mock_entry_with_yaml_config):
+async def test_no_payload_stop(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test with no stop payload."""
     assert await async_setup_component(
         hass,
@@ -1247,7 +1287,9 @@ async def test_no_payload_stop(hass, mqtt_mock_entry_with_yaml_config):
     assert hass.states.get("cover.test").attributes["supported_features"] == 3
 
 
-async def test_with_command_topic_and_tilt(hass, mqtt_mock_entry_with_yaml_config):
+async def test_with_command_topic_and_tilt(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test with command topic and tilt config."""
     assert await async_setup_component(
         hass,
@@ -1273,7 +1315,9 @@ async def test_with_command_topic_and_tilt(hass, mqtt_mock_entry_with_yaml_confi
     assert hass.states.get("cover.test").attributes["supported_features"] == 251
 
 
-async def test_tilt_defaults(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_defaults(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the defaults."""
     assert await async_setup_component(
         hass,
@@ -1302,7 +1346,9 @@ async def test_tilt_defaults(hass, mqtt_mock_entry_with_yaml_config):
     assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
 
 
-async def test_tilt_via_invocation_defaults(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_via_invocation_defaults(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt defaults on close/open."""
     assert await async_setup_component(
         hass,
@@ -1386,7 +1432,9 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock_entry_with_yaml_conf
     mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
 
 
-async def test_tilt_given_value(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_given_value(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilting to a given value."""
     assert await async_setup_component(
         hass,
@@ -1476,7 +1524,9 @@ async def test_tilt_given_value(hass, mqtt_mock_entry_with_yaml_config):
     )
 
 
-async def test_tilt_given_value_optimistic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_given_value_optimistic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilting to a given value."""
     assert await async_setup_component(
         hass,
@@ -1554,7 +1604,9 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock_entry_with_yaml_confi
     )
 
 
-async def test_tilt_given_value_altered_range(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_given_value_altered_range(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilting to a given value."""
     assert await async_setup_component(
         hass,
@@ -1632,7 +1684,9 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock_entry_with_yaml_co
     )
 
 
-async def test_tilt_via_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_via_topic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt by updating status via MQTT."""
     assert await async_setup_component(
         hass,
@@ -1671,7 +1725,9 @@ async def test_tilt_via_topic(hass, mqtt_mock_entry_with_yaml_config):
     assert current_cover_tilt_position == 50
 
 
-async def test_tilt_via_topic_template(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_via_topic_template(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt by updating status via MQTT and template."""
     assert await async_setup_component(
         hass,
@@ -1714,8 +1770,10 @@ async def test_tilt_via_topic_template(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_tilt_via_topic_template_json_value(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test tilt by updating status via MQTT and template with JSON value."""
     assert await async_setup_component(
         hass,
@@ -1763,7 +1821,9 @@ async def test_tilt_via_topic_template_json_value(
     ) in caplog.text
 
 
-async def test_tilt_via_topic_altered_range(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_via_topic_altered_range(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt status via MQTT with altered tilt range."""
     assert await async_setup_component(
         hass,
@@ -1812,8 +1872,10 @@ async def test_tilt_via_topic_altered_range(hass, mqtt_mock_entry_with_yaml_conf
 
 
 async def test_tilt_status_out_of_range_warning(
-    hass, caplog, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+) -> None:
     """Test tilt status via MQTT tilt out of range warning message."""
     assert await async_setup_component(
         hass,
@@ -1847,8 +1909,10 @@ async def test_tilt_status_out_of_range_warning(
 
 
 async def test_tilt_status_not_numeric_warning(
-    hass, caplog, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+) -> None:
     """Test tilt status via MQTT tilt not numeric warning message."""
     assert await async_setup_component(
         hass,
@@ -1880,8 +1944,8 @@ async def test_tilt_status_not_numeric_warning(
 
 
 async def test_tilt_via_topic_altered_range_inverted(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt status via MQTT with altered tilt range and inverted tilt position."""
     assert await async_setup_component(
         hass,
@@ -1930,8 +1994,8 @@ async def test_tilt_via_topic_altered_range_inverted(
 
 
 async def test_tilt_via_topic_template_altered_range(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt status via MQTT and template with altered tilt range."""
     assert await async_setup_component(
         hass,
@@ -1982,7 +2046,9 @@ async def test_tilt_via_topic_template_altered_range(
     assert current_cover_tilt_position == 50
 
 
-async def test_tilt_position(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_position(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt via method invocation."""
     assert await async_setup_component(
         hass,
@@ -2018,7 +2084,9 @@ async def test_tilt_position(hass, mqtt_mock_entry_with_yaml_config):
     )
 
 
-async def test_tilt_position_templated(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_position_templated(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt position via template."""
     assert await async_setup_component(
         hass,
@@ -2055,7 +2123,9 @@ async def test_tilt_position_templated(hass, mqtt_mock_entry_with_yaml_config):
     )
 
 
-async def test_tilt_position_altered_range(hass, mqtt_mock_entry_with_yaml_config):
+async def test_tilt_position_altered_range(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test tilt via method invocation with altered range."""
     assert await async_setup_component(
         hass,
@@ -2095,7 +2165,7 @@ async def test_tilt_position_altered_range(hass, mqtt_mock_entry_with_yaml_confi
     )
 
 
-async def test_find_percentage_in_range_defaults(hass):
+async def test_find_percentage_in_range_defaults(hass: HomeAssistant) -> None:
     """Test find percentage in range with default range."""
     mqtt_cover = MqttCover(
         hass,
@@ -2138,7 +2208,7 @@ async def test_find_percentage_in_range_defaults(hass):
     assert mqtt_cover.find_percentage_in_range(44, "cover") == 44
 
 
-async def test_find_percentage_in_range_altered(hass):
+async def test_find_percentage_in_range_altered(hass: HomeAssistant) -> None:
     """Test find percentage in range with altered range."""
     mqtt_cover = MqttCover(
         hass,
@@ -2181,7 +2251,7 @@ async def test_find_percentage_in_range_altered(hass):
     assert mqtt_cover.find_percentage_in_range(120, "cover") == 40
 
 
-async def test_find_percentage_in_range_defaults_inverted(hass):
+async def test_find_percentage_in_range_defaults_inverted(hass: HomeAssistant) -> None:
     """Test find percentage in range with default range but inverted."""
     mqtt_cover = MqttCover(
         hass,
@@ -2224,7 +2294,7 @@ async def test_find_percentage_in_range_defaults_inverted(hass):
     assert mqtt_cover.find_percentage_in_range(44, "cover") == 56
 
 
-async def test_find_percentage_in_range_altered_inverted(hass):
+async def test_find_percentage_in_range_altered_inverted(hass: HomeAssistant) -> None:
     """Test find percentage in range with altered range and inverted."""
     mqtt_cover = MqttCover(
         hass,
@@ -2267,7 +2337,7 @@ async def test_find_percentage_in_range_altered_inverted(hass):
     assert mqtt_cover.find_percentage_in_range(120, "cover") == 60
 
 
-async def test_find_in_range_defaults(hass):
+async def test_find_in_range_defaults(hass: HomeAssistant) -> None:
     """Test find in range with default range."""
     mqtt_cover = MqttCover(
         hass,
@@ -2310,7 +2380,7 @@ async def test_find_in_range_defaults(hass):
     assert mqtt_cover.find_in_range_from_percent(44, "cover") == 44
 
 
-async def test_find_in_range_altered(hass):
+async def test_find_in_range_altered(hass: HomeAssistant) -> None:
     """Test find in range with altered range."""
     mqtt_cover = MqttCover(
         hass,
@@ -2353,7 +2423,7 @@ async def test_find_in_range_altered(hass):
     assert mqtt_cover.find_in_range_from_percent(40, "cover") == 120
 
 
-async def test_find_in_range_defaults_inverted(hass):
+async def test_find_in_range_defaults_inverted(hass: HomeAssistant) -> None:
     """Test find in range with default range but inverted."""
     mqtt_cover = MqttCover(
         hass,
@@ -2396,7 +2466,7 @@ async def test_find_in_range_defaults_inverted(hass):
     assert mqtt_cover.find_in_range_from_percent(56, "cover") == 44
 
 
-async def test_find_in_range_altered_inverted(hass):
+async def test_find_in_range_altered_inverted(hass: HomeAssistant) -> None:
     """Test find in range with altered range and inverted."""
     mqtt_cover = MqttCover(
         hass,
@@ -2440,36 +2510,44 @@ async def test_find_in_range_altered_inverted(hass):
 
 
 async def test_availability_when_connection_lost(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_availability_without_topic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
+async def test_default_availability_payload(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
+async def test_custom_availability_payload(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
+async def test_valid_device_class(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the setting of a valid device class."""
     assert await async_setup_component(
         hass,
@@ -2491,7 +2569,9 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("device_class") == "garage"
 
 
-async def test_invalid_device_class(hass, caplog):
+async def test_invalid_device_class(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the setting of an invalid device class."""
     assert not await async_setup_component(
         hass,
@@ -2510,8 +2590,8 @@ async def test_invalid_device_class(hass, caplog):
 
 
 async def test_setting_attribute_via_mqtt_json_message(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
@@ -2519,8 +2599,8 @@ async def test_setting_attribute_via_mqtt_json_message(
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass, mqtt_mock_entry_no_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
@@ -2531,7 +2611,9 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
     )
 
 
-async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
+async def test_setting_attribute_with_template(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
@@ -2539,8 +2621,10 @@ async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_c
 
 
 async def test_update_with_json_attrs_not_dict(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
         hass,
@@ -2552,8 +2636,10 @@ async def test_update_with_json_attrs_not_dict(
 
 
 async def test_update_with_json_attrs_bad_json(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
         hass,
@@ -2564,7 +2650,11 @@ async def test_update_with_json_attrs_bad_json(
     )
 
 
-async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_discovery_update_attr(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
         hass,
@@ -2575,7 +2665,9 @@ async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplo
     )
 
 
-async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique_id option only creates one cover per id."""
     config = {
         mqtt.DOMAIN: {
@@ -2598,7 +2690,11 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     )
 
 
-async def test_discovery_removal_cover(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_discovery_removal_cover(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test removal of discovered cover."""
     data = '{ "name": "test", "command_topic": "test_topic" }'
     await help_test_discovery_removal(
@@ -2606,7 +2702,11 @@ async def test_discovery_removal_cover(hass, mqtt_mock_entry_no_yaml_config, cap
     )
 
 
-async def test_discovery_update_cover(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_discovery_update_cover(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test update of discovered cover."""
     config1 = {"name": "Beer", "command_topic": "test_topic"}
     config2 = {"name": "Milk", "command_topic": "test_topic"}
@@ -2616,8 +2716,10 @@ async def test_discovery_update_cover(hass, mqtt_mock_entry_no_yaml_config, capl
 
 
 async def test_discovery_update_unchanged_cover(
-    hass, mqtt_mock_entry_no_yaml_config, caplog
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test update of discovered cover."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
     with patch(
@@ -2634,7 +2736,11 @@ async def test_discovery_update_unchanged_cover(
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_discovery_broken(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic#" }'
     data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
@@ -2643,49 +2749,63 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     )
 
 
-async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
+async def test_entity_device_info_with_connection(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test MQTT cover device registry integration."""
     await help_test_entity_device_info_with_connection(
         hass, mqtt_mock_entry_no_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
+async def test_entity_device_info_with_identifier(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test MQTT cover device registry integration."""
     await help_test_entity_device_info_with_identifier(
         hass, mqtt_mock_entry_no_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
+async def test_entity_device_info_update(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test device registry update."""
     await help_test_entity_device_info_update(
         hass, mqtt_mock_entry_no_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
+async def test_entity_device_info_remove(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
         hass, mqtt_mock_entry_no_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
+async def test_entity_id_update_subscriptions(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
         hass, mqtt_mock_entry_with_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
+async def test_entity_id_update_discovery_update(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock_entry_no_yaml_config, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
+async def test_entity_debug_info_message(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass,
@@ -2698,8 +2818,8 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
 
 
 async def test_state_and_position_topics_state_not_set_via_position_topic(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test state is not set via position topic when both state and position topics are set."""
     assert await async_setup_component(
         hass,
@@ -2759,8 +2879,8 @@ async def test_state_and_position_topics_state_not_set_via_position_topic(
 
 
 async def test_set_state_via_position_using_stopped_state(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling state via position topic using stopped state."""
     assert await async_setup_component(
         hass,
@@ -2816,8 +2936,8 @@ async def test_set_state_via_position_using_stopped_state(
 
 
 async def test_position_via_position_topic_template(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test position by updating status via position template."""
     assert await async_setup_component(
         hass,
@@ -2854,8 +2974,10 @@ async def test_position_via_position_topic_template(
 
 
 async def test_position_via_position_topic_template_json_value(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test position by updating status via position template with a JSON value."""
     assert await async_setup_component(
         hass,
@@ -2897,7 +3019,9 @@ async def test_position_via_position_topic_template_json_value(
     ) in caplog.text
 
 
-async def test_position_template_with_entity_id(hass, mqtt_mock_entry_with_yaml_config):
+async def test_position_template_with_entity_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test position by updating status via position template."""
     assert await async_setup_component(
         hass,
@@ -2939,8 +3063,8 @@ async def test_position_template_with_entity_id(hass, mqtt_mock_entry_with_yaml_
 
 
 async def test_position_via_position_topic_template_return_json(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test position by updating status via position template and returning json."""
     assert await async_setup_component(
         hass,
@@ -2970,8 +3094,10 @@ async def test_position_via_position_topic_template_return_json(
 
 
 async def test_position_via_position_topic_template_return_json_warning(
-    hass, caplog, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+) -> None:
     """Test position by updating status via position template returning json without position attribute."""
     assert await async_setup_component(
         hass,
@@ -3001,8 +3127,8 @@ async def test_position_via_position_topic_template_return_json_warning(
 
 
 async def test_position_and_tilt_via_position_topic_template_return_json(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test position and tilt by updating the position via position template."""
     assert await async_setup_component(
         hass,
@@ -3045,8 +3171,8 @@ async def test_position_and_tilt_via_position_topic_template_return_json(
 
 
 async def test_position_via_position_topic_template_all_variables(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test position by updating status via position template."""
     assert await async_setup_component(
         hass,
@@ -3093,8 +3219,8 @@ async def test_position_via_position_topic_template_all_variables(
 
 
 async def test_set_state_via_stopped_state_no_position_topic(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the controlling state via stopped state when no position topic."""
     assert await async_setup_component(
         hass,
@@ -3146,8 +3272,10 @@ async def test_set_state_via_stopped_state_no_position_topic(
 
 
 async def test_position_via_position_topic_template_return_invalid_json(
-    hass, caplog, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+) -> None:
     """Test position by updating status via position template and returning invalid json."""
     assert await async_setup_component(
         hass,
@@ -3173,7 +3301,9 @@ async def test_position_via_position_topic_template_return_invalid_json(
     assert ("Payload '{'position': Undefined}' is not numeric") in caplog.text
 
 
-async def test_set_position_topic_without_get_position_topic_error(hass, caplog):
+async def test_set_position_topic_without_get_position_topic_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test error when set_position_topic is used without position_topic."""
     assert not await async_setup_component(
         hass,
@@ -3195,9 +3325,9 @@ async def test_set_position_topic_without_get_position_topic_error(hass, caplog)
 
 
 async def test_value_template_without_state_topic_error(
-    hass,
-    caplog,
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test error when value_template is used and state_topic is missing."""
     assert not await async_setup_component(
         hass,
@@ -3217,7 +3347,9 @@ async def test_value_template_without_state_topic_error(
     ) in caplog.text
 
 
-async def test_position_template_without_position_topic_error(hass, caplog):
+async def test_position_template_without_position_topic_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test error when position_template is used and position_topic is missing."""
     assert not await async_setup_component(
         hass,
@@ -3239,9 +3371,9 @@ async def test_position_template_without_position_topic_error(hass, caplog):
 
 
 async def test_set_position_template_without_set_position_topic(
-    hass,
-    caplog,
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test error when set_position_template is used and set_position_topic is missing."""
     assert not await async_setup_component(
         hass,
@@ -3262,7 +3394,9 @@ async def test_set_position_template_without_set_position_topic(
     )
 
 
-async def test_tilt_command_template_without_tilt_command_topic(hass, caplog):
+async def test_tilt_command_template_without_tilt_command_topic(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test error when tilt_command_template is used and tilt_command_topic is missing."""
     assert not await async_setup_component(
         hass,
@@ -3283,7 +3417,9 @@ async def test_tilt_command_template_without_tilt_command_topic(hass, caplog):
     )
 
 
-async def test_tilt_status_template_without_tilt_status_topic_topic(hass, caplog):
+async def test_tilt_status_template_without_tilt_status_topic_topic(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test error when tilt_status_template is used and tilt_status_topic is missing."""
     assert not await async_setup_component(
         hass,
@@ -3331,15 +3467,15 @@ async def test_tilt_status_template_without_tilt_status_topic_topic(hass, caplog
     ],
 )
 async def test_publishing_with_custom_encoding(
-    hass,
-    mqtt_mock_entry_with_yaml_config,
-    caplog,
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     service,
     topic,
     parameters,
     payload,
     template,
-):
+) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = cover.DOMAIN
     config = DEFAULT_CONFIG
@@ -3359,22 +3495,18 @@ async def test_publishing_with_custom_encoding(
     )
 
 
-async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
+async def test_reloadable(
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+) -> None:
     """Test reloading the MQTT platform."""
     domain = cover.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
-
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
-    """Test reloading the MQTT platform with late entry setup."""
-    domain = cover.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
-    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
 @pytest.mark.parametrize(
@@ -3387,14 +3519,14 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     ],
 )
 async def test_encoding_subscribable_topics(
-    hass,
-    mqtt_mock_entry_with_yaml_config,
-    caplog,
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     topic,
     value,
     attribute,
     attribute_value,
-):
+) -> None:
     """Test handling of incoming encoded payload."""
     await help_test_encoding_subscribable_topics(
         hass,
@@ -3410,30 +3542,21 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass):
+async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
     """Test setup manual configured MQTT entity."""
     platform = cover.DOMAIN
     await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
     assert hass.states.get(f"{platform}.test")
 
 
-async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    tmp_path: Path,
+) -> None:
     """Test unloading the config entry."""
     domain = cover.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
-
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
-    """Test a setup with deprecated yaml platform schema."""
-    domain = cover.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config["name"] = "test"
-    assert await async_setup_component(hass, domain, {domain: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-    assert hass.states.get(f"{domain}.test") is not None

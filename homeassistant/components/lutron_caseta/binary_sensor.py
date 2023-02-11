@@ -6,13 +6,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_and_name_from_name
-from .const import CONFIG_URL, MANUFACTURER
+from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_name_from_id
+from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
 from .models import LutronCasetaData
 
 
@@ -43,7 +44,8 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     def __init__(self, device, data):
         """Init an occupancy sensor."""
         super().__init__(device, data)
-        _, name = _area_and_name_from_name(device["name"])
+        area = _area_name_from_id(self._smartbridge.areas, device["area"])
+        name = f"{area} {device['device_name']}"
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
             identifiers={(CASETA_DOMAIN, self.unique_id)},
@@ -54,6 +56,8 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
             configuration_url=CONFIG_URL,
             entry_type=DeviceEntryType.SERVICE,
         )
+        if area != UNASSIGNED_AREA:
+            self._attr_device_info[ATTR_SUGGESTED_AREA] = area
 
     @property
     def is_on(self):

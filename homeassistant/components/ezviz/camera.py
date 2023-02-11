@@ -66,7 +66,6 @@ async def async_setup_entry(
     camera_entities = []
 
     for camera, value in coordinator.data.items():
-
         camera_rtsp_entry = [
             item
             for item in hass.config_entries.async_entries(DOMAIN)
@@ -81,7 +80,6 @@ async def async_setup_entry(
         )
 
         if camera_rtsp_entry:
-
             ffmpeg_arguments = camera_rtsp_entry[0].options[CONF_FFMPEG_ARGUMENTS]
             camera_username = camera_rtsp_entry[0].data[CONF_USERNAME]
             camera_password = camera_rtsp_entry[0].data[CONF_PASSWORD]
@@ -96,7 +94,6 @@ async def async_setup_entry(
             )
 
         else:
-
             discovery_flow.async_create_flow(
                 hass,
                 DOMAIN,
@@ -108,7 +105,10 @@ async def async_setup_entry(
             )
 
             _LOGGER.warning(
-                "Found camera with serial %s without configuration. Please go to integration to complete setup",
+                (
+                    "Found camera with serial %s without configuration. Please go to"
+                    " integration to complete setup"
+                ),
                 camera,
             )
 

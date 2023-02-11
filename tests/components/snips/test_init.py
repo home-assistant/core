@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.components.snips as snips
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.intent import ServiceIntentHandler, async_register
 
 from tests.common import async_fire_mqtt_message, async_mock_intent, async_mock_service
@@ -26,6 +27,25 @@ async def test_snips_config(hass, mqtt_mock):
         },
     )
     assert result
+
+
+async def test_snips_no_mqtt(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test Snips Config."""
+    result = await async_setup_component(
+        hass,
+        "snips",
+        {
+            "snips": {
+                "feedback_sounds": True,
+                "probability_threshold": 0.5,
+                "site_ids": ["default", "remote"],
+            }
+        },
+    )
+    assert not result
+    assert "MQTT integration is not available" in caplog.text
 
 
 async def test_snips_bad_config(hass, mqtt_mock):
@@ -402,7 +422,7 @@ async def test_intent_special_slots(hass, mqtt_mock):
     assert calls[0].data["site_id"] == "default"
 
 
-async def test_snips_say(hass):
+async def test_snips_say(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(hass, "snips", "say", snips.SERVICE_SCHEMA_SAY)
     data = {"text": "Hello"}
@@ -415,7 +435,7 @@ async def test_snips_say(hass):
     assert calls[0].data["text"] == "Hello"
 
 
-async def test_snips_say_action(hass):
+async def test_snips_say_action(hass: HomeAssistant) -> None:
     """Test snips say_action with invalid config."""
     calls = async_mock_service(
         hass, "snips", "say_action", snips.SERVICE_SCHEMA_SAY_ACTION
@@ -432,7 +452,7 @@ async def test_snips_say_action(hass):
     assert calls[0].data["intent_filter"] == ["myIntent"]
 
 
-async def test_snips_say_invalid_config(hass):
+async def test_snips_say_invalid_config(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(hass, "snips", "say", snips.SERVICE_SCHEMA_SAY)
 
@@ -444,7 +464,7 @@ async def test_snips_say_invalid_config(hass):
     assert len(calls) == 0
 
 
-async def test_snips_say_action_invalid(hass):
+async def test_snips_say_action_invalid(hass: HomeAssistant) -> None:
     """Test snips say_action with invalid config."""
     calls = async_mock_service(
         hass, "snips", "say_action", snips.SERVICE_SCHEMA_SAY_ACTION
@@ -459,7 +479,7 @@ async def test_snips_say_action_invalid(hass):
     assert len(calls) == 0
 
 
-async def test_snips_feedback_on(hass):
+async def test_snips_feedback_on(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(
         hass, "snips", "feedback_on", snips.SERVICE_SCHEMA_FEEDBACK
@@ -475,7 +495,7 @@ async def test_snips_feedback_on(hass):
     assert calls[0].data["site_id"] == "remote"
 
 
-async def test_snips_feedback_off(hass):
+async def test_snips_feedback_off(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(
         hass, "snips", "feedback_off", snips.SERVICE_SCHEMA_FEEDBACK
@@ -491,7 +511,7 @@ async def test_snips_feedback_off(hass):
     assert calls[0].data["site_id"] == "remote"
 
 
-async def test_snips_feedback_config(hass):
+async def test_snips_feedback_config(hass: HomeAssistant) -> None:
     """Test snips say with invalid config."""
     calls = async_mock_service(
         hass, "snips", "feedback_on", snips.SERVICE_SCHEMA_FEEDBACK

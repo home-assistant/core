@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from coinbase.wallet.client import Client
 from coinbase.wallet.error import AuthenticationError
@@ -10,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from . import get_accounts
@@ -23,8 +25,6 @@ from .const import (
     CONF_EXCHANGE_PRECISION,
     CONF_EXCHANGE_PRECISION_DEFAULT,
     CONF_EXCHANGE_RATES,
-    CONF_OPTIONS,
-    CONF_YAML_API_TOKEN,
     DOMAIN,
     RATES,
     WALLETS,
@@ -104,20 +104,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
         self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
-
-        options = {}
-
-        if CONF_OPTIONS in user_input:
-            options = user_input.pop(CONF_OPTIONS)
 
         try:
             info = await validate_api(self.hass, user_input)
@@ -133,32 +130,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(
-                title=info["title"], data=user_input, options=options
-            )
+            return self.async_create_entry(title=info["title"], data=user_input)
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, config):
-        """Handle import of Coinbase config from YAML."""
-
-        cleaned_data = {
-            CONF_API_KEY: config[CONF_API_KEY],
-            CONF_API_TOKEN: config[CONF_YAML_API_TOKEN],
-        }
-        cleaned_data[CONF_OPTIONS] = {
-            CONF_CURRENCIES: [],
-            CONF_EXCHANGE_RATES: [],
-        }
-        if CONF_CURRENCIES in config:
-            cleaned_data[CONF_OPTIONS][CONF_CURRENCIES] = config[CONF_CURRENCIES]
-        if CONF_EXCHANGE_RATES in config:
-            cleaned_data[CONF_OPTIONS][CONF_EXCHANGE_RATES] = config[
-                CONF_EXCHANGE_RATES
-            ]
-
-        return await self.async_step_user(user_input=cleaned_data)
 
     @staticmethod
     @callback
@@ -176,7 +151,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
 
         errors = {}

@@ -32,6 +32,7 @@ from .const import (
 )
 from .error import Disconnect
 from .messages import message_to_json
+from .util import describe_request
 
 if TYPE_CHECKING:
     from .connection import ActiveConnection
@@ -57,6 +58,8 @@ class WebSocketAdapter(logging.LoggerAdapter):
 
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
         """Add connid to websocket log messages."""
+        if not self.extra or "connid" not in self.extra:
+            return msg, kwargs
         return f'[{self.extra["connid"]}] {msg}', kwargs
 
 
@@ -71,9 +74,17 @@ class WebSocketHandler:
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
+        self._closing: bool = False
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
         self.connection: ActiveConnection | None = None
+
+    @property
+    def description(self) -> str:
+        """Return a description of the connection."""
+        if self.connection is not None:
+            return self.connection.get_description(self.request)
+        return describe_request(self.request)
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
@@ -87,7 +98,6 @@ class WebSocketHandler:
                     if (process := await to_write.get()) is None:
                         return
                     message = process if isinstance(process, str) else process()
-
                     if (
                         to_write.empty()
                         or not self.connection
@@ -107,13 +117,18 @@ class WebSocketHandler:
                         )
 
                     coalesced_messages = "[" + ",".join(messages) + "]"
-                    self._logger.debug("Sending %s", coalesced_messages)
-                    await self.wsock.send_str(coalesced_messages)
+                    logger.debug("Sending %s", coalesced_messages)
+                    await wsock.send_str(coalesced_messages)
         finally:
             # Clean up the peaker checker when we shut down the writer
-            if self._peak_checker_unsub is not None:
-                self._peak_checker_unsub()
-                self._peak_checker_unsub = None
+            self._cancel_peak_checker()
+
+    @callback
+    def _cancel_peak_checker(self) -> None:
+        """Cancel the peak checker."""
+        if self._peak_checker_unsub is not None:
+            self._peak_checker_unsub()
+            self._peak_checker_unsub = None
 
     @callback
     def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
@@ -123,25 +138,39 @@ class WebSocketHandler:
 
         Async friendly.
         """
+        if self._closing:
+            # Connection is cancelled, don't flood logs about exceeding
+            # max pending messages.
+            return
+
         if isinstance(message, dict):
             message = message_to_json(message)
 
+        to_write = self._to_write
+
         try:
-            self._to_write.put_nowait(message)
+            to_write.put_nowait(message)
         except asyncio.QueueFull:
             self._logger.error(
-                "Client exceeded max pending messages [2]: %s", MAX_PENDING_MSG
+                (
+                    "%s: Client unable to keep up with pending messages. Reached %s pending"
+                    " messages. The system's load is too high or an integration is"
+                    " misbehaving. Last message was: %s"
+                ),
+                self.description,
+                MAX_PENDING_MSG,
+                message,
             )
-
             self._cancel()
 
-        if self._to_write.qsize() < PENDING_MSG_PEAK:
-            if self._peak_checker_unsub:
-                self._peak_checker_unsub()
-                self._peak_checker_unsub = None
+        peak_checker_active = self._peak_checker_unsub is not None
+
+        if to_write.qsize() < PENDING_MSG_PEAK:
+            if peak_checker_active:
+                self._cancel_peak_checker()
             return
 
-        if self._peak_checker_unsub is None:
+        if not peak_checker_active:
             self._peak_checker_unsub = async_call_later(
                 self.hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
             )
@@ -155,7 +184,12 @@ class WebSocketHandler:
             return
 
         self._logger.error(
-            "Client unable to keep up with pending messages. Stayed over %s for %s seconds",
+            (
+                "%s: Client unable to keep up with pending messages. Stayed over %s for %s"
+                " seconds. The system's load is too high or an integration is"
+                " misbehaving"
+            ),
+            self.description,
             PENDING_MSG_PEAK,
             PENDING_MSG_PEAK_TIME,
         )
@@ -164,6 +198,7 @@ class WebSocketHandler:
     @callback
     def _cancel(self) -> None:
         """Cancel the connection."""
+        self._closing = True
         if self._handle_task is not None:
             self._handle_task.cancel()
         if self._writer_task is not None:
@@ -213,7 +248,7 @@ class WebSocketHandler:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
                 raise Disconnect from err
 
-            if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
+            if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
                 raise Disconnect
 
             if msg.type != WSMsgType.TEXT:
@@ -237,7 +272,7 @@ class WebSocketHandler:
             while not wsock.closed:
                 msg = await wsock.receive()
 
-                if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
+                if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
                     break
 
                 if msg.type != WSMsgType.TEXT:
@@ -272,6 +307,8 @@ class WebSocketHandler:
 
             if connection is not None:
                 connection.async_handle_close()
+
+            self._closing = True
 
             try:
                 self._to_write.put_nowait(None)

@@ -9,8 +9,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -35,6 +35,12 @@ SWITCHES: tuple[SwitchEntityDescription, ...] = (
         key="relay",
         name="Relay",
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    SwitchEntityDescription(
+        key="cooling_ena_switch",
+        name="Cooling",
+        icon="mdi:snowflake-thermometer",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

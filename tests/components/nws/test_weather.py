@@ -15,7 +15,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .const import (
     EXPECTED_FORECAST_IMPERIAL,
@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
     "units,result_observation,result_forecast",
     [
         (
-            IMPERIAL_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
             WEATHER_EXPECTED_OBSERVATION_IMPERIAL,
             EXPECTED_FORECAST_IMPERIAL,
         ),

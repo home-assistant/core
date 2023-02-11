@@ -3,8 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER, SourceType
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER,
+    ScannerEntity,
+    SourceType,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -32,12 +35,10 @@ async def async_setup_entry(
 
     # Restore clients that is not a part of active clients list.
     for entity in registry.entities.values():
-
         if (
             entity.config_entry_id == config_entry.entry_id
             and entity.domain == DEVICE_TRACKER
         ):
-
             if (
                 entity.unique_id in coordinator.api.devices
                 or entity.unique_id not in coordinator.api.all_devices
@@ -68,8 +69,7 @@ def update_items(
             tracked[mac] = MikrotikDataUpdateCoordinatorTracker(device, coordinator)
             new_tracked.append(tracked[mac])
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 class MikrotikDataUpdateCoordinatorTracker(

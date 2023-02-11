@@ -9,7 +9,6 @@ from astral.location import Elevation, Location
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_ELEVATION,
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -82,11 +81,6 @@ _PHASE_UPDATES = {
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track the state of the sun."""
-    if config.get(CONF_ELEVATION) is not None:
-        _LOGGER.warning(
-            "Elevation is now configured in Home Assistant core. "
-            "See https://www.home-assistant.io/docs/configuration/basic/"
-        )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,

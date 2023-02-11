@@ -53,7 +53,6 @@ MOCK_DATETIME = datetime.fromtimestamp(1595560000, timezone.utc)
 VEHICLE_STATUS_EV = {
     "status": {
         "AVG_FUEL_CONSUMPTION": 2.3,
-        "BATTERY_VOLTAGE": 12.0,
         "DISTANCE_TO_EMPTY_FUEL": 707,
         "DOOR_BOOT_LOCK_STATUS": "UNKNOWN",
         "DOOR_BOOT_POSITION": "CLOSED",
@@ -75,7 +74,6 @@ VEHICLE_STATUS_EV = {
         "EV_STATE_OF_CHARGE_MODE": "EV_MODE",
         "EV_STATE_OF_CHARGE_PERCENT": 20,
         "EV_TIME_TO_FULLY_CHARGED_UTC": MOCK_DATETIME,
-        "EXT_EXTERNAL_TEMP": 21.5,
         "ODOMETER": 1234,
         "POSITION_HEADING_DEGREE": 150,
         "POSITION_SPEED_KMPH": "0",
@@ -103,7 +101,7 @@ VEHICLE_STATUS_EV = {
         "TYRE_PRESSURE_FRONT_LEFT": 0,
         "TYRE_PRESSURE_FRONT_RIGHT": 2550,
         "TYRE_PRESSURE_REAR_LEFT": 2450,
-        "TYRE_PRESSURE_REAR_RIGHT": 2350,
+        "TYRE_PRESSURE_REAR_RIGHT": None,
         "TYRE_STATUS_FRONT_LEFT": "UNKNOWN",
         "TYRE_STATUS_FRONT_RIGHT": "UNKNOWN",
         "TYRE_STATUS_REAR_LEFT": "UNKNOWN",
@@ -115,9 +113,9 @@ VEHICLE_STATUS_EV = {
         "WINDOW_REAR_LEFT_STATUS": "UNKNOWN",
         "WINDOW_REAR_RIGHT_STATUS": "UNKNOWN",
         "WINDOW_SUNROOF_STATUS": "UNKNOWN",
-        "heading": 170,
-        "latitude": 40.0,
-        "longitude": -100.0,
+        "HEADING": 170,
+        "LATITUDE": 40.0,
+        "LONGITUDE": -100.0,
     }
 }
 
@@ -125,7 +123,6 @@ VEHICLE_STATUS_EV = {
 VEHICLE_STATUS_G2 = {
     "status": {
         "AVG_FUEL_CONSUMPTION": 2.3,
-        "BATTERY_VOLTAGE": 12.0,
         "DISTANCE_TO_EMPTY_FUEL": 707,
         "DOOR_BOOT_LOCK_STATUS": "UNKNOWN",
         "DOOR_BOOT_POSITION": "CLOSED",
@@ -139,7 +136,6 @@ VEHICLE_STATUS_G2 = {
         "DOOR_REAR_LEFT_POSITION": "CLOSED",
         "DOOR_REAR_RIGHT_LOCK_STATUS": "UNKNOWN",
         "DOOR_REAR_RIGHT_POSITION": "CLOSED",
-        "EXT_EXTERNAL_TEMP": None,
         "ODOMETER": 1234,
         "POSITION_HEADING_DEGREE": 150,
         "POSITION_SPEED_KMPH": "0",
@@ -167,7 +163,7 @@ VEHICLE_STATUS_G2 = {
         "TYRE_PRESSURE_FRONT_LEFT": 2550,
         "TYRE_PRESSURE_FRONT_RIGHT": 2550,
         "TYRE_PRESSURE_REAR_LEFT": 2450,
-        "TYRE_PRESSURE_REAR_RIGHT": 2350,
+        "TYRE_PRESSURE_REAR_RIGHT": None,
         "TYRE_STATUS_FRONT_LEFT": "UNKNOWN",
         "TYRE_STATUS_FRONT_RIGHT": "UNKNOWN",
         "TYRE_STATUS_REAR_LEFT": "UNKNOWN",
@@ -179,15 +175,14 @@ VEHICLE_STATUS_G2 = {
         "WINDOW_REAR_LEFT_STATUS": "UNKNOWN",
         "WINDOW_REAR_RIGHT_STATUS": "UNKNOWN",
         "WINDOW_SUNROOF_STATUS": "UNKNOWN",
-        "heading": 170,
-        "latitude": 40.0,
-        "longitude": -100.0,
+        "HEADING": 170,
+        "LATITUDE": 40.0,
+        "LONGITUDE": -100.0,
     }
 }
 
 EXPECTED_STATE_EV_IMPERIAL = {
     "AVG_FUEL_CONSUMPTION": "102.3",
-    "BATTERY_VOLTAGE": "12.0",
     "DISTANCE_TO_EMPTY_FUEL": "439.3",
     "EV_CHARGER_STATE_TYPE": "CHARGING",
     "EV_CHARGE_SETTING_AMPERE_TYPE": "MAXIMUM",
@@ -197,7 +192,6 @@ EXPECTED_STATE_EV_IMPERIAL = {
     "EV_STATE_OF_CHARGE_MODE": "EV_MODE",
     "EV_STATE_OF_CHARGE_PERCENT": "20",
     "EV_TIME_TO_FULLY_CHARGED_UTC": "2020-07-24T03:06:40+00:00",
-    "EXT_EXTERNAL_TEMP": "70.7",
     "ODOMETER": "766.8",
     "POSITION_HEADING_DEGREE": "150",
     "POSITION_SPEED_KMPH": "0",
@@ -207,16 +201,15 @@ EXPECTED_STATE_EV_IMPERIAL = {
     "TYRE_PRESSURE_FRONT_LEFT": "0.0",
     "TYRE_PRESSURE_FRONT_RIGHT": "37.0",
     "TYRE_PRESSURE_REAR_LEFT": "35.5",
-    "TYRE_PRESSURE_REAR_RIGHT": "34.1",
+    "TYRE_PRESSURE_REAR_RIGHT": "unknown",
     "VEHICLE_STATE_TYPE": "IGNITION_OFF",
-    "heading": 170,
-    "latitude": 40.0,
-    "longitude": -100.0,
+    "HEADING": 170,
+    "LATITUDE": 40.0,
+    "LONGITUDE": -100.0,
 }
 
 EXPECTED_STATE_EV_METRIC = {
     "AVG_FUEL_CONSUMPTION": "2.3",
-    "BATTERY_VOLTAGE": "12.0",
     "DISTANCE_TO_EMPTY_FUEL": "707",
     "EV_CHARGER_STATE_TYPE": "CHARGING",
     "EV_CHARGE_SETTING_AMPERE_TYPE": "MAXIMUM",
@@ -226,7 +219,6 @@ EXPECTED_STATE_EV_METRIC = {
     "EV_STATE_OF_CHARGE_MODE": "EV_MODE",
     "EV_STATE_OF_CHARGE_PERCENT": "20",
     "EV_TIME_TO_FULLY_CHARGED_UTC": "2020-07-24T03:06:40+00:00",
-    "EXT_EXTERNAL_TEMP": "21.5",
     "ODOMETER": "1234",
     "POSITION_HEADING_DEGREE": "150",
     "POSITION_SPEED_KMPH": "0",
@@ -236,17 +228,16 @@ EXPECTED_STATE_EV_METRIC = {
     "TYRE_PRESSURE_FRONT_LEFT": "0",
     "TYRE_PRESSURE_FRONT_RIGHT": "2550",
     "TYRE_PRESSURE_REAR_LEFT": "2450",
-    "TYRE_PRESSURE_REAR_RIGHT": "2350",
+    "TYRE_PRESSURE_REAR_RIGHT": "unknown",
     "VEHICLE_STATE_TYPE": "IGNITION_OFF",
-    "heading": 170,
-    "latitude": 40.0,
-    "longitude": -100.0,
+    "HEADING": 170,
+    "LATITUDE": 40.0,
+    "LONGITUDE": -100.0,
 }
 
 
 EXPECTED_STATE_EV_UNAVAILABLE = {
     "AVG_FUEL_CONSUMPTION": "unavailable",
-    "BATTERY_VOLTAGE": "unavailable",
     "DISTANCE_TO_EMPTY_FUEL": "unavailable",
     "EV_CHARGER_STATE_TYPE": "unavailable",
     "EV_CHARGE_SETTING_AMPERE_TYPE": "unavailable",
@@ -256,7 +247,6 @@ EXPECTED_STATE_EV_UNAVAILABLE = {
     "EV_STATE_OF_CHARGE_MODE": "unavailable",
     "EV_STATE_OF_CHARGE_PERCENT": "unavailable",
     "EV_TIME_TO_FULLY_CHARGED_UTC": "unavailable",
-    "EXT_EXTERNAL_TEMP": "unavailable",
     "ODOMETER": "unavailable",
     "POSITION_HEADING_DEGREE": "unavailable",
     "POSITION_SPEED_KMPH": "unavailable",
@@ -268,7 +258,7 @@ EXPECTED_STATE_EV_UNAVAILABLE = {
     "TYRE_PRESSURE_REAR_LEFT": "unavailable",
     "TYRE_PRESSURE_REAR_RIGHT": "unavailable",
     "VEHICLE_STATE_TYPE": "unavailable",
-    "heading": "unavailable",
-    "latitude": "unavailable",
-    "longitude": "unavailable",
+    "HEADING": "unavailable",
+    "LATITUDE": "unavailable",
+    "LONGITUDE": "unavailable",
 }

@@ -1,5 +1,5 @@
 """The tests the History component."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from datetime import timedelta
 from http import HTTPStatus
 import json
@@ -10,28 +10,41 @@ import pytest
 from homeassistant.components import history
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.websocket_api import (
-    ws_handle_get_statistics_during_period,
-    ws_handle_list_statistic_ids,
+from homeassistant.const import (
+    CONF_DOMAINS,
+    CONF_ENTITIES,
+    CONF_EXCLUDE,
+    CONF_INCLUDE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
 )
-from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.components.recorder.common import (
-    async_recorder_block_till_done,
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    assert_states_equal_without_context,
     async_wait_recording_done,
     wait_recording_done,
 )
 
 
+def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
+    """Return listeners without final write listeners since we are not testing for these."""
+    return {
+        key: value
+        for key, value in listeners.items()
+        if key != EVENT_HOMEASSISTANT_FINAL_WRITE
+    }
+
+
 @pytest.mark.usefixtures("hass_history")
-def test_setup():
+def test_setup() -> None:
     """Test setup method of history."""
     # Verification occurs in the fixture
-    pass
 
 
 def test_get_significant_states(hass_history):
@@ -44,7 +57,7 @@ def test_get_significant_states(hass_history):
     hass = hass_history
     zero, four, states = record_states(hass)
     hist = get_significant_states(hass, zero, four, filters=history.Filters())
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_minimal_response(hass_history):
@@ -86,7 +99,30 @@ def test_get_significant_states_minimal_response(hass_history):
                 "last_changed": orig_last_changed,
                 "state": orig_state,
             }
-    assert states == hist
+    assert len(hist) == len(states)
+    assert_states_equal_without_context(
+        states["media_player.test"][0], hist["media_player.test"][0]
+    )
+    assert states["media_player.test"][1] == hist["media_player.test"][1]
+    assert states["media_player.test"][2] == hist["media_player.test"][2]
+
+    assert_multiple_states_equal_without_context(
+        states["media_player.test2"], hist["media_player.test2"]
+    )
+    assert_states_equal_without_context(
+        states["media_player.test3"][0], hist["media_player.test3"][0]
+    )
+    assert states["media_player.test3"][1] == hist["media_player.test3"][1]
+
+    assert_multiple_states_equal_without_context(
+        states["script.can_cancel_this_one"], hist["script.can_cancel_this_one"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test"], hist["thermostat.test"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test2"], hist["thermostat.test2"]
+    )
 
 
 def test_get_significant_states_with_initial(hass_history):
@@ -114,7 +150,7 @@ def test_get_significant_states_with_initial(hass_history):
         filters=history.Filters(),
         include_start_time_state=True,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_without_initial(hass_history):
@@ -141,7 +177,7 @@ def test_get_significant_states_without_initial(hass_history):
         filters=history.Filters(),
         include_start_time_state=False,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_entity_id(hass_history):
@@ -157,7 +193,7 @@ def test_get_significant_states_entity_id(hass_history):
     hist = get_significant_states(
         hass, zero, four, ["media_player.test"], filters=history.Filters()
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_multiple_entity_ids(hass_history):
@@ -176,7 +212,7 @@ def test_get_significant_states_multiple_entity_ids(hass_history):
         ["media_player.test", "thermostat.test"],
         filters=history.Filters(),
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_exclude_domain(hass_history):
@@ -481,14 +517,22 @@ def test_get_significant_states_only(hass_history):
     hist = get_significant_states(hass, start, significant_changes_only=True)
 
     assert len(hist[entity_id]) == 2
-    assert states[0] not in hist[entity_id]
-    assert states[1] in hist[entity_id]
-    assert states[2] in hist[entity_id]
+    assert not any(
+        state.last_updated == states[0].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[1].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[2].last_updated for state in hist[entity_id]
+    )
 
     hist = get_significant_states(hass, start, significant_changes_only=False)
 
     assert len(hist[entity_id]) == 3
-    assert states == hist[entity_id]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states, hist[entity_id]
+    )
 
 
 def check_significant_states(hass, zero, four, states, config):
@@ -504,7 +548,7 @@ def check_significant_states(hass, zero, four, states, config):
         filters.included_domains = include.get(CONF_DOMAINS, [])
 
     hist = get_significant_states(hass, zero, four, filters=filters)
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def record_states(hass):
@@ -587,7 +631,7 @@ def record_states(hass):
     return zero, four, states
 
 
-async def test_fetch_period_api(hass, hass_client, recorder_mock):
+async def test_fetch_period_api(recorder_mock, hass, hass_client):
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -596,7 +640,7 @@ async def test_fetch_period_api(hass, hass_client, recorder_mock):
 
 
 async def test_fetch_period_api_with_use_include_order(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history with include order."""
     await async_setup_component(
@@ -607,7 +651,7 @@ async def test_fetch_period_api_with_use_include_order(
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_client):
+async def test_fetch_period_api_with_minimal_response(recorder_mock, hass, hass_client):
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
     await async_setup_component(hass, "history", {})
@@ -647,7 +691,7 @@ async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_
     ).replace('"', "")
 
 
-async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mock):
+async def test_fetch_period_api_with_no_timestamp(recorder_mock, hass, hass_client):
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -655,7 +699,7 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mo
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_mock):
+async def test_fetch_period_api_with_include_order(recorder_mock, hass, hass_client):
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
@@ -676,7 +720,7 @@ async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_m
 
 
 async def test_fetch_period_api_with_entity_glob_include(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -704,7 +748,7 @@ async def test_fetch_period_api_with_entity_glob_include(
 
 
 async def test_fetch_period_api_with_entity_glob_exclude(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -738,13 +782,12 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 3
-    assert response_json[0][0]["entity_id"] == "binary_sensor.sensor"
-    assert response_json[1][0]["entity_id"] == "light.cow"
-    assert response_json[2][0]["entity_id"] == "light.match"
+    entities = {state[0]["entity_id"] for state in response_json}
+    assert entities == {"binary_sensor.sensor", "light.cow", "light.match"}
 
 
 async def test_fetch_period_api_with_entity_glob_include_and_exclude(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -780,13 +823,16 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 4
-    assert response_json[0][0]["entity_id"] == "light.many_state_changes"
-    assert response_json[1][0]["entity_id"] == "light.match"
-    assert response_json[2][0]["entity_id"] == "media_player.test"
-    assert response_json[3][0]["entity_id"] == "switch.match"
+    entities = {state[0]["entity_id"] for state in response_json}
+    assert entities == {
+        "light.many_state_changes",
+        "light.match",
+        "media_player.test",
+        "switch.match",
+    }
 
 
-async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
+async def test_entity_ids_limit_via_api(recorder_mock, hass, hass_client):
     """Test limiting history to entity_ids."""
     await async_setup_component(
         hass,
@@ -811,7 +857,7 @@ async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
@@ -842,535 +888,3 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
     assert response_json[1][0]["entity_id"] == "light.cow"
-
-
-async def test_statistics_during_period(hass, hass_ws_client, recorder_mock, caplog):
-    """Test history/statistics_during_period forwards to recorder."""
-    now = dt_util.utcnow()
-    await async_setup_component(hass, "history", {})
-    client = await hass_ws_client()
-
-    # Test the WS API works and issues a warning
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/statistics_during_period",
-            "start_time": now.isoformat(),
-            "end_time": now.isoformat(),
-            "statistic_ids": ["sensor.test"],
-            "period": "hour",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {}
-
-    assert (
-        "WS API 'history/statistics_during_period' is deprecated and will be removed in "
-        "Home Assistant Core 2022.12. Use 'recorder/statistics_during_period' instead"
-    ) in caplog.text
-
-    # Test the WS API forwards to recorder
-    with patch(
-        "homeassistant.components.history.recorder_ws.ws_handle_get_statistics_during_period",
-        wraps=ws_handle_get_statistics_during_period,
-    ) as ws_mock:
-        await client.send_json(
-            {
-                "id": 2,
-                "type": "history/statistics_during_period",
-                "start_time": now.isoformat(),
-                "end_time": now.isoformat(),
-                "statistic_ids": ["sensor.test"],
-                "period": "hour",
-            }
-        )
-        await client.receive_json()
-        ws_mock.assert_awaited_once()
-
-
-async def test_list_statistic_ids(hass, hass_ws_client, recorder_mock, caplog):
-    """Test history/list_statistic_ids forwards to recorder."""
-    await async_setup_component(hass, "history", {})
-    client = await hass_ws_client()
-
-    # Test the WS API works and issues a warning
-    await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == []
-
-    assert (
-        "WS API 'history/list_statistic_ids' is deprecated and will be removed in "
-        "Home Assistant Core 2022.12. Use 'recorder/list_statistic_ids' instead"
-    ) in caplog.text
-
-    with patch(
-        "homeassistant.components.history.recorder_ws.ws_handle_list_statistic_ids",
-        wraps=ws_handle_list_statistic_ids,
-    ) as ws_mock:
-        await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
-        await client.receive_json()
-        ws_mock.assert_called_once()
-
-
-async def test_history_during_period(hass, hass_ws_client, recorder_mock):
-    """Test history_during_period."""
-    now = dt_util.utcnow()
-
-    await async_setup_component(hass, "history", {})
-    await async_setup_component(hass, "sensor", {})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "changed"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "again"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
-    await async_wait_recording_done(hass)
-
-    await async_wait_recording_done(hass)
-
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "end_time": now.isoformat(),
-            "entity_ids": ["sensor.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": False,
-            "no_attributes": True,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {}
-
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "entity_ids": ["sensor.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": False,
-            "no_attributes": True,
-            "minimal_response": True,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 2
-
-    sensor_test_history = response["result"]["sensor.test"]
-    assert len(sensor_test_history) == 3
-
-    assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {}
-    assert isinstance(sensor_test_history[0]["lu"], float)
-    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
-
-    assert "a" not in sensor_test_history[1]
-    assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lu"], float)
-    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
-
-    assert sensor_test_history[2]["s"] == "on"
-    assert "a" not in sensor_test_history[2]
-
-    await client.send_json(
-        {
-            "id": 3,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "entity_ids": ["sensor.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": False,
-            "no_attributes": False,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 3
-    sensor_test_history = response["result"]["sensor.test"]
-
-    assert len(sensor_test_history) == 5
-
-    assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {"any": "attr"}
-    assert isinstance(sensor_test_history[0]["lu"], float)
-    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
-
-    assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lu"], float)
-    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
-    assert sensor_test_history[1]["a"] == {"any": "attr"}
-
-    assert sensor_test_history[4]["s"] == "on"
-    assert sensor_test_history[4]["a"] == {"any": "attr"}
-
-    await client.send_json(
-        {
-            "id": 4,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "entity_ids": ["sensor.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": True,
-            "no_attributes": False,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 4
-    sensor_test_history = response["result"]["sensor.test"]
-
-    assert len(sensor_test_history) == 3
-
-    assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {"any": "attr"}
-    assert isinstance(sensor_test_history[0]["lu"], float)
-    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
-
-    assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lu"], float)
-    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
-    assert sensor_test_history[1]["a"] == {"any": "attr"}
-
-    assert sensor_test_history[2]["s"] == "on"
-    assert sensor_test_history[2]["a"] == {"any": "attr"}
-
-
-async def test_history_during_period_impossible_conditions(
-    hass, hass_ws_client, recorder_mock
-):
-    """Test history_during_period returns when condition cannot be true."""
-    await async_setup_component(hass, "history", {})
-    await async_setup_component(hass, "sensor", {})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "changed"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "off", attributes={"any": "again"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", "on", attributes={"any": "attr"})
-    await async_wait_recording_done(hass)
-
-    await async_wait_recording_done(hass)
-
-    after = dt_util.utcnow()
-
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/history_during_period",
-            "start_time": after.isoformat(),
-            "end_time": after.isoformat(),
-            "entity_ids": ["sensor.test"],
-            "include_start_time_state": False,
-            "significant_changes_only": False,
-            "no_attributes": True,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 1
-    assert response["result"] == {}
-
-    future = dt_util.utcnow() + timedelta(hours=10)
-
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "history/history_during_period",
-            "start_time": future.isoformat(),
-            "entity_ids": ["sensor.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": True,
-            "no_attributes": True,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 2
-    assert response["result"] == {}
-
-
-@pytest.mark.parametrize(
-    "time_zone", ["UTC", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
-)
-async def test_history_during_period_significant_domain(
-    time_zone, hass, hass_ws_client, recorder_mock
-):
-    """Test history_during_period with climate domain."""
-    hass.config.set_time_zone(time_zone)
-    now = dt_util.utcnow()
-
-    await async_setup_component(hass, "history", {})
-    await async_setup_component(hass, "sensor", {})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("climate.test", "on", attributes={"temperature": "1"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("climate.test", "off", attributes={"temperature": "2"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("climate.test", "off", attributes={"temperature": "3"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("climate.test", "off", attributes={"temperature": "4"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("climate.test", "on", attributes={"temperature": "5"})
-    await async_wait_recording_done(hass)
-
-    await async_wait_recording_done(hass)
-
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "end_time": now.isoformat(),
-            "entity_ids": ["climate.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": False,
-            "no_attributes": True,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {}
-
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "entity_ids": ["climate.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": False,
-            "no_attributes": True,
-            "minimal_response": True,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 2
-
-    sensor_test_history = response["result"]["climate.test"]
-    assert len(sensor_test_history) == 5
-
-    assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {}
-    assert isinstance(sensor_test_history[0]["lu"], float)
-    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
-
-    assert "a" in sensor_test_history[1]
-    assert sensor_test_history[1]["s"] == "off"
-    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
-
-    assert sensor_test_history[4]["s"] == "on"
-    assert sensor_test_history[4]["a"] == {}
-
-    await client.send_json(
-        {
-            "id": 3,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "entity_ids": ["climate.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": False,
-            "no_attributes": False,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 3
-    sensor_test_history = response["result"]["climate.test"]
-
-    assert len(sensor_test_history) == 5
-
-    assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {"temperature": "1"}
-    assert isinstance(sensor_test_history[0]["lu"], float)
-    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
-
-    assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lu"], float)
-    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
-    assert sensor_test_history[1]["a"] == {"temperature": "2"}
-
-    assert sensor_test_history[4]["s"] == "on"
-    assert sensor_test_history[4]["a"] == {"temperature": "5"}
-
-    await client.send_json(
-        {
-            "id": 4,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "entity_ids": ["climate.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": True,
-            "no_attributes": False,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 4
-    sensor_test_history = response["result"]["climate.test"]
-
-    assert len(sensor_test_history) == 5
-
-    assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {"temperature": "1"}
-    assert isinstance(sensor_test_history[0]["lu"], float)
-    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
-
-    assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lu"], float)
-    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
-    assert sensor_test_history[1]["a"] == {"temperature": "2"}
-
-    assert sensor_test_history[2]["s"] == "off"
-    assert sensor_test_history[2]["a"] == {"temperature": "3"}
-
-    assert sensor_test_history[3]["s"] == "off"
-    assert sensor_test_history[3]["a"] == {"temperature": "4"}
-
-    assert sensor_test_history[4]["s"] == "on"
-    assert sensor_test_history[4]["a"] == {"temperature": "5"}
-
-    # Test we impute the state time state
-    later = dt_util.utcnow()
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "history/history_during_period",
-            "start_time": later.isoformat(),
-            "entity_ids": ["climate.test"],
-            "include_start_time_state": True,
-            "significant_changes_only": True,
-            "no_attributes": False,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 5
-    sensor_test_history = response["result"]["climate.test"]
-
-    assert len(sensor_test_history) == 1
-
-    assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {"temperature": "5"}
-    assert sensor_test_history[0]["lu"] == later.timestamp()
-    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
-
-
-async def test_history_during_period_bad_start_time(
-    hass, hass_ws_client, recorder_mock
-):
-    """Test history_during_period bad state time."""
-    await async_setup_component(
-        hass,
-        "history",
-        {"history": {}},
-    )
-
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/history_during_period",
-            "start_time": "cats",
-        }
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "invalid_start_time"
-
-
-async def test_history_during_period_bad_end_time(hass, hass_ws_client, recorder_mock):
-    """Test history_during_period bad end time."""
-    now = dt_util.utcnow()
-
-    await async_setup_component(
-        hass,
-        "history",
-        {"history": {}},
-    )
-
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "end_time": "dogs",
-        }
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "invalid_end_time"
-
-
-async def test_history_during_period_with_use_include_order(
-    hass, hass_ws_client, recorder_mock
-):
-    """Test history_during_period."""
-    now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
-    await async_setup_component(
-        hass,
-        "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
-    )
-    await async_setup_component(hass, "sensor", {})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.three", "off", attributes={"any": "changed"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.four", "off", attributes={"any": "again"})
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
-    await async_wait_recording_done(hass)
-
-    await async_wait_recording_done(hass)
-
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/history_during_period",
-            "start_time": now.isoformat(),
-            "include_start_time_state": True,
-            "significant_changes_only": False,
-            "no_attributes": True,
-            "minimal_response": True,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["id"] == 1
-
-    assert list(response["result"]) == [
-        *sort_order,
-        "sensor.three",
-    ]

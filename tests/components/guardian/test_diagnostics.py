@@ -14,12 +14,21 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
-            "title": "Mock Title",
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "domain": "guardian",
+            "title": REDACTED,
             "data": {
+                "uid": REDACTED,
                 "ip_address": "192.168.1.100",
                 "port": 7777,
-                "uid": REDACTED,
             },
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
             "valve_controller": {

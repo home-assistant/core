@@ -5,12 +5,11 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import aiohttp
 from async_upnp_client.client import UpnpError
 from openhomedevice.device import Device
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -80,15 +79,22 @@ async def async_setup_platform(
     )
 
 
-def catch_request_errors() -> Callable[
-    [Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]],
-    Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]],
-]:
+_FuncType = Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[
+    Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]
+]
+
+
+def catch_request_errors() -> (
+    Callable[
+        [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
+    ]
+):
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
-        func: Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
-    ) -> Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]]:
+        func: _FuncType[_OpenhomeDeviceT, _P, _R]
+    ) -> _ReturnFuncType[_OpenhomeDeviceT, _P, _R]:
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
@@ -124,7 +130,7 @@ class OpenhomeDevice(MediaPlayerEntity):
         self._source_index = {}
         self._source = {}
         self._name = None
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self._available = True
 
     @property
@@ -178,16 +184,16 @@ class OpenhomeDevice(MediaPlayerEntity):
                 )
 
             if self._in_standby:
-                self._state = MediaPlayerState.OFF
+                self._attr_state = MediaPlayerState.OFF
             elif self._transport_state == "Paused":
-                self._state = MediaPlayerState.PAUSED
+                self._attr_state = MediaPlayerState.PAUSED
             elif self._transport_state in ("Playing", "Buffering"):
-                self._state = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
             elif self._transport_state == "Stopped":
-                self._state = MediaPlayerState.IDLE
+                self._attr_state = MediaPlayerState.IDLE
             else:
                 # Device is playing an external source with no transport controls
-                self._state = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
 
             self._available = True
         except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
@@ -266,7 +272,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                 await self._device.invoke_pin(pin)
             else:
                 _LOGGER.error("Pins service not supported")
-        except (UpnpError):
+        except UpnpError:
             _LOGGER.error("Error invoking pin %s", pin)
 
     @property
@@ -278,11 +284,6 @@ class OpenhomeDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._device.uuid()
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def source_list(self):

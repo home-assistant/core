@@ -2,9 +2,10 @@
 
 
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+
+from tests.components.bluetooth import generate_advertisement_data
 
 COOKER_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="COOKERHOOD_FJAR",
@@ -15,7 +16,7 @@ COOKER_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={},
     source="local",
     device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="COOKERHOOD_FJAR"),
-    advertisement=AdvertisementData(),
+    advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
 )

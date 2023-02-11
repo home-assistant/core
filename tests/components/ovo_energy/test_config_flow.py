@@ -85,6 +85,9 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=True,
     ), patch(
+        "homeassistant.components.ovo_energy.config_flow.OVOEnergy.username",
+        "some_name",
+    ), patch(
         "homeassistant.components.ovo_energy.async_setup_entry",
         return_value=True,
     ):

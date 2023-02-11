@@ -1,10 +1,6 @@
 """Make sure that handling real world LG HomeKit characteristics isn't broken."""
 
-from homeassistant.components.media_player import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-)
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -36,9 +32,11 @@ async def test_lg_tv(hass):
                 EntityTestInfo(
                     entity_id="media_player.lg_webos_tv_af80",
                     friendly_name="LG webOS TV AF80",
-                    unique_id="homekit-999AAAAAA999-48",
+                    unique_id="00:00:00:00:00:00_1_48",
                     supported_features=(
-                        SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
+                        MediaPlayerEntityFeature.PAUSE
+                        | MediaPlayerEntityFeature.PLAY
+                        | MediaPlayerEntityFeature.SELECT_SOURCE
                     ),
                     capabilities={
                         "source_list": [

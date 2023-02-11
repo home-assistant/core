@@ -1,5 +1,4 @@
 """Tests for the Input slider component."""
-# pylint: disable=protected-access
 import datetime
 from unittest.mock import patch
 
@@ -26,7 +25,7 @@ from homeassistant.components.input_datetime import (
     SERVICE_RELOAD,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_NAME
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -121,7 +120,7 @@ def test_invalid_configs(config):
         CONFIG_SCHEMA({DOMAIN: config})
 
 
-async def test_set_datetime(hass):
+async def test_set_datetime(hass: HomeAssistant) -> None:
     """Test set_datetime method using date & time."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
@@ -149,7 +148,7 @@ async def test_set_datetime(hass):
     assert state.attributes["timestamp"] == dt_obj.timestamp()
 
 
-async def test_set_datetime_2(hass):
+async def test_set_datetime_2(hass: HomeAssistant) -> None:
     """Test set_datetime method using datetime."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
@@ -177,7 +176,7 @@ async def test_set_datetime_2(hass):
     assert state.attributes["timestamp"] == dt_obj.timestamp()
 
 
-async def test_set_datetime_3(hass):
+async def test_set_datetime_3(hass: HomeAssistant) -> None:
     """Test set_datetime method using timestamp."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
@@ -205,7 +204,7 @@ async def test_set_datetime_3(hass):
     assert state.attributes["timestamp"] == dt_obj.timestamp()
 
 
-async def test_set_datetime_time(hass):
+async def test_set_datetime_time(hass: HomeAssistant) -> None:
     """Test set_datetime method with only time."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_time": {"has_time": True, "has_date": False}}}
@@ -225,7 +224,7 @@ async def test_set_datetime_time(hass):
     assert state.attributes["timestamp"] == (19 * 3600) + (46 * 60) + 30
 
 
-async def test_set_invalid(hass):
+async def test_set_invalid(hass: HomeAssistant) -> None:
     """Test set_datetime method with only time."""
     initial = "2017-01-01"
     await async_setup_component(
@@ -255,7 +254,7 @@ async def test_set_invalid(hass):
     assert state.state == initial
 
 
-async def test_set_invalid_2(hass):
+async def test_set_invalid_2(hass: HomeAssistant) -> None:
     """Test set_datetime method with date and datetime."""
     initial = "2017-01-01"
     await async_setup_component(
@@ -285,7 +284,7 @@ async def test_set_invalid_2(hass):
     assert state.state == initial
 
 
-async def test_set_datetime_date(hass):
+async def test_set_datetime_date(hass: HomeAssistant) -> None:
     """Test set_datetime method with only date."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_date": {"has_time": False, "has_date": True}}}
@@ -307,7 +306,7 @@ async def test_set_datetime_date(hass):
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -365,7 +364,7 @@ async def test_restore_state(hass):
     assert state_was_date.state == default.strftime(FMT_TIME)
 
 
-async def test_default_value(hass):
+async def test_default_value(hass: HomeAssistant) -> None:
     """Test default value if none has been set via initial or restore state."""
     await async_setup_component(
         hass,
@@ -657,7 +656,7 @@ async def test_setup_no_config(hass, hass_admin_user):
     assert count_start == len(hass.states.async_entity_ids())
 
 
-async def test_timestamp(hass):
+async def test_timestamp(hass: HomeAssistant) -> None:
     """Test timestamp."""
     hass.config.set_time_zone("America/Los_Angeles")
 

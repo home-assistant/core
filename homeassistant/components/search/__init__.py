@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -44,7 +45,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     }
 )
 @callback
-def websocket_search_related(hass, connection, msg):
+def websocket_search_related(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle search."""
     searcher = Searcher(
         hass,

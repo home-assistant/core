@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry
@@ -596,7 +597,13 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
             result["flow_id"],
             user_input=data,
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["step_id"] == "confirm_still"
+
+        result2a = await hass.config_entries.options.async_configure(
+            result2["flow_id"], user_input={CONF_CONFIRMED_OK: True}
+        )
+        assert result2a["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         result3 = await hass.config_entries.options.async_init(mock_entry.entry_id)
         assert result3["type"] == data_entry_flow.FlowResultType.FORM
@@ -643,9 +650,8 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
     assert result7["errors"] == {"stream_source": "malformed_url"}
 
 
-async def test_slug(hass, caplog):
-    """
-    Test that the slug function generates an error in case of invalid template.
+async def test_slug(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test that the slug function generates an error in case of invalid template.
 
     Other paths in the slug function are already tested by other tests.
     """
@@ -681,10 +687,16 @@ async def test_options_only_stream(hass, fakeimgbytes_png, mock_create_stream):
 
     # try updating the config options
     with mock_create_stream:
-        result3 = await hass.config_entries.options.async_configure(
+        result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input=data,
         )
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "confirm_still"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={CONF_CONFIRMED_OK: True}
+    )
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
 
@@ -725,7 +737,7 @@ async def test_unload_entry(hass, fakeimg_png):
     assert mock_entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
-async def test_reload_on_title_change(hass) -> None:
+async def test_reload_on_title_change(hass: HomeAssistant) -> None:
     """Test the integration gets reloaded when the title is updated."""
 
     test_data = TESTDATA_OPTIONS
@@ -747,7 +759,7 @@ async def test_reload_on_title_change(hass) -> None:
     assert hass.states.get("camera.my_title").attributes["friendly_name"] == "New Title"
 
 
-async def test_migrate_existing_ids(hass) -> None:
+async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
     """Test that existing ids are migrated for issue #70568."""
 
     registry = entity_registry.async_get(hass)
@@ -809,4 +821,24 @@ async def test_use_wallclock_as_timestamps_option(
             result["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
         )
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    # Test what happens if user rejects the preview
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={CONF_CONFIRMED_OK: False}
+    )
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["step_id"] == "init"
+    with patch(
+        "homeassistant.components.generic.async_setup_entry", return_value=True
+    ), mock_create_stream:
+        result4 = await hass.config_entries.options.async_configure(
+            result3["flow_id"],
+            user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
+        )
+    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["step_id"] == "confirm_still"
+    result5 = await hass.config_entries.options.async_configure(
+        result4["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
+    assert result5["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY

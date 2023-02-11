@@ -14,6 +14,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -52,6 +53,17 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         command_on="async_turn_on_timer",
         command_off="async_turn_off_timer",
         data_key="timer_on",
+    ),
+    SensiboDeviceSwitchEntityDescription(
+        key="climate_react_switch",
+        device_class=SwitchDeviceClass.SWITCH,
+        name="Climate React",
+        icon="mdi:wizard-hat",
+        value_fn=lambda data: data.smart_on,
+        extra_fn=lambda data: {"type": data.smart_type},
+        command_on="async_turn_on_off_smart",
+        command_off="async_turn_on_off_smart",
+        data_key="smart_on",
     ),
 )
 
@@ -139,7 +151,6 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     @async_handle_api_call
     async def async_turn_on_timer(self, key: str, value: Any) -> bool:
         """Make service call to api for setting timer."""
-        result = {}
         new_state = bool(self.device_data.ac_states["on"] is False)
         data = {
             "minutesFromNow": 60,
@@ -151,14 +162,12 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     @async_handle_api_call
     async def async_turn_off_timer(self, key: str, value: Any) -> bool:
         """Make service call to api for deleting timer."""
-        result = {}
         result = await self._client.async_del_timer(self._device_id)
         return bool(result.get("status") == "success")
 
     @async_handle_api_call
     async def async_turn_on_off_pure_boost(self, key: str, value: Any) -> bool:
         """Make service call to api for setting Pure Boost."""
-        result = {}
         new_state = bool(self.device_data.pure_boost_enabled is False)
         data: dict[str, Any] = {"enabled": new_state}
         if self.device_data.pure_measure_integration is None:
@@ -168,4 +177,17 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
             data["geoIntegration"] = False
             data["primeIntegration"] = False
         result = await self._client.async_set_pureboost(self._device_id, data)
+        return bool(result.get("status") == "success")
+
+    @async_handle_api_call
+    async def async_turn_on_off_smart(self, key: str, value: Any) -> bool:
+        """Make service call to api for setting Climate React."""
+        if self.device_data.smart_type is None:
+            raise HomeAssistantError(
+                "Use Sensibo Enable Climate React Service once to enable switch or the"
+                " Sensibo app"
+            )
+        new_state = bool(self.device_data.smart_on is False)
+        data: dict[str, Any] = {"enabled": new_state}
+        result = await self._client.async_enable_climate_react(self._device_id, data)
         return bool(result.get("status") == "success")

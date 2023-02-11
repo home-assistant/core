@@ -31,7 +31,7 @@ class MockTransport:
 
 
 @pytest.fixture
-def aiohttp_client(loop, aiohttp_client, socket_enabled):
+def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
@@ -64,7 +64,7 @@ async def setup_hue(hass):
         await hass.async_block_till_done()
 
 
-def test_upnp_discovery_basic():
+def test_upnp_discovery_basic() -> None:
     """Tests the UPnP basic discovery response."""
     upnp_responder_protocol = upnp.UPNPResponderProtocol(None, None, "192.0.2.42", 8080)
     mock_transport = MockTransport()
@@ -96,7 +96,7 @@ USN: uuid:2f402f80-da50-11e1-9b23-001788255acc
     assert mock_transport.sends == [(expected_send, 1234)]
 
 
-def test_upnp_discovery_rootdevice():
+def test_upnp_discovery_rootdevice() -> None:
     """Tests the UPnP rootdevice discovery response."""
     upnp_responder_protocol = upnp.UPNPResponderProtocol(None, None, "192.0.2.42", 8080)
     mock_transport = MockTransport()
@@ -128,7 +128,7 @@ USN: uuid:2f402f80-da50-11e1-9b23-001788255acc::upnp:rootdevice
     assert mock_transport.sends == [(expected_send, 1234)]
 
 
-def test_upnp_no_response():
+def test_upnp_no_response() -> None:
     """Tests the UPnP does not response on an invalid request."""
     upnp_responder_protocol = upnp.UPNPResponderProtocol(None, None, "192.0.2.42", 8080)
     mock_transport = MockTransport()

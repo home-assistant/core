@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Any
 
 import metno
+from typing_extensions import Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,9 +17,8 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     EVENT_CORE_CONFIG_UPDATE,
-    LENGTH_FEET,
-    LENGTH_METERS,
     Platform,
+    UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -26,6 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_TRACK_HOME,
@@ -95,7 +96,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
         """Initialize global Met data updater."""
         self._unsub_track_home: Callable[[], None] | None = None
         self.weather = MetWeatherData(
-            hass, config_entry.data, hass.config.units.is_metric
+            hass, config_entry.data, hass.config.units is METRIC_SYSTEM
         )
         self.weather.set_coordinates()
 
@@ -160,7 +161,11 @@ class MetWeatherData:
 
         if not self._is_metric:
             elevation = int(
-                round(DistanceConverter.convert(elevation, LENGTH_FEET, LENGTH_METERS))
+                round(
+                    DistanceConverter.convert(
+                        elevation, UnitOfLength.FEET, UnitOfLength.METERS
+                    )
+                )
             )
 
         coordinates = {
@@ -177,7 +182,7 @@ class MetWeatherData:
         )
         return True
 
-    async def fetch_data(self) -> MetWeatherData:
+    async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         resp = await self._weather_data.fetching_data()
         if not resp:

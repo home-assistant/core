@@ -1,5 +1,4 @@
 """Test MQTT diagnostics."""
-
 import json
 from unittest.mock import ANY, patch
 
@@ -7,12 +6,15 @@ import pytest
 
 from homeassistant.components import mqtt
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import async_fire_mqtt_message, mock_device_registry
+from tests.common import async_fire_mqtt_message
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
 default_config = {
     "birth_message": {},
@@ -23,6 +25,9 @@ default_config = {
     "port": 1883,
     "protocol": "3.1.1",
     "tls_version": "auto",
+    "transport": "tcp",
+    "ws_headers": {},
+    "ws_path": "/",
     "will_message": {
         "payload": "offline",
         "qos": 0,
@@ -42,15 +47,12 @@ def device_tracker_sensor_only():
         yield
 
 
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
 async def test_entry_diagnostics(
-    hass, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_client: ClientSessionGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
     """Test config entry diagnostics."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
@@ -87,7 +89,7 @@ async def test_entry_diagnostics(
     )
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [
@@ -169,8 +171,11 @@ async def test_entry_diagnostics(
     ],
 )
 async def test_redact_diagnostics(
-    hass, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_client: ClientSessionGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
     """Test redacting diagnostics."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     expected_config = dict(default_config)
@@ -199,7 +204,7 @@ async def test_redact_diagnostics(
     async_fire_mqtt_message(hass, "attributes-topic", location_data)
     await hass.async_block_till_done()
 
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
 
     expected_debug_info = {
         "entities": [
@@ -248,7 +253,7 @@ async def test_redact_diagnostics(
                         "gps_accuracy": 1.5,
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
-                        "source_type": None,
+                        "source_type": "gps",
                     },
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,

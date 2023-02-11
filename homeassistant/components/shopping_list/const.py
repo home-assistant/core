@@ -3,6 +3,7 @@ DOMAIN = "shopping_list"
 EVENT_SHOPPING_LIST_UPDATED = "shopping_list_updated"
 
 SERVICE_ADD_ITEM = "add_item"
+SERVICE_REMOVE_ITEM = "remove_item"
 SERVICE_COMPLETE_ITEM = "complete_item"
 SERVICE_INCOMPLETE_ITEM = "incomplete_item"
 SERVICE_COMPLETE_ALL = "complete_all"

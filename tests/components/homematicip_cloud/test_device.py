@@ -22,7 +22,7 @@ async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 262
+    assert len(mock_hap.hmip_device_by_entity_id) == 270
 
 
 async def test_hmip_remove_device(hass, default_mock_hap_factory):
@@ -183,7 +183,7 @@ async def test_hap_reconnected(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNAVAILABLE
 
-    mock_hap._accesspoint_connected = False  # pylint: disable=protected-access
+    mock_hap._accesspoint_connected = False
     await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
     await hass.async_block_till_done()
     ha_state = hass.states.get(entity_id)

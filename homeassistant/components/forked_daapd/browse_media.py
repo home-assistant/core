@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import quote, unquote
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
@@ -160,7 +160,7 @@ async def get_owntone_content(
         return create_browse_media_response(
             master,
             media_content,
-            cast(list[dict[str, Union[int, str]]], result),
+            cast(list[dict[str, int | str]], result),
             children,
         )
     if media_content.id_or_path == "":  # top level search
@@ -172,7 +172,7 @@ async def get_owntone_content(
             result = await master.api.get_artists()  # list of artists with name, uri
         elif media_content.type == MediaType.GENRE:
             if result := await master.api.get_genres():  # returns list of genre names
-                for item in result:  # pylint: disable=not-an-iterable
+                for item in result:
                     # add generated genre uris to list of genre names
                     item["uri"] = create_owntone_uri(
                         MediaType.GENRE, cast(str, item["name"])
@@ -188,7 +188,7 @@ async def get_owntone_content(
         return create_browse_media_response(
             master,
             media_content,
-            cast(list[dict[str, Union[int, str]]], result),
+            cast(list[dict[str, int | str]], result),
         )
     # Not a directory or top level of library
     # We should have content type and id
@@ -214,7 +214,7 @@ async def get_owntone_content(
         )
 
     return create_browse_media_response(
-        master, media_content, cast(list[dict[str, Union[int, str]]], result)
+        master, media_content, cast(list[dict[str, int | str]], result)
     )
 
 

@@ -1,0 +1,15 @@
+{
+  "domain": "ruuvi_gateway",
+  "name": "Ruuvi Gateway",
+  "codeowners": ["@akx"],
+  "config_flow": true,
+  "dependencies": ["bluetooth"],
+  "dhcp": [
+    {
+      "hostname": "ruuvigateway*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/ruuvi_gateway",
+  "iot_class": "local_polling",
+  "requirements": ["aioruuvigateway==0.0.2"]
+}

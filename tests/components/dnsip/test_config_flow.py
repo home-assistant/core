@@ -20,21 +20,9 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import RetrieveDNS
+
 from tests.common import MockConfigEntry
-
-
-class RetrieveDNS:
-    """Return list of test information."""
-
-    @staticmethod
-    async def query(hostname, qtype) -> dict[str, str]:
-        """Return information."""
-        return {"hostname": "1.2.3.4"}
-
-    @property
-    def nameservers(self) -> list[str]:
-        """Return nameserver."""
-        return ["1.2.3.4"]
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -164,12 +152,13 @@ async def test_flow_already_exist(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    dns_mock = RetrieveDNS()
     with patch(
         "homeassistant.components.dnsip.async_setup_entry",
         return_value=True,
     ), patch(
         "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
-        return_value=RetrieveDNS,
+        return_value=dns_mock,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -204,9 +193,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
         return_value=RetrieveDNS(),
-    ), patch(
-        "homeassistant.components.dnsip.async_setup_entry",
-        return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -223,12 +209,15 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_RESOLVER_IPV6: "2001:4860:4860::8888",
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "resolver": "8.8.8.8",
         "resolver_ipv6": "2001:4860:4860::8888",
     }
+
+    assert entry.state == config_entries.ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(

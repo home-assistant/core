@@ -178,9 +178,11 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 if self.should_report_state:
                     persistent_notification.async_create(
                         self.hass,
-                        f"There was an error reporting state to Alexa ({body['reason']}). "
-                        "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.",
+                        (
+                            "There was an error reporting state to Alexa"
+                            f" ({body['reason']}). Please re-link your Alexa skill via"
+                            " the Alexa app to continue using it."
+                        ),
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )

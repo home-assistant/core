@@ -1,6 +1,5 @@
 """The tests for the IPMA weather component."""
-from collections import namedtuple
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -21,6 +20,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+
+from . import MockLocation
 
 from tests.common import MockConfigEntry
 
@@ -39,128 +41,6 @@ TEST_CONFIG_HOURLY = {
 }
 
 
-class MockLocation:
-    """Mock Location from pyipma."""
-
-    async def observation(self, api):
-        """Mock Observation."""
-        Observation = namedtuple(
-            "Observation",
-            [
-                "accumulated_precipitation",
-                "humidity",
-                "pressure",
-                "radiation",
-                "temperature",
-                "wind_direction",
-                "wind_intensity_km",
-            ],
-        )
-
-        return Observation(0.0, 71.0, 1000.0, 0.0, 18.0, "NW", 3.94)
-
-    async def forecast(self, api, period):
-        """Mock Forecast."""
-        Forecast = namedtuple(
-            "Forecast",
-            [
-                "feels_like_temperature",
-                "forecast_date",
-                "forecasted_hours",
-                "humidity",
-                "max_temperature",
-                "min_temperature",
-                "precipitation_probability",
-                "temperature",
-                "update_date",
-                "weather_type",
-                "wind_direction",
-                "wind_strength",
-            ],
-        )
-
-        WeatherType = namedtuple("WeatherType", ["id", "en", "pt"])
-
-        if period == 24:
-            return [
-                Forecast(
-                    None,
-                    datetime(2020, 1, 16, 0, 0, 0),
-                    24,
-                    None,
-                    16.2,
-                    10.6,
-                    "100.0",
-                    13.4,
-                    "2020-01-15T07:51:00",
-                    WeatherType(9, "Rain/showers", "Chuva/aguaceiros"),
-                    "S",
-                    "10",
-                ),
-            ]
-        if period == 1:
-            return [
-                Forecast(
-                    "7.7",
-                    datetime(2020, 1, 15, 1, 0, 0, tzinfo=timezone.utc),
-                    1,
-                    "86.9",
-                    12.0,
-                    None,
-                    80.0,
-                    10.6,
-                    "2020-01-15T02:51:00",
-                    WeatherType(10, "Light rain", "Chuva fraca ou chuvisco"),
-                    "S",
-                    "32.7",
-                ),
-                Forecast(
-                    "5.7",
-                    datetime(2020, 1, 15, 2, 0, 0, tzinfo=timezone.utc),
-                    1,
-                    "86.9",
-                    12.0,
-                    None,
-                    80.0,
-                    10.6,
-                    "2020-01-15T02:51:00",
-                    WeatherType(1, "Clear sky", "C\u00e9u limpo"),
-                    "S",
-                    "32.7",
-                ),
-            ]
-
-    @property
-    def name(self):
-        """Mock location."""
-        return "HomeTown"
-
-    @property
-    def station(self):
-        """Mock station."""
-        return "HomeTown Station"
-
-    @property
-    def station_latitude(self):
-        """Mock latitude."""
-        return 0
-
-    @property
-    def global_id_local(self):
-        """Mock global identifier of the location."""
-        return 1130600
-
-    @property
-    def id_station(self):
-        """Mock identifier of the station."""
-        return 1200545
-
-    @property
-    def station_longitude(self):
-        """Mock longitude."""
-        return 0
-
-
 class MockBadLocation(MockLocation):
     """Mock Location with unresponsive api."""
 
@@ -173,7 +53,7 @@ class MockBadLocation(MockLocation):
         return []
 
 
-async def test_setup_config_flow(hass):
+async def test_setup_config_flow(hass: HomeAssistant) -> None:
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "pyipma.location.Location.get",
@@ -196,7 +76,7 @@ async def test_setup_config_flow(hass):
     assert state.attributes.get("friendly_name") == "HomeTown"
 
 
-async def test_daily_forecast(hass):
+async def test_daily_forecast(hass: HomeAssistant) -> None:
     """Test for successfully getting daily forecast."""
     with patch(
         "pyipma.location.Location.get",
@@ -221,7 +101,7 @@ async def test_daily_forecast(hass):
 
 
 @freeze_time("2020-01-14 23:00:00")
-async def test_hourly_forecast(hass):
+async def test_hourly_forecast(hass: HomeAssistant) -> None:
     """Test for successfully getting daily forecast."""
     with patch(
         "pyipma.location.Location.get",
@@ -243,7 +123,7 @@ async def test_hourly_forecast(hass):
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
 
 
-async def test_failed_get_observation_forecast(hass):
+async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "pyipma.location.Location.get",

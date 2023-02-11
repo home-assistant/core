@@ -1,16 +1,19 @@
 """BleBox devices setup tests."""
-
 import logging
 
 import blebox_uniapi
+import pytest
 
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
-from .conftest import mock_config, patch_product_identify
+from .conftest import mock_config, patch_product_identify, setup_product_mock
 
 
-async def test_setup_failure(hass, caplog):
+async def test_setup_failure(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that setup failure is handled and logged."""
 
     patch_product_identify(None, side_effect=blebox_uniapi.error.ClientError)
@@ -26,7 +29,9 @@ async def test_setup_failure(hass, caplog):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_failure_on_connection(hass, caplog):
+async def test_setup_failure_on_connection(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that setup failure is handled and logged."""
 
     patch_product_identify(None, side_effect=blebox_uniapi.error.ConnectionError)
@@ -42,9 +47,9 @@ async def test_setup_failure_on_connection(hass, caplog):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_config_entry(hass):
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test that unloading works properly."""
-    patch_product_identify(None)
+    setup_product_mock("switches", [])
 
     entry = mock_config()
     entry.add_to_hass(hass)

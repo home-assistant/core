@@ -36,8 +36,7 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
-        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Schedule"
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 12
 
@@ -80,8 +79,7 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
     assert (
-        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Schedule"
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 21
 
@@ -194,8 +192,7 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
-        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Schedule"
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
 
 
@@ -213,8 +210,7 @@ async def test_service_preset_mode_frost_guard_thermostat(
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
-        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Schedule"
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
 
     # Test service setting the preset mode to "frost guard"
@@ -269,8 +265,7 @@ async def test_service_preset_mode_frost_guard_thermostat(
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
-        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Schedule"
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
 
 
@@ -286,8 +281,7 @@ async def test_service_preset_modes_thermostat(hass, config_entry, netatmo_auth)
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
-        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Schedule"
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
 
     # Test service setting the preset mode to "away"

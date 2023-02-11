@@ -6,14 +6,10 @@ from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, TypeVar, cast
 
 from aiohttp.client_exceptions import ClientError
-from kostal.plenticore import (
-    PlenticoreApiClient,
-    PlenticoreApiException,
-    PlenticoreAuthenticationException,
-)
+from pykoplenti import ApiClient, ApiException, AuthenticationException
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -26,6 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+_DataT = TypeVar("_DataT")
 
 
 class Plenticore:
@@ -47,18 +44,16 @@ class Plenticore:
         return self.config_entry.data[CONF_HOST]
 
     @property
-    def client(self) -> PlenticoreApiClient:
+    def client(self) -> ApiClient:
         """Return the Plenticore API client."""
         return self._client
 
     async def async_setup(self) -> bool:
         """Set up Plenticore API client."""
-        self._client = PlenticoreApiClient(
-            async_get_clientsession(self.hass), host=self.host
-        )
+        self._client = ApiClient(async_get_clientsession(self.hass), host=self.host)
         try:
             await self._client.login(self.config_entry.data[CONF_PASSWORD])
-        except PlenticoreAuthenticationException as err:
+        except AuthenticationException as err:
             _LOGGER.error(
                 "Authentication exception connecting to %s: %s", self.host, err
             )
@@ -134,7 +129,7 @@ class DataUpdateCoordinatorMixin:
 
         try:
             return await client.get_setting_values(module_id, data_id)
-        except PlenticoreApiException:
+        except ApiException:
             return None
 
     async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
@@ -148,13 +143,13 @@ class DataUpdateCoordinatorMixin:
 
         try:
             await client.set_setting_values(module_id, value)
-        except PlenticoreApiException:
+        except ApiException:
             return False
-        else:
-            return True
+
+        return True
 
 
-class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
+class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
     def __init__(
@@ -192,7 +187,9 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
         self._fetch[module_id].remove(data_id)
 
 
-class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
+class ProcessDataUpdateCoordinator(
+    PlenticoreUpdateCoordinator[dict[str, dict[str, str]]]
+):
     """Implementation of PlenticoreUpdateCoordinator for process data."""
 
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
@@ -214,7 +211,7 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 
 
 class SettingDataUpdateCoordinator(
-    PlenticoreUpdateCoordinator, DataUpdateCoordinatorMixin
+    PlenticoreUpdateCoordinator[dict[str, dict[str, str]]], DataUpdateCoordinatorMixin
 ):
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
@@ -230,7 +227,7 @@ class SettingDataUpdateCoordinator(
         return fetched_data
 
 
-class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
+class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
     def __init__(
@@ -249,10 +246,12 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_inverval,
         )
         # data ids to poll
-        self._fetch: dict[str, list[str]] = defaultdict(list)
+        self._fetch: dict[str, list[str | list[str]]] = defaultdict(list)
         self._plenticore = plenticore
 
-    def start_fetch_data(self, module_id: str, data_id: str, all_options: str) -> None:
+    def start_fetch_data(
+        self, module_id: str, data_id: str, all_options: list[str]
+    ) -> None:
         """Start fetching the given data (module-id and entry-id)."""
         self._fetch[module_id].append(data_id)
         self._fetch[module_id].append(all_options)
@@ -264,14 +263,17 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
 
         async_call_later(self.hass, 2, force_refresh)
 
-    def stop_fetch_data(self, module_id: str, data_id: str, all_options: str) -> None:
+    def stop_fetch_data(
+        self, module_id: str, data_id: str, all_options: list[str]
+    ) -> None:
         """Stop fetching the given data (module-id and entry-id)."""
         self._fetch[module_id].remove(all_options)
         self._fetch[module_id].remove(data_id)
 
 
 class SelectDataUpdateCoordinator(
-    PlenticoreSelectUpdateCoordinator, DataUpdateCoordinatorMixin
+    PlenticoreSelectUpdateCoordinator[dict[str, dict[str, str]]],
+    DataUpdateCoordinatorMixin,
 ):
     """Implementation of PlenticoreUpdateCoordinator for select data."""
 
@@ -287,11 +289,11 @@ class SelectDataUpdateCoordinator(
 
     async def _async_get_current_option(
         self,
-        module_id: dict[str, list[str]],
+        module_id: dict[str, list[str | list[str]]],
     ) -> dict[str, dict[str, str]]:
         """Get current option."""
         for mid, pids in module_id.items():
-            all_options = pids[1]
+            all_options = cast(list[str], pids[1])
             for all_option in all_options:
                 if all_option == "None" or not (
                     val := await self.async_read_data(mid, all_option)
@@ -299,10 +301,10 @@ class SelectDataUpdateCoordinator(
                     continue
                 for option in val.values():
                     if option[all_option] == "1":
-                        fetched = {mid: {pids[0]: all_option}}
+                        fetched = {mid: {cast(str, pids[0]): all_option}}
                         return fetched
 
-            return {mid: {pids[0]: "None"}}
+            return {mid: {cast(str, pids[0]): "None"}}
         return {}
 
 

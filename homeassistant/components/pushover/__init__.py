@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             pushover_api.validate, entry.data[CONF_USER_KEY]
         )
 
-    except BadAPIRequestError as err:
+    except (BadAPIRequestError, ValueError) as err:
         if "application token is invalid" in str(err):
             raise ConfigEntryAuthFailed(err) from err
         raise ConfigEntryNotReady(err) from err

@@ -1,5 +1,4 @@
-"""
-Regression tests for Aqara Gateway V3.
+"""Regression tests for Aqara Gateway V3.
 
 https://github.com/home-assistant/core/issues/20885
 """
@@ -39,7 +38,7 @@ async def test_lennox_e30_setup(hass):
                 EntityTestInfo(
                     entity_id="climate.lennox",
                     friendly_name="Lennox",
-                    unique_id="homekit-XXXXXXXX-100",
+                    unique_id="00:00:00:00:00:00_1_100",
                     supported_features=(
                         SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
                     ),

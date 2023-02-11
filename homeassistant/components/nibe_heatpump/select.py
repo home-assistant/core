@@ -5,8 +5,8 @@ from nibe.coil import Coil
 
 from homeassistant.components.select import ENTITY_ID_FORMAT, SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, CoilEntity, Coordinator
@@ -35,11 +35,16 @@ class Select(CoilEntity, SelectEntity):
 
     def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
         """Initialize entity."""
+        assert coil.mappings
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
         self._attr_options = list(coil.mappings.values())
         self._attr_current_option = None
 
     def _async_read_coil(self, coil: Coil) -> None:
+        if not isinstance(coil.value, str):
+            self._attr_current_option = None
+            return
+
         self._attr_current_option = coil.value
 
     async def async_select_option(self, option: str) -> None:

@@ -1,5 +1,4 @@
 """Test UniFi Network."""
-
 import asyncio
 from copy import deepcopy
 from datetime import timedelta
@@ -7,14 +6,15 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import aiounifi
-from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
+from aiounifi.models.event import EventKey
+from aiounifi.models.message import MessageKey
+from aiounifi.websocket import WebsocketState
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER,
     CONF_SITE_ID,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -38,6 +38,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,6 +46,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
@@ -65,7 +67,7 @@ CONTROLLER_HOST = {
     "uptime": 1562600160,
 }
 
-CONTROLLER_DATA = {
+ENTRY_CONFIG = {
     CONF_HOST: DEFAULT_HOST,
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
@@ -73,8 +75,6 @@ CONTROLLER_DATA = {
     CONF_SITE_ID: DEFAULT_SITE,
     CONF_VERIFY_SSL: False,
 }
-
-ENTRY_CONFIG = {**CONTROLLER_DATA, CONF_CONTROLLER: CONTROLLER_DATA}
 ENTRY_OPTIONS = {}
 
 CONFIGURATION = []
@@ -210,7 +210,9 @@ async def setup_unifi_integration(
     return config_entry
 
 
-async def test_controller_setup(hass, aioclient_mock):
+async def test_controller_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Successful setup."""
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
@@ -225,8 +227,8 @@ async def test_controller_setup(hass, aioclient_mock):
     assert forward_entry_setup.mock_calls[1][1] == (entry, SENSOR_DOMAIN)
     assert forward_entry_setup.mock_calls[2][1] == (entry, SWITCH_DOMAIN)
 
-    assert controller.host == CONTROLLER_DATA[CONF_HOST]
-    assert controller.site == CONTROLLER_DATA[CONF_SITE_ID]
+    assert controller.host == ENTRY_CONFIG[CONF_HOST]
+    assert controller.site == ENTRY_CONFIG[CONF_SITE_ID]
     assert controller.site_name == SITE[0]["desc"]
     assert controller.site_role == SITE[0]["role"]
 
@@ -248,7 +250,9 @@ async def test_controller_setup(hass, aioclient_mock):
     assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
 
 
-async def test_controller_mac(hass, aioclient_mock):
+async def test_controller_mac(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that it is possible to identify controller mac."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[CONTROLLER_HOST]
@@ -265,7 +269,7 @@ async def test_controller_mac(hass, aioclient_mock):
     assert device_entry.configuration_url == controller.api.url
 
 
-async def test_controller_not_accessible(hass):
+async def test_controller_not_accessible(hass: HomeAssistant) -> None:
     """Retry to login gets scheduled when connection fails."""
     with patch(
         "homeassistant.components.unifi.controller.get_unifi_controller",
@@ -275,7 +279,7 @@ async def test_controller_not_accessible(hass):
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_controller_trigger_reauth_flow(hass):
+async def test_controller_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
         "homeassistant.components.unifi.get_unifi_controller",
@@ -286,7 +290,7 @@ async def test_controller_trigger_reauth_flow(hass):
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_controller_unknown_error(hass):
+async def test_controller_unknown_error(hass: HomeAssistant) -> None:
     """Unknown errors are handled."""
     with patch(
         "homeassistant.components.unifi.controller.get_unifi_controller",
@@ -296,7 +300,9 @@ async def test_controller_unknown_error(hass):
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_config_entry_updated(hass, aioclient_mock):
+async def test_config_entry_updated(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
@@ -317,7 +323,9 @@ async def test_config_entry_updated(hass, aioclient_mock):
     unsub()
 
 
-async def test_reset_after_successful_setup(hass, aioclient_mock):
+async def test_reset_after_successful_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
@@ -328,7 +336,9 @@ async def test_reset_after_successful_setup(hass, aioclient_mock):
     assert result is True
 
 
-async def test_reset_fails(hass, aioclient_mock):
+async def test_reset_fails(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Calling reset when the entry has been setup can return false."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
@@ -359,13 +369,13 @@ async def test_connection_state_signalling(
     # Controller is connected
     assert hass.states.get("device_tracker.client").state == "home"
 
-    mock_unifi_websocket(state=STATE_DISCONNECTED)
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     # Controller is disconnected
     assert hass.states.get("device_tracker.client").state == "unavailable"
 
-    mock_unifi_websocket(state=STATE_RUNNING)
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
     await hass.async_block_till_done()
 
     # Controller is once again connected
@@ -396,21 +406,14 @@ async def test_wireless_client_event_calls_update_wireless_devices(
         "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
         return_value=None,
     ) as wireless_clients_mock:
-        mock_unifi_websocket(
-            data={
-                "meta": {"rc": "ok", "message": "events"},
-                "data": [
-                    {
-                        "datetime": "2020-01-20T19:37:04Z",
-                        "user": "00:00:00:00:00:01",
-                        "key": aiounifi.events.WIRELESS_CLIENT_CONNECTED,
-                        "msg": "User[11:22:33:44:55:66] has connected to WLAN",
-                        "time": 1579549024893,
-                    }
-                ],
-            },
-        )
-
+        event = {
+            "datetime": "2020-01-20T19:37:04Z",
+            "user": "00:00:00:00:00:01",
+            "key": EventKey.WIRELESS_CLIENT_CONNECTED.value,
+            "msg": "User[11:22:33:44:55:66] has connected to WLAN",
+            "time": 1579549024893,
+        }
+        mock_unifi_websocket(message=MessageKey.EVENT, data=event)
         assert wireless_clients_mock.assert_called_once
 
 
@@ -423,7 +426,7 @@ async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket):
         f"https://{DEFAULT_HOST}:1234/api/login", status=HTTPStatus.BAD_GATEWAY
     )
 
-    mock_unifi_websocket(state=STATE_DISCONNECTED)
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 0
@@ -459,7 +462,7 @@ async def test_reconnect_mechanism_exceptions(
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
         "homeassistant.components.unifi.controller.UniFiController.reconnect"
     ) as mock_reconnect:
-        mock_unifi_websocket(state=STATE_DISCONNECTED)
+        mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
         await hass.async_block_till_done()
 
         new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
@@ -467,17 +470,17 @@ async def test_reconnect_mechanism_exceptions(
         mock_reconnect.assert_called_once()
 
 
-async def test_get_unifi_controller(hass):
+async def test_get_unifi_controller(hass: HomeAssistant) -> None:
     """Successful call."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True
     ):
-        assert await get_unifi_controller(hass, CONTROLLER_DATA)
+        assert await get_unifi_controller(hass, ENTRY_CONFIG)
 
 
-async def test_get_unifi_controller_verify_ssl_false(hass):
+async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> None:
     """Successful call with verify ssl set to false."""
-    controller_data = dict(CONTROLLER_DATA)
+    controller_data = dict(ENTRY_CONFIG)
     controller_data[CONF_VERIFY_SSL] = False
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True
@@ -505,4 +508,4 @@ async def test_get_unifi_controller_fails_to_connect(
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=side_effect
     ), pytest.raises(raised_exception):
-        await get_unifi_controller(hass, CONTROLLER_DATA)
+        await get_unifi_controller(hass, ENTRY_CONFIG)

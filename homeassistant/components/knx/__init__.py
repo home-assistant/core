@@ -51,6 +51,9 @@ from .const import (
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
+    CONF_KNX_ROUTING_SECURE,
+    CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
@@ -80,6 +83,7 @@ from .schema import (
     SelectSchema,
     SensorSchema,
     SwitchSchema,
+    TextSchema,
     WeatherSchema,
     ga_validator,
     sensor_type_validator,
@@ -130,6 +134,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **SelectSchema.platform_node(),
                     **SensorSchema.platform_node(),
                     **SwitchSchema.platform_node(),
+                    **TextSchema.platform_node(),
                     **WeatherSchema.platform_node(),
                 }
             ),
@@ -219,7 +224,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    # `config` is None when reloading the integration or no `knx` key in configuration.yaml
+    # `config` is None when reloading the integration
+    # or no `knx` key in configuration.yaml
     if (config := hass.data.get(DATA_KNX_CONFIG)) is None:
         _conf = await async_integration_yaml_config(hass, DOMAIN)
         if not _conf or DOMAIN not in _conf:
@@ -362,11 +368,8 @@ class KNXModule:
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
         self.xknx = XKNX(
-            own_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
-            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
-            multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
-            multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
+            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
             state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
         )
 
@@ -384,6 +387,9 @@ class KNXModule:
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
+                individual_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
+                multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
+                multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
                 local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
                 threaded=True,
@@ -406,15 +412,15 @@ class KNXModule:
                 auto_reconnect=True,
                 threaded=True,
             )
-        if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
-            knxkeys_file: str | None = (
-                self.hass.config.path(
-                    STORAGE_DIR,
-                    self.entry.data[CONF_KNX_KNXKEY_FILENAME],
-                )
-                if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
-                else None
+        knxkeys_file: str | None = (
+            self.hass.config.path(
+                STORAGE_DIR,
+                self.entry.data[CONF_KNX_KNXKEY_FILENAME],
             )
+            if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
+            else None
+        )
+        if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP_SECURE,
                 gateway_ip=self.entry.data[CONF_HOST],
@@ -424,6 +430,24 @@ class KNXModule:
                     user_password=self.entry.data.get(CONF_KNX_SECURE_USER_PASSWORD),
                     device_authentication_password=self.entry.data.get(
                         CONF_KNX_SECURE_DEVICE_AUTHENTICATION
+                    ),
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=knxkeys_file,
+                ),
+                auto_reconnect=True,
+                threaded=True,
+            )
+        if _conn_type == CONF_KNX_ROUTING_SECURE:
+            return ConnectionConfig(
+                connection_type=ConnectionType.ROUTING_SECURE,
+                individual_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
+                multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
+                multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
+                local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
+                secure_config=SecureConfig(
+                    backbone_key=self.entry.data.get(CONF_KNX_ROUTING_BACKBONE_KEY),
+                    latency_ms=self.entry.data.get(
+                        CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
                     ),
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
                     knxkeys_file_path=knxkeys_file,
@@ -472,7 +496,10 @@ class KNXModule:
                         value = transcoder.from_knx(data)
                     except ConversionError as err:
                         _LOGGER.warning(
-                            "Error in `knx_event` at decoding type '%s' from telegram %s\n%s",
+                            (
+                                "Error in `knx_event` at decoding type '%s' from"
+                                " telegram %s\n%s"
+                            ),
                             transcoder.__name__,
                             telegram,
                             err,
@@ -500,7 +527,10 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {_filter: transcoder for _filter in _filters}  # type: ignore[misc]
+                    {
+                        _filter: transcoder  # type: ignore[type-abstract]
+                        for _filter in _filters
+                    }
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(
@@ -532,7 +562,10 @@ class KNXModule:
             transcoder := DPTBase.parse_transcoder(dpt)
         ):
             self._group_address_transcoder.update(
-                {_address: transcoder for _address in group_addresses}  # type: ignore[misc]
+                {
+                    _address: transcoder  # type: ignore[type-abstract]
+                    for _address in group_addresses
+                }
             )
         for group_address in group_addresses:
             if group_address in self._knx_event_callback.group_addresses:
@@ -554,14 +587,17 @@ class KNXModule:
                 raise HomeAssistantError(
                     f"Could not find exposure for '{group_address}' to remove."
                 ) from err
-            else:
-                removed_exposure.shutdown()
+
+            removed_exposure.shutdown()
             return
 
         if group_address in self.service_exposures:
             replaced_exposure = self.service_exposures.pop(group_address)
             _LOGGER.warning(
-                "Service exposure_register replacing already registered exposure for '%s' - %s",
+                (
+                    "Service exposure_register replacing already registered exposure"
+                    " for '%s' - %s"
+                ),
                 group_address,
                 replaced_exposure.device.name,
             )

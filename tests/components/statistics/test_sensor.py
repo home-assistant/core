@@ -21,7 +21,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -45,8 +45,10 @@ async def test_unique_id(hass: HomeAssistant):
                 {
                     "platform": "statistics",
                     "name": "test",
-                    "entity_id": "sensor.test_monitored",
                     "unique_id": "uniqueid_sensor_test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -71,6 +73,8 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
                     "platform": "statistics",
                     "name": "test",
                     "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -81,14 +85,14 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
     assert state is not None
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state.attributes.get("source_value_valid") is True
@@ -109,14 +113,16 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
     hass.states.async_set(
         "sensor.test_monitored",
         "0",
-        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     new_state = hass.states.get("sensor.test")
     new_mean = round(sum(VALUES_NUMERIC) / (len(VALUES_NUMERIC) + 1), 2)
     assert new_state is not None
     assert new_state.state == str(new_mean)
-    assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert (
+        new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    )
     assert new_state.attributes.get("buffer_usage_ratio") == round(10 / 20, 2)
     assert new_state.attributes.get("source_value_valid") is True
 
@@ -127,7 +133,9 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
     new_state = hass.states.get("sensor.test")
     assert new_state is not None
     assert new_state.state == str(new_mean)
-    assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert (
+        new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    )
     assert new_state.attributes.get("source_value_valid") is False
 
     # Source sensor has the STATE_UNKNOWN state, unit and state should not change
@@ -137,7 +145,9 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
     new_state = hass.states.get("sensor.test")
     assert new_state is not None
     assert new_state.state == str(new_mean)
-    assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert (
+        new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    )
     assert new_state.attributes.get("source_value_valid") is False
 
     # Source sensor is removed, unit and state should not change
@@ -147,7 +157,9 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
     new_state = hass.states.get("sensor.test")
     assert new_state is not None
     assert new_state.state == str(new_mean)
-    assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert (
+        new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    )
     assert new_state.attributes.get("source_value_valid") is False
 
 
@@ -162,6 +174,8 @@ async def test_sensor_defaults_binary(hass: HomeAssistant):
                     "platform": "statistics",
                     "name": "test",
                     "entity_id": "binary_sensor.test_monitored",
+                    "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -172,7 +186,7 @@ async def test_sensor_defaults_binary(hass: HomeAssistant):
         hass.states.async_set(
             "binary_sensor.test_monitored",
             value,
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
     await hass.async_block_till_done()
 
@@ -199,12 +213,14 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant):
                     "name": "test_normal",
                     "entity_id": "sensor.test_monitored_normal",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_force",
                     "entity_id": "sensor.test_monitored_force",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -215,12 +231,12 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant):
         hass.states.async_set(
             "sensor.test_monitored_normal",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
         hass.states.async_set(
             "sensor.test_monitored_force",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             force_update=True,
         )
     await hass.async_block_till_done()
@@ -234,8 +250,8 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant):
     assert state_force.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
 
-async def test_sampling_size_non_default(hass: HomeAssistant):
-    """Test rotation."""
+async def test_sampling_size_reduced(hass: HomeAssistant):
+    """Test limited buffer size."""
     assert await async_setup_component(
         hass,
         "sensor",
@@ -257,7 +273,7 @@ async def test_sampling_size_non_default(hass: HomeAssistant):
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
     await hass.async_block_till_done()
 
@@ -287,11 +303,11 @@ async def test_sampling_size_1(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    for value in VALUES_NUMERIC[-3:]:  # just the last 3 will do
+    for value in VALUES_NUMERIC:
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
     await hass.async_block_till_done()
 
@@ -303,7 +319,7 @@ async def test_sampling_size_1(hass: HomeAssistant):
 
 
 async def test_age_limit_expiry(hass: HomeAssistant):
-    """Test that values are removed after certain age."""
+    """Test that values are removed with given max age."""
     now = dt_util.utcnow()
     mock_data = {
         "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
@@ -325,6 +341,7 @@ async def test_age_limit_expiry(hass: HomeAssistant):
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
                         "state_characteristic": "mean",
+                        "sampling_size": 20,
                         "max_age": {"minutes": 4},
                     },
                 ]
@@ -338,7 +355,7 @@ async def test_age_limit_expiry(hass: HomeAssistant):
             hass.states.async_set(
                 "sensor.test_monitored",
                 str(value),
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
         await hass.async_block_till_done()
 
@@ -391,7 +408,7 @@ async def test_age_limit_expiry(hass: HomeAssistant):
 
 
 async def test_precision(hass: HomeAssistant):
-    """Test correct result with precision set."""
+    """Test correct results with precision set."""
     assert await async_setup_component(
         hass,
         "sensor",
@@ -402,6 +419,7 @@ async def test_precision(hass: HomeAssistant):
                     "name": "test_precision_0",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                     "precision": 0,
                 },
                 {
@@ -409,6 +427,7 @@ async def test_precision(hass: HomeAssistant):
                     "name": "test_precision_3",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                     "precision": 3,
                 },
             ]
@@ -420,7 +439,7 @@ async def test_precision(hass: HomeAssistant):
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
     await hass.async_block_till_done()
 
@@ -431,6 +450,60 @@ async def test_precision(hass: HomeAssistant):
     state = hass.states.get("sensor.test_precision_3")
     assert state is not None
     assert state.state == str(round(mean, 3))
+
+
+async def test_percentile(hass: HomeAssistant):
+    """Test correct results for percentile characteristic."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_percentile_omitted",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "percentile",
+                    "sampling_size": 20,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_percentile_default",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "percentile",
+                    "sampling_size": 20,
+                    "percentile": 50,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_percentile_min",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "percentile",
+                    "sampling_size": 20,
+                    "percentile": 1,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for value in VALUES_NUMERIC:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(value),
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_percentile_omitted")
+    assert state is not None
+    assert state.state == str(9.2)
+    state = hass.states.get("sensor.test_percentile_default")
+    assert state is not None
+    assert state.state == str(9.2)
+    state = hass.states.get("sensor.test_percentile_min")
+    assert state is not None
+    assert state.state == str(2.72)
 
 
 async def test_device_class(hass: HomeAssistant):
@@ -446,6 +519,7 @@ async def test_device_class(hass: HomeAssistant):
                     "name": "test_source_class",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
                 {
                     # Device class is set to None for characteristics with special meaning
@@ -453,6 +527,7 @@ async def test_device_class(hass: HomeAssistant):
                     "name": "test_none",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     # Device class is set to timestamp for datetime characteristics
@@ -460,6 +535,7 @@ async def test_device_class(hass: HomeAssistant):
                     "name": "test_timestamp",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "datetime_oldest",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -471,7 +547,7 @@ async def test_device_class(hass: HomeAssistant):
             "sensor.test_monitored",
             str(value),
             {
-                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
             },
         )
@@ -500,12 +576,14 @@ async def test_state_class(hass: HomeAssistant):
                     "name": "test_normal",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_nan",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "datetime_oldest",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -516,7 +594,7 @@ async def test_state_class(hass: HomeAssistant):
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
     await hass.async_block_till_done()
 
@@ -540,29 +618,35 @@ async def test_unitless_source_sensor(hass: HomeAssistant):
                     "name": "test_unitless_1",
                     "entity_id": "sensor.test_monitored_unitless",
                     "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_2",
                     "entity_id": "sensor.test_monitored_unitless",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_3",
                     "entity_id": "sensor.test_monitored_unitless",
                     "state_characteristic": "change_second",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_4",
                     "entity_id": "binary_sensor.test_monitored_unitless",
+                    "state_characteristic": "count",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_unitless_5",
                     "entity_id": "binary_sensor.test_monitored_unitless",
                     "state_characteristic": "mean",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -753,13 +837,11 @@ async def test_state_characteristics(hass: HomeAssistant):
         },
         {
             "source_sensor_domain": "sensor",
-            "name": "quantiles",
+            "name": "percentile",
             "value_0": STATE_UNKNOWN,
             "value_1": STATE_UNKNOWN,
-            "value_9": [
-                round(quantile, 2) for quantile in statistics.quantiles(VALUES_NUMERIC)
-            ],
-            "unit": None,
+            "value_9": 9.2,
+            "unit": "°C",
         },
         {
             "source_sensor_domain": "sensor",
@@ -767,6 +849,56 @@ async def test_state_characteristics(hass: HomeAssistant):
             "value_0": STATE_UNKNOWN,
             "value_1": STATE_UNKNOWN,
             "value_9": float(round(statistics.stdev(VALUES_NUMERIC), 2)),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum",
+            "value_0": STATE_UNKNOWN,
+            "value_1": float(VALUES_NUMERIC[-1]),
+            "value_9": float(sum(VALUES_NUMERIC)),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum_differences",
+            "value_0": STATE_UNKNOWN,
+            "value_1": STATE_UNKNOWN,
+            "value_9": float(
+                sum(
+                    [
+                        abs(20 - 17),
+                        abs(15.2 - 20),
+                        abs(5 - 15.2),
+                        abs(3.8 - 5),
+                        abs(9.2 - 3.8),
+                        abs(6.7 - 9.2),
+                        abs(14 - 6.7),
+                        abs(6 - 14),
+                    ]
+                )
+            ),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "sum_differences_nonnegative",
+            "value_0": STATE_UNKNOWN,
+            "value_1": STATE_UNKNOWN,
+            "value_9": float(
+                sum(
+                    [
+                        20 - 17,
+                        15.2 - 0,
+                        5 - 0,
+                        3.8 - 0,
+                        9.2 - 3.8,
+                        6.7 - 0,
+                        14 - 6.7,
+                        6 - 0,
+                    ]
+                )
+            ),
             "unit": "°C",
         },
         {
@@ -900,12 +1032,12 @@ async def test_state_characteristics(hass: HomeAssistant):
             hass.states.async_set(
                 "sensor.test_monitored",
                 str(VALUES_NUMERIC[i]),
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
             hass.states.async_set(
                 "binary_sensor.test_monitored",
                 str(VALUES_BINARY[i]),
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
         await hass.async_block_till_done()
 
@@ -914,14 +1046,14 @@ async def test_state_characteristics(hass: HomeAssistant):
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
             assert state is not None, (
-                f"no state object for characteristic "
+                "no state object for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer filled)"
+                "(buffer filled)"
             )
             assert state.state == str(characteristic["value_9"]), (
-                f"value mismatch for characteristic "
+                "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer filled) - "
+                "(buffer filled) - "
                 f"assert {state.state} == {str(characteristic['value_9'])}"
             )
             assert (
@@ -939,14 +1071,14 @@ async def test_state_characteristics(hass: HomeAssistant):
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
             assert state is not None, (
-                f"no state object for characteristic "
+                "no state object for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(one stored value)"
+                "(one stored value)"
             )
             assert state.state == str(characteristic["value_1"]), (
-                f"value mismatch for characteristic "
+                "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(one stored value) - "
+                "(one stored value) - "
                 f"assert {state.state} == {str(characteristic['value_1'])}"
             )
 
@@ -961,14 +1093,14 @@ async def test_state_characteristics(hass: HomeAssistant):
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
             assert state is not None, (
-                f"no state object for characteristic "
+                "no state object for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer empty)"
+                "(buffer empty)"
             )
             assert state.state == str(characteristic["value_0"]), (
-                f"value mismatch for characteristic "
+                "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer empty) - "
+                "(buffer empty) - "
                 f"assert {state.state} == {str(characteristic['value_0'])}"
             )
 
@@ -985,12 +1117,14 @@ async def test_invalid_state_characteristic(hass: HomeAssistant):
                     "name": "test_numeric",
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": "invalid",
+                    "sampling_size": 20,
                 },
                 {
                     "platform": "statistics",
                     "name": "test_binary",
                     "entity_id": "binary_sensor.test_monitored",
                     "state_characteristic": "variance",
+                    "sampling_size": 20,
                 },
             ]
         },
@@ -1000,7 +1134,7 @@ async def test_invalid_state_characteristic(hass: HomeAssistant):
     hass.states.async_set(
         "sensor.test_monitored",
         str(VALUES_NUMERIC[0]),
-        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -1010,7 +1144,7 @@ async def test_invalid_state_characteristic(hass: HomeAssistant):
     assert state is None
 
 
-async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
+async def test_initialize_from_database(recorder_mock, hass: HomeAssistant):
     """Test initializing the statistics from the recorder database."""
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
@@ -1020,7 +1154,7 @@ async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
         hass.states.async_set(
             "sensor.test_monitored",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
@@ -1046,10 +1180,10 @@ async def test_initialize_from_database(hass: HomeAssistant, recorder_mock):
     state = hass.states.get("sensor.test")
     assert state is not None
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
 
-async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorder_mock):
+async def test_initialize_from_database_with_maxage(recorder_mock, hass: HomeAssistant):
     """Test initializing the statistics from the database."""
     now = dt_util.utcnow()
     mock_data = {
@@ -1075,7 +1209,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorde
             hass.states.async_set(
                 "sensor.test_monitored",
                 str(value),
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
             await hass.async_block_till_done()
             mock_data["return_time"] += timedelta(hours=1)
@@ -1090,8 +1224,8 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorde
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
-                        "sampling_size": 100,
                         "state_characteristic": "datetime_newest",
+                        "sampling_size": 100,
                         "max_age": {"hours": 3},
                     },
                 ]
@@ -1109,7 +1243,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant, recorde
     ) + timedelta(hours=1)
 
 
-async def test_reload(hass: HomeAssistant, recorder_mock):
+async def test_reload(recorder_mock, hass: HomeAssistant):
     """Verify we can reload statistics sensors."""
 
     await async_setup_component(

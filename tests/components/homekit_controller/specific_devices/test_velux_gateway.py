@@ -1,5 +1,4 @@
-"""
-Test against characteristics captured from a Velux Gateway.
+"""Test against characteristics captured from a Velux Gateway.
 
 https://github.com/home-assistant/core/issues/44314
 """
@@ -51,7 +50,7 @@ async def test_velux_cover_setup(hass):
                         EntityTestInfo(
                             entity_id="cover.velux_window_roof_window",
                             friendly_name="VELUX Window Roof Window",
-                            unique_id="homekit-1111111a114a111a-8",
+                            unique_id="00:00:00:00:00:00_3_8",
                             supported_features=CoverEntityFeature.CLOSE
                             | CoverEntityFeature.SET_POSITION
                             | CoverEntityFeature.OPEN,
@@ -73,7 +72,7 @@ async def test_velux_cover_setup(hass):
                             entity_id="sensor.velux_sensor_temperature_sensor",
                             friendly_name="VELUX Sensor Temperature sensor",
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                            unique_id="homekit-a11b111-8",
+                            unique_id="00:00:00:00:00:00_2_8",
                             unit_of_measurement=TEMP_CELSIUS,
                             state="18.9",
                         ),
@@ -81,7 +80,7 @@ async def test_velux_cover_setup(hass):
                             entity_id="sensor.velux_sensor_humidity_sensor",
                             friendly_name="VELUX Sensor Humidity sensor",
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                            unique_id="homekit-a11b111-11",
+                            unique_id="00:00:00:00:00:00_2_11",
                             unit_of_measurement=PERCENTAGE,
                             state="58",
                         ),
@@ -89,7 +88,7 @@ async def test_velux_cover_setup(hass):
                             entity_id="sensor.velux_sensor_carbon_dioxide_sensor",
                             friendly_name="VELUX Sensor Carbon Dioxide sensor",
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                            unique_id="homekit-a11b111-14",
+                            unique_id="00:00:00:00:00:00_2_14",
                             unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                             state="400",
                         ),

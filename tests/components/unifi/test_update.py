@@ -1,8 +1,8 @@
 """The tests for the UniFi Network update platform."""
 from copy import deepcopy
 
-from aiounifi.controller import MESSAGE_DEVICE
-from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
+from aiounifi.models.message import MessageKey
+from aiounifi.websocket import WebsocketState
 from yarl import URL
 
 from homeassistant.components.unifi.const import CONF_SITE_ID
@@ -24,8 +24,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_controller import DESCRIPTION, setup_unifi_integration
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_1 = {
     "board_rev": 3,
@@ -57,16 +60,16 @@ DEVICE_2 = {
 }
 
 
-async def test_no_entities(hass, aioclient_mock):
+async def test_no_entities(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 0
 
 
-async def test_device_updates(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+async def test_device_updates(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some devices."""
     device_1 = deepcopy(DEVICE_1)
     await setup_unifi_integration(
@@ -102,12 +105,7 @@ async def test_device_updates(
     # Simulate start of update
 
     device_1["state"] = 4
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MESSAGE_DEVICE},
-            "data": [device_1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     device_1_state = hass.states.get("update.device_1")
@@ -122,12 +120,7 @@ async def test_device_updates(
     device_1["version"] = "4.3.17.11279"
     device_1["upgradable"] = False
     del device_1["upgrade_to_firmware"]
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MESSAGE_DEVICE},
-            "data": [device_1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     device_1_state = hass.states.get("update.device_1")
@@ -137,7 +130,9 @@ async def test_device_updates(
     assert device_1_state.attributes[ATTR_IN_PROGRESS] is False
 
 
-async def test_not_admin(hass, aioclient_mock):
+async def test_not_admin(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that the INSTALL feature is not available on a non-admin account."""
     description = deepcopy(DESCRIPTION)
     description[0]["site_role"] = "not admin"
@@ -157,7 +152,9 @@ async def test_not_admin(hass, aioclient_mock):
     )
 
 
-async def test_install(hass, aioclient_mock):
+async def test_install(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the device update install call."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[DEVICE_1]
@@ -188,9 +185,7 @@ async def test_install(hass, aioclient_mock):
     )
 
 
-async def test_controller_state_change(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocket):
     """Verify entities state reflect on controller becoming unavailable."""
     await setup_unifi_integration(
         hass,
@@ -202,13 +197,13 @@ async def test_controller_state_change(
     assert hass.states.get("update.device_1").state == STATE_ON
 
     # Controller unavailable
-    mock_unifi_websocket(state=STATE_DISCONNECTED)
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     assert hass.states.get("update.device_1").state == STATE_UNAVAILABLE
 
     # Controller available
-    mock_unifi_websocket(state=STATE_RUNNING)
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
     await hass.async_block_till_done()
 
     assert hass.states.get("update.device_1").state == STATE_ON

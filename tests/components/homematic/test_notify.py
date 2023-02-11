@@ -1,12 +1,12 @@
 """The tests for the Homematic notification platform."""
-
 import homeassistant.components.notify as notify_comp
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
 
-async def test_setup_full(hass):
+async def test_setup_full(hass: HomeAssistant) -> None:
     """Test valid configuration."""
     await async_setup_component(
         hass,
@@ -32,7 +32,7 @@ async def test_setup_full(hass):
     assert handle_config[notify_comp.DOMAIN]
 
 
-async def test_setup_without_optional(hass):
+async def test_setup_without_optional(hass: HomeAssistant) -> None:
     """Test valid configuration without optional."""
     await async_setup_component(
         hass,
@@ -57,7 +57,7 @@ async def test_setup_without_optional(hass):
     assert handle_config[notify_comp.DOMAIN]
 
 
-async def test_bad_config(hass):
+async def test_bad_config(hass: HomeAssistant) -> None:
     """Test invalid configuration."""
     config = {notify_comp.DOMAIN: {"name": "test", "platform": "homematic"}}
     with assert_setup_component(0) as handle_config:

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from typing import Any
 
 import aiopulse
 import async_timeout
@@ -10,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_ID
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -19,11 +21,13 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.discovered_hubs: dict[str, aiopulse.Hub] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if (
             user_input is not None
@@ -37,7 +41,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             entry.unique_id for entry in self._async_current_entries()
         }
 
-        hubs = []
+        hubs: list[aiopulse.Hub] = []
         with suppress(asyncio.TimeoutError):
             async with async_timeout.timeout(5):
                 async for hub in aiopulse.Hub.discover():
@@ -63,7 +67,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_create(self, hub):
+    async def async_create(self, hub: aiopulse.Hub) -> FlowResult:
         """Create the Acmeda Hub entry."""
         await self.async_set_unique_id(hub.id, raise_on_progress=False)
         return self.async_create_entry(title=hub.id, data={CONF_HOST: hub.host})

@@ -20,7 +20,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ecobee flow."""
         self._ecobee = None
 
@@ -76,8 +76,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data):
-        """
-        Import ecobee config from configuration.yaml.
+        """Import ecobee config from configuration.yaml.
 
         Triggered by async_setup only if a config entry doesn't already exist.
         If ecobee.conf exists, we will attempt to validate the credentials
@@ -94,7 +93,8 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         except (HomeAssistantError, KeyError):
             _LOGGER.debug(
-                "No valid ecobee.conf configuration found for import, delegating to user step"
+                "No valid ecobee.conf configuration found for import, delegating to"
+                " user step"
             )
             return await self.async_step_user(
                 user_input={
@@ -106,7 +106,8 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
             # Credentials found and validated; create the entry.
             _LOGGER.debug(
-                "Valid ecobee configuration found for import, creating configuration entry"
+                "Valid ecobee configuration found for import, creating configuration"
+                " entry"
             )
             return self.async_create_entry(
                 title=DOMAIN,

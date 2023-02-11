@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_DEFAULT_NAME, TEMP_CELSIUS
+from homeassistant.const import DEVICE_DEFAULT_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -71,7 +71,7 @@ async def async_setup_platform(
                 native_max_value=35.0,
                 native_step=1,
                 mode=NumberMode.BOX,
-                unit_of_measurement=TEMP_CELSIUS,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
             ),
         ]
     )

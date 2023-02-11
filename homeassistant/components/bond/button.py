@@ -274,8 +274,7 @@ async def async_setup_entry(
             )
         entities.extend(device_entities)
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class BondButtonEntity(BondEntity, ButtonEntity):
