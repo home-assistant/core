@@ -53,7 +53,7 @@
   "issues": {
     "deprecated_integration": {
       "title": "The Min/Max integration has been deprecated",
-      "description": "The Min/Max integration has been deprecated.\n\nThe functionality has been moved into Group sensor.\n\nRemove this integration and recreate your sensor using the Group sensor instead."
+      "description": "The Min/Max integration has been deprecated.\n\nThe functionality has been moved into Group sensor.\n\nYour Group Sensor(s) has been automatically created and the Min/Max integration can be safely removed."
     }
   }
 }
