@@ -1994,6 +1994,15 @@ def _statistics_at_time(
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
+_TYPE_TO_ROW_ATTR = {
+    "mean": "mean",
+    "min": "min",
+    "max": "max",
+    "state": "state",
+    "sum": "sum",
+}
+
+
 def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
@@ -2042,6 +2051,10 @@ def _sorted_statistics_to_dict(
             for stat in tmp:
                 stats_by_meta_id[stat.metadata_id].insert(0, stat)
 
+    wanted_rows = {
+        row: db_attr for row, db_attr in _TYPE_TO_ROW_ATTR.items() if row in types
+    }
+    want_last_reset = "last_reset" in types
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -2051,32 +2064,37 @@ def _sorted_statistics_to_dict(
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+            _fetch = _get_row_fetcher_statistic_to_display_unit_converter(
+                unit, state_unit, units
+            )
         else:
-            convert = None
-        ent_results = result[statistic_id]
-        for db_state in stats_list:
-            start_ts = db_state.start_ts
-            row: dict[str, Any] = {
-                "start": start_ts,
+            _fetch = getattr
+        result[statistic_id].extend(
+            {
+                "start": (start_ts := db_state.start_ts),
                 "end": start_ts + table_duration_seconds,
             }
-            if "mean" in types:
-                row["mean"] = convert(db_state.mean) if convert else db_state.mean
-            if "min" in types:
-                row["min"] = convert(db_state.min) if convert else db_state.min
-            if "max" in types:
-                row["max"] = convert(db_state.max) if convert else db_state.max
-            if "last_reset" in types:
-                row["last_reset"] = db_state.last_reset_ts
-            if "state" in types:
-                row["state"] = convert(db_state.state) if convert else db_state.state
-            if "sum" in types:
-                row["sum"] = convert(db_state.sum) if convert else db_state.sum
-
-            ent_results.append(row)
+            | ({"last_reset": db_state.last_reset_ts} if want_last_reset else {})
+            | {row: _fetch(db_state, db_attr) for row, db_attr in wanted_rows.items()}
+            for db_state in stats_list
+        )
 
     return result
+
+
+def _get_row_fetcher_statistic_to_display_unit_converter(
+    statistic_unit: str | None,
+    state_unit: str | None,
+    requested_units: dict[str, str] | None,
+) -> Callable[[Row, str], float | None]:
+    """Return a function to fetch a row attribute and convert it to the requested unit."""
+    if (
+        _converter := _get_statistic_to_display_unit_converter(
+            statistic_unit, state_unit, requested_units
+        )
+    ) is not None:
+        return lambda db_state, db_attr: _converter(getattr(db_state, db_attr))  # type: ignore[misc]
+    return getattr
 
 
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
