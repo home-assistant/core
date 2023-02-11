@@ -24,6 +24,16 @@ DISCOVERY_INFO = usb.UsbServiceInfo(
 )
 
 
+DEVICE_NAME = usb.human_readable_device_name(
+    DISCOVERY_INFO.device,
+    DISCOVERY_INFO.serial_number,
+    DISCOVERY_INFO.manufacturer,
+    DISCOVERY_INFO.description,
+    DISCOVERY_INFO.vid,
+    DISCOVERY_INFO.pid,
+)
+
+
 DEVICE_INFO = DeviceInfo(
     device_mac_id=bytes.fromhex("abcdef0123456789"),
     install_code=None,

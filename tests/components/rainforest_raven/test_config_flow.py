@@ -8,14 +8,13 @@ from serial.serialutil import SerialException
 import serial.tools.list_ports
 
 from homeassistant import data_entry_flow
-from homeassistant.components import usb
 from homeassistant.components.rainforest_raven.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
 from . import create_mock_device
-from .const import DISCOVERY_INFO, METER_LIST
+from .const import DEVICE_NAME, DISCOVERY_INFO, METER_LIST
 
 from tests.common import MockConfigEntry
 
@@ -139,14 +138,7 @@ async def test_flow_user(hass: HomeAssistant, mock_comports, mock_device):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_DEVICE: usb.human_readable_device_name(
-                DISCOVERY_INFO.device,
-                DISCOVERY_INFO.serial_number,
-                DISCOVERY_INFO.manufacturer,
-                DISCOVERY_INFO.description,
-                DISCOVERY_INFO.vid,
-                DISCOVERY_INFO.pid,
-            )
+            CONF_DEVICE: DEVICE_NAME,
         },
     )
     assert result
@@ -207,14 +199,7 @@ async def test_flow_user_cannot_connect(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data={
-            CONF_DEVICE: usb.human_readable_device_name(
-                DISCOVERY_INFO.device,
-                DISCOVERY_INFO.serial_number,
-                DISCOVERY_INFO.manufacturer,
-                DISCOVERY_INFO.description,
-                DISCOVERY_INFO.vid,
-                DISCOVERY_INFO.pid,
-            )
+            CONF_DEVICE: DEVICE_NAME,
         },
     )
     assert result
@@ -230,14 +215,7 @@ async def test_flow_user_timeout_connect(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data={
-            CONF_DEVICE: usb.human_readable_device_name(
-                DISCOVERY_INFO.device,
-                DISCOVERY_INFO.serial_number,
-                DISCOVERY_INFO.manufacturer,
-                DISCOVERY_INFO.description,
-                DISCOVERY_INFO.vid,
-                DISCOVERY_INFO.pid,
-            )
+            CONF_DEVICE: DEVICE_NAME,
         },
     )
     assert result
@@ -253,14 +231,7 @@ async def test_flow_user_parse_error(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data={
-            CONF_DEVICE: usb.human_readable_device_name(
-                DISCOVERY_INFO.device,
-                DISCOVERY_INFO.serial_number,
-                DISCOVERY_INFO.manufacturer,
-                DISCOVERY_INFO.description,
-                DISCOVERY_INFO.vid,
-                DISCOVERY_INFO.pid,
-            )
+            CONF_DEVICE: DEVICE_NAME,
         },
     )
     assert result
@@ -277,14 +248,7 @@ async def test_flow_user_invalid_mac(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data={
-            CONF_DEVICE: usb.human_readable_device_name(
-                DISCOVERY_INFO.device,
-                DISCOVERY_INFO.serial_number,
-                DISCOVERY_INFO.manufacturer,
-                DISCOVERY_INFO.description,
-                DISCOVERY_INFO.vid,
-                DISCOVERY_INFO.pid,
-            )
+            CONF_DEVICE: DEVICE_NAME,
         },
     )
     assert result
@@ -310,14 +274,7 @@ async def test_flow_user_invalid_type(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data={
-            CONF_DEVICE: usb.human_readable_device_name(
-                DISCOVERY_INFO.device,
-                DISCOVERY_INFO.serial_number,
-                DISCOVERY_INFO.manufacturer,
-                DISCOVERY_INFO.description,
-                DISCOVERY_INFO.vid,
-                DISCOVERY_INFO.pid,
-            )
+            CONF_DEVICE: DEVICE_NAME,
         },
     )
     assert result
