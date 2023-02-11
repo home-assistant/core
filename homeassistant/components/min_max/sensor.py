@@ -96,7 +96,13 @@ async def async_setup_entry(
         translation_key="deprecated_integration",
     )
 
-    input_config = config_entry.options.copy()
+    input_config = {
+        "ignore_non_numeric": False,
+        "entities": config_entry.options[CONF_ENTITY_IDS],
+        "hide_members": False,
+        "type": config_entry.options[CONF_TYPE],
+        "name": config_entry.options[CONF_NAME],
+    }
 
     await hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -148,6 +154,22 @@ async def async_setup_platform(
     sensor_type: str = config[CONF_TYPE]
     round_digits: int = config[CONF_ROUND_DIGITS]
     unique_id = config.get(CONF_UNIQUE_ID)
+
+    input_config = {
+        "ignore_non_numeric": False,
+        "entities": entity_ids,
+        "hide_members": False,
+        "type": sensor_type,
+        "name": name,
+    }
+
+    await hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            "group",
+            context={"source": SOURCE_IMPORT},
+            data=input_config,
+        )
+    )
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
