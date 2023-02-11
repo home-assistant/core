@@ -10,134 +10,37 @@ from homeassistant import config_entries
 from homeassistant.components.dormakaba_dkey.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
 
-from . import DKEY_DISCOVERY_INFO, NOT_DKEY_DISCOVERY_INFO
+from . import DKEY_DISCOVERY_INFO
 
 from tests.common import MockConfigEntry
 
 
-async def test_user_step_success(hass: HomeAssistant) -> None:
-    """Test user step success path."""
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.async_discovered_service_info",
-        return_value=[NOT_DKEY_DISCOVERY_INFO, DKEY_DISCOVERY_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ADDRESS: DKEY_DISCOVERY_INFO.address,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "associate"
-    assert result["errors"] is None
-
-    await _test_common_success(hass, result)
-
-
-async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
-    """Test user step with no devices found."""
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.async_discovered_service_info",
-        return_value=[NOT_DKEY_DISCOVERY_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
-    """Test user step with only existing devices found."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ADDRESS: DKEY_DISCOVERY_INFO.address,
-        },
-        unique_id=DKEY_DISCOVERY_INFO.address,
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.async_discovered_service_info",
-        return_value=[DKEY_DISCOVERY_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_user_step_device_added_between_steps_1(hass: HomeAssistant) -> None:
-    """Test the device gets added via another flow between steps."""
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.async_discovered_service_info",
-        return_value=[DKEY_DISCOVERY_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DKEY_DISCOVERY_INFO.address,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"address": DKEY_DISCOVERY_INFO.address},
-    )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_async_step_user_takes_precedence_over_discovery(hass):
-    """Test manual setup takes precedence over discovery."""
-    result = await hass.config_entries.flow.async_init(
+async def test_user_step(hass: HomeAssistant) -> None:
+    """Test user step when there is a discovery flow."""
+    await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=DKEY_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
-
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.async_discovered_service_info",
-        return_value=[DKEY_DISCOVERY_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        assert result["type"] == FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ADDRESS: DKEY_DISCOVERY_INFO.address,
-        },
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "associate"
-    assert result["errors"] is None
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_additional_devices_found"
+    return
 
-    await _test_common_success(hass, result)
 
-    # Verify the discovery flow was aborted
-    assert not hass.config_entries.flow.async_progress(DOMAIN)
+async def test_user_step_no_discovery_flow(hass: HomeAssistant) -> None:
+    """Test user step with no discovery flows."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+    return
 
 
 async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
@@ -155,12 +58,6 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "associate"
     assert result["errors"] is None
-
-    await _test_common_success(hass, result)
-
-
-async def _test_common_success(hass: HomeAssistant, result: FlowResult) -> None:
-    """Test bluetooth and user flow success paths."""
 
     with patch(
         "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
@@ -294,3 +191,33 @@ async def test_bluetooth_step_cannot_associate(hass: HomeAssistant, exc, error) 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "associate"
     assert result["errors"] == {"base": error}
+
+
+async def test_unignore_flow(hass: HomeAssistant) -> None:
+    """Test a config flow started by unignoring a device."""
+    # Create ignored entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={
+            "unique_id": DKEY_DISCOVERY_INFO.address,
+            "title": DKEY_DISCOVERY_INFO.name,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["context"]["unique_id"] == DKEY_DISCOVERY_INFO.address
+
+    # Unignore and expect rediscover call to bluetooth
+    with patch(
+        "homeassistant.components.dormakaba_dkey.config_flow.async_rediscover_address",
+    ) as rediscover_mock:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_UNIGNORE},
+            data={"unique_id": DKEY_DISCOVERY_INFO.address},
+        )
+    rediscover_mock.assert_called_once_with(hass, DKEY_DISCOVERY_INFO.address)
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"

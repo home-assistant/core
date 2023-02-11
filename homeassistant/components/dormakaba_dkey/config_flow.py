@@ -5,13 +5,13 @@ import logging
 from typing import Any
 
 from bleak import BleakError
-from py_dormakaba_dkey import DKEYLock, device_filter, errors as dkey_errors
+from py_dormakaba_dkey import DKEYLock, errors as dkey_errors
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
-    async_discovered_service_info,
+    async_rediscover_address,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
@@ -43,48 +43,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the user step to pick discovered device."""
-        errors: dict[str, str] = {}
+        """Handle the user step.
 
-        if user_input is not None:
-            address = user_input[CONF_ADDRESS]
-            await self.async_set_unique_id(address, raise_on_progress=False)
-            # Guard against the user selecting a device which has been configured by
-            # another flow.
-            self._abort_if_unique_id_configured()
-            self._discovery_info = self._discovered_devices[address]
-            return await self.async_step_associate()
-
-        current_addresses = self._async_current_ids()
-        for discovery in async_discovered_service_info(self.hass):
-            if (
-                discovery.address in current_addresses
-                or discovery.address in self._discovered_devices
-                or not device_filter(discovery.advertisement)
-            ):
-                continue
-            self._discovered_devices[discovery.address] = discovery
-
-        if not self._discovered_devices:
-            return self.async_abort(reason="no_devices_found")
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_ADDRESS): vol.In(
-                    {
-                        service_info.address: (
-                            f"{service_info.name} ({service_info.address})"
-                        )
-                        for service_info in self._discovered_devices.values()
-                    }
-                ),
-            }
-        )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=data_schema,
-            errors=errors,
-        )
+        The user will be shown a list of matching discovery flows automatically,
+        so we just abort a user flow.
+        """
+        if self._async_in_progress(include_uninitialized=True):
+            return self.async_abort(reason="no_additional_devices_found")
+        return self.async_abort(reason="no_devices_found")
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -155,3 +121,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="associate", data_schema=STEP_ASSOCIATE_SCHEMA, errors=errors
         )
+
+    async def async_step_unignore(self, user_input: dict[str, Any]) -> FlowResult:
+        """Unignore an ignored bluetooth discovery flow."""
+        async_rediscover_address(self.hass, user_input["unique_id"])
+        return self.async_abort(reason="already_in_progress")
