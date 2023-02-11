@@ -65,26 +65,29 @@ BINARY_SENSORS = [
         value_fn=lambda data: data.alert["alert_install_pending"],
     ),
     StarlinkBinarySensorEntityDescription(
-        key="roaming",
-        name="Roaming mode",
-        value_fn=lambda data: data.alert["alert_roaming"],
-    ),
-    StarlinkBinarySensorEntityDescription(
         key="currently_obstructed",
         name="Obstructed",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda data: data.status["currently_obstructed"],
     ),
     StarlinkBinarySensorEntityDescription(
+        key="roaming",
+        name="Roaming mode",
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.alert["alert_roaming"],
+    ),
+    StarlinkBinarySensorEntityDescription(
         key="heating",
         name="Heating",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_is_heating"],
     ),
     StarlinkBinarySensorEntityDescription(
         key="power_save_idle",
         name="Idle",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_is_power_save_idle"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -92,6 +95,7 @@ BINARY_SENSORS = [
         name="Mast near vertical",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_mast_not_near_vertical"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -99,6 +103,7 @@ BINARY_SENSORS = [
         name="Motors stuck",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_motors_stuck"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -106,6 +111,7 @@ BINARY_SENSORS = [
         name="Ethernet speeds",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_slow_ethernet_speeds"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -113,6 +119,7 @@ BINARY_SENSORS = [
         name="Thermal throttle",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_thermal_throttle"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -120,6 +127,7 @@ BINARY_SENSORS = [
         name="Unexpected location",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: data.alert["alert_unexpected_location"],
     ),
 ]
