@@ -17,6 +17,7 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
     PassiveBluetoothDataUpdateCoordinator,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -59,7 +60,11 @@ class MyCoordinator(PassiveBluetoothDataUpdateCoordinator):
         super()._async_handle_bluetooth_event(service_info, change)
 
 
-async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapters):
+async def test_basic_usage(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test basic usage of the PassiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     coordinator = MyCoordinator(
@@ -88,8 +93,10 @@ async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapte
 
 
 async def test_context_compatiblity_with_data_update_coordinator(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test contexts can be passed for compatibility with DataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     coordinator = MyCoordinator(
@@ -124,8 +131,10 @@ async def test_context_compatiblity_with_data_update_coordinator(
 
 
 async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test that the coordinator goes unavailable when the bluetooth stack no longer sees the device."""
     start_monotonic = time.monotonic()
     with patch(
@@ -181,8 +190,10 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
 
 async def test_passive_bluetooth_coordinator_entity(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test integration of PassiveBluetoothDataUpdateCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     coordinator = MyCoordinator(

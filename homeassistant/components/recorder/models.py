@@ -16,7 +16,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.json import json_loads_object
 import homeassistant.util.dt as dt_util
 
 from .const import SupportedDialect
@@ -122,6 +122,20 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
         return dt_util.utc_to_timestamp(ts)
     return ts.timestamp()
+
+
+def datetime_to_timestamp_or_none(dt: datetime | None) -> float | None:
+    """Convert a datetime to a timestamp."""
+    if dt is None:
+        return None
+    return dt_util.utc_to_timestamp(dt)
+
+
+def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:
+    """Convert a timestamp to a datetime."""
+    if not ts:
+        return None
+    return dt_util.utc_from_timestamp(ts)
 
 
 class LazyStatePreSchema31(State):
@@ -347,7 +361,7 @@ def decode_attributes_from_row(
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
     try:
-        attr_cache[source] = attributes = json_loads(source)
+        attr_cache[source] = attributes = json_loads_object(source)
     except ValueError:
         _LOGGER.exception("Error converting row to state attributes: %s", source)
         attr_cache[source] = attributes = {}

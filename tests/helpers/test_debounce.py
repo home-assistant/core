@@ -1,10 +1,11 @@
 """Tests for debounce."""
 from unittest.mock import AsyncMock
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 
 
-async def test_immediate_works(hass):
+async def test_immediate_works(hass: HomeAssistant) -> None:
     """Test immediate works."""
     calls = []
     debouncer = debounce.Debouncer(
@@ -57,7 +58,7 @@ async def test_immediate_works(hass):
     assert debouncer._job.target == debouncer.function
 
 
-async def test_not_immediate_works(hass):
+async def test_not_immediate_works(hass: HomeAssistant) -> None:
     """Test immediate works."""
     calls = []
     debouncer = debounce.Debouncer(
@@ -107,7 +108,7 @@ async def test_not_immediate_works(hass):
     assert debouncer._job.target == debouncer.function
 
 
-async def test_immediate_works_with_function_swapped(hass):
+async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> None:
     """Test immediate works and we can change out the function."""
     calls = []
 

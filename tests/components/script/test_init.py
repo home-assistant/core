@@ -1,5 +1,4 @@
 """The tests for the Script component."""
-
 import asyncio
 from datetime import timedelta
 from unittest.mock import Mock, patch
@@ -43,6 +42,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service, mock_restore_cache
 from tests.components.logbook.common import MockRow, mock_humanify
+from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "script.test"
 
@@ -53,7 +53,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "script")
 
 
-async def test_passing_variables(hass):
+async def test_passing_variables(hass: HomeAssistant) -> None:
     """Test different ways of passing in variables."""
     mock_restore_cache(hass, ())
     calls = []
@@ -410,7 +410,7 @@ async def test_reload_unchanged_script(hass, calls, script_config):
         assert len(calls) == 2
 
 
-async def test_service_descriptions(hass):
+async def test_service_descriptions(hass: HomeAssistant) -> None:
     """Test that service descriptions are loaded and reloaded correctly."""
     # Test 1: has "description" but no "fields"
     assert await async_setup_component(
@@ -485,7 +485,7 @@ async def test_service_descriptions(hass):
     assert descriptions[DOMAIN]["turn_on"]["name"] == "Turn on"
 
 
-async def test_shared_context(hass):
+async def test_shared_context(hass: HomeAssistant) -> None:
     """Test that the shared context is passed down the chain."""
     event = "test_event"
     context = Context()
@@ -524,7 +524,9 @@ async def test_shared_context(hass):
     assert state.context == context
 
 
-async def test_logging_script_error(hass, caplog):
+async def test_logging_script_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test logging script error."""
     assert await async_setup_component(
         hass,
@@ -539,7 +541,7 @@ async def test_logging_script_error(hass, caplog):
     assert "Error executing script" in caplog.text
 
 
-async def test_turning_no_scripts_off(hass):
+async def test_turning_no_scripts_off(hass: HomeAssistant) -> None:
     """Test it is possible to turn two scripts off."""
     assert await async_setup_component(hass, "script", {})
 
@@ -549,7 +551,7 @@ async def test_turning_no_scripts_off(hass):
     )
 
 
-async def test_async_get_descriptions_script(hass):
+async def test_async_get_descriptions_script(hass: HomeAssistant) -> None:
     """Test async_set_service_schema for the script integration."""
     script_config = {
         DOMAIN: {
@@ -583,7 +585,7 @@ async def test_async_get_descriptions_script(hass):
     )
 
 
-async def test_extraction_functions(hass):
+async def test_extraction_functions(hass: HomeAssistant) -> None:
     """Test extraction functions."""
     assert await async_setup_component(
         hass,
@@ -656,7 +658,7 @@ async def test_extraction_functions(hass):
     }
 
 
-async def test_config_basic(hass):
+async def test_config_basic(hass: HomeAssistant) -> None:
     """Test passing info in config."""
     assert await async_setup_component(
         hass,
@@ -682,7 +684,7 @@ async def test_config_basic(hass):
     assert entry.unique_id == "test_script"
 
 
-async def test_config_multiple_domains(hass):
+async def test_config_multiple_domains(hass: HomeAssistant) -> None:
     """Test splitting configuration over multiple domains."""
     assert await async_setup_component(
         hass,
@@ -712,7 +714,7 @@ async def test_config_multiple_domains(hass):
     assert test_script.name == "Secondary domain"
 
 
-async def test_logbook_humanify_script_started_event(hass):
+async def test_logbook_humanify_script_started_event(hass: HomeAssistant) -> None:
     """Test humanifying script started event."""
     hass.config.components.add("recorder")
     await async_setup_component(hass, DOMAIN, {})
@@ -829,7 +831,9 @@ async def test_concurrent_script(hass, concurrently):
     assert not script.is_on(hass, "script.script2")
 
 
-async def test_script_variables(hass, caplog):
+async def test_script_variables(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test defining scripts."""
     assert await async_setup_component(
         hass,
@@ -926,7 +930,9 @@ async def test_script_variables(hass, caplog):
     assert mock_calls[3].data["value"] == 1
 
 
-async def test_script_this_var_always(hass, caplog):
+async def test_script_this_var_always(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test script always has reference to this, even with no variabls are configured."""
 
     assert await async_setup_component(
@@ -1216,7 +1222,9 @@ async def test_setup_with_duplicate_scripts(
     assert len(hass.states.async_entity_ids("script")) == 1
 
 
-async def test_websocket_config(hass, hass_ws_client):
+async def test_websocket_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test config command."""
     config = {
         "alias": "hello",
@@ -1361,7 +1369,9 @@ async def test_blueprint_script_bad_config(
     assert details in caplog.text
 
 
-async def test_blueprint_script_fails_substitution(hass, caplog):
+async def test_blueprint_script_fails_substitution(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test blueprint script with bad inputs."""
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",

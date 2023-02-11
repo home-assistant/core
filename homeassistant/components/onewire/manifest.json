@@ -1,12 +1,12 @@
 {
   "domain": "onewire",
   "name": "1-Wire",
-  "integration_type": "hub",
-  "documentation": "https://www.home-assistant.io/integrations/onewire",
-  "config_flow": true,
-  "requirements": ["pyownet==0.10.0.post1"],
   "codeowners": ["@garbled1", "@epenet"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/onewire",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyownet"],
-  "quality_scale": "gold"
+  "quality_scale": "gold",
+  "requirements": ["pyownet==0.10.0.post1"]
 }

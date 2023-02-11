@@ -8,7 +8,7 @@ import pytest
 from homeassistant.util import process
 
 
-async def test_kill_process():
+async def test_kill_process() -> None:
     """Test killing a process."""
     sleeper = subprocess.Popen(
         "sleep 1000",

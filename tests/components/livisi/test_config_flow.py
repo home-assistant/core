@@ -1,5 +1,4 @@
 """Test the Livisi Home Assistant config flow."""
-
 from unittest.mock import patch
 
 from aiolivisi import errors as livisi_errors
@@ -8,6 +7,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.livisi.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
 
 from . import (
     VALID_CONFIG,
@@ -17,7 +17,7 @@ from . import (
 )
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create LIVISI entity."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
+from homeassistant.core import HomeAssistant
 
 
 async def test_duplicate_error(hass, config_entry):
@@ -25,7 +26,7 @@ async def test_duplicate_error(hass, config_entry):
     assert result["errors"] == {"base": "already_configured"}
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     flow = config_flow.GeonetnzVolcanoFlowHandler()
     flow.hass = hass
@@ -36,7 +37,7 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_step_import(hass):
+async def test_step_import(hass: HomeAssistant) -> None:
     """Test that the import step works."""
     conf = {
         CONF_LATITUDE: -41.2,
@@ -66,7 +67,7 @@ async def test_step_import(hass):
     }
 
 
-async def test_step_user(hass):
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     hass.config.latitude = -41.2
     hass.config.longitude = 174.7

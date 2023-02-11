@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 import pytest
-import voluptuous
+import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.homekit.const import (
@@ -11,8 +11,7 @@ from homeassistant.components.homekit.const import (
     SHORT_BRIDGE_NAME,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntry, RegistryEntryHider
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
@@ -1416,7 +1415,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
     # sonos_config_switch.entity_id is a config category entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(voluptuous.error.MultipleInvalid):
+    with pytest.raises(vol.error.MultipleInvalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_config_switch.entity_id]},
@@ -1506,7 +1505,7 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
 
     # sonos_hidden_switch.entity_id is a hidden entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(voluptuous.error.MultipleInvalid):
+    with pytest.raises(vol.error.MultipleInvalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_hidden_switch.entity_id]},
