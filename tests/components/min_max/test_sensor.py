@@ -20,6 +20,8 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
+from tests.components.repairs import get_repairs
+from tests.typing import WebSocketGenerator
 
 VALUES = [17, 20, 15.3]
 VALUES_ERROR = [17, "string", 15.3]
@@ -33,6 +35,27 @@ MEDIAN = round(statistics.median(VALUES), 2)
 RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
 RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 SUM_VALUE = sum(VALUES)
+
+
+async def test_deprecated_setup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test integration creates repair issue."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "type": "min",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(DOMAIN)
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    assert issues[0]["issue_id"] == "deprecated_integration"
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
