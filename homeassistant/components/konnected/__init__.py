@@ -293,7 +293,7 @@ class KonnectedView(HomeAssistantView):
     name = "api:konnected"
     requires_auth = False  # Uses access token from configuration
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the view."""
 
     @staticmethod

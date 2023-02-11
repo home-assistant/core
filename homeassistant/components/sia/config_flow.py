@@ -100,7 +100,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SIAOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self._data: dict[str, Any] = {}
         self._options: Mapping[str, Any] = {CONF_ACCOUNTS: {}}

@@ -2,8 +2,7 @@
 
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

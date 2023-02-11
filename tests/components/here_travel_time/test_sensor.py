@@ -471,7 +471,7 @@ async def test_route_not_found(hass: HomeAssistant, caplog):
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Test sensor restore state."""
     # Home assistant is not running yet
     hass.state = CoreState.not_running

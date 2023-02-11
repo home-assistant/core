@@ -9,6 +9,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
@@ -42,7 +43,7 @@ INTEGRATION_DISCOVERY = {
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +72,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_enters_dns_name(hass):
+async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
     """Test we reject dns names and want ips."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,7 +138,7 @@ async def test_user_form_exceptions(hass, side_effect, error_base):
     assert result2["errors"] == {"base": error_base}
 
 
-async def test_form_updates_unique_id(hass):
+async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
     """Test a duplicate id aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -340,7 +341,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_ret
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_setup_via_discovery(hass):
+async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     """Test setting up via discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -409,7 +410,7 @@ async def test_setup_via_discovery(hass):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_setup_via_discovery_cannot_connect(hass):
+async def test_setup_via_discovery_cannot_connect(hass: HomeAssistant) -> None:
     """Test setting up via discovery and we fail to connect to the discovered device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -441,7 +442,7 @@ async def test_setup_via_discovery_cannot_connect(hass):
     assert result3["reason"] == "cannot_connect"
 
 
-async def test_setup_via_discovery_exception_finds_nothing(hass):
+async def test_setup_via_discovery_exception_finds_nothing(hass: HomeAssistant) -> None:
     """Test we do not find anything if discovery throws."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -462,7 +463,7 @@ async def test_setup_via_discovery_exception_finds_nothing(hass):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_with_firmware_update(hass):
+async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
     """Test we check the device again between first discovery and config entry creation."""
     with _patch_wizlight(
         device=None,

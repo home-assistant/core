@@ -13,6 +13,7 @@ from homeassistant.components.feedreader import (
     EVENT_FEEDREADER,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -76,7 +77,7 @@ def fixture_feed_storage():
         yield
 
 
-async def test_setup_one_feed(hass):
+async def test_setup_one_feed(hass: HomeAssistant) -> None:
     """Test the general setup of this component."""
     with patch(
         "homeassistant.components.feedreader.track_time_interval"
@@ -87,7 +88,7 @@ async def test_setup_one_feed(hass):
         track_method.assert_called_once_with(hass, mock.ANY, DEFAULT_SCAN_INTERVAL)
 
 
-async def test_setup_scan_interval(hass):
+async def test_setup_scan_interval(hass: HomeAssistant) -> None:
     """Test the setup of this component with scan interval."""
     with patch(
         "homeassistant.components.feedreader.track_time_interval"
@@ -98,7 +99,7 @@ async def test_setup_scan_interval(hass):
         track_method.assert_called_once_with(hass, mock.ANY, timedelta(seconds=60))
 
 
-async def test_setup_max_entries(hass):
+async def test_setup_max_entries(hass: HomeAssistant) -> None:
     """Test the setup of this component with max entries."""
     assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_3)
     await hass.async_block_till_done()

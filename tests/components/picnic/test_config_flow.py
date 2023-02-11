@@ -8,6 +8,7 @@ import requests
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -66,7 +67,7 @@ async def test_form(hass, picnic_api):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid authentication."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,7 +90,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle connection errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -112,7 +113,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_exception(hass):
+async def test_form_exception(hass: HomeAssistant) -> None:
     """Test we handle random exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -201,7 +202,7 @@ async def test_step_reauth(hass, picnic_api):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_step_reauth_failed(hass):
+async def test_step_reauth_failed(hass: HomeAssistant) -> None:
     """Test the re-auth flow when authentication fails."""
     # Create a mocked config entry
     user_id = "f29-2a6-o32n"

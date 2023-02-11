@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
@@ -312,7 +312,7 @@ async def test_setup_valid_device_class(hass, start_ha):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_creating_sensor_loads_group(hass):
+async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
     """Test setting up template sensor loads group component first."""
     order = []
     after_dep_event = Event()
@@ -445,7 +445,9 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-async def test_no_template_match_all(hass, caplog):
+async def test_no_template_match_all(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we allow static templates."""
     hass.states.async_set("sensor.test_sensor", "startup")
 
@@ -917,7 +919,9 @@ async def test_self_referencing_entity_picture_loop(hass, start_ha, caplog_setup
     assert int(state.state) == 1
 
 
-async def test_self_referencing_icon_with_no_loop(hass, caplog):
+async def test_self_referencing_icon_with_no_loop(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a self referencing icon that does not loop."""
 
     hass.states.async_set("sensor.heartworm_high_80", 10)
@@ -1214,7 +1218,7 @@ async def test_config_top_level(hass, start_ha):
     assert state.attributes["state_class"] == "measurement"
 
 
-async def test_trigger_entity_available(hass):
+async def test_trigger_entity_available(hass: HomeAssistant) -> None:
     """Test trigger entity availability works."""
     assert await async_setup_component(
         hass,
@@ -1255,7 +1259,7 @@ async def test_trigger_entity_available(hass):
     assert state.state == "unavailable"
 
 
-async def test_trigger_entity_device_class_parsing_works(hass):
+async def test_trigger_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
     """Test trigger entity device class parsing works."""
     assert await async_setup_component(
         hass,
@@ -1299,7 +1303,7 @@ async def test_trigger_entity_device_class_parsing_works(hass):
     assert ts_state.state == now.isoformat(timespec="seconds")
 
 
-async def test_trigger_entity_device_class_errors_works(hass):
+async def test_trigger_entity_device_class_errors_works(hass: HomeAssistant) -> None:
     """Test trigger entity device class errors works."""
     assert await async_setup_component(
         hass,
@@ -1342,7 +1346,7 @@ async def test_trigger_entity_device_class_errors_works(hass):
     assert ts_state.state == STATE_UNKNOWN
 
 
-async def test_entity_device_class_parsing_works(hass):
+async def test_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
     """Test entity device class parsing works."""
     # State of timestamp sensors are always in UTC
     now = dt_util.utcnow()
@@ -1381,7 +1385,7 @@ async def test_entity_device_class_parsing_works(hass):
     assert ts_state.state == now.isoformat(timespec="seconds")
 
 
-async def test_entity_device_class_errors_works(hass):
+async def test_entity_device_class_errors_works(hass: HomeAssistant) -> None:
     """Test entity device class errors works."""
     assert await async_setup_component(
         hass,

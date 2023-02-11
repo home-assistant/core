@@ -3,10 +3,15 @@ from datetime import timedelta
 
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
 from homeassistant.components.knx.schema import BinarySensorSchema
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from .conftest import KNXTestKit

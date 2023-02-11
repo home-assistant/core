@@ -1,11 +1,11 @@
 {
   "domain": "tractive",
   "name": "Tractive",
+  "codeowners": ["@Danielhiversen", "@zhulik", "@bieniu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tractive",
-  "requirements": ["aiotractive==0.5.5"],
-  "codeowners": ["@Danielhiversen", "@zhulik", "@bieniu"],
+  "integration_type": "device",
   "iot_class": "cloud_push",
   "loggers": ["aiotractive"],
-  "integration_type": "device"
+  "requirements": ["aiotractive==0.5.5"]
 }
