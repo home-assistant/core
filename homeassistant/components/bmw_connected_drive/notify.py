@@ -52,9 +52,16 @@ def get_service(
 class BMWNotificationService(BaseNotificationService):
     """Send Notifications to BMW."""
 
+    vehicle_targets: dict[str, MyBMWVehicle]
+
     def __init__(self, targets: dict[str, MyBMWVehicle]) -> None:
         """Set up the notification service."""
-        self.targets: dict[str, MyBMWVehicle] = targets
+        self.vehicle_targets = targets
+
+    @property
+    def targets(self) -> dict[str, Any] | None:
+        """Return a dictionary of registered targets."""
+        return self.vehicle_targets
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message or POI to the car."""

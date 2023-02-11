@@ -1,7 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "ipv6_not_supported": "IPv6 no es compatible."
-        }
-    }
-}

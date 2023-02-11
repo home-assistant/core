@@ -8,13 +8,12 @@ import pytest
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, State
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, mock_registry
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
@@ -29,7 +28,9 @@ def mock_conf(hass, cloud_prefs):
     )
 
 
-async def test_google_update_report_state(mock_conf, hass, cloud_prefs):
+async def test_google_update_report_state(
+    mock_conf, hass: HomeAssistant, cloud_prefs
+) -> None:
     """Test Google config responds to updating preference."""
     await mock_conf.async_initialize()
     await mock_conf.async_connect_agent_user("mock-user-id")
@@ -47,8 +48,8 @@ async def test_google_update_report_state(mock_conf, hass, cloud_prefs):
 
 
 async def test_google_update_report_state_subscription_expired(
-    mock_conf, hass, cloud_prefs
-):
+    mock_conf, hass: HomeAssistant, cloud_prefs
+) -> None:
     """Test Google config not reporting state when subscription has expired."""
     await mock_conf.async_initialize()
     await mock_conf.async_connect_agent_user("mock-user-id")
@@ -65,7 +66,7 @@ async def test_google_update_report_state_subscription_expired(
     assert len(mock_report_state.mock_calls) == 0
 
 
-async def test_sync_entities(mock_conf, hass, cloud_prefs):
+async def test_sync_entities(mock_conf, hass: HomeAssistant, cloud_prefs) -> None:
     """Test sync devices."""
     await mock_conf.async_initialize()
     await mock_conf.async_connect_agent_user("mock-user-id")
@@ -83,7 +84,9 @@ async def test_sync_entities(mock_conf, hass, cloud_prefs):
         assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
+async def test_google_update_expose_trigger_sync(
+    hass: HomeAssistant, cloud_prefs
+) -> None:
     """Test Google config responds to updating exposed entities."""
     with freeze_time(utcnow()):
         config = CloudGoogleConfig(
@@ -127,7 +130,9 @@ async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
+async def test_google_entity_registry_sync(
+    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+) -> None:
     """Test Google config responds to entity registry."""
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
@@ -191,7 +196,9 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
         assert len(mock_sync.mock_calls) == 3
 
 
-async def test_google_device_registry_sync(hass, mock_cloud_login, cloud_prefs):
+async def test_google_device_registry_sync(
+    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+) -> None:
     """Test Google config responds to device registry."""
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
@@ -250,7 +257,9 @@ async def test_google_device_registry_sync(hass, mock_cloud_login, cloud_prefs):
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_sync_google_when_started(hass, mock_cloud_login, cloud_prefs):
+async def test_sync_google_when_started(
+    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+) -> None:
     """Test Google config syncs on init."""
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
@@ -262,7 +271,9 @@ async def test_sync_google_when_started(hass, mock_cloud_login, cloud_prefs):
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_sync_google_on_home_assistant_start(hass, mock_cloud_login, cloud_prefs):
+async def test_sync_google_on_home_assistant_start(
+    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+) -> None:
     """Test Google config syncs when home assistant started."""
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
@@ -278,10 +289,10 @@ async def test_sync_google_on_home_assistant_start(hass, mock_cloud_login, cloud
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
+async def test_google_config_expose_entity_prefs(
+    hass: HomeAssistant, mock_conf, cloud_prefs, entity_registry: er.EntityRegistry
+) -> None:
     """Test Google config should expose using prefs."""
-    entity_registry = mock_registry(hass)
-
     entity_entry1 = entity_registry.async_get_or_create(
         "light",
         "test",
@@ -351,7 +362,9 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     assert not mock_conf.should_expose(state)
 
 
-def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs):
+def test_enabled_requires_valid_sub(
+    hass: HomeAssistant, mock_expired_cloud_login, cloud_prefs
+) -> None:
     """Test that google config enabled requires a valid Cloud sub."""
     assert cloud_prefs.google_enabled
     assert hass.data["cloud"].is_logged_in
@@ -364,7 +377,7 @@ def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs)
     assert not config.enabled
 
 
-async def test_setup_integration(hass, mock_conf, cloud_prefs):
+async def test_setup_integration(hass: HomeAssistant, mock_conf, cloud_prefs) -> None:
     """Test that we set up the integration if used."""
     mock_conf._cloud.subscription_expired = False
 
@@ -381,7 +394,9 @@ async def test_setup_integration(hass, mock_conf, cloud_prefs):
     assert "google_assistant" in hass.config.components
 
 
-async def test_google_handle_logout(hass, cloud_prefs, mock_cloud_login):
+async def test_google_handle_logout(
+    hass: HomeAssistant, cloud_prefs, mock_cloud_login
+) -> None:
     """Test Google config responds to logging out."""
     gconf = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)

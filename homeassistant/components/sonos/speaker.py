@@ -359,7 +359,8 @@ class SonosSpeaker:
         if any(isinstance(result, Exception) for result in results):
             raise SonosSubscriptionsFailed
 
-        # Create a polling task in case subscriptions fail or callback events do not arrive
+        # Create a polling task in case subscriptions fail
+        # or callback events do not arrive
         if not self._poll_timer:
             self._poll_timer = async_track_time_interval(
                 self.hass,

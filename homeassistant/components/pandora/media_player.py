@@ -68,8 +68,8 @@ class PandoraMediaPlayer(MediaPlayerEntity):
     """A media player that uses the Pianobar interface to Pandora."""
 
     _attr_media_content_type = MediaType.MUSIC
-    # MediaPlayerEntityFeature.VOLUME_SET is close to available but we need volume up/down
-    # controls in the GUI.
+    # MediaPlayerEntityFeature.VOLUME_SET is close to available
+    # but we need volume up/down controls in the GUI.
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.TURN_ON

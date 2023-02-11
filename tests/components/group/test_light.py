@@ -44,13 +44,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass):
+async def test_default_state(hass: HomeAssistant) -> None:
     """Test light group default state."""
     hass.states.async_set("light.kitchen", "on")
     await async_setup_component(
@@ -87,7 +88,7 @@ async def test_default_state(hass):
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting_any(hass):
+async def test_state_reporting_any(hass: HomeAssistant) -> None:
     """Test the state reporting in 'any' mode.
 
     The group state is unavailable if all group members are unavailable.
@@ -175,7 +176,7 @@ async def test_state_reporting_any(hass):
     assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
 
 
-async def test_state_reporting_all(hass):
+async def test_state_reporting_all(hass: HomeAssistant) -> None:
     """Test the state reporting in 'all' mode.
 
     The group state is unavailable if all group members are unavailable.
@@ -875,7 +876,7 @@ async def test_min_max_mireds(hass, enable_custom_integrations):
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 1234567890
 
 
-async def test_effect_list(hass):
+async def test_effect_list(hass: HomeAssistant) -> None:
     """Test effect_list reporting."""
     await async_setup_component(
         hass,
@@ -935,7 +936,7 @@ async def test_effect_list(hass):
     }
 
 
-async def test_effect(hass):
+async def test_effect(hass: HomeAssistant) -> None:
     """Test effect reporting."""
     await async_setup_component(
         hass,
@@ -1178,7 +1179,7 @@ async def test_color_mode2(hass, enable_custom_integrations):
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
 
 
-async def test_supported_features(hass):
+async def test_supported_features(hass: HomeAssistant) -> None:
     """Test supported features reporting."""
     await async_setup_component(
         hass,
@@ -1361,7 +1362,7 @@ async def test_service_calls(hass, enable_custom_integrations, supported_color_m
     assert state.attributes[ATTR_RGB_COLOR] == (255, 0, 0)
 
 
-async def test_service_call_effect(hass):
+async def test_service_call_effect(hass: HomeAssistant) -> None:
     """Test service calls."""
     await async_setup_component(
         hass,
@@ -1416,7 +1417,7 @@ async def test_service_call_effect(hass):
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
 
-async def test_invalid_service_calls(hass):
+async def test_invalid_service_calls(hass: HomeAssistant) -> None:
     """Test invalid service call arguments get discarded."""
     add_entities = MagicMock()
     await group.async_setup_platform(
@@ -1461,7 +1462,7 @@ async def test_invalid_service_calls(hass):
         )
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test the ability to reload lights."""
     await async_setup_component(
         hass,
@@ -1504,7 +1505,7 @@ async def test_reload(hass):
     assert hass.states.get("light.outside_patio_lights_g") is not None
 
 
-async def test_reload_with_platform_not_setup(hass):
+async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     """Test the ability to reload lights."""
     hass.states.async_set("light.bowl", STATE_ON)
     await async_setup_component(
@@ -1542,7 +1543,9 @@ async def test_reload_with_platform_not_setup(hass):
     assert hass.states.get("light.outside_patio_lights_g") is not None
 
 
-async def test_reload_with_base_integration_platform_not_setup(hass):
+async def test_reload_with_base_integration_platform_not_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test the ability to reload lights."""
     assert await async_setup_component(
         hass,
@@ -1577,7 +1580,7 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
     assert hass.states.get("light.outside_patio_lights_g").state == STATE_OFF
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested light group."""
     await async_setup_component(
         hass,

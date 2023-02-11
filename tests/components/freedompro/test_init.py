@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.freedompro.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +21,7 @@ async def test_async_setup_entry(hass, init_integration):
     assert state is not None
 
 
-async def test_config_not_ready(hass):
+async def test_config_not_ready(hass: HomeAssistant) -> None:
     """Test for setup failure if connection to Freedompro is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,

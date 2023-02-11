@@ -14,7 +14,7 @@ from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(

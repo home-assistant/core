@@ -6,11 +6,12 @@ from pykoplenti import AuthenticationException
 
 from homeassistant import config_entries
 from homeassistant.components.kostal_plenticore.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_formx(hass):
+async def test_formx(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -63,7 +64,7 @@ async def test_formx(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -97,7 +98,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -131,7 +132,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"host": "cannot_connect"}
 
 
-async def test_form_unexpected_error(hass):
+async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -165,7 +166,7 @@ async def test_form_unexpected_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_already_configured(hass):
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured error."""
     MockConfigEntry(
         domain="kostal_plenticore",

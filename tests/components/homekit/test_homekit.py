@@ -47,7 +47,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistantError, State
+from homeassistant.core import HomeAssistant, HomeAssistantError, State
 from homeassistant.helpers import device_registry, entity_registry as er, instance_id
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -488,7 +488,7 @@ async def test_homekit_entity_glob_filter_with_config_entities(
     """Test the entity filter with configuration entities."""
     entry = await async_init_integration(hass)
 
-    from homeassistant.helpers.entity import EntityCategory
+    from homeassistant.const import EntityCategory
     from homeassistant.helpers.entity_registry import RegistryEntry
 
     select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
@@ -744,7 +744,7 @@ async def test_homekit_start_with_a_device(
     await homekit.async_stop()
 
 
-async def test_homekit_stop(hass):
+async def test_homekit_stop(hass: HomeAssistant) -> None:
     """Test HomeKit stop method."""
     entry = await async_init_integration(hass)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)

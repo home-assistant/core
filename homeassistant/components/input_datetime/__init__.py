@@ -5,6 +5,7 @@ import datetime as py_datetime
 import logging
 from typing import Any
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -250,14 +251,14 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             )
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> InputDatetime:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_dt = cls(config)
         input_dt.editable = True
         return input_dt
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> InputDatetime:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_dt = cls(config)
         input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

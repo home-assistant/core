@@ -247,6 +247,7 @@ homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.repairs.*
+homeassistant.components.rest.*
 homeassistant.components.rfxtrx.*
 homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
@@ -299,6 +300,7 @@ homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
+homeassistant.components.tplink_omada.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.trafikverket_ferry.*

@@ -1,5 +1,4 @@
 """The sensor tests for the AEMET OpenData platform."""
-
 from unittest.mock import patch
 
 from homeassistant.components.weather import (
@@ -7,12 +6,13 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SNOWY,
 )
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .util import async_init_integration
 
 
-async def test_aemet_forecast_create_sensors(hass):
+async def test_aemet_forecast_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of forecast sensors."""
 
     hass.config.set_time_zone("UTC")
@@ -73,7 +73,7 @@ async def test_aemet_forecast_create_sensors(hass):
     assert state is None
 
 
-async def test_aemet_weather_create_sensors(hass):
+async def test_aemet_weather_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of weather sensors."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")

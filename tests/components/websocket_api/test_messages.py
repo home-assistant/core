@@ -1,15 +1,14 @@
 """Test Websocket API messages module."""
-
 from homeassistant.components.websocket_api.messages import (
     _cached_event_message as lru_event_cache,
     cached_event_message,
     message_to_json,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 
-async def test_cached_event_message(hass):
+async def test_cached_event_message(hass: HomeAssistant) -> None:
     """Test that we cache event messages."""
 
     events = []
@@ -47,7 +46,7 @@ async def test_cached_event_message(hass):
     assert cache_info.currsize == 2
 
 
-async def test_cached_event_message_with_different_idens(hass):
+async def test_cached_event_message_with_different_idens(hass: HomeAssistant) -> None:
     """Test that we cache event messages when the subscrition idens differ."""
 
     events = []
