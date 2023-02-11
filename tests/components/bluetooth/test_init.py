@@ -998,7 +998,7 @@ async def test_rediscovery(
         inject_advertisement(hass, switchbot_device, switchbot_adv_2)
         await hass.async_block_till_done()
 
-        assert len(mock_config_flow.mock_calls) == 2
+        assert len(mock_config_flow.mock_calls) == 3
         assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
 
 
