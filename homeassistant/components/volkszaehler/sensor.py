@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MIDDLEWARE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
@@ -78,6 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_MIDDLEWARE, default=True): cv.boolean,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["average"]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
@@ -97,10 +99,11 @@ async def async_setup_platform(
     name: str = config[CONF_NAME]
     port: int = config[CONF_PORT]
     uuid: str = config[CONF_UUID]
+    middleware: bool = config[CONF_MIDDLEWARE]
     conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
 
     session = async_get_clientsession(hass)
-    vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
+    vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port, middleware=middleware))
 
     await vz_api.async_update()
 
