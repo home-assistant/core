@@ -13,6 +13,7 @@ import time
 from typing import TYPE_CHECKING, Any, cast
 import uuid
 
+import async_timeout
 import attr
 import certifi
 
@@ -741,7 +742,8 @@ class MQTT:
         # may be executed first.
         await self._register_mid(mid)
         try:
-            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
+            async with async_timeout.timeout(TIMEOUT_ACK):
+                await self._pending_operations[mid].wait()
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
