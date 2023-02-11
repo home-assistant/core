@@ -1,11 +1,11 @@
 {
   "domain": "asus_router",
   "name": "Asus Router",
-  "integration_type": "hub",
-  "documentation": "https://www.home-assistant.io/integrations/asus_router",
-  "config_flow": true,
   "codeowners": ["@vaskivskyi"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/asus_router",
+  "integration_type": "hub",
   "iot_class": "local_polling",
-  "requirements": ["asusrouter==0.18.2"],
-  "loggers": ["asusrouter"]
+  "loggers": ["asusrouter"],
+  "requirements": ["asusrouter==0.18.2"]
 }
