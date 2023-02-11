@@ -1,7 +1,6 @@
 """Test adding external statistics from southern_company."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -15,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt
 
-from . import HOURLY_DATA, HOURLY_DATA_MISSING, async_init_integration
+from . import HOURLY_DATA, HOURLY_DATA_MISSING, MockedApi, async_init_integration
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
@@ -85,8 +84,7 @@ async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
 
 async def test_update_coordinator_no_jwt(recorder_mock: Recorder, hass: HomeAssistant):
     """Ensure if a coordinator update happens, and there is no jwt, then we report update failed."""
-    api_mock = AsyncMock()
-    api_mock.jwt = None
+    api_mock = MockedApi(None, [])
     coordinator = SouthernCompanyCoordinator(hass, api_mock)
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -94,8 +92,7 @@ async def test_update_coordinator_no_jwt(recorder_mock: Recorder, hass: HomeAssi
 
 async def test_statistics_no_jwt(recorder_mock: Recorder, hass: HomeAssistant):
     """Ensure if a statistic update happens, and there is no jwt, then we report update failed."""
-    api_mock = AsyncMock()
-    api_mock.jwt = None
+    api_mock = MockedApi(None, [])
     coordinator = SouthernCompanyCoordinator(hass, api_mock)
     with pytest.raises(UpdateFailed):
         await coordinator._insert_statistics()

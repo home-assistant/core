@@ -1,8 +1,8 @@
 """Tests for the Southern Company integration."""
 import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from southern_company_api.account import HourlyEnergyUsage, MonthlyUsage
+from southern_company_api.account import Account, HourlyEnergyUsage, MonthlyUsage
 
 from homeassistant.components.southern_company import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -130,6 +130,64 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
     return entry
 
 
+class MockedAccount:
+    """Mock Southern Company account."""
+
+    def __init__(
+        self,
+        name: str,
+        number: str,
+        month_data: list[MonthlyUsage],
+        hourly_data: list[HourlyEnergyUsage],
+    ) -> None:
+        """Mock a account object."""
+        self.name = name
+        self.number = number
+        self.month_data = month_data
+        self.hourly_data = hourly_data
+
+    async def get_month_data(self, jwt: str) -> list[MonthlyUsage]:
+        """Mock get month data of account."""
+        return self.month_data
+
+    async def get_hourly_data(
+        self, jwt: str, time: datetime.datetime, end_time: datetime.datetime
+    ) -> list[HourlyEnergyUsage]:
+        """Mock get hourly data of account."""
+        return self.hourly_data
+
+
+class MockedApi:
+    """Mock SouthernCompanyAPI."""
+
+    def __init__(self, jwt, accounts) -> None:
+        """Create a mocked version of the api."""
+        self._jwt = jwt
+        self._accounts = accounts
+
+    @property
+    async def jwt(self):
+        """Get jwt of api."""
+        return self._jwt
+
+    @property
+    async def accounts(self):
+        """Get account of api."""
+        return self._accounts
+
+    async def get_accounts(self) -> MockedAccount | Account:
+        """Get account of api."""
+        return self._accounts
+
+    async def authenticate(self) -> bool:
+        """Authenticate api."""
+        return True
+
+    async def get_jwt(self) -> str:
+        """Get jwt of api."""
+        return self._jwt
+
+
 async def async_init_integration(
     hass: HomeAssistant,
     hourly_data: list[HourlyEnergyUsage] = HOURLY_DATA,
@@ -140,20 +198,8 @@ async def async_init_integration(
     with patch(
         "homeassistant.components.southern_company.SouthernCompanyAPI"
     ) as api_mock:
-        account_mock = AsyncMock()
-        account_mock.number = "1"
-        account_mock.get_month_data.return_value = MONTH_DATA
-        account_mock.get_hourly_data.return_value = hourly_data
-        api_mock.return_value.accounts = [account_mock]
-        api_mock.return_value.get_accounts = AsyncMock()
-        api_mock.return_value.get_accounts.return_value = [account_mock]
-
-        api_mock.return_value.authenticate = AsyncMock()
-        api_mock.return_value.authenticate.return_value = True
-        api_mock.return_value.get_jwt = AsyncMock()
-        api_mock.return_value.get_jwt.return_value = jwt
-        api_mock.return_value.jwt = jwt
-
+        account_mock = MockedAccount("test_account", "1", MONTH_DATA, hourly_data)
+        api_mock.return_value = MockedApi(jwt, [account_mock])
         entry = create_entry(hass)
         if not skip_setup:
             await hass.config_entries.async_setup(entry.entry_id)

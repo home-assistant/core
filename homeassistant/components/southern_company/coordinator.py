@@ -47,13 +47,13 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
         self,
     ) -> dict[str, southern_company_api.account.MonthlyUsage]:
         """Update data via API."""
-        if self._southern_company_connection.jwt is not None:
+        if await self._southern_company_connection.jwt is not None:
             account_month_data: dict[
                 str, southern_company_api.account.MonthlyUsage
             ] = {}
-            for account in self._southern_company_connection.accounts:
+            for account in await self._southern_company_connection.accounts:
                 account_month_data[account.number] = await account.get_month_data(
-                    self._southern_company_connection.jwt
+                    await self._southern_company_connection.jwt
                 )
             # Note: insert statistics can be somewhat slow on first setup.
             await self._insert_statistics()
@@ -62,9 +62,9 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
 
     async def _insert_statistics(self) -> None:
         """Insert Southern Company statistics."""
-        if self._southern_company_connection.jwt is None:
+        if await self._southern_company_connection.jwt is None:
             raise UpdateFailed("Jwt is None")
-        for account in self._southern_company_connection.accounts:
+        for account in await self._southern_company_connection.accounts:
             cost_statistic_id = f"{DOMAIN}:energy_" f"cost_" f"{account.number}"
             usage_statistic_id = f"{DOMAIN}:energy_" f"usage_" f"{account.number}"
 
@@ -76,7 +76,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                 hourly_data = await account.get_hourly_data(
                     datetime.datetime.now() - timedelta(days=365),
                     datetime.datetime.now(),
-                    self._southern_company_connection.jwt,
+                    await self._southern_company_connection.jwt,
                 )
 
                 _cost_sum = 0.0
@@ -90,7 +90,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                 hourly_data = await account.get_hourly_data(
                     datetime.datetime.now() - timedelta(days=31),
                     datetime.datetime.now(),
-                    self._southern_company_connection.jwt,
+                    await self._southern_company_connection.jwt,
                 )
 
                 from_time = hourly_data[0].time

@@ -4,7 +4,6 @@ from __future__ import annotations
 from southern_company_api.exceptions import (
     CantReachSouthernCompany,
     InvalidLogin,
-    NoJwtTokenFound,
     NoRequestTokenFound,
     NoScTokenFound,
 )
@@ -39,10 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     except InvalidLogin as err:
         raise ConfigEntryAuthFailed("Login incorrect") from err
-    try:
-        await sca.get_accounts()  # We need to get all accounts each time we start up.
-    except (NoScTokenFound, NoJwtTokenFound) as err:
-        raise ConfigEntryNotReady("token missing while getting accounts") from err
     coordinator = SouthernCompanyCoordinator(hass, sca)
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator

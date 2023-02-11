@@ -107,7 +107,7 @@ async def async_setup_entry(
     coordinator: SouthernCompanyCoordinator = hass.data[DOMAIN][entry.entry_id]
     southern_company_connection = coordinator.api
     entities: list[SouthernCompanySensor] = []
-    for account in southern_company_connection.accounts:
+    for account in await southern_company_connection.accounts:
         device = DeviceInfo(
             identifiers={(DOMAIN, account.number)},
             name=f"Account {account.number}",
