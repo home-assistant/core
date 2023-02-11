@@ -52,8 +52,11 @@ async def test_service_setup_and_unload(
 @patch("homeassistant.core.ServiceRegistry.async_remove")
 @patch("homeassistant.core.ServiceRegistry.async_register")
 async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
-    register_service_mock, remove_service_mock, hass, aioclient_mock
-):
+    register_service_mock,
+    remove_service_mock,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Make sure that services are only setup and removed once."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
     register_service_mock.reset_mock()
