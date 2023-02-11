@@ -22,13 +22,16 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture
-def client(hass, hass_ws_client):
+async def client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(entity_registry.async_setup(hass))
-    return hass.loop.run_until_complete(hass_ws_client(hass))
+    await entity_registry.async_setup(hass)
+    return await hass_ws_client(hass)
 
 
 @pytest.fixture
@@ -144,7 +147,9 @@ async def test_list_entities(hass: HomeAssistant, client) -> None:
     ]
 
 
-async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
+async def test_list_entities_for_display(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test list entries."""
     mock_registry(
         hass,
@@ -214,7 +219,7 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
         },
     )
 
-    await client.send_json({"id": 5, "type": "config/entity_registry/list_for_display"})
+    await client.send_json_auto_id({"type": "config/entity_registry/list_for_display"})
     msg = await client.receive_json()
 
     assert msg["result"] == {
@@ -282,7 +287,7 @@ async def test_list_entities_for_display(hass: HomeAssistant, client) -> None:
         },
     )
 
-    await client.send_json({"id": 6, "type": "config/entity_registry/list_for_display"})
+    await client.send_json_auto_id({"type": "config/entity_registry/list_for_display"})
     msg = await client.receive_json()
 
     assert msg["result"] == {
