@@ -67,7 +67,7 @@ async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
     assert len(cost_stats[cost_statistic_id]) == 2
     _sum = 0
     for k, stat in enumerate(cost_stats[cost_statistic_id]):
-        assert stat["start"] == hourly_data[k].time
+        assert stat["start"] == hourly_data[k].time.timestamp()
         assert stat["state"] == hourly_data[k].cost
         assert stat["mean"] is None
         assert stat["min"] is None
@@ -145,7 +145,7 @@ async def test_statistics_missing_data(recorder_mock: Recorder, hass: HomeAssist
     assert len(cost_stats[cost_statistic_id]) == 2
     _sum = 0
     for k, stat in enumerate(cost_stats[cost_statistic_id]):
-        assert stat["start"] == hourly_data[k].time
+        assert stat["start"] == hourly_data[k].time.timestamp()
         assert stat["state"] == hourly_data[k].cost
         assert stat["mean"] is None
         assert stat["min"] is None
