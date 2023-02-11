@@ -120,35 +120,35 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         name="Average - tomorrow",
         service_type="tomorrow_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_tomorrow.average_price,
+        value_fn=lambda data: data.energy_tomorrow.average_price if data.energy_tomorrow else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="max_price",
         name="Highest price - tomorrow",
         service_type="tomorrow_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_tomorrow.extreme_prices[1],
+        value_fn=lambda data: data.energy_tomorrow.extreme_prices[1] if data.energy_tomorrow else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="min_price",
         name="Lowest price - tomorrow",
         service_type="tomorrow_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_tomorrow.extreme_prices[0],
+        value_fn=lambda data: data.energy_tomorrow.extreme_prices[0] if data.energy_tomorrow else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="highest_price_time",
         name="Time of highest price - tomorrow",
         service_type="tomorrow_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_tomorrow.highest_price_time,
+        value_fn=lambda data: data.energy_tomorrow.highest_price_time if data.energy_tomorrow else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="lowest_price_time",
         name="Time of lowest price - tomorrow",
         service_type="tomorrow_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_tomorrow.lowest_price_time,
+        value_fn=lambda data: data.energy_tomorrow.lowest_price_time if data.energy_tomorrow else None,
     )
 )
 
