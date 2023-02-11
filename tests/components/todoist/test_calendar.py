@@ -8,8 +8,8 @@ from todoist_api_python.models import Due, Label, Project, Task
 from homeassistant import setup
 from homeassistant.components.todoist.calendar import DOMAIN
 from homeassistant.const import CONF_TOKEN
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 
 
 @pytest.fixture(name="task")
@@ -28,7 +28,7 @@ def mock_task() -> Task:
             is_recurring=False, date=datetime.now().strftime("%Y-%m-%d"), string="today"
         ),
         id="1",
-        labels=["label1"],
+        labels=["Label1"],
         order=1,
         parent_id=None,
         priority=1,
@@ -60,7 +60,7 @@ def mock_api(task) -> AsyncMock:
         )
     ]
     api.get_labels.return_value = [
-        Label(id="1", name="label1", color="1", order=1, is_favorite=False)
+        Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
     ]
     api.get_collaborators.return_value = []
     api.get_tasks.return_value = [task]
@@ -107,7 +107,7 @@ async def test_update_entity_sets_labels_attribute_when_on(todoist_api, hass, ap
     await async_update_entity(hass, "calendar.name")
     state = hass.states.get("calendar.name")
     assert state.state == "on"
-    assert state.attributes["labels"] == ["label1"]
+    assert state.attributes["labels"] == ["Label1"]
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
