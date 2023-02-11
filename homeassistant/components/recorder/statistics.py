@@ -1036,6 +1036,12 @@ def _reduce_statistics(
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
     period_seconds = period.total_seconds()
+    _want_mean = "mean" in types
+    _want_min = "min" in types
+    _want_max = "max" in types
+    _want_last_reset = "last_reset" in types
+    _want_state = "state" in types
+    _want_sum = "sum" in types
     for statistic_id, stat_list in stats.items():
         max_values: list[float] = []
         mean_values: list[float] = []
@@ -1053,29 +1059,29 @@ def _reduce_statistics(
                     "start": start,
                     "end": end,
                 }
-                if "mean" in types:
+                if _want_mean:
                     row["mean"] = mean(mean_values) if mean_values else None
-                if "min" in types:
+                if _want_min:
                     row["min"] = min(min_values) if min_values else None
-                if "max" in types:
+                if _want_max:
                     row["max"] = max(max_values) if max_values else None
-                if "last_reset" in types:
+                if _want_last_reset:
                     row["last_reset"] = prev_stat.get("last_reset")
-                if "state" in types:
+                if _want_state:
                     row["state"] = prev_stat.get("state")
-                if "sum" in types:
+                if _want_sum:
                     row["sum"] = prev_stat["sum"]
                 result[statistic_id].append(row)
 
                 max_values = []
                 mean_values = []
                 min_values = []
-            if statistic.get("max") is not None:
-                max_values.append(statistic["max"])
-            if statistic.get("mean") is not None:
-                mean_values.append(statistic["mean"])
-            if statistic.get("min") is not None:
-                min_values.append(statistic["min"])
+            if _want_max and (_max := statistic.get("max")) is not None:
+                max_values.append(_max)
+            if _want_mean and (_mean := statistic.get("mean")) is not None:
+                mean_values.append(_mean)
+            if _want_min and (_min := statistic.get("min")) is not None:
+                min_values.append(_min)
             prev_stat = statistic
 
     return result
