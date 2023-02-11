@@ -104,44 +104,6 @@ async def test_user_step_device_added_between_steps_1(hass: HomeAssistant) -> No
     assert result["reason"] == "already_configured"
 
 
-async def test_user_step_device_added_between_steps_2(hass: HomeAssistant) -> None:
-    """Test the device gets added via another flow between steps."""
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.async_discovered_service_info",
-        return_value=[DKEY_DISCOVERY_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"address": DKEY_DISCOVERY_INFO.address},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "associate"
-    assert result["errors"] is None
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DKEY_DISCOVERY_INFO.address,
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.dormakaba_dkey.config_flow.DKEYLock.associate",
-        return_value=AssociationData(b"1234", b"AABBCCDD"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"activation_code": "1234-1234"}
-        )
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
 async def test_async_step_user_takes_precedence_over_discovery(hass):
     """Test manual setup takes precedence over discovery."""
     result = await hass.config_entries.flow.async_init(

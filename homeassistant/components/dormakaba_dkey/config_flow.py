@@ -49,6 +49,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
+            # Guard against the user selecting a device which has been configured by
+            # another flow.
             self._abort_if_unique_id_configured()
             self._discovery_info = self._discovered_devices[address]
             return await self.async_step_associate()
@@ -140,7 +142,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=lock.device_info.device_name
                 or lock.device_info.device_id
