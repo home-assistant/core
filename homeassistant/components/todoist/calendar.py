@@ -458,7 +458,7 @@ class TodoistProjectData:
 
         # All task Labels (optional parameter).
         task[LABELS] = [
-            label.name.lower() for label in self._labels if label.id in data.labels
+            label.name.lower() for label in self._labels if label.name in data.labels
         ]
 
         if self._label_whitelist and (

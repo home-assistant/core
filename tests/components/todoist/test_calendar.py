@@ -1,4 +1,5 @@
 """Unit tests for the Todoist calendar platform."""
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,6 +8,7 @@ from todoist_api_python.models import Due, Label, Project, Task
 from homeassistant import setup
 from homeassistant.components.todoist.calendar import DOMAIN
 from homeassistant.const import CONF_TOKEN
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers import entity_registry
 
 
@@ -22,9 +24,11 @@ def mock_task() -> Task:
         created_at="2021-10-01T00:00:00",
         creator_id="1",
         description="A task",
-        due=Due(is_recurring=False, date="2022-01-01", string="today"),
+        due=Due(
+            is_recurring=False, date=datetime.now().strftime("%Y-%m-%d"), string="today"
+        ),
         id="1",
-        labels=[],
+        labels=["label1"],
         order=1,
         parent_id=None,
         priority=1,
@@ -36,7 +40,7 @@ def mock_task() -> Task:
 
 
 @pytest.fixture(name="api")
-def mock_api() -> AsyncMock:
+def mock_api(task) -> AsyncMock:
     """Mock the api state."""
     api = AsyncMock()
     api.get_projects.return_value = [
@@ -59,6 +63,7 @@ def mock_api() -> AsyncMock:
         Label(id="1", name="label1", color="1", order=1, is_favorite=False)
     ]
     api.get_collaborators.return_value = []
+    api.get_tasks.return_value = [task]
     return api
 
 
@@ -81,6 +86,28 @@ async def test_calendar_entity_unique_id(todoist_api, hass, api):
     registry = entity_registry.async_get(hass)
     entity = registry.async_get("calendar.name")
     assert entity.unique_id == "12345"
+
+
+@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+async def test_update_entity_sets_labels_attribute_when_on(todoist_api, hass, api):
+    """Test the labels attr is set correctly on the state when an entity is on."""
+    todoist_api.return_value = api
+    assert await setup.async_setup_component(
+        hass,
+        "calendar",
+        {
+            "calendar": {
+                "platform": DOMAIN,
+                CONF_TOKEN: "token",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await async_update_entity(hass, "calendar.name")
+    state = hass.states.get("calendar.name")
+    assert state.state == "on"
+    assert state.attributes["labels"] == ["label1"]
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
