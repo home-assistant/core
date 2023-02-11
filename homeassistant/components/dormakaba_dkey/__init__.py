@@ -1,11 +1,9 @@
 """The Dormakaba dKey integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.errors import DKEY_EXCEPTIONS
 from py_dormakaba_dkey.models import AssociationData
@@ -18,7 +16,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ASSOCIATION_DATA, DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
+from .const import CONF_ASSOCIATION_DATA, DOMAIN, UPDATE_SECONDS
 from .models import DormakabaDkeyData
 
 PLATFORMS: list[Platform] = [Platform.LOCK]
@@ -65,8 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except DKEY_EXCEPTIONS as ex:
             raise UpdateFailed(str(ex)) from ex
 
-    startup_event = asyncio.Event()
-    cancel_first_update = lock.register_callback(lambda *_: startup_event.set())
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -74,23 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=_async_update,
         update_interval=timedelta(seconds=UPDATE_SECONDS),
     )
-
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
-        cancel_first_update()
-        raise
-
-    try:
-        async with async_timeout.timeout(DEVICE_TIMEOUT):
-            await startup_event.wait()
-    except asyncio.TimeoutError as ex:
-        raise ConfigEntryNotReady(
-            "Unable to communicate with the device; "
-            f"Try moving the Bluetooth adapter closer to {lock.name}"
-        ) from ex
-    finally:
-        cancel_first_update()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = DormakabaDkeyData(
         lock, coordinator
