@@ -7,7 +7,7 @@ from typing import Any, TypeVar
 _EnumT = TypeVar("_EnumT", bound=Enum)
 
 
-@lru_cache(maxsize=1042)
+@lru_cache(maxsize=1024)
 def try_parse_enum(cls: type[_EnumT], value: Any) -> _EnumT | None:
     """Try to parse the value into an Enum.
 
