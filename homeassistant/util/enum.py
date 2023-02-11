@@ -1,13 +1,23 @@
 """Helpers for working with enums."""
+from collections.abc import Callable
 import contextlib
 from enum import Enum
-from functools import lru_cache
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 _EnumT = TypeVar("_EnumT", bound=Enum)
 
+# https://github.com/python/mypy/issues/5107
+if TYPE_CHECKING:
+    _LruCacheT = TypeVar("_LruCacheT", bound=Callable)
 
-@lru_cache(maxsize=1042)
+    def lru_cache(func: _LruCacheT) -> _LruCacheT:
+        """Stub for lru_cache."""
+
+else:
+    from functools import lru_cache
+
+
+@lru_cache
 def try_parse_enum(cls: type[_EnumT], value: Any) -> _EnumT | None:
     """Try to parse the value into an Enum.
 
