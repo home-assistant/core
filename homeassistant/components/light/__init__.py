@@ -118,9 +118,11 @@ COLOR_MODES_COLOR = {
 class LightServices(StrEnum):
     """Additional service calls."""
 
+    # These overlap with TYPE_* in .action. Could be streamlined eventually
+    #  by importing them in .action from here.
     SERVICE_LIGHT_FLASH = "flash"
-    SERVICE_LIGHT_BRIGHTNESS_INC = "inc"
-    SERVICE_LIGHT_BRIGHTNESS_DEC = "dec"
+    SERVICE_LIGHT_BRIGHTNESS_INC = "brightness_increase"
+    SERVICE_LIGHT_BRIGHTNESS_DEC = "brightness_decrease"
 
 
 # mypy: disallow-any-generics
@@ -618,6 +620,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=None
         )
 
+    async def async_handle_brightness_inc_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
+        await async_handle_brightness_service(10, light, call)
+
+    async def async_handle_brightness_dec_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
+        await async_handle_brightness_service(-10, light, call)
+
+    async def async_handle_brightness_service(
+        step: int, light: LightEntity, call: ServiceCall
+    ) -> None:
+        """Handle stepping brightness up/down."""
+        if not brightness_supported(light.supported_color_modes):
+            return
+        data = {ATTR_ENTITY_ID: call.data[ATTR_ENTITY_ID]}
+        data[ATTR_BRIGHTNESS_STEP_PCT] = step
+
+        # We use the same logic as the action here.
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=None
+        )
+
     # Listen for light on and light off service calls.
 
     component.async_register_entity_service(
@@ -642,6 +668,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         LightServices.SERVICE_LIGHT_FLASH,
         vol.All(cv.make_entity_service_schema(LIGHT_FLASH_SCHEMA), preprocess_data),
         async_handle_flash_service,
+    )
+
+    component.async_register_entity_service(
+        LightServices.SERVICE_LIGHT_BRIGHTNESS_INC,
+        {},
+        async_handle_brightness_inc_service,
+    )
+
+    component.async_register_entity_service(
+        LightServices.SERVICE_LIGHT_BRIGHTNESS_DEC,
+        {},
+        async_handle_brightness_dec_service,
     )
 
     return True

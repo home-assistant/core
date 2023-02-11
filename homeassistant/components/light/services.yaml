@@ -593,3 +593,17 @@ flash:
               value: "long"
             - label: "Short"
               value: "short"
+brightness_increase:
+  name: Increase brightness
+  description: >
+    Increase brightness by 10%.
+  target:
+    entity:
+      domain: light
+brightness_decrease:
+  name: Decrease brightness
+  description: >
+    Decrease brightness by 10%.
+  target:
+    entity:
+      domain: light
