@@ -54,6 +54,10 @@
     "deprecated_integration": {
       "title": "The Min/Max integration has been deprecated",
       "description": "The Min/Max integration has been deprecated.\n\nThe functionality has been moved into Group sensor.\n\nYour Group Sensor(s) has been automatically created and the Min/Max integration can be safely removed."
+    },
+    "deprecated_integration_yaml": {
+      "title": "[%key:component::min_max::issues::deprecated_integration::title%]",
+      "description": "The Min/Max integration has been deprecated.\n\nThe functionality has been moved into Group sensor.\n\nDuring deprecation the yaml configuration will configure a Group Sensor helper.\nPlease reconfigure your yaml to use Group Sensor instead."
     }
   }
 }

@@ -8,6 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.group.sensor import SensorGroup
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
@@ -30,7 +31,6 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -38,7 +38,6 @@ from homeassistant.helpers.typing import (
     StateType,
 )
 
-from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,19 +95,19 @@ async def async_setup_entry(
         translation_key="deprecated_integration",
     )
 
-    input_config = {
+    import_config = {
         "ignore_non_numeric": False,
         "entities": config_entry.options[CONF_ENTITY_IDS],
         "hide_members": False,
         "type": config_entry.options[CONF_TYPE],
-        "name": config_entry.options[CONF_NAME],
+        "name": f"Sensor Group {config_entry.options[CONF_NAME]}",
     }
 
     await hass.async_create_task(
         hass.config_entries.flow.async_init(
             "group",
             context={"source": SOURCE_IMPORT},
-            data=input_config,
+            data=import_config,
         )
     )
 
@@ -146,35 +145,45 @@ async def async_setup_platform(
         breaks_in_ha_version="2023.4.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_integration",
+        translation_key="deprecated_integration_yaml",
     )
 
     entity_ids: list[str] = config[CONF_ENTITY_IDS]
     name: str | None = config.get(CONF_NAME)
     sensor_type: str = config[CONF_TYPE]
-    round_digits: int = config[CONF_ROUND_DIGITS]
     unique_id = config.get(CONF_UNIQUE_ID)
 
-    input_config = {
+    import_config = {
         "ignore_non_numeric": False,
         "entities": entity_ids,
         "hide_members": False,
         "type": sensor_type,
-        "name": name,
+        "name": f"Sensor Group {name}"
+        if name
+        else f"Sensor Group {sensor_type}".capitalize(),
     }
 
     await hass.async_create_task(
         hass.config_entries.flow.async_init(
             "group",
             context={"source": SOURCE_IMPORT},
-            data=input_config,
+            data=import_config,
         )
     )
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
     async_add_entities(
-        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
+        [
+            SensorGroup(
+                unique_id,
+                name if name else f"{sensor_type} sensor".capitalize(),
+                entity_ids,
+                False,
+                sensor_type,
+                None,
+                None,
+                None,
+            )
+        ]
     )
 
 
