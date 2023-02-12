@@ -1860,7 +1860,7 @@ whirlpool-sixth-sense==0.18.2
 whois==0.9.27
 
 # homeassistant.components.wiffi
-wiffi==1.1.0
+wiffi==1.1.2
 
 # homeassistant.components.withings
 withings-api==2.4.0
