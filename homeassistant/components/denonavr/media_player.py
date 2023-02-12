@@ -249,7 +249,7 @@ class DenonDevice(MediaPlayerEntity):
 
         self._receiver.register_callback("ALL", self._telnet_callback)
 
-        self._telnet_was_healthy = False
+        self._telnet_was_healthy: bool | None = None
 
     async def _telnet_callback(self, zone, event, parameter):
         """Process a telnet command callback."""
@@ -277,7 +277,13 @@ class DenonDevice(MediaPlayerEntity):
             await receiver.input.async_update_media_state()
             return
 
+        # if async_update raises an exception, we don't want to skip the next update
+        # so we set _telnet_was_healthy to None here and only set it to the value
+        # before the update if the update was successful
+        self._telnet_was_healthy = None
+
         await receiver.async_update()
+
         self._telnet_was_healthy = telnet_is_healthy
 
         if self._update_audyssey:
