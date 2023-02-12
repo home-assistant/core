@@ -1315,7 +1315,7 @@ async def test_statistics_during_period_empty_statistic_ids(
     )
     response = await client.receive_json()
     assert not response["success"]
-    assert response["error"]["code"] == "invalid_statistic_ids"
+    assert response["error"]["code"] == "invalid_format"
 
 
 @pytest.mark.parametrize(

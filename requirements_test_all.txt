@@ -399,7 +399,7 @@ brother==2.1.1
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==2.5.1
+bthome-ble==2.5.2
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1287,7 +1287,7 @@ pymeteoclimatic==0.0.6
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.1.1
+pymodbus==3.1.3
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1857,7 +1857,7 @@ whirlpool-sixth-sense==0.18.2
 whois==0.9.27
 
 # homeassistant.components.wiffi
-wiffi==1.1.0
+wiffi==1.1.2
 
 # homeassistant.components.withings
 withings-api==2.4.0

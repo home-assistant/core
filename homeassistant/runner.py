@@ -83,15 +83,12 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
         Back ported from cpython 3.12
         """
-        _LOGGER.warning("_init_watcher")
         with events._lock:  # type: ignore[attr-defined] # pylint: disable=protected-access
             if self._watcher is None:  # pragma: no branch
                 if can_use_pidfd():
                     self._watcher = asyncio.PidfdChildWatcher()
-                    _LOGGER.warning("PidfdChildWatcher")
                 else:
                     self._watcher = asyncio.ThreadedChildWatcher()
-                    _LOGGER.warning("ThreadedChildWatcher")
                 if threading.current_thread() is threading.main_thread():
                     self._watcher.attach_loop(
                         self._local._loop  # type: ignore[attr-defined] # pylint: disable=protected-access

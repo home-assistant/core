@@ -211,35 +211,6 @@ async def test_config_flow_user_initiated_unknown_failure_2(
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_config_flow_import(hass: HomeAssistant) -> None:
-    """Test for importing config from configuration.yaml."""
-    with patch(
-        "homeassistant.components.fibaro.FibaroClient.connect", return_value=True
-    ), patch(
-        "homeassistant.components.fibaro.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_URL: TEST_URL,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_IMPORT_PLUGINS: False,
-            },
-        )
-
-        assert result["type"] == "create_entry"
-        assert result["title"] == TEST_NAME
-        assert result["data"] == {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_IMPORT_PLUGINS: False,
-        }
-
-
 async def test_reauth_success(hass: HomeAssistant) -> None:
     """Successful reauth flow initialized by the user."""
     mock_config = MockConfigEntry(
