@@ -249,6 +249,8 @@ class DenonDevice(MediaPlayerEntity):
 
         self._receiver.register_callback("ALL", self._telnet_callback)
 
+        self._telnet_was_healthy: bool | None = None
+
     async def _telnet_callback(self, zone, event, parameter):
         """Process a telnet command callback."""
         if zone != self._receiver.zone:
@@ -263,16 +265,29 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_update(self) -> None:
         """Get the latest status information from device."""
+        receiver = self._receiver
+
+        # We can only skip the update if telnet was healthy after
+        # the last update and is still healthy now to ensure that
+        # we don't miss any state changes while telnet is down
+        # or reconnecting.
         if (
-            self._receiver.telnet_connected is True
-            and self._receiver.telnet_healthy is True
-        ):
-            await self._receiver.input.async_update_media_state()
+            telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
+        ) and self._telnet_was_healthy:
+            await receiver.input.async_update_media_state()
             return
 
-        await self._receiver.async_update()
+        # if async_update raises an exception, we don't want to skip the next update
+        # so we set _telnet_was_healthy to None here and only set it to the value
+        # before the update if the update was successful
+        self._telnet_was_healthy = None
+
+        await receiver.async_update()
+
+        self._telnet_was_healthy = telnet_is_healthy
+
         if self._update_audyssey:
-            await self._receiver.async_update_audyssey()
+            await receiver.async_update_audyssey()
 
     @property
     def state(self) -> MediaPlayerState | None:
