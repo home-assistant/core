@@ -12,6 +12,7 @@ from synology_dsm.exceptions import SynologyDSMException
 from homeassistant.components import http
 from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import (
+    BrowseError,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -72,7 +73,7 @@ class SynologyPhotosMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if not self.hass.data.get(DOMAIN):
-            raise Unresolvable("Diskstation not initialized")
+            raise BrowseError("Diskstation not initialized")
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
@@ -194,9 +195,6 @@ class SynologyPhotosMediaSource(MediaSource):
         self, item: SynoPhotosItem, diskstation: SynologyDSMData
     ) -> str:
         """Get thumbnail."""
-        if not self.hass.data.get(DOMAIN):
-            raise Unresolvable("Diskstation not initialized")
-
         try:
             thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
         except SynologyDSMException:
@@ -238,4 +236,5 @@ class SynologyDsmMediaView(http.HomeAssistantView):
             mode="wb", suffix=f".{file_extension}", delete=False
         ) as temp:
             temp.write(image)
-            return web.FileResponse(Path(temp.name))
+        return web.FileResponse(Path(temp.name))
+
