@@ -3,10 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
-    SensorEntity,
+    RestoreSensor,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -16,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -78,9 +79,7 @@ async def async_setup_entry(
     )
 
 
-class SpeedtestSensor(
-    CoordinatorEntity[SpeedTestDataCoordinator], RestoreEntity, SensorEntity
-):
+class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], RestoreSensor):
     """Implementation of a speedtest.net sensor."""
 
     entity_description: SpeedtestSensorEntityDescription
@@ -97,7 +96,7 @@ class SpeedtestSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = description.key
-        self._state: StateType = None
+        self._state: StateType | date | datetime | Decimal = None
         self._attrs: dict[str, Any] = {}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
@@ -107,7 +106,7 @@ class SpeedtestSensor(
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return native value for entity."""
         if self.coordinator.data:
             state = self.coordinator.data[self.entity_description.key]
@@ -138,5 +137,6 @@ class SpeedtestSensor(
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if state := await self.async_get_last_state():
-            self._state = state.state
+        state = await self.async_get_last_sensor_data()
+        if state:
+            self._state = state.native_value

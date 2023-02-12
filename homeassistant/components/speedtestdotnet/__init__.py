@@ -31,13 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Request a refresh."""
         await coordinator.async_request_refresh()
 
-    if hass.state == CoreState.running:
-        await coordinator.async_config_entry_first_refresh()
-    else:
-        # Running a speed test during startup can prevent
-        # integrations from being able to setup because it
-        # can saturate the network interface.
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _request_refresh)
+    if not config_entry.pref_disable_polling:
+        if hass.state == CoreState.running:
+            await coordinator.async_config_entry_first_refresh()
+        else:
+            # Running a speed test during startup can prevent
+            # integrations from being able to setup because it
+            # can saturate the network interface.
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _request_refresh)
 
     hass.data[DOMAIN] = coordinator
 
