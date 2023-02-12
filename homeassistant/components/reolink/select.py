@@ -21,8 +21,8 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkSelectEntityDescriptionMixin:
     """Mixin values for Reolink select entities."""
 
-    value: Callable[[Host, int | None], bool]
-    method: Callable[[Host, int | None, float], Any]
+    value: Callable[[Host, int | None], str]
+    method: Callable[[Host, int | None, str], Any]
 
 
 @dataclass
