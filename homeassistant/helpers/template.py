@@ -821,8 +821,8 @@ class TemplateStateBase(State):
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
-        if self._collect and _RENDER_INFO in self._hass.data:
-            self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
+        if self._collect and (_render_info := self._hass.data.get(_RENDER_INFO)):
+            _render_info.entities.add(self._entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -830,8 +830,8 @@ class TemplateStateBase(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if self._collect and _RENDER_INFO in self._hass.data:
-                self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
+            if self._collect and (_render_info := self._hass.data.get(_RENDER_INFO)):
+                _render_info.entities.add(self._entity_id)
             return getattr(self._state, item)
         if item == "entity_id":
             return self._entity_id
@@ -910,12 +910,13 @@ class TemplateStateBase(State):
         )
 
         self._collect_state()
-        unit = self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if rounded and split_entity_id(self._entity_id)[0] == SENSOR_DOMAIN:
+        if rounded and self._state.domain == SENSOR_DOMAIN:
             state = async_rounded_state(self._hass, self._entity_id, self._state)
         else:
             state = self._state.state
-        return f"{state} {unit}" if with_unit and unit else state
+        if with_unit and (unit := self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            return f"{state} {unit}"
+        return state
 
     def __eq__(self, other: Any) -> bool:
         """Ensure we collect on equality check."""
