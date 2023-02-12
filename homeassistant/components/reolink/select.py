@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import Host, SpotlightModeEnum
+from reolink_aio.api import DayNightEnum, Host, SpotlightModeEnum
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -36,13 +36,22 @@ class ReolinkSelectEntityDescription(
 
 SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
-        key="floodlight mode",
+        key="floodlight_mode",
         name="Floodlight mode",
         icon="mdi:spotlight-beam",
         options=[mode.name for mode in SpotlightModeEnum],
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
         method=lambda api, ch, value: api.set_whiteled(ch, mode=value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="day_night_mode",
+        name="Day night mode",
+        icon="mdi:theme-light-dark",
+        options=[mode.value for mode in DayNightEnum],
+        supported=lambda api, ch: api.supported(ch, "dayNight"),
+        value=lambda api, ch: api.daynight_state(ch),
+        method=lambda api, ch, value: api.set_daynight(ch, value),
     ),
 )
 
