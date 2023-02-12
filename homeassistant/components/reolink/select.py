@@ -7,7 +7,7 @@ from typing import Any
 
 from reolink_aio.api import Host, SpotlightModeEnum
 
-from homeassistant.components.select import (SelectEntity, SelectEntityDescription)
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
