@@ -10,15 +10,11 @@ from pyfibaro.fibaro_client import FibaroClient
 from pyfibaro.fibaro_device import DeviceModel
 from pyfibaro.fibaro_scene import SceneModel
 from requests.exceptions import HTTPError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ARMED,
     ATTR_BATTERY_LEVEL,
-    CONF_DEVICE_CLASS,
-    CONF_EXCLUDE,
-    CONF_ICON,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -31,22 +27,14 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COLOR = "color"
-CONF_DEVICE_CONFIG = "device_config"
-CONF_DIMMING = "dimming"
-CONF_GATEWAYS = "gateways"
-CONF_PLUGINS = "plugins"
-CONF_RESET_COLOR = "reset_color"
-CONF_WHITE_VALUE = "white_value"
+
 FIBARO_CONTROLLER = "fibaro_controller"
 FIBARO_DEVICES = "fibaro_devices"
 PLATFORMS = [
@@ -85,45 +73,6 @@ FIBARO_TYPEMAP = {
     "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
     "com.fibaro.accelerometer": Platform.BINARY_SENSOR,
 }
-
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
-    {
-        vol.Optional(CONF_DIMMING): cv.boolean,
-        vol.Optional(CONF_COLOR): cv.boolean,
-        vol.Optional(CONF_WHITE_VALUE): cv.boolean,
-        vol.Optional(CONF_RESET_COLOR): cv.boolean,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        vol.Optional(CONF_ICON): cv.string,
-    }
-)
-
-FIBARO_ID_LIST_SCHEMA = vol.Schema([cv.string])
-
-GATEWAY_CONFIG = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_URL): cv.url,
-        vol.Optional(CONF_PLUGINS, default=False): cv.boolean,
-        vol.Optional(CONF_EXCLUDE, default=[]): FIBARO_ID_LIST_SCHEMA,
-        vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
-            {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
-        ),
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {vol.Required(CONF_GATEWAYS): vol.All(cv.ensure_list, [GATEWAY_CONFIG])}
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 class FibaroController:
@@ -411,37 +360,6 @@ class FibaroController:
                     _LOGGER.debug("not handling separately")
             except (KeyError, ValueError):
                 pass
-
-
-async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
-    """Migrate configuration from configuration.yaml."""
-    if DOMAIN not in base_config:
-        return True
-    gateways = base_config[DOMAIN][CONF_GATEWAYS]
-    if gateways is None:
-        return True
-
-    # check if already configured
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-
-    for gateway in gateways:
-        # prepare new config based on configuration.yaml
-        conf = {
-            CONF_URL: gateway[CONF_URL],
-            CONF_USERNAME: gateway[CONF_USERNAME],
-            CONF_PASSWORD: gateway[CONF_PASSWORD],
-            CONF_IMPORT_PLUGINS: gateway[CONF_PLUGINS],
-        }
-
-        # import into config flow based configuration
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
 
 
 def _init_controller(data: Mapping[str, Any]) -> FibaroController:
