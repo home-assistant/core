@@ -11,8 +11,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -61,6 +61,6 @@ BUTTONS = [
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_fn=lambda coordinator: coordinator.reboot_starlink(),
+        press_fn=lambda coordinator: coordinator.async_reboot_starlink(),
     )
 ]

@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
@@ -25,7 +26,7 @@ from tests.common import async_mock_service
 orig_Profiles = light.Profiles
 
 
-async def test_methods(hass):
+async def test_methods(hass: HomeAssistant) -> None:
     """Test if methods call the services as expected."""
     # Test is_on
     hass.states.async_set("light.test", STATE_ON)
@@ -1011,7 +1012,7 @@ async def test_light_brightness_pct_conversion(hass, enable_custom_integrations)
     assert data["brightness"] == 255
 
 
-async def test_profiles(hass):
+async def test_profiles(hass: HomeAssistant) -> None:
     """Test profiles loading."""
     profiles = orig_Profiles(hass)
     await profiles.async_initialize()
@@ -1028,7 +1029,7 @@ async def test_profiles(hass):
 
 
 @patch("os.path.isfile", MagicMock(side_effect=(True, False)))
-async def test_profile_load_optional_hs_color(hass):
+async def test_profile_load_optional_hs_color(hass: HomeAssistant) -> None:
     """Test profile loading with profiles containing no xy color."""
 
     csv_file = """the first line is skipped
@@ -2348,7 +2349,7 @@ async def test_services_filter_parameters(
     assert data == {}
 
 
-def test_valid_supported_color_modes():
+def test_valid_supported_color_modes() -> None:
     """Test valid_supported_color_modes."""
     supported = {light.ColorMode.HS}
     assert light.valid_supported_color_modes(supported) == supported
@@ -2387,7 +2388,7 @@ def test_valid_supported_color_modes():
         light.valid_supported_color_modes(supported)
 
 
-def test_filter_supported_color_modes():
+def test_filter_supported_color_modes() -> None:
     """Test filter_supported_color_modes."""
     supported = {light.ColorMode.HS}
     assert light.filter_supported_color_modes(supported) == supported

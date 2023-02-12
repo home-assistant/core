@@ -9,9 +9,8 @@ import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -358,6 +357,7 @@ async def test_color_number(
                 "color_temp_physical_max",
                 "color_capabilities",
                 "start_up_color_temperature",
+                "options",
             ],
             allow_cache=True,
             only_cache=False,

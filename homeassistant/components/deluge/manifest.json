@@ -1,11 +1,11 @@
 {
   "domain": "deluge",
   "name": "Deluge",
-  "documentation": "https://www.home-assistant.io/integrations/deluge",
-  "requirements": ["deluge-client==1.7.1"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/deluge",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["deluge_client"],
-  "integration_type": "service"
+  "requirements": ["deluge-client==1.7.1"]
 }

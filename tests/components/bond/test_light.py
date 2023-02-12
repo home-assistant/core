@@ -4,7 +4,6 @@ from datetime import timedelta
 from bond_async import Action, DeviceType
 import pytest
 
-from homeassistant import core
 from homeassistant.components.bond.const import (
     ATTR_POWER_STATE,
     DOMAIN,
@@ -30,6 +29,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -153,7 +153,7 @@ def light_brightness_increase_decrease_only(name: str):
     }
 
 
-async def test_fan_entity_registry(hass: core.HomeAssistant):
+async def test_fan_entity_registry(hass: HomeAssistant) -> None:
     """Tests that fan with light devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -168,7 +168,7 @@ async def test_fan_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 
-async def test_fan_up_light_entity_registry(hass: core.HomeAssistant):
+async def test_fan_up_light_entity_registry(hass: HomeAssistant) -> None:
     """Tests that fan with up light devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -183,7 +183,7 @@ async def test_fan_up_light_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id_up_light"
 
 
-async def test_fan_down_light_entity_registry(hass: core.HomeAssistant):
+async def test_fan_down_light_entity_registry(hass: HomeAssistant) -> None:
     """Tests that fan with down light devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -198,7 +198,7 @@ async def test_fan_down_light_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id_down_light"
 
 
-async def test_fireplace_entity_registry(hass: core.HomeAssistant):
+async def test_fireplace_entity_registry(hass: HomeAssistant) -> None:
     """Tests that flame fireplace devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -213,7 +213,7 @@ async def test_fireplace_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 
-async def test_fireplace_with_light_entity_registry(hass: core.HomeAssistant):
+async def test_fireplace_with_light_entity_registry(hass: HomeAssistant) -> None:
     """Tests that flame+light devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -230,7 +230,7 @@ async def test_fireplace_with_light_entity_registry(hass: core.HomeAssistant):
     assert entity_light.unique_id == "test-hub-id_test-device-id_light"
 
 
-async def test_light_entity_registry(hass: core.HomeAssistant):
+async def test_light_entity_registry(hass: HomeAssistant) -> None:
     """Tests lights are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -245,7 +245,7 @@ async def test_light_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 
-async def test_sbb_trust_state(hass: core.HomeAssistant):
+async def test_sbb_trust_state(hass: HomeAssistant) -> None:
     """Assumed state should be False if device is a Smart by Bond."""
     version = {
         "model": "MR123A",
@@ -259,7 +259,7 @@ async def test_sbb_trust_state(hass: core.HomeAssistant):
     assert device.attributes.get(ATTR_ASSUMED_STATE) is not True
 
 
-async def test_trust_state_not_specified(hass: core.HomeAssistant):
+async def test_trust_state_not_specified(hass: HomeAssistant) -> None:
     """Assumed state should be True if Trust State is not specified."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
@@ -267,7 +267,7 @@ async def test_trust_state_not_specified(hass: core.HomeAssistant):
     assert device.attributes.get(ATTR_ASSUMED_STATE) is True
 
 
-async def test_trust_state(hass: core.HomeAssistant):
+async def test_trust_state(hass: HomeAssistant) -> None:
     """Assumed state should be True if Trust State is False."""
     await setup_platform(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), props={"trust_state": False}
@@ -277,7 +277,7 @@ async def test_trust_state(hass: core.HomeAssistant):
     assert device.attributes.get(ATTR_ASSUMED_STATE) is True
 
 
-async def test_no_trust_state(hass: core.HomeAssistant):
+async def test_no_trust_state(hass: HomeAssistant) -> None:
     """Assumed state should be False if Trust State is True."""
     await setup_platform(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), props={"trust_state": True}
@@ -286,7 +286,7 @@ async def test_no_trust_state(hass: core.HomeAssistant):
     assert device.attributes.get(ATTR_ASSUMED_STATE) is not True
 
 
-async def test_light_set_brightness_belief_full(hass: core.HomeAssistant):
+async def test_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
         hass,
@@ -309,7 +309,7 @@ async def test_light_set_brightness_belief_full(hass: core.HomeAssistant):
     )
 
 
-async def test_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
+async def test_light_set_brightness_belief_api_error(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
     await setup_platform(
         hass,
@@ -330,7 +330,7 @@ async def test_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def test_fp_light_set_brightness_belief_full(hass: core.HomeAssistant):
+async def test_fp_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
         hass,
@@ -353,7 +353,7 @@ async def test_fp_light_set_brightness_belief_full(hass: core.HomeAssistant):
     )
 
 
-async def test_fp_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
+async def test_fp_light_set_brightness_belief_api_error(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
     await setup_platform(
         hass,
@@ -375,8 +375,8 @@ async def test_fp_light_set_brightness_belief_api_error(hass: core.HomeAssistant
 
 
 async def test_light_set_brightness_belief_brightness_not_supported(
-    hass: core.HomeAssistant,
-):
+    hass: HomeAssistant,
+) -> None:
     """Tests that the set brightness belief function of a light that doesn't support setting brightness returns an error."""
     await setup_platform(
         hass,
@@ -395,7 +395,7 @@ async def test_light_set_brightness_belief_brightness_not_supported(
         await hass.async_block_till_done()
 
 
-async def test_light_set_brightness_belief_zero(hass: core.HomeAssistant):
+async def test_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
         hass,
@@ -418,7 +418,7 @@ async def test_light_set_brightness_belief_zero(hass: core.HomeAssistant):
     )
 
 
-async def test_fp_light_set_brightness_belief_zero(hass: core.HomeAssistant):
+async def test_fp_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
         hass,
@@ -441,7 +441,7 @@ async def test_fp_light_set_brightness_belief_zero(hass: core.HomeAssistant):
     )
 
 
-async def test_light_set_power_belief(hass: core.HomeAssistant):
+async def test_light_set_power_belief(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
         hass,
@@ -464,7 +464,7 @@ async def test_light_set_power_belief(hass: core.HomeAssistant):
     )
 
 
-async def test_light_set_power_belief_api_error(hass: core.HomeAssistant):
+async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
     await setup_platform(
         hass,
@@ -485,7 +485,7 @@ async def test_light_set_power_belief_api_error(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def test_fp_light_set_power_belief(hass: core.HomeAssistant):
+async def test_fp_light_set_power_belief(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
         hass,
@@ -508,7 +508,7 @@ async def test_fp_light_set_power_belief(hass: core.HomeAssistant):
     )
 
 
-async def test_fp_light_set_power_belief_api_error(hass: core.HomeAssistant):
+async def test_fp_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
     await setup_platform(
         hass,
@@ -530,8 +530,8 @@ async def test_fp_light_set_power_belief_api_error(hass: core.HomeAssistant):
 
 
 async def test_fp_light_set_brightness_belief_brightness_not_supported(
-    hass: core.HomeAssistant,
-):
+    hass: HomeAssistant,
+) -> None:
     """Tests that the set brightness belief function of a fireplace light that doesn't support setting brightness returns an error."""
     await setup_platform(
         hass,
@@ -550,7 +550,7 @@ async def test_fp_light_set_brightness_belief_brightness_not_supported(
         await hass.async_block_till_done()
 
 
-async def test_light_start_increasing_brightness(hass: core.HomeAssistant):
+async def test_light_start_increasing_brightness(hass: HomeAssistant) -> None:
     """Tests a light that can only increase or decrease brightness delegates to API can start increasing brightness."""
     await setup_platform(
         hass,
@@ -574,8 +574,8 @@ async def test_light_start_increasing_brightness(hass: core.HomeAssistant):
 
 
 async def test_light_start_increasing_brightness_missing_service(
-    hass: core.HomeAssistant,
-):
+    hass: HomeAssistant,
+) -> None:
     """Tests a light does not have start increasing brightness throws."""
     await setup_platform(
         hass, LIGHT_DOMAIN, light("name-1"), bond_device_id="test-device-id"
@@ -591,7 +591,7 @@ async def test_light_start_increasing_brightness_missing_service(
         await hass.async_block_till_done()
 
 
-async def test_light_start_decreasing_brightness(hass: core.HomeAssistant):
+async def test_light_start_decreasing_brightness(hass: HomeAssistant) -> None:
     """Tests a light that can only increase or decrease brightness delegates to API can start decreasing brightness."""
     await setup_platform(
         hass,
@@ -615,8 +615,8 @@ async def test_light_start_decreasing_brightness(hass: core.HomeAssistant):
 
 
 async def test_light_start_decreasing_brightness_missing_service(
-    hass: core.HomeAssistant,
-):
+    hass: HomeAssistant,
+) -> None:
     """Tests a light does not have start decreasing brightness throws."""
     await setup_platform(
         hass,
@@ -635,7 +635,7 @@ async def test_light_start_decreasing_brightness_missing_service(
         await hass.async_block_till_done()
 
 
-async def test_light_stop(hass: core.HomeAssistant):
+async def test_light_stop(hass: HomeAssistant) -> None:
     """Tests a light that can only increase or decrease brightness delegates to API can stop."""
     await setup_platform(
         hass,
@@ -657,8 +657,8 @@ async def test_light_stop(hass: core.HomeAssistant):
 
 
 async def test_light_stop_missing_service(
-    hass: core.HomeAssistant,
-):
+    hass: HomeAssistant,
+) -> None:
     """Tests a light does not have stop throws."""
     await setup_platform(
         hass,
@@ -677,7 +677,7 @@ async def test_light_stop_missing_service(
         await hass.async_block_till_done()
 
 
-async def test_turn_on_light(hass: core.HomeAssistant):
+async def test_turn_on_light(hass: HomeAssistant) -> None:
     """Tests that turn on command delegates to API."""
     await setup_platform(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
@@ -695,7 +695,7 @@ async def test_turn_on_light(hass: core.HomeAssistant):
     mock_turn_light_on.assert_called_once_with("test-device-id", Action.turn_light_on())
 
 
-async def test_turn_off_light(hass: core.HomeAssistant):
+async def test_turn_off_light(hass: HomeAssistant) -> None:
     """Tests that turn off command delegates to API."""
     await setup_platform(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
@@ -715,7 +715,7 @@ async def test_turn_off_light(hass: core.HomeAssistant):
     )
 
 
-async def test_brightness_support(hass: core.HomeAssistant):
+async def test_brightness_support(hass: HomeAssistant) -> None:
     """Tests that a dimmable light should support the brightness feature."""
     await setup_platform(
         hass,
@@ -741,7 +741,7 @@ async def test_brightness_support(hass: core.HomeAssistant):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
-async def test_brightness_not_supported(hass: core.HomeAssistant):
+async def test_brightness_not_supported(hass: HomeAssistant) -> None:
     """Tests that a non-dimmable light should not support the brightness feature."""
     await setup_platform(
         hass,
@@ -767,7 +767,7 @@ async def test_brightness_not_supported(hass: core.HomeAssistant):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
-async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
+async def test_turn_on_light_with_brightness(hass: HomeAssistant) -> None:
     """Tests that turn on command, on a dimmable light, delegates to API and parses brightness."""
     await setup_platform(
         hass,
@@ -790,7 +790,7 @@ async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
     )
 
 
-async def test_turn_on_up_light(hass: core.HomeAssistant):
+async def test_turn_on_up_light(hass: HomeAssistant) -> None:
     """Tests that turn on command, on an up light, delegates to API."""
     await setup_platform(
         hass,
@@ -813,7 +813,7 @@ async def test_turn_on_up_light(hass: core.HomeAssistant):
     )
 
 
-async def test_turn_off_up_light(hass: core.HomeAssistant):
+async def test_turn_off_up_light(hass: HomeAssistant) -> None:
     """Tests that turn off command, on an up light, delegates to API."""
     await setup_platform(
         hass,
@@ -836,7 +836,7 @@ async def test_turn_off_up_light(hass: core.HomeAssistant):
     )
 
 
-async def test_turn_on_down_light(hass: core.HomeAssistant):
+async def test_turn_on_down_light(hass: HomeAssistant) -> None:
     """Tests that turn on command, on a down light, delegates to API."""
     await setup_platform(
         hass,
@@ -859,7 +859,7 @@ async def test_turn_on_down_light(hass: core.HomeAssistant):
     )
 
 
-async def test_turn_off_down_light(hass: core.HomeAssistant):
+async def test_turn_off_down_light(hass: HomeAssistant) -> None:
     """Tests that turn off command, on a down light, delegates to API."""
     await setup_platform(
         hass,
@@ -882,7 +882,7 @@ async def test_turn_off_down_light(hass: core.HomeAssistant):
     )
 
 
-async def test_update_reports_light_is_on(hass: core.HomeAssistant):
+async def test_update_reports_light_is_on(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
@@ -893,7 +893,7 @@ async def test_update_reports_light_is_on(hass: core.HomeAssistant):
     assert hass.states.get("light.name_1").state == "on"
 
 
-async def test_update_reports_light_is_off(hass: core.HomeAssistant):
+async def test_update_reports_light_is_off(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
 
@@ -904,7 +904,7 @@ async def test_update_reports_light_is_off(hass: core.HomeAssistant):
     assert hass.states.get("light.name_1").state == "off"
 
 
-async def test_update_reports_up_light_is_on(hass: core.HomeAssistant):
+async def test_update_reports_up_light_is_on(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the up light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
 
@@ -915,7 +915,7 @@ async def test_update_reports_up_light_is_on(hass: core.HomeAssistant):
     assert hass.states.get("light.name_1_up_light").state == "on"
 
 
-async def test_update_reports_up_light_is_off(hass: core.HomeAssistant):
+async def test_update_reports_up_light_is_off(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the up light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
 
@@ -926,7 +926,7 @@ async def test_update_reports_up_light_is_off(hass: core.HomeAssistant):
     assert hass.states.get("light.name_1_up_light").state == "off"
 
 
-async def test_update_reports_down_light_is_on(hass: core.HomeAssistant):
+async def test_update_reports_down_light_is_on(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the down light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
 
@@ -937,7 +937,7 @@ async def test_update_reports_down_light_is_on(hass: core.HomeAssistant):
     assert hass.states.get("light.name_1_down_light").state == "on"
 
 
-async def test_update_reports_down_light_is_off(hass: core.HomeAssistant):
+async def test_update_reports_down_light_is_off(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the down light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
 
@@ -948,7 +948,7 @@ async def test_update_reports_down_light_is_off(hass: core.HomeAssistant):
     assert hass.states.get("light.name_1_down_light").state == "off"
 
 
-async def test_turn_on_fireplace_with_brightness(hass: core.HomeAssistant):
+async def test_turn_on_fireplace_with_brightness(hass: HomeAssistant) -> None:
     """Tests that turn on command delegates to set flame API."""
     await setup_platform(
         hass, LIGHT_DOMAIN, fireplace("name-1"), bond_device_id="test-device-id"
@@ -966,7 +966,7 @@ async def test_turn_on_fireplace_with_brightness(hass: core.HomeAssistant):
     mock_set_flame.assert_called_once_with("test-device-id", Action.set_flame(50))
 
 
-async def test_turn_on_fireplace_without_brightness(hass: core.HomeAssistant):
+async def test_turn_on_fireplace_without_brightness(hass: HomeAssistant) -> None:
     """Tests that turn on command delegates to turn on API."""
     await setup_platform(
         hass, LIGHT_DOMAIN, fireplace("name-1"), bond_device_id="test-device-id"
@@ -984,7 +984,7 @@ async def test_turn_on_fireplace_without_brightness(hass: core.HomeAssistant):
     mock_turn_on.assert_called_once_with("test-device-id", Action.turn_on())
 
 
-async def test_turn_off_fireplace(hass: core.HomeAssistant):
+async def test_turn_off_fireplace(hass: HomeAssistant) -> None:
     """Tests that turn off command delegates to API."""
     await setup_platform(
         hass, LIGHT_DOMAIN, fireplace("name-1"), bond_device_id="test-device-id"
@@ -1002,7 +1002,7 @@ async def test_turn_off_fireplace(hass: core.HomeAssistant):
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
 
 
-async def test_flame_converted_to_brightness(hass: core.HomeAssistant):
+async def test_flame_converted_to_brightness(hass: HomeAssistant) -> None:
     """Tests that reported flame level (0..100) converted to HA brightness (0...255)."""
     await setup_platform(hass, LIGHT_DOMAIN, fireplace("name-1"))
 
@@ -1013,14 +1013,14 @@ async def test_flame_converted_to_brightness(hass: core.HomeAssistant):
     assert hass.states.get("light.name_1").attributes[ATTR_BRIGHTNESS] == 128
 
 
-async def test_light_available(hass: core.HomeAssistant):
+async def test_light_available(hass: HomeAssistant) -> None:
     """Tests that available state is updated based on API errors."""
     await help_test_entity_available(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), "light.name_1"
     )
 
 
-async def test_parse_brightness(hass: core.HomeAssistant):
+async def test_parse_brightness(hass: HomeAssistant) -> None:
     """Tests that reported brightness level (0..100) converted to HA brightness (0...255)."""
     await setup_platform(hass, LIGHT_DOMAIN, dimmable_ceiling_fan("name-1"))
 

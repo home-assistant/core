@@ -1,5 +1,4 @@
 """The tests for the Input select component."""
-# pylint: disable=protected-access
 from unittest.mock import patch
 
 import pytest
@@ -26,7 +25,7 @@ from homeassistant.const import (
     ATTR_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -68,7 +67,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [
         None,
@@ -81,7 +80,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_select_option(hass):
+async def test_select_option(hass: HomeAssistant) -> None:
     """Test select_option methods."""
     assert await async_setup_component(
         hass,
@@ -112,7 +111,7 @@ async def test_select_option(hass):
     assert state.state == "another option"
 
 
-async def test_select_next(hass):
+async def test_select_next(hass: HomeAssistant) -> None:
     """Test select_next methods."""
     assert await async_setup_component(
         hass,
@@ -150,7 +149,7 @@ async def test_select_next(hass):
     assert state.state == "first option"
 
 
-async def test_select_previous(hass):
+async def test_select_previous(hass: HomeAssistant) -> None:
     """Test select_previous methods."""
     assert await async_setup_component(
         hass,
@@ -188,7 +187,7 @@ async def test_select_previous(hass):
     assert state.state == "last option"
 
 
-async def test_select_first_last(hass):
+async def test_select_first_last(hass: HomeAssistant) -> None:
     """Test select_first and _last methods."""
     assert await async_setup_component(
         hass,
@@ -228,7 +227,7 @@ async def test_select_first_last(hass):
     assert state.state == "last option"
 
 
-async def test_config_options(hass):
+async def test_config_options(hass: HomeAssistant) -> None:
     """Test configuration options."""
     count_start = len(hass.states.async_entity_ids())
 
@@ -268,7 +267,7 @@ async def test_config_options(hass):
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
-async def test_set_options_service(hass):
+async def test_set_options_service(hass: HomeAssistant) -> None:
     """Test set_options service."""
     assert await async_setup_component(
         hass,
@@ -324,7 +323,7 @@ async def test_set_options_service(hass):
     assert state.state == "test2"
 
 
-async def test_set_options_service_duplicate(hass):
+async def test_set_options_service_duplicate(hass: HomeAssistant) -> None:
     """Test set_options service with duplicates."""
     assert await async_setup_component(
         hass,
@@ -364,7 +363,7 @@ async def test_set_options_service_duplicate(hass):
     ]
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -387,7 +386,7 @@ async def test_restore_state(hass):
     assert state.state == "first option"
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,

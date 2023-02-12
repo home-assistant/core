@@ -385,6 +385,11 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "D8D5B9*",
     },
     {
+        "domain": "reolink",
+        "hostname": "reolink*",
+        "macaddress": "EC71DB*",
+    },
+    {
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*",

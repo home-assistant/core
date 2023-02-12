@@ -7,6 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DEFAULT_HOST, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -14,7 +15,7 @@ NAME = "Solarlog test 1 2 3"
 HOST = "http://1.1.1.1"
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(

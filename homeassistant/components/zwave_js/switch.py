@@ -86,7 +86,7 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
 
 
 class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
-    """This switch is used to turn on or off a barrier device's event signaling subsystem."""
+    """Switch is used to turn on/off a barrier device's event signaling subsystem."""
 
     def __init__(
         self,

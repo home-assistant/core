@@ -7,9 +7,16 @@ from aioesphomeapi import APIClient, DeviceInfo
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN
+from homeassistant.components.esphome import (
+    CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
+    DOMAIN,
+    dashboard,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+
+from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
 from tests.common import MockConfigEntry
 
@@ -25,9 +32,9 @@ def esphome_mock_async_zeroconf(mock_async_zeroconf):
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(hass) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    config_entry = MockConfigEntry(
         title="ESPHome Device",
         domain=DOMAIN,
         data={
@@ -35,9 +42,12 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PORT: 6053,
             CONF_PASSWORD: "pwd",
             CONF_NOISE_PSK: "12345678123456781234567812345678",
+            CONF_DEVICE_NAME: "test",
         },
         unique_id="11:22:33:44:55:aa",
     )
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 @pytest.fixture
@@ -57,8 +67,6 @@ async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Set up the ESPHome integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -98,3 +106,17 @@ def mock_client(mock_device_info):
         "homeassistant.components.esphome.config_flow.APIClient", mock_client
     ):
         yield mock_client
+
+
+@pytest.fixture
+async def mock_dashboard(hass):
+    """Mock dashboard."""
+    data = {"configured": [], "importable": []}
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        return_value=data,
+    ):
+        await dashboard.async_set_dashboard_info(
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        )
+        yield data

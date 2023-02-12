@@ -11,8 +11,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -58,6 +58,12 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
 
 
 BINARY_SENSORS = [
+    StarlinkBinarySensorEntityDescription(
+        key="update",
+        name="Update available",
+        device_class=BinarySensorDeviceClass.UPDATE,
+        value_fn=lambda data: data.alert["alert_install_pending"],
+    ),
     StarlinkBinarySensorEntityDescription(
         key="roaming",
         name="Roaming mode",

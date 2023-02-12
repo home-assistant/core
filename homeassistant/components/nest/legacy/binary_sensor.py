@@ -8,7 +8,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NestSensorDevice
 from .const import DATA_NEST, DATA_NEST_CONFIG
@@ -53,14 +56,9 @@ _VALID_BINARY_SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Nest binary sensors.
-
-    No longer used.
-    """
-
-
-async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_legacy_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a Nest binary sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 

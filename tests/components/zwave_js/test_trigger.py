@@ -15,6 +15,7 @@ from homeassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.setup import async_setup_component
 
@@ -954,7 +955,7 @@ async def test_zwave_js_event_invalid_config_entry_id(
     caplog.clear()
 
 
-async def test_async_validate_trigger_config(hass):
+async def test_async_validate_trigger_config(hass: HomeAssistant) -> None:
     """Test async_validate_trigger_config."""
     mock_platform = AsyncMock()
     with patch(
@@ -966,7 +967,7 @@ async def test_async_validate_trigger_config(hass):
         mock_platform.async_validate_trigger_config.assert_awaited()
 
 
-async def test_invalid_trigger_configs(hass):
+async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
     """Test invalid trigger configs."""
     with pytest.raises(vol.Invalid):
         await async_validate_trigger_config(

@@ -10,6 +10,7 @@ import homeassistant.components.mfi.sensor as mfi
 import homeassistant.components.sensor as sensor_component
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -28,7 +29,7 @@ GOOD_CONFIG = {
 }
 
 
-async def test_setup_missing_config(hass):
+async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setup with missing configuration."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         config = {"sensor": {"platform": "mfi"}}
@@ -36,21 +37,21 @@ async def test_setup_missing_config(hass):
         assert not mock_client.called
 
 
-async def test_setup_failed_login(hass):
+async def test_setup_failed_login(hass: HomeAssistant) -> None:
     """Test setup with login failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = FailedToLogin
         assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
 
 
-async def test_setup_failed_connect(hass):
+async def test_setup_failed_connect(hass: HomeAssistant) -> None:
     """Test setup with connection failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = requests.exceptions.ConnectionError
         assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
 
 
-async def test_setup_minimum(hass):
+async def test_setup_minimum(hass: HomeAssistant) -> None:
     """Test setup with minimum configuration."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         config = deepcopy(GOOD_CONFIG)
@@ -63,7 +64,7 @@ async def test_setup_minimum(hass):
         )
 
 
-async def test_setup_with_port(hass):
+async def test_setup_with_port(hass: HomeAssistant) -> None:
     """Test setup with port."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         assert await async_setup_component(hass, COMPONENT.DOMAIN, GOOD_CONFIG)
@@ -74,7 +75,7 @@ async def test_setup_with_port(hass):
         )
 
 
-async def test_setup_with_tls_disabled(hass):
+async def test_setup_with_tls_disabled(hass: HomeAssistant) -> None:
     """Test setup without TLS."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         config = deepcopy(GOOD_CONFIG)
@@ -89,7 +90,7 @@ async def test_setup_with_tls_disabled(hass):
         )
 
 
-async def test_setup_adds_proper_devices(hass):
+async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
     with mock.patch(
         "homeassistant.components.mfi.sensor.MFiClient"
@@ -170,11 +171,11 @@ async def test_state_digital(port, sensor):
     """Test the digital input."""
     port.model = "Input Digital"
     port.value = 0
-    assert mfi.STATE_OFF == sensor.state
+    assert sensor.state == mfi.STATE_OFF
     port.value = 1
-    assert mfi.STATE_ON == sensor.state
+    assert sensor.state == mfi.STATE_ON
     port.value = 2
-    assert mfi.STATE_ON == sensor.state
+    assert sensor.state == mfi.STATE_ON
 
 
 async def test_state_digits(port, sensor):
@@ -190,7 +191,7 @@ async def test_state_digits(port, sensor):
 async def test_state_uninitialized(port, sensor):
     """Test the state of uninitialized sensorfs."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
-    assert mfi.STATE_OFF == sensor.state
+    assert sensor.state == mfi.STATE_OFF
 
 
 async def test_update(port, sensor):

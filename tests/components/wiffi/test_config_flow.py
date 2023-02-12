@@ -7,6 +7,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wiffi.const import DOMAIN
 from homeassistant.const import CONF_PORT, CONF_TIMEOUT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -112,7 +113,7 @@ async def test_form_start_server_failed(hass, start_server_failed):
     assert result2["reason"] == "start_server_failed"
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test option flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)

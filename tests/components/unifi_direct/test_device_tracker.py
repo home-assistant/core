@@ -21,6 +21,7 @@ from homeassistant.components.unifi_direct.device_tracker import (
     get_scanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, load_fixture, mock_component
@@ -126,22 +127,22 @@ async def test_to_get_update(mock_sendline, mock_prompt, mock_login, mock_logout
     scanner = get_scanner(hass, conf_dict)
     # mock_sendline.side_effect = AssertionError("Test")
     mock_prompt.side_effect = AssertionError("Test")
-    devices = scanner._get_update()  # pylint: disable=protected-access
+    devices = scanner._get_update()
     assert devices is None
 
 
-def test_good_response_parses(hass):
+def test_good_response_parses(hass: HomeAssistant) -> None:
     """Test that the response form the AP parses to JSON correctly."""
     response = _response_to_json(load_fixture("data.txt", "unifi_direct"))
     assert response != {}
 
 
-def test_bad_response_returns_none(hass):
+def test_bad_response_returns_none(hass: HomeAssistant) -> None:
     """Test that a bad response form the AP parses to JSON correctly."""
     assert _response_to_json("{(}") == {}
 
 
-def test_config_error():
+def test_config_error() -> None:
     """Test for configuration errors."""
     with pytest.raises(vol.Invalid):
         PLATFORM_SCHEMA(

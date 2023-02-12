@@ -15,13 +15,18 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
@@ -46,6 +51,24 @@ from .util import (
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+UNIT_SCHEMA = vol.Schema(
+    {
+        vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
+        vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
+        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
+        vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+        vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
+        vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
+        vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
+        vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
+        vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
+    }
+)
 
 
 @callback
@@ -89,22 +112,11 @@ def _ws_get_statistic_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
-        vol.Optional("statistic_id"): str,
+        vol.Required("statistic_id"): str,
         vol.Optional("types"): vol.All(
             [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
         ),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
         **PERIOD_SCHEMA.schema,
     }
 )
@@ -127,7 +139,7 @@ async def ws_get_statistic_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_id"),
+            msg["statistic_id"],
             msg.get("types"),
             msg.get("units"),
         )
@@ -157,11 +169,11 @@ def _ws_get_statistics_during_period(
     for statistic_id in result:
         for item in result[statistic_id]:
             if (start := item.get("start")) is not None:
-                item["start"] = int(start.timestamp() * 1000)
+                item["start"] = int(start * 1000)
             if (end := item.get("end")) is not None:
-                item["end"] = int(end.timestamp() * 1000)
+                item["end"] = int(end * 1000)
             if (last_reset := item.get("last_reset")) is not None:
-                item["last_reset"] = int(last_reset.timestamp() * 1000)
+                item["last_reset"] = int(last_reset * 1000)
     return JSON_DUMP(messages.result_message(msg_id, result))
 
 
@@ -196,7 +208,7 @@ async def ws_handle_get_statistics_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_ids"),
+            msg["statistic_ids"],
             msg.get("period"),
             msg.get("units"),
             types,
@@ -209,20 +221,9 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("type"): "recorder/statistics_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("statistic_ids"): [str],
+        vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
         vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
             [vol.Any("last_reset", "max", "mean", "min", "state", "sum")],
             vol.Coerce(set),

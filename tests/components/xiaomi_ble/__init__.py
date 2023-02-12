@@ -27,7 +27,9 @@ LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-63,
     manufacturer_data={},
     service_data={
-        "0000fe95-0000-1000-8000-00805f9b34fb": b"P \xaa\x01\xda!\x9354-X\r\x10\x04\xfe\x00H\x02"
+        "0000fe95-0000-1000-8000-00805f9b34fb": (
+            b"P \xaa\x01\xda!\x9354-X\r\x10\x04\xfe\x00H\x02"
+        )
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
@@ -43,7 +45,9 @@ MMC_T201_1_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-56,
     manufacturer_data={},
     service_data={
-        "0000fe95-0000-1000-8000-00805f9b34fb": b'p"\xdb\x00o\xc1o\xdd\xf9\x81\x00\t\x00 \x05\xc6\rc\rQ'
+        "0000fe95-0000-1000-8000-00805f9b34fb": (
+            b'p"\xdb\x00o\xc1o\xdd\xf9\x81\x00\t\x00 \x05\xc6\rc\rQ'
+        )
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
@@ -59,7 +63,9 @@ JTYJGD03MI_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-56,
     manufacturer_data={},
     service_data={
-        "0000fe95-0000-1000-8000-00805f9b34fb": b'XY\x97\td\xbc\x9c\xe3D\xefT" `\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3'
+        "0000fe95-0000-1000-8000-00805f9b34fb": (
+            b'XY\x97\td\xbc\x9c\xe3D\xefT" `\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3'
+        )
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
@@ -75,7 +81,9 @@ YLKG07YL_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-56,
     manufacturer_data={},
     service_data={
-        "0000fe95-0000-1000-8000-00805f9b34fb": b"X0\xb6\x03\xd2\x8b\x98\xc5A$\xf8\xc3I\x14vu~\x00\x00\x00\x99",
+        "0000fe95-0000-1000-8000-00805f9b34fb": (
+            b"X0\xb6\x03\xd2\x8b\x98\xc5A$\xf8\xc3I\x14vu~\x00\x00\x00\x99"
+        ),
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",

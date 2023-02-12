@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import base64
 from email.message import EmailMessage
-from typing import Any, cast
+from typing import Any
 
 from googleapiclient.http import HttpRequest
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -27,9 +26,9 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> GMailNotificationService:
+) -> GMailNotificationService | None:
     """Get the notification service."""
-    return GMailNotificationService(cast(DiscoveryInfoType, discovery_info))
+    return GMailNotificationService(discovery_info) if discovery_info else None
 
 
 class GMailNotificationService(BaseNotificationService):
@@ -61,6 +60,6 @@ class GMailNotificationService(BaseNotificationService):
             msg = users.drafts().create(userId=email["From"], body={ATTR_MESSAGE: body})
         else:
             if not to_addrs:
-                raise vol.Invalid("recipient address required")
+                raise ValueError("recipient address required")
             msg = users.messages().send(userId=email["From"], body=body)
         await self.hass.async_add_executor_job(msg.execute)

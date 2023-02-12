@@ -41,7 +41,6 @@ def test_binary_sensor(hass: HomeAssistant):
     assert len(hass_devices) == 3
 
     for device in hass_devices:
-
         # Test pre data retrieval
         if device.subscription == "555555":
             assert device.name == "Vultr {}"
@@ -75,7 +74,7 @@ def test_binary_sensor(hass: HomeAssistant):
             assert device_attrs[ATTR_SUBSCRIPTION_ID] == "123456"
 
 
-def test_invalid_sensor_config():
+def test_invalid_sensor_config() -> None:
     """Test config type failures."""
     with pytest.raises(vol.Invalid):  # No subs
         vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})

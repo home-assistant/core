@@ -1,5 +1,4 @@
-"""
-The methods for loading Home Assistant integrations.
+"""The methods for loading Home Assistant integrations.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
@@ -120,8 +119,7 @@ class USBMatcher(USBMatcherRequired, USBMatcherOptional):
 
 
 class Manifest(TypedDict, total=False):
-    """
-    Integration manifest.
+    """Integration manifest.
 
     Note that none of the attributes are marked Optional here. However, some of
     them may be optional in manifest.json in the sense that they can be omitted
@@ -229,7 +227,7 @@ async def async_get_config_flows(
     type_filter: Literal["device", "helper", "hub", "service"] | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .generated.config_flows import FLOWS
 
     integrations = await async_get_custom_components(hass)
@@ -261,7 +259,7 @@ async def async_get_integration_descriptions(
     config_flow_path = pathlib.Path(base) / "integrations.json"
 
     flow = await hass.async_add_executor_job(config_flow_path.read_text)
-    core_flows: dict[str, Any] = json_loads(flow)
+    core_flows = cast(dict[str, Any], json_loads(flow))
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
         "integration": {},
@@ -476,7 +474,7 @@ class Integration:
                 continue
 
             try:
-                manifest = json_loads(manifest_path.read_text())
+                manifest = cast(Manifest, json_loads(manifest_path.read_text()))
             except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err

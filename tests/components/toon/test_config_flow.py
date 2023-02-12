@@ -9,6 +9,7 @@ from homeassistant.components.toon.const import CONF_AGREEMENT, CONF_MIGRATE, DO
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -31,7 +32,7 @@ async def setup_component(hass):
         await hass.async_block_till_done()
 
 
-async def test_abort_if_no_configuration(hass):
+async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Test abort if no app is configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -54,7 +55,6 @@ async def test_full_flow_implementation(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -114,7 +114,6 @@ async def test_no_agreements(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -154,7 +153,6 @@ async def test_multiple_agreements(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -205,7 +203,6 @@ async def test_agreement_already_set_up(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -244,7 +241,7 @@ async def test_toon_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    # pylint: disable=protected-access
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -306,7 +303,6 @@ async def test_import_migration(
     assert len(flows) == 1
     assert flows[0]["context"][CONF_MIGRATE] == old_entry.entry_id
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {

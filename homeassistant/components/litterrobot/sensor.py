@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic, Union, cast
+from typing import Any, Generic, cast
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
 
@@ -15,9 +15,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfMass
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -55,7 +54,7 @@ class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
         if self.entity_description.should_report(self.robot):
             if isinstance(val := getattr(self.robot, self.entity_description.key), str):
                 return val.lower()
-            return cast(Union[float, datetime, None], val)
+            return cast(float | datetime | None, val)
         return None
 
     @property
@@ -141,7 +140,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Pet weight",
             native_unit_of_measurement=UnitOfMass.POUNDS,
             device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.TOTAL,
         ),
     ],
     FeederRobot: [

@@ -1,6 +1,7 @@
 """Fixtures for HomeWizard integration tests."""
+from collections.abc import Generator
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homewizard_energy.features import Features
 from homewizard_energy.models import Data, Device, State, System
@@ -80,3 +81,13 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_onboarding() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding

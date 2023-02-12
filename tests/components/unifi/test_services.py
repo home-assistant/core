@@ -1,5 +1,4 @@
 """deCONZ service tests."""
-
 from unittest.mock import patch
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
@@ -9,12 +8,17 @@ from homeassistant.components.unifi.services import (
     SUPPORTED_SERVICES,
 )
 from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .test_controller import setup_unifi_integration
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_service_setup_and_unload(hass, aioclient_mock):
+
+async def test_service_setup_and_unload(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify service setup works."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     for service in SUPPORTED_SERVICES:
@@ -44,7 +48,9 @@ async def test_service_setup_and_unload_not_called_if_multiple_integrations_dete
     assert remove_service_mock.call_count == 2
 
 
-async def test_reconnect_client(hass, aioclient_mock):
+async def test_reconnect_client(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify call to reconnect client is performed as expected."""
     clients = [
         {
@@ -77,7 +83,9 @@ async def test_reconnect_client(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_reconnect_non_existant_device(hass, aioclient_mock):
+async def test_reconnect_non_existant_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify no call is made if device does not exist."""
     await setup_unifi_integration(hass, aioclient_mock)
 
@@ -92,7 +100,9 @@ async def test_reconnect_non_existant_device(hass, aioclient_mock):
     assert aioclient_mock.call_count == 0
 
 
-async def test_reconnect_device_without_mac(hass, aioclient_mock):
+async def test_reconnect_device_without_mac(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify no call is made if device does not have a known mac."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
@@ -113,7 +123,9 @@ async def test_reconnect_device_without_mac(hass, aioclient_mock):
     assert aioclient_mock.call_count == 0
 
 
-async def test_reconnect_client_controller_unavailable(hass, aioclient_mock):
+async def test_reconnect_client_controller_unavailable(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify no call is made if controller is unavailable."""
     clients = [
         {
@@ -147,7 +159,9 @@ async def test_reconnect_client_controller_unavailable(hass, aioclient_mock):
     assert aioclient_mock.call_count == 0
 
 
-async def test_reconnect_client_unknown_mac(hass, aioclient_mock):
+async def test_reconnect_client_unknown_mac(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify no call is made if trying to reconnect a mac unknown to controller."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
@@ -168,7 +182,9 @@ async def test_reconnect_client_unknown_mac(hass, aioclient_mock):
     assert aioclient_mock.call_count == 0
 
 
-async def test_reconnect_wired_client(hass, aioclient_mock):
+async def test_reconnect_wired_client(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify no call is made if client is wired."""
     clients = [
         {
@@ -197,7 +213,9 @@ async def test_reconnect_wired_client(hass, aioclient_mock):
     assert aioclient_mock.call_count == 0
 
 
-async def test_remove_clients(hass, aioclient_mock):
+async def test_remove_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify removing different variations of clients work."""
     clients = [
         {
@@ -251,7 +269,9 @@ async def test_remove_clients(hass, aioclient_mock):
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_remove_clients_controller_unavailable(hass, aioclient_mock):
+async def test_remove_clients_controller_unavailable(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify no call is made if controller is unavailable."""
     clients = [
         {
@@ -272,7 +292,9 @@ async def test_remove_clients_controller_unavailable(hass, aioclient_mock):
     assert aioclient_mock.call_count == 0
 
 
-async def test_remove_clients_no_call_on_empty_list(hass, aioclient_mock):
+async def test_remove_clients_no_call_on_empty_list(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify no call is made if no fitting client has been added to the list."""
     clients = [
         {
