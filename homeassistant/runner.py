@@ -3,18 +3,22 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import events
+from collections.abc import Coroutine, Generator
 import dataclasses
 import logging
 import os
 import threading
 import traceback
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from . import bootstrap
 from .core import callback
 from .helpers.frame import warn_use
 from .util.executor import InterruptibleThreadPoolExecutor
 from .util.thread import deadlock_safe_shutdown
+
+if TYPE_CHECKING:
+    from asyncio.events import _TaskFactory
 
 #
 # Some Python versions may have different number of workers by default
@@ -30,6 +34,8 @@ MAX_EXECUTOR_WORKERS = 64
 TASK_CANCELATION_TIMEOUT = 5
 
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 @dataclasses.dataclass
@@ -101,6 +107,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
         loop.set_exception_handler(_async_loop_exception_handler)
+        loop.set_task_factory(_async_create_task_factory())
         if self.debug:
             loop.set_debug(True)
 
@@ -137,6 +144,35 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
         context["message"],
         **kwargs,  # type: ignore[arg-type]
     )
+
+
+def _async_create_task_factory() -> _TaskFactory:
+    """Create asyncio task factory that keeps reference to running tasks.
+
+    This prevents garbage collection while the task is running.
+    """
+    tasks = set()
+
+    def _asyncio_task_factory(
+        loop: asyncio.BaseEventLoop,
+        coro: Coroutine[Any, Any, _T] | Generator[Any, None, _T]
+        # Py3.11: context=None
+    ) -> asyncio.Task[_T]:
+        # Copied from original source for create task in cpython
+        # https://github.com/python/cpython/blob/main/Lib/asyncio/base_events.py
+        task = asyncio.Task(coro, loop=loop)  # on Py3.11 also pass context=context
+        # if (  # pylint: disable=protected-access, using-constant-test
+        #     task._source_traceback
+        # ):
+        #     del task._source_traceback[  # pylint: disable=protected-access, unsupported-delete-operation
+        #         -1
+        #     ]
+
+        tasks.add(task)
+        task.add_done_callback(tasks.remove)
+        return task
+
+    return _asyncio_task_factory  # type: ignore[return-value]
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
