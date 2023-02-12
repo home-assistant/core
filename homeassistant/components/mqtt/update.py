@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import Any
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 
@@ -68,6 +68,17 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
 
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
+
+
+class _MqttUpdatePayloadType(TypedDict, total=False):
+    """Presentation of supported JSON payload to process state updates."""
+
+    installed_version: str
+    latest_version: str
+    title: str
+    release_summary: str
+    release_url: str
+    entity_picture: str
 
 
 async def async_setup_entry(
@@ -171,18 +182,19 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 )
                 return
 
-            json_payload: Any | dict = {}
+            json_payload: _MqttUpdatePayloadType = {}
             try:
-                json_payload = json_loads(payload)
-                if isinstance(json_payload, dict):
+                rendered_json_payload = json_loads(payload)
+                if isinstance(rendered_json_payload, dict):
                     _LOGGER.debug(
                         (
                             "JSON payload detected after processing payload '%s' on"
                             " topic %s"
                         ),
-                        json_payload,
+                        rendered_json_payload,
                         msg.topic,
                     )
+                    json_payload = cast(_MqttUpdatePayloadType, rendered_json_payload)
                 else:
                     _LOGGER.debug(
                         (
@@ -192,7 +204,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                         payload,
                         msg.topic,
                     )
-                    json_payload = {"installed_version": payload}
+                    json_payload = {"installed_version": str(payload)}
             except JSON_DECODE_EXCEPTIONS:
                 _LOGGER.debug(
                     (
@@ -202,7 +214,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     payload,
                     msg.topic,
                 )
-                json_payload["installed_version"] = payload
+                json_payload["installed_version"] = str(payload)
 
             if "installed_version" in json_payload:
                 self._attr_installed_version = json_payload["installed_version"]
@@ -212,20 +224,20 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 self._attr_latest_version = json_payload["latest_version"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_TITLE in json_payload:
-                self._attr_title = json_payload[CONF_TITLE]
+            if "title" in json_payload:
+                self._attr_title = json_payload["title"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_SUMMARY in json_payload:
-                self._attr_release_summary = json_payload[CONF_RELEASE_SUMMARY]
+            if "release_summary" in json_payload:
+                self._attr_release_summary = json_payload["release_summary"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_RELEASE_URL in json_payload:
-                self._attr_release_url = json_payload[CONF_RELEASE_URL]
+            if "release_url" in json_payload:
+                self._attr_release_url = json_payload["release_url"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-            if CONF_ENTITY_PICTURE in json_payload:
-                self._entity_picture = json_payload[CONF_ENTITY_PICTURE]
+            if "entity_picture" in json_payload:
+                self._entity_picture = json_payload["entity_picture"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
