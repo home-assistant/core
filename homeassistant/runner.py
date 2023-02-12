@@ -6,6 +6,7 @@ from asyncio import events
 import dataclasses
 import logging
 import os
+import subprocess
 import threading
 import traceback
 from typing import Any
@@ -28,6 +29,7 @@ from .util.thread import deadlock_safe_shutdown
 #
 MAX_EXECUTOR_WORKERS = 64
 TASK_CANCELATION_TIMEOUT = 5
+ALPINE_RELEASE_FILE = "/etc/alpine-release"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,6 +160,16 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
+    if not subprocess._USE_POSIX_SPAWN:  # pylint: disable=protected-access
+        # The subprocess module does not know about Alpine Linux/musl
+        # and will use fork() instead of posix_spawn() which significantly
+        # less efficient. This is a workaround to force posix_spawn()
+        # on Alpine Linux which is supported by musl.
+        _exists = os.path.exists
+        subprocess._USE_POSIX_SPAWN = _exists(  # pylint: disable=protected-access
+            ALPINE_RELEASE_FILE
+        )
+
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()
