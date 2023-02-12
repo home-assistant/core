@@ -674,7 +674,7 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request):
             assert is_internal_request(hass), mock_current_request.return_value.url
 
 
-async def test_is_hass_url(hass):
+async def test_is_hass_url(hass: HomeAssistant) -> None:
     """Test is_hass_url."""
     assert hass.config.api is None
     assert hass.config.internal_url is None
@@ -721,7 +721,7 @@ async def test_is_hass_url(hass):
         assert is_hass_url(hass, "http://example.nabu.casa") is False
 
 
-async def test_is_hass_url_addon_url(hass):
+async def test_is_hass_url_addon_url(hass: HomeAssistant) -> None:
     """Test is_hass_url with a supervisor network URL."""
     assert is_hass_url(hass, "http://homeassistant:8123") is False
 
@@ -741,7 +741,7 @@ async def test_is_hass_url_addon_url(hass):
     assert is_hass_url(hass, "https://homeassistant:8123")
 
 
-async def test_get_supervisor_network_url(hass):
+async def test_get_supervisor_network_url(hass: HomeAssistant) -> None:
     """Test get_supervisor_network_url."""
     assert get_supervisor_network_url(hass) is None
 

@@ -9,7 +9,7 @@ from homeassistant.components.zwave_me import ZWaveMePlatform
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 DEFAULT_DEVICE_INFO = ZWaveMeData(
     id="DummyDevice",
@@ -18,12 +18,6 @@ DEFAULT_DEVICE_INFO = ZWaveMeData(
     level=100,
     deviceIdentifier="16-23",
 )
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
 
 
 async def mock_connection(controller):
@@ -40,7 +34,7 @@ async def mock_connection(controller):
     ],
 )
 async def test_remove_stale_devices(
-    hass: HomeAssistant, device_reg, identifier, should_exist
+    hass: HomeAssistant, device_registry, identifier, should_exist
 ):
     """Test removing devices with old-format ids."""
 
@@ -50,7 +44,7 @@ async def test_remove_stale_devices(
         data={CONF_TOKEN: "test_token", CONF_URL: "http://test_test"},
     )
     config_entry.add_to_hass(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={("mac", "12:34:56:AB:CD:EF")},
         identifiers={("zwave_me", f"{config_entry.unique_id}-{identifier}")},
@@ -64,7 +58,7 @@ async def test_remove_stale_devices(
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert (
         bool(
-            device_reg.async_get_device(
+            device_registry.async_get_device(
                 {
                     (
                         "zwave_me",

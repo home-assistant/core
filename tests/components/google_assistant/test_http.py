@@ -18,10 +18,11 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
 )
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, async_mock_service
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
     {
@@ -41,7 +42,7 @@ MOCK_HEADER = {
 }
 
 
-async def test_get_jwt(hass):
+async def test_get_jwt(hass: HomeAssistant) -> None:
     """Test signing of key."""
 
     jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9rZW4iLCJpYXQiOjE1NzEwMTEyMDAsImV4cCI6MTU3MTAxNDgwMH0.akHbMhOflXdIDHVvUVwO0AoJONVOPUdCghN6hAdVz4gxjarrQeGYc_Qn2r84bEvCU7t6EvimKKr0fyupyzBAzfvKULs5mTHO3h2CwSgvOBMv8LnILboJmbO4JcgdnRV7d9G3ktQs7wWSCXJsI5i5jUr1Wfi9zWwxn2ebaAAgrp8"
@@ -53,7 +54,9 @@ async def test_get_jwt(hass):
     assert res == jwt
 
 
-async def test_get_access_token(hass, aioclient_mock):
+async def test_get_access_token(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the function to get access token."""
     jwt = "dummyjwt"
 
@@ -71,7 +74,7 @@ async def test_get_access_token(hass, aioclient_mock):
     }
 
 
-async def test_update_access_token(hass):
+async def test_update_access_token(hass: HomeAssistant) -> None:
     """Test the function to update access token when expired."""
     jwt = "dummyjwt"
 
@@ -205,7 +208,7 @@ async def test_google_config_local_fulfillment(hass, aioclient_mock, hass_storag
     assert config.get_local_agent_user_id("INCORRECT") is None
 
 
-async def test_secure_device_pin_config(hass):
+async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
     """Test the setting of the secure device pin configuration."""
     secure_pin = "TEST"
     secure_config = GOOGLE_ASSISTANT_SCHEMA(
@@ -223,7 +226,7 @@ async def test_secure_device_pin_config(hass):
     assert config.secure_devices_pin == secure_pin
 
 
-async def test_should_expose(hass):
+async def test_should_expose(hass: HomeAssistant) -> None:
     """Test the google config should expose method."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
@@ -244,7 +247,7 @@ async def test_should_expose(hass):
     assert config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock")) is False
 
 
-async def test_missing_service_account(hass):
+async def test_missing_service_account(hass: HomeAssistant) -> None:
     """Test the google config _async_request_sync_devices."""
     incorrect_config = GOOGLE_ASSISTANT_SCHEMA(
         {
