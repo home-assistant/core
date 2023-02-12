@@ -297,7 +297,7 @@ async def test_entity_with_auto_update(
     # Should not be able to skip the update
     with pytest.raises(
         HomeAssistantError,
-        match="Skipping update is not supported for Update with auto update",
+        match="Skipping update is not supported for update.update_with_auto_update",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -309,7 +309,7 @@ async def test_entity_with_auto_update(
     # Should not be able to clear a skipped the update
     with pytest.raises(
         HomeAssistantError,
-        match="Clearing skipped update is not supported for Update with auto update",
+        match="Clearing skipped update is not supported for update.update_with_auto_update",
     ):
         await hass.services.async_call(
             DOMAIN,
