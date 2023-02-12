@@ -94,7 +94,7 @@ class ReolinkSelectEntity(ReolinkCoordinatorEntity, SelectEntity):
 
     @property
     def current_option(self) -> str:
-        """The current select option."""
+        """Return the current option."""
         return self.entity_description.value(self._host.api, self._channel)
 
     async def async_select_option(self, option: str) -> None:
