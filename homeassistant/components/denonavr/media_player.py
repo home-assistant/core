@@ -164,7 +164,6 @@ def async_log_errors(
                     self._receiver.host,
                 )
                 self._attr_available = False
-                self._needs_full_resync = True
         except AvrNetworkError:
             available = False
             if self.available:
@@ -176,7 +175,6 @@ def async_log_errors(
                     self._receiver.host,
                 )
                 self._attr_available = False
-                self._needs_full_resync = True
         except AvrForbiddenError:
             available = False
             if self.available:
@@ -189,7 +187,6 @@ def async_log_errors(
                     self._receiver.host,
                 )
                 self._attr_available = False
-                self._needs_full_resync = True
         except AvrCommandError as err:
             available = False
             _LOGGER.error(
@@ -252,11 +249,7 @@ class DenonDevice(MediaPlayerEntity):
 
         self._receiver.register_callback("ALL", self._telnet_callback)
 
-        # Flag to indicate if a full resync is needed
-        # This is needed when the telnet connection is lost
-        # so we know we need to do a full resync before
-        # we can go back getting partial updates from telnet
-        self._needs_full_resync = True
+        self._telnet_was_healthy = False
 
     async def _telnet_callback(self, zone, event, parameter):
         """Process a telnet command callback."""
@@ -272,19 +265,23 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_update(self) -> None:
         """Get the latest status information from device."""
+        receiver = self._receiver
+
+        # We can only skip the update if telnet was healthy after
+        # the last update and is still healthy now to ensure that
+        # we don't miss any state changes while telnet is down
+        # or reconnecting.
         if (
-            self._receiver.telnet_connected is True
-            and self._receiver.telnet_healthy is True
-            and not self._needs_full_resync
-        ):
-            await self._receiver.input.async_update_media_state()
+            telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
+        ) and self._telnet_was_healthy:
+            await receiver.input.async_update_media_state()
             return
 
-        await self._receiver.async_update()
-        self._needs_full_resync = False
+        await receiver.async_update()
+        self._telnet_was_healthy = telnet_is_healthy
 
         if self._update_audyssey:
-            await self._receiver.async_update_audyssey()
+            await receiver.async_update_audyssey()
 
     @property
     def state(self) -> MediaPlayerState | None:
