@@ -13,6 +13,7 @@ import time
 from typing import TYPE_CHECKING, Any, cast
 import uuid
 
+import async_timeout
 import attr
 import certifi
 
@@ -472,7 +473,7 @@ class MQTT:
 
         def no_more_acks() -> bool:
             """Return False if there are unprocessed ACKs."""
-            return not bool(self._pending_operations)
+            return not any(not op.is_set() for op in self._pending_operations.values())
 
         # wait for ACKs to be processed
         async with self._pending_operations_condition:
@@ -718,13 +719,15 @@ class MQTT:
         # The callback signature for on_unsubscribe is different from on_subscribe
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reasoncodes are not used in Home Assistant
-        self.hass.add_job(self._mqtt_handle_mid, mid)
+        self.hass.create_task(self._mqtt_handle_mid(mid))
 
     async def _mqtt_handle_mid(self, mid: int) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        await self._register_mid(mid)
-        self._pending_operations[mid].set()
+        async with self._pending_operations_condition:
+            if mid not in self._pending_operations:
+                self._pending_operations[mid] = asyncio.Event()
+            self._pending_operations[mid].set()
 
     async def _register_mid(self, mid: int) -> None:
         """Create Event for an expected ACK."""
@@ -755,7 +758,8 @@ class MQTT:
         # may be executed first.
         await self._register_mid(mid)
         try:
-            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
+            async with async_timeout.timeout(TIMEOUT_ACK):
+                await self._pending_operations[mid].wait()
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
