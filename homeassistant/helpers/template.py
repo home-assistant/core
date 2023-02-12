@@ -966,9 +966,9 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
-@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
-def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
-    return TemplateState(hass, state, collect=False)
+_template_state_no_collect = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(
+    partial(TemplateState, collect=False)
+)
 
 
 def _state_generator(
@@ -990,9 +990,7 @@ def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
-@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
-def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
-    return TemplateState(hass, state)
+_template_state = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(TemplateState)
 
 
 def _get_template_state_from_state(
@@ -1812,10 +1810,7 @@ def regex_match(value, find="", ignorecase=False):
     return bool(_regex_cache(find, flags).match(value))
 
 
-@lru_cache(maxsize=128)
-def _regex_cache(find: str, flags: int) -> re.Pattern:
-    """Cache compiled regex."""
-    return re.compile(find, flags)
+_regex_cache = lru_cache(maxsize=128)(re.compile)
 
 
 def regex_replace(value="", find="", replace="", ignorecase=False):
