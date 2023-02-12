@@ -25,7 +25,7 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkNumberEntityDescriptionMixin:
     """Mixin values for Reolink number entities."""
 
-    value: Callable[[Host, int | None], bool]
+    value: Callable[[Host, int | None], float]
     get_min_value: Callable[[Host, int | None], float]
     get_max_value: Callable[[Host, int | None], float]
     method: Callable[[Host, int | None, float], Any]
