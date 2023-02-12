@@ -152,8 +152,9 @@ class MatchRule:
     def weight(self) -> int:
         """Return the weight of the matching rule.
 
-        More specific matches should be preferred over less specific. Model matching
-        rules have a priority over manufacturer matching rules and rules matching a
+        More specific matches should be preferred over less specific. Quirk class
+        matching rules have priority over model matching rules
+        and have a priority over manufacturer matching rules and rules matching a
         single model/manufacturer get a better priority over rules matching multiple
         models/manufacturers. And any model or manufacturers matching rules get better
         priority over rules matching only channels.
@@ -161,16 +162,17 @@ class MatchRule:
         multiple channels a better priority over rules matching a single channel.
         """
         weight = 0
+        if self.quirk_classes:
+            weight += 501 - (
+                1 if callable(self.quirk_classes) else len(self.quirk_classes)
+            )
+
         if self.models:
             weight += 401 - (1 if callable(self.models) else len(self.models))
 
         if self.manufacturers:
             weight += 301 - (
                 1 if callable(self.manufacturers) else len(self.manufacturers)
-            )
-        if self.quirk_classes:
-            weight += 201 - (
-                1 if callable(self.quirk_classes) else len(self.quirk_classes)
             )
 
         weight += 10 * len(self.channel_names)
