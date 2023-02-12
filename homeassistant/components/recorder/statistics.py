@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 import contextlib
 import dataclasses
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from functools import lru_cache, partial
 from itertools import chain, groupby
 import json
@@ -1036,6 +1036,12 @@ def _reduce_statistics(
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
     period_seconds = period.total_seconds()
+    _want_mean = "mean" in types
+    _want_min = "min" in types
+    _want_max = "max" in types
+    _want_last_reset = "last_reset" in types
+    _want_state = "state" in types
+    _want_sum = "sum" in types
     for statistic_id, stat_list in stats.items():
         max_values: list[float] = []
         mean_values: list[float] = []
@@ -1053,29 +1059,29 @@ def _reduce_statistics(
                     "start": start,
                     "end": end,
                 }
-                if "mean" in types:
+                if _want_mean:
                     row["mean"] = mean(mean_values) if mean_values else None
-                if "min" in types:
+                if _want_min:
                     row["min"] = min(min_values) if min_values else None
-                if "max" in types:
+                if _want_max:
                     row["max"] = max(max_values) if max_values else None
-                if "last_reset" in types:
+                if _want_last_reset:
                     row["last_reset"] = prev_stat.get("last_reset")
-                if "state" in types:
+                if _want_state:
                     row["state"] = prev_stat.get("state")
-                if "sum" in types:
+                if _want_sum:
                     row["sum"] = prev_stat["sum"]
                 result[statistic_id].append(row)
 
                 max_values = []
                 mean_values = []
                 min_values = []
-            if statistic.get("max") is not None:
-                max_values.append(statistic["max"])
-            if statistic.get("mean") is not None:
-                mean_values.append(statistic["mean"])
-            if statistic.get("min") is not None:
-                min_values.append(statistic["min"])
+            if _want_max and (_max := statistic.get("max")) is not None:
+                max_values.append(_max)
+            if _want_mean and (_mean := statistic.get("mean")) is not None:
+                mean_values.append(_mean)
+            if _want_min and (_min := statistic.get("min")) is not None:
+                min_values.append(_min)
             prev_stat = statistic
 
     return result
@@ -1088,32 +1094,34 @@ def reduce_day_ts_factory() -> (
     ]
 ):
     """Return functions to match same day and day start end."""
+    _boundries: tuple[float, float] = (0, 0)
+
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
     )
-    # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
-
-    def _as_local_date(time: float) -> date:
-        """Return the local date of a datetime."""
-        return _local_from_timestamp(time).date()
-
-    _as_local_date_cached = lru_cache(maxsize=6)(_as_local_date)
 
     def _same_day_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same date."""
-        return _as_local_date_cached(time1) == _as_local_date_cached(time2)
+        nonlocal _boundries
+        if not _boundries[0] <= time1 < _boundries[1]:
+            _boundries = _day_start_end_ts_cached(time1)
+        return _boundries[0] <= time2 < _boundries[1]
 
     def _day_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (day) time is within."""
-        start = dt_util.as_utc(
-            _as_local_cached(time).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_local = _local_from_timestamp(time).replace(
+            hour=0, minute=0, second=0, microsecond=0
         )
-        end = start + timedelta(days=1)
-        return (start.timestamp(), end.timestamp())
+        return (
+            start_local.astimezone(dt_util.UTC).timestamp(),
+            (start_local + timedelta(days=1)).astimezone(dt_util.UTC).timestamp(),
+        )
 
-    return _same_day_ts, _day_start_end_ts
+    # We create _day_start_end_ts_cached in the closure in case the timezone changes
+    _day_start_end_ts_cached = lru_cache(maxsize=6)(_day_start_end_ts)
+
+    return _same_day_ts, _day_start_end_ts_cached
 
 
 def _reduce_statistics_per_day(
@@ -1134,38 +1142,36 @@ def reduce_week_ts_factory() -> (
     ]
 ):
     """Return functions to match same week and week start end."""
+    _boundries: tuple[float, float] = (0, 0)
+
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
     )
-    # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
-
-    def _as_local_isocalendar(
-        time: float,
-    ) -> tuple:  # Need python3.11 for isocalendar typing
-        """Return the local isocalendar of a datetime."""
-        return _local_from_timestamp(time).isocalendar()
-
-    _as_local_isocalendar_cached = lru_cache(maxsize=6)(_as_local_isocalendar)
 
     def _same_week_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and week."""
-        date1 = _as_local_isocalendar_cached(time1)
-        date2 = _as_local_isocalendar_cached(time2)
-        return (date1.year, date1.week) == (date2.year, date2.week)  # type: ignore[attr-defined]
+        nonlocal _boundries
+        if not _boundries[0] <= time1 < _boundries[1]:
+            _boundries = _week_start_end_ts_cached(time1)
+        return _boundries[0] <= time2 < _boundries[1]
 
     def _week_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (week) time is within."""
-        time_local = _as_local_cached(time)
+        nonlocal _boundries
+        time_local = _local_from_timestamp(time)
         start_local = time_local.replace(
             hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=time_local.weekday())
-        start = dt_util.as_utc(start_local)
-        end = dt_util.as_utc(start_local + timedelta(days=7))
-        return (start.timestamp(), end.timestamp())
+        return (
+            start_local.astimezone(dt_util.UTC).timestamp(),
+            (start_local + timedelta(days=7)).astimezone(dt_util.UTC).timestamp(),
+        )
 
-    return _same_week_ts, _week_start_end_ts
+    # We create _week_start_end_ts_cached in the closure in case the timezone changes
+    _week_start_end_ts_cached = lru_cache(maxsize=6)(_week_start_end_ts)
+
+    return _same_week_ts, _week_start_end_ts_cached
 
 
 def _reduce_statistics_per_week(
@@ -1186,30 +1192,38 @@ def reduce_month_ts_factory() -> (
     ]
 ):
     """Return functions to match same month and month start end."""
+    _boundries: tuple[float, float] = (0, 0)
+
     # We have to recreate _local_from_timestamp in the closure in case the timezone changes
     _local_from_timestamp = partial(
         datetime.fromtimestamp, tz=dt_util.DEFAULT_TIME_ZONE
     )
-    # We create _as_local_cached in the closure in case the timezone changes
-    _as_local_cached = lru_cache(maxsize=6)(_local_from_timestamp)
 
     def _same_month_ts(time1: float, time2: float) -> bool:
         """Return True if time1 and time2 are in the same year and month."""
-        date1 = _as_local_cached(time1)
-        date2 = _as_local_cached(time2)
-        return (date1.year, date1.month) == (date2.year, date2.month)
+        nonlocal _boundries
+        if not _boundries[0] <= time1 < _boundries[1]:
+            _boundries = _month_start_end_ts_cached(time1)
+        return _boundries[0] <= time2 < _boundries[1]
 
     def _month_start_end_ts(time: float) -> tuple[float, float]:
         """Return the start and end of the period (month) time is within."""
-        start_local = _as_local_cached(time).replace(
+        start_local = _local_from_timestamp(time).replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
-        start = dt_util.as_utc(start_local)
-        end_local = (start_local + timedelta(days=31)).replace(day=1)
-        end = dt_util.as_utc(end_local)
-        return (start.timestamp(), end.timestamp())
+        # We add 4 days to the end to make sure we are in the next month
+        end_local = (start_local.replace(day=28) + timedelta(days=4)).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        return (
+            start_local.astimezone(dt_util.UTC).timestamp(),
+            end_local.astimezone(dt_util.UTC).timestamp(),
+        )
 
-    return _same_month_ts, _month_start_end_ts
+    # We create _month_start_end_ts_cached in the closure in case the timezone changes
+    _month_start_end_ts_cached = lru_cache(maxsize=6)(_month_start_end_ts)
+
+    return _same_month_ts, _month_start_end_ts_cached
 
 
 def _reduce_statistics_per_month(
@@ -2034,6 +2048,12 @@ def _sorted_statistics_to_dict(
             for stat in tmp:
                 stats_by_meta_id[stat.metadata_id].insert(0, stat)
 
+    _want_mean = "mean" in types
+    _want_min = "min" in types
+    _want_max = "max" in types
+    _want_last_reset = "last_reset" in types
+    _want_state = "state" in types
+    _want_sum = "sum" in types
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -2048,24 +2068,22 @@ def _sorted_statistics_to_dict(
             convert = None
         ent_results = result[statistic_id]
         for db_state in stats_list:
-            start_ts = db_state.start_ts
             row: dict[str, Any] = {
-                "start": start_ts,
+                "start": (start_ts := db_state.start_ts),
                 "end": start_ts + table_duration_seconds,
             }
-            if "mean" in types:
+            if _want_mean:
                 row["mean"] = convert(db_state.mean) if convert else db_state.mean
-            if "min" in types:
+            if _want_min:
                 row["min"] = convert(db_state.min) if convert else db_state.min
-            if "max" in types:
+            if _want_max:
                 row["max"] = convert(db_state.max) if convert else db_state.max
-            if "last_reset" in types:
+            if _want_last_reset:
                 row["last_reset"] = db_state.last_reset_ts
-            if "state" in types:
+            if _want_state:
                 row["state"] = convert(db_state.state) if convert else db_state.state
-            if "sum" in types:
+            if _want_sum:
                 row["sum"] = convert(db_state.sum) if convert else db_state.sum
-
             ent_results.append(row)
 
     return result
