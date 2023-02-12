@@ -33,7 +33,6 @@ async def async_setup_entry(
 class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
     """Update entity for a Netgear device."""
 
-    _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.INSTALL
 

@@ -43,7 +43,6 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
     """An implementation of a Reolink IP camera."""
 
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
-    _attr_has_entity_name = True
 
     def __init__(
         self,

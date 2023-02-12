@@ -15,6 +15,8 @@ from .const import DOMAIN
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
     """Parent class for Reolink hardware camera entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, reolink_data: ReolinkData, coordinator: DataUpdateCoordinator
     ) -> None:
