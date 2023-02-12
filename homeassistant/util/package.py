@@ -94,7 +94,14 @@ def install_package(
         args += ["--user"]
         env["PYTHONUSERBASE"] = os.path.abspath(target)
     _LOGGER.debug("Running pip command: args=%s", args)
-    with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
+    with Popen(
+        args,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        close_fds=False,  # required for posix_spawn
+    ) as process:
         _, stderr = process.communicate()
         if process.returncode != 0:
             _LOGGER.error(
