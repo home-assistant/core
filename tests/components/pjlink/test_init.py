@@ -66,7 +66,74 @@ async def test_initialization(projector_from_address, hass):
             {
                 media_player.DOMAIN: {
                     "platform": "pjlink",
-                    "name": "test",
+                    "host": "127.0.0.1",
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.test")
+        assert state.state == "off"
+
+        assert "source_list" in state.attributes
+        source_list = state.attributes["source_list"]
+
+        assert set(source_list) == {"HDMI 1", "HDMI 2", "VGA 1"}
+
+
+@pytest.mark.parametrize("power_state", ["on", "warm-up"])
+async def test_on_state_init(projector_from_address, hass, power_state):
+    """Test a device that is available."""
+
+    with assert_setup_component(1, media_player.DOMAIN):
+        instance = projector_from_address.return_value
+
+        with instance as mocked_instance:
+            mocked_instance.get_name.return_value = "Test"
+            mocked_instance.get_power.return_value = power_state
+            mocked_instance.get_inputs.return_value = (("HDMI", 1),)
+            mocked_instance.get_input.return_value = ("HDMI", 1)
+
+        assert await async_setup_component(
+            hass,
+            media_player.DOMAIN,
+            {
+                media_player.DOMAIN: {
+                    "platform": "pjlink",
+                    "host": "127.0.0.1",
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.test")
+        assert state.state == "on"
+
+        assert state.attributes["source"] == "HDMI 1"
+
+
+async def test_initialization(projector_from_address, hass):
+    """Test a device that is available."""
+
+    with assert_setup_component(1, media_player.DOMAIN):
+        instance = projector_from_address.return_value
+
+        with instance as mocked_instance:
+            mocked_instance.get_name.return_value = "Test"
+            mocked_instance.get_inputs.return_value = (
+                ("HDMI", 1),
+                ("HDMI", 2),
+                ("VGA", 1),
+            )
+
+        assert await async_setup_component(
+            hass,
+            media_player.DOMAIN,
+            {
+                media_player.DOMAIN: {
+                    "platform": "pjlink",
                     "host": "127.0.0.1",
                 }
             },
