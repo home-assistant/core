@@ -112,7 +112,7 @@ def _ws_get_statistic_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
-        vol.Optional("statistic_id"): str,
+        vol.Required("statistic_id"): str,
         vol.Optional("types"): vol.All(
             [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
         ),
@@ -139,7 +139,7 @@ async def ws_get_statistic_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_id"),
+            msg["statistic_id"],
             msg.get("types"),
             msg.get("units"),
         )
@@ -208,7 +208,7 @@ async def ws_handle_get_statistics_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_ids"),
+            msg["statistic_ids"],
             msg.get("period"),
             msg.get("units"),
             types,
@@ -221,7 +221,7 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("type"): "recorder/statistics_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("statistic_ids"): [str],
+        vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
         vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
         vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(

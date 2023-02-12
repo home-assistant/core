@@ -1089,6 +1089,7 @@ async def test_statistics_during_period_invalid_unit_conversion(
             "id": 1,
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
         }
     )
@@ -1102,6 +1103,7 @@ async def test_statistics_during_period_invalid_unit_conversion(
             "id": 2,
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
             "units": custom_units,
         }
@@ -1242,6 +1244,7 @@ async def test_statistics_during_period_bad_start_time(
             "id": 1,
             "type": "recorder/statistics_during_period",
             "start_time": "cats",
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
         }
     )
@@ -1263,12 +1266,56 @@ async def test_statistics_during_period_bad_end_time(
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
             "end_time": "dogs",
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
         }
     )
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_end_time"
+
+
+async def test_statistics_during_period_no_statistic_ids(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test statistics_during_period without passing statistic_ids."""
+    now = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": (now + timedelta(seconds=1)).isoformat(),
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
+async def test_statistics_during_period_empty_statistic_ids(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test statistics_during_period with passing an empty list of statistic_ids."""
+    now = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": [],
+            "end_time": (now + timedelta(seconds=1)).isoformat(),
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
 
 
 @pytest.mark.parametrize(
@@ -1606,6 +1653,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
             "id": 1,
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test1", "sensor.test2", "sensor.test3"],
             "period": "5minute",
         }
     )
@@ -1667,6 +1715,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
         {
             "id": 3,
             "type": "recorder/statistics_during_period",
+            "statistic_ids": ["sensor.test1", "sensor.test2", "sensor.test3"],
             "start_time": now.isoformat(),
             "period": "5minute",
         }
@@ -1691,6 +1740,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
         {
             "id": 5,
             "type": "recorder/statistics_during_period",
+            "statistic_ids": ["sensor.test1", "sensor.test2", "sensor.test3"],
             "start_time": now.isoformat(),
             "period": "5minute",
         }
