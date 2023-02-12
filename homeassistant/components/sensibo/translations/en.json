@@ -54,7 +54,7 @@
             }
         },
         "sensor": {
-            "_": {
+            "sensibo_sensor": {
                 "state_attributes": {
                     "fanlevel": {
                         "name": "Fan level",
@@ -143,7 +143,7 @@
             }
         },
         "switch": {
-            "_": {
+            "sensibo_switch": {
                 "state_attributes": {
                     "id": {
                         "name": "Id"
