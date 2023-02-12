@@ -78,16 +78,13 @@ FIBARO_TYPEMAP = {
 class FibaroController:
     """Initiate Fibaro Controller Class."""
 
-    def __init__(
-        self, config: Mapping[str, Any], serial_number: str | None = None
-    ) -> None:
+    def __init__(self, config: Mapping[str, Any]) -> None:
         """Initialize the Fibaro controller."""
 
         # The FibaroClient uses the correct API version automatically
         self._client = FibaroClient(config[CONF_URL])
         self._client.set_authentication(config[CONF_USERNAME], config[CONF_PASSWORD])
 
-        self._scene_map = None
         # Whether to import devices from plugins
         self._import_plugins = config[CONF_IMPORT_PLUGINS]
         self._room_map = None  # Mapping roomId to room object
@@ -105,15 +102,13 @@ class FibaroController:
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
-        try:
-            connected = self._client.connect()
-            info = self._client.read_info()
-            self.hub_serial = info.serial_number
-            self.hub_name = info.hc_name
-            self.hub_software_version = info.current_version
-        except AssertionError:
-            _LOGGER.error("Can't connect to Fibaro HC. Please check URL")
-            return False
+
+        connected = self._client.connect()
+        info = self._client.read_info()
+        self.hub_serial = info.serial_number
+        self.hub_name = info.hc_name
+        self.hub_software_version = info.current_version
+
         if connected is False:
             _LOGGER.error(
                 "Invalid login for Fibaro HC. Please check username and password"
@@ -266,7 +261,7 @@ class FibaroController:
         if "zwaveCompany" in master_entity.properties:
             manufacturer = master_entity.properties.get("zwaveCompany")
         else:
-            manufacturer = "Unknown"
+            manufacturer = None
 
         self._device_infos[master_entity.fibaro_id] = DeviceInfo(
             identifiers={(DOMAIN, master_entity.fibaro_id)},
@@ -285,7 +280,6 @@ class FibaroController:
 
     def _read_scenes(self):
         scenes = self._client.read_scenes()
-        self._scene_map = {}
         for device in scenes:
             device.fibaro_controller = self
             if device.room_id == 0:
@@ -300,7 +294,6 @@ class FibaroController:
             device.unique_id_str = (
                 f"{slugify(self.hub_serial)}.scene.{device.fibaro_id}"
             )
-            self._scene_map[device.fibaro_id] = device
             self.fibaro_devices[Platform.SCENE].append(device)
             _LOGGER.debug("%s scene -> %s", device.ha_id, device)
 
@@ -368,12 +361,9 @@ class FibaroController:
             except (KeyError, ValueError):
                 pass
 
-
-def _init_controller(
-    data: Mapping[str, Any], serial_number: str | None
-) -> FibaroController:
+def _init_controller(data: Mapping[str, Any]) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
-    controller = FibaroController(data, serial_number)
+    controller = FibaroController(data)
     controller.connect_with_error_handling()
     return controller
 
@@ -384,9 +374,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     The unique id of the config entry is the serial number of the home center.
     """
     try:
-        controller = await hass.async_add_executor_job(
-            _init_controller, entry.data, entry.unique_id
-        )
+        controller = await hass.async_add_executor_job(_init_controller, entry.data)
     except FibaroConnectFailed as connect_ex:
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"

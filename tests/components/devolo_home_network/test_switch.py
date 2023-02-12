@@ -32,7 +32,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_switch_setup(hass: HomeAssistant):
+async def test_switch_setup(hass: HomeAssistant) -> None:
     """Test default setup of the switch component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -47,7 +47,7 @@ async def test_switch_setup(hass: HomeAssistant):
 
 async def test_update_guest_wifi_status_auth_failed(
     hass: HomeAssistant, mock_device: MockDevice
-):
+) -> None:
     """Test getting the wifi_status with wrong password triggers the reauth flow."""
     entry = configure_integration(hass)
     mock_device.device.async_get_wifi_guest_access.side_effect = DevicePasswordProtected
@@ -70,7 +70,9 @@ async def test_update_guest_wifi_status_auth_failed(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDevice):
+async def test_update_enable_guest_wifi(
+    hass: HomeAssistant, mock_device: MockDevice
+) -> None:
     """Test state change of a enable_guest_wifi switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -155,7 +157,7 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
+async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test state change of a enable_leds switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -250,7 +252,7 @@ async def test_device_failure(
     name: str,
     get_method: str,
     update_interval: timedelta,
-):
+) -> None:
     """Test device failure."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -281,7 +283,7 @@ async def test_device_failure(
 )
 async def test_auth_failed(
     hass: HomeAssistant, mock_device: MockDevice, name: str, set_method: str
-):
+) -> None:
     """Test setting unautherized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()

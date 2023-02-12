@@ -75,17 +75,13 @@ LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistic
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
-    statistics_sensors = []
     instance = get_instance(hass)
-
-    for state in all_sensors:
-        if not instance.entity_filter(state.entity_id):
-            continue
-        if not try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)):
-            continue
-        statistics_sensors.append(state)
-
-    return statistics_sensors
+    return [
+        state
+        for state in all_sensors
+        if instance.entity_filter(state.entity_id)
+        and try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS))
+    ]
 
 
 def _time_weighted_average(
@@ -347,11 +343,10 @@ def reset_detected(
 
 def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
     """Prepare a dict with wanted statistics for entities."""
-    wanted_statistics = {}
-    for state in sensor_states:
-        state_class = state.attributes[ATTR_STATE_CLASS]
-        wanted_statistics[state.entity_id] = DEFAULT_STATISTICS[state_class]
-    return wanted_statistics
+    return {
+        state.entity_id: DEFAULT_STATISTICS[state.attributes[ATTR_STATE_CLASS]]
+        for state in sensor_states
+    }
 
 
 def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | None:
