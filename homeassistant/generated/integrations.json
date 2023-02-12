@@ -6474,6 +6474,10 @@
       "integration_type": "helper",
       "config_flow": false
     },
+    "input_schedule": {
+      "integration_type": "helper",
+      "config_flow": false
+    },
     "input_select": {
       "integration_type": "helper",
       "config_flow": false
@@ -6491,10 +6495,6 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
-    },
-    "schedule": {
-      "integration_type": "helper",
-      "config_flow": false
     },
     "switch_as_x": {
       "integration_type": "helper",
@@ -6539,6 +6539,7 @@
     "input_boolean",
     "input_datetime",
     "input_number",
+    "input_schedule",
     "input_select",
     "input_text",
     "integration",
@@ -6552,7 +6553,6 @@
     "plant",
     "proximity",
     "rpi_power",
-    "schedule",
     "shopping_list",
     "sun",
     "switch_as_x",

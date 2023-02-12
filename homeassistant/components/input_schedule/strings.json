@@ -1,5 +1,5 @@
 {
-  "title": "Schedule",
+  "title": "Input Schedule",
   "state": {
     "_": {
       "off": "[%key:common::state::off%]",

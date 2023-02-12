@@ -1,4 +1,4 @@
-"""Test for the Schedule integration."""
+"""Test for the Input Schedule component."""
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -8,8 +8,11 @@ from unittest.mock import patch
 from aiohttp import ClientWebSocketResponse
 import pytest
 
-from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
-from homeassistant.components.schedule.const import (
+from homeassistant.components.input_schedule import (
+    STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
+)
+from homeassistant.components.input_schedule.const import (
     ATTR_NEXT_EVENT,
     CONF_FRIDAY,
     CONF_FROM,

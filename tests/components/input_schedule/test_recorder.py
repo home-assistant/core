@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.components.input_schedule.const import ATTR_NEXT_EVENT, DOMAIN
 from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.components.schedule.const import ATTR_NEXT_EVENT, DOMAIN
 from homeassistant.const import ATTR_EDITABLE, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component

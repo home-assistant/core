@@ -76,6 +76,7 @@ components: &components
   - homeassistant/components/input_number/**
   - homeassistant/components/input_select/**
   - homeassistant/components/input_text/**
+  - homeassistant/components/input_schedule/**
   - homeassistant/components/logbook/**
   - homeassistant/components/logger/**
   - homeassistant/components/lovelace/**

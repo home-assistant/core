@@ -116,6 +116,7 @@ ALLOWED_USED_COMPONENTS = {
     "input_number",
     "input_select",
     "input_text",
+    "input_schedule",
     "media_source",
     "onboarding",
     "persistent_notification",

@@ -78,6 +78,7 @@ NO_IOT_CLASS = [
     "input_button",
     "input_datetime",
     "input_number",
+    "input_schedule",
     "input_select",
     "input_text",
     "intent_script",

@@ -2,7 +2,7 @@
 import logging
 from typing import Final
 
-DOMAIN: Final = "schedule"
+DOMAIN: Final = "input_schedule"
 LOGGER = logging.getLogger(__package__)
 
 CONF_FRIDAY: Final = "friday"

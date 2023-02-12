@@ -19,14 +19,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers.collection import (
-    CollectionEntity,
-    IDManager,
-    StorageCollection,
-    StorageCollectionWebsocket,
-    YamlCollection,
-    sync_entity_lifecycle,
-)
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -65,7 +58,6 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     schedule = sorted(schedule, key=lambda time_range: time_range[CONF_FROM])
 
     # Check if the start time of the next event is before the end time of the previous event
-    previous_to = None
     for time_range in schedule:
         if time_range[CONF_FROM] >= time_range[CONF_TO]:
             raise vol.Invalid(
@@ -74,10 +66,10 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
             )
 
         # Check if the from time of the event is after the to time of the previous event
-        if previous_to is not None and previous_to > time_range[CONF_FROM]:  # type: ignore[unreachable]
-            raise vol.Invalid("Overlapping times found in schedule")
+        # if previous_to is not None and previous_to > time_range[CONF_FROM]:
+        #     raise vol.Invalid("Overlapping times found in schedule")
 
-        previous_to = time_range[CONF_TO]
+        # time_range[CONF_TO]
 
     return schedule
 
@@ -161,10 +153,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    id_manager = IDManager()
+    id_manager = collection.IDManager()
 
-    yaml_collection = YamlCollection(LOGGER, id_manager)
-    sync_entity_lifecycle(hass, DOMAIN, DOMAIN, component, yaml_collection, Schedule)
+    yaml_collection = collection.YamlCollection(LOGGER, id_manager)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Schedule
+    )
 
     storage_collection = ScheduleStorageCollection(
         Store(
@@ -176,14 +170,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    sync_entity_lifecycle(hass, DOMAIN, DOMAIN, component, storage_collection, Schedule)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, Schedule
+    )
 
     await yaml_collection.async_load(
         [{CONF_ID: id_, **cfg} for id_, cfg in config.get(DOMAIN, {}).items()]
     )
     await storage_collection.async_load()
 
-    StorageCollectionWebsocket(
+    collection.StorageCollectionWebsocket(
         storage_collection,
         DOMAIN,
         DOMAIN,
@@ -210,7 +206,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ScheduleStorageCollection(StorageCollection):
+class ScheduleStorageCollection(collection.StorageCollection):
     """Schedules stored in storage."""
 
     SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
@@ -238,7 +234,7 @@ class ScheduleStorageCollection(StorageCollection):
         return data
 
 
-class Schedule(CollectionEntity):
+class Schedule(collection.CollectionEntity):
     """Schedule entity."""
 
     _attr_has_entity_name = True
