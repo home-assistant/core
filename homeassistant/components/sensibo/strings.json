@@ -80,8 +80,8 @@
           "fixedleftright": "Fixed left right",
           "rangecenter": "Range center",
           "rangefull": "Range full",
-          "rangeLeft": "Range left",
-          "rangeRight": "Range right"
+          "rangeleft": "Range left",
+          "rangeright": "Range right"
         }
       },
       "light": {

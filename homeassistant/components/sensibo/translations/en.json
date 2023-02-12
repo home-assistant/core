@@ -72,10 +72,10 @@
                     "fixedleft": "Fixed left",
                     "fixedleftright": "Fixed left right",
                     "fixedright": "Fixed right",
-                    "rangeLeft": "Range left",
-                    "rangeRight": "Range right",
                     "rangecenter": "Range center",
                     "rangefull": "Range full",
+                    "rangeleft": "Range left",
+                    "rangeright": "Range right",
                     "stopped": "Stopped"
                 }
             },
