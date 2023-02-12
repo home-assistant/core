@@ -137,7 +137,7 @@ async def test_sensors(
         },
     }
 
-    ## Check if the entity is well registered in the device registry
+    # Check if the entity is well registered in the device registry
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
