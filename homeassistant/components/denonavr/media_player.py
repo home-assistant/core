@@ -254,6 +254,7 @@ class DenonDevice(MediaPlayerEntity):
         if zone != self._receiver.zone:
             return
 
+        self._attr_available = True
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -266,6 +267,7 @@ class DenonDevice(MediaPlayerEntity):
         if (
             self._receiver.telnet_connected is True
             and self._receiver.telnet_healthy is True
+            or not self.available
         ):
             await self._receiver.input.async_update_media_state()
             return
