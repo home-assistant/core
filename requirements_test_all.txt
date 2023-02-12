@@ -635,7 +635,7 @@ greeclimate==1.4.1
 greeneye_monitor==3.0.3
 
 # homeassistant.components.pure_energie
-gridnet==4.0.0
+gridnet==4.2.0
 
 # homeassistant.components.growatt_server
 growattServer==1.3.0
