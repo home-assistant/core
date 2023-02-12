@@ -7,7 +7,7 @@ from typing import Any
 
 from reolink_aio.api import Host
 
-from homeassistant.components.number import (
+from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
