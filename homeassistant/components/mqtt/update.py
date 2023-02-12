@@ -1,7 +1,6 @@
 """Configure update platform in a device through MQTT topic."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import functools
 import logging
 from typing import Any
@@ -35,7 +34,7 @@ from .const import (
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
-from .models import MqttValueTemplate, ReceiveMessage
+from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -148,7 +147,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         topics: dict[str, Any] = {}
 
         def add_subscription(
-            topics: dict[str, Any], topic: str, msg_callback: Callable
+            topics: dict[str, Any], topic: str, msg_callback: MessageCallbackType
         ) -> None:
             if self._config.get(topic) is not None:
                 topics[topic] = {
