@@ -1138,6 +1138,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "dormakaba_dkey": {
+      "name": "Dormakaba dKey",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "dovado": {
       "name": "Dovado",
       "integration_type": "hub",

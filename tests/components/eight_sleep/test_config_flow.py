@@ -29,7 +29,7 @@ async def test_form(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_invalid_auth(hass, token_error) -> None:
+async def test_form_invalid_auth(hass: HomeAssistant, token_error) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -68,7 +68,7 @@ async def test_import(hass: HomeAssistant) -> None:
     }
 
 
-async def test_import_invalid_auth(hass, token_error) -> None:
+async def test_import_invalid_auth(hass: HomeAssistant, token_error) -> None:
     """Test we handle invalid auth on import."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
