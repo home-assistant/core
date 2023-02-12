@@ -37,6 +37,7 @@ import async_timeout
 from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
+from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -2256,7 +2257,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
-        if isinstance(obj, (AllStates, DomainStates, TemplateState)):
+        if isinstance(
+            obj, (AllStates, DomainStates, TemplateState, LoopContext, AsyncLoopContext)
+        ):
             return attr[0] != "_"
 
         if isinstance(obj, Namespace):
