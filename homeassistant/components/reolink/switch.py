@@ -98,9 +98,9 @@ class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, self._channel, True)
-        await self.coordinator.async_request_refresh()
+        await self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
-        await self.coordinator.async_request_refresh()
+        await self.async_write_ha_state()
