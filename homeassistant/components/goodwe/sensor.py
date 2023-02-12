@@ -18,13 +18,16 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -109,6 +112,18 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         value=lambda prev, val: prev if not val else val,
         available=lambda entity: entity.coordinator.data is not None,
     ),
+    "VA": GoodweSensorEntityDescription(
+        key="VA",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+    ),
+    "var": GoodweSensorEntityDescription(
+        key="var",
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+    ),
     "C": GoodweSensorEntityDescription(
         key="C",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -120,6 +135,12 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
+    "h": GoodweSensorEntityDescription(
+        key="h",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.HOURS,
     ),
     "%": GoodweSensorEntityDescription(
         key="%",
