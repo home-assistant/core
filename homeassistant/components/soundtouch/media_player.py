@@ -407,16 +407,19 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             return None
 
         # Client devices do NOT return their siblings as part of the "slaves" list.
-        # Only the master has the full list of slaves. To compensate for this shortcoming
-        # we have to fetch the zone info from the master when the current device is a slave.
+        # Only the master has the full list of slaves. To compensate for this
+        # shortcoming we have to fetch the zone info from the master when the current
+        # device is a slave.
         # In addition to this shortcoming, libsoundtouch seems to report the "is_master"
-        # property wrong on some slaves, so the only reliable way to detect if the current
-        # devices is the master, is by comparing the master_id of the zone with the device_id.
+        # property wrong on some slaves, so the only reliable way to detect
+        # if the current devices is the master, is by comparing the master_id
+        # of the zone with the device_id.
         if zone_status.master_id == self._device.config.device_id:
             return self._build_zone_info(self.entity_id, zone_status.slaves)
 
-        # The master device has to be searched by it's ID and not IP since libsoundtouch / BOSE API
-        # do not return the IP of the master for some slave objects/responses
+        # The master device has to be searched by it's ID and not IP since
+        # libsoundtouch / BOSE API do not return the IP of the master
+        # for some slave objects/responses
         master_instance = self._get_instance_by_id(zone_status.master_id)
         if master_instance is not None:
             master_zone_status = master_instance.device.zone_status()
@@ -424,8 +427,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
                 master_instance.entity_id, master_zone_status.slaves
             )
 
-        # We should never end up here since this means we haven't found a master device to get the
-        # correct zone info from. In this case, assume current device is master
+        # We should never end up here since this means we haven't found a master
+        # device to get the correct zone info from. In this case,
+        # assume current device is master
         return self._build_zone_info(self.entity_id, zone_status.slaves)
 
     def _get_instance_by_ip(self, ip_address):

@@ -1,8 +1,6 @@
 {
   "domain": "somfy_mylink",
   "name": "Somfy MyLink",
-  "documentation": "https://www.home-assistant.io/integrations/somfy_mylink",
-  "requirements": ["somfy-mylink-synergy==1.0.6"],
   "codeowners": [],
   "config_flow": true,
   "dhcp": [
@@ -11,6 +9,8 @@
       "macaddress": "B8B7F1*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/somfy_mylink",
   "iot_class": "assumed_state",
-  "loggers": ["somfy_mylink_synergy"]
+  "loggers": ["somfy_mylink_synergy"],
+  "requirements": ["somfy-mylink-synergy==1.0.6"]
 }

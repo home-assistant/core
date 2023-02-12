@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_TYPE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -98,7 +99,7 @@ async def test_get_triggers(hass, wemo_entity):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_fires_on_long_press(hass):
+async def test_fires_on_long_press(hass: HomeAssistant) -> None:
     """Test wemo long press trigger firing."""
     assert await setup_automation(hass, MOCK_DEVICE_ID, EVENT_TYPE_LONG_PRESS)
     calls = async_mock_service(hass, "test", "automation")

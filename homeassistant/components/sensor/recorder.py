@@ -13,8 +13,8 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
+    get_instance,
     history,
-    is_entity_recorded,
     statistics,
     util as recorder_util,
 )
@@ -76,9 +76,10 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
     statistics_sensors = []
+    instance = get_instance(hass)
 
     for state in all_sensors:
-        if not is_entity_recorded(hass, state.entity_id):
+        if not instance.entity_filter(state.entity_id):
             continue
         if not try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)):
             continue
@@ -369,6 +370,13 @@ def _last_reset_as_utc_isoformat(last_reset_s: Any, entity_id: str) -> str | Non
     return dt_util.as_utc(last_reset).isoformat()
 
 
+def _timestamp_to_isoformat_or_none(timestamp: float | None) -> str | None:
+    """Convert a timestamp to ISO format or return None."""
+    if timestamp is None:
+        return None
+    return dt_util.utc_from_timestamp(timestamp).isoformat()
+
+
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> statistics.PlatformCompiledStatistics:
@@ -526,9 +534,9 @@ def _compile_statistics(  # noqa: C901
             if entity_id in last_stats:
                 # We have compiled history for this sensor before,
                 # use that as a starting point.
-                last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
-                if old_last_reset is not None:
-                    last_reset = old_last_reset = old_last_reset.isoformat()
+                last_reset = old_last_reset = _timestamp_to_isoformat_or_none(
+                    last_stats[entity_id][0]["last_reset"]
+                )
                 new_state = old_state = last_stats[entity_id][0]["state"]
                 _sum = last_stats[entity_id][0]["sum"] or 0.0
 
@@ -673,6 +681,7 @@ def validate_statistics(
     metadatas = statistics.get_metadata(hass, statistic_source=RECORDER_DOMAIN)
     sensor_entity_ids = {i.entity_id for i in sensor_states}
     sensor_statistic_ids = set(metadatas)
+    instance = get_instance(hass)
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -682,7 +691,7 @@ def validate_statistics(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
-            if not is_entity_recorded(hass, state.entity_id):
+            if not instance.entity_filter(state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -732,7 +741,7 @@ def validate_statistics(
                     )
                 )
         elif state_class is not None:
-            if not is_entity_recorded(hass, state.entity_id):
+            if not instance.entity_filter(state.entity_id):
                 # Sensor is not recorded
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(

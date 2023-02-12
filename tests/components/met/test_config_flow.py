@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -18,7 +19,7 @@ def met_setup_fixture():
         yield
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -28,7 +29,7 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_flow_with_home_location(hass):
+async def test_flow_with_home_location(hass: HomeAssistant) -> None:
     """Test config flow.
 
     Test the flow when a default location is configured.
@@ -52,7 +53,7 @@ async def test_flow_with_home_location(hass):
     assert default_data["elevation"] == 3
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     test_data = {
         "name": "home",
@@ -70,7 +71,7 @@ async def test_create_entry(hass):
     assert result["data"] == test_data
 
 
-async def test_flow_entry_already_exists(hass):
+async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists.
 
     Test when the form should show when user puts existing location
@@ -97,7 +98,7 @@ async def test_flow_entry_already_exists(hass):
     assert result["errors"]["name"] == "already_configured"
 
 
-async def test_onboarding_step(hass):
+async def test_onboarding_step(hass: HomeAssistant) -> None:
     """Test initializing via onboarding step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "onboarding"}, data={}

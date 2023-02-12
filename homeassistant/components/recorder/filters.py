@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from sqlalchemy import Column, Text, cast, not_, or_
-from sqlalchemy.sql.elements import ClauseList
+from sqlalchemy.sql.elements import ColumnElement
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
@@ -125,7 +125,7 @@ class Filters:
 
     def _generate_filter_for_columns(
         self, columns: Iterable[Column], encoder: Callable[[Any], Any]
-    ) -> ClauseList:
+    ) -> ColumnElement | None:
         """Generate a filter from pre-comuted sets and pattern lists.
 
         This must match exactly how homeassistant.helpers.entityfilter works.
@@ -174,6 +174,8 @@ class Filters:
         if self.included_domains or self.included_entity_globs:
             return or_(
                 i_entities,
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9190
+                # pylint: disable-next=invalid-unary-operand-type
                 (~e_entities & (i_entity_globs | (~e_entity_globs & i_domains))),
             ).self_group()
 
@@ -184,23 +186,24 @@ class Filters:
         # - Otherwise, entity matches domain exclude: exclude
         # - Otherwise: include
         if self.excluded_domains or self.excluded_entity_globs:
-            return (not_(or_(*excludes)) | i_entities).self_group()
+            return (not_(or_(*excludes)) | i_entities).self_group()  # type: ignore[no-any-return, no-untyped-call]
 
         # Case 6 - No Domain and/or glob includes or excludes
         # - Entity listed in entities include: include
         # - Otherwise: exclude
         return i_entities
 
-    def states_entity_filter(self) -> ClauseList:
+    def states_entity_filter(self) -> ColumnElement | None:
         """Generate the entity filter query."""
 
         def _encoder(data: Any) -> Any:
             """Nothing to encode for states since there is no json."""
             return data
 
-        return self._generate_filter_for_columns((States.entity_id,), _encoder)
+        # The type annotation should be improved so the type ignore can be removed
+        return self._generate_filter_for_columns((States.entity_id,), _encoder)  # type: ignore[arg-type]
 
-    def events_entity_filter(self) -> ClauseList:
+    def events_entity_filter(self) -> ColumnElement:
         """Generate the entity filter query."""
         _encoder = json.dumps
         return or_(
@@ -215,15 +218,16 @@ class Filters:
             & (
                 (OLD_ENTITY_ID_IN_EVENT == JSON_NULL) | OLD_ENTITY_ID_IN_EVENT.is_(None)
             ),
-            self._generate_filter_for_columns(
-                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder
+            # Needs https://github.com/bdraco/home-assistant/commit/bba91945006a46f3a01870008eb048e4f9cbb1ef
+            self._generate_filter_for_columns(  # type: ignore[union-attr]
+                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder  # type: ignore[arg-type]
             ).self_group(),
         )
 
 
 def _globs_to_like(
     glob_strs: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
-) -> ClauseList:
+) -> ColumnElement:
     """Translate glob to sql."""
     matchers = [
         (
@@ -240,7 +244,7 @@ def _globs_to_like(
 
 def _entity_matcher(
     entity_ids: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
-) -> ClauseList:
+) -> ColumnElement:
     matchers = [
         (
             column.is_not(None)
@@ -253,7 +257,7 @@ def _entity_matcher(
 
 def _domain_matcher(
     domains: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
-) -> ClauseList:
+) -> ColumnElement:
     matchers = [
         (column.is_not(None) & cast(column, Text()).like(encoder(domain_matcher)))
         for domain_matcher in like_domain_matchers(domains)

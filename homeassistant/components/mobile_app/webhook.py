@@ -43,6 +43,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
+    EntityCategory,
 )
 from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
@@ -53,7 +54,6 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.decorator import Registry
 
 from .const import (

@@ -1,5 +1,4 @@
 """The tests for the UniFi Network device tracker platform."""
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -18,15 +17,19 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, setup_unifi_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_entities(hass, aioclient_mock):
+async def test_no_entities(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(hass, aioclient_mock)
 
