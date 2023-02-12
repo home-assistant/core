@@ -71,33 +71,33 @@ def thermostat_fixture(data):
     return ecobee.Thermostat(data, 1, thermostat)
 
 
-async def test_name(thermostat):
+async def test_name(thermostat) -> None:
     """Test name property."""
     assert thermostat.name == "Ecobee"
 
 
-async def test_current_temperature(ecobee_fixture, thermostat):
+async def test_current_temperature(ecobee_fixture, thermostat) -> None:
     """Test current temperature."""
     assert thermostat.current_temperature == 30
     ecobee_fixture["runtime"]["actualTemperature"] = HTTPStatus.NOT_FOUND
     assert thermostat.current_temperature == 40.4
 
 
-async def test_target_temperature_low(ecobee_fixture, thermostat):
+async def test_target_temperature_low(ecobee_fixture, thermostat) -> None:
     """Test target low temperature."""
     assert thermostat.target_temperature_low == 40
     ecobee_fixture["runtime"]["desiredHeat"] = 502
     assert thermostat.target_temperature_low == 50.2
 
 
-async def test_target_temperature_high(ecobee_fixture, thermostat):
+async def test_target_temperature_high(ecobee_fixture, thermostat) -> None:
     """Test target high temperature."""
     assert thermostat.target_temperature_high == 20
     ecobee_fixture["runtime"]["desiredCool"] = 679
     assert thermostat.target_temperature_high == 67.9
 
 
-async def test_target_temperature(ecobee_fixture, thermostat):
+async def test_target_temperature(ecobee_fixture, thermostat) -> None:
     """Test target temperature."""
     assert thermostat.target_temperature is None
     ecobee_fixture["settings"]["hvacMode"] = "heat"
@@ -110,14 +110,14 @@ async def test_target_temperature(ecobee_fixture, thermostat):
     assert thermostat.target_temperature is None
 
 
-async def test_desired_fan_mode(ecobee_fixture, thermostat):
+async def test_desired_fan_mode(ecobee_fixture, thermostat) -> None:
     """Test desired fan mode property."""
     assert thermostat.fan_mode == "on"
     ecobee_fixture["runtime"]["desiredFanMode"] = "auto"
     assert thermostat.fan_mode == "auto"
 
 
-async def test_fan(ecobee_fixture, thermostat):
+async def test_fan(ecobee_fixture, thermostat) -> None:
     """Test fan property."""
     assert thermostat.fan == const.STATE_ON
     ecobee_fixture["equipmentStatus"] = ""
@@ -126,7 +126,7 @@ async def test_fan(ecobee_fixture, thermostat):
     assert thermostat.fan == STATE_OFF
 
 
-async def test_hvac_mode(ecobee_fixture, thermostat):
+async def test_hvac_mode(ecobee_fixture, thermostat) -> None:
     """Test current operation property."""
     assert thermostat.hvac_mode == "heat_cool"
     ecobee_fixture["settings"]["hvacMode"] = "heat"
@@ -139,19 +139,19 @@ async def test_hvac_mode(ecobee_fixture, thermostat):
     assert thermostat.hvac_mode == "off"
 
 
-async def test_hvac_modes(thermostat):
+async def test_hvac_modes(thermostat) -> None:
     """Test operation list property."""
     assert ["heat_cool", "heat", "cool", "off"] == thermostat.hvac_modes
 
 
-async def test_hvac_mode2(ecobee_fixture, thermostat):
+async def test_hvac_mode2(ecobee_fixture, thermostat) -> None:
     """Test operation mode property."""
     assert thermostat.hvac_mode == "heat_cool"
     ecobee_fixture["settings"]["hvacMode"] = "heat"
     assert thermostat.hvac_mode == "heat"
 
 
-async def test_extra_state_attributes(ecobee_fixture, thermostat):
+async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
     """Test device state attributes property."""
     ecobee_fixture["equipmentStatus"] = "heatPump2"
     assert {
@@ -201,14 +201,14 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
     } == thermostat.extra_state_attributes
 
 
-async def test_is_aux_heat_on(ecobee_fixture, thermostat):
+async def test_is_aux_heat_on(ecobee_fixture, thermostat) -> None:
     """Test aux heat property."""
     assert not thermostat.is_aux_heat
     ecobee_fixture["equipmentStatus"] = "fan, auxHeat"
     assert thermostat.is_aux_heat
 
 
-async def test_set_temperature(ecobee_fixture, thermostat, data):
+async def test_set_temperature(ecobee_fixture, thermostat, data) -> None:
     """Test set temperature."""
     # Auto -> Auto
     data.reset_mock()
@@ -247,7 +247,7 @@ async def test_set_temperature(ecobee_fixture, thermostat, data):
     assert not data.ecobee.set_hold_temp.called
 
 
-async def test_set_hvac_mode(thermostat, data):
+async def test_set_hvac_mode(thermostat, data) -> None:
     """Test operation mode setter."""
     data.reset_mock()
     thermostat.set_hvac_mode("heat_cool")
@@ -257,7 +257,7 @@ async def test_set_hvac_mode(thermostat, data):
     data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "heat")])
 
 
-async def test_set_fan_min_on_time(thermostat, data):
+async def test_set_fan_min_on_time(thermostat, data) -> None:
     """Test fan min on time setter."""
     data.reset_mock()
     thermostat.set_fan_min_on_time(15)
@@ -267,7 +267,7 @@ async def test_set_fan_min_on_time(thermostat, data):
     data.ecobee.set_fan_min_on_time.assert_has_calls([mock.call(1, 20)])
 
 
-async def test_resume_program(thermostat, data):
+async def test_resume_program(thermostat, data) -> None:
     """Test resume program."""
     # False
     data.reset_mock()
@@ -289,7 +289,7 @@ async def test_resume_program(thermostat, data):
     data.ecobee.resume_program.assert_has_calls([mock.call(1, "true")])
 
 
-async def test_hold_preference(ecobee_fixture, thermostat):
+async def test_hold_preference(ecobee_fixture, thermostat) -> None:
     """Test hold preference."""
     ecobee_fixture["settings"]["holdAction"] = "indefinite"
     assert thermostat.hold_preference() == "indefinite"
@@ -304,7 +304,7 @@ async def test_hold_preference(ecobee_fixture, thermostat):
         assert thermostat.hold_preference() == "nextTransition"
 
 
-def test_hold_hours(ecobee_fixture, thermostat):
+def test_hold_hours(ecobee_fixture, thermostat) -> None:
     """Test hold hours preference."""
     ecobee_fixture["settings"]["holdAction"] = "useEndTime2hour"
     assert thermostat.hold_hours() == 2
@@ -319,7 +319,7 @@ def test_hold_hours(ecobee_fixture, thermostat):
         assert thermostat.hold_hours() is None
 
 
-async def test_set_fan_mode_on(thermostat, data):
+async def test_set_fan_mode_on(thermostat, data) -> None:
     """Test set fan mode to on."""
     data.reset_mock()
     thermostat.set_fan_mode("on")
@@ -328,7 +328,7 @@ async def test_set_fan_mode_on(thermostat, data):
     )
 
 
-async def test_set_fan_mode_auto(thermostat, data):
+async def test_set_fan_mode_auto(thermostat, data) -> None:
     """Test set fan mode to auto."""
     data.reset_mock()
     thermostat.set_fan_mode("auto")
