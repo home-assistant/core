@@ -254,7 +254,6 @@ class DenonDevice(MediaPlayerEntity):
         if zone != self._receiver.zone:
             return
 
-        self._attr_available = True
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
