@@ -17,7 +17,9 @@ from homeassistant.util import utcnow
 from tests.common import async_fire_time_changed
 
 
-async def test_config_google_home_entity_id_to_number(hass, hass_storage):
+async def test_config_google_home_entity_id_to_number(
+    hass: HomeAssistant, hass_storage
+) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
@@ -48,7 +50,9 @@ async def test_config_google_home_entity_id_to_number(hass, hass_storage):
     assert entity_id == "light.test2"
 
 
-async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage):
+async def test_config_google_home_entity_id_to_number_altered(
+    hass: HomeAssistant, hass_storage
+) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
@@ -79,7 +83,9 @@ async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage
     assert entity_id == "light.test2"
 
 
-async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
+async def test_config_google_home_entity_id_to_number_empty(
+    hass: HomeAssistant, hass_storage
+) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {"version": DATA_VERSION, "key": DATA_KEY, "data": {}}
