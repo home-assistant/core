@@ -302,4 +302,3 @@ async def test_media_view(hass: HomeAssistant, tmp_path: Path, dsm_with_photos) 
     tempfile.tempdir = tmp_path
     result = await view.get(request, "unique_id", "10_1298753/filename.jpg")
     assert isinstance(result, web.FileResponse)
-

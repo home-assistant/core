@@ -35,4 +35,3 @@ def fixture_dsm():
         dsm.upgrade.update = AsyncMock(return_value=True)
 
     return dsm
-

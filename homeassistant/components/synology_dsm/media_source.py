@@ -237,4 +237,3 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         ) as temp:
             temp.write(image)
         return web.FileResponse(Path(temp.name))
-
