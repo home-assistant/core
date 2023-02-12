@@ -121,6 +121,7 @@ async def async_get_user_site(deps_dir: str) -> str:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
         env=env,
+        close_fds=False,  # required for posix_spawn
     )
     stdout, _ = await process.communicate()
     lib_dir = stdout.decode().strip()
