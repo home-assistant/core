@@ -358,6 +358,8 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
         self.subscriptions: list[Subscription] = []
+        self._simple_subscriptions: dict[str, list[Subscription]] = {}
+        self._wildcard_subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -498,6 +500,10 @@ class MQTT:
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
         self.subscriptions.append(subscription)
+        if _is_simple := "+" not in topic and "#" not in topic:
+            self._simple_subscriptions.setdefault(topic, []).append(subscription)
+        else:
+            self._wildcard_subscriptions.append(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
@@ -511,6 +517,12 @@ class MQTT:
             if subscription not in self.subscriptions:
                 raise HomeAssistantError("Can't remove subscription twice")
             self.subscriptions.remove(subscription)
+            if _is_simple:
+                self._simple_subscriptions[topic].remove(subscription)
+                if not self._simple_subscriptions[topic]:
+                    del self._simple_subscriptions[topic]
+            else:
+                self._wildcard_subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
@@ -644,10 +656,12 @@ class MQTT:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
 
-    @lru_cache(2048)
+    @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
         subscriptions: list[Subscription] = []
-        for subscription in self.subscriptions:
+        if topic in self._simple_subscriptions:
+            subscriptions.extend(self._simple_subscriptions[topic])
+        for subscription in self._wildcard_subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
