@@ -361,6 +361,7 @@ class FibaroController:
             except (KeyError, ValueError):
                 pass
 
+
 def _init_controller(data: Mapping[str, Any]) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data)
