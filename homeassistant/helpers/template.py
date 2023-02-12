@@ -2261,8 +2261,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         if isinstance(obj, Namespace):
             return True
 
-        _LOGGER.warning("is_safe_attribute called with %s %s %s", obj, attr, value)
-
         return super().is_safe_attribute(obj, attr, value)
 
     @overload
