@@ -173,7 +173,7 @@ class HomeKitProvisionPreferredThreadCrentials(CharacteristicEntity, ButtonEntit
 
     async def async_press(self) -> None:
         """Press the button."""
-        self._accessory.async_thread_provision()
+        await self._accessory.async_thread_provision()
 
 
 BUTTON_ENTITY_CLASSES: dict[str, type] = {

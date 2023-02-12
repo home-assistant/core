@@ -17,7 +17,7 @@ from aiohomekit.exceptions import (
 )
 from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic
-from aiohomekit.model.services import Service
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
@@ -775,9 +775,22 @@ class HKDevice:
         """Control a HomeKit device state from Home Assistant."""
         await self.pairing.put_characteristics(characteristics)
 
+    @property
+    def is_unprovisioned_thread_device(self) -> bool:
+        """Is this a thread capable device not connected by CoAP."""
+        if self.pairing.controller.transport_type != TransportType.BLE:
+            return False
+
+        if not self.entity_map.aid(1).services.first(
+            service_type=ServicesTypes.THREAD_TRANSPORT
+        ):
+            return False
+
+        return True
+
     async def async_thread_provision(self) -> None:
         """Migrate a HomeKit pairing to CoAP (Thread)."""
-        if self.pairing.transport == TransportType.COAP:
+        if self.pairing.controller.transport_type == TransportType.COAP:
             raise HomeAssistantError("Already connected to a thread network")
 
         if not (dataset := await async_get_preferred_dataset(self.hass)):

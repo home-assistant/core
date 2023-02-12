@@ -119,3 +119,24 @@ async def async_remove_config_entry_device(
             ATTR_IDENTIFIERS
         ]
     )
+
+
+def async_get_uncommissioned_devices(hass: HomeAssistant) -> list[ConfigEntry]:
+    """Return a list of config entries for devices that support Thread, but are not currently on Thread."""
+    devices: dict[str, HKDevice] = hass.data[KNOWN_DEVICES]
+    entries = []
+
+    for device in devices.values():
+        if device.is_unprovisioned_thread_device:
+            entries.append(device.config_entry)
+
+    return entries
+
+
+async def async_commission_device(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Given its config entry, migrate a device to Thread."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
+    await connection.async_thread_provision()
