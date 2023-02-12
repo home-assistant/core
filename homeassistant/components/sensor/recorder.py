@@ -13,8 +13,8 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
+    get_instance,
     history,
-    is_entity_recorded,
     statistics,
     util as recorder_util,
 )
@@ -76,9 +76,10 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
     statistics_sensors = []
+    instance = get_instance(hass)
 
     for state in all_sensors:
-        if not is_entity_recorded(hass, state.entity_id):
+        if not instance.entity_filter(state.entity_id):
             continue
         if not try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)):
             continue
@@ -680,6 +681,7 @@ def validate_statistics(
     metadatas = statistics.get_metadata(hass, statistic_source=RECORDER_DOMAIN)
     sensor_entity_ids = {i.entity_id for i in sensor_states}
     sensor_statistic_ids = set(metadatas)
+    instance = get_instance(hass)
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -689,7 +691,7 @@ def validate_statistics(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
-            if not is_entity_recorded(hass, state.entity_id):
+            if not instance.entity_filter(state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -739,7 +741,7 @@ def validate_statistics(
                     )
                 )
         elif state_class is not None:
-            if not is_entity_recorded(hass, state.entity_id):
+            if not instance.entity_filter(state.entity_id):
                 # Sensor is not recorded
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
