@@ -89,8 +89,8 @@ async def test_calendar_entity_unique_id(todoist_api, hass, api):
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
-async def test_update_entity_sets_labels_attribute_when_on(todoist_api, hass, api):
-    """Test the labels attr is set correctly on the state when an entity is on."""
+async def test_update_entity_for_custom_project_with_labels_on(todoist_api, hass, api):
+    """Test that the calendar's state is on for a custom project using labels."""
     todoist_api.return_value = api
     assert await setup.async_setup_component(
         hass,
@@ -99,15 +99,16 @@ async def test_update_entity_sets_labels_attribute_when_on(todoist_api, hass, ap
             "calendar": {
                 "platform": DOMAIN,
                 CONF_TOKEN: "token",
+                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
             }
         },
     )
     await hass.async_block_till_done()
 
-    await async_update_entity(hass, "calendar.name")
-    state = hass.states.get("calendar.name")
-    assert state.state == "on"
+    await async_update_entity(hass, "calendar.all_projects")
+    state = hass.states.get("calendar.all_projects")
     assert state.attributes["labels"] == ["Label1"]
+    assert state.state == "on"
 
 
 @patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")

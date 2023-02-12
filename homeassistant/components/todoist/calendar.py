@@ -94,7 +94,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                             ),
                             vol.Optional(
                                 CONF_PROJECT_LABEL_WHITELIST, default=[]
-                            ): vol.All(cv.ensure_list, [vol.All(cv.string, vol.Lower)]),
+                            ): vol.All(cv.ensure_list, [vol.All(cv.string)]),
                         }
                     )
                 ]
@@ -460,7 +460,6 @@ class TodoistProjectData:
         task[LABELS] = [
             label.name for label in self._labels if label.name in data.labels
         ]
-
         if self._label_whitelist and (
             not any(label in task[LABELS] for label in self._label_whitelist)
         ):
