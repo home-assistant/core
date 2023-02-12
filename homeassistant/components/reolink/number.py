@@ -132,3 +132,4 @@ class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(self._host.api, self._channel, value)
+        await self.coordinator.async_request_refresh()
