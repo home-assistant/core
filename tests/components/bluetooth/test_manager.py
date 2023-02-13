@@ -1,8 +1,8 @@
 """Tests for the Bluetooth integration manager."""
-
 from collections.abc import Generator
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -319,7 +319,10 @@ async def test_restore_history_from_dbus(
 
 
 async def test_restore_history_from_dbus_and_remote_adapters(
-    hass: HomeAssistant, one_adapter: None, hass_storage, disable_new_discovery_flows
+    hass: HomeAssistant,
+    one_adapter: None,
+    hass_storage: dict[str, Any],
+    disable_new_discovery_flows,
 ) -> None:
     """Test we can restore history from dbus along with remote adapters."""
     address = "AA:BB:CC:CC:CC:FF"
@@ -356,7 +359,10 @@ async def test_restore_history_from_dbus_and_remote_adapters(
 
 
 async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
-    hass: HomeAssistant, one_adapter: None, hass_storage, disable_new_discovery_flows
+    hass: HomeAssistant,
+    one_adapter: None,
+    hass_storage: dict[str, Any],
+    disable_new_discovery_flows,
 ) -> None:
     """Test we can restore history from dbus when the remote adapters data is corrupted."""
     address = "AA:BB:CC:CC:CC:FF"
