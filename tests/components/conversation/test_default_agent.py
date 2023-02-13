@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import entity, entity_registry, intent
 from homeassistant.setup import async_setup_component
 
@@ -26,7 +26,9 @@ async def init_components(hass):
         {"entity_category": entity.EntityCategory.DIAGNOSTIC},
     ],
 )
-async def test_hidden_entities_skipped(hass, init_components, er_kwargs):
+async def test_hidden_entities_skipped(
+    hass: HomeAssistant, init_components, er_kwargs
+) -> None:
     """Test we skip hidden entities."""
 
     er = entity_registry.async_get(hass)

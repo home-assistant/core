@@ -29,6 +29,7 @@ _T = TypeVar("_T")
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
 INTENT_TOGGLE = "HassToggle"
+INTENT_GET_STATE = "HassGetState"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -386,7 +387,9 @@ class ServiceIntentHandler(IntentHandler):
         )
 
         if not states:
-            raise IntentHandleError("No entities matched")
+            raise IntentHandleError(
+                f"No entities matched for: name={name}, area={area}, domains={domains}, device_classes={device_classes}",
+            )
 
         response = await self.async_handle_states(intent_obj, states, area)
 
@@ -431,6 +434,7 @@ class ServiceIntentHandler(IntentHandler):
         response.async_set_results(
             success_results=success_results,
         )
+        response.async_set_states(states)
 
         if self.speech is not None:
             response.async_set_speech(self.speech.format(speech_name))
@@ -569,6 +573,8 @@ class IntentResponse:
         self.intent_targets: list[IntentResponseTarget] = []
         self.success_results: list[IntentResponseTarget] = []
         self.failed_results: list[IntentResponseTarget] = []
+        self.matched_states: list[State] = []
+        self.unmatched_states: list[State] = []
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -635,6 +641,14 @@ class IntentResponse:
         """Set response results."""
         self.success_results = success_results
         self.failed_results = failed_results if failed_results is not None else []
+
+    @callback
+    def async_set_states(
+        self, matched_states: list[State], unmatched_states: list[State] | None = None
+    ) -> None:
+        """Set entity states that were matched or not matched during intent handling (query)."""
+        self.matched_states = matched_states
+        self.unmatched_states = unmatched_states or []
 
     @callback
     def as_dict(self) -> dict[str, Any]:
