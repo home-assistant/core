@@ -74,5 +74,5 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
             await self._host.api.update_firmware()
         except ReolinkError as err:
             raise HomeAssistantError(
-                "Error trying to update Reolink firmware: %s", err
+                f"Error trying to update Reolink firmware: {err}"
             ) from err
