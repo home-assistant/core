@@ -3,14 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import (
-    Awaitable,
-    Callable,
-    Collection,
-    Generator,
-    Mapping,
-    Sequence,
-)
+from collections.abc import Awaitable, Callable, Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
@@ -22,7 +15,6 @@ import os
 import pathlib
 import threading
 import time
-import types
 from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -50,7 +42,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import (
-    BLOCK_LOG_TIMEOUT,
     CoreState,
     Event,
     HomeAssistant,
@@ -220,37 +211,9 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
         return orig_async_create_task(coroutine)
 
-    async def _await_count_and_log_pending(
-        self, pending: Collection[Awaitable[Any]], max_remaining_tasks: int = 0
-    ) -> Collection[Awaitable[Any]]:
-        """Block at most max_remaining_tasks remain and log tasks that take a long time.
-
-        Based on HomeAssistant._await_and_log_pending
-        """
-        wait_time = 0
-
-        return_when = asyncio.ALL_COMPLETED
-        if max_remaining_tasks:
-            return_when = asyncio.FIRST_COMPLETED
-
-        while len(pending) > max_remaining_tasks:
-            _, pending = await asyncio.wait(
-                pending, timeout=BLOCK_LOG_TIMEOUT, return_when=return_when
-            )
-            if not pending or max_remaining_tasks:
-                return pending
-            wait_time += BLOCK_LOG_TIMEOUT
-            for task in pending:
-                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
-
-        return []
-
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
     hass.async_create_task = async_create_task
-    hass._await_count_and_log_pending = types.MethodType(
-        _await_count_and_log_pending, hass
-    )
 
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
