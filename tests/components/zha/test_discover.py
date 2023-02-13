@@ -264,7 +264,7 @@ def test_discover_by_device_type(device_type, component, hit):
         assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
-def test_discover_by_device_type_override():
+def test_discover_by_device_type_override() -> None:
     """Test entity discovery by device type overriding."""
 
     ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
@@ -290,7 +290,7 @@ def test_discover_by_device_type_override():
         assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
-def test_discover_probe_single_cluster():
+def test_discover_probe_single_cluster() -> None:
     """Test entity discovery by single cluster."""
 
     ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
@@ -424,7 +424,7 @@ def _test_single_input_cluster_device_class(probe_mock):
         assert call[0][1] == ch
 
 
-def test_single_input_cluster_device_class_by_cluster_class():
+def test_single_input_cluster_device_class_by_cluster_class() -> None:
     """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
     mock_reg = {
         zigpy.zcl.clusters.closures.DoorLock.cluster_id: Platform.LOCK,

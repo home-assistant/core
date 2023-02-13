@@ -29,6 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -37,7 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.helpers.update_coordinator import (
@@ -469,12 +470,15 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             "accumulatedConsumption",
             "accumulatedProduction",
         ):
-            # Value is reset to 0 at midnight, but not always strictly increasing due to hourly corrections
-            # If device is offline, last_reset should be updated when it comes back online if the value has decreased
+            # Value is reset to 0 at midnight, but not always strictly increasing
+            # due to hourly corrections.
+            # If device is offline, last_reset should be updated when it comes
+            # back online if the value has decreased
             ts_local = dt_util.parse_datetime(live_measurement["timestamp"])
             if ts_local is not None:
                 if self.last_reset is None or (
-                    state < 0.5 * self.native_value  # type: ignore[operator]  # native_value is float
+                    # native_value is float
+                    state < 0.5 * self.native_value  # type: ignore[operator]
                     and (
                         ts_local.hour == 0
                         or (ts_local - self.last_reset) > timedelta(hours=24)

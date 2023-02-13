@@ -54,6 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady(
             f"Error while trying to setup {host.api.host}:{host.api.port}: {str(err)}"
         ) from err
+    except Exception:  # pylint: disable=broad-except
+        await host.stop()
+        raise
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)

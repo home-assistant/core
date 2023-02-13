@@ -9,6 +9,7 @@ from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.components.simplisafe.config_flow import CONF_AUTH_CODE
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 VALID_AUTH_CODE = "code12345123451234512345123451234512345123451"
@@ -32,7 +33,7 @@ async def test_duplicate_error(config_entry, hass, setup_simplisafe):
         assert result["reason"] == "already_configured"
 
 
-async def test_invalid_auth_code_length(hass):
+async def test_invalid_auth_code_length(hass: HomeAssistant) -> None:
     """Test that an invalid auth code length show the correct error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -47,7 +48,7 @@ async def test_invalid_auth_code_length(hass):
     assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth_code_length"}
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials show the correct error."""
     with patch(
         "homeassistant.components.simplisafe.config_flow.API.async_from_auth",

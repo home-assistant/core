@@ -206,7 +206,7 @@ class MiroboVacuum(
         entry,
         unique_id,
         coordinator: DataUpdateCoordinator[VacuumCoordinatorData],
-    ):
+    ) -> None:
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(device, entry, unique_id, coordinator)
         self._state: str | None = None

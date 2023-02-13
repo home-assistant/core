@@ -15,7 +15,7 @@ SUPERVISOR_HARD_TIMEOUT = 220
 TIMEOUT_SAFETY_MARGIN = 10
 
 
-async def test_cumulative_shutdown_timeout_less_than_supervisor():
+async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     """Verify the cumulative shutdown timeout is at least 10s less than the supervisor."""
     assert (
         core.STAGE_1_SHUTDOWN_TIMEOUT

@@ -95,7 +95,7 @@ async def test_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_password(hass):
+async def test_reauth_password(hass: HomeAssistant) -> None:
     """Test reauth form."""
 
     # set up initially

@@ -1,6 +1,4 @@
 """Test the Mopeka sensors."""
-
-
 from homeassistant.components.mopeka.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
@@ -10,6 +8,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 
 from . import PRO_GOOD_SIGNAL_SERVICE_INFO, PRO_SERVICE_INFO
 
@@ -17,7 +16,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors_bad_signal(hass):
+async def test_sensors_bad_signal(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors when there is bad signal."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -31,7 +30,7 @@ async def test_sensors_bad_signal(hass):
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, PRO_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 4
 
     temp_sensor = hass.states.get("sensor.pro_plus_eeff_temperature")
     temp_sensor_attrs = temp_sensor.attributes
@@ -51,7 +50,7 @@ async def test_sensors_bad_signal(hass):
     await hass.async_block_till_done()
 
 
-async def test_sensors_good_signal(hass):
+async def test_sensors_good_signal(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors when there is good signal."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -65,7 +64,7 @@ async def test_sensors_good_signal(hass):
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, PRO_GOOD_SIGNAL_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 4
 
     temp_sensor = hass.states.get("sensor.pro_plus_eeff_temperature")
     temp_sensor_attrs = temp_sensor.attributes

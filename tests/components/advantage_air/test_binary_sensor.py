@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
@@ -15,9 +16,12 @@ from . import (
 )
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
+async def test_binary_sensor_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test binary sensor setup."""
 
     aioclient_mock.get(

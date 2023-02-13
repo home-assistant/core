@@ -11,8 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, ID_TYPE_DEVICE_ID
-from .helpers import get_device_id, get_matter
+from .helpers import get_matter, get_node_from_device_entry
 
 ATTRIBUTES_TO_REDACT = {"chip.clusters.Objects.BasicInformation.Attributes.Location"}
 
@@ -53,28 +52,14 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     matter = get_matter(hass)
-    device_id_type_prefix = f"{ID_TYPE_DEVICE_ID}_"
-    device_id_full = next(
-        identifier[1]
-        for identifier in device.identifiers
-        if identifier[0] == DOMAIN and identifier[1].startswith(device_id_type_prefix)
-    )
-    device_id = device_id_full.lstrip(device_id_type_prefix)
-
     server_diagnostics = await matter.matter_client.get_diagnostics()
-
-    node = next(
-        node
-        for node in await matter.matter_client.get_nodes()
-        for node_device in node.node_devices
-        if get_device_id(server_diagnostics.info, node_device) == device_id
-    )
+    node = await get_node_from_device_entry(hass, device)
 
     return {
         "server_info": remove_serialization_type(
             dataclass_to_dict(server_diagnostics.info)
         ),
         "node": redact_matter_attributes(
-            remove_serialization_type(dataclass_to_dict(node))
+            remove_serialization_type(dataclass_to_dict(node) if node else {})
         ),
     }

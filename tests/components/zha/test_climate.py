@@ -267,7 +267,7 @@ async def device_climate_zonnsmart(device_climate_mock):
     )
 
 
-def test_sequence_mappings():
+def test_sequence_mappings() -> None:
     """Test correct mapping between control sequence -> HVAC Mode -> Sysmode."""
 
     for hvac_modes in SEQ_OF_OPERATION.values():

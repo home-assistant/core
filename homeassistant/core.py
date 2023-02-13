@@ -1,5 +1,4 @@
-"""
-Core components of Home Assistant.
+"""Core components of Home Assistant.
 
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
@@ -38,6 +37,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
@@ -1076,9 +1076,6 @@ class EventBus:
             )
 
 
-_StateT = TypeVar("_StateT", bound="State")
-
-
 class State:
     """Object to represent a state within the state machine.
 
@@ -1201,7 +1198,7 @@ class State:
         return compressed_state
 
     @classmethod
-    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
+    def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -1577,8 +1574,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
@@ -1594,8 +1590,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
 
@@ -1652,8 +1647,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         See description of async_call for details.
         """
@@ -1674,8 +1668,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         Specify blocking=True to wait until service is executed.
         Waits a maximum of limit, which may be None for no timeout.

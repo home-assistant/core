@@ -374,6 +374,10 @@ def node_status(node: Node) -> dict[str, Any]:
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
         "is_controller_node": node.is_controller_node,
+        "has_firmware_update_cc": any(
+            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
+            for cc in node.command_classes
+        ),
     }
 
 
@@ -484,7 +488,9 @@ async def websocket_network_status(
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
             "is_primary": controller.is_primary,
-            "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
+            "is_using_home_id_from_other_network": (
+                controller.is_using_home_id_from_other_network
+            ),
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
             "is_suc": controller.is_suc,
@@ -498,6 +504,7 @@ async def websocket_network_status(
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
+            "rf_region": controller.rf_region,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }

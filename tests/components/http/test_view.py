@@ -31,7 +31,7 @@ def mock_request_with_stopping():
     return Mock(app={"hass": Mock(is_stopping=True)}, match_info={})
 
 
-async def test_invalid_json(caplog):
+async def test_invalid_json(caplog: pytest.LogCaptureFixture) -> None:
     """Test trying to return invalid JSON."""
     with pytest.raises(HTTPInternalServerError):
         HomeAssistantView.json({"hello": Decimal("2.0")})
@@ -42,13 +42,13 @@ async def test_invalid_json(caplog):
     )
 
 
-async def test_nan_serialized_to_null():
+async def test_nan_serialized_to_null() -> None:
     """Test nan serialized to null JSON."""
     response = HomeAssistantView.json(float("NaN"))
     assert json.loads(response.body.decode("utf-8")) is None
 
 
-async def test_handling_unauthorized(mock_request):
+async def test_handling_unauthorized(mock_request) -> None:
     """Test handling unauth exceptions."""
     with pytest.raises(HTTPUnauthorized):
         await request_handler_factory(
@@ -56,7 +56,7 @@ async def test_handling_unauthorized(mock_request):
         )(mock_request)
 
 
-async def test_handling_invalid_data(mock_request):
+async def test_handling_invalid_data(mock_request) -> None:
     """Test handling unauth exceptions."""
     with pytest.raises(HTTPBadRequest):
         await request_handler_factory(
@@ -64,7 +64,7 @@ async def test_handling_invalid_data(mock_request):
         )(mock_request)
 
 
-async def test_handling_service_not_found(mock_request):
+async def test_handling_service_not_found(mock_request) -> None:
     """Test handling unauth exceptions."""
     with pytest.raises(HTTPInternalServerError):
         await request_handler_factory(
@@ -73,7 +73,7 @@ async def test_handling_service_not_found(mock_request):
         )(mock_request)
 
 
-async def test_not_running(mock_request_with_stopping):
+async def test_not_running(mock_request_with_stopping) -> None:
     """Test we get a 503 when not running."""
     response = await request_handler_factory(
         Mock(requires_auth=False), AsyncMock(side_effect=Unauthorized)
