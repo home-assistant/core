@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import logging
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
@@ -16,12 +15,11 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
 from .entity import DevoloEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -112,6 +110,8 @@ async def async_setup_entry(
 class DevoloButtonEntity(DevoloEntity, ButtonEntity):
     """Representation of a devolo button."""
 
+    entity_description: DevoloButtonEntityDescription
+
     def __init__(
         self,
         entry: ConfigEntry,
@@ -119,7 +119,7 @@ class DevoloButtonEntity(DevoloEntity, ButtonEntity):
         device: Device,
     ) -> None:
         """Initialize entity."""
-        self.entity_description: DevoloButtonEntityDescription = description
+        self.entity_description = description
         super().__init__(entry, device)
 
     async def async_press(self) -> None:
@@ -128,5 +128,7 @@ class DevoloButtonEntity(DevoloEntity, ButtonEntity):
             await self.entity_description.press_func(self.device)
         except DevicePasswordProtected:
             self.entry.async_start_reauth(self.hass)
-        except DeviceUnavailable:
-            _LOGGER.error("Device %s did not respond", self.entry.title)
+        except DeviceUnavailable as ex:
+            raise HomeAssistantError(
+                f"Device {self.entry.title} did not respond"
+            ) from ex

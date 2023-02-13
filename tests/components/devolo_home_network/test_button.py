@@ -1,5 +1,4 @@
 """Tests for the devolo Home Network buttons."""
-import logging
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
@@ -14,6 +13,7 @@ from homeassistant.components.devolo_home_network.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import EntityCategory
 
@@ -22,7 +22,7 @@ from .mock import MockDevice
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_button_setup(hass: HomeAssistant):
+async def test_button_setup(hass: HomeAssistant) -> None:
     """Test default setup of the button component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -41,7 +41,7 @@ async def test_button_setup(hass: HomeAssistant):
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
-async def test_identify_device(hass: HomeAssistant, mock_device: MockDevice):
+async def test_identify_device(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test start PLC pairing button."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -72,7 +72,7 @@ async def test_identify_device(hass: HomeAssistant, mock_device: MockDevice):
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
-async def test_start_plc_pairing(hass: HomeAssistant, mock_device: MockDevice):
+async def test_start_plc_pairing(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test start PLC pairing button."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -101,7 +101,7 @@ async def test_start_plc_pairing(hass: HomeAssistant, mock_device: MockDevice):
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
-async def test_restart(hass: HomeAssistant, mock_device: MockDevice):
+async def test_restart(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test restart button."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -133,7 +133,7 @@ async def test_restart(hass: HomeAssistant, mock_device: MockDevice):
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
-async def test_start_wps(hass: HomeAssistant, mock_device: MockDevice):
+async def test_start_wps(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test start WPS button."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -173,11 +173,10 @@ async def test_start_wps(hass: HomeAssistant, mock_device: MockDevice):
 )
 async def test_device_failure(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     mock_device: MockDevice,
     name: str,
     trigger_method: str,
-):
+) -> None:
     """Test device failure."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -194,22 +193,19 @@ async def test_device_failure(
     await hass.async_block_till_done()
 
     # Emulate button press
-    await hass.services.async_call(
-        PLATFORM,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: state_key},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert caplog.records[-1].funcName == "async_press"
-    assert caplog.records[-1].levelno == logging.ERROR
-    assert caplog.records[-1].msg == "Device %s did not respond"
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: state_key},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice):
+async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test setting unautherized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
