@@ -18,7 +18,10 @@ def call_shell_with_timeout(
     try:
         _LOGGER.debug("Running command: %s", command)
         subprocess.check_output(
-            command, shell=True, timeout=timeout  # nosec # shell by design
+            command,
+            shell=True,  # nosec # shell by design
+            timeout=timeout,
+            close_fds=False,  # required for posix_spawn
         )
         return 0
     except subprocess.CalledProcessError as proc_exception:
@@ -41,7 +44,10 @@ def check_output_or_log(command: str, timeout: int) -> str | None:
     """Run a shell command with a timeout and return the output."""
     try:
         return_value = subprocess.check_output(
-            command, shell=True, timeout=timeout  # nosec # shell by design
+            command,
+            shell=True,  # nosec # shell by design
+            timeout=timeout,
+            close_fds=False,  # required for posix_spawn
         )
         return return_value.strip().decode("utf-8")
     except subprocess.CalledProcessError as err:
