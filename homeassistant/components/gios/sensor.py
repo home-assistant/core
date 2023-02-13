@@ -4,7 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
+
+from gios import GiosSensors
 
 from homeassistant.components.sensor import (
     DOMAIN as PLATFORM,
@@ -49,17 +51,22 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class GiosSensorEntityDescription(SensorEntityDescription):
-    """Class describing GIOS sensor entities."""
+class GiosSensorRequiredKeysMixin:
+    """Class for GIOS entity required keys."""
 
-    value: Callable | None = round
+    value: Callable[[GiosSensors], StateType]
+
+
+@dataclass
+class GiosSensorEntityDescription(SensorEntityDescription, GiosSensorRequiredKeysMixin):
+    """GIOS sensor entity description."""
 
 
 SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_AQI,
         name="AQI",
-        value=None,
+        value=lambda sensors: getattr(sensors.aqi, "value", None),
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
         translation_key="aqi",
@@ -67,6 +74,8 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_C6H6,
         name="C6H6",
+        value=lambda sensors: getattr(sensors.c6h6, "value", None),
+        suggested_display_precision=0,
         icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -74,12 +83,16 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_CO,
         name="CO",
+        value=lambda sensors: getattr(sensors.co, "value", None),
+        suggested_display_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO2,
         name="NO2",
+        value=lambda sensors: getattr(sensors.no2, "value", None),
+        suggested_display_precision=0,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -87,6 +100,8 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_O3,
         name="O3",
+        value=lambda sensors: getattr(sensors.o3, "value", None),
+        suggested_display_precision=0,
         device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -94,6 +109,8 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_PM10,
         name="PM10",
+        value=lambda sensors: getattr(sensors.pm10, "value", None),
+        suggested_display_precision=0,
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -101,6 +118,8 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_PM25,
         name="PM2.5",
+        value=lambda sensors: getattr(sensors.pm25, "value", None),
+        suggested_display_precision=0,
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -108,6 +127,8 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_SO2,
         name="SO2",
+        value=lambda sensors: getattr(sensors.so2, "value", None),
+        suggested_display_precision=0,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -139,15 +160,12 @@ async def async_setup_entry(
         )
         entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    sensors: list[GiosSensor | GiosAqiSensor] = []
+    sensors: list[GiosSensor] = []
 
     for description in SENSOR_TYPES:
         if getattr(coordinator.data, description.key) is None:
             continue
-        if description.key == ATTR_AQI:
-            sensors.append(GiosAqiSensor(name, coordinator, description))
-        else:
-            sensors.append(GiosSensor(name, coordinator, description))
+        sensors.append(GiosSensor(name, coordinator, description))
     async_add_entities(sensors)
 
 
@@ -193,25 +211,13 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        state = getattr(self.coordinator.data, self.entity_description.key).value
-        assert self.entity_description.value is not None
-        return cast(StateType, self.entity_description.value(state))
-
-
-class GiosAqiSensor(GiosSensor):
-    """Define an GIOS AQI sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state."""
-        return cast(
-            StateType, getattr(self.coordinator.data, self.entity_description.key).value
-        )
+        return self.entity_description.value(self.coordinator.data)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         available = super().available
+
         return available and bool(
             getattr(self.coordinator.data, self.entity_description.key)
         )
