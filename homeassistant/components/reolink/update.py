@@ -35,6 +35,7 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_release_url = "https://reolink.com/download-center/"
     _attr_name = "Update"
 
     def __init__(
@@ -54,15 +55,13 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
+        if self.coordinator.data is None:
+            return None
+
         if not self.coordinator.data:
             return self.installed_version
 
         return self.coordinator.data
-
-    @property
-    def release_url(self) -> str:
-        """Reolink firmware download page."""
-        return "https://reolink.com/download-center/"
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
