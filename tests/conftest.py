@@ -31,6 +31,7 @@ import pytest
 import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
+import yaml
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -44,6 +45,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
@@ -90,6 +92,7 @@ from .common import (  # noqa: E402, isort:skip
     get_test_home_assistant,
     init_recorder_component,
     mock_storage,
+    patch_yaml_files,
 )
 from .test_util.aiohttp import (  # noqa: E402, isort:skip
     AiohttpClientMocker,
@@ -915,6 +918,38 @@ async def _mqtt_mock_entry(
 
     with patch("homeassistant.components.mqtt.MQTT", side_effect=create_mock_mqtt):
         yield _setup_mqtt_entry
+
+
+@pytest.fixture
+def yaml_config() -> ConfigType | None:
+    """Fixture to override configuration.yaml using mock_yaml_config."""
+    return None
+
+
+@pytest.fixture
+def mock_yaml_config(
+    hass: HomeAssistant, yaml_config: ConfigType
+) -> Generator[None, None, None]:
+    """Fixture to mock the configuration.yaml file content.
+
+    Parameterize configuration.yaml using the `yaml_config` fixture.
+    """
+    files = {YAML_CONFIG_FILE: yaml.dump(yaml_config or {})}
+    with patch_yaml_files(files):
+        yield
+
+
+@pytest.fixture
+async def mqtt_mock_entry_setup(
+    hass: HomeAssistant,
+    yaml_config: ConfigType,
+    mock_yaml_config: None,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> MqttMockHAClientGenerator:
+    """Set up an MQTT config entry."""
+    return mqtt_mock_entry_no_yaml_config
 
 
 @pytest.fixture

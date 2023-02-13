@@ -127,6 +127,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_device_tracker_conf": "list[Device]",
     "mock_get_source_ip": "None",
     "mock_zeroconf": "None",
+    "mock_yaml_config": "None",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",
@@ -136,6 +137,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
     "tmp_path": "Path",
+    "yaml_config": "ConfigType | None",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
