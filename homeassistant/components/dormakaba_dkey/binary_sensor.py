@@ -45,7 +45,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     DormakabaDkeyBinarySensorDescription(
         key="security_locked",
-        name="Security locked",
+        name="Dead bolt",
         device_class=BinarySensorDeviceClass.LOCK,
         is_on=lambda state: state.unlock_status != UnlockStatus.SECURITY_LOCKED,
     ),
