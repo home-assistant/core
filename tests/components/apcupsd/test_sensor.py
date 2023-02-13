@@ -126,8 +126,9 @@ async def test_state_update(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=2)
 
     new_status = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
-    with patch("apcaccess.status.parse", return_value=new_status), patch(
-        "apcaccess.status.get", return_value=b""
+    with (
+        patch("apcaccess.status.parse", return_value=new_status),
+        patch("apcaccess.status.get", return_value=b""),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -151,9 +152,10 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
 
-    with patch("apcaccess.status.parse") as mock_parse, patch(
-        "apcaccess.status.get", return_value=b""
-    ) as mock_get:
+    with (
+        patch("apcaccess.status.parse") as mock_parse,
+        patch("apcaccess.status.get", return_value=b"") as mock_get,
+    ):
         # Now, we fast-forward the time to pass the debouncer cooldown, but put it
         # before the normal update interval to see if the manual update works.
         async_fire_time_changed(
@@ -201,9 +203,10 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
 
-    with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
-        "apcaccess.status.get", return_value=b""
-    ) as mock_get:
+    with (
+        patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse,
+        patch("apcaccess.status.get", return_value=b"") as mock_get,
+    ):
         # Fast-forward time to just pass the initial debouncer cooldown.
         async_fire_time_changed(
             hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 5)

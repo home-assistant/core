@@ -38,10 +38,10 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_config_flow_no_status(hass: HomeAssistant) -> None:
     """Test config flow setup with successful connection but no status is reported."""
-    with patch(
-        "apcaccess.status.parse",
-        return_value={},  # Returns no status.
-    ), patch("apcaccess.status.get", return_value=b""):
+    with (
+        patch("apcaccess.status.parse", return_value={}),  # Returns no status.
+        patch("apcaccess.status.get", return_value=b""),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -63,9 +63,11 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("apcaccess.status.parse") as mock_parse, patch(
-        "apcaccess.status.get", return_value=b""
-    ), _patch_setup():
+    with (
+        patch("apcaccess.status.parse") as mock_parse,
+        patch("apcaccess.status.get", return_value=b""),
+        _patch_setup(),
+    ):
         mock_parse.return_value = MOCK_STATUS
 
         # Now, create the integration again using the same config data, we should reject
@@ -109,9 +111,11 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
 
 async def test_flow_works(hass: HomeAssistant) -> None:
     """Test successful creation of config entries via user configuration."""
-    with patch("apcaccess.status.parse", return_value=MOCK_STATUS), patch(
-        "apcaccess.status.get", return_value=b""
-    ), _patch_setup() as mock_setup:
+    with (
+        patch("apcaccess.status.parse", return_value=MOCK_STATUS),
+        patch("apcaccess.status.get", return_value=b""),
+        _patch_setup() as mock_setup,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -147,9 +151,11 @@ async def test_flow_minimal_status(
     We test different combinations of minimal statuses, where the title of the
     integration will vary.
     """
-    with patch("apcaccess.status.parse") as mock_parse, patch(
-        "apcaccess.status.get", return_value=b""
-    ), _patch_setup() as mock_setup:
+    with (
+        patch("apcaccess.status.parse") as mock_parse,
+        patch("apcaccess.status.get", return_value=b""),
+        _patch_setup() as mock_setup,
+    ):
         status = MOCK_MINIMAL_STATUS | extra_status
         mock_parse.return_value = status
 

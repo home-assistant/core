@@ -109,8 +109,9 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    with patch("apcaccess.status.parse", side_effect=OSError()), patch(
-        "apcaccess.status.get"
+    with (
+        patch("apcaccess.status.parse", side_effect=OSError()),
+        patch("apcaccess.status.get"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -155,8 +156,9 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state.state != STATE_UNAVAILABLE
     assert pytest.approx(float(state.state)) == 14.0
 
-    with patch("apcaccess.status.parse") as mock_parse, patch(
-        "apcaccess.status.get", return_value=b""
+    with (
+        patch("apcaccess.status.parse") as mock_parse,
+        patch("apcaccess.status.get", return_value=b""),
     ):
         # Mock a network error and then trigger an auto-polling event.
         mock_parse.side_effect = OSError()
@@ -186,9 +188,10 @@ async def test_throttle(hass: HomeAssistant) -> None:
     """Ensure that we only send network once for sensor updates."""
     await init_integration(hass)
 
-    with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
-        "apcaccess.status.get", return_value=b""
-    ) as mock_get:
+    with (
+        patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse,
+        patch("apcaccess.status.get", return_value=b"") as mock_get,
+    ):
         # No network call 5 second before the update interval.
         async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL - timedelta(seconds=5))
         await hass.async_block_till_done()
