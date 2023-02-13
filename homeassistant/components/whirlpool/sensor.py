@@ -32,6 +32,7 @@ TANK_FILL = {
     "3": "50",
     "4": "100",
     "5": "active",
+    None: "unknown",
 }
 
 MACHINE_STATE = {
@@ -119,6 +120,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         key="DispenseLevel",
         name="Detergent Level",
         translation_key="whirlpool_tank",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=list(TANK_FILL.values()),
         value_fn=lambda WasherDryer: TANK_FILL[

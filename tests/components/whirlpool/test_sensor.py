@@ -147,6 +147,13 @@ async def test_washer_sensor_values(
     assert state.state == thetimestamp.isoformat()
 
     state_id = f"{entity_id.split('_')[0]}_detergent_level"
+    entry = registry.async_get(state_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
+    await hass.async_block_till_done()
+
     state = hass.states.get(state_id)
     assert state is not None
     assert state.state == "50"
