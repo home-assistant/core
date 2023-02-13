@@ -35,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 
 
-def test_not_supported(caplog):
+def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
     """Test if none is returned if entity isn't supported."""
     # not supported entity
     assert get_accessory(None, None, State("demo.demo", "on"), 2, {}) is None
@@ -61,7 +61,7 @@ def test_not_supported_media_player() -> None:
 @pytest.mark.parametrize(
     "config, name", [({CONF_NAME: "Customize Name"}, "Customize Name")]
 )
-def test_customize_options(config, name):
+def test_customize_options(config, name) -> None:
     """Test with customized options."""
     mock_type = Mock()
     conf = config.copy()
@@ -97,7 +97,7 @@ def test_customize_options(config, name):
         ("WaterHeater", "water_heater.test", "auto", {}, {}),
     ],
 )
-def test_types(type_name, entity_id, state, attrs, config):
+def test_types(type_name, entity_id, state, attrs, config) -> None:
     """Test if types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -162,7 +162,7 @@ def test_types(type_name, entity_id, state, attrs, config):
         ),
     ],
 )
-def test_type_covers(type_name, entity_id, state, attrs):
+def test_type_covers(type_name, entity_id, state, attrs) -> None:
     """Test if cover types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -193,7 +193,7 @@ def test_type_covers(type_name, entity_id, state, attrs):
         ),
     ],
 )
-def test_type_media_player(type_name, entity_id, state, attrs, config):
+def test_type_media_player(type_name, entity_id, state, attrs, config) -> None:
     """Test if media_player types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -278,7 +278,7 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
         ),
     ],
 )
-def test_type_sensors(type_name, entity_id, state, attrs):
+def test_type_sensors(type_name, entity_id, state, attrs) -> None:
     """Test if sensor types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -308,7 +308,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
         ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_SPRINKLER}),
     ],
 )
-def test_type_switches(type_name, entity_id, state, attrs, config):
+def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
     """Test if switch types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -332,7 +332,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
         ("Vacuum", "vacuum.basic_vacuum", "off", {}),
     ],
 )
-def test_type_vacuum(type_name, entity_id, state, attrs):
+def test_type_vacuum(type_name, entity_id, state, attrs) -> None:
     """Test if vacuum types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -345,7 +345,7 @@ def test_type_vacuum(type_name, entity_id, state, attrs):
     "type_name, entity_id, state, attrs",
     [("Camera", "camera.basic", "on", {})],
 )
-def test_type_camera(type_name, entity_id, state, attrs):
+def test_type_camera(type_name, entity_id, state, attrs) -> None:
     """Test if camera types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):

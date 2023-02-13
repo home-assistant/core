@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import assert_lists_same, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 
 def stub_alert(aioclient_mock, alert_id):
@@ -88,7 +89,7 @@ async def setup_repairs(hass):
 )
 async def test_alerts(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
     ha_version,
     supervisor_info,
@@ -186,7 +187,7 @@ async def test_alerts(
 )
 async def test_bad_alerts(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
     ha_version,
     fixture,
@@ -247,7 +248,7 @@ async def test_bad_alerts(
 
 async def test_no_alerts(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test creating issues based on alerts."""

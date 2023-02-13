@@ -88,7 +88,7 @@ DEVICE_MIGRATION_TESTS = [
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
 async def test_migrate_device_id_no_serial_skip_if_other_owner(
     hass: HomeAssistant, variant: DeviceMigrationTest
-):
+) -> None:
     """Don't migrate unrelated devices.
 
     Create a device registry entry that needs migrate, but belongs to a different
@@ -118,7 +118,7 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
 async def test_migrate_device_id_no_serial(
     hass: HomeAssistant, variant: DeviceMigrationTest
-):
+) -> None:
     """Test that a Ryse smart bridge with four shades can be migrated correctly in HA."""
     device_registry = dr.async_get(hass)
 
@@ -154,7 +154,7 @@ async def test_migrate_device_id_no_serial(
     assert device.manufacturer == variant.manufacturer
 
 
-async def test_migrate_ble_unique_id(hass: HomeAssistant):
+async def test_migrate_ble_unique_id(hass: HomeAssistant) -> None:
     """Test that a config entry with incorrect unique_id is repaired."""
     accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
 

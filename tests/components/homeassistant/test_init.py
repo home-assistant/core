@@ -37,6 +37,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    MockUser,
     async_capture_events,
     async_mock_service,
     get_test_home_assistant,
@@ -313,7 +314,9 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     assert hass.config.longitude == 40
 
 
-async def test_require_admin(hass, hass_read_only_user):
+async def test_require_admin(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
     """Test services requiring admin."""
     await async_setup_component(hass, "homeassistant", {})
 
@@ -343,7 +346,9 @@ async def test_require_admin(hass, hass_read_only_user):
         )
 
 
-async def test_turn_on_off_toggle_schema(hass, hass_read_only_user):
+async def test_turn_on_off_toggle_schema(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
     """Test the schemas for the turn on/off/toggle services."""
     await async_setup_component(hass, "homeassistant", {})
 
@@ -441,7 +446,9 @@ async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "service", [SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP]
 )
-async def test_raises_when_db_upgrade_in_progress(hass, service, caplog):
+async def test_raises_when_db_upgrade_in_progress(
+    hass: HomeAssistant, service, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test an exception is raised when the database migration is in progress."""
     await async_setup_component(hass, "homeassistant", {})
 
