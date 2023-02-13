@@ -1226,7 +1226,7 @@ def mock_storage(
 
     orig_load = storage.Store._async_load
 
-    async def mock_async_load(store):
+    async def mock_async_load(store: storage.Store) -> None:
         """Mock version of load."""
         if store._data is None:
             # No data to load
@@ -1246,14 +1246,16 @@ def mock_storage(
         _LOGGER.debug("Loading data for %s: %s", store.key, loaded)
         return loaded
 
-    async def mock_write_data(store, path, data_to_write):
+    async def mock_write_data(
+        store: storage.Store, path: str, data_to_write: dict[str, Any]
+    ) -> None:
         """Mock version of write data."""
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
-    async def mock_remove(store):
+    async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
         data.pop(store.key, None)
 
