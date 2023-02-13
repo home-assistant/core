@@ -528,7 +528,9 @@ async def _async_set_up_integrations(
     hass.data[DATA_SETUP_STARTED] = {}
     setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
 
-    watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
+    watch_task = hass.background_tasks.async_create_task(
+        _async_watch_pending_setups(hass), "watch_pending_setups"
+    )
 
     domains_to_setup = _get_domains(hass, config)
 

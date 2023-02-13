@@ -260,6 +260,49 @@ class CoreState(enum.Enum):
         return self.value
 
 
+class BackgroundTasks:
+    """Class to manage background tasks."""
+
+    def __init__(self) -> None:
+        """Initialize the background task runner."""
+        self._tasks: set[asyncio.Task[Any]] = set()
+        self._loop = asyncio.get_running_loop()
+        self._running = True
+
+    def async_create_task(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+    ) -> asyncio.Task[_R]:
+        """Create a task and add it to the set of tasks."""
+        if not self._running:
+            raise RuntimeError("BackgroundTasks is no longer running")
+        task = self._loop.create_task(target, name=name)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+        return task
+
+    async def async_cancel_all(self) -> None:
+        """Cancel all tasks."""
+        self._running = False
+
+        if not self._tasks:
+            return
+
+        for task in self._tasks:
+            task.cancel()
+
+        for task in list(self._tasks):
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error cancelling task %s", task)
+
+        self._tasks.clear()
+
+
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
@@ -276,8 +319,8 @@ class HomeAssistant:
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
-        self._pending_tasks: list[asyncio.Future[Any]] = []
-        self._track_task = True
+        self._tasks: set[asyncio.Future[Any]] = set()
+        self.background_tasks = BackgroundTasks()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -353,12 +396,14 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-        try:
-            # Only block for EVENT_HOMEASSISTANT_START listener
-            self.async_stop_track_tasks()
-            async with self.timeout.async_timeout(TIMEOUT_EVENT_START):
-                await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        if not self._tasks:
+            pending: set[asyncio.Future[Any]] | None = None
+        else:
+            _done, pending = await asyncio.wait(
+                self._tasks, timeout=TIMEOUT_EVENT_START
+            )
+
+        if pending:
             _LOGGER.warning(
                 (
                     "Something is blocking Home Assistant from wrapping up the start up"
@@ -494,9 +539,8 @@ class HomeAssistant:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
-        # If a task is scheduled
-        if self._track_task:
-            self._pending_tasks.append(task)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
 
@@ -517,8 +561,8 @@ class HomeAssistant:
         """
         task = self.loop.create_task(target)
 
-        if self._track_task:
-            self._pending_tasks.append(task)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
 
@@ -530,20 +574,10 @@ class HomeAssistant:
         task = self.loop.run_in_executor(None, target, *args)
 
         # If a task is scheduled
-        if self._track_task:
-            self._pending_tasks.append(task)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
-
-    @callback
-    def async_track_tasks(self) -> None:
-        """Track tasks so you can wait for all tasks to be done."""
-        self._track_task = True
-
-    @callback
-    def async_stop_track_tasks(self) -> None:
-        """Stop track tasks so you can't wait for all tasks to be done."""
-        self._track_task = False
 
     @overload
     @callback
@@ -637,30 +671,27 @@ class HomeAssistant:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
+        await asyncio.sleep(0)
         start_time: float | None = None
+        current_task = asyncio.current_task()
 
-        while self._pending_tasks:
-            pending = [task for task in self._pending_tasks if not task.done()]
-            self._pending_tasks.clear()
-            if pending:
-                await self._await_and_log_pending(pending)
+        while tasks := [task for task in self._tasks if task is not current_task]:
+            await self._await_and_log_pending(tasks)
 
-                if start_time is None:
-                    # Avoid calling monotonic() until we know
-                    # we may need to start logging blocked tasks.
-                    start_time = 0
-                elif start_time == 0:
-                    # If we have waited twice then we set the start
-                    # time
-                    start_time = monotonic()
-                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
-                    # We have waited at least three loops and new tasks
-                    # continue to block. At this point we start
-                    # logging all waiting tasks.
-                    for task in pending:
-                        _LOGGER.debug("Waiting for task: %s", task)
-            else:
-                await asyncio.sleep(0)
+            if start_time is None:
+                # Avoid calling monotonic() until we know
+                # we may need to start logging blocked tasks.
+                start_time = 0
+            elif start_time == 0:
+                # If we have waited twice then we set the start
+                # time
+                start_time = monotonic()
+            elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                # We have waited at least three loops and new tasks
+                # continue to block. At this point we start
+                # logging all waiting tasks.
+                for task in tasks:
+                    _LOGGER.debug("Waiting for task: %s", task)
 
     async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
@@ -702,9 +733,12 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        cancel_background_tasks = asyncio.create_task(
+            self.background_tasks.async_cancel_all()
+        )
+
         # stage 1
         self.state = CoreState.stopping
-        self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
@@ -737,6 +771,11 @@ class HomeAssistant:
         # which will cause the futures to block forever when waiting for
         # the `result()` which will cause a deadlock when shutting down the executor.
         shutdown_run_callback_threadsafe(self.loop)
+
+        # Run this as part of stage 3.
+        if not cancel_background_tasks.done():
+            self._tasks.add(cancel_background_tasks)
+            cancel_background_tasks.add_done_callback(self._tasks.remove)
 
         try:
             async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):

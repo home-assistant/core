@@ -815,7 +815,7 @@ async def test_wait_for_trigger_variables(hass: HomeAssistant) -> None:
     actions = [
         {
             "alias": "variables",
-            "variables": {"seconds": 5},
+            "variables": {"seconds": 0.01},
         },
         {
             "alias": wait_alias,
@@ -839,9 +839,6 @@ async def test_wait_for_trigger_variables(hass: HomeAssistant) -> None:
         assert script_obj.is_running
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "off")
-        # the script task +  2 tasks created by wait_for_trigger script step
-        await hass.async_wait_for_task_count(3)
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
         await hass.async_block_till_done()
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()

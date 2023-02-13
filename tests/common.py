@@ -22,7 +22,6 @@ import os
 import pathlib
 import threading
 import time
-from time import monotonic
 import types
 from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
@@ -221,44 +220,6 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
         return orig_async_create_task(coroutine)
 
-    async def async_wait_for_task_count(self, max_remaining_tasks: int = 0) -> None:
-        """Block until at most max_remaining_tasks remain.
-
-        Based on HomeAssistant.async_block_till_done
-        """
-        # To flush out any call_soon_threadsafe
-        await asyncio.sleep(0)
-        start_time: float | None = None
-
-        while len(self._pending_tasks) > max_remaining_tasks:
-            pending: Collection[Awaitable[Any]] = [
-                task for task in self._pending_tasks if not task.done()
-            ]
-            self._pending_tasks.clear()
-            if len(pending) > max_remaining_tasks:
-                remaining_pending = await self._await_count_and_log_pending(
-                    pending, max_remaining_tasks=max_remaining_tasks
-                )
-                self._pending_tasks.extend(remaining_pending)
-
-                if start_time is None:
-                    # Avoid calling monotonic() until we know
-                    # we may need to start logging blocked tasks.
-                    start_time = 0
-                elif start_time == 0:
-                    # If we have waited twice then we set the start
-                    # time
-                    start_time = monotonic()
-                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
-                    # We have waited at least three loops and new tasks
-                    # continue to block. At this point we start
-                    # logging all waiting tasks.
-                    for task in pending:
-                        _LOGGER.debug("Waiting for task: %s", task)
-            else:
-                self._pending_tasks.extend(pending)
-                await asyncio.sleep(0)
-
     async def _await_count_and_log_pending(
         self, pending: Collection[Awaitable[Any]], max_remaining_tasks: int = 0
     ) -> Collection[Awaitable[Any]]:
@@ -287,7 +248,6 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
     hass.async_create_task = async_create_task
-    hass.async_wait_for_task_count = types.MethodType(async_wait_for_task_count, hass)
     hass._await_count_and_log_pending = types.MethodType(
         _await_count_and_log_pending, hass
     )
@@ -327,17 +287,6 @@ async def async_test_home_assistant(event_loop, load_registries=True):
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = CoreState.running
-
-    # Mock async_start
-    orig_start = hass.async_start
-
-    async def mock_async_start():
-        """Start the mocking."""
-        # We only mock time during tests and we want to track tasks
-        with patch.object(hass, "async_stop_track_tasks"):
-            await orig_start()
-
-    hass.async_start = mock_async_start
 
     @callback
     def clear_instance(event):
