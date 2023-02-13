@@ -38,10 +38,8 @@ async def async_setup_entry(
     """Set up the lock platform for Dormakaba dKey."""
     data: DormakabaDkeyData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            DormakabaDkeySensor(data.coordinator, data.lock, description)
-            for description in BINARY_SENSOR_DESCRIPTIONS
-        ]
+        DormakabaDkeySensor(data.coordinator, data.lock, description)
+        for description in BINARY_SENSOR_DESCRIPTIONS
     )
 
 
