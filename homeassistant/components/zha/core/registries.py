@@ -235,7 +235,7 @@ class EntityClassAndChannels:
 class ZHAEntityRegistry:
     """Channel to ZHA Entity mapping."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Registry instance."""
         self._strict_registry: dict[
             str, dict[MatchRule, type[ZhaEntity]]

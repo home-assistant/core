@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import webhook
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -40,7 +41,7 @@ async def test_unregistering_webhook(hass, mock_client):
     assert len(hooks) == 1
 
 
-async def test_generate_webhook_url(hass):
+async def test_generate_webhook_url(hass: HomeAssistant) -> None:
     """Test we generate a webhook url correctly."""
     await async_process_ha_core_config(
         hass,
@@ -51,7 +52,7 @@ async def test_generate_webhook_url(hass):
     assert url == "https://example.com/api/webhook/some_id"
 
 
-async def test_async_generate_path(hass):
+async def test_async_generate_path(hass: HomeAssistant) -> None:
     """Test generating just the path component of the url correctly."""
     path = webhook.async_generate_path("some_id")
     assert path == "/api/webhook/some_id"

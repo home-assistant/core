@@ -326,7 +326,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_discovery_and_dhcp(hass):
+async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
     with _patch_discovery(), _patch_config_flow_try_connect():

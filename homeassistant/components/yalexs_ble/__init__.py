@@ -1,16 +1,13 @@
 """The Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
-
-import async_timeout
-from yalexs_ble import PushLock, local_name_is_unique
+from yalexs_ble import AuthError, PushLock, YaleXSBLEError, local_name_is_unique
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DEVICE_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
@@ -30,8 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
 
-    startup_event = asyncio.Event()
-
     @callback
     def _async_update_ble(
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -40,7 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update from a ble callback."""
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
 
-    cancel_first_update = push_lock.register_callback(lambda *_: startup_event.set())
     entry.async_on_unload(await push_lock.start())
 
     # We may already have the advertisement, so check for it.
@@ -57,15 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(DEVICE_TIMEOUT):
-            await startup_event.wait()
-    except asyncio.TimeoutError as ex:
+        await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
+    except AuthError as ex:
+        raise ConfigEntryAuthFailed(str(ex)) from ex
+    except YaleXSBLEError as ex:
         raise ConfigEntryNotReady(
-            f"{push_lock.last_error}; "
-            f"Try moving the Bluetooth adapter closer to {local_name}"
+            f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex
-    finally:
-        cancel_first_update()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
         entry.title, push_lock
