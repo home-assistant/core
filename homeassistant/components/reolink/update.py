@@ -35,6 +35,7 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_name = "Update"
 
     def __init__(
         self,
@@ -43,7 +44,6 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
         """Initialize a Netgear device."""
         super().__init__(reolink_data, reolink_data.firmware_coordinator)
 
-        self._attr_name = "Update"
         self._attr_unique_id = f"{self._host.unique_id}_update"
 
     @property
