@@ -102,7 +102,7 @@ async def test_async_handle_message(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_sync_message(hass, registries):
+async def test_sync_message(hass: HomeAssistant, registries) -> None:
     """Test a sync message."""
     entity = registries.entity.async_get_or_create(
         "light",
@@ -229,7 +229,7 @@ async def test_sync_message(hass, registries):
 
 
 @pytest.mark.parametrize("area_on_device", [True, False])
-async def test_sync_in_area(area_on_device, hass, registries):
+async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> None:
     """Test a sync message where room hint comes from area."""
     area = registries.area.async_create("Living Room")
 
@@ -443,7 +443,9 @@ async def test_query_message(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "report_state,on,brightness,value", [(False, True, 20, 0.2), (True, ANY, ANY, ANY)]
 )
-async def test_execute(hass, report_state, on, brightness, value):
+async def test_execute(
+    hass: HomeAssistant, report_state, on, brightness, value
+) -> None:
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -620,7 +622,9 @@ async def test_execute(hass, report_state, on, brightness, value):
 
 
 @pytest.mark.parametrize("report_state,on,brightness,value", [(False, False, ANY, ANY)])
-async def test_execute_times_out(hass, report_state, on, brightness, value):
+async def test_execute_times_out(
+    hass: HomeAssistant, report_state, on, brightness, value
+) -> None:
     """Test an execute command which times out."""
     orig_execute_limit = sh.EXECUTE_LIMIT
     sh.EXECUTE_LIMIT = 0.02  # Decrease timeout to 20ms
@@ -1001,7 +1005,9 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
         ("outlet", "action.devices.types.OUTLET"),
     ],
 )
-async def test_device_class_switch(hass, device_class, google_type):
+async def test_device_class_switch(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a cover entity syncs to the correct device type."""
     sensor = DemoSwitch(
         None,
@@ -1051,7 +1057,9 @@ async def test_device_class_switch(hass, device_class, google_type):
         ("window", "action.devices.types.WINDOW"),
     ],
 )
-async def test_device_class_binary_sensor(hass, device_class, google_type):
+async def test_device_class_binary_sensor(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a binary entity syncs to the correct device type."""
     sensor = DemoBinarySensor(
         None, "Demo Sensor", state=False, device_class=device_class
@@ -1101,7 +1109,9 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
         ("curtain", "action.devices.types.CURTAIN"),
     ],
 )
-async def test_device_class_cover(hass, device_class, google_type):
+async def test_device_class_cover(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a cover entity syncs to the correct device type."""
     sensor = DemoCover(None, hass, "Demo Sensor", device_class=device_class)
     sensor.hass = hass
@@ -1146,7 +1156,9 @@ async def test_device_class_cover(hass, device_class, google_type):
         ("receiver", "action.devices.types.AUDIO_VIDEO_RECEIVER"),
     ],
 )
-async def test_device_media_player(hass, device_class, google_type):
+async def test_device_media_player(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a binary entity syncs to the correct device type."""
     sensor = AbstractDemoPlayer("Demo", device_class=device_class)
     sensor.hass = hass

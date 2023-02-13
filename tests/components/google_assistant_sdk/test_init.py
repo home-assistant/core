@@ -17,6 +17,7 @@ from .conftest import ComponentSetup, ExpectedCredentials
 
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def fetch_api_url(hass_client, url):
@@ -232,7 +233,9 @@ async def test_send_text_command_expired_token_refresh_failure(
 
 
 async def test_send_text_command_media_player(
-    hass: HomeAssistant, setup_integration: ComponentSetup, hass_client
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test send_text_command with media_player."""
     await setup_integration()
