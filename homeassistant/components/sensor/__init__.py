@@ -681,12 +681,14 @@ class SensorEntity(Entity):
 
         device_class = self.device_class
         display_precision = self.suggested_display_precision
-        native_unit_of_measurement = self.native_unit_of_measurement
+        default_unit_of_measurement = (
+            self.suggested_unit_of_measurement or self.native_unit_of_measurement
+        )
         unit_of_measurement = self.unit_of_measurement
 
         if (
             display_precision is not None
-            and native_unit_of_measurement != unit_of_measurement
+            and default_unit_of_measurement != unit_of_measurement
             and device_class in UNIT_CONVERTERS
         ):
             converter = UNIT_CONVERTERS[device_class]
@@ -695,7 +697,7 @@ class SensorEntity(Entity):
             # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
             ratio_log = log10(
                 converter.get_unit_ratio(
-                    native_unit_of_measurement, unit_of_measurement
+                    default_unit_of_measurement, unit_of_measurement
                 )
             )
             ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
