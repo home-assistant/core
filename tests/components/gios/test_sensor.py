@@ -246,10 +246,19 @@ async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
+    json.loads(load_fixture("gios/indexes.json"))
+
     state = hass.states.get("sensor.home_pm2_5")
     assert state
-    assert state.state != STATE_UNAVAILABLE
     assert state.state == "4"
+
+    state = hass.states.get("sensor.home_pm2_5_index")
+    assert state
+    assert state.state == "good"
+
+    state = hass.states.get("sensor.home_aqi")
+    assert state
+    assert state.state == "good"
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
@@ -260,6 +269,14 @@ async def test_availability(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.home_pm2_5")
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+        state = hass.states.get("sensor.home_pm2_5_index")
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+        state = hass.states.get("sensor.home_aqi")
         assert state
         assert state.state == STATE_UNAVAILABLE
 
@@ -276,10 +293,15 @@ async def test_availability(hass: HomeAssistant) -> None:
 
         state = hass.states.get("sensor.home_pm2_5")
         assert state
-        assert state.state != STATE_UNAVAILABLE
         assert state.state == "4"
 
+        # Indexes are empty so the state is unavailable
         state = hass.states.get("sensor.home_aqi")
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+        # Indexes are empty so the state is unavailable
+        state = hass.states.get("sensor.home_pm2_5_index")
         assert state
         assert state.state == STATE_UNAVAILABLE
 

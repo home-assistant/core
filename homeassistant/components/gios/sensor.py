@@ -259,7 +259,8 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
         available = super().available
         sensor_data = getattr(self.coordinator.data, self.entity_description.key)
 
+        # Sometimes the API returns sensor data without index
         if self.entity_description.subkey:
-            return available and bool(getattr(sensor_data, ATTR_INDEX))
+            return available and bool(sensor_data.index)
 
         return available and bool(sensor_data)
