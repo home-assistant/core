@@ -167,7 +167,7 @@ async def test_number_validator() -> None:
         },
     ],
 )
-async def test_ok_struct_validator(do_config):
+async def test_ok_struct_validator(do_config) -> None:
     """Test struct validator."""
     try:
         struct_validator(do_config)
@@ -223,7 +223,7 @@ async def test_ok_struct_validator(do_config):
         },
     ],
 )
-async def test_exception_struct_validator(do_config):
+async def test_exception_struct_validator(do_config) -> None:
     """Test struct validator."""
     try:
         struct_validator(do_config)
@@ -265,7 +265,7 @@ async def test_exception_struct_validator(do_config):
         ],
     ],
 )
-async def test_duplicate_modbus_validator(do_config):
+async def test_duplicate_modbus_validator(do_config) -> None:
     """Test duplicate modbus validator."""
     duplicate_modbus_validator(do_config)
     assert len(do_config) == 1
@@ -316,7 +316,7 @@ async def test_duplicate_modbus_validator(do_config):
         ],
     ],
 )
-async def test_duplicate_entity_validator(do_config):
+async def test_duplicate_entity_validator(do_config) -> None:
     """Test duplicate entity validator."""
     duplicate_entity_validator(do_config)
     assert len(do_config[0][CONF_SENSORS]) == 1
@@ -432,7 +432,9 @@ async def test_duplicate_entity_validator(do_config):
         },
     ],
 )
-async def test_config_modbus(hass, caplog, mock_modbus_with_pymodbus):
+async def test_config_modbus(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus_with_pymodbus
+) -> None:
     """Run configuration test for modbus."""
 
 
@@ -503,8 +505,13 @@ SERVICE = "service"
     ],
 )
 async def test_pb_service_write(
-    hass, do_write, do_return, do_unit, caplog, mock_modbus_with_pymodbus
-):
+    hass: HomeAssistant,
+    do_write,
+    do_return,
+    do_unit,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus_with_pymodbus,
+) -> None:
     """Run test for service write_register."""
 
     func_name = {
@@ -610,8 +617,13 @@ async def mock_modbus_read_pymodbus_fixture(
     ],
 )
 async def test_pb_read(
-    hass, do_domain, do_expect_state, do_expect_value, caplog, mock_modbus_read_pymodbus
-):
+    hass: HomeAssistant,
+    do_domain,
+    do_expect_state,
+    do_expect_value,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus_read_pymodbus,
+) -> None:
     """Run test for different read."""
 
     # Check state
@@ -654,7 +666,9 @@ async def test_pymodbus_constructor_fail(
         assert mock_pb.called
 
 
-async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
+async def test_pymodbus_close_fail(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus
+) -> None:
     """Run test for failing pymodbus close."""
     config = {
         DOMAIN: [
@@ -673,7 +687,9 @@ async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
     # Close() is called as part of teardown
 
 
-async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
+async def test_pymodbus_connect_fail(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_pymodbus
+) -> None:
     """Run test for failing pymodbus constructor."""
     config = {
         DOMAIN: [
@@ -692,7 +708,9 @@ async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
     assert ExceptionMessage in caplog.text
 
 
-async def test_delay(hass, mock_pymodbus, freezer: FrozenDateTimeFactory):
+async def test_delay(
+    hass: HomeAssistant, mock_pymodbus, freezer: FrozenDateTimeFactory
+) -> None:
     """Run test for startup delay."""
 
     # the purpose of this test is to test startup delay
@@ -764,7 +782,12 @@ async def test_delay(hass, mock_pymodbus, freezer: FrozenDateTimeFactory):
         },
     ],
 )
-async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
+async def test_shutdown(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_pymodbus,
+    mock_modbus_with_pymodbus,
+) -> None:
     """Run test for shutdown."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
@@ -787,7 +810,9 @@ async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
         },
     ],
 )
-async def test_stop_restart(hass, caplog, mock_modbus):
+async def test_stop_restart(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+) -> None:
     """Run test for service stop."""
 
     caplog.set_level(logging.INFO)
@@ -827,7 +852,7 @@ async def test_stop_restart(hass, caplog, mock_modbus):
 
 
 @pytest.mark.parametrize("do_config", [{}])
-async def test_write_no_client(hass, mock_modbus):
+async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
     """Run test for service stop and write without client."""
 
     mock_modbus.reset()
@@ -849,8 +874,11 @@ async def test_write_no_client(hass, mock_modbus):
 
 @pytest.mark.parametrize("do_config", [{}])
 async def test_integration_reload(
-    hass, caplog, mock_modbus, freezer: FrozenDateTimeFactory
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Run test for integration reload."""
 
     caplog.set_level(logging.INFO)
@@ -868,7 +896,9 @@ async def test_integration_reload(
 
 
 @pytest.mark.parametrize("do_config", [{}])
-async def test_integration_reload_failed(hass, caplog, mock_modbus) -> None:
+async def test_integration_reload_failed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+) -> None:
     """Run test for integration connect failure on reload."""
     caplog.set_level(logging.INFO)
     caplog.clear()
