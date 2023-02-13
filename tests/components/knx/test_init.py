@@ -202,7 +202,7 @@ async def test_init_connection_handling(
     knx: KNXTestKit,
     config_entry_data: KNXConfigEntryData,
     connection_config: ConnectionConfig,
-):
+) -> None:
     """Test correctly generating connection config."""
 
     config_entry = MockConfigEntry(

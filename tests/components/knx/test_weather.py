@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import KNXTestKit
 
 
-async def test_weather(hass: HomeAssistant, knx: KNXTestKit):
+async def test_weather(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX weather."""
 
     await knx.setup_integration(
