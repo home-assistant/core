@@ -636,13 +636,15 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
 
                 statistics = []
 
+                last_stats_time_dt = dt_util.utc_from_timestamp(last_stats_time)
+
                 for data in hourly_data:
                     if data.get(sensor_type) is None:
                         continue
 
                     from_time = dt_util.parse_datetime(data["from"])
                     if from_time is None or (
-                        last_stats_time is not None and from_time <= last_stats_time
+                        last_stats_time is not None and from_time <= last_stats_time_dt
                     ):
                         continue
 
