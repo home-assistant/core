@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings sensors platform.
+"""Test for the SmartThings sensors platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -20,15 +19,15 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_platform
 
 
-async def test_mapping_integrity():
+async def test_mapping_integrity() -> None:
     """Test ensures the map dicts have proper integrity."""
     for capability, maps in sensor.CAPABILITY_TO_SENSORS.items():
         assert capability in CAPABILITIES, capability

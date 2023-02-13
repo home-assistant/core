@@ -113,18 +113,14 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events, run_immediately=True
@@ -296,9 +292,7 @@ def handle_subscribe_entities(
         if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
-        connection.send_message(
-            lambda: messages.cached_state_diff_message(msg["id"], event)
-        )
+        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition

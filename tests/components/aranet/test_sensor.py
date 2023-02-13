@@ -1,9 +1,8 @@
 """Test the Aranet sensors."""
-
-
 from homeassistant.components.aranet.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant
 
 from . import DISABLED_INTEGRATIONS_SERVICE_INFO, VALID_DATA_SERVICE_INFO
 
@@ -11,7 +10,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -66,7 +65,7 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
 
 
-async def test_smart_home_integration_disabled(hass):
+async def test_smart_home_integration_disabled(hass: HomeAssistant) -> None:
     """Test disabling smart home integration marks entities as unavailable."""
     entry = MockConfigEntry(
         domain=DOMAIN,

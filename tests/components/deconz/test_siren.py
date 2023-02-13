@@ -1,5 +1,4 @@
 """deCONZ switch platform tests."""
-
 from unittest.mock import patch
 
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
@@ -11,6 +10,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -18,8 +18,12 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_sirens(hass, aioclient_mock, mock_deconz_websocket):
+
+async def test_sirens(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that siren entities are created."""
     data = {
         "lights": {

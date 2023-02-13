@@ -16,18 +16,19 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import mock_device, mock_location, mock_mode
 
-from tests.common import mock_registry
 
-
-async def test_alarm_control_panel(hass, canary) -> None:
+async def test_alarm_control_panel(
+    hass: HomeAssistant, canary, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the alarm_control_panel for Canary."""
 
-    registry = mock_registry(hass)
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
     mocked_location = mock_location(
@@ -48,7 +49,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
         await hass.async_block_till_done()
 
     entity_id = "alarm_control_panel.home"
-    entity_entry = registry.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.unique_id == "100"
 
@@ -107,7 +108,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     assert state.state == STATE_ALARM_ARMED_NIGHT
 
 
-async def test_alarm_control_panel_services(hass, canary) -> None:
+async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None:
     """Test the services of the alarm_control_panel for Canary."""
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")

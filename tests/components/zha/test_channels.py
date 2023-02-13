@@ -319,9 +319,9 @@ async def test_out_channel_config(
     assert cluster.configure_reporting.call_count == 0
 
 
-def test_channel_registry():
+def test_channel_registry() -> None:
     """Test ZIGBEE Channel Registry."""
-    for (cluster_id, channel) in registries.ZIGBEE_CHANNEL_REGISTRY.items():
+    for cluster_id, channel in registries.ZIGBEE_CHANNEL_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
         assert issubclass(channel, base_channels.ZigbeeChannel)

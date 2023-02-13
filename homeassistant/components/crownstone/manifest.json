@@ -1,21 +1,21 @@
 {
   "domain": "crownstone",
   "name": "Crownstone",
+  "after_dependencies": ["usb"],
+  "codeowners": ["@Crownstone", "@RicArch97"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/crownstone",
-  "requirements": [
-    "crownstone-cloud==1.4.9",
-    "crownstone-sse==2.0.4",
-    "crownstone-uart==2.1.0",
-    "pyserial==3.5"
-  ],
-  "codeowners": ["@Crownstone", "@RicArch97"],
-  "after_dependencies": ["usb"],
   "iot_class": "cloud_push",
   "loggers": [
     "crownstone_cloud",
     "crownstone_core",
     "crownstone_sse",
     "crownstone_uart"
+  ],
+  "requirements": [
+    "crownstone-cloud==1.4.9",
+    "crownstone-sse==2.0.4",
+    "crownstone-uart==2.1.0",
+    "pyserial==3.5"
   ]
 }

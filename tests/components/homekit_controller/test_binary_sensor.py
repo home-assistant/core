@@ -3,6 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import get_next_aid, setup_test_component
@@ -16,7 +17,7 @@ def create_motion_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_motion_sensor_read_state(hass, utcnow):
+async def test_motion_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit motion sensor accessory."""
     helper = await setup_test_component(hass, create_motion_sensor_service)
 
@@ -43,7 +44,7 @@ def create_contact_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_contact_sensor_read_state(hass, utcnow):
+async def test_contact_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit contact accessory."""
     helper = await setup_test_component(hass, create_contact_sensor_service)
 
@@ -70,7 +71,7 @@ def create_smoke_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_smoke_sensor_read_state(hass, utcnow):
+async def test_smoke_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit contact accessory."""
     helper = await setup_test_component(hass, create_smoke_sensor_service)
 
@@ -97,7 +98,7 @@ def create_carbon_monoxide_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_carbon_monoxide_sensor_read_state(hass, utcnow):
+async def test_carbon_monoxide_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit contact accessory."""
     helper = await setup_test_component(hass, create_carbon_monoxide_sensor_service)
 
@@ -126,7 +127,7 @@ def create_occupancy_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_occupancy_sensor_read_state(hass, utcnow):
+async def test_occupancy_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit occupancy sensor accessory."""
     helper = await setup_test_component(hass, create_occupancy_sensor_service)
 
@@ -153,7 +154,7 @@ def create_leak_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_leak_sensor_read_state(hass, utcnow):
+async def test_leak_sensor_read_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit leak sensor accessory."""
     helper = await setup_test_component(hass, create_leak_sensor_service)
 
@@ -172,7 +173,7 @@ async def test_leak_sensor_read_state(hass, utcnow):
     assert state.attributes["device_class"] == BinarySensorDeviceClass.MOISTURE
 
 
-async def test_migrate_unique_id(hass, utcnow):
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     """Test a we can migrate a binary_sensor unique id."""
     entity_registry = er.async_get(hass)
     aid = get_next_aid()

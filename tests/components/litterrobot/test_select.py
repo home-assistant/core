@@ -7,17 +7,16 @@ from homeassistant.components.select import (
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_integration
 
 SELECT_ENTITY_ID = "select.test_clean_cycle_wait_time_minutes"
 
 
-async def test_wait_time_select(hass: HomeAssistant, mock_account):
+async def test_wait_time_select(hass: HomeAssistant, mock_account) -> None:
     """Tests the wait time select entity."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
@@ -46,7 +45,7 @@ async def test_wait_time_select(hass: HomeAssistant, mock_account):
         assert mock_account.robots[0].set_wait_time.call_count == count
 
 
-async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account):
+async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> None:
     """Tests the wait time select entity with invalid value."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 

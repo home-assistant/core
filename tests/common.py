@@ -3,10 +3,18 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable, Collection, Mapping, Sequence
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Generator,
+    Mapping,
+    Sequence,
+)
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
+from functools import lru_cache
 from io import StringIO
 import json
 import logging
@@ -309,13 +317,13 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     # Load the registries
     if load_registries:
-        await asyncio.gather(
-            area_registry.async_load(hass),
-            device_registry.async_load(hass),
-            entity_registry.async_load(hass),
-            issue_registry.async_load(hass),
-        )
-        await hass.async_block_till_done()
+        with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
+            await asyncio.gather(
+                area_registry.async_load(hass),
+                device_registry.async_load(hass),
+                entity_registry.async_load(hass),
+                issue_registry.async_load(hass),
+            )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = CoreState.running
@@ -379,16 +387,34 @@ def async_mock_intent(hass, intent_typ):
 
 
 @callback
-def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
+def async_fire_mqtt_message(
+    hass: HomeAssistant,
+    topic: str,
+    payload: bytes | str,
+    qos: int = 0,
+    retain: bool = False,
+) -> None:
     """Fire the MQTT message."""
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
-    from homeassistant.components.mqtt.models import ReceiveMessage
+
+    # pylint: disable-next=import-outside-toplevel
+    from paho.mqtt.client import MQTTMessage
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.mqtt.models import MqttData
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = ReceiveMessage(topic, payload, qos, retain)
-    hass.data["mqtt"].client._mqtt_handle_message(msg)
+
+    msg = MQTTMessage(topic=topic.encode("utf-8"))
+    msg.payload = payload
+    msg.qos = qos
+    msg.retain = retain
+
+    mqtt_data: MqttData = hass.data["mqtt"]
+    assert mqtt_data.client
+    mqtt_data.client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -484,6 +510,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
     )
 
 
+@lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text()
@@ -514,7 +541,17 @@ def mock_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, entity_registry.RegistryEntry] | None = None,
 ) -> entity_registry.EntityRegistry:
-    """Mock the Entity Registry."""
+    """Mock the Entity Registry.
+
+    This should only be used if you need to mock/re-stage a clean mocked
+    entity registry in your current hass object. It can be useful to,
+    for example, pre-load the registry with items.
+
+    This mock will thus replace the existing registry in the running hass.
+
+    If you just need to access the existing registry, use the `entity_registry`
+    fixture instead.
+    """
     registry = entity_registry.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
@@ -529,7 +566,17 @@ def mock_registry(
 def mock_area_registry(
     hass: HomeAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
 ) -> area_registry.AreaRegistry:
-    """Mock the Area Registry."""
+    """Mock the Area Registry.
+
+    This should only be used if you need to mock/re-stage a clean mocked
+    area registry in your current hass object. It can be useful to,
+    for example, pre-load the registry with items.
+
+    This mock will thus replace the existing registry in the running hass.
+
+    If you just need to access the existing registry, use the `area_registry`
+    fixture instead.
+    """
     registry = area_registry.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
 
@@ -541,7 +588,17 @@ def mock_device_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, device_registry.DeviceEntry] | None = None,
 ) -> device_registry.DeviceRegistry:
-    """Mock the Device Registry."""
+    """Mock the Device Registry.
+
+    This should only be used if you need to mock/re-stage a clean mocked
+    device registry in your current hass object. It can be useful to,
+    for example, pre-load the registry with items.
+
+    This mock will thus replace the existing registry in the running hass.
+
+    If you just need to access the existing registry, use the `device_registry`
+    fixture instead.
+    """
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = device_registry.DeviceRegistryItems()
     if mock_entries is None:
@@ -1155,7 +1212,9 @@ class MockEntity(entity.Entity):
 
 
 @contextmanager
-def mock_storage(data=None):
+def mock_storage(
+    data: dict[str, Any] | None = None
+) -> Generator[dict[str, Any], None, None]:
     """Mock storage.
 
     Data is a dict {'key': {'version': version, 'data': data}}
@@ -1167,7 +1226,9 @@ def mock_storage(data=None):
 
     orig_load = storage.Store._async_load
 
-    async def mock_async_load(store):
+    async def mock_async_load(
+        store: storage.Store,
+    ) -> dict[str, Any] | list[Any] | None:
         """Mock version of load."""
         if store._data is None:
             # No data to load
@@ -1187,14 +1248,16 @@ def mock_storage(data=None):
         _LOGGER.debug("Loading data for %s: %s", store.key, loaded)
         return loaded
 
-    async def mock_write_data(store, path, data_to_write):
+    async def mock_write_data(
+        store: storage.Store, path: str, data_to_write: dict[str, Any]
+    ) -> None:
         """Mock version of write data."""
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
-    async def mock_remove(store):
+    async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
         data.pop(store.key, None)
 
@@ -1363,7 +1426,7 @@ ANY = _HA_ANY()
 def raise_contains_mocks(val: Any) -> None:
     """Raise for mocks."""
     if isinstance(val, Mock):
-        raise ValueError
+        raise TypeError
 
     if isinstance(val, dict):
         for dict_value in val.values():

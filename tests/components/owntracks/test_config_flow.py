@@ -9,6 +9,7 @@ from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_
 from homeassistant.components.owntracks.const import DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -76,7 +77,7 @@ async def test_user(hass, webhook_id, secret):
     assert result["description_placeholders"][CONF_WEBHOOK_URL] == WEBHOOK_URL
 
 
-async def test_import_setup(hass):
+async def test_import_setup(hass: HomeAssistant) -> None:
     """Test that we don't automatically create a config entry."""
     await async_process_ha_core_config(
         hass,
@@ -89,7 +90,7 @@ async def test_import_setup(hass):
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test that we can't add more than one instance."""
     flow = await init_config_flow(hass)
 
@@ -114,7 +115,7 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
     )
 
 
-async def test_unload(hass):
+async def test_unload(hass: HomeAssistant) -> None:
     """Test unloading a config flow."""
     await async_process_ha_core_config(
         hass,
@@ -147,7 +148,7 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] not in hass.data["webhook"]
 
 
-async def test_with_cloud_sub(hass):
+async def test_with_cloud_sub(hass: HomeAssistant) -> None:
     """Test creating a config flow while subscribed."""
     assert await async_setup_component(hass, "cloud", {})
 
@@ -174,7 +175,7 @@ async def test_with_cloud_sub(hass):
     )
 
 
-async def test_with_cloud_sub_not_connected(hass):
+async def test_with_cloud_sub_not_connected(hass: HomeAssistant) -> None:
     """Test creating a config flow while subscribed."""
     assert await async_setup_component(hass, "cloud", {})
 

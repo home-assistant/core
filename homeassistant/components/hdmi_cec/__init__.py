@@ -308,8 +308,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     def _update(call: ServiceCall) -> None:
-        """
-        Update if device update is needed.
+        """Update if device update is needed.
 
         Called by service, requests CEC network to update data.
         """
