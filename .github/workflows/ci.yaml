@@ -28,12 +28,14 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 3
-  PIP_CACHE_VERSION: 3
-  MYPY_CACHE_VERSION: 3
+  CACHE_VERSION: 5
+  PIP_CACHE_VERSION: 4
+  MYPY_CACHE_VERSION: 4
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
+  MARIADB_VERSIONS: "['mariadb:10.9.3']"
+  POSTGRESQL_VERSIONS: "['postgres:15.0']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -56,6 +58,8 @@ jobs:
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
+      mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
+      postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
@@ -103,6 +107,8 @@ jobs:
         run: |
           # Defaults
           integrations_glob=""
+          mariadb_groups=${MARIADB_VERSIONS}
+          postgresql_groups=${POSTGRESQL_VERSIONS}
           test_full_suite="true"
           test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
           test_group_count=10
@@ -136,6 +142,8 @@ jobs:
             tests_glob=$(echo "${tests}" | jq -cSr '. | join(",")')
             [[ "${tests_glob}" == *","* ]] && tests_glob="{${tests_glob}}"
 
+            mariadb_groups="[]"
+            postgresql_groups="[]"
             test_full_suite="false"
           fi
 
@@ -148,12 +156,18 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
+            mariadb_groups=${MARIADB_VERSIONS}
+            postgresql_groups=${POSTGRESQL_VERSIONS}
             test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
             test_group_count=10
             test_full_suite="true"
           fi
 
           # Output & sent to GitHub Actions
+          echo "mariadb_groups: ${mariadb_groups}"
+          echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
+          echo "postgresql_groups: ${postgresql_groups}"
+          echo "postgresql_groups=${postgresql_groups}" >> $GITHUB_OUTPUT
           echo "python_versions: ${ALL_PYTHON_VERSIONS}"
           echo "python_versions=${ALL_PYTHON_VERSIONS}" >> $GITHUB_OUTPUT
           echo "test_full_suite: ${test_full_suite}"
@@ -188,7 +202,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.5
         with:
           path: venv
           key: >-
@@ -203,7 +217,7 @@ jobs:
           pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -232,30 +246,22 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if pre-commit cache restore failed
-        if: steps.cache-precommit.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore pre-commit environment from cache"
-          exit 1
       - name: Run black (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
@@ -286,30 +292,22 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if pre-commit cache restore failed
-        if: steps.cache-precommit.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore pre-commit environment from cache"
-          exit 1
       - name: Register flake8 problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/flake8.json"
@@ -325,6 +323,7 @@ jobs:
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+
   lint-ruff:
     name: Check ruff
     runs-on: ubuntu-latest
@@ -342,30 +341,22 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if pre-commit cache restore failed
-        if: steps.cache-precommit.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore pre-commit environment from cache"
-          exit 1
       - name: Register ruff problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/ruff.json"
@@ -373,14 +364,15 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual ruff --all-files
+          pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
       - name: Run ruff (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+          pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
+
   lint-isort:
     name: Check isort
     runs-on: ubuntu-20.04
@@ -398,30 +390,22 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if pre-commit cache restore failed
-        if: steps.cache-precommit.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore pre-commit environment from cache"
-          exit 1
       - name: Run isort
         run: |
           . venv/bin/activate
@@ -444,30 +428,22 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Fail job if pre-commit cache restore failed
-        if: steps.cache-precommit.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore pre-commit environment from cache"
-          exit 1
 
       - name: Run pyupgrade (fully)
         if: needs.info.outputs.test_full_suite == 'true'
@@ -576,7 +552,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.5
         with:
           path: venv
           key: >-
@@ -584,7 +560,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.5
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -613,7 +589,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.4" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<23.1" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt --use-deprecated=legacy-resolver
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
           pip install -e .
@@ -638,17 +614,13 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Run hassfest
         run: |
           . venv/bin/activate
@@ -674,17 +646,13 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Run gen_requirements_all.py
         run: |
           . venv/bin/activate
@@ -711,17 +679,13 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -766,19 +730,15 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Restore mypy cache
-        uses: actions/cache@v3.2.3
+        uses: actions/cache@v3.2.5
         with:
           path: .mypy_cache
           key: >-
@@ -829,17 +789,13 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Run pip check
         run: |
           . venv/bin/activate
@@ -858,9 +814,9 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
-      - lint-other
       - lint-isort
+      - lint-other
+      - lint-ruff
       - mypy
     strategy:
       fail-fast: false
@@ -886,16 +842,12 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -909,6 +861,10 @@ jobs:
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
       - name: Run pytest (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         timeout-minutes: 60
@@ -966,7 +922,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       mariadb:
-        image: mariadb:10.9.3
+        image: ${{ matrix.mariadb-group }}
         ports:
           - 3306:3306
         env:
@@ -977,22 +933,22 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
-      && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
       - base
       - gen-requirements-all
       - hassfest
-      - lint-black
-      - lint-other
       - lint-isort
+      - lint-other
+      - lint-ruff
       - mypy
     strategy:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     name: >-
-      Run tests Python ${{ matrix.python-version }} (mariadb)
+      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.mariadb-group }})
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -1011,16 +967,12 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.3
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
+          fail-on-cache-miss: true
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1061,6 +1013,110 @@ jobs:
         uses: actions/upload-artifact@v3.1.2
         with:
           name: coverage-${{ matrix.python-version }}-mariadb
+          path: coverage.xml
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
+
+  pytest-postgres:
+    runs-on: ubuntu-20.04
+    services:
+      postgres:
+        image: ${{ matrix.postgresql-group }}
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: password
+        options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
+    if: |
+      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
+      && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+    needs:
+      - info
+      - base
+      - gen-requirements-all
+      - hassfest
+      - lint-other
+      - lint-isort
+      - mypy
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
+    name: >-
+      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.postgresql-group }})
+    steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            bluez \
+            ffmpeg \
+            postgresql-server-dev-12
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.1.0
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v4.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          check-latest: true
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.2.5
+        with:
+          path: venv
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Install Pytest Annotation plugin
+        run: |
+          . venv/bin/activate
+          # Ideally this should be part of our dependencies
+          # However this plugin is fairly new and doesn't run correctly
+          # on a non-GitHub environment.
+          pip install pytest-github-actions-annotate-failures==0.1.3
+      - name: Register pytest slow test problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
+      - name: Install SQL Python libraries
+        run: |
+          . venv/bin/activate
+          pip install psycopg2 sqlalchemy_utils
+      - name: Run pytest (partially)
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+
+          python3 -X dev -m pytest \
+            -qq \
+            --timeout=9 \
+            -n 1 \
+            --cov="homeassistant.components.recorder" \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            -o console_output_style=count \
+            --durations=0 \
+            --durations-min=10 \
+            -p no:sugar \
+            --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
+            tests/components/recorder
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: coverage-${{ matrix.python-version }}-postgresql
           path: coverage.xml
       - name: Check dirty
         run: |

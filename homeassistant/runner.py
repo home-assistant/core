@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import events
 import dataclasses
 import logging
+import os
 import threading
 import traceback
 from typing import Any
@@ -49,6 +51,22 @@ class RuntimeConfig:
     open_ui: bool = False
 
 
+def can_use_pidfd() -> bool:
+    """Check if pidfd_open is available.
+
+    Back ported from cpython 3.12
+    """
+    if not hasattr(os, "pidfd_open"):
+        return False
+    try:
+        pid = os.getpid()
+        os.close(os.pidfd_open(pid, 0))  # pylint: disable=no-member
+    except OSError:
+        # blocked by security policy like SECCOMP
+        return False
+    return True
+
+
 class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
@@ -56,6 +74,23 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         """Init the event loop policy."""
         super().__init__()
         self.debug = debug
+        self._watcher: asyncio.AbstractChildWatcher | None = None
+
+    def _init_watcher(self) -> None:
+        """Initialize the watcher for child processes.
+
+        Back ported from cpython 3.12
+        """
+        with events._lock:  # type: ignore[attr-defined] # pylint: disable=protected-access
+            if self._watcher is None:  # pragma: no branch
+                if can_use_pidfd():
+                    self._watcher = asyncio.PidfdChildWatcher()
+                else:
+                    self._watcher = asyncio.ThreadedChildWatcher()
+                if threading.current_thread() is threading.main_thread():
+                    self._watcher.attach_loop(
+                        self._local._loop  # type: ignore[attr-defined] # pylint: disable=protected-access
+                    )
 
     @property
     def loop_name(self) -> str:

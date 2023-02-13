@@ -1,9 +1,8 @@
-"""
-Regression tests for Netamo Smart CO Alarm.
+"""Regression tests for Netamo Smart CO Alarm.
 
 https://github.com/home-assistant/core/issues/78903
 """
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

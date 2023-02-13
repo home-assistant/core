@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from xiaomi_ble import SensorUpdate, XiaomiBluetoothDeviceData
-from xiaomi_ble.parser import EncryptionScheme
+from xiaomi_ble import EncryptionScheme, SensorUpdate, XiaomiBluetoothDeviceData
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (

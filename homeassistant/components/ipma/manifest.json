@@ -1,10 +1,10 @@
 {
   "domain": "ipma",
   "name": "Instituto Portugu\u00eas do Mar e Atmosfera (IPMA)",
+  "codeowners": ["@dgomes", "@abmantis"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ipma",
-  "requirements": ["pyipma==3.0.5"],
-  "codeowners": ["@dgomes", "@abmantis"],
   "iot_class": "cloud_polling",
-  "loggers": ["geopy", "pyipma"]
+  "loggers": ["geopy", "pyipma"],
+  "requirements": ["pyipma==3.0.6"]
 }

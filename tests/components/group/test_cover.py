@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -789,7 +790,7 @@ async def test_is_opening_closing(hass, setup_comp):
     assert hass.states.get(COVER_GROUP).state == STATE_OPENING
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested cover group."""
     await async_setup_component(
         hass,

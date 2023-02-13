@@ -145,9 +145,10 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     return dattim.astimezone(DEFAULT_TIME_ZONE)
 
 
-def utc_from_timestamp(timestamp: float) -> dt.datetime:
-    """Return a UTC time from a timestamp."""
-    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
+# We use a partial here to improve performance by avoiding the global lookup
+# of UTC and the function call overhead.
+utc_from_timestamp = partial(dt.datetime.fromtimestamp, tz=UTC)
+"""Return a UTC time from a timestamp."""
 
 
 def utc_to_timestamp(utc_dt: dt.datetime) -> float:

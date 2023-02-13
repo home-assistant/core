@@ -12,16 +12,16 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockConsumption, HomeControlMockSensor
 
 
-async def test_temperature_sensor(hass: HomeAssistant):
+async def test_temperature_sensor(hass: HomeAssistant) -> None:
     """Test setup of a temperature sensor device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSensor()
@@ -43,7 +43,7 @@ async def test_temperature_sensor(hass: HomeAssistant):
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
 
-async def test_battery_sensor(hass: HomeAssistant):
+async def test_battery_sensor(hass: HomeAssistant) -> None:
     """Test setup and state change of a battery sensor device."""
     entry = configure_integration(hass)
     er = entity_registry.async_get(hass)
@@ -73,7 +73,7 @@ async def test_battery_sensor(hass: HomeAssistant):
     assert hass.states.get(f"{DOMAIN}.test_battery_level").state == "10"
 
 
-async def test_consumption_sensor(hass: HomeAssistant):
+async def test_consumption_sensor(hass: HomeAssistant) -> None:
     """Test setup and state change of a consumption sensor device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockConsumption()
@@ -118,7 +118,7 @@ async def test_consumption_sensor(hass: HomeAssistant):
     )
 
 
-async def test_voltage_sensor(hass: HomeAssistant):
+async def test_voltage_sensor(hass: HomeAssistant) -> None:
     """Test disabled setup of a voltage sensor device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockConsumption()
@@ -133,7 +133,7 @@ async def test_voltage_sensor(hass: HomeAssistant):
     assert state is None
 
 
-async def test_sensor_change(hass: HomeAssistant):
+async def test_sensor_change(hass: HomeAssistant) -> None:
     """Test state change of a sensor device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSensor()
@@ -157,7 +157,7 @@ async def test_sensor_change(hass: HomeAssistant):
     assert hass.states.get(f"{DOMAIN}.test_temperature").state == STATE_UNAVAILABLE
 
 
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSensor()

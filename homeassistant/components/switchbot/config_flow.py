@@ -71,7 +71,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_adv: SwitchBotAdvertisement | None = None
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}

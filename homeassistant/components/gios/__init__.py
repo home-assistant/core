@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Using station_id: %d", station_id)
 
     # We used to use int as config_entry unique_id, convert this to str.
-    if isinstance(entry.unique_id, int):  # type: ignore[unreachable]
+    if isinstance(entry.unique_id, int):
         hass.config_entries.async_update_entry(entry, unique_id=str(station_id))  # type: ignore[unreachable]
 
     # We used to use int in device_entry identifiers, convert this to str.
