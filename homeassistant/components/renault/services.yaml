@@ -86,3 +86,14 @@ charge_start:
       selector:
         device:
           integration: renault
+          
+charge_pause:
+  description: Pause charge on vehicle.
+  fields:
+    vehicle:
+      name: Vehicle
+      description: The vehicle to send the command to.
+      required: true
+      selector:
+        device:
+          integration: renault
