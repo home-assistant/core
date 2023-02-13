@@ -54,7 +54,6 @@ def fixture_mock_srp_energy() -> Generator[None, MagicMock, None]:
     with patch(
         "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
     ) as srp_energy_mock:
-
         client = srp_energy_mock.return_value
         client.validate.return_value = True
         client.usage.return_value = MOCK_USAGE
@@ -67,7 +66,6 @@ def fixture_mock_srp_energy_config_flow() -> Generator[None, MagicMock, None]:
     with patch(
         "homeassistant.components.srp_energy.config_flow.SrpEnergyClient", autospec=True
     ) as srp_energy_mock:
-
         client = srp_energy_mock.return_value
         client.validate.return_value = True
         client.usage.return_value = MOCK_USAGE

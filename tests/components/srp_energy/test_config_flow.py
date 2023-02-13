@@ -151,7 +151,6 @@ async def test_two_entries(
     }
 
     for user_input in (user_input_one, user_input_two):
-
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             data=user_input,
