@@ -63,9 +63,7 @@ SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
 SERVICE_AC_CANCEL = "ac_cancel"
 SERVICE_AC_START = "ac_start"
 SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
-SERVICE_CHARGE_START = "charge_start"
-SERVICE_CHARGE_PAUSE = "charge_pause"
-SERVICES = [SERVICE_AC_CANCEL, SERVICE_AC_START, SERVICE_CHARGE_SET_SCHEDULES, SERVICE_CHARGE_START, SERVICE_CHARGE_PAUSE]
+SERVICES = [SERVICE_AC_CANCEL, SERVICE_AC_START, SERVICE_CHARGE_SET_SCHEDULES]
 
 
 def setup_services(hass: HomeAssistant) -> None:
@@ -88,38 +86,6 @@ def setup_services(hass: HomeAssistant) -> None:
         LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
         result = await proxy.set_ac_start(temperature, when)
         LOGGER.debug("A/C start result: %s", result.raw_data)
-
-    async def charge_start(service_call: ServiceCall) -> None:
-        """Start charge."""
-        # The Renault start charge service has been replaced by a
-        # dedicated button entity and marked as deprecated
-        LOGGER.warning(
-            "The 'renault.charge_start' service is deprecated and "
-            "replaced by a dedicated start charge button entity; please "
-            "use that entity to start the charge instead"
-        )
-
-        proxy = get_vehicle_proxy(service_call.data)
-
-        LOGGER.debug("Charge start attempt")
-        result = await proxy.vehicle.set_charge_start()
-        LOGGER.debug("Charge start result: %s", result)
-
-    async def charge_pause(service_call: ServiceCall) -> None:
-        """Pause charge."""
-        # The Renault pause charge service has been replaced by a
-        # dedicated button entity and marked as deprecated
-        LOGGER.warning(
-            "The 'renault.charge_pause' service is deprecated and "
-            "replaced by a dedicated start charge button entity; please "
-            "use that entity to start the charge instead"
-        )
-
-        proxy = get_vehicle_proxy(service_call.data)
-
-        LOGGER.debug("Charge pause attempt")
-        result = await proxy.vehicle.set_charge_stop()
-        LOGGER.debug("Charge pause result: %s", result)
 
     async def charge_set_schedules(service_call: ServiceCall) -> None:
         """Set charge schedules."""
@@ -165,18 +131,6 @@ def setup_services(hass: HomeAssistant) -> None:
         SERVICE_AC_START,
         ac_start,
         schema=SERVICE_AC_START_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CHARGE_START,
-        charge_start,
-        schema=SERVICE_VEHICLE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CHARGE_PAUSE,
-        charge_pause,
-        schema=SERVICE_VEHICLE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
