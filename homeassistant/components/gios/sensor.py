@@ -29,11 +29,13 @@ from .const import (
     ATTR_AQI,
     ATTR_C6H6,
     ATTR_CO,
+    ATTR_INDEX,
     ATTR_NO2,
     ATTR_O3,
     ATTR_PM10,
     ATTR_PM25,
     ATTR_SO2,
+    ATTR_VALUE,
     ATTRIBUTION,
     DOMAIN,
     MANUFACTURER,
@@ -61,7 +63,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_AQI,
         name="AQI",
-        value=lambda sensors: getattr(sensors.aqi, "value", None),
+        value=lambda sensors: getattr(sensors.aqi, ATTR_VALUE, None),
         icon="mdi:air-filter",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
@@ -70,7 +72,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_C6H6,
         name="C6H6",
-        value=lambda sensors: getattr(sensors.c6h6, "value", None),
+        value=lambda sensors: getattr(sensors.c6h6, ATTR_VALUE, None),
         suggested_display_precision=0,
         icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -79,7 +81,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_CO,
         name="CO",
-        value=lambda sensors: getattr(sensors.co, "value", None),
+        value=lambda sensors: getattr(sensors.co, ATTR_VALUE, None),
         suggested_display_precision=0,
         icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -88,7 +90,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_NO2,
         name="NO2",
-        value=lambda sensors: getattr(sensors.no2, "value", None),
+        value=lambda sensors: getattr(sensors.no2, ATTR_VALUE, None),
         suggested_display_precision=0,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -96,9 +98,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO2,
-        subkey="index",
+        subkey=ATTR_INDEX,
         name="NO2 index",
-        value=lambda sensors: getattr(sensors.no2, "index", None),
+        value=lambda sensors: getattr(sensors.no2, ATTR_INDEX, None),
         icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
@@ -107,7 +109,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_O3,
         name="O3",
-        value=lambda sensors: getattr(sensors.o3, "value", None),
+        value=lambda sensors: getattr(sensors.o3, ATTR_VALUE, None),
         suggested_display_precision=0,
         device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -115,9 +117,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     ),
     GiosSensorEntityDescription(
         key=ATTR_O3,
-        subkey="index",
+        subkey=ATTR_INDEX,
         name="O3 index",
-        value=lambda sensors: getattr(sensors.o3, "index", None),
+        value=lambda sensors: getattr(sensors.o3, ATTR_INDEX, None),
         icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
@@ -126,7 +128,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_PM10,
         name="PM10",
-        value=lambda sensors: getattr(sensors.pm10, "value", None),
+        value=lambda sensors: getattr(sensors.pm10, ATTR_VALUE, None),
         suggested_display_precision=0,
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -134,9 +136,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM10,
-        subkey="index",
+        subkey=ATTR_INDEX,
         name="PM10 index",
-        value=lambda sensors: getattr(sensors.pm10, "index", None),
+        value=lambda sensors: getattr(sensors.pm10, ATTR_INDEX, None),
         icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
@@ -145,7 +147,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_PM25,
         name="PM2.5",
-        value=lambda sensors: getattr(sensors.pm25, "value", None),
+        value=lambda sensors: getattr(sensors.pm25, ATTR_VALUE, None),
         suggested_display_precision=0,
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -153,9 +155,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM25,
-        subkey="index",
+        subkey=ATTR_INDEX,
         name="PM2.5 index",
-        value=lambda sensors: getattr(sensors.pm25, "index", None),
+        value=lambda sensors: getattr(sensors.pm25, ATTR_INDEX, None),
         icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
@@ -164,7 +166,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_SO2,
         name="SO2",
-        value=lambda sensors: getattr(sensors.so2, "value", None),
+        value=lambda sensors: getattr(sensors.so2, ATTR_VALUE, None),
         suggested_display_precision=0,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -172,9 +174,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     ),
     GiosSensorEntityDescription(
         key=ATTR_SO2,
-        subkey="index",
+        subkey=ATTR_INDEX,
         name="SO2 index",
-        value=lambda sensors: getattr(sensors.so2, "index", None),
+        value=lambda sensors: getattr(sensors.so2, ATTR_INDEX, None),
         icon="mdi:molecule",
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
@@ -258,6 +260,6 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
         sensor_data = getattr(self.coordinator.data, self.entity_description.key)
 
         if self.entity_description.subkey:
-            return available and bool(getattr(sensor_data, "index"))
+            return available and bool(getattr(sensor_data, ATTR_INDEX))
 
         return available and bool(sensor_data)
