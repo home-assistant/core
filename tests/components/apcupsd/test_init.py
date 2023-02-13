@@ -189,14 +189,14 @@ async def test_throttle(hass: HomeAssistant) -> None:
     with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
         "apcaccess.status.get", return_value=b""
     ) as mock_get:
-        # No network call 1 second before the update interval.
-        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL - timedelta(seconds=1))
+        # No network call 5 second before the update interval.
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL - timedelta(seconds=5))
         await hass.async_block_till_done()
         assert mock_parse.call_count == 0
         assert mock_get.call_count == 0
 
-        # Just _one_ network call 1 second after the update interval.
-        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=1))
+        # Just _one_ network call 5 second after the update interval.
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert mock_parse.call_count == 1
         assert mock_get.call_count == 1

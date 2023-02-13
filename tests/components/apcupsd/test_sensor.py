@@ -157,8 +157,9 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         # Now, we fast-forward the time to pass the debouncer cooldown, but put it
         # before the normal update interval to see if the manual update works.
         async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 1)
+            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 5)
         )
+        await hass.async_block_till_done()
 
         mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
         await hass.services.async_call(
@@ -179,7 +180,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         # Now fast-forward the time to pass the normal update interval, the sensor
         # should be updated again (due to auto-polling).
         mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "16.0 Percent"}
-        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=5))
         await hass.async_block_till_done()
 
         assert mock_parse.call_count == 2
@@ -205,7 +206,7 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
     ) as mock_get:
         # Fast-forward time to just pass the initial debouncer cooldown.
         async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 1)
+            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 5)
         )
         await hass.services.async_call(
             "homeassistant",
