@@ -1,6 +1,7 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -219,7 +220,9 @@ async def test_config_local_sdk_if_ssl_enabled(
     assert await resp.read() == b""
 
 
-async def test_agent_user_id_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_agent_user_id_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test a disconnect message."""
 
     hass_storage["google_assistant"] = {

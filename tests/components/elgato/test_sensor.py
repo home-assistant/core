@@ -1,5 +1,4 @@
 """Tests for the Elgato sensor platform."""
-
 import pytest
 
 from homeassistant.components.elgato.const import DOMAIN
