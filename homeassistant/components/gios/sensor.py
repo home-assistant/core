@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from gios import GiosSensors
 
@@ -30,7 +29,6 @@ from .const import (
     ATTR_AQI,
     ATTR_C6H6,
     ATTR_CO,
-    ATTR_INDEX,
     ATTR_NO2,
     ATTR_O3,
     ATTR_PM10,
@@ -55,6 +53,8 @@ class GiosSensorRequiredKeysMixin:
 @dataclass
 class GiosSensorEntityDescription(SensorEntityDescription, GiosSensorRequiredKeysMixin):
     """GIOS sensor entity description."""
+
+    subkey: str | None = None
 
 
 SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
@@ -95,6 +95,16 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
+        key=ATTR_NO2,
+        subkey="index",
+        name="NO2 index",
+        value=lambda sensors: getattr(sensors.no2, "index", None),
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="no2_index",
+    ),
+    GiosSensorEntityDescription(
         key=ATTR_O3,
         name="O3",
         value=lambda sensors: getattr(sensors.o3, "value", None),
@@ -102,6 +112,16 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_O3,
+        subkey="index",
+        name="O3 index",
+        value=lambda sensors: getattr(sensors.o3, "index", None),
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="o3_index",
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM10,
@@ -113,6 +133,16 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
+        key=ATTR_PM10,
+        subkey="index",
+        name="PM10 index",
+        value=lambda sensors: getattr(sensors.pm10, "index", None),
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="pm10_index",
+    ),
+    GiosSensorEntityDescription(
         key=ATTR_PM25,
         name="PM2.5",
         value=lambda sensors: getattr(sensors.pm25, "value", None),
@@ -122,6 +152,16 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
+        key=ATTR_PM25,
+        subkey="index",
+        name="PM2.5 index",
+        value=lambda sensors: getattr(sensors.pm25, "index", None),
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="pm25_index",
+    ),
+    GiosSensorEntityDescription(
         key=ATTR_SO2,
         name="SO2",
         value=lambda sensors: getattr(sensors.so2, "value", None),
@@ -129,6 +169,16 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_SO2,
+        subkey="index",
+        name="SO2 index",
+        value=lambda sensors: getattr(sensors.so2, "index", None),
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="so2_index",
     ),
 )
 
@@ -188,17 +238,13 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
             name=name,
             configuration_url=URL.format(station_id=coordinator.gios.station_id),
         )
-        self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
-        self._attrs: dict[str, Any] = {}
+        if description.subkey:
+            self._attr_unique_id = (
+                f"{coordinator.gios.station_id}-{description.key}-{description.subkey}"
+            )
+        else:
+            self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self.entity_description = description
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        self._attrs[ATTR_INDEX] = getattr(
-            self.coordinator.data, self.entity_description.key
-        ).index
-        return self._attrs
 
     @property
     def native_value(self) -> StateType:
@@ -209,7 +255,9 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         available = super().available
+        sensor_data = getattr(self.coordinator.data, self.entity_description.key)
 
-        return available and bool(
-            getattr(self.coordinator.data, self.entity_description.key)
-        )
+        if self.entity_description.subkey:
+            return available and bool(getattr(sensor_data, "index"))
+
+        return available and bool(sensor_data)
