@@ -135,6 +135,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 
+        if ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp:
+            return self.async_abort(reason="no_serial")
+
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
 
