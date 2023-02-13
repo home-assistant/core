@@ -1226,7 +1226,9 @@ def mock_storage(
 
     orig_load = storage.Store._async_load
 
-    async def mock_async_load(store: storage.Store) -> None:
+    async def mock_async_load(
+        store: storage.Store,
+    ) -> dict[str, Any] | list[Any] | None:
         """Mock version of load."""
         if store._data is None:
             # No data to load
