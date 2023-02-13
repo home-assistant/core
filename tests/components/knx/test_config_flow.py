@@ -901,7 +901,7 @@ async def _get_menu_step(hass: HomeAssistant) -> FlowResult:
 async def test_get_secure_menu_step_manual_tunnelling(
     _request_description_mock,
     hass: HomeAssistant,
-):
+) -> None:
     """Test flow reaches secure_tunnellinn menu step from manual tunnelling configuration."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
@@ -948,7 +948,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     assert result3["step_id"] == "secure_key_source"
 
 
-async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup):
+async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) -> None:
     """Test configure tunnelling secure keys manually."""
     menu_step = await _get_menu_step(hass)
 
@@ -985,7 +985,7 @@ async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup):
     knx_setup.assert_called_once()
 
 
-async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup):
+async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
     """Test configure secure knxkeys."""
     menu_step = await _get_menu_step(hass)
 
@@ -1040,7 +1040,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup):
     knx_setup.assert_called_once()
 
 
-async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
+async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step(hass)
 
@@ -1068,7 +1068,7 @@ async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
         assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_FILENAME] == "keyfile_not_found"
 
 
-async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
+async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step(hass)
 
@@ -1099,7 +1099,7 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
         )
 
 
-async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant):
+async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step(hass)
 

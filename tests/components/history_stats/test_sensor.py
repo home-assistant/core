@@ -1,5 +1,4 @@
 """The test for the History Statistics sensor platform."""
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -12,8 +11,10 @@ from homeassistant.components.history_stats import DOMAIN
 from homeassistant.components.history_stats.sensor import (
     PLATFORM_SCHEMA as SENSOR_SCHEMA,
 )
+from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_DEVICE_CLASS, SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -101,7 +102,9 @@ def test_setup_invalid_config(config):
         SENSOR_SCHEMA(config)
 
 
-async def test_invalid_date_for_start(recorder_mock, hass):
+async def test_invalid_date_for_start(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Verify with an invalid date for start."""
     await async_setup_component(
         hass,
@@ -126,7 +129,9 @@ async def test_invalid_date_for_start(recorder_mock, hass):
     assert hass.states.get("sensor.test") is None
 
 
-async def test_invalid_date_for_end(recorder_mock, hass):
+async def test_invalid_date_for_end(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Verify with an invalid date for end."""
     await async_setup_component(
         hass,
@@ -151,7 +156,9 @@ async def test_invalid_date_for_end(recorder_mock, hass):
     assert hass.states.get("sensor.test") is None
 
 
-async def test_invalid_entity_in_template(recorder_mock, hass):
+async def test_invalid_entity_in_template(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Verify with an invalid entity in the template."""
     await async_setup_component(
         hass,
@@ -176,7 +183,9 @@ async def test_invalid_entity_in_template(recorder_mock, hass):
     assert hass.states.get("sensor.test") is None
 
 
-async def test_invalid_entity_returning_none_in_template(recorder_mock, hass):
+async def test_invalid_entity_returning_none_in_template(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Verify with an invalid entity returning none in the template."""
     await async_setup_component(
         hass,
@@ -201,7 +210,7 @@ async def test_invalid_entity_returning_none_in_template(recorder_mock, hass):
     assert hass.states.get("sensor.test") is None
 
 
-async def test_reload(recorder_mock, hass):
+async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Verify we can reload history_stats sensors."""
     hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
@@ -244,7 +253,7 @@ async def test_reload(recorder_mock, hass):
     assert hass.states.get("sensor.second_test")
 
 
-async def test_measure_multiple(recorder_mock, hass):
+async def test_measure_multiple(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor measure for multiple ."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -326,7 +335,7 @@ async def test_measure_multiple(recorder_mock, hass):
     assert hass.states.get("sensor.sensor4").state == "50.0"
 
 
-async def test_measure(recorder_mock, hass):
+async def test_measure(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor measure."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -405,7 +414,9 @@ async def test_measure(recorder_mock, hass):
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
-async def test_async_on_entire_period(recorder_mock, hass):
+async def test_async_on_entire_period(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test the history statistics sensor measuring as on the entire period."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -485,7 +496,9 @@ async def test_async_on_entire_period(recorder_mock, hass):
     assert hass.states.get("sensor.on_sensor4").state == "100.0"
 
 
-async def test_async_off_entire_period(recorder_mock, hass):
+async def test_async_off_entire_period(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test the history statistics sensor measuring as off the entire period."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -567,9 +580,9 @@ async def test_async_off_entire_period(recorder_mock, hass):
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_single(
-    recorder_mock,
-    hass,
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
     """Test we startup from history and switch to watching state changes."""
     hass.config.set_time_zone("UTC")
     utcnow = dt_util.utcnow()
@@ -665,9 +678,9 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_single_expanding_window(
-    recorder_mock,
-    hass,
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
     """Test we startup from history and switch to watching state changes with an expanding end time."""
     hass.config.set_time_zone("UTC")
     utcnow = dt_util.utcnow()
@@ -762,9 +775,9 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_multiple(
-    recorder_mock,
-    hass,
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
     """Test we startup from history and switch to watching state changes."""
     hass.config.set_time_zone("UTC")
     utcnow = dt_util.utcnow()
@@ -897,7 +910,9 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor4").state == "87.5"
 
 
-async def test_does_not_work_into_the_future(recorder_mock, hass):
+async def test_does_not_work_into_the_future(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test history cannot tell the future.
 
     Verifies we do not regress https://github.com/home-assistant/core/pull/20589
@@ -1036,7 +1051,9 @@ async def test_does_not_work_into_the_future(recorder_mock, hass):
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
 
-async def test_reload_before_start_event(recorder_mock, hass):
+async def test_reload_before_start_event(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Verify we can reload history_stats sensors before the start event."""
     hass.state = ha.CoreState.not_running
     hass.states.async_set("binary_sensor.test_id", "on")
@@ -1077,7 +1094,9 @@ async def test_reload_before_start_event(recorder_mock, hass):
     assert hass.states.get("sensor.second_test")
 
 
-async def test_measure_sliding_window(recorder_mock, hass):
+async def test_measure_sliding_window(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test the history statistics sensor with a moving end and a moving start."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -1170,7 +1189,9 @@ async def test_measure_sliding_window(recorder_mock, hass):
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
 
-async def test_measure_from_end_going_backwards(recorder_mock, hass):
+async def test_measure_from_end_going_backwards(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test the history statistics sensor with a moving end and a duration to find the start."""
     start_time = dt_util.utcnow() - timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
@@ -1262,7 +1283,7 @@ async def test_measure_from_end_going_backwards(recorder_mock, hass):
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
-async def test_measure_cet(recorder_mock, hass):
+async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor measure with a non-UTC timezone."""
     hass.config.set_time_zone("Europe/Berlin")
     start_time = dt_util.utcnow() - timedelta(minutes=60)
@@ -1343,7 +1364,9 @@ async def test_measure_cet(recorder_mock, hass):
 
 
 @pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
-async def test_end_time_with_microseconds_zeroed(time_zone, recorder_mock, hass):
+async def test_end_time_with_microseconds_zeroed(
+    time_zone, recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test the history statistics sensor that has the end time microseconds zeroed out."""
     hass.config.set_time_zone(time_zone)
     start_of_today = dt_util.now().replace(
@@ -1458,7 +1481,7 @@ async def test_end_time_with_microseconds_zeroed(time_zone, recorder_mock, hass)
         assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"
 
 
-async def test_device_classes(recorder_mock, hass):
+async def test_device_classes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the device classes."""
     await async_setup_component(
         hass,
