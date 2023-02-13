@@ -127,7 +127,8 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                     continue
                 from_time = data.time
                 if from_time is None or (
-                    last_stats_time is not None and from_time <= last_stats_time
+                    last_stats_time is not None
+                    and from_time.timestamp() <= last_stats_time
                 ):
                     continue
                 from_time = from_time.replace(minute=0, second=0, microsecond=0)
