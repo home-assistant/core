@@ -39,7 +39,7 @@ async def user_flow(hass):
     return result["flow_id"]
 
 
-async def test_user_flow(hass, user_flow):
+async def test_user_flow(hass: HomeAssistant, user_flow) -> None:
     """Test a successful user initiated flow."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -68,7 +68,7 @@ async def test_user_flow(hass, user_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_valid_auth(hass, user_flow):
+async def test_form_valid_auth(hass: HomeAssistant, user_flow) -> None:
     """Test we handle valid auth."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -111,7 +111,7 @@ async def test_form_valid_auth(hass, user_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_valid_ws_port(hass, user_flow):
+async def test_form_valid_ws_port(hass: HomeAssistant, user_flow) -> None:
     """Test we handle valid websocket port."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -159,7 +159,7 @@ async def test_form_valid_ws_port(hass, user_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_empty_ws_port(hass, user_flow):
+async def test_form_empty_ws_port(hass: HomeAssistant, user_flow) -> None:
     """Test we handle an empty websocket port input."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -201,7 +201,7 @@ async def test_form_empty_ws_port(hass, user_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass, user_flow):
+async def test_form_invalid_auth(hass: HomeAssistant, user_flow) -> None:
     """Test we handle invalid auth."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -281,7 +281,7 @@ async def test_form_invalid_auth(hass, user_flow):
     assert result["errors"] == {}
 
 
-async def test_form_cannot_connect_http(hass, user_flow):
+async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow) -> None:
     """Test we handle cannot connect over HTTP error."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -297,7 +297,7 @@ async def test_form_cannot_connect_http(hass, user_flow):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_exception_http(hass, user_flow):
+async def test_form_exception_http(hass: HomeAssistant, user_flow) -> None:
     """Test we handle generic exception over HTTP."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -313,7 +313,7 @@ async def test_form_exception_http(hass, user_flow):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_form_cannot_connect_ws(hass, user_flow):
+async def test_form_cannot_connect_ws(hass: HomeAssistant, user_flow) -> None:
     """Test we handle cannot connect over WebSocket error."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -365,7 +365,7 @@ async def test_form_cannot_connect_ws(hass, user_flow):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_exception_ws(hass, user_flow):
+async def test_form_exception_ws(hass: HomeAssistant, user_flow) -> None:
     """Test we handle generic exception over WebSocket."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",
@@ -486,7 +486,7 @@ async def test_discovery_cannot_connect_ws(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_discovery_exception_http(hass, user_flow):
+async def test_discovery_exception_http(hass: HomeAssistant, user_flow) -> None:
     """Test we handle generic exception during discovery validation."""
     with patch(
         "homeassistant.components.kodi.config_flow.Kodi.ping",

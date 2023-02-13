@@ -611,7 +611,7 @@ glances_api==0.4.1
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.18
+goodwe==0.2.25
 
 # homeassistant.components.google_mail
 google-api-python-client==2.71.0
