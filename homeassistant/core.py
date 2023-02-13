@@ -297,7 +297,9 @@ class BackgroundTasks:
         await asyncio.wait(tasks)
 
         for task in tasks:
-            if (exception := task.exception()) is None:
+            if (exception := task.exception()) is None or isinstance(
+                exception, asyncio.CancelledError
+            ):
                 continue
 
             _LOGGER.error(
