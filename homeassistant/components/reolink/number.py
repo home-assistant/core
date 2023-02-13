@@ -70,7 +70,6 @@ NUMBER_ENTITIES = (
         key="floodlight_brightness",
         name="Floodlight brightness",
         icon="mdi:spotlight-beam",
-        mode=NumberMode.SLIDER,
         native_step=1,
         get_min_value=lambda api, ch: 1,
         get_max_value=lambda api, ch: 100,
