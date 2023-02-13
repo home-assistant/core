@@ -43,17 +43,17 @@ SELECT_ENTITIES = (
         options=[mode.name for mode in SpotlightModeEnum],
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
-        method=lambda api, ch, value: api.set_whiteled(ch, mode=value),
+        method=lambda api, ch, name: api.set_whiteled(ch, mode=name),
     ),
     ReolinkSelectEntityDescription(
         key="day_night_mode",
         name="Day night mode",
         icon="mdi:theme-light-dark",
         translation_key="day_night_mode",
-        options=[mode.value for mode in DayNightEnum],
+        options=[mode.name for mode in DayNightEnum],
         supported=lambda api, ch: api.supported(ch, "dayNight"),
-        value=lambda api, ch: api.daynight_state(ch),
-        method=lambda api, ch, value: api.set_daynight(ch, value),
+        value=lambda api, ch: DayNightEnum(api.daynight_state(ch)).name,
+        method=lambda api, ch, name: api.set_daynight(ch, DayNightEnum[name].value),
     ),
 )
 

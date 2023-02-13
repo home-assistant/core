@@ -48,16 +48,16 @@
     "select": {
       "floodlight_mode": {
         "state": {
-          "Off": "Off",
-          "Auto": "Auto",
-          "Schedule": "Schedule"
+          "off": "Off",
+          "auto": "Auto",
+          "schedule": "Schedule"
         }
       },
       "day_night_mode": {
         "state": {
-          "Auto": "Auto",
-          "Color": "Color",
-          "Black&White": "Black&White"
+          "auto": "Auto",
+          "color": "Color",
+          "blackwhite": "Black&White"
         }
       }
     }
