@@ -988,8 +988,10 @@ class Recorder(threading.Thread):
 
     def _handle_sqlite_corruption(self) -> None:
         """Handle the sqlite3 database being corrupt."""
-        self._close_event_session()
-        self._close_connection()
+        try:
+            self._close_event_session()
+        finally:
+            self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
         self.run_history.reset()
         self._setup_recorder()
@@ -1212,18 +1214,21 @@ class Recorder(threading.Thread):
         """End the recorder session."""
         if self.event_session is None:
             return
-        try:
+        if self.run_history.active:
             self.run_history.end(self.event_session)
+        try:
             self._commit_event_session_or_retry()
-            self.event_session.close()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error saving the event session during shutdown: %s", err)
 
+        self.event_session.close()
         self.run_history.clear()
 
     def _shutdown(self) -> None:
         """Save end time for current run."""
         self.hass.add_job(self._async_stop_listeners)
         self._stop_executor()
-        self._end_session()
-        self._close_connection()
+        try:
+            self._end_session()
+        finally:
+            self._close_connection()
