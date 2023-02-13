@@ -174,10 +174,9 @@ class RegistryEntry:
         """Return a partial dict representation of the entry.
 
         This version only includes what's needed for display.
+        Returns None if there's no data needed for display.
         """
-        display_dict: dict[str, Any] = {
-            "ei": self.entity_id,
-        }
+        display_dict: dict[str, Any] = {}
         for key, attr_name in DISLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
                 display_dict[key] = attr_val
@@ -194,6 +193,10 @@ class RegistryEntry:
                 precision := sensor_options.get("suggested_display_precision")
             ) is not None:
                 display_dict["dp"] = precision
+        if not display_dict:
+            # We didn't gather any data needed for display
+            return None
+        display_dict["ei"] = self.entity_id
         return display_dict
 
     @property

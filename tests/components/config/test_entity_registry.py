@@ -245,9 +245,6 @@ async def test_list_entities_for_display(
                 "ei": "test_domain.renamed",
             },
             {
-                "ei": "test_domain.boring",
-            },
-            {
                 "ei": "test_domain.hidden",
                 "hb": True,
             },
