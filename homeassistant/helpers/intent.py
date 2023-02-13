@@ -419,20 +419,30 @@ class ServiceIntentHandler(IntentHandler):
         service_coros = []
         for state in states:
             service_coros.append(self.async_call_service(intent_obj, state))
-            success_results.append(
-                IntentResponseTarget(
-                    type=IntentResponseTargetType.ENTITY,
-                    name=state.name,
-                    id=state.entity_id,
-                ),
+
+        # Handle service calls in parallel, noting failures as they occur.
+        failed_results: list[IntentResponseTarget] = []
+        for service_coro in asyncio.as_completed(service_coros):
+            success, state = await service_coro
+            target = IntentResponseTarget(
+                type=IntentResponseTargetType.ENTITY,
+                name=state.name,
+                id=state.entity_id,
+            )
+            if success:
+                success_results.append(target)
+            else:
+                failed_results.append(target)
+
+        if not success_results:
+            # If no entities succeeded, raise an error.
+            failed_entity_ids = [target.id for target in failed_results]
+            raise IntentHandleError(
+                f"Failed to call {self.service} for: {failed_entity_ids}"
             )
 
-        # Handle service calls in parallel.
-        # We will need to handle partial failures here.
-        await asyncio.gather(*service_coros)
-
         response.async_set_results(
-            success_results=success_results,
+            success_results=success_results, failed_results=failed_results
         )
         response.async_set_states(states)
 
@@ -441,15 +451,20 @@ class ServiceIntentHandler(IntentHandler):
 
         return response
 
-    async def async_call_service(self, intent_obj: Intent, state: State) -> None:
+    async def async_call_service(
+        self, intent_obj: Intent, state: State
+    ) -> tuple[bool, State]:
         """Call service on entity."""
         hass = intent_obj.hass
-        await hass.services.async_call(
+        result = await hass.services.async_call(
             self.domain,
             self.service,
             {ATTR_ENTITY_ID: state.entity_id},
             context=intent_obj.context,
+            blocking=True,
         )
+
+        return result is True, state
 
 
 class IntentCategory(Enum):

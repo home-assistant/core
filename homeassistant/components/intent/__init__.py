@@ -61,24 +61,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class OnOffIntentHandler(intent.ServiceIntentHandler):
     """Intent handler for on/off that handles covers too."""
 
-    async def async_call_service(self, intent_obj: intent.Intent, state: State) -> None:
+    async def async_call_service(
+        self, intent_obj: intent.Intent, state: State
+    ) -> tuple[bool, State]:
         """Call service on entity with special case for covers."""
         hass = intent_obj.hass
 
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            await hass.services.async_call(
+            result = await hass.services.async_call(
                 COVER_DOMAIN,
                 SERVICE_OPEN_COVER
                 if self.service == SERVICE_TURN_ON
                 else SERVICE_CLOSE_COVER,
                 {ATTR_ENTITY_ID: state.entity_id},
                 context=intent_obj.context,
+                blocking=True,
             )
-        else:
-            # Fall back to homeassistant.turn_on/off
-            await super().async_call_service(intent_obj, state)
+
+            return result is True, state
+
+        if not hass.services.has_service(state.domain, self.service):
+            _LOGGER.warning(
+                "Service %s does not support entity %s", self.service, state.entity_id
+            )
+            return False, state
+
+        # Fall back to homeassistant.turn_on/off
+        return await super().async_call_service(intent_obj, state)
 
 
 class GetStateIntentHandler(intent.IntentHandler):
