@@ -103,7 +103,9 @@ async def test_hap_setup_connection_error() -> None:
     assert not hass.config_entries.flow.async_init.mock_calls
 
 
-async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap_factory):
+async def test_hap_reset_unloads_entry_if_setup(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test calling reset while the entry has been setup."""
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()
     assert hass.data[HMIPC_DOMAIN][HAPID] == mock_hap
@@ -116,7 +118,9 @@ async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap_factory):
     assert hass.data[HMIPC_DOMAIN] == {}
 
 
-async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
+async def test_hap_create(
+    hass: HomeAssistant, hmip_config_entry, simple_mock_home
+) -> None:
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
@@ -125,7 +129,9 @@ async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
         assert await hap.async_setup()
 
 
-async def test_hap_create_exception(hass, hmip_config_entry, mock_connection_init):
+async def test_hap_create_exception(
+    hass: HomeAssistant, hmip_config_entry, mock_connection_init
+) -> None:
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
 
@@ -145,7 +151,7 @@ async def test_hap_create_exception(hass, hmip_config_entry, mock_connection_ini
         await hap.async_setup()
 
 
-async def test_auth_create(hass, simple_mock_auth):
+async def test_auth_create(hass: HomeAssistant, simple_mock_auth) -> None:
     """Mock AsyncAuth to execute get_auth."""
     config = {HMIPC_HAPID: HAPID, HMIPC_PIN: HAPPIN, HMIPC_NAME: "hmip"}
     hmip_auth = HomematicipAuth(hass, config)
@@ -160,7 +166,7 @@ async def test_auth_create(hass, simple_mock_auth):
         assert hmip_auth.auth.pin == HAPPIN
 
 
-async def test_auth_create_exception(hass, simple_mock_auth):
+async def test_auth_create_exception(hass: HomeAssistant, simple_mock_auth) -> None:
     """Mock AsyncAuth to execute get_auth."""
     config = {HMIPC_HAPID: HAPID, HMIPC_PIN: HAPPIN, HMIPC_NAME: "hmip"}
     hmip_auth = HomematicipAuth(hass, config)

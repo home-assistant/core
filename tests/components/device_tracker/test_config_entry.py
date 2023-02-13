@@ -24,7 +24,9 @@ def test_tracker_entity() -> None:
     assert not instance.force_update
 
 
-async def test_cleanup_legacy(hass, enable_custom_integrations):
+async def test_cleanup_legacy(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we clean up devices created by old device tracker."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)

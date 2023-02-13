@@ -1,8 +1,8 @@
 """Test honeywell setup process."""
-
 from unittest.mock import create_autospec, patch
 
 import aiosomecomfort
+import pytest
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
@@ -19,7 +19,7 @@ MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
 
 @patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
-async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry):
+async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Initialize the config entry."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -43,7 +43,11 @@ async def test_setup_multiple_thermostats(
 
 @patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_setup_multiple_thermostats_with_same_deviceid(
-    hass: HomeAssistant, caplog, config_entry: MockConfigEntry, device, client
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry: MockConfigEntry,
+    device,
+    client,
 ) -> None:
     """Test Honeywell TCC API returning duplicate device IDs."""
     mock_location2 = create_autospec(aiosomecomfort.Location, instance=True)

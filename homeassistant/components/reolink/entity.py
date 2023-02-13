@@ -13,19 +13,20 @@ from .const import DOMAIN
 
 
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
-    """
-    Parent class for entities that control the Reolink NVR itself, withouth a channel.
-    
-    A camera connected directly to HomeAssistant withouth using a NVR is in the reolink API
+    """Parent class for entities that control the Reolink NVR itself, without a channel.
+
+    A camera connected directly to HomeAssistant without using a NVR is in the reolink API
     basically a NVR with a single channel that has the camera connected to that channel.
     """
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, reolink_data: ReolinkData, coordinator: DataUpdateCoordinator | None = None
+        self,
+        reolink_data: ReolinkData,
+        coordinator: DataUpdateCoordinator | None = None,
     ) -> None:
-        """Initialize ReolinkBaseCoordinatorEntity for a NVR entity withouth a channel."""
+        """Initialize ReolinkBaseCoordinatorEntity for a NVR entity without a channel."""
         if coordinator is None:
             coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)
@@ -54,7 +55,12 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
 class ReolinkCoordinatorEntity(ReolinkBaseCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
 
-    def __init__(self, reolink_data: ReolinkData, channel: int, coordinator: DataUpdateCoordinator | None = None) -> None:
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        coordinator: DataUpdateCoordinator | None = None,
+    ) -> None:
         """Initialize ReolinkCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
         super().__init__(reolink_data, coordinator)
 

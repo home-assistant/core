@@ -8,12 +8,11 @@ import datetime
 import functools
 import gc
 import itertools
-from json import JSONDecoder
 import logging
 import sqlite3
 import ssl
 import threading
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import client
@@ -23,6 +22,7 @@ from aiohttp.test_utils import (
     TestServer,
     make_mocked_request,
 )
+from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import freezegun
 import multidict
@@ -101,13 +101,13 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 asyncio.set_event_loop_policy = lambda policy: None
 
 
-def _utcnow():
+def _utcnow() -> datetime.datetime:
     """Make utcnow patchable by freezegun."""
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-dt_util.utcnow = _utcnow
-event.time_tracker_utcnow = _utcnow
+dt_util.utcnow = _utcnow  # type: ignore[assignment]
+event.time_tracker_utcnow = _utcnow  # type: ignore[assignment]
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -143,8 +143,8 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
-    freezegun.api.FakeDatetime = HAFakeDatetime
+    freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
+    freezegun.api.FakeDatetime = HAFakeDatetime  # type: ignore[attr-defined]
 
     def adapt_datetime(val):
         return val.isoformat(" ")
@@ -154,6 +154,7 @@ def pytest_runtest_setup() -> None:
 
     # Setup HAFakeDatetime converter for pymysql
     try:
+        # pylint: disable-next=import-outside-toplevel
         import MySQLdb.converters as MySQLdb_converters
     except ImportError:
         pass
@@ -163,12 +164,12 @@ def pytest_runtest_setup() -> None:
         ] = MySQLdb_converters.DateTime2literal
 
 
-def ha_datetime_to_fakedatetime(datetime):
+def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]
     """Convert datetime to FakeDatetime.
 
     Modified to include https://github.com/spulec/freezegun/pull/424.
     """
-    return freezegun.api.FakeDatetime(
+    return freezegun.api.FakeDatetime(  # type: ignore[attr-defined]
         datetime.year,
         datetime.month,
         datetime.day,
@@ -181,7 +182,7 @@ def ha_datetime_to_fakedatetime(datetime):
     )
 
 
-class HAFakeDatetime(freezegun.api.FakeDatetime):
+class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
     """Modified to include https://github.com/spulec/freezegun/pull/424."""
 
     @classmethod
@@ -200,16 +201,20 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):
         return ha_datetime_to_fakedatetime(result)
 
 
-def check_real(func):
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
+
+def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
-    async def guard_func(*args, **kwargs):
+    async def guard_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         real = kwargs.pop("_test_real", None)
 
         if not real:
-            raise Exception(
-                'Forgot to mock or pass "_test_real=True" to %s', func.__name__
+            raise RuntimeError(
+                f'Forgot to mock or pass "_test_real=True" to {func.__name__}'
             )
 
         return await func(*args, **kwargs)
@@ -268,7 +273,7 @@ def verify_cleanup(
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:
+    for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
@@ -382,6 +387,7 @@ def aiohttp_client(
         else:
             assert not args, "args should be empty"
 
+        client: TestClient
         if isinstance(__param, Application):
             server_kwargs = server_kwargs or {}
             server = TestServer(__param, loop=loop, **server_kwargs)
@@ -441,7 +447,7 @@ def hass(
             )
         orig_exception_handler(loop, context)
 
-    exceptions = []
+    exceptions: list[Exception] = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
     ha._cv_hass.set(hass)
 
@@ -692,7 +698,7 @@ def hass_client_no_auth(
 
 
 @pytest.fixture
-def current_request():
+def current_request() -> Generator[MagicMock, None, None]:
     """Mock current request."""
     with patch("homeassistant.components.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
@@ -706,7 +712,7 @@ def current_request():
 
 
 @pytest.fixture
-def current_request_with_host(current_request):
+def current_request_with_host(current_request: MagicMock) -> None:
     """Mock current request with a host header."""
     new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
     new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
@@ -954,7 +960,7 @@ async def mqtt_mock_entry_with_yaml_config(
 
 
 @pytest.fixture(autouse=True)
-def mock_network():
+def mock_network() -> Generator[None, None, None]:
     """Mock network."""
     mock_adapter = Adapter(
         name="eth0",
@@ -973,7 +979,7 @@ def mock_network():
 
 
 @pytest.fixture(autouse=True)
-def mock_get_source_ip():
+def mock_get_source_ip() -> Generator[None, None, None]:
     """Mock network util's async_get_source_ip."""
     with patch(
         "homeassistant.components.network.util.async_get_source_ip",
@@ -983,7 +989,7 @@ def mock_get_source_ip():
 
 
 @pytest.fixture
-def mock_zeroconf():
+def mock_zeroconf() -> Generator[None, None, None]:
     """Mock zeroconf."""
     with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
         "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
@@ -992,7 +998,7 @@ def mock_zeroconf():
 
 
 @pytest.fixture
-def mock_async_zeroconf(mock_zeroconf):
+def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
     with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
         zc = mock_aiozc.return_value
@@ -1007,7 +1013,7 @@ def mock_async_zeroconf(mock_zeroconf):
 
 
 @pytest.fixture
-def enable_custom_integrations(hass):
+def enable_custom_integrations(hass: HomeAssistant) -> None:
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
@@ -1334,7 +1340,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()
+    bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
     with patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
     ) as mock_bleak_scanner_start:
@@ -1343,7 +1349,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 def mock_bluetooth(
-    mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters
+    mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters: None
 ) -> None:
     """Mock out bluetooth from starting."""
 

@@ -104,8 +104,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Fetch initial data so we have data when entities subscribe
     try:
         await asyncio.gather(
-            device_coordinator.async_config_entry_first_refresh()
-            firmware_coordinator.async_config_entry_first_refresh()
+            device_coordinator.async_config_entry_first_refresh(),
+            firmware_coordinator.async_config_entry_first_refresh(),
         )
     except ConfigEntryNotReady:
         await host.stop()

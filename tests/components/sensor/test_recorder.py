@@ -3894,8 +3894,10 @@ async def test_validate_statistics_sensor_no_longer_recorded(
             }
         ],
     }
-    with patch(
-        "homeassistant.components.sensor.recorder.is_entity_recorded",
+    instance = get_instance(hass)
+    with patch.object(
+        instance,
+        "entity_filter",
         return_value=False,
     ):
         await assert_validation_result(client, expected)
@@ -3945,8 +3947,10 @@ async def test_validate_statistics_sensor_not_recorded(
             }
         ],
     }
-    with patch(
-        "homeassistant.components.sensor.recorder.is_entity_recorded",
+    instance = get_instance(hass)
+    with patch.object(
+        instance,
+        "entity_filter",
         return_value=False,
     ):
         hass.states.async_set("sensor.test", 10, attributes=attributes)
