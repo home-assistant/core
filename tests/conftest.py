@@ -939,20 +939,6 @@ def mock_yaml_config(
         yield
 
 
-@pytest.fixture
-async def mqtt_mock_entry_setup(
-    hass: HomeAssistant,
-    yaml_config: ConfigType,
-    mock_yaml_config: None,
-    mqtt_client_mock: MqttMockPahoClient,
-    mqtt_config_entry_data: dict[str, Any] | None,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
-) -> MqttMockHAClientGenerator:
-    """Set up an MQTT config entry."""
-    return mqtt_mock_entry_no_yaml_config
-
-
-@pytest.fixture
 async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
