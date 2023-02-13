@@ -9,7 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import KNXTestKit
 
 
-async def test_activate_knx_scene(hass: HomeAssistant, knx: KNXTestKit):
+async def test_activate_knx_scene(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX scene."""
     await knx.setup_integration(
         {

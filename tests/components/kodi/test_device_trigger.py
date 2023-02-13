@@ -5,6 +5,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.kodi import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
@@ -30,7 +32,11 @@ async def kodi_media_player(hass):
     return f"{MP_DOMAIN}.name"
 
 
-async def test_get_triggers(hass, device_registry, entity_registry):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a kodi."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
@@ -63,7 +69,9 @@ async def test_get_triggers(hass, device_registry, entity_registry):
         assert trigger in expected_triggers or trigger["domain"] == "media_player"
 
 
-async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
+async def test_if_fires_on_state_change(
+    hass: HomeAssistant, calls, kodi_media_player
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     assert await async_setup_component(
         hass,
