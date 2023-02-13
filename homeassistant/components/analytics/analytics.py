@@ -260,8 +260,12 @@ class Analytics:
 
             if RECORDER_DOMAIN in integrations:
                 instance = get_recorder_instance(self.hass)
-                if dialect_name := instance.dialect_name:
-                    payload[ATTR_RECORDER] = {ATTR_ENGINE: dialect_name.value}
+                engine = instance.database_engine
+                if engine and engine.dialect is not None and engine.version is not None:
+                    payload[ATTR_RECORDER] = {
+                        ATTR_ENGINE: engine.dialect.value,
+                        ATTR_VERSION: engine.version,
+                    }
 
         if self.preferences.get(ATTR_STATISTICS, False):
             payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())
