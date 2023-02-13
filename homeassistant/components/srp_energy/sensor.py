@@ -47,6 +47,7 @@ async def async_setup_entry(
 
     async def async_update_data():
         """Fetch data from API endpoint.
+
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
@@ -66,7 +67,7 @@ async def async_setup_entry(
                 )
 
                 LOGGER.debug(
-                    "async_update_data: Received %s records from %s to %s",
+                    "async_update_data: Received %s record(s) from %s to %s",
                     len(hourly_usage) if hourly_usage else "None",
                     start_date,
                     end_date,
@@ -173,6 +174,7 @@ class SrpEntity(SensorEntity):
 
     async def async_update(self) -> None:
         """Update the entity.
+
         Only used by the generic entity update service.
         """
         await self.coordinator.async_request_refresh()
