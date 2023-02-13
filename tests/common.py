@@ -3,7 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable, Collection, Mapping, Sequence
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Generator,
+    Mapping,
+    Sequence,
+)
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
@@ -1205,7 +1212,9 @@ class MockEntity(entity.Entity):
 
 
 @contextmanager
-def mock_storage(data=None):
+def mock_storage(
+    data: dict[str, Any] | None = None
+) -> Generator[dict[str, Any], None, None]:
     """Mock storage.
 
     Data is a dict {'key': {'version': version, 'data': data}}

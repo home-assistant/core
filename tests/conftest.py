@@ -224,7 +224,7 @@ def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
 
 # Guard a few functions that would make network connections
 location.async_detect_location_info = check_real(location.async_detect_location_info)
-util.get_local_ip = lambda: "127.0.0.1"  # type: ignore[attr-defined]
+util.get_local_ip = lambda: "127.0.0.1"
 
 
 @pytest.fixture(name="caplog")
