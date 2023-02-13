@@ -1,7 +1,6 @@
 """Tradfri fan (recognised as air purifiers in the IKEA ecosystem) platform tests."""
 from __future__ import annotations
 
-import json
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -12,7 +11,6 @@ from pytradfri.const import (
     ATTR_REACHABLE_STATE,
     ROOT_AIR_PURIFIER,
 )
-from pytradfri.device import Device
 from pytradfri.device.air_purifier import AirPurifier
 
 from homeassistant.components.fan import (
@@ -26,7 +24,6 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.tradfri.const import DOMAIN
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
@@ -36,23 +33,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration, trigger_observe_callback
-
-from tests.common import load_fixture
-
-
-@pytest.fixture(scope="module")
-def air_purifier_response() -> dict[str, Any]:
-    """Return an air purifier response."""
-    return json.loads(load_fixture("air_purifier.json", DOMAIN))
-
-
-@pytest.fixture
-def air_purifier(air_purifier_response: dict[str, Any]) -> AirPurifier:
-    """Return air purifier."""
-    device = Device(air_purifier_response)
-    air_purifier_control = device.air_purifier_control
-    assert air_purifier_control
-    return air_purifier_control.air_purifiers[0]
 
 
 async def test_fan_available(
