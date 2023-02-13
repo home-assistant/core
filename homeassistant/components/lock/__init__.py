@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Lock the lock."""
-    code: str = service_call.data.get(ATTR_CODE, "")
+    code: str = service_call.data.get(ATTR_CODE, entity.default_code)
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
@@ -97,7 +97,7 @@ async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
 
 async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Unlock the lock."""
-    code: str = service_call.data.get(ATTR_CODE, "")
+    code: str = service_call.data.get(ATTR_CODE, entity.default_code)
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for unlocking {entity.entity_id} doesn't match pattern {entity.code_format}"
@@ -107,7 +107,7 @@ async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     """Open the door latch."""
-    code: str = service_call.data.get(ATTR_CODE, "")
+    code: str = service_call.data.get(ATTR_CODE, entity.default_code)
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
             f"Code '{code}' for opening {entity.entity_id} doesn't match pattern {entity.code_format}"
@@ -138,6 +138,7 @@ class LockEntity(Entity):
     entity_description: LockEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_format: str | None = None
+    _attr_default_code: str | int | None = None
     _attr_is_locked: bool | None = None
     _attr_is_locking: bool | None = None
     _attr_is_unlocking: bool | None = None
@@ -155,6 +156,11 @@ class LockEntity(Entity):
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         return self._attr_code_format
+
+    @property
+    def default_code(self) -> str | int | None:
+        """Default code."""
+        return self._attr_default_code
 
     @property
     @final
