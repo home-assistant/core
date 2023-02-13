@@ -1,16 +1,66 @@
 """Tradfri sensor platform tests."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
+
+import pytest
+from pytradfri.device.air_purifier_control import AirPurifierControl
 
 from homeassistant.components import tradfri
 from homeassistant.helpers import entity_registry as er
 
 from . import GATEWAY_ID
 from .common import setup_integration
-from .test_fan import mock_fan
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def setup(request):
+    """Set up patches for pytradfri methods for the fan platform.
+
+    This is used in test_fan as well as in test_sensor.
+    """
+    with patch(
+        "pytradfri.device.AirPurifierControl.raw",
+        new_callable=PropertyMock,
+        return_value=[{"mock": "mock"}],
+    ), patch(
+        "pytradfri.device.AirPurifierControl.air_purifiers",
+    ):
+        yield
+
+
+def mock_fan(test_features=None, test_state=None, device_number=0):
+    """Mock a tradfri fan/air purifier."""
+    if test_features is None:
+        test_features = {}
+    if test_state is None:
+        test_state = {}
+    mock_fan_data = Mock(**test_state)
+
+    dev_info_mock = MagicMock()
+    dev_info_mock.manufacturer = "manufacturer"
+    dev_info_mock.model_number = "model"
+    dev_info_mock.firmware_version = "1.2.3"
+    _mock_fan = Mock(
+        id=f"mock-fan-id-{device_number}",
+        reachable=True,
+        observe=Mock(),
+        device_info=dev_info_mock,
+        has_light_control=False,
+        has_socket_control=False,
+        has_blind_control=False,
+        has_signal_repeater_control=False,
+        has_air_purifier_control=True,
+    )
+    _mock_fan.name = f"tradfri_fan_{device_number}"
+    air_purifier_control = AirPurifierControl(_mock_fan)
+
+    # Store the initial state.
+    setattr(air_purifier_control, "air_purifiers", [mock_fan_data])
+    _mock_fan.air_purifier_control = air_purifier_control
+    return _mock_fan
 
 
 def mock_sensor(test_state: list, device_number=0):
