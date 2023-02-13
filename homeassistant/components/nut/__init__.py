@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import cast
 
 import async_timeout
 from pynut2.nut2 import PyNUTClient, PyNUTError
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -84,10 +86,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     all_device_supported_commands = data.list_commands() or {}
     supported_commands: set[str] = set()
 
-    for [
+    for (
         device_supported_command,
         command_description,
-    ] in all_device_supported_commands.items():
+    ) in all_device_supported_commands.items():
         if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS:
             supported_commands.add(device_supported_command)
         else:
@@ -290,17 +292,23 @@ class PyNUTData:
         if self._device_info is None:
             self._device_info = self._get_device_info()
 
-    def run_command(self, command_name: str | None) -> None:
+    async def async_run_command(
+        self, hass: HomeAssistant, data: PyNUTData, command_name: str | None
+    ) -> None:
         """Invoke instant command in UPS."""
         try:
-            self._client.run_command(self._alias, command_name)
+            await hass.async_add_executor_job(
+                self._client.run_command, self._alias, command_name
+            )
         except PyNUTError as err:
-            _LOGGER.error("Error running command %s, %s", command_name, err)
+            raise HomeAssistantError(
+                f"Error running command {command_name}, {err}"
+            ) from err
 
     def list_commands(self) -> dict[str, str] | None:
         """Fetch the list of supported commands."""
         try:
-            return dict[str, str](self._client.list_commands(self._alias))
+            return cast(dict[str, str], self._client.list_commands(self._alias))
         except PyNUTError as err:
             _LOGGER.error("Error retrieving supported commands %s", err)
             return None

@@ -30,20 +30,22 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Network UPS Tools (NUT) devices."""
-    actions = []
     entry_id = _get_entry_id_from_device_id(hass, device_id)
-    if entry_id is not None:
-        supported_commands: set[str] = hass.data[DOMAIN][entry_id][
-            DEVICE_SUPPORTED_COMMANDS
-        ]
-        for command_name in supported_commands:
-            device_action_name = _get_device_action_name(command_name)
+    if entry_id is None:
+        return []
 
-            base_action = {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-            }
-            actions.append({**base_action, CONF_TYPE: device_action_name})
+    actions = []
+    supported_commands: set[str] = hass.data[DOMAIN][entry_id][
+        DEVICE_SUPPORTED_COMMANDS
+    ]
+    for command_name in supported_commands:
+        device_action_name = _get_device_action_name(command_name)
+
+        base_action = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+        }
+        actions.append({**base_action, CONF_TYPE: device_action_name})
 
     return actions
 
@@ -58,8 +60,9 @@ async def async_call_action_from_config(
     device_action_name: str = config[CONF_TYPE]
     command_name = _get_command_name(device_action_name)
     device_id: str = config[CONF_DEVICE_ID]
-
-    hass.async_add_executor_job(_run_command, hass, device_id, command_name)
+    entry_id = _get_entry_id_from_device_id(hass, device_id)
+    data: PyNUTData = hass.data[DOMAIN][entry_id][PYNUT_DATA]
+    await data.async_run_command(hass, data, command_name)
 
 
 def _get_device_action_name(command_name: str) -> str:
@@ -76,9 +79,3 @@ def _get_entry_id_from_device_id(hass: HomeAssistant, device_id: str) -> str | N
     if device is None:
         return None
     return next(entry for entry in device.config_entries)
-
-
-def _run_command(hass: HomeAssistant, device_id: str, command_name: str) -> None:
-    entry_id = _get_entry_id_from_device_id(hass, device_id)
-    data: PyNUTData = hass.data[DOMAIN][entry_id][PYNUT_DATA]
-    data.run_command(command_name)
