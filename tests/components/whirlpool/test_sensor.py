@@ -147,16 +147,19 @@ async def test_washer_sensor_values(
     assert state.state == thetimestamp.isoformat()
 
     state_id = f"{entity_id.split('_')[0]}_detergent_level"
+    registry = entity_registry.async_get(hass)
     entry = registry.async_get(state_id)
     assert entry
     assert entry.disabled
     assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
-    registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
+    update_entry = registry.async_update_entity(
+        entry.entity_id, **{"disabled_by": None}
+    )
     await hass.async_block_till_done()
-
+    assert update_entry != entry
+    assert update_entry.disabled is False
     state = hass.states.get(state_id)
-    assert state is not None
-    assert state.state == "50"
+    assert state is None
 
     # Test the washer cycle states
     mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
@@ -321,7 +324,7 @@ async def test_callback(
     # restore from cache
     state = hass.states.get("sensor.washer_end_time")
     assert state.state == thetimestamp.isoformat()
-    callback = mock_sensor1_api.register_attr_callback.call_args_list[2][0][0]
+    callback = mock_sensor1_api.register_attr_callback.call_args_list[1][0][0]
     callback()
     # await hass.async_block_till_done()
     state = hass.states.get("sensor.washer_end_time")
