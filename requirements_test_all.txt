@@ -1076,7 +1076,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.26.12
+pyTibber==0.26.13
 
 # homeassistant.components.dlink
 pyW215==0.7.0
