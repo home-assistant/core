@@ -289,18 +289,22 @@ class BackgroundTasks:
         if not self._tasks:
             return
 
-        for task in self._tasks:
+        tasks = list(self._tasks)
+
+        for task in tasks:
             task.cancel()
 
-        for task in list(self._tasks):
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error cancelling task %s", task)
+        await asyncio.wait(tasks)
 
-        self._tasks.clear()
+        for task in tasks:
+            if (exception := task.exception()) is None:
+                continue
+
+            _LOGGER.error(
+                "Error canceling background task %s - received exception",
+                task,
+                exc_info=(type(exception), exception, exception.__traceback__),
+            )
 
 
 class HomeAssistant:

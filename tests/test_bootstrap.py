@@ -779,7 +779,7 @@ async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
             async def _background_task():
                 await asyncio.sleep(0.2)
 
-            await hass.async_create_task(_background_task())
+            hass.async_create_task(_background_task())
             return True
 
         return async_setup
