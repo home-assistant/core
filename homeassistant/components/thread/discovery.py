@@ -50,17 +50,17 @@ class ThreadRouterDiscovery:
             self._router_discovered = router_discovered
             self._router_removed = router_removed
 
-        def add_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
+        def add_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service added."""
             _LOGGER.debug("add_service %s", name)
             self._hass.async_create_task(self._add_update_service(type_, name))
 
-        def remove_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
+        def remove_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service removed."""
             _LOGGER.debug("remove_service %s", name)
             self._router_removed(name)
 
-        def update_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
+        def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service updated."""
             _LOGGER.debug("update_service %s", name)
             self._hass.async_create_task(self._add_update_service(type_, name))
