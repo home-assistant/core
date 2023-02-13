@@ -244,7 +244,9 @@ async def test_commands_without_supported_features(
     mqtt_mock.async_publish.assert_not_called()
 
 
-async def test_status(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_status(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN])
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
@@ -479,7 +481,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one vacuum per unique_id."""
     config = {
         mqtt.DOMAIN: {

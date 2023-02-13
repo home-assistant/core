@@ -706,7 +706,9 @@ async def test_default_availability_list_payload_any(
     )
 
 
-async def test_default_availability_list_single(hass: HomeAssistant, caplog) -> None:
+async def test_default_availability_list_single(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test availability list and availability_topic are mutually exclusive."""
     await help_test_default_availability_list_single(
         hass,
@@ -930,7 +932,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one sensor per unique_id."""
     config = {
         mqtt.DOMAIN: {

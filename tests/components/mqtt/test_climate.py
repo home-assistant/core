@@ -122,7 +122,9 @@ async def test_setup_params(
     assert state.attributes.get("max_humidity") == DEFAULT_MAX_HUMIDITY
 
 
-async def test_preset_none_in_preset_modes(hass: HomeAssistant, caplog) -> None:
+async def test_preset_none_in_preset_modes(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the preset mode payload reset configuration."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][climate.DOMAIN])
     config["preset_modes"].append("none")
@@ -489,7 +491,9 @@ async def test_set_swing_optimistic(
     assert state.attributes.get("swing_mode") == "off"
 
 
-async def test_set_swing(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_set_swing(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setting of new swing mode."""
     assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
@@ -1017,7 +1021,9 @@ async def test_set_aux_pessimistic(
     assert state.attributes.get("aux_heat") == "off"
 
 
-async def test_set_aux(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_set_aux(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test setting of the aux heating."""
     assert await async_setup_component(hass, mqtt.DOMAIN, DEFAULT_CONFIG)
     await hass.async_block_till_done()
@@ -1510,7 +1516,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one climate per unique_id."""
     config = {
         mqtt.DOMAIN: {
