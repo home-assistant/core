@@ -7,6 +7,5 @@
   "requirements": ["aiosomecomfort==0.0.7"],
   "codeowners": ["@rdfurman", "@mkmer"],
   "iot_class": "cloud_polling",
-  "loggers": ["somecomfort"],
-  "requirements": ["aiosomecomfort==0.0.6"]
+  "loggers": ["somecomfort"]
 }
