@@ -118,6 +118,7 @@ async def test_shutdown(hass: HomeAssistant, mock_socket, mock_time) -> None:
 
     hass.states.async_set("test.entity", STATE_ON)
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -136,6 +137,7 @@ async def test_shutdown(hass: HomeAssistant, mock_socket, mock_time) -> None:
 
     hass.states.async_set("test.entity", STATE_OFF)
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 0
     assert mock_socket.return_value.sendall.call_count == 0
@@ -161,6 +163,7 @@ async def test_report_attributes(hass: HomeAssistant, mock_socket, mock_time) ->
 
     hass.states.async_set("test.entity", STATE_ON, attrs)
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -192,6 +195,7 @@ async def test_report_with_string_state(
 
     hass.states.async_set("test.entity", "above_horizon", {"foo": 1.0})
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -207,6 +211,7 @@ async def test_report_with_string_state(
 
     hass.states.async_set("test.entity", "not_float")
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 0
     assert mock_socket.return_value.sendall.call_count == 0
@@ -232,6 +237,7 @@ async def test_report_with_binary_state(
     ]
     hass.states.async_set("test.entity", STATE_ON, {"foo": 1.0})
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -251,6 +257,7 @@ async def test_report_with_binary_state(
     ]
     hass.states.async_set("test.entity", STATE_OFF, {"foo": 1.0})
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
