@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from reolink_aio.exceptions import ReolinkError
+
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
@@ -11,6 +13,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
@@ -67,4 +70,7 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
-        await self._host.api.update_firmware()
+        try:
+            await self._host.api.update_firmware()
+        except ReolinkError as err:
+            raise HomeAssistantError("Error trying to update Reolink firmware: %s", err) from err
