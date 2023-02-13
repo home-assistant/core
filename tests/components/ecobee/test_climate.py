@@ -405,15 +405,20 @@ async def test_turn_aux_heat_on(hass: HomeAssistant, mock_ecobee: MagicMock) -> 
         {ATTR_ENTITY_ID: ENTITY_ID, climate.ATTR_AUX_HEAT: True},
         blocking=True,
     )
-    assert mock_ecobee.const.settings.assert_has_calls(
-        [mock.call(1, ECOBEE_AUX_HEAT_ONLY)]
-    )
-    # assert mock_ecobee.settings.assert_has_calls([mock.call(1, ECOBEE_AUX_HEAT_ONLY)])
+    assert mock_ecobee.set_hvac_mode.call_count == 1
+    assert mock_ecobee.set_hvac_mode.call_args == mock.call(0, ECOBEE_AUX_HEAT_ONLY)
 
 
-async def test_turn_aux_heat_off(hass):
+async def test_turn_aux_heat_off(hass: HomeAssistant, mock_ecobee: MagicMock) -> None:
     """Test when aux heat is tuned off.  Must change HVAC mode back to last used."""
-    # thermostat._last_active_hvac_mode = "heat"
-    # thermostat.turn_aux_heat_off()
-    # data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "heat")])
-    assert True
+    mock_ecobee.get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
+    mock_ecobee.thermostats = [GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP]
+    await setup_platform(hass, const.Platform.CLIMATE)
+    await hass.services.async_call(
+        climate.DOMAIN,
+        climate.SERVICE_SET_AUX_HEAT,
+        {ATTR_ENTITY_ID: ENTITY_ID, climate.ATTR_AUX_HEAT: False},
+        blocking=True,
+    )
+    assert mock_ecobee.set_hvac_mode.call_count == 1
+    assert mock_ecobee.set_hvac_mode.call_args == mock.call(0, "auto")

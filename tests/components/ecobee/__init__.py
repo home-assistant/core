@@ -30,6 +30,7 @@ GENERIC_THERMOSTAT_INFO = {
         "hasHumidifier": False,
         "humidifierMode": "manual",
         "humidity": "30",
+        "ventilatorType": "none",
     },
     "equipmentStatus": "fan",
     "events": [
@@ -89,6 +90,7 @@ GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP = {
         "humidifierMode": "manual",
         "humidity": "30",
         "hasHeatPump": True,
+        "ventilatorType": "none",
     },
     "equipmentStatus": "fan",
     "events": [

@@ -35,6 +35,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from . import EcobeeData
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 from .util import ecobee_date, ecobee_time
 
@@ -310,7 +311,9 @@ class Thermostat(ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    def __init__(self, data, thermostat_index, thermostat):
+    def __init__(
+        self, data: EcobeeData, thermostat_index: int, thermostat: dict
+    ) -> None:
         """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index

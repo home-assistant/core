@@ -3,6 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.ecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
+
 from tests.common import load_fixture
 
 
@@ -19,13 +21,13 @@ def requests_mock_fixture(requests_mock):
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_ecobee():
     """Mock an Ecobee object."""
     ecobee = MagicMock()
     ecobee.request_pin.return_value = True
     ecobee.refresh_tokens.return_value = True
-    # TODO: build out the mock_ecobee so the integration
-    # can actually be setup and tested
+
+    ecobee.config = {ECOBEE_API_KEY: "mocked_key", ECOBEE_REFRESH_TOKEN: "mocked_token"}
     with patch("homeassistant.components.ecobee.Ecobee", return_value=ecobee):
         yield ecobee
