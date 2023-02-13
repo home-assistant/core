@@ -671,7 +671,6 @@ class HomeAssistant:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
-        await asyncio.sleep(0)
         start_time: float | None = None
         current_task = asyncio.current_task()
 
