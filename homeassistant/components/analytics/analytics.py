@@ -261,7 +261,7 @@ class Analytics:
             if RECORDER_DOMAIN in integrations:
                 instance = get_recorder_instance(self.hass)
                 engine = instance.database_engine
-                if engine and engine.dialect is not None and engine.version is not None:
+                if engine and engine.version is not None:
                     payload[ATTR_RECORDER] = {
                         ATTR_ENGINE: engine.dialect.value,
                         ATTR_VERSION: engine.version,
