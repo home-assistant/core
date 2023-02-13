@@ -623,6 +623,8 @@ class SensorEntity(Entity):
                 # This can be replaced with adding the z option when we drop support for
                 # Python 3.10
                 value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+            else:
+                value = converted_numerical_value
 
         # Validate unit of measurement used for sensors with a device class
         if (

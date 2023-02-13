@@ -788,7 +788,9 @@ async def test_custom_unit_change(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit, native_value, native_state, automatic_state, suggested_state, custom_state, device_class",
+    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit,"
+    "native_value, native_state, automatic_state, suggested_state, custom_state,"
+    "device_class",
     [
         # Distance
         (
@@ -915,6 +917,147 @@ async def test_unit_conversion_priority(
 
     state = hass.states.get(entity2.entity_id)
     assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+
+@pytest.mark.parametrize(
+    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit,"
+    "suggested_precision, native_value, native_state, automatic_state, suggested_state,"
+    "custom_state, device_class",
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
+            UnitOfLength.METERS,
+            UnitOfLength.YARDS,
+            2,
+            1000,
+            "1000",
+            621.371,
+            1000000,
+            1093613,
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_precision(
+    hass,
+    enable_custom_integrations,
+    unit_system,
+    native_unit,
+    automatic_unit,
+    suggested_unit,
+    custom_unit,
+    suggested_precision,
+    native_value,
+    native_state,
+    automatic_state,
+    suggested_state,
+    custom_state,
+    device_class,
+):
+    """Test priority of unit conversion for sensors with suggested_display_precision."""
+
+    hass.config.units = unit_system
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    platform.ENTITIES["2"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity2 = platform.ENTITIES["2"]
+
+    platform.ENTITIES["3"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=suggested_unit,
+    )
+    entity3 = platform.ENTITIES["3"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow automatic unit conversion
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(automatic_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
+    # Assert the automatic unit conversion is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options == {
+        "sensor": {"suggested_display_precision": 2},
+        "sensor.private": {"suggested_unit_of_measurement": automatic_unit},
+    }
+
+    # Unregistered entity -> Follow native unit
+    state = hass.states.get(entity1.entity_id)
+    assert state.state == native_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    # Registered entity with suggested unit
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == pytest.approx(suggested_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity2.entity_id)
+    assert entry.options == {
+        "sensor": {"suggested_display_precision": 2},
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit},
+    }
+
+    # Unregistered entity with suggested unit
+    state = hass.states.get(entity3.entity_id)
+    assert float(state.state) == pytest.approx(suggested_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+    # Set a custom unit, this should have priority over the automatic unit conversion
+    entity_registry.async_update_entity_options(
+        entity0.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(custom_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    entity_registry.async_update_entity_options(
+        entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == pytest.approx(custom_state)
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
 
 
