@@ -2,11 +2,19 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+import json
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytradfri.device import Device
+from pytradfri.device.air_purifier import AirPurifier
+
+from homeassistant.components.tradfri.const import DOMAIN
 
 from . import GATEWAY_ID, TRADFRI_PATH
+
+from tests.common import load_fixture
 
 
 @pytest.fixture
@@ -79,3 +87,18 @@ def mock_api_factory(mock_api) -> Generator[MagicMock, None, None]:
         factory.init.return_value = factory.return_value
         factory.return_value.request = mock_api
         yield factory.return_value
+
+
+@pytest.fixture(scope="session")
+def air_purifier_response() -> dict[str, Any]:
+    """Return an air purifier response."""
+    return json.loads(load_fixture("air_purifier.json", DOMAIN))
+
+
+@pytest.fixture
+def air_purifier(air_purifier_response: dict[str, Any]) -> AirPurifier:
+    """Return air purifier."""
+    device = Device(air_purifier_response)
+    air_purifier_control = device.air_purifier_control
+    assert air_purifier_control
+    return air_purifier_control.air_purifiers[0]
