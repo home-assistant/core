@@ -2324,14 +2324,15 @@ async def test_recorder_is_far_behind(
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"]["events"] == []
-
-    hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "1"})
-    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"]["events"] == []
+
+    hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "1"})
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
