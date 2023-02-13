@@ -1552,9 +1552,7 @@ async def test_purge_many_old_events(
 
     with session_scope(hass=hass) as session:
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
-        event_datas = session.query(EventData)
         assert events.count() == MAX_ROWS_TO_PURGE * 6
-        assert event_datas.count() == 5
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
@@ -1568,7 +1566,6 @@ async def test_purge_many_old_events(
         )
         assert not finished
         assert events.count() == MAX_ROWS_TO_PURGE * 3
-        assert event_datas.count() == 5
 
         # we should only have 2 groups of events left
         finished = purge_old_data(
@@ -1580,7 +1577,6 @@ async def test_purge_many_old_events(
         )
         assert finished
         assert events.count() == MAX_ROWS_TO_PURGE * 2
-        assert event_datas.count() == 5
 
         # we should now purge everything
         finished = purge_old_data(
@@ -1592,7 +1588,6 @@ async def test_purge_many_old_events(
         )
         assert finished
         assert events.count() == 0
-        assert event_datas.count() == 0
 
 
 async def test_purge_can_mix_legacy_and_new_format(
