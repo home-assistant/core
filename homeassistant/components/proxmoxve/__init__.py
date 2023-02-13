@@ -26,7 +26,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -51,6 +55,7 @@ from .const import (
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    ID,
     INTEGRATION_NAME,
     LOGGER,
     PROXMOX_CLIENT,
@@ -147,7 +152,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     },
                 )
             else:
-
                 if nodes := conf.get(CONF_NODES):
                     for node in nodes:
                         config_import = {}
@@ -267,22 +271,55 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     for api_category, update_interval in coordinator_interval_update_map.items():
         if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
             for vm_id in config_entry.data[api_category]:
-                coordinator = coordinators[vm_id] = DataUpdateCoordinator(
-                    hass,
-                    logger=LOGGER,
-                    name=(
-                        f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
-                        f" - {config_entry.data[CONF_NODE]} - {vm_id} {api_category}"
-                    ),
-                    update_interval=update_interval,
-                    update_method=partial(
-                        async_update,
-                        api_category,
-                        config_entry.data[CONF_NODE],
-                        vm_id,
-                    ),
-                )
-                controller_init_tasks.append(async_init_coordinator(coordinator))
+                if vm_id in [
+                    *{
+                        str(qemu[ID])
+                        for qemu in await hass.async_add_executor_job(
+                            proxmox.nodes(config_entry.data[CONF_NODE]).qemu.get
+                        )
+                    },
+                    *{
+                        str(lxc[ID])
+                        for lxc in await hass.async_add_executor_job(
+                            proxmox.nodes(config_entry.data[CONF_NODE]).lxc.get
+                        )
+                    },
+                ]:
+                    async_delete_issue(
+                        async_get_hass(),
+                        DOMAIN,
+                        f"vm_id_nonexistent_{DOMAIN}_{config_entry.data[CONF_HOST]}_{config_entry.data[CONF_PORT]}_{vm_id}",
+                    )
+                    coordinator = coordinators[vm_id] = DataUpdateCoordinator(
+                        hass,
+                        logger=LOGGER,
+                        name=f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]} - {config_entry.data[CONF_NODE]} - {vm_id} {api_category}",
+                        update_interval=update_interval,
+                        update_method=partial(
+                            async_update,
+                            api_category,
+                            config_entry.data[CONF_NODE],
+                            vm_id,
+                        ),
+                    )
+                    controller_init_tasks.append(async_init_coordinator(coordinator))
+                else:
+                    async_create_issue(
+                        async_get_hass(),
+                        DOMAIN,
+                        f"vm_id_nonexistent_{DOMAIN}_{config_entry.data[CONF_HOST]}_{config_entry.data[CONF_PORT]}_{vm_id}",
+                        is_fixable=False,
+                        severity=IssueSeverity.ERROR,
+                        translation_key="vm_id_nonexistent",
+                        translation_placeholders={
+                            "integration": INTEGRATION_NAME,
+                            "platform": DOMAIN,
+                            "host": config_entry.data[CONF_HOST],
+                            "port": config_entry.data[CONF_PORT],
+                            "node": config_entry.data[CONF_NODE],
+                            "vm_id": vm_id,
+                        },
+                    )
         else:
             coordinator = coordinators[api_category] = DataUpdateCoordinator(
                 hass,
@@ -498,9 +535,6 @@ class ProxmoxEntity(CoordinatorEntity):
         unique_id,
         name,
         icon,
-        host_name,
-        node_name,
-        vm_id=None,
     ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
@@ -537,7 +571,7 @@ class ProxmoxEntity(CoordinatorEntity):
 class ProxmoxClient:
     """A wrapper for the proxmoxer ProxmoxAPI client."""
 
-    def __init__(self, host, port, user, realm, password, verify_ssl):
+    def __init__(self, host, port, user, realm, password, verify_ssl) -> None:
         """Initialize the ProxmoxClient."""
 
         self._host = host

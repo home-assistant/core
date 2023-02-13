@@ -172,7 +172,6 @@ async def test_flow_port_small(hass: HomeAssistant):
     with patch(
         "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens", return_value=None
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_SMALL
         )
@@ -187,7 +186,6 @@ async def test_flow_port_big(hass: HomeAssistant):
     with patch(
         "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens", return_value=None
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_BIG
         )
@@ -204,7 +202,6 @@ async def test_flow_auth_error(hass: HomeAssistant):
         side_effect=proxmoxer.backends.https.AuthenticationError("mock msg"),
         return_value=None,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
@@ -221,7 +218,6 @@ async def test_flow_cant_connect(hass: HomeAssistant):
         side_effect=ConnectTimeout,
         return_value=None,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
@@ -238,7 +234,6 @@ async def test_flow_ssl_error(hass: HomeAssistant):
         side_effect=SSLError,
         return_value=None,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
@@ -255,7 +250,6 @@ async def test_flow_unknown_exception(hass: HomeAssistant):
         side_effect=Exception,
         return_value=None,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
@@ -281,7 +275,6 @@ async def test_flow_already_configured(hass: HomeAssistant):
         "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -308,7 +301,6 @@ async def test_flow_import_ok(hass: HomeAssistant):
         "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens",
         return_value=None,
     ):
-
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -329,7 +321,6 @@ async def test_flow_import_error_auth_error(hass: HomeAssistant):
         side_effect=proxmoxer.backends.https.AuthenticationError("mock msg"),
         return_value=None,
     ):
-
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
@@ -347,7 +338,6 @@ async def test_flow_import_error_ssl_rejection(hass: HomeAssistant):
         side_effect=SSLError,
         return_value=None,
     ):
-
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_USER_HOST
@@ -365,7 +355,6 @@ async def test_flow_import_error_cant_connect(hass: HomeAssistant):
         side_effect=ConnectTimeout,
         return_value=None,
     ):
-
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
@@ -383,7 +372,6 @@ async def test_flow_import_error_general_error(hass: HomeAssistant):
         side_effect=Exception,
         return_value=None,
     ):
-
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
@@ -400,7 +388,6 @@ async def test_flow_import_error_node_not_exist(hass: HomeAssistant):
         "homeassistant.components.proxmoxve.ProxmoxClient.build_client",
         return_value=None,
     ):
-
         # imported config is identical to the one generated from config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_NOT_EXIST
@@ -427,7 +414,6 @@ async def test_flow_import_error_already_configured(hass: HomeAssistant):
         "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -565,7 +551,6 @@ async def test_options_flow_v1(hass: HomeAssistant):
     with patch(
         "homeassistant.components.proxmoxve.async_setup_entry", return_value=True
     ):
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -581,7 +566,6 @@ async def test_options_flow_v1(hass: HomeAssistant):
             side_effect=proxmoxer.backends.https.AuthenticationError("mock msg"),
             return_value=None,
         ):
-
             result_auth_error = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 user_input=USER_INPUT_OPTION_AUTH,
@@ -594,7 +578,6 @@ async def test_options_flow_v1(hass: HomeAssistant):
             side_effect=SSLError,
             return_value=None,
         ):
-
             result_auth_ssl_rejection = (
                 await hass.config_entries.options.async_configure(
                     result["flow_id"],
@@ -611,7 +594,6 @@ async def test_options_flow_v1(hass: HomeAssistant):
             side_effect=ConnectTimeout,
             return_value=None,
         ):
-
             result_auth_cant_connect = (
                 await hass.config_entries.options.async_configure(
                     result["flow_id"],
@@ -626,7 +608,6 @@ async def test_options_flow_v1(hass: HomeAssistant):
             side_effect=Exception,
             return_value=None,
         ):
-
             result_auth_general_error = (
                 await hass.config_entries.options.async_configure(
                     result["flow_id"],
@@ -642,7 +623,6 @@ async def test_options_flow_v1(hass: HomeAssistant):
             "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens",
             return_value=None,
         ):
-
             result = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 user_input=USER_INPUT_OPTION_AUTH,

@@ -87,6 +87,10 @@
     "yaml_deprecated": {
       "title": "Configuration of the {integration} in YAML is deprecated",
       "description": "Configuration of the {integration} (`{platform}`) in YAML is deprecated and should be removed in 2022.12. Resolve the import issues and remove the YAML configuration from your `configuration.yaml` file."
+    },
+    "vm_id_nonexistent": {
+      "description": "VM/container {vm_id} does not exist on node {node} ({host}:{port}), remove it in integration options.",
+      "title": "VM/container {vm_id} does not exist"
     }
   },
   "options": {
