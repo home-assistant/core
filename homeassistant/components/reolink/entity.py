@@ -13,14 +13,16 @@ from .const import DOMAIN
 
 
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
-    """Parent class for Reolink hardware camera entities."""
+    """Parent class for entities that control the Reolink NVR itself, withouth a channel."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, reolink_data: ReolinkData, coordinator: DataUpdateCoordinator
+        self, reolink_data: ReolinkData, coordinator: DataUpdateCoordinator | None = None
     ) -> None:
-        """Initialize ReolinkCoordinatorEntity for a hardware camera."""
+        """Initialize ReolinkBaseCoordinatorEntity for a NVR entity withouth a channel."""
+        if coordinator is None:
+            coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)
 
         self._host = reolink_data.host
@@ -45,11 +47,10 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
 
 
 class ReolinkCoordinatorEntity(ReolinkBaseCoordinatorEntity):
-    """Parent class for Reolink hardware camera entities."""
+    """Parent class for Reolink hardware camera entities connected to a channel."""
 
-    def __init__(self, reolink_data: ReolinkData, channel: int) -> None:
-        """Initialize ReolinkCoordinatorEntity for a hardware camera."""
-        coordinator = reolink_data.device_coordinator
+    def __init__(self, reolink_data: ReolinkData, channel: int, coordinator: DataUpdateCoordinator | None = None) -> None:
+        """Initialize ReolinkCoordinatorEntity for a hardware camera connected to a channel."""
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
