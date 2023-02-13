@@ -55,7 +55,7 @@ async def test_sensors(
     # Battery voltage sensor
     state = hass.states.get("sensor.frenck_battery_voltage")
     assert state
-    assert state.state == "3860"
+    assert state.state == "3.86"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck Battery voltage"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
@@ -78,7 +78,7 @@ async def test_sensors(
     # Charging current sensor
     state = hass.states.get("sensor.frenck_charging_current")
     assert state
-    assert state.state == "3008"
+    assert state.state == "3.008"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck Charging current"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
@@ -117,7 +117,7 @@ async def test_sensors(
     # Charging voltage sensor
     state = hass.states.get("sensor.frenck_charging_voltage")
     assert state
-    assert state.state == "4208"
+    assert state.state == "4.208"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck Charging voltage"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
