@@ -22,18 +22,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+pytestmark = [
+    pytest.mark.parametrize("device_fixtures", ["key-light-mini"]),
+    pytest.mark.usefixtures("device_fixtures", "init_integration"),
+]
 
-@pytest.mark.parametrize("device_fixtures", ["key-light-mini"])
-@pytest.mark.usefixtures(
-    "device_fixtures",
-    "entity_registry_enabled_by_default",
-    "init_integration",
-)
-async def test_battery_bypass(hass: HomeAssistant, mock_elgato: MagicMock) -> None:
+
+async def test_battery_bypass(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_elgato: MagicMock,
+) -> None:
     """Test the Elgato battery bypass switch."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("switch.frenck_studio_mode")
     assert state
     assert state.state == STATE_OFF
@@ -108,3 +109,42 @@ async def test_battery_bypass(hass: HomeAssistant, mock_elgato: MagicMock) -> No
         await hass.async_block_till_done()
 
     assert len(mock_elgato.battery_bypass.mock_calls) == 4
+
+
+async def test_battery_energy_saving(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test the Elgato energy saving switch."""
+    state = hass.states.get("switch.frenck_energy_saving")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck Energy saving"
+    assert state.attributes.get(ATTR_ICON) == "mdi:leaf"
+    assert not state.attributes.get(ATTR_DEVICE_CLASS)
+
+    entry = entity_registry.async_get("switch.frenck_energy_saving")
+    assert entry
+    assert entry.unique_id == "GW24L1A02987_energy_saving"
+    assert entry.entity_category == EntityCategory.CONFIG
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.frenck_energy_saving"},
+        blocking=True,
+    )
+
+    assert len(mock_elgato.energy_saving.mock_calls) == 1
+    mock_elgato.energy_saving.assert_called_once_with(on=True)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.frenck_energy_saving"},
+        blocking=True,
+    )
+
+    assert len(mock_elgato.energy_saving.mock_calls) == 2
+    mock_elgato.energy_saving.assert_called_with(on=False)
