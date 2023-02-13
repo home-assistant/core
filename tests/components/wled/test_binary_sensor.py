@@ -4,10 +4,15 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
 

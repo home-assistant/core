@@ -8,7 +8,7 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 import homeassistant.util.dt as dt_util
 
 from ..common import (
@@ -65,8 +65,7 @@ async def test_koogeek_ls1_setup(hass):
 
 @pytest.mark.parametrize("failure_cls", [AccessoryDisconnectedError, EncryptionError])
 async def test_recover_from_failure(hass, utcnow, failure_cls):
-    """
-    Test that entity actually recovers from a network connection drop.
+    """Test that entity actually recovers from a network connection drop.
 
     See https://github.com/home-assistant/core/issues/18949
     """

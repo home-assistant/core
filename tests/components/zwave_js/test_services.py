@@ -1296,7 +1296,9 @@ async def test_multicast_set_value_options(
             ],
             ATTR_COMMAND_CLASS: 51,
             ATTR_PROPERTY: "targetColor",
-            ATTR_VALUE: '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }',
+            ATTR_VALUE: (
+                '{ "warmWhite": 0, "coldWhite": 0, "red": 255, "green": 0, "blue": 0 }'
+            ),
             ATTR_OPTIONS: {"transitionDuration": 1},
         },
         blocking=True,

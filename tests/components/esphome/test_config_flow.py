@@ -22,11 +22,13 @@ from homeassistant.components.esphome import (
 )
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import VALID_NOISE_PSK
 
 from tests.common import MockConfigEntry
 
-VALID_NOISE_PSK = "bOFFzzvfpg5DB94DuBGLXD/hMnhpDKgP9UQyBulwWVU="
 INVALID_NOISE_PSK = "lSYBYEjQI1bVL8s2Vask4YytGMj1f1epNtmoim2yuTM="
 
 
@@ -518,6 +520,116 @@ async def test_reauth_fixed_via_dashboard(
     assert len(mock_get_encryption_key.mock_calls) == 1
 
 
+async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
+    hass, mock_client, mock_zeroconf, mock_dashboard, mock_config_entry
+):
+    """Test reauth fixed automatically via dashboard with password removed."""
+    mock_client.device_info.side_effect = (
+        InvalidAuthAPIError,
+        DeviceInfo(uses_password=False, name="test"),
+    )
+
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+        }
+    )
+
+    await dashboard.async_get_dashboard(hass).async_refresh()
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await hass.config_entries.flow.async_init(
+            "esphome",
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config_entry.entry_id,
+                "unique_id": mock_config_entry.unique_id,
+            },
+        )
+
+    assert result["type"] == FlowResultType.ABORT, result
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+    assert mock_config_entry.data[CONF_PASSWORD] == ""
+
+    assert len(mock_get_encryption_key.mock_calls) == 1
+
+
+async def test_reauth_fixed_via_remove_password(hass, mock_client, mock_config_entry):
+    """Test reauth fixed automatically by seeing password removed."""
+    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+            "unique_id": mock_config_entry.unique_id,
+        },
+    )
+
+    assert result["type"] == FlowResultType.ABORT, result
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == ""
+
+
+async def test_reauth_fixed_via_dashboard_at_confirm(
+    hass, mock_client, mock_zeroconf, mock_dashboard
+):
+    """Test reauth fixed automatically via dashboard at confirm step."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM, result
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+        }
+    )
+
+    await dashboard.async_get_dashboard(hass).async_refresh()
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        # We just fetch the form
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.ABORT, result
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+    assert len(mock_get_encryption_key.mock_calls) == 1
+
+
 async def test_reauth_confirm_invalid(hass, mock_client, mock_zeroconf):
     """Test reauth initiation with invalid PSK."""
     entry = MockConfigEntry(
@@ -649,7 +761,7 @@ async def test_discovery_dhcp_no_changes(hass, mock_client):
     assert entry.data[CONF_HOST] == "192.168.43.183"
 
 
-async def test_discovery_hassio(hass):
+async def test_discovery_hassio(hass: HomeAssistant) -> None:
     """Test dashboard discovery."""
     result = await hass.config_entries.flow.async_init(
         "esphome",

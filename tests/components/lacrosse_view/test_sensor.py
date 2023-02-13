@@ -114,7 +114,7 @@ async def test_field_types(
     assert hass.states.get(f"sensor.test_{entity_id}").state == expected
 
 
-async def test_no_field(hass: HomeAssistant, caplog: Any) -> None:
+async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test behavior when the expected field is not present."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)

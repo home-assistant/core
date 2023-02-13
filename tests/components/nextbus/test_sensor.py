@@ -69,7 +69,7 @@ def mock_nextbus_predictions(mock_nextbus):
     instance = mock_nextbus.return_value
     instance.get_predictions_for_multi_stops.return_value = BASIC_RESULTS
 
-    yield instance.get_predictions_for_multi_stops
+    return instance.get_predictions_for_multi_stops
 
 
 @pytest.fixture

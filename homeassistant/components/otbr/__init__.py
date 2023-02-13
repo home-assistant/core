@@ -1,26 +1,34 @@
 """The Open Thread Border Router integration."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import python_otbr_api
 
+from homeassistant.components.thread import async_add_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DOMAIN
 
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
-def _handle_otbr_error(func):
+
+def _handle_otbr_error(
+    func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]
+) -> Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]:
     """Handle OTBR errors."""
 
     @wraps(func)
-    async def _func(self, *args, **kwargs):
+    async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
         except python_otbr_api.OTBRError as exc:
@@ -51,7 +59,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
-    hass.data[DOMAIN] = OTBRData(entry.data["url"], api)
+
+    otbrdata = OTBRData(entry.data["url"], api)
+    try:
+        dataset = await otbrdata.get_active_dataset_tlvs()
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
+    if dataset:
+        await async_add_dataset(hass, entry.title, dataset.hex())
+
+    hass.data[DOMAIN] = otbrdata
+
     return True
 
 

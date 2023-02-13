@@ -74,7 +74,7 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
             data = await self.hass.async_add_executor_job(
                 self.client.get_pool_measure_latest, self.flipr_id
             )
-        except (FliprError) as error:
+        except FliprError as error:
             raise UpdateFailed(error) from error
 
         return data

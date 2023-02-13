@@ -71,7 +71,7 @@ class MatterAdapter:
         bridge_unique_id: str | None = None
 
         if node.aggregator_device_type_instance is not None and (
-            node.root_device_type_instance.get_cluster(all_clusters.Basic)
+            node.root_device_type_instance.get_cluster(all_clusters.BasicInformation)
         ):
             # create virtual (parent) device for bridge node device
             bridge_device = MatterBridgedNodeDevice(

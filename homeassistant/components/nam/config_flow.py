@@ -135,7 +135,6 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-
                 return self.async_create_entry(
                     title=self.host,
                     data={**user_input, CONF_HOST: self.host},

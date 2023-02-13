@@ -29,7 +29,7 @@ from homeassistant.components.http.request_context import (
     current_request,
     setup_request_context,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH, mock_real_ip
@@ -98,7 +98,7 @@ def trusted_networks_auth(hass):
     return prv
 
 
-async def test_auth_middleware_loaded_by_default(hass):
+async def test_auth_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
     with patch("homeassistant.components.http.async_setup_auth") as mock_setup:
         await async_setup_component(hass, "http", {"http": {}})
@@ -546,7 +546,7 @@ async def test_async_user_not_allowed_do_auth(hass, app):
         )
 
 
-async def test_create_user_once(hass):
+async def test_create_user_once(hass: HomeAssistant) -> None:
     """Test that we reuse the user."""
     cur_users = len(await hass.auth.async_get_users())
     app = web.Application()

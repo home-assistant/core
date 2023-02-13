@@ -20,7 +20,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ecobee flow."""
         self._ecobee = None
 
@@ -76,8 +76,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data):
-        """
-        Import ecobee config from configuration.yaml.
+        """Import ecobee config from configuration.yaml.
 
         Triggered by async_setup only if a config entry doesn't already exist.
         If ecobee.conf exists, we will attempt to validate the credentials
