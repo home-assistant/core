@@ -98,7 +98,7 @@ def sensor_platforms_only() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_storage(hass_storage: Generator[dict[str, Any], None, None]) -> None:
+def mock_storage(hass_storage: dict[str, Any]) -> None:
     """Autouse hass_storage for the TestCase tests."""
 
 
