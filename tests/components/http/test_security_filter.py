@@ -7,6 +7,8 @@ import urllib3
 
 from homeassistant.components.http.security_filter import setup_security_filter
 
+from tests.typing import ClientSessionGenerator
+
 
 async def mock_handler(request):
     """Return OK."""
@@ -23,7 +25,9 @@ async def mock_handler(request):
         ("/", {"test": "123"}),
     ],
 )
-async def test_ok_requests(request_path, request_params, aiohttp_client):
+async def test_ok_requests(
+    request_path, request_params, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test request paths that should not be filtered."""
     app = web.Application()
     app.router.add_get("/{all:.*}", mock_handler)
@@ -56,8 +60,13 @@ async def test_ok_requests(request_path, request_params, aiohttp_client):
     ],
 )
 async def test_bad_requests(
-    request_path, request_params, fail_on_query_string, aiohttp_client, caplog, loop
-):
+    request_path,
+    request_params,
+    fail_on_query_string,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    loop,
+) -> None:
     """Test request paths that should be filtered."""
     app = web.Application()
     app.router.add_get("/{all:.*}", mock_handler)

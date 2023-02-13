@@ -142,7 +142,7 @@ async def test_removing_non_existing_backup(
 async def test_getting_backup_that_does_not_exist(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test getting backup that does not exist."""
     manager = BackupManager(hass)
     manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}

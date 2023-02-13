@@ -33,7 +33,9 @@ from tests.common import async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
+async def test_deconz_events(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of deconz events."""
     data = {
         "sensors": {
@@ -209,7 +211,9 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
+async def test_deconz_alarm_events(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of deconz alarm events."""
     data = {
         "alarmsystems": {
@@ -419,7 +423,9 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_deconz_presence_events(hass, aioclient_mock, mock_deconz_websocket):
+async def test_deconz_presence_events(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of deconz presence events."""
     data = {
         "sensors": {
@@ -521,8 +527,8 @@ async def test_deconz_presence_events(hass, aioclient_mock, mock_deconz_websocke
 
 
 async def test_deconz_relative_rotary_events(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of deconz relative rotary events."""
     data = {
         "sensors": {

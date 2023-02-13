@@ -7,11 +7,15 @@ from typing import Any
 
 from elgato import Elgato, ElgatoError
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -40,6 +44,13 @@ BUTTONS = [
         icon="mdi:help",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.identify(),
+    ),
+    ElgatoButtonEntityDescription(
+        key="restart",
+        name="Restart",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda client: client.restart(),
     ),
 ]
 

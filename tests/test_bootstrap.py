@@ -32,7 +32,7 @@ def apply_mock_storage(hass_storage):
 
 
 @pytest.fixture(autouse=True)
-async def apply_stop_hass(stop_hass):
+async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 

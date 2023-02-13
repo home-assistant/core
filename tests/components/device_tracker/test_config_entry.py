@@ -4,12 +4,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockPlatform,
-    mock_registry,
-)
+from tests.common import MockConfigEntry, MockEntityPlatform, MockPlatform
 
 
 def test_tracker_entity() -> None:
@@ -29,7 +24,9 @@ def test_tracker_entity() -> None:
     assert not instance.force_update
 
 
-async def test_cleanup_legacy(hass, enable_custom_integrations):
+async def test_cleanup_legacy(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we clean up devices created by old device tracker."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -170,10 +167,10 @@ async def test_register_mac_ignored(hass: HomeAssistant) -> None:
     assert entity_entry_1.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_connected_device_registered(hass: HomeAssistant) -> None:
+async def test_connected_device_registered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test dispatch on connected device being registered."""
-
-    registry = mock_registry(hass)
     dispatches = []
 
     @callback
@@ -243,9 +240,9 @@ async def test_connected_device_registered(hass: HomeAssistant) -> None:
     full_name = f"{entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0  # should be disabled
-    assert len(registry.entities) == 2
+    assert len(entity_registry.entities) == 2
     assert (
-        registry.entities["test_domain.test_aa_bb_cc_dd_ee_ff"].config_entry_id
+        entity_registry.entities["test_domain.test_aa_bb_cc_dd_ee_ff"].config_entry_id
         == "super-mock-id"
     )
     unsub()

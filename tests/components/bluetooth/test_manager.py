@@ -1,7 +1,8 @@
 """Tests for the Bluetooth integration manager."""
-
+from collections.abc import Generator
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -45,7 +46,7 @@ from tests.common import async_fire_time_changed, load_fixture
 
 
 @pytest.fixture
-def register_hci0_scanner(hass: HomeAssistant) -> None:
+def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci0 scanner."""
     hci0_scanner = FakeScanner(hass, "hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
@@ -54,7 +55,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def register_hci1_scanner(hass: HomeAssistant) -> None:
+def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci1 scanner."""
     hci1_scanner = FakeScanner(hass, "hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
@@ -63,8 +64,11 @@ def register_hci1_scanner(hass: HomeAssistant) -> None:
 
 
 async def test_advertisements_do_not_switch_adapters_for_no_reason(
-    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
-):
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
     """Test we only switch adapters when needed."""
 
     address = "44:44:33:11:23:12"
@@ -111,8 +115,11 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
 
 
 async def test_switching_adapters_based_on_rssi(
-    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
-):
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
     """Test switching adapters based on rssi."""
 
     address = "44:44:33:11:23:45"
@@ -167,8 +174,11 @@ async def test_switching_adapters_based_on_rssi(
 
 
 async def test_switching_adapters_based_on_zero_rssi(
-    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
-):
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
     """Test switching adapters based on zero rssi."""
 
     address = "44:44:33:11:23:45"
@@ -223,8 +233,11 @@ async def test_switching_adapters_based_on_zero_rssi(
 
 
 async def test_switching_adapters_based_on_stale(
-    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
-):
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
     """Test switching adapters based on the previous advertisement being stale."""
 
     address = "44:44:33:11:23:41"
@@ -283,8 +296,8 @@ async def test_switching_adapters_based_on_stale(
 
 
 async def test_restore_history_from_dbus(
-    hass, one_adapter, disable_new_discovery_flows
-):
+    hass: HomeAssistant, one_adapter: None, disable_new_discovery_flows
+) -> None:
     """Test we can restore history from dbus."""
     address = "AA:BB:CC:CC:CC:FF"
 
@@ -306,8 +319,11 @@ async def test_restore_history_from_dbus(
 
 
 async def test_restore_history_from_dbus_and_remote_adapters(
-    hass, one_adapter, hass_storage, disable_new_discovery_flows
-):
+    hass: HomeAssistant,
+    one_adapter: None,
+    hass_storage: dict[str, Any],
+    disable_new_discovery_flows,
+) -> None:
     """Test we can restore history from dbus along with remote adapters."""
     address = "AA:BB:CC:CC:CC:FF"
 
@@ -343,8 +359,11 @@ async def test_restore_history_from_dbus_and_remote_adapters(
 
 
 async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
-    hass, one_adapter, hass_storage, disable_new_discovery_flows
-):
+    hass: HomeAssistant,
+    one_adapter: None,
+    hass_storage: dict[str, Any],
+    disable_new_discovery_flows,
+) -> None:
     """Test we can restore history from dbus when the remote adapters data is corrupted."""
     address = "AA:BB:CC:CC:CC:FF"
 
@@ -378,8 +397,11 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
 
 
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
-    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
-):
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
     """Test switching adapters based on rssi from connectable to non connectable."""
 
     address = "44:44:33:11:23:45"
@@ -461,8 +483,11 @@ async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
 
 
 async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_connectable(
-    hass, enable_bluetooth, register_hci0_scanner, register_hci1_scanner
-):
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
     """Test we can still get a connectable BLEDevice when the best path is non-connectable.
 
     In this case the the device is closer to a non-connectable scanner, but the
@@ -509,8 +534,8 @@ async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_
 
 
 async def test_switching_adapters_when_one_goes_away(
-    hass, enable_bluetooth, register_hci0_scanner
-):
+    hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
+) -> None:
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(
         hass, FakeScanner(hass, "hci2", "hci2"), True
@@ -560,8 +585,8 @@ async def test_switching_adapters_when_one_goes_away(
 
 
 async def test_switching_adapters_when_one_stop_scanning(
-    hass, enable_bluetooth, register_hci0_scanner
-):
+    hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
+) -> None:
     """Test switching adapters when stops scanning."""
     hci2_scanner = FakeScanner(hass, "hci2", "hci2")
     cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
@@ -612,8 +637,8 @@ async def test_switching_adapters_when_one_stop_scanning(
 
 
 async def test_goes_unavailable_connectable_only_and_recovers(
-    hass, mock_bluetooth_adapters
-):
+    hass: HomeAssistant, mock_bluetooth_adapters: None
+) -> None:
     """Test all connectable scanners go unavailable, and than recover when there is a non-connectable scanner."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()

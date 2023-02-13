@@ -3,7 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable, Collection, Mapping, Sequence
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Generator,
+    Mapping,
+    Sequence,
+)
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
@@ -310,13 +317,13 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     # Load the registries
     if load_registries:
-        await asyncio.gather(
-            area_registry.async_load(hass),
-            device_registry.async_load(hass),
-            entity_registry.async_load(hass),
-            issue_registry.async_load(hass),
-        )
-        await hass.async_block_till_done()
+        with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
+            await asyncio.gather(
+                area_registry.async_load(hass),
+                device_registry.async_load(hass),
+                entity_registry.async_load(hass),
+                issue_registry.async_load(hass),
+            )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = CoreState.running
@@ -1205,7 +1212,9 @@ class MockEntity(entity.Entity):
 
 
 @contextmanager
-def mock_storage(data=None):
+def mock_storage(
+    data: dict[str, Any] | None = None
+) -> Generator[dict[str, Any], None, None]:
     """Mock storage.
 
     Data is a dict {'key': {'version': version, 'data': data}}
@@ -1217,7 +1226,9 @@ def mock_storage(data=None):
 
     orig_load = storage.Store._async_load
 
-    async def mock_async_load(store):
+    async def mock_async_load(
+        store: storage.Store,
+    ) -> dict[str, Any] | list[Any] | None:
         """Mock version of load."""
         if store._data is None:
             # No data to load
@@ -1237,14 +1248,16 @@ def mock_storage(data=None):
         _LOGGER.debug("Loading data for %s: %s", store.key, loaded)
         return loaded
 
-    async def mock_write_data(store, path, data_to_write):
+    async def mock_write_data(
+        store: storage.Store, path: str, data_to_write: dict[str, Any]
+    ) -> None:
         """Mock version of write data."""
         # To ensure that the data can be serialized
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
-    async def mock_remove(store):
+    async def mock_remove(store: storage.Store) -> None:
         """Remove data."""
         data.pop(store.key, None)
 

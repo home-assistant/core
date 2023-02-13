@@ -12,6 +12,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -166,12 +167,12 @@ def mock_all(aioclient_mock, request):
     ],
 )
 async def test_update_entities(
-    hass,
+    hass: HomeAssistant,
     entity_id,
     expected_state,
     auto_update,
-    aioclient_mock,
-):
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test update entities."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -425,7 +426,11 @@ async def test_update_core_with_error(
         )
 
 
-async def test_release_notes_between_versions(hass, aioclient_mock, hass_ws_client):
+async def test_release_notes_between_versions(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test release notes between versions."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -457,7 +462,11 @@ async def test_release_notes_between_versions(hass, aioclient_mock, hass_ws_clie
     assert "New updates" in result["result"]
 
 
-async def test_release_notes_full(hass, aioclient_mock, hass_ws_client):
+async def test_release_notes_full(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test release notes no match."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -489,7 +498,11 @@ async def test_release_notes_full(hass, aioclient_mock, hass_ws_client):
     assert "New updates" in result["result"]
 
 
-async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
+async def test_not_release_notes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test handling where there are no release notes."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
