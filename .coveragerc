@@ -214,6 +214,7 @@ omit =
     homeassistant/components/doorbird/util.py
     homeassistant/components/dormakaba_dkey/__init__.py
     homeassistant/components/dormakaba_dkey/lock.py
+    homeassistant/components/dormakaba_dkey/sensor.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
     homeassistant/components/dsmr_reader/__init__.py
