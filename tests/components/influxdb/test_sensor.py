@@ -23,6 +23,7 @@ from homeassistant.components.influxdb.const import (
 from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
 import homeassistant.components.sensor as sensor
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -216,7 +217,9 @@ async def _setup(hass, config_ext, queries, expected_sensors):
     ],
     indirect=["mock_client"],
 )
-async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_mock):
+async def test_minimal_config(
+    hass: HomeAssistant, mock_client, config_ext, queries, set_query_mock
+) -> None:
     """Test the minimal config and defaults."""
     set_query_mock(mock_client)
     await _setup(hass, config_ext, queries, ["sensor.test"])
@@ -286,14 +289,16 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
     ],
     indirect=["mock_client"],
 )
-async def test_full_config(hass, mock_client, config_ext, queries, set_query_mock):
+async def test_full_config(
+    hass: HomeAssistant, mock_client, config_ext, queries, set_query_mock
+) -> None:
     """Test the full config."""
     set_query_mock(mock_client)
     await _setup(hass, config_ext, queries, ["sensor.test"])
 
 
 @pytest.mark.parametrize("config_ext", [(BASE_V1_CONFIG), (BASE_V2_CONFIG)])
-async def test_config_failure(hass, config_ext):
+async def test_config_failure(hass: HomeAssistant, config_ext) -> None:
     """Test an invalid config."""
     config = {"platform": DOMAIN}
     config.update(config_ext)
@@ -323,8 +328,13 @@ async def test_config_failure(hass, config_ext):
     indirect=["mock_client"],
 )
 async def test_state_matches_query_result(
-    hass, mock_client, config_ext, queries, set_query_mock, make_resultset
-):
+    hass: HomeAssistant,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
+    make_resultset,
+) -> None:
     """Test state of sensor matches response from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42))
 
@@ -354,8 +364,14 @@ async def test_state_matches_query_result(
     indirect=["mock_client"],
 )
 async def test_state_matches_first_query_result_for_multiple_return(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
+    make_resultset,
+) -> None:
     """Test state of sensor matches response from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42, "not used"))
 
@@ -380,8 +396,13 @@ async def test_state_matches_first_query_result_for_multiple_return(
     indirect=["mock_client"],
 )
 async def test_state_for_no_results(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
+) -> None:
     """Test state of sensor matches response from query api."""
     set_query_mock(mock_client)
 
@@ -441,8 +462,14 @@ async def test_state_for_no_results(
     indirect=["mock_client"],
 )
 async def test_error_querying_influx(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock, query_exception
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
+    query_exception,
+) -> None:
     """Test behavior of sensor when influx returns error."""
     set_query_mock(mock_client, query_exception=query_exception)
 
@@ -494,8 +521,15 @@ async def test_error_querying_influx(
     indirect=["mock_client"],
 )
 async def test_error_rendering_template(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset, key
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
+    make_resultset,
+    key,
+) -> None:
     """Test behavior of sensor with error rendering template."""
     set_query_mock(mock_client, return_value=make_resultset(42))
 
@@ -561,15 +595,15 @@ async def test_error_rendering_template(
     indirect=["mock_client"],
 )
 async def test_connection_error_at_startup(
-    hass,
-    caplog,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     mock_client,
     config_ext,
     queries,
     set_query_mock,
     test_exception,
     make_resultset,
-):
+) -> None:
     """Test behavior of sensor when influx returns error."""
     query_api = set_query_mock(mock_client, side_effect=test_exception)
     expected_sensor = "sensor.test"
@@ -614,13 +648,13 @@ async def test_connection_error_at_startup(
     indirect=["mock_client"],
 )
 async def test_data_repository_not_found(
-    hass,
-    caplog,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     mock_client,
     config_ext,
     queries,
     set_query_mock,
-):
+) -> None:
     """Test sensor is not setup when bucket not available."""
     set_query_mock(mock_client)
     await _setup(hass, config_ext, queries, [])

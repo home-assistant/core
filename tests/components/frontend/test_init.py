@@ -2,6 +2,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 import re
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -189,7 +190,7 @@ async def test_themes_api(hass: HomeAssistant, themes_ws_client) -> None:
 
 async def test_themes_persist(
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
     ignore_frontend_deps,
 ) -> None:
@@ -214,7 +215,7 @@ async def test_themes_persist(
 
 
 async def test_themes_save_storage(
-    hass: HomeAssistant, hass_storage, frontend_themes
+    hass: HomeAssistant, hass_storage: dict[str, Any], frontend_themes
 ) -> None:
     """Test that theme settings are restores after restart."""
 

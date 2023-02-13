@@ -1,6 +1,7 @@
 """Test Google http services."""
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
@@ -115,7 +116,7 @@ async def test_update_access_token(hass: HomeAssistant) -> None:
 async def test_call_homegraph_api(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_storage,
+    hass_storage: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the function to call the homegraph api."""
@@ -141,7 +142,9 @@ async def test_call_homegraph_api(
 
 
 async def test_call_homegraph_api_retry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_storage
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test the that the calls get retried with new token on 401."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
@@ -168,7 +171,9 @@ async def test_call_homegraph_api_retry(
 
 
 async def test_report_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_storage
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test the report state function."""
     agent_user_id = "user"
@@ -191,7 +196,9 @@ async def test_report_state(
 
 
 async def test_google_config_local_fulfillment(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_storage
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test the google config for local fulfillment."""
     agent_user_id = "user"
@@ -287,7 +294,7 @@ async def test_missing_service_account(hass: HomeAssistant) -> None:
 async def test_async_enable_local_sdk(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_storage,
+    hass_storage: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the google config enable and disable local sdk."""
