@@ -774,8 +774,6 @@ async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            await asyncio.sleep(0.1)
-
             async def _background_task():
                 await asyncio.sleep(0.2)
 
