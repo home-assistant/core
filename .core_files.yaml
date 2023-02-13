@@ -114,8 +114,8 @@ tests: &tests
   - tests/auth/**
   - tests/backports/**
   - tests/common.py
-  - tests/components/logbook/**
   - tests/components/history/**
+  - tests/components/logbook/**
   - tests/components/recorder/**
   - tests/components/sensor/**
   - tests/conftest.py
