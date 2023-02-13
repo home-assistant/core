@@ -939,6 +939,7 @@ def mock_yaml_config(
         yield
 
 
+@pytest.fixture
 async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
