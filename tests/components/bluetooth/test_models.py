@@ -18,6 +18,7 @@ from homeassistant.components.bluetooth.wrappers import (
     HaBleakClientWrapper,
     HaBleakScannerWrapper,
 )
+from homeassistant.core import HomeAssistant
 
 from . import (
     MockBleakClient,
@@ -28,7 +29,9 @@ from . import (
 )
 
 
-async def test_wrapped_bleak_scanner(hass, enable_bluetooth):
+async def test_wrapped_bleak_scanner(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test wrapped bleak scanner dispatches calls as expected."""
     scanner = HaBleakScannerWrapper()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
@@ -40,7 +43,9 @@ async def test_wrapped_bleak_scanner(hass, enable_bluetooth):
     assert await scanner.discover() == [switchbot_device]
 
 
-async def test_wrapped_bleak_client_raises_device_missing(hass, enable_bluetooth):
+async def test_wrapped_bleak_client_raises_device_missing(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test wrapped bleak client dispatches calls as expected."""
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
     client = HaBleakClientWrapper(switchbot_device)
@@ -53,8 +58,8 @@ async def test_wrapped_bleak_client_raises_device_missing(hass, enable_bluetooth
 
 
 async def test_wrapped_bleak_client_set_disconnected_callback_before_connected(
-    hass, enable_bluetooth
-):
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test wrapped bleak client can set a disconnected callback before connected."""
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
     client = HaBleakClientWrapper(switchbot_device)
@@ -62,8 +67,8 @@ async def test_wrapped_bleak_client_set_disconnected_callback_before_connected(
 
 
 async def test_wrapped_bleak_client_local_adapter_only(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+) -> None:
     """Test wrapped bleak client with only a local adapter."""
     manager = _get_manager()
 
@@ -123,8 +128,8 @@ async def test_wrapped_bleak_client_local_adapter_only(
 
 
 async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+) -> None:
     """Test wrapped bleak client can set a disconnected callback after connected."""
     manager = _get_manager()
 
@@ -210,8 +215,8 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
 
 
 async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+) -> None:
     """Test we switch to the next available proxy when one runs out of connections with no scanners."""
     manager = _get_manager()
 
@@ -247,8 +252,8 @@ async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
 
 
 async def test_ble_device_with_proxy_client_out_of_connections(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+) -> None:
     """Test handling all scanners are out of connection slots."""
     manager = _get_manager()
 
@@ -311,7 +316,9 @@ async def test_ble_device_with_proxy_client_out_of_connections(
     cancel()
 
 
-async def test_ble_device_with_proxy_clear_cache(hass, enable_bluetooth, one_adapter):
+async def test_ble_device_with_proxy_clear_cache(
+    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+) -> None:
     """Test we can clear cache on the proxy."""
     manager = _get_manager()
 
@@ -372,8 +379,8 @@ async def test_ble_device_with_proxy_clear_cache(hass, enable_bluetooth, one_ada
 
 
 async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant, enable_bluetooth: None, one_adapter: None
+) -> None:
     """Test we switch to the next available proxy when one runs out of connections."""
     manager = _get_manager()
 
@@ -481,8 +488,8 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
 
 
 async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available_macos(
-    hass, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant, enable_bluetooth: None, macos_adapter: None
+) -> None:
     """Test we switch to the next available proxy when one runs out of connections on MacOS."""
     manager = _get_manager()
 

@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from .const import SupportedDialect
 from .db_schema import (
     SCHEMA_VERSION,
+    STATISTICS_TABLES,
     TABLE_STATES,
     Base,
     SchemaChanges,
@@ -43,13 +44,18 @@ from .statistics import (
     get_start_time,
     validate_db_schema as statistics_validate_db_schema,
 )
-from .tasks import CommitTask, PostSchemaMigrationTask
+from .tasks import (
+    CommitTask,
+    PostSchemaMigrationTask,
+    StatisticsTimestampMigrationCleanupTask,
+)
 from .util import session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,13 +280,21 @@ def _drop_index(
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
-        if index_name in ("ix_states_entity_id", "ix_states_context_parent_id"):
+        if index_name in (
+            "ix_states_entity_id",
+            "ix_states_context_parent_id",
+            "ix_statistics_short_term_statistic_id_start",
+            "ix_statistics_statistic_id_start",
+        ):
             # ix_states_context_parent_id was only there on nightly so we do not want
             # to generate log noise or issues about it.
             #
             # ix_states_entity_id was only there for users who upgraded from schema
             # version 8 or earlier. Newer installs will not have it so we do not
             # want to generate log noise or issues about it.
+            #
+            # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
+            # were only there for users who upgraded from schema version 23 or earlier.
             return
 
         _LOGGER.warning(
@@ -764,35 +778,9 @@ def _apply_update(  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        # Recreate statistics indices to block duplicated statistics
-        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
-        _drop_index(
-            session_maker,
-            "statistics_short_term",
-            "ix_statistics_short_term_statistic_id_start",
-        )
-        try:
-            _create_index(
-                session_maker, "statistics", "ix_statistics_statistic_id_start"
-            )
-            _create_index(
-                session_maker,
-                "statistics_short_term",
-                "ix_statistics_short_term_statistic_id_start",
-            )
-        except DatabaseError:
-            # There may be duplicated statistics entries, delete duplicated statistics
-            # and try again
-            with session_scope(session=session_maker()) as session:
-                delete_statistics_duplicates(hass, session)
-            _create_index(
-                session_maker, "statistics", "ix_statistics_statistic_id_start"
-            )
-            _create_index(
-                session_maker,
-                "statistics_short_term",
-                "ix_statistics_short_term_statistic_id_start",
-            )
+        _LOGGER.debug("Deleting duplicated statistics entries")
+        with session_scope(session=session_maker()) as session:
+            delete_statistics_duplicates(hass, session)
     elif new_version == 25:
         _add_columns(session_maker, "states", [f"attributes_id {big_int}"])
         _create_index(session_maker, "states", "ix_states_attributes_id")
@@ -881,13 +869,62 @@ def _apply_update(  # noqa: C901
         # when querying the states table.
         # https://github.com/home-assistant/core/issues/83787
         _drop_index(session_maker, "states", "ix_states_entity_id")
+    elif new_version == 34:
+        # Once we require SQLite >= 3.35.5, we should drop the columns:
+        # ALTER TABLE statistics DROP COLUMN created
+        # ALTER TABLE statistics DROP COLUMN start
+        # ALTER TABLE statistics DROP COLUMN last_reset
+        # ALTER TABLE statistics_short_term DROP COLUMN created
+        # ALTER TABLE statistics_short_term DROP COLUMN start
+        # ALTER TABLE statistics_short_term DROP COLUMN last_reset
+        _add_columns(
+            session_maker,
+            "statistics",
+            [
+                f"created_ts {timestamp_type}",
+                f"start_ts {timestamp_type}",
+                f"last_reset_ts {timestamp_type}",
+            ],
+        )
+        _add_columns(
+            session_maker,
+            "statistics_short_term",
+            [
+                f"created_ts {timestamp_type}",
+                f"start_ts {timestamp_type}",
+                f"last_reset_ts {timestamp_type}",
+            ],
+        )
+        _create_index(session_maker, "statistics", "ix_statistics_start_ts")
+        _create_index(
+            session_maker, "statistics", "ix_statistics_statistic_id_start_ts"
+        )
+        _create_index(
+            session_maker, "statistics_short_term", "ix_statistics_short_term_start_ts"
+        )
+        _create_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start_ts",
+        )
+        _migrate_statistics_columns_to_timestamp(session_maker, engine)
+    elif new_version == 35:
+        # Migration is done in two steps to ensure we can start using
+        # the new columns before we wipe the old ones.
+        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
+        _drop_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+        )
+        # ix_statistics_start and ix_statistics_statistic_id_start are still used
+        # for the post migration cleanup and can be removed in a future version.
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
 
 def post_schema_migration(
-    engine: Engine,
-    session: Session,
+    instance: Recorder,
     old_version: int,
     new_version: int,
 ) -> None:
@@ -905,7 +942,19 @@ def post_schema_migration(
         # In version 31 we migrated all the time_fired, last_updated, and last_changed
         # columns to be timestamps. In version 32 we need to wipe the old columns
         # since they are no longer used and take up a significant amount of space.
-        _wipe_old_string_time_columns(engine, session)
+        assert instance.event_session is not None
+        assert instance.engine is not None
+        _wipe_old_string_time_columns(instance.engine, instance.event_session)
+    if old_version < 35 <= new_version:
+        # In version 34 we migrated all the created, start, and last_reset
+        # columns to be timestamps. In version 34 we need to wipe the old columns
+        # since they are no longer used and take up a significant amount of space.
+        _wipe_old_string_statistics_columns(instance)
+
+
+def _wipe_old_string_statistics_columns(instance: Recorder) -> None:
+    """Wipe old string statistics columns to save space."""
+    instance.queue_task(StatisticsTimestampMigrationCleanupTask())
 
 
 def _wipe_old_string_time_columns(engine: Engine, session: Session) -> None:
@@ -996,7 +1045,7 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE events set time_fired_ts="
                         "IF(time_fired is NULL,0,"
-                        "UNIX_TIMESTAMP(CONVERT_TZ(time_fired,'+00:00',@@global.time_zone))"
+                        "UNIX_TIMESTAMP(time_fired)"
                         ") "
                         "where time_fired_ts is NULL "
                         "LIMIT 250000;"
@@ -1009,10 +1058,10 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE states set last_updated_ts="
                         "IF(last_updated is NULL,0,"
-                        "UNIX_TIMESTAMP(CONVERT_TZ(last_updated,'+00:00',@@global.time_zone)) "
+                        "UNIX_TIMESTAMP(last_updated) "
                         "), "
                         "last_changed_ts="
-                        "UNIX_TIMESTAMP(CONVERT_TZ(last_changed,'+00:00',@@global.time_zone)) "
+                        "UNIX_TIMESTAMP(last_changed) "
                         "where last_updated_ts is NULL "
                         "LIMIT 250000;"
                     )
@@ -1046,6 +1095,74 @@ def _migrate_columns_to_timestamp(
                         " );"
                     )
                 )
+
+
+def _migrate_statistics_columns_to_timestamp(
+    session_maker: Callable[[], Session], engine: Engine
+) -> None:
+    """Migrate statistics columns to use timestamp."""
+    # Migrate all data in statistics.start to statistics.start_ts
+    # Migrate all data in statistics.created to statistics.created_ts
+    # Migrate all data in statistics.last_reset to statistics.last_reset_ts
+    # Migrate all data in statistics_short_term.start to statistics_short_term.start_ts
+    # Migrate all data in statistics_short_term.created to statistics_short_term.created_ts
+    # Migrate all data in statistics_short_term.last_reset to statistics_short_term.last_reset_ts
+    result: CursorResult | None = None
+    if engine.dialect.name == SupportedDialect.SQLITE:
+        # With SQLite we do this in one go since it is faster
+        for table in STATISTICS_TABLES:
+            with session_scope(session=session_maker()) as session:
+                session.connection().execute(
+                    text(
+                        f"UPDATE {table} set start_ts=strftime('%s',start) + "
+                        "cast(substr(start,-7) AS FLOAT), "
+                        f"created_ts=strftime('%s',created) + "
+                        "cast(substr(created,-7) AS FLOAT), "
+                        f"last_reset_ts=strftime('%s',last_reset) + "
+                        "cast(substr(last_reset,-7) AS FLOAT);"
+                    )
+                )
+    elif engine.dialect.name == SupportedDialect.MYSQL:
+        # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
+        # We also need to do this in a loop since we can't be sure that we have
+        # updated all rows in the table until the rowcount is 0
+        for table in STATISTICS_TABLES:
+            result = None
+            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+                with session_scope(session=session_maker()) as session:
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} set start_ts="
+                            "IF(start is NULL,0,"
+                            "UNIX_TIMESTAMP(start) "
+                            "), "
+                            "created_ts="
+                            "UNIX_TIMESTAMP(created), "
+                            "last_reset_ts="
+                            "UNIX_TIMESTAMP(last_reset) "
+                            "where start_ts is NULL "
+                            "LIMIT 250000;"
+                        )
+                    )
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        # With Postgresql we do this in chunks to avoid using too much memory
+        # We also need to do this in a loop since we can't be sure that we have
+        # updated all rows in the table until the rowcount is 0
+        for table in STATISTICS_TABLES:
+            result = None
+            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+                with session_scope(session=session_maker()) as session:
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} set start_ts="  # nosec
+                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start) end), "
+                            "created_ts=EXTRACT(EPOCH FROM created), "
+                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset) "
+                            "where id IN ( "
+                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 250000 "
+                            " );"
+                        )
+                    )
 
 
 def _initialize_database(session: Session) -> bool:

@@ -30,6 +30,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import (
@@ -55,8 +56,6 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
-
-    from .entity import EntityCategory
 
 T = TypeVar("T")
 
@@ -526,8 +525,6 @@ class EntityRegistry:
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
 
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
-
         if (
             entity_category
             and entity_category is not UNDEFINED
@@ -690,8 +687,6 @@ class EntityRegistry:
             and not isinstance(hidden_by, RegistryEntryHider)
         ):
             raise ValueError("hidden_by must be a RegistryEntryHider value")
-
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if (
             entity_category
@@ -880,8 +875,6 @@ class EntityRegistry:
 
         data = await self._store.async_load()
         entities = EntityRegistryItems()
-
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if data is not None:
             for entity in data["entities"]:

@@ -46,7 +46,7 @@ def _get_native_states(hass, entity_id):
         ]
 
 
-async def test_schema_update_calls(hass: HomeAssistant, recorder_db_url: str) -> None:
+async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) -> None:
     """Test that schema migrations occur in correct order."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -75,7 +75,7 @@ async def test_schema_update_calls(hass: HomeAssistant, recorder_db_url: str) ->
     )
 
 
-async def test_migration_in_progress(hass: HomeAssistant, recorder_db_url: str) -> None:
+async def test_migration_in_progress(recorder_db_url: str, hass: HomeAssistant) -> None:
     """Test that we can check for migration in progress."""
     if recorder_db_url.startswith("mysql://"):
         # The database drop at the end of this test currently hangs on MySQL
@@ -104,7 +104,7 @@ async def test_migration_in_progress(hass: HomeAssistant, recorder_db_url: str) 
 
 
 async def test_database_migration_failed(
-    hass: HomeAssistant, recorder_db_url: str
+    recorder_db_url: str, hass: HomeAssistant
 ) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -137,7 +137,7 @@ async def test_database_migration_failed(
 
 
 async def test_database_migration_encounters_corruption(
-    hass: HomeAssistant, recorder_db_url: str
+    recorder_db_url: str, hass: HomeAssistant
 ) -> None:
     """Test we move away the database if its corrupt."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -174,7 +174,7 @@ async def test_database_migration_encounters_corruption(
 
 
 async def test_database_migration_encounters_corruption_not_sqlite(
-    hass: HomeAssistant, recorder_db_url: str
+    recorder_db_url: str, hass: HomeAssistant
 ) -> None:
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -210,7 +210,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(
 
 
 async def test_events_during_migration_are_queued(
-    hass: HomeAssistant, recorder_db_url: str
+    recorder_db_url: str, hass: HomeAssistant
 ) -> None:
     """Test that events during migration are queued."""
 
@@ -246,7 +246,7 @@ async def test_events_during_migration_are_queued(
 
 
 async def test_events_during_migration_queue_exhausted(
-    hass: HomeAssistant, recorder_db_url: str
+    recorder_db_url: str, hass: HomeAssistant
 ) -> None:
     """Test that events during migration takes so long the queue is exhausted."""
 
@@ -290,7 +290,7 @@ async def test_events_during_migration_queue_exhausted(
     [(0, True), (16, True), (18, True), (22, True), (25, True)],
 )
 async def test_schema_migrate(
-    hass: HomeAssistant, recorder_db_url: str, start_version, live
+    recorder_db_url: str, hass: HomeAssistant, start_version, live
 ):
     """Test the full schema migration logic.
 
@@ -370,6 +370,10 @@ async def test_schema_migrate(
         wraps=_instrument_apply_update,
     ), patch(
         "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._process_state_changed_event_into_session",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._process_non_state_changed_event_into_session",
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.async_create_task(
@@ -436,6 +440,7 @@ def test_forgiving_add_column(recorder_db_url: str) -> None:
         migration._add_columns(
             instance.get_session, "hello", ["context_id CHARACTER(36)"]
         )
+    engine.dispose()
 
 
 def test_forgiving_add_index(recorder_db_url: str) -> None:
@@ -446,6 +451,7 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
         migration._create_index(instance.get_session, "states", "ix_states_context_id")
+    engine.dispose()
 
 
 @pytest.mark.parametrize(

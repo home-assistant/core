@@ -9,10 +9,9 @@ from homeassistant.components.devolo_home_network.const import (
     SHORT_UPDATE_INTERVAL,
 )
 from homeassistant.components.sensor import DOMAIN, SensorStateClass
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from . import configure_integration
@@ -22,7 +21,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_sensor_setup(hass: HomeAssistant):
+async def test_sensor_setup(hass: HomeAssistant) -> None:
     """Test default setup of the sensor component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -38,7 +37,7 @@ async def test_sensor_setup(hass: HomeAssistant):
 
 async def test_update_connected_wifi_clients(
     hass: HomeAssistant, mock_device: MockDevice
-):
+) -> None:
     """Test state change of a connected_wifi_clients sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -80,7 +79,7 @@ async def test_update_connected_wifi_clients(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_neighboring_wifi_networks(
     hass: HomeAssistant, mock_device: MockDevice
-):
+) -> None:
     """Test state change of a neighboring_wifi_networks sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -124,7 +123,7 @@ async def test_update_neighboring_wifi_networks(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_connected_plc_devices(
     hass: HomeAssistant, mock_device: MockDevice
-):
+) -> None:
     """Test state change of a connected_plc_devices sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()

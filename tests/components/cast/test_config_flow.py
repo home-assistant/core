@@ -44,7 +44,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
         config_entries.SOURCE_ZEROCONF,
     ],
 )
-async def test_single_instance(hass, source):
+async def test_single_instance(hass: HomeAssistant, source) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain="cast").add_to_hass(hass)
     await hass.async_block_till_done()
@@ -173,7 +173,7 @@ def get_suggested(schema, key):
         ),
     ],
 )
-async def test_option_flow(hass, parameter_data):
+async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
     """Test config flow options."""
     basic_parameters = ["known_hosts"]
     advanced_parameters = ["ignore_cec", "uuid"]
@@ -267,7 +267,7 @@ async def test_option_flow(hass, parameter_data):
     assert dict(config_entry.data) == expected_data
 
 
-async def test_known_hosts(hass, castbrowser_mock):
+async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
     """Test known hosts is passed to pychromecasts."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
