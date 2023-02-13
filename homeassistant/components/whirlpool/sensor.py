@@ -32,7 +32,6 @@ TANK_FILL = {
     "3": "50",
     "4": "100",
     "5": "active",
-    None: "unknown",
 }
 
 MACHINE_STATE = {
@@ -123,9 +122,9 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=list(TANK_FILL.values()),
-        value_fn=lambda WasherDryer: TANK_FILL[
-            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
-        ],
+        value_fn=lambda WasherDryer: TANK_FILL.get(
+            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level"), None
+        ),
     ),
 )
 
