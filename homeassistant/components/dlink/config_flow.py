@@ -131,6 +131,6 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception: %s", ex)
             return "unknown"
-        if smartplug.authenticated:
-            return None
-        return "cannot_connect"
+        if not smartplug.authenticated and smartplug.use_legacy_protocol:
+            return "cannot_connect"
+        return None

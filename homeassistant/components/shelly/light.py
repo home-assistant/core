@@ -81,7 +81,6 @@ def async_setup_block_entry(
                 continue
 
             blocks.append(block)
-            assert coordinator.device.shelly
             unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 
@@ -299,7 +298,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             ATTR_COLOR_TEMP_KELVIN in kwargs
             and ColorMode.COLOR_TEMP in supported_color_modes
         ):
-            # Color temperature change - used only in white mode, switch device mode to white
+            # Color temperature change - used only in white mode,
+            # switch device mode to white
             color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
             set_mode = "white"
             params["temp"] = int(
@@ -310,12 +310,14 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             )
 
         if ATTR_RGB_COLOR in kwargs and ColorMode.RGB in supported_color_modes:
-            # Color channels change - used only in color mode, switch device mode to color
+            # Color channels change - used only in color mode,
+            # switch device mode to color
             set_mode = "color"
             (params["red"], params["green"], params["blue"]) = kwargs[ATTR_RGB_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs and ColorMode.RGBW in supported_color_modes:
-            # Color channels change - used only in color mode, switch device mode to color
+            # Color channels change - used only in color mode,
+            # switch device mode to color
             set_mode = "color"
             (params["red"], params["green"], params["blue"], params["white"]) = kwargs[
                 ATTR_RGBW_COLOR

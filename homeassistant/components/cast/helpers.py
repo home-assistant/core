@@ -5,6 +5,7 @@ import asyncio
 import configparser
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import aiohttp
@@ -18,6 +19,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components import zeroconf
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,15 +129,15 @@ class ChromecastInfo:
 class ChromeCastZeroconf:
     """Class to hold a zeroconf instance."""
 
-    __zconf = None
+    __zconf: zeroconf.HaZeroconf | None = None
 
     @classmethod
-    def set_zeroconf(cls, zconf):
+    def set_zeroconf(cls, zconf: zeroconf.HaZeroconf) -> None:
         """Set zeroconf."""
         cls.__zconf = zconf
 
     @classmethod
-    def get_zeroconf(cls):
+    def get_zeroconf(cls) -> zeroconf.HaZeroconf | None:
         """Get zeroconf."""
         return cls.__zconf
 

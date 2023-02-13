@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 
@@ -25,7 +26,9 @@ def recorder_url_mock():
         yield
 
 
-async def test_setup(hass, mock_zeroconf, mock_get_source_ip, mock_bluetooth):
+async def test_setup(
+    hass: HomeAssistant, mock_zeroconf: None, mock_get_source_ip, mock_bluetooth: None
+) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)
     assert await async_setup_component(hass, "default_config", {"foo": "bar"})

@@ -498,7 +498,10 @@ class ProxmoxEntity(CoordinatorEntity):
         unique_id,
         name,
         icon,
-    ):
+        host_name,
+        node_name,
+        vm_id=None,
+    ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
 
@@ -548,7 +551,10 @@ class ProxmoxClient:
         self._connection_start_time = None
 
     def build_client(self):
-        """Construct the ProxmoxAPI client."""
+        """Construct the ProxmoxAPI client.
+
+        Allows inserting the realm within the `user` value.
+        """
 
         if "@" in self._user:
             user_id = self._user

@@ -46,7 +46,7 @@ def test_not_supported(caplog):
     assert "invalid aid" in caplog.records[0].msg
 
 
-def test_not_supported_media_player():
+def test_not_supported_media_player() -> None:
     """Test if mode isn't supported and if no supported modes."""
     # selected mode for entity not supported
     config = {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}}
@@ -179,8 +179,8 @@ def test_type_covers(type_name, entity_id, state, attrs):
             "media_player.test",
             "on",
             {
-                ATTR_SUPPORTED_FEATURES: media_player_c.SUPPORT_TURN_ON
-                | media_player_c.SUPPORT_TURN_OFF
+                ATTR_SUPPORTED_FEATURES: media_player_c.MediaPlayerEntityFeature.TURN_ON
+                | media_player_c.MediaPlayerEntityFeature.TURN_OFF
             },
             {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}},
         ),

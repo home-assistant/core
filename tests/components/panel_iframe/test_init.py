@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import frontend
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -19,7 +20,7 @@ async def test_wrong_config(hass, config_to_try):
     )
 
 
-async def test_correct_config(hass):
+async def test_correct_config(hass: HomeAssistant) -> None:
     """Test correct config."""
     assert await async_setup_component(
         hass,

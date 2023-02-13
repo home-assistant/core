@@ -210,27 +210,21 @@ async def test_data_manager_webhook_subscription(
     api.notify_subscribe.assert_any_call(
         data_manager.webhook_config.url, NotifyAppli.SLEEP
     )
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.USER
         )
-        assert False
-    except AssertionError:
-        pass
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.BED_IN
         )
-        assert False
-    except AssertionError:
-        pass
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.BED_OUT
         )
-        assert False
-    except AssertionError:
-        pass
 
     # Test unsubscribing.
     await data_manager.async_unsubscribe_webhook()

@@ -11,16 +11,22 @@ import re
 from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
-from hassil.recognize import recognize
+from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_intents
 import yaml
 
 from homeassistant import core, setup
-from homeassistant.helpers import area_registry, entity_registry, intent, template
-from homeassistant.helpers.json import json_loads
+from homeassistant.helpers import (
+    area_registry,
+    entity_registry,
+    intent,
+    template,
+    translation,
+)
+from homeassistant.helpers.json import JsonObjectType, json_loads_object
 
-from .agent import AbstractConversationAgent, ConversationResult
+from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,9 +35,9 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 REGEX_TYPE = type(re.compile(""))
 
 
-def json_load(fp: IO[str]) -> dict[str, Any]:
+def json_load(fp: IO[str]) -> JsonObjectType:
     """Wrap json_loads for get_intents."""
-    return json_loads(fp.read())
+    return json_loads_object(fp.read())
 
 
 @dataclass
@@ -71,6 +77,8 @@ class DefaultAgent(AbstractConversationAgent):
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
+        self._areas_list: TextSlotList | None = None
+        self._names_list: TextSlotList | None = None
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""
@@ -81,16 +89,27 @@ class DefaultAgent(AbstractConversationAgent):
         if config_intents:
             self._config_intents = config_intents
 
-    async def async_process(
-        self,
-        text: str,
-        context: core.Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
-    ) -> ConversationResult:
+        self.hass.bus.async_listen(
+            area_registry.EVENT_AREA_REGISTRY_UPDATED,
+            self._async_handle_area_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_handle_entity_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            core.EVENT_STATE_CHANGED,
+            self._async_handle_state_changed,
+            run_immediately=True,
+        )
+
+    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        language = language or self.hass.config.language
+        language = user_input.language or self.hass.config.language
         lang_intents = self._lang_intents.get(language)
+        conversation_id = None  # Not supported
 
         # Reload intents if missing or new components
         if lang_intents is None or (
@@ -114,9 +133,14 @@ class DefaultAgent(AbstractConversationAgent):
             "name": self._make_names_list(),
         }
 
-        result = recognize(text, lang_intents.intents, slot_lists=slot_lists)
+        result = await self.hass.async_add_executor_job(
+            self._recognize,
+            user_input,
+            lang_intents,
+            slot_lists,
+        )
         if result is None:
-            _LOGGER.debug("No intent was matched for '%s'", text)
+            _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_INTENT_MATCH,
@@ -133,8 +157,8 @@ class DefaultAgent(AbstractConversationAgent):
                     entity.name: {"value": entity.value}
                     for entity in result.entities_list
                 },
-                text,
-                context,
+                user_input.text,
+                user_input.context,
                 language,
             )
         except intent.IntentHandleError:
@@ -160,25 +184,100 @@ class DefaultAgent(AbstractConversationAgent):
             and (response_key := result.response)
         ):
             # Use response template, if available
-            response_str = lang_intents.intent_responses.get(
+            response_template_str = lang_intents.intent_responses.get(
                 result.intent.name, {}
             ).get(response_key)
-            if response_str:
-                response_template = template.Template(response_str, self.hass)
-                intent_response.async_set_speech(
-                    response_template.async_render(
-                        {
-                            "slots": {
-                                entity_name: entity_value.text or entity_value.value
-                                for entity_name, entity_value in result.entities.items()
-                            }
-                        }
-                    )
+            if response_template_str:
+                response_template = template.Template(response_template_str, self.hass)
+                speech = await self._build_speech(
+                    language, response_template, intent_response, result
                 )
+                intent_response.async_set_speech(speech)
 
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
+
+    def _recognize(
+        self,
+        user_input: ConversationInput,
+        lang_intents: LanguageIntents,
+        slot_lists: dict[str, SlotList],
+    ) -> RecognizeResult | None:
+        """Search intents for a match to user input."""
+        # Prioritize matches with entity names above area names
+        maybe_result: RecognizeResult | None = None
+        for result in recognize_all(
+            user_input.text, lang_intents.intents, slot_lists=slot_lists
+        ):
+            if "name" in result.entities:
+                return result
+
+            # Keep looking in case an entity has the same name
+            maybe_result = result
+
+        return maybe_result
+
+    async def _build_speech(
+        self,
+        language: str,
+        response_template: template.Template,
+        intent_response: intent.IntentResponse,
+        recognize_result: RecognizeResult,
+    ) -> str:
+        all_states = intent_response.matched_states + intent_response.unmatched_states
+        domains = {state.domain for state in all_states}
+        translations = await translation.async_get_translations(
+            self.hass, language, "state", domains
+        )
+
+        # Use translated state names
+        for state in all_states:
+            device_class = state.attributes.get("device_class", "_")
+            key = f"component.{state.domain}.state.{device_class}.{state.state}"
+            state.state = translations.get(key, state.state)
+
+        # Get first matched or unmatched state.
+        # This is available in the response template as "state".
+        state1: core.State | None = None
+        if intent_response.matched_states:
+            state1 = intent_response.matched_states[0]
+        elif intent_response.unmatched_states:
+            state1 = intent_response.unmatched_states[0]
+
+        # Render response template
+        speech = response_template.async_render(
+            {
+                # Slots from intent recognizer
+                "slots": {
+                    entity_name: entity_value.text or entity_value.value
+                    for entity_name, entity_value in recognize_result.entities.items()
+                },
+                # First matched or unmatched state
+                "state": template.TemplateState(self.hass, state1)
+                if state1 is not None
+                else None,
+                "query": {
+                    # Entity states that matched the query (e.g, "on")
+                    "matched": [
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.matched_states
+                    ],
+                    # Entity states that did not match the query
+                    "unmatched": [
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.unmatched_states
+                    ],
+                },
+            }
+        )
+
+        # Normalize whitespace
+        if speech is not None:
+            speech = str(speech)
+            speech = " ".join(speech.strip().split())
+
+        return speech
 
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
@@ -201,13 +300,15 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
+        hass_components = set(self.hass.config.components)
         async with self._lang_lock[language]:
             return await self.hass.async_add_executor_job(
-                self._get_or_load_intents,
-                language,
+                self._get_or_load_intents, language, hass_components
             )
 
-    def _get_or_load_intents(self, language: str) -> LanguageIntents | None:
+    def _get_or_load_intents(
+        self, language: str, hass_components: set[str]
+    ) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
         lang_intents = self._lang_intents.get(language)
 
@@ -220,7 +321,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Check if any new components have been loaded
         intents_changed = False
-        for component in self.hass.config.components:
+        for component in hass_components:
             if component in loaded_components:
                 continue
 
@@ -315,8 +416,29 @@ class DefaultAgent(AbstractConversationAgent):
 
         return lang_intents
 
+    @core.callback
+    def _async_handle_area_registry_changed(self, event: core.Event) -> None:
+        """Clear area area cache when the area registry has changed."""
+        self._areas_list = None
+
+    @core.callback
+    def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
+        """Clear names list cache when an entity changes aliases."""
+        if event.data["action"] == "update" and "aliases" not in event.data["changes"]:
+            return
+        self._names_list = None
+
+    @core.callback
+    def _async_handle_state_changed(self, event: core.Event) -> None:
+        """Clear names list cache when a state is added or removed from the state machine."""
+        if event.data.get("old_state") and event.data.get("new_state"):
+            return
+        self._names_list = None
+
     def _make_areas_list(self) -> TextSlotList:
         """Create slot list mapping area names/aliases to area ids."""
+        if self._areas_list is not None:
+            return self._areas_list
         registry = area_registry.async_get(self.hass)
         areas = []
         for entry in registry.async_list_areas():
@@ -325,31 +447,38 @@ class DefaultAgent(AbstractConversationAgent):
                 for alias in entry.aliases:
                     areas.append((alias, entry.id))
 
-        return TextSlotList.from_tuples(areas)
+        self._areas_list = TextSlotList.from_tuples(areas, allow_template=False)
+        return self._areas_list
 
     def _make_names_list(self) -> TextSlotList:
-        """Create slot list mapping entity names/aliases to entity ids."""
+        """Create slot list with entity names/aliases."""
+        if self._names_list is not None:
+            return self._names_list
         states = self.hass.states.async_all()
-        registry = entity_registry.async_get(self.hass)
+        entities = entity_registry.async_get(self.hass)
         names = []
         for state in states:
-            domain = state.entity_id.split(".", maxsplit=1)[0]
-            context = {"domain": domain}
+            context = {"domain": state.domain}
 
-            entry = registry.async_get(state.entity_id)
-            if entry is not None:
-                if entry.entity_category:
-                    # Skip configuration/diagnostic entities
+            entity = entities.async_get(state.entity_id)
+            if entity is not None:
+                if entity.entity_category or entity.hidden:
+                    # Skip configuration/diagnostic/hidden entities
                     continue
 
-                if entry.aliases:
-                    for alias in entry.aliases:
-                        names.append((alias, state.entity_id, context))
+                if entity.aliases:
+                    for alias in entity.aliases:
+                        names.append((alias, alias, context))
 
-            # Default name
-            names.append((state.name, state.entity_id, context))
+                # Default name
+                names.append((state.name, state.name, context))
 
-        return TextSlotList.from_tuples(names)
+            else:
+                # Default name
+                names.append((state.name, state.name, context))
+
+        self._names_list = TextSlotList.from_tuples(names, allow_template=False)
+        return self._names_list
 
     def _get_error_text(
         self, response_type: ResponseType, lang_intents: LanguageIntents

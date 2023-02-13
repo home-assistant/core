@@ -6,6 +6,7 @@ import pytest
 import requests
 
 from homeassistant.components.nx584 import binary_sensor as nx584
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 DEFAULT_CONFIG = {
@@ -126,14 +127,14 @@ async def test_nx584_sensor_setup_with_exceptions(hass, exception_type):
 
 
 @pytest.mark.usefixtures("client")
-async def test_nx584_sensor_setup_version_too_old(hass):
+async def test_nx584_sensor_setup_version_too_old(hass: HomeAssistant) -> None:
     """Test if version is too old."""
     nx584_client.Client.return_value.get_version.return_value = "1.0"
     await _test_assert_graceful_fail(hass, {})
 
 
 @pytest.mark.usefixtures("client")
-def test_nx584_sensor_setup_no_zones(hass):
+def test_nx584_sensor_setup_no_zones(hass: HomeAssistant) -> None:
     """Test the setup with no zones."""
     nx584_client.Client.return_value.list_zones.return_value = []
     add_entities = mock.MagicMock()
@@ -145,7 +146,7 @@ def test_nx584_sensor_setup_no_zones(hass):
     assert not add_entities.called
 
 
-def test_nx584_zone_sensor_normal():
+def test_nx584_zone_sensor_normal() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}
     sensor = nx584.NX584ZoneSensor(zone, "motion")
@@ -159,7 +160,7 @@ def test_nx584_zone_sensor_normal():
     assert not sensor.is_on
 
 
-def test_nx584_zone_sensor_bypassed():
+def test_nx584_zone_sensor_bypassed() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": True}
     sensor = nx584.NX584ZoneSensor(zone, "motion")
@@ -198,7 +199,7 @@ def test_nx584_watcher_process_zone_event_missing_zone(mock_update):
     assert not mock_update.called
 
 
-def test_nx584_watcher_run_with_zone_events():
+def test_nx584_watcher_run_with_zone_events() -> None:
     """Test the zone events."""
     empty_me = [1, 2]
 

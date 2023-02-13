@@ -8,11 +8,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
-async def test_default_state(hass):
+async def test_default_state(hass: HomeAssistant) -> None:
     """Test binary_sensor group default state."""
     hass.states.async_set("binary_sensor.kitchen", "on")
     hass.states.async_set("binary_sensor.bedroom", "on")
@@ -49,7 +50,7 @@ async def test_default_state(hass):
     assert entry.original_device_class == "presence"
 
 
-async def test_state_reporting_all(hass):
+async def test_state_reporting_all(hass: HomeAssistant) -> None:
     """Test the state reporting in 'all' mode.
 
     The group state is unavailable if all group members are unavailable.
@@ -144,7 +145,7 @@ async def test_state_reporting_all(hass):
     )
 
 
-async def test_state_reporting_any(hass):
+async def test_state_reporting_any(hass: HomeAssistant) -> None:
     """Test the state reporting in 'any' mode.
 
     The group state is unavailable if all group members are unavailable.

@@ -9,8 +9,7 @@ from aioshelly.block_device import Block
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
@@ -85,7 +84,8 @@ def async_setup_block_attribute_entities(
             if getattr(block, sensor_id, None) in (-1, None):
                 continue
 
-            # Filter and remove entities that according to settings should not create an entity
+            # Filter and remove entities that according to settings
+            # should not create an entity
             if description.removal_condition and description.removal_condition(
                 coordinator.device.settings, block
             ):
@@ -193,7 +193,8 @@ def async_setup_rpc_attribute_entities(
             ] and not description.supported(coordinator.device.status[key]):
                 continue
 
-            # Filter and remove entities that according to settings/status should not create an entity
+            # Filter and remove entities that according to settings/status
+            # should not create an entity
             if description.removal_condition and description.removal_condition(
                 coordinator.device.config, coordinator.device.status, key
             ):
@@ -566,8 +567,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     ) -> None:
         """Initialize the sleeping sensor."""
         self.sensors = sensors
-        self.last_state: StateType = None
-        self.last_unit: str | None = None
+        self.last_state: State | None = None
         self.coordinator = coordinator
         self.attribute = attribute
         self.block: Block | None = block  # type: ignore[assignment]
@@ -592,12 +592,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-
-        if last_state is not None:
-            self.last_state = last_state.state
-            self.last_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self.last_state = await self.async_get_last_state()
 
     @callback
     def _update_callback(self) -> None:
@@ -649,8 +644,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
         entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        self.last_state: StateType = None
-        self.last_unit: str | None = None
+        self.last_state: State | None = None
         self.coordinator = coordinator
         self.key = key
         self.attribute = attribute
@@ -675,9 +669,4 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-
-        if last_state is not None:
-            self.last_state = last_state.state
-            self.last_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self.last_state = await self.async_get_last_state()

@@ -454,7 +454,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_homekit_and_dhcp(hass):
+async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
 
     mocked_bulb = _mocked_bulb()
@@ -630,7 +630,7 @@ async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovered_ssdp(hass):
+async def test_discovered_ssdp(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from ssdp."""
 
     mocked_bulb = _mocked_bulb()
@@ -675,7 +675,7 @@ async def test_discovered_ssdp(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_discovered_zeroconf(hass):
+async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     mocked_bulb = _mocked_bulb()
@@ -844,7 +844,6 @@ async def test_discovered_during_onboarding(hass, source, data):
     ) as mock_async_setup_entry, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ) as mock_is_onboarded:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )

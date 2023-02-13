@@ -17,11 +17,12 @@ from homeassistant.components.smartthings.const import (
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_import_shows_user_step(hass):
+async def test_import_shows_user_step(hass: HomeAssistant) -> None:
     """Test import source shows the user form."""
     # Webhook confirmation shown
     result = await hass.config_entries.flow.async_init(
@@ -363,7 +364,6 @@ async def test_entry_created_with_cloudhook(
         "async_create_cloudhook",
         AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:
-
         await smartapp.setup_smartapp_endpoint(hass)
 
         # Webhook confirmation shown
@@ -422,7 +422,7 @@ async def test_entry_created_with_cloudhook(
         )
 
 
-async def test_invalid_webhook_aborts(hass):
+async def test_invalid_webhook_aborts(hass: HomeAssistant) -> None:
     """Test flow aborts if webhook is invalid."""
     # Webhook confirmation shown
     await async_process_ha_core_config(
@@ -440,7 +440,7 @@ async def test_invalid_webhook_aborts(hass):
     assert "component_url" in result["description_placeholders"]
 
 
-async def test_invalid_token_shows_error(hass):
+async def test_invalid_token_shows_error(hass: HomeAssistant) -> None:
     """Test an error is shown for invalid token formats."""
     token = "123456789"
 
