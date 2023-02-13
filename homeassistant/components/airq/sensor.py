@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -28,11 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirQCoordinator
-from .const import (
-    ACTIVITY_BECQUEREL_PER_CUBIC_METER,
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    DOMAIN,
-)
+from .const import ACTIVITY_BECQUEREL_PER_CUBIC_METER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

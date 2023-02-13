@@ -43,7 +43,7 @@ ATTRIBUTION = "Awair air quality sensor"
 
 DOMAIN = "awair"
 
-DUST_ALIASES = [API_PM25, API_PM10, API_PM10EST]
+DUST_ALIASES = [API_PM25, API_PM10]
 
 LOGGER = logging.getLogger(__package__)
 
