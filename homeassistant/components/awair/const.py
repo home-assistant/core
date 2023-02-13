@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -24,10 +25,13 @@ from homeassistant.const import (
 )
 
 API_CO2 = "carbon_dioxide"
+API_DEWPOINT = "dew_point"
 API_DUST = "dust"
 API_HUMID = "humidity"
+API_HUMIDABS = "abs_humid"
 API_LUX = "illuminance"
 API_PM10 = "particulate_matter_10"
+API_PM10EST = "pm10_est"
 API_PM25 = "particulate_matter_2_5"
 API_SCORE = "score"
 API_SPL_A = "sound_pressure_level"
@@ -39,7 +43,7 @@ ATTRIBUTION = "Awair air quality sensor"
 
 DOMAIN = "awair"
 
-DUST_ALIASES = [API_PM25, API_PM10]
+DUST_ALIASES = [API_PM25, API_PM10, API_PM10EST]
 
 LOGGER = logging.getLogger(__package__)
 
@@ -78,6 +82,14 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
+        key=API_HUMIDABS,
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        name="Absolute Humidity",
+        unique_id_tag="HUMIDABS",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
         key=API_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
@@ -110,6 +122,14 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
+        key=API_DEWPOINT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        name="Dew Point",
+        unique_id_tag="dew_point",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
         key=API_CO2,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
@@ -134,6 +154,14 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         name="PM10",
         unique_id_tag="PM10",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AwairSensorEntityDescription(
+        key=API_PM10EST,
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        name="PM10 (Estimated)",
+        unique_id_tag="PM10EST",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )

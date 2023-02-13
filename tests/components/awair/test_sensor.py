@@ -3,9 +3,12 @@ from unittest.mock import patch
 
 from homeassistant.components.awair.const import (
     API_CO2,
+    API_DEWPOINT,
     API_HUMID,
+    API_HUMIDABS,
     API_LUX,
     API_PM10,
+    API_PM10EST,
     API_PM25,
     API_SCORE,
     API_SPL_A,
@@ -206,6 +209,33 @@ async def test_local_awair_sensors(
         "sensor.mock_title_score",
         f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "94",
+        {},
+    )
+
+    assert_expected_properties(
+        hass,
+        registry,
+        "sensor.mock_title_dew_point",
+        f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_DEWPOINT].unique_id_tag}",
+        "14.47",
+        {},
+    )
+
+    assert_expected_properties(
+        hass,
+        registry,
+        "sensor.mock_title_absolute_humidity",
+        f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_HUMIDABS].unique_id_tag}",
+        "12.0",
+        {},
+    )
+
+    assert_expected_properties(
+        hass,
+        registry,
+        "sensor.mock_title_pm10_estimated",
+        f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_PM10EST].unique_id_tag}",
+        "3",
         {},
     )
 
