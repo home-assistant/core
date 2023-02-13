@@ -1,5 +1,7 @@
 """Test reproduce state for Input select."""
-from homeassistant.core import State
+import pytest
+
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.setup import async_setup_component
 
@@ -15,7 +17,9 @@ VALID_OPTION_SET2 = [VALID_OPTION4, VALID_OPTION5, VALID_OPTION6]
 ENTITY = "input_select.test_select"
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Input select states."""
 
     # Setup entity

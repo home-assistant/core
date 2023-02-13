@@ -1,5 +1,4 @@
 """UniFi Network sensor platform tests."""
-
 from copy import deepcopy
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -17,15 +16,16 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
 from .test_controller import setup_unifi_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_1 = {
     "board_rev": 2,
@@ -96,7 +96,9 @@ DEVICE_1 = {
 }
 
 
-async def test_no_clients(hass, aioclient_mock):
+async def test_no_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(
         hass,

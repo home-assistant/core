@@ -14,7 +14,7 @@ from homeassistant.components.text import (
     _async_set_value,
 )
 from homeassistant.const import MAX_LENGTH_STATE_STATE
-from homeassistant.core import ServiceCall, State
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
@@ -41,7 +41,7 @@ class MockTextEntity(TextEntity):
         self._attr_native_value = value
 
 
-async def test_text_default(hass):
+async def test_text_default(hass: HomeAssistant) -> None:
     """Test text entity with defaults."""
     text = MockTextEntity()
     text.hass = hass
@@ -56,7 +56,7 @@ async def test_text_default(hass):
     assert text.state == "test"
 
 
-async def test_text_new_min_max_pattern(hass):
+async def test_text_new_min_max_pattern(hass: HomeAssistant) -> None:
     """Test text entity with new min, max, and pattern."""
     text = MockTextEntity(native_min=-1, native_max=500, pattern=r"[a-z]")
     text.hass = hass
@@ -69,7 +69,7 @@ async def test_text_new_min_max_pattern(hass):
     }
 
 
-async def test_text_set_value(hass):
+async def test_text_set_value(hass: HomeAssistant) -> None:
     """Test text entity with set_value service."""
     text = MockTextEntity(native_min=1, native_max=5, pattern=r"[a-z]")
     text.hass = hass
@@ -96,7 +96,7 @@ async def test_text_set_value(hass):
     assert text.state == "test2"
 
 
-async def test_text_value_outside_bounds(hass):
+async def test_text_value_outside_bounds(hass: HomeAssistant) -> None:
     """Test text entity with value that is outside min and max."""
     with pytest.raises(ValueError):
         _ = MockTextEntity(

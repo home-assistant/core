@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.lovelace import cast as lovelace_cast
 from homeassistant.components.media_player import MediaClass
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -60,7 +61,7 @@ async def mock_yaml_dashboard(hass):
         yield
 
 
-async def test_root_object(hass):
+async def test_root_object(hass: HomeAssistant) -> None:
     """Test getting a root object."""
     assert (
         await lovelace_cast.async_get_media_browser_root_object(hass, "some-type") == []
@@ -80,7 +81,7 @@ async def test_root_object(hass):
     assert item.can_expand is True
 
 
-async def test_browse_media_error(hass):
+async def test_browse_media_error(hass: HomeAssistant) -> None:
     """Test browse media checks valid URL."""
     assert await async_setup_component(hass, "lovelace", {})
 

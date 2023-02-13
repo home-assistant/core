@@ -9,7 +9,10 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
@@ -44,6 +47,9 @@ def get_mock_info(error=None, user_level="admin"):
     host_mock.use_https = TEST_USE_HTTPS
     host_mock.is_admin = user_level == "admin"
     host_mock.user_level = user_level
+    host_mock.timeout = 60
+    host_mock.renewtimer = 600
+    host_mock.get_states = AsyncMock(return_value=None)
     return host_mock
 
 
@@ -51,14 +57,15 @@ def get_mock_info(error=None, user_level="admin"):
 def reolink_connect_fixture(mock_get_source_ip):
     """Mock reolink connection and entry setup."""
     with patch(
-        "homeassistant.components.reolink.async_setup_entry", return_value=True
-    ), patch(
+        "homeassistant.components.reolink.host.webhook.async_register",
+        return_value=True,
+    ), patch("homeassistant.components.reolink.PLATFORMS", return_value=[]), patch(
         "homeassistant.components.reolink.host.Host", return_value=get_mock_info()
     ):
         yield
 
 
-async def test_config_flow_manual_success(hass):
+async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -91,7 +98,7 @@ async def test_config_flow_manual_success(hass):
     }
 
 
-async def test_config_flow_errors(hass):
+async def test_config_flow_errors(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user after some errors."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -201,7 +208,7 @@ async def test_config_flow_errors(hass):
     }
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -239,7 +246,7 @@ async def test_options_flow(hass):
     }
 
 
-async def test_change_connection_settings(hass):
+async def test_change_connection_settings(hass: HomeAssistant) -> None:
     """Test changing connection settings by issuing a second user config flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -282,7 +289,7 @@ async def test_change_connection_settings(hass):
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
 
 
-async def test_reauth(hass):
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test a reauth flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -342,7 +349,7 @@ async def test_reauth(hass):
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
 
 
-async def test_dhcp_flow(hass):
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Successful flow from DHCP discovery."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
@@ -380,7 +387,7 @@ async def test_dhcp_flow(hass):
     }
 
 
-async def test_dhcp_abort_flow(hass):
+async def test_dhcp_abort_flow(hass: HomeAssistant) -> None:
     """Test dhcp discovery aborts if already configured."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -414,3 +421,63 @@ async def test_dhcp_abort_flow(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_http_no_repair_issue(hass: HomeAssistant) -> None:
+    """Test no repairs issue is raised when http local url is used."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await async_process_ha_core_config(
+        hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+
+async def test_https_repair_issue(hass: HomeAssistant) -> None:
+    """Test repairs issue is raised when https local url is used."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await async_process_ha_core_config(
+        hass, {"country": "GB", "internal_url": "https://test_homeassistant_address"}
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1

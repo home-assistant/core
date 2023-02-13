@@ -1,12 +1,14 @@
 """The tests for the apprise notification platform."""
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 BASE_COMPONENT = "notify"
 
 
-async def test_apprise_config_load_fail01(hass):
+async def test_apprise_config_load_fail01(hass: HomeAssistant) -> None:
     """Test apprise configuration failures 1."""
 
     config = {
@@ -21,7 +23,7 @@ async def test_apprise_config_load_fail01(hass):
         assert not hass.services.has_service(BASE_COMPONENT, "test")
 
 
-async def test_apprise_config_load_fail02(hass):
+async def test_apprise_config_load_fail02(hass: HomeAssistant) -> None:
     """Test apprise configuration failures 2."""
 
     config = {
@@ -38,7 +40,7 @@ async def test_apprise_config_load_fail02(hass):
         assert not hass.services.has_service(BASE_COMPONENT, "test")
 
 
-async def test_apprise_config_load_okay(hass, tmp_path):
+async def test_apprise_config_load_okay(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test apprise configuration failures."""
 
     # Test cases where our URL is invalid
@@ -56,7 +58,7 @@ async def test_apprise_config_load_okay(hass, tmp_path):
     assert hass.services.has_service(BASE_COMPONENT, "test")
 
 
-async def test_apprise_url_load_fail(hass):
+async def test_apprise_url_load_fail(hass: HomeAssistant) -> None:
     """Test apprise url failure."""
 
     config = {
@@ -74,7 +76,7 @@ async def test_apprise_url_load_fail(hass):
         assert not hass.services.has_service(BASE_COMPONENT, "test")
 
 
-async def test_apprise_notification(hass):
+async def test_apprise_notification(hass: HomeAssistant) -> None:
     """Test apprise notification."""
 
     config = {
@@ -110,7 +112,9 @@ async def test_apprise_notification(hass):
         )
 
 
-async def test_apprise_notification_with_target(hass, tmp_path):
+async def test_apprise_notification_with_target(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
     """Test apprise notification with a target."""
 
     # Test cases where our URL is invalid

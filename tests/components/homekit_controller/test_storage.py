@@ -4,6 +4,7 @@ from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.homekit_controller.const import ENTITY_MAP
 from homeassistant.components.homekit_controller.storage import EntityMapStorage
+from homeassistant.core import HomeAssistant
 
 from .common import setup_platform, setup_test_component
 
@@ -42,7 +43,7 @@ async def test_storage_is_removed(hass, hass_storage):
     assert hass_storage[ENTITY_MAP]["data"]["pairings"] == {}
 
 
-async def test_storage_is_removed_idempotent(hass):
+async def test_storage_is_removed_idempotent(hass: HomeAssistant) -> None:
     """Test entity map storage removal is idempotent."""
     await setup_platform(hass)
 
