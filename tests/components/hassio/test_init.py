@@ -1,6 +1,7 @@
 """The tests for the hassio component."""
 from datetime import timedelta
 import os
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -279,7 +280,9 @@ async def test_setup_api_push_api_data_server_host(
 
 
 async def test_setup_api_push_api_data_default(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_storage
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -307,7 +310,9 @@ async def test_setup_api_push_api_data_default(
 
 
 async def test_setup_adds_admin_group_to_user(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_storage
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test setup with API push default data."""
     # Create user without admin
@@ -329,7 +334,9 @@ async def test_setup_adds_admin_group_to_user(
 
 
 async def test_setup_migrate_user_name(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_storage
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test setup with migrating the user name."""
     # Create user with old name
@@ -350,7 +357,9 @@ async def test_setup_migrate_user_name(
 
 
 async def test_setup_api_existing_hassio_user(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_storage
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Hass.io test")
