@@ -564,7 +564,6 @@ class HomeAssistant:
         target: target to call.
         """
         task = self.loop.create_task(target)
-
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 
@@ -576,8 +575,6 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-
-        # If a task is scheduled
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 
@@ -736,12 +733,9 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
-        cancel_background_tasks = asyncio.create_task(
-            self.background_tasks.async_cancel_all()
-        )
-
         # stage 1
         self.state = CoreState.stopping
+        self.async_create_task(self.background_tasks.async_cancel_all())
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
@@ -774,11 +768,6 @@ class HomeAssistant:
         # which will cause the futures to block forever when waiting for
         # the `result()` which will cause a deadlock when shutting down the executor.
         shutdown_run_callback_threadsafe(self.loop)
-
-        # Run this as part of stage 3.
-        if not cancel_background_tasks.done():
-            self._tasks.add(cancel_background_tasks)
-            cancel_background_tasks.add_done_callback(self._tasks.remove)
 
         try:
             async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
