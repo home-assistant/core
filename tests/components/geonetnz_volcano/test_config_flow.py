@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 
-async def test_duplicate_error(hass, config_entry):
+async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
 
