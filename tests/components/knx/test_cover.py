@@ -8,7 +8,7 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit):
+async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX cover basic."""
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(

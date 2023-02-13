@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
@@ -353,7 +354,7 @@ async def test_base_scanner_connecting_behavior(
 
 
 async def test_restore_history_remote_adapter(
-    hass: HomeAssistant, hass_storage, disable_new_discovery_flows
+    hass: HomeAssistant, hass_storage: dict[str, Any], disable_new_discovery_flows
 ) -> None:
     """Test we can restore history for a remote adapter."""
 
