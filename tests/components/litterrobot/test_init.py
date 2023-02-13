@@ -12,6 +12,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 
 from .common import CONFIG, VACUUM_ENTITY_ID
 from .conftest import setup_integration
@@ -19,7 +20,7 @@ from .conftest import setup_integration
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass, mock_account):
+async def test_unload_entry(hass: HomeAssistant, mock_account) -> None:
     """Test being able to unload an entry."""
     entry = await setup_integration(hass, mock_account, VACUUM_DOMAIN)
 
@@ -47,7 +48,9 @@ async def test_unload_entry(hass, mock_account):
         (LitterRobotException, ConfigEntryState.SETUP_RETRY),
     ),
 )
-async def test_entry_not_setup(hass, side_effect, expected_state):
+async def test_entry_not_setup(
+    hass: HomeAssistant, side_effect, expected_state
+) -> None:
     """Test being able to handle config entry not setup."""
     entry = MockConfigEntry(
         domain=litterrobot.DOMAIN,

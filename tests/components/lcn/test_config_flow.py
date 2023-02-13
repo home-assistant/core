@@ -80,7 +80,7 @@ async def test_step_import_existing_host(hass: HomeAssistant) -> None:
         (TimeoutError, "connection_timeout"),
     ],
 )
-async def test_step_import_error(hass, error, reason):
+async def test_step_import_error(hass: HomeAssistant, error, reason) -> None:
     """Test for error in import is handled correctly."""
     with patch(
         "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
