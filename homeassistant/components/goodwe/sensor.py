@@ -133,9 +133,8 @@ DIAG_SENSOR = GoodweSensorEntityDescription(
     key="_",
     state_class=SensorStateClass.MEASUREMENT,
 )
-ENUM_SENSOR = GoodweSensorEntityDescription(
-    key="enum",
-    device_class=SensorDeviceClass.ENUM,
+TEXT_SENSOR = GoodweSensorEntityDescription(
+    key="text",
 )
 
 
@@ -182,7 +181,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self.entity_description = _DESCRIPTIONS[sensor.unit]
         except KeyError:
             if "Enum" in type(sensor).__name__ or sensor.id_ == "timestamp":
-                self.entity_description = ENUM_SENSOR
+                self.entity_description = TEXT_SENSOR
             else:
                 self.entity_description = DIAG_SENSOR
                 self._attr_native_unit_of_measurement = sensor.unit
