@@ -34,7 +34,11 @@ env:
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
-  MARIADB_VERSIONS: "['mariadb:10.9.3']"
+  # 10.6 is the current long-term-support
+  # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
+  # 10.10 is the latest short-term-support
+  # - 10.10.3 is the latest (as of 6 Feb 2023)
+  MARIADB_VERSIONS: "['mariadb:10.6.10','mariadb:10.10.3']"
   POSTGRESQL_VERSIONS: "['postgres:15.0']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
