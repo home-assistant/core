@@ -6,7 +6,12 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_condition
 from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -35,14 +40,14 @@ def calls(hass):
     ],
 )
 async def test_get_conditions(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     features_reg,
     features_state,
     expected_condition_types,
-):
+) -> None:
     """Test we get the expected conditions from a humidifier."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -101,12 +106,12 @@ async def test_get_conditions(
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -139,7 +144,7 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set("humidifier.entity", STATE_ON, {ATTR_MODE: const.MODE_AWAY})
 
@@ -355,15 +360,15 @@ async def test_if_state(hass, calls):
     ],
 )
 async def test_capabilities(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     capabilities_reg,
     capabilities_state,
     condition,
     expected_capabilities,
-):
+) -> None:
     """Test getting capabilities."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -411,7 +416,9 @@ async def test_capabilities(
         ("is_mode", "mode", {"type": "select", "options": []}),
     ],
 )
-async def test_capabilities_missing_entity(hass, condition, capability_name, extra):
+async def test_capabilities_missing_entity(
+    hass: HomeAssistant, condition, capability_name, extra
+) -> None:
     """Test getting capabilities."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

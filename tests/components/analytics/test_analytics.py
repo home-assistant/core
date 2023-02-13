@@ -579,7 +579,7 @@ async def test_send_usage_with_certificate(
 
 
 async def test_send_with_recorder(
-    recorder_mock: AsyncMock,
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
