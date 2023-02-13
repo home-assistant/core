@@ -41,7 +41,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_c6h6")
     assert state
-    assert state.state == "0"
+    assert state.state == "0.23789"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -58,7 +58,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_co")
     assert state
-    assert state.state == "252"
+    assert state.state == "251.874"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
@@ -75,7 +75,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_no2")
     assert state
-    assert state.state == "7"
+    assert state.state == "7.13411"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.NITROGEN_DIOXIDE
@@ -92,7 +92,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_o3")
     assert state
-    assert state.state == "96"
+    assert state.state == "95.7768"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.OZONE
@@ -109,7 +109,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_pm10")
     assert state
-    assert state.state == "17"
+    assert state.state == "16.8344"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
@@ -143,7 +143,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_so2")
     assert state
-    assert state.state == "4"
+    assert state.state == "4.35478"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SULPHUR_DIOXIDE
@@ -220,7 +220,7 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_c6h6")
     assert state
-    assert state.state == "0"
+    assert state.state == "0.23789"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -237,7 +237,7 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_co")
     assert state
-    assert state.state == "252"
+    assert state.state == "251.874"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -253,7 +253,7 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_no2")
     assert state
-    assert state.state == "7"
+    assert state.state == "7.13411"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -269,7 +269,7 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_o3")
     assert state
-    assert state.state == "96"
+    assert state.state == "95.7768"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -285,7 +285,7 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_pm10")
     assert state
-    assert state.state == "17"
+    assert state.state == "16.8344"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -317,7 +317,7 @@ async def test_invalid_indexes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_so2")
     assert state
-    assert state.state == "4"
+    assert state.state == "4.35478"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
