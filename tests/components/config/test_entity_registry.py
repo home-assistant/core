@@ -231,6 +231,7 @@ async def test_list_entities_for_display(
                 "ec": 1,
                 "ei": "test_domain.test",
                 "en": "Hello World",
+                "pl": "test_platform",
                 "tk": "translations_galore",
             },
             {

@@ -180,6 +180,8 @@ class RegistryEntry:
         for key, attr_name in DISLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
                 display_dict[key] = attr_val
+        if "tk" in display_dict:
+            display_dict["pl"] = self.platform
         if (category := self.entity_category) is not None:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
