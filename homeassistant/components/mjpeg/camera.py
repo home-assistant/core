@@ -122,8 +122,9 @@ class MjpegCamera(Camera):
     async def stream_source(self) -> str:
         """Return the stream source."""
         url = URL(self._mjpeg_url)
-        if self._username and self._password:
+        if self._username:
             url = url.with_user(self._username)
+        if self._password:
             url = url.with_password(self._password)
         return str(url)
 
