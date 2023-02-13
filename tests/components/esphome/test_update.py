@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
 from homeassistant.components.update import UpdateEntityFeature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
@@ -56,14 +57,14 @@ def stub_reconnect():
     ],
 )
 async def test_update_entity(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_device_info,
     mock_dashboard,
     devices_payload,
     expected_state,
     expected_attributes,
-):
+) -> None:
     """Test ESPHome update entity."""
     mock_dashboard["configured"] = devices_payload
     await async_get_dashboard(hass).async_refresh()
@@ -105,11 +106,11 @@ async def test_update_entity(
 
 
 async def test_update_static_info(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_device_info,
     mock_dashboard,
-):
+) -> None:
     """Test ESPHome update entity."""
     mock_dashboard["configured"] = [
         {
@@ -148,11 +149,11 @@ async def test_update_static_info(
 
 
 async def test_update_device_state_for_availability(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_device_info,
     mock_dashboard,
-):
+) -> None:
     """Test ESPHome update entity changes availability with the device."""
     mock_dashboard["configured"] = [
         {

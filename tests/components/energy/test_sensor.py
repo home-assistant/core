@@ -22,12 +22,14 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfVolume,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -68,7 +70,9 @@ def get_statistics_for_entity(statistics_results, entity_id):
     return None
 
 
-async def test_cost_sensor_no_states(setup_integration, hass, hass_storage) -> None:
+async def test_cost_sensor_no_states(
+    setup_integration, hass: HomeAssistant, hass_storage
+) -> None:
     """Test sensors are created."""
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -94,7 +98,9 @@ async def test_cost_sensor_no_states(setup_integration, hass, hass_storage) -> N
     # TODO: No states, should the cost entity refuse to setup?
 
 
-async def test_cost_sensor_attributes(setup_integration, hass, hass_storage) -> None:
+async def test_cost_sensor_attributes(
+    setup_integration, hass: HomeAssistant, hass_storage
+) -> None:
     """Test sensor attributes."""
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -144,9 +150,9 @@ async def test_cost_sensor_attributes(setup_integration, hass, hass_storage) -> 
 )
 async def test_cost_sensor_price_entity_total_increasing(
     setup_integration,
-    hass,
+    hass: HomeAssistant,
     hass_storage,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     initial_energy,
     initial_cost,
     price_entity,
@@ -347,9 +353,9 @@ async def test_cost_sensor_price_entity_total_increasing(
 @pytest.mark.parametrize("energy_state_class", ["total", "measurement"])
 async def test_cost_sensor_price_entity_total(
     setup_integration,
-    hass,
+    hass: HomeAssistant,
     hass_storage,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     initial_energy,
     initial_cost,
     price_entity,
@@ -553,9 +559,9 @@ async def test_cost_sensor_price_entity_total(
 @pytest.mark.parametrize("energy_state_class", ["total"])
 async def test_cost_sensor_price_entity_total_no_reset(
     setup_integration,
-    hass,
+    hass: HomeAssistant,
     hass_storage,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     initial_energy,
     initial_cost,
     price_entity,
@@ -726,7 +732,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     ],
 )
 async def test_cost_sensor_handle_energy_units(
-    setup_integration, hass, hass_storage, energy_unit, factor
+    setup_integration, hass: HomeAssistant, hass_storage, energy_unit, factor
 ) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
@@ -792,7 +798,7 @@ async def test_cost_sensor_handle_energy_units(
     ],
 )
 async def test_cost_sensor_handle_price_units(
-    setup_integration, hass, hass_storage, price_unit, factor
+    setup_integration, hass: HomeAssistant, hass_storage, price_unit, factor
 ) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
@@ -858,7 +864,7 @@ async def test_cost_sensor_handle_price_units(
     (UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
 )
 async def test_cost_sensor_handle_gas(
-    setup_integration, hass, hass_storage, unit
+    setup_integration, hass: HomeAssistant, hass_storage, unit
 ) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
@@ -908,7 +914,7 @@ async def test_cost_sensor_handle_gas(
 
 
 async def test_cost_sensor_handle_gas_kwh(
-    setup_integration, hass, hass_storage
+    setup_integration, hass: HomeAssistant, hass_storage
 ) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
@@ -967,7 +973,12 @@ async def test_cost_sensor_handle_gas_kwh(
     ),
 )
 async def test_cost_sensor_handle_water(
-    setup_integration, hass, hass_storage, unit_system, usage_unit, growth
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage,
+    unit_system,
+    usage_unit,
+    growth,
 ) -> None:
     """Test water cost price from sensor entity."""
     hass.config.units = unit_system
@@ -1019,7 +1030,11 @@ async def test_cost_sensor_handle_water(
 
 @pytest.mark.parametrize("state_class", [None])
 async def test_cost_sensor_wrong_state_class(
-    setup_integration, hass, hass_storage, caplog, state_class
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage,
+    caplog: pytest.LogCaptureFixture,
+    state_class,
 ) -> None:
     """Test energy sensor rejects sensor with wrong state_class."""
     energy_attributes = {
@@ -1080,7 +1095,11 @@ async def test_cost_sensor_wrong_state_class(
 
 @pytest.mark.parametrize("state_class", [SensorStateClass.MEASUREMENT])
 async def test_cost_sensor_state_class_measurement_no_reset(
-    setup_integration, hass, hass_storage, caplog, state_class
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage,
+    caplog: pytest.LogCaptureFixture,
+    state_class,
 ) -> None:
     """Test energy sensor rejects state_class measurement with no last_reset."""
     energy_attributes = {
@@ -1135,7 +1154,9 @@ async def test_cost_sensor_state_class_measurement_no_reset(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_inherit_source_unique_id(setup_integration, hass, hass_storage):
+async def test_inherit_source_unique_id(
+    setup_integration, hass: HomeAssistant, hass_storage
+) -> None:
     """Test sensor inherits unique ID from source."""
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
