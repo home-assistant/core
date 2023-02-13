@@ -25,7 +25,7 @@
   },
   "entity": {
     "sensor": {
-      "air_quality": {
+      "aqi": {
         "state": {
           "very_bad": "Very bad",
           "bad": "Bad",

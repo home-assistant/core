@@ -62,7 +62,7 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
         value=None,
         device_class=SensorDeviceClass.ENUM,
         options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
-        translation_key="air_quality",
+        translation_key="aqi",
     ),
     GiosSensorEntityDescription(
         key=ATTR_C6H6,
