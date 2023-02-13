@@ -1012,7 +1012,10 @@ jobs:
             --durations=10 \
             -p no:sugar \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
-            tests/components/recorder
+            tests/components/history \
+            tests/components/logbook \
+            tests/components/recorder \
+            tests/components/sensor
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.2
         with:
@@ -1116,7 +1119,10 @@ jobs:
             --durations-min=10 \
             -p no:sugar \
             --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
-            tests/components/recorder
+            tests/components/history \
+            tests/components/logbook \
+            tests/components/recorder \
+            tests/components/sensor
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
         with:

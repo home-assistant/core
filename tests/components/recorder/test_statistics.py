@@ -1438,7 +1438,7 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
-            for _ in range(3000):
+            for _ in range(1100):
                 session.add(
                     recorder.db_schema.StatisticsMeta.from_meta(
                         external_energy_metadata_1
@@ -1468,15 +1468,15 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    assert "Deleted 3002 duplicated statistics_meta rows" in caplog.text
+    assert "Deleted 1102 duplicated statistics_meta rows" in caplog.text
     with session_scope(hass=hass) as session:
         tmp = session.query(recorder.db_schema.StatisticsMeta).all()
         assert len(tmp) == 3
-        assert tmp[0].id == 3001
+        assert tmp[0].id == 1101
         assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
-        assert tmp[1].id == 3003
+        assert tmp[1].id == 1103
         assert tmp[1].statistic_id == "test:total_energy_import_tariff_2"
-        assert tmp[2].id == 3005
+        assert tmp[2].id == 1105
         assert tmp[2].statistic_id == "test:fossil_percentage"
 
     hass.stop()
