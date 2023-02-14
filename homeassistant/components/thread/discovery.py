@@ -26,8 +26,9 @@ class ThreadRouterDiscoveryData:
     """Thread router discovery data."""
 
     brand: str | None
+    extended_pan_id: str | None
+    model_name: str | None
     network_name: str | None
-    product_name: str | None
     vendor_name: str | None
 
 
@@ -47,6 +48,7 @@ class ThreadRouterDiscovery:
             """Initialize."""
             self._aiozc = aiozc
             self._hass = hass
+            self._known_routers: dict[str, tuple[str, ThreadRouterDiscoveryData]] = {}
             self._router_discovered = router_discovered
             self._router_removed = router_removed
 
@@ -58,7 +60,10 @@ class ThreadRouterDiscovery:
         def remove_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service removed."""
             _LOGGER.debug("remove_service %s", name)
-            self._router_removed(name)
+            if name not in self._known_routers:
+                return
+            extended_mac_address, _ = self._known_routers.pop(name)
+            self._router_removed(extended_mac_address)
 
         def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
             """Handle service updated."""
@@ -77,26 +82,33 @@ class ThreadRouterDiscovery:
                 _LOGGER.debug("_add_update_service failed to add %s, %s", type_, name)
                 return
 
-            def try_decode(value: bytes | None) -> str | None:
-                """Try decoding UTF-8."""
-                if value is None:
-                    return None
-                try:
-                    return value.decode()
-                except UnicodeDecodeError:
-                    return None
-
             _LOGGER.debug("_add_update_service %s %s", name, service)
-            network_name = try_decode(service.properties.get(b"nn"))
-            product_name = try_decode(service.properties.get(b"pn"))
-            vendor_name = try_decode(service.properties.get(b"vn"))
+            try:
+                extended_mac_address = service.properties[b"xa"].hex()
+                extended_pan_id = service.properties[b"xp"].hex()
+                network_name = service.properties[b"nn"].decode()
+                model_name = service.properties[b"mn"].decode()
+                vendor_name = service.properties[b"vn"].decode()
+            except (KeyError, UnicodeDecodeError) as err:
+                _LOGGER.debug("_add_update_service failed to parse service %s", err)
+                return
             data = ThreadRouterDiscoveryData(
                 brand=KNOWN_BRANDS.get(vendor_name),
+                extended_pan_id=extended_pan_id,
                 network_name=network_name,
-                product_name=product_name,
+                model_name=model_name,
                 vendor_name=vendor_name,
             )
-            self._router_discovered(name, data)
+            if name in self._known_routers and self._known_routers[name] == (
+                extended_mac_address,
+                data,
+            ):
+                _LOGGER.debug(
+                    "_add_update_service suppressing identical update for %s", name
+                )
+                return
+            self._known_routers[name] = (extended_mac_address, data)
+            self._router_discovered(extended_mac_address, data)
 
     def __init__(
         self,

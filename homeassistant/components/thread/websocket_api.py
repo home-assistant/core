@@ -116,7 +116,7 @@ async def ws_discover_routers(
     """Discover Thread routers."""
 
     @callback
-    def router_discovered(name: str, data: discovery.ThreadRouterDiscoveryData) -> None:
+    def router_discovered(key: str, data: discovery.ThreadRouterDiscoveryData) -> None:
         """Forward router discovery or update to websocket."""
 
         connection.send_message(
@@ -124,14 +124,14 @@ async def ws_discover_routers(
                 msg["id"],
                 {
                     "type": "router_discovered",
-                    "name": name,
+                    "key": key,
                     "data": data,
                 },
             )
         )
 
     @callback
-    def router_removed(name: str) -> None:
+    def router_removed(key: str) -> None:
         """Forward router discovery or update to websocket."""
 
         connection.send_message(
@@ -139,7 +139,7 @@ async def ws_discover_routers(
                 msg["id"],
                 {
                     "type": "router_removed",
-                    "name": name,
+                    "key": key,
                 },
             )
         )
