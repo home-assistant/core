@@ -3,7 +3,7 @@
 import asyncio
 from contextlib import suppress
 
-from aiohttp import client, web, web_protocol
+from aiohttp import client, web, web_protocol, web_server
 import pytest
 
 from homeassistant.helpers.aiohttp_compat import CancelOnDisconnectRequestHandler
@@ -16,6 +16,8 @@ async def test_handler_cancellation(socket_enabled, unused_tcp_port_factory) -> 
     From aiohttp tests/test_web_server.py
     """
     assert web_protocol.RequestHandler is CancelOnDisconnectRequestHandler
+    assert web_server.RequestHandler is CancelOnDisconnectRequestHandler
+
     event = asyncio.Event()
     port = unused_tcp_port_factory()
 

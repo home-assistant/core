@@ -1,7 +1,7 @@
 """Helper to restore old aiohttp behavior."""
 from __future__ import annotations
 
-from aiohttp import web_protocol
+from aiohttp import web_protocol, web_server
 
 
 class CancelOnDisconnectRequestHandler(web_protocol.RequestHandler):
@@ -22,3 +22,4 @@ def restore_original_aiohttp_cancel_behavior() -> None:
     https://github.com/aio-libs/aiohttp/pull/7128
     """
     web_protocol.RequestHandler = CancelOnDisconnectRequestHandler  # type: ignore[misc]
+    web_server.RequestHandler = CancelOnDisconnectRequestHandler  # type: ignore[misc]
