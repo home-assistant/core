@@ -154,8 +154,8 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
             await self.async_put_characteristics({key: val})
 
 
-class HomeKitProvisionPreferredThreadCrentials(CharacteristicEntity, ButtonEntity):
-    """Representation of a Button control for Ecobee clear hold request."""
+class HomeKitProvisionPreferredThreadCredentials(CharacteristicEntity, ButtonEntity):
+    """A button users can press to migrate their HomeKit BLE device to Thread."""
 
     _attr_entity_category = EntityCategory.CONFIG
 
@@ -178,5 +178,5 @@ class HomeKitProvisionPreferredThreadCrentials(CharacteristicEntity, ButtonEntit
 
 BUTTON_ENTITY_CLASSES: dict[str, type] = {
     CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
-    CharacteristicsTypes.THREAD_CONTROL_POINT: HomeKitProvisionPreferredThreadCrentials,
+    CharacteristicsTypes.THREAD_CONTROL_POINT: HomeKitProvisionPreferredThreadCredentials,
 }
