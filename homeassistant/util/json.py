@@ -11,17 +11,14 @@ import orjson
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.json import (
+    JSONEncoder as DefaultHASSJSONEncoder,
+    json_encoder_default as default_hass_orjson_encoder,
+)
 
 from .file import write_utf8_file, write_utf8_file_atomic
 
 _LOGGER = logging.getLogger(__name__)
-
-JsonValueType = (
-    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
-)
-"""Any data that can be returned by the standard JSON deserializing process."""
-JsonObjectType = dict[str, JsonValueType]
-"""Dictionary that can be returned by the standard JSON deserializing process."""
 
 
 class SerializationError(HomeAssistantError):
@@ -54,11 +51,6 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
 
 def _orjson_default_encoder(data: Any) -> str:
     """JSON encoder that uses orjson with hass defaults."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.json import (
-        json_encoder_default as default_hass_orjson_encoder,
-    )
-
     return orjson.dumps(
         data,
         option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
@@ -78,9 +70,6 @@ def save_json(
 
     Returns True on success.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.json import JSONEncoder as DefaultHASSJSONEncoder
-
     dump: Callable[[Any], Any]
     try:
         # For backwards compatibility, if they pass in the

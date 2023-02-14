@@ -1,5 +1,4 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
-from collections.abc import Callable
 import datetime
 import json
 from pathlib import Path
@@ -7,10 +6,12 @@ from typing import Any, Final
 
 import orjson
 
-from homeassistant.util.json import JsonObjectType, JsonValueType
+from homeassistant.util.json_decode import (  # pylint: disable=unused-import # noqa: F401
+    JSON_DECODE_EXCEPTIONS,
+    json_loads,
+)
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
-JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -133,20 +134,6 @@ def json_dumps_sorted(data: Any) -> str:
         option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
         default=json_encoder_default,
     ).decode("utf-8")
-
-
-json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
-json_loads = orjson.loads
-"""Parse JSON data."""
-
-
-def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObjectType:
-    """Parse JSON data and ensure result is a dictionary."""
-    value: JsonValueType = json_loads(__obj)
-    # Avoid isinstance overhead as we are not interested in dict subclasses
-    if type(value) is dict:  # pylint: disable=unidiomatic-typecheck
-        return value
-    raise ValueError(f"Expected JSON to be parsed as a dict got {type(value)}")
 
 
 JSON_DUMP: Final = json_dumps
