@@ -560,19 +560,19 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
-        callback_job = HassJob(msg_callback)
+        already_active_subcription = self._is_active_subscription(topic)
         subscription = Subscription(
-            topic, _matcher_for_topic(topic), callback_job, qos, encoding
+            topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
         if self.connected:
-            if _is_simple and len(self._simple_subscriptions.get(topic)) > 1:
+            if already_active_subscription:
                 _LOGGER.debug("Skipped duplicate subscribe for %s", topic)
                 if topic in self._last_message:
-                    self.hass.async_run_hass_job(callback_job, self._last_message.get(topic))
+                    self.hass.async_run_hass_job(subscription.job, self._last_message.get(topic))
                     self._mqtt_data.state_write_requests.process_write_state_requests()
             else:
                 self._last_subscribe = time.time()
@@ -585,9 +585,7 @@ class MQTT:
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
-            if self.connected and not (_is_simple and topic in self._simple_subscriptions):
-                if _is_simple:
-                    del self._last_message[topic]
+            if self.connected:
                 self.hass.async_create_task(self._async_unsubscribe(topic))
 
         return async_remove
@@ -609,6 +607,7 @@ class MQTT:
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
 
+            del self._last_message[topic]
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
@@ -777,6 +776,7 @@ class MQTT:
                 subscription.topic,
                 timestamp,
             )
+            # Only cache messages for simple topics
             if msg.topic in self._simple_subscriptions:
                 self._last_message[msg.topic] = receive_msg
             self.hass.async_run_hass_job(subscription.job, receive_msg)
