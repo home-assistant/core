@@ -16,7 +16,6 @@ from homeassistant.components.bluetooth.active_update_processor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 
@@ -37,10 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Only poll if hass is running, we need to poll,
         # and we actually have a way to connect to the device
         # and battery is not disabled
-        registry = er.async_get(hass)
-        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-            if entity.original_name == "Battery" and entity.disabled:
-                return False
         return (
             hass.state == CoreState.running
             and data.poll_needed(service_info, last_poll)
