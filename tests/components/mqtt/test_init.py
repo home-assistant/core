@@ -1944,7 +1944,6 @@ async def test_delayed_birth_message(
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"].client,
-        spec_set=hass.data["mqtt"].client,
         wraps=hass.data["mqtt"].client,
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
