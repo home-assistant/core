@@ -13,10 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry, entity_registry, intent
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import MockUser, async_mock_service
+from tests.typing import ClientSessionGenerator
 
 
-async def test_http_handle_intent(hass, hass_client, hass_admin_user):
+async def test_http_handle_intent(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
     """Test handle intent via HTTP API."""
 
     class TestIntentHandler(intent.IntentHandler):

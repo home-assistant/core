@@ -97,6 +97,7 @@ FLOWS = {
         "dlna_dms",
         "dnsip",
         "doorbird",
+        "dormakaba_dkey",
         "dsmr",
         "dsmr_reader",
         "dunehd",
