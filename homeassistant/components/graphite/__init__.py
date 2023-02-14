@@ -69,7 +69,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         _LOGGER.debug("No connection check for UDP possible")
 
-    GraphiteFeeder(hass, host, port, protocol, prefix)
+    hass.data[DOMAIN] = GraphiteFeeder(hass, host, port, protocol, prefix)
     return True
 
 
