@@ -4,7 +4,6 @@ import asyncio
 from contextlib import suppress
 
 from aiohttp import client, web
-import aiohttp.client_exceptions
 import pytest
 
 from homeassistant.helpers.aiohttp_compat import (
@@ -46,9 +45,7 @@ async def test_handler_cancellation(socket_enabled, aiohttp_unused_port) -> None
         async with client.ClientSession(
             timeout=client.ClientTimeout(total=0.1)
         ) as sess:
-            with pytest.raises(
-                (asyncio.TimeoutError, aiohttp.client_exceptions.ClientOSError)
-            ):
+            with pytest.raises(asyncio.TimeoutError):
                 await sess.get(f"http://127.0.0.1:{port}/")
 
         with suppress(asyncio.TimeoutError):
