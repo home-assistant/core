@@ -213,7 +213,7 @@ async def async_remove_config_entry_device(
 
     device_mac = None
     for connection in device_entry.connections:
-        if connection[0] == "mac":
+        if connection[0] == dr.CONNECTION_NETWORK_MAC:
             device_mac = connection[1]
             break
 

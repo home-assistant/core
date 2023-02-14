@@ -15,7 +15,7 @@ from .const import MOCK_USER_DATA
 from tests.common import MockConfigEntry
 
 
-async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
     """Test setup of Fritz!Tools buttons."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -47,7 +47,7 @@ async def test_buttons(
     wrapper_method: str,
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test Fritz!Tools buttons."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)

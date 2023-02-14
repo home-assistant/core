@@ -302,7 +302,7 @@ def bcrypt_cost() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def hass_storage():
+def hass_storage() -> Generator[dict[str, Any], None, None]:
     """Fixture to mock storage."""
     with mock_storage() as stored_data:
         yield stored_data
