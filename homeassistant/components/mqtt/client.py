@@ -560,7 +560,7 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
-        already_active_subcription = self._is_active_subscription(topic)
+        already_active_subscription = self._is_active_subscription(topic)
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
