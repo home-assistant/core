@@ -96,8 +96,8 @@ async def test_get_triggers_rpc_device(hass, mock_rpc_device):
             "btn_up",
             "single_push",
             "double_push",
-            "long_push",
             "triple_push",
+            "long_push",
         ]
     ]
 

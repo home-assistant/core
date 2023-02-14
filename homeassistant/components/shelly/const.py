@@ -102,8 +102,8 @@ RPC_INPUTS_EVENTS_TYPES: Final = {
     "btn_up",
     "single_push",
     "double_push",
-    "long_push",
     "triple_push",
+    "long_push",
 }
 
 BLOCK_INPUTS_EVENTS_TYPES: Final = {
