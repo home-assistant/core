@@ -922,20 +922,47 @@ async def _mqtt_mock_entry(
 
 @pytest.fixture
 def yaml_config() -> ConfigType | None:
-    """Fixture to override configuration.yaml using mock_yaml_config."""
+    """Fixture to override configuration.yaml using mock_yaml_config.
+
+    Patches the content of configuration.yaml with the
+    yaml dump of a config dict.
+    """
     return None
 
 
 @pytest.fixture
+def yaml_configuration(yaml_config: ConfigType | None) -> str | None:
+    """Fixture to override configuration.yaml using mock_yaml_config.
+
+    Patches the content of configuration.yaml using yaml string content.
+    Defaults to a yaml dump of `yaml_config`.
+    """
+    return None if yaml_config is None else yaml.dump(yaml_config)
+
+
+@pytest.fixture
+def yaml_configuration_files(yaml_configuration: str | None) -> dict[str, str] | None:
+    """Fixture to override yaml configuration files using mock_yaml_config.
+
+    Configures yaml files to patch, defaults to patching `configuration.yaml`
+    with the content of `yaml_configuration`.
+    Format dict[{yaml_file_name},{yamlcontent}]
+    """
+    return (
+        None if yaml_configuration is None else {YAML_CONFIG_FILE: yaml_configuration}
+    )
+
+
+@pytest.fixture
 def mock_yaml_config(
-    hass: HomeAssistant, yaml_config: ConfigType
+    hass: HomeAssistant, yaml_configuration_file: dict[str, str] | None
 ) -> Generator[None, None, None]:
     """Fixture to mock the configuration.yaml file content.
 
-    Parameterize configuration.yaml using the `yaml_config` fixture.
+    Parameterize configuration.yaml using the `yaml_config`,
+    `yaml_configuration` and `yaml_configuration_files` fixtures.
     """
-    files = {YAML_CONFIG_FILE: yaml.dump(yaml_config or {})}
-    with patch_yaml_files(files):
+    with patch_yaml_files(yaml_configuration_files):
         yield
 
 

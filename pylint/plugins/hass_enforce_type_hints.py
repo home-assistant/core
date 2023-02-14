@@ -138,6 +138,8 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "snapshot": "SnapshotAssertion",
     "tmp_path": "Path",
     "yaml_config": "ConfigType | None",
+    "yaml_configuration": "str | None",
+    "yaml_configuration_files": "dict[str, str] | None",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
