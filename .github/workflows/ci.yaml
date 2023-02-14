@@ -958,7 +958,7 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     name: >-
-      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.mariadb-group }})
+      Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -1060,7 +1060,7 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     name: >-
-      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.postgresql-group }})
+      Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
