@@ -320,7 +320,7 @@ aprslib==0.7.0
 aranet4==2.1.3
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.0.1
+arcam-fmj==1.2.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
