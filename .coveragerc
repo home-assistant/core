@@ -213,6 +213,7 @@ omit =
     homeassistant/components/doorbird/entity.py
     homeassistant/components/doorbird/util.py
     homeassistant/components/dormakaba_dkey/__init__.py
+    homeassistant/components/dormakaba_dkey/binary_sensor.py
     homeassistant/components/dormakaba_dkey/entity.py
     homeassistant/components/dormakaba_dkey/lock.py
     homeassistant/components/dormakaba_dkey/sensor.py
@@ -976,6 +977,7 @@ omit =
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/calendar.py
     homeassistant/components/ridwell/coordinator.py
     homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py

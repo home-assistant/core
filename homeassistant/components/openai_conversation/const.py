@@ -14,7 +14,7 @@ An overview of the areas and the devices in this smart home:
 {{ area.name }}:
         {%- set area_info.printed = true %}
       {%- endif %}
-- {{ device_attr(device, "name") }}{% if device_attr(device, "model") and device_attr(device, "model") not in device_attr(device, "name") %} ({{ device_attr(device, "model") }}){% endif %}
+- {{ device_attr(device, "name") }}{% if device_attr(device, "model") and (device_attr(device, "model") | string) not in (device_attr(device, "name") | string) %} ({{ device_attr(device, "model") }}){% endif %}
     {%- endif %}
   {%- endfor %}
 {%- endfor %}
