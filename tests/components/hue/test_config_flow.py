@@ -353,8 +353,8 @@ async def test_import_with_no_config(
 
 
 async def test_creating_entry_removes_entries_for_same_host_or_bridge(
-    hass, aioclient_mock
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that we clean up entries for same host and bridge.
 
     An IP can only hold a single bridge and a single bridge can only be

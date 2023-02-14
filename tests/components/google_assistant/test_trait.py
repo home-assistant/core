@@ -82,7 +82,7 @@ PIN_DATA = helpers.RequestData(
 @pytest.mark.parametrize(
     "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
 )
-async def test_brightness_light(hass, supported_color_modes):
+async def test_brightness_light(hass: HomeAssistant, supported_color_modes) -> None:
     """Test brightness trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert trait.BrightnessTrait.supported(
@@ -563,7 +563,9 @@ async def test_startstop_cover_assumed(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
-async def test_color_setting_color_light(hass, supported_color_modes):
+async def test_color_setting_color_light(
+    hass: HomeAssistant, supported_color_modes
+) -> None:
     """Test ColorSpectrum trait support for light domain."""
     assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None, {})
@@ -774,7 +776,7 @@ async def test_light_modes(hass: HomeAssistant) -> None:
     "component",
     [button, input_button],
 )
-async def test_scene_button(hass, component):
+async def test_scene_button(hass: HomeAssistant, component) -> None:
     """Test Scene trait support for the (input) button domain."""
     assert helpers.get_google_type(component.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(component.DOMAIN, 0, None, None)
@@ -1763,7 +1765,9 @@ async def test_fan_speed_ordered(
         (None, fan.DIRECTION_FORWARD),
     ],
 )
-async def test_fan_reverse(hass, direction_state, direction_call):
+async def test_fan_reverse(
+    hass: HomeAssistant, direction_state, direction_call
+) -> None:
     """Test FanSpeed trait speed control support for fan domain."""
 
     calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_DIRECTION)
@@ -1938,7 +1942,9 @@ async def test_inputselector(hass: HomeAssistant) -> None:
         (["a", "b", "c"], "a", "b", "c"),
     ],
 )
-async def test_inputselector_nextprev(hass, sources, source, source_next, source_prev):
+async def test_inputselector_nextprev(
+    hass: HomeAssistant, sources, source, source_next, source_prev
+) -> None:
     """Test input selector trait."""
     trt = trait.InputSelectorTrait(
         hass,
@@ -1986,7 +1992,9 @@ async def test_inputselector_nextprev(hass, sources, source, source_next, source
 @pytest.mark.parametrize(
     "sources,source", [(None, "a"), (["a", "b"], None), (["a", "b"], "c")]
 )
-async def test_inputselector_nextprev_invalid(hass, sources, source):
+async def test_inputselector_nextprev_invalid(
+    hass: HomeAssistant, sources, source
+) -> None:
     """Test input selector trait."""
     trt = trait.InputSelectorTrait(
         hass,
@@ -2606,7 +2614,7 @@ async def test_openclose_cover_no_position(hass: HomeAssistant) -> None:
         cover.CoverDeviceClass.GATE,
     ),
 )
-async def test_openclose_cover_secure(hass, device_class):
+async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for cover domain."""
     assert helpers.get_google_type(cover.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(
@@ -2674,7 +2682,7 @@ async def test_openclose_cover_secure(hass, device_class):
         binary_sensor.BinarySensorDeviceClass.WINDOW,
     ),
 )
-async def test_openclose_binary_sensor(hass, device_class):
+async def test_openclose_binary_sensor(hass: HomeAssistant, device_class) -> None:
     """Test OpenClose trait support for binary_sensor domain."""
     assert helpers.get_google_type(binary_sensor.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(binary_sensor.DOMAIN, 0, device_class, None)
@@ -2916,7 +2924,9 @@ async def test_temperature_control_sensor(hass: HomeAssistant) -> None:
         (UnitOfTemperature.FAHRENHEIT, "F", "unknown", None),
     ],
 )
-async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, ambient):
+async def test_temperature_control_sensor_data(
+    hass: HomeAssistant, unit_in, unit_out, state, ambient
+) -> None:
     """Test TemperatureControl trait support for temperature sensor."""
     hass.config.units.temperature_unit = unit_in
 
@@ -2963,7 +2973,9 @@ async def test_humidity_setting_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "state,ambient", [("70", 70), ("unavailable", None), ("unknown", None)]
 )
-async def test_humidity_setting_sensor_data(hass, state, ambient):
+async def test_humidity_setting_sensor_data(
+    hass: HomeAssistant, state, ambient
+) -> None:
     """Test HumiditySetting trait support for humidity sensor."""
     trt = trait.HumiditySettingTrait(
         hass,
@@ -3116,7 +3128,7 @@ async def test_transport_control(hass: HomeAssistant) -> None:
         STATE_UNKNOWN,
     ),
 )
-async def test_media_state(hass, state):
+async def test_media_state(hass: HomeAssistant, state) -> None:
     """Test the MediaStateTrait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 

@@ -185,6 +185,9 @@ class Recorder(threading.Thread):
         self.engine: Engine | None = None
         self.run_history = RunHistory()
 
+        # The entity_filter is exposed on the recorder instance so that
+        # it can be used to see if an entity is being recorded and is called
+        # by is_entity_recorder and the sensor recorder.
         self.entity_filter = entity_filter
         self.exclude_t = set(exclude_t)
 

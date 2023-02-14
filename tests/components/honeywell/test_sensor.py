@@ -16,7 +16,7 @@ async def test_outdoor_sensor(
     device_with_outdoor_sensor: Device,
     unit,
     temp,
-):
+) -> None:
     """Test outdoor temperature sensor."""
     device_with_outdoor_sensor.temperature_unit = unit
     location.devices_by_id[

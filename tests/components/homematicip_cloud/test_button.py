@@ -1,16 +1,18 @@
 """Tests for HomematicIP Cloud button."""
-
 from unittest.mock import patch
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button.const import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .helper import get_and_check_entity_basics
 
 
-async def test_hmip_garage_door_controller_button(hass, default_mock_hap_factory):
+async def test_hmip_garage_door_controller_button(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipGarageDoorControllerButton."""
     entity_id = "button.garagentor"
     entity_name = "Garagentor"

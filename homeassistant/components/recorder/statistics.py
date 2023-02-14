@@ -1036,6 +1036,12 @@ def _reduce_statistics(
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[dict[str, Any]]] = defaultdict(list)
     period_seconds = period.total_seconds()
+    _want_mean = "mean" in types
+    _want_min = "min" in types
+    _want_max = "max" in types
+    _want_last_reset = "last_reset" in types
+    _want_state = "state" in types
+    _want_sum = "sum" in types
     for statistic_id, stat_list in stats.items():
         max_values: list[float] = []
         mean_values: list[float] = []
@@ -1053,29 +1059,29 @@ def _reduce_statistics(
                     "start": start,
                     "end": end,
                 }
-                if "mean" in types:
+                if _want_mean:
                     row["mean"] = mean(mean_values) if mean_values else None
-                if "min" in types:
+                if _want_min:
                     row["min"] = min(min_values) if min_values else None
-                if "max" in types:
+                if _want_max:
                     row["max"] = max(max_values) if max_values else None
-                if "last_reset" in types:
+                if _want_last_reset:
                     row["last_reset"] = prev_stat.get("last_reset")
-                if "state" in types:
+                if _want_state:
                     row["state"] = prev_stat.get("state")
-                if "sum" in types:
+                if _want_sum:
                     row["sum"] = prev_stat["sum"]
                 result[statistic_id].append(row)
 
                 max_values = []
                 mean_values = []
                 min_values = []
-            if statistic.get("max") is not None:
-                max_values.append(statistic["max"])
-            if statistic.get("mean") is not None:
-                mean_values.append(statistic["mean"])
-            if statistic.get("min") is not None:
-                min_values.append(statistic["min"])
+            if _want_max and (_max := statistic.get("max")) is not None:
+                max_values.append(_max)
+            if _want_mean and (_mean := statistic.get("mean")) is not None:
+                mean_values.append(_mean)
+            if _want_min and (_min := statistic.get("min")) is not None:
+                min_values.append(_min)
             prev_stat = statistic
 
     return result
@@ -2042,6 +2048,12 @@ def _sorted_statistics_to_dict(
             for stat in tmp:
                 stats_by_meta_id[stat.metadata_id].insert(0, stat)
 
+    _want_mean = "mean" in types
+    _want_min = "min" in types
+    _want_max = "max" in types
+    _want_last_reset = "last_reset" in types
+    _want_state = "state" in types
+    _want_sum = "sum" in types
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -2056,24 +2068,22 @@ def _sorted_statistics_to_dict(
             convert = None
         ent_results = result[statistic_id]
         for db_state in stats_list:
-            start_ts = db_state.start_ts
             row: dict[str, Any] = {
-                "start": start_ts,
+                "start": (start_ts := db_state.start_ts),
                 "end": start_ts + table_duration_seconds,
             }
-            if "mean" in types:
+            if _want_mean:
                 row["mean"] = convert(db_state.mean) if convert else db_state.mean
-            if "min" in types:
+            if _want_min:
                 row["min"] = convert(db_state.min) if convert else db_state.min
-            if "max" in types:
+            if _want_max:
                 row["max"] = convert(db_state.max) if convert else db_state.max
-            if "last_reset" in types:
+            if _want_last_reset:
                 row["last_reset"] = db_state.last_reset_ts
-            if "state" in types:
+            if _want_state:
                 row["state"] = convert(db_state.state) if convert else db_state.state
-            if "sum" in types:
+            if _want_sum:
                 row["sum"] = convert(db_state.sum) if convert else db_state.sum
-
             ent_results.append(row)
 
     return result

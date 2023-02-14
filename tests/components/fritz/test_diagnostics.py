@@ -21,7 +21,7 @@ async def test_entry_diagnostics(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test config entry diagnostics."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
