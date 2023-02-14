@@ -815,15 +815,13 @@ async def test_wait_for_trigger_variables(hass: HomeAssistant) -> None:
     actions = [
         {
             "alias": "variables",
-            "variables": {"seconds": 0.01},
+            "variables": {"state": "off"},
         },
         {
             "alias": wait_alias,
             "wait_for_trigger": {
-                "platform": "state",
-                "entity_id": "switch.test",
-                "to": "off",
-                "for": {"seconds": "{{ seconds }}"},
+                "platform": "template",
+                "value_template": "{{ states.switch.test.state == state }}",
             },
         },
     ]
