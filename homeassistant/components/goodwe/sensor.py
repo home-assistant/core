@@ -84,7 +84,7 @@ class GoodweSensorEntityDescription(SensorEntityDescription):
     ] = lambda entity: entity.coordinator.last_update_success
 
 
-_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+_DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
     "A": GoodweSensorEntityDescription(
         key="A",
         device_class=SensorDeviceClass.CURRENT,
