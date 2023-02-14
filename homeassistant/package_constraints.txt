@@ -22,7 +22,7 @@ dbus-fast==1.84.1
 fnvhash==0.1.0
 hass-nabucasa==0.61.0
 hassil==0.2.6
-home-assistant-bluetooth==1.9.2
+home-assistant-bluetooth==1.9.3
 home-assistant-frontend==20230202.0
 home-assistant-intents==2023.1.31
 httpx==0.23.3
