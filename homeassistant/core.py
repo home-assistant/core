@@ -77,6 +77,7 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
+from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .util import dt as dt_util, location, ulid as ulid_util
 from .util.async_ import (
     fire_coroutine_threadsafe,
@@ -105,6 +106,7 @@ STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
+restore_original_aiohttp_cancel_behavior()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
