@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coolmaster = CoolMasterNet(
         host,
         port,
-        read_timeout=1 if not entry.data.get(CONF_SWING_SUPPORT, False) else 5,
+        read_timeout=5 if entry.data.get(CONF_SWING_SUPPORT) else 1,
         swing_support=entry.data.get(CONF_SWING_SUPPORT, False),
     )
     try:
