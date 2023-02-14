@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "freebox"
 SERVICE_REBOOT = "reboot"
+VALUE_NOT_SET = ""
 
 APP_DESC = {
     "app_id": "hass",
@@ -16,7 +17,13 @@ APP_DESC = {
 }
 API_VERSION = "v6"
 
-PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.CAMERA,
+]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 
@@ -27,6 +34,7 @@ STORAGE_VERSION = 1
 
 CONNECTION_SENSORS_KEYS = {"rate_down", "rate_up"}
 
+BINARY_SENSOR_SCAN_INTERVAL_SECS = 5
 
 # Icons
 DEVICE_ICONS = {
@@ -48,3 +56,16 @@ DEVICE_ICONS = {
     "vg_console": "mdi:gamepad-variant",
     "workstation": "mdi:desktop-tower-monitor",
 }
+
+ATTR_DETECTION = "detection"
+ATTR_ACTIVATION = "activation"
+ATTR_QUALITY = "quality"
+ATTR_SENSITIVITY = "sensitivity"
+ATTR_THRESHOLD = "threshold"
+ATTR_FLIP = "flip"
+ATTR_TIMESTAMP = "timestamp"
+ATTR_VOLUME = "volume"
+ATTR_SOUND_DETECTION = "sound_detection"
+ATTR_SOUND_TRIGGER = "sound_trigger"
+ATTR_RTSP = "rtsp"
+ATTR_DISK = "disk"

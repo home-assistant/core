@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime
+import logging
 import os
 from pathlib import Path
 from typing import Any
@@ -11,7 +12,7 @@ from typing import Any
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import NotOpenError
+from freebox_api.exceptions import InsufficientPermissionsError, NotOpenError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -30,6 +31,8 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
@@ -70,11 +73,16 @@ class FreeboxRouter:
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
+        self.home_devices: dict[str, Any] = {}
+        self._unsub_dispatcher = None
+        self._option_listener = None
+        self.listeners: list[dict[str, Any]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
         await self.update_device_trackers()
         await self.update_sensors()
+        await self.update_home_devices()
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
@@ -146,6 +154,29 @@ class FreeboxRouter:
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
 
+    async def update_home_devices(self) -> None:
+        """Update Home devices (light, cover, alarm, sensors ...)."""
+        new_device = False
+        # Home sensors (alarm,pir,switch,kfb...)
+        try:
+            home_nodes: Any | list[Any] = await self._api.home.get_home_nodes() or []
+        except InsufficientPermissionsError:
+            _LOGGER.warning("Home access is not granted")
+            return
+
+        for home_node in home_nodes:
+            if home_node["category"] in [
+                "camera",
+            ]:
+                if self.home_devices.get(home_node["id"]) is None:
+                    new_device = True
+                self.home_devices[home_node["id"]] = home_node
+
+        async_dispatcher_send(self.hass, self.signal_home_device_update)
+
+        if new_device:
+            async_dispatcher_send(self.hass, self.signal_home_device_new)
+
     async def reboot(self) -> None:
         """Reboot the Freebox."""
         await self._api.system.reboot()
@@ -173,6 +204,11 @@ class FreeboxRouter:
         return f"{DOMAIN}-{self._host}-device-new"
 
     @property
+    def signal_home_device_new(self) -> str:
+        """Event specific per Freebox entry to signal new home device."""
+        return f"{DOMAIN}-{self._host}-home-device-new"
+
+    @property
     def signal_device_update(self) -> str:
         """Event specific per Freebox entry to signal updates in devices."""
         return f"{DOMAIN}-{self._host}-device-update"
@@ -181,6 +217,11 @@ class FreeboxRouter:
     def signal_sensor_update(self) -> str:
         """Event specific per Freebox entry to signal updates in sensors."""
         return f"{DOMAIN}-{self._host}-sensor-update"
+
+    @property
+    def signal_home_device_update(self) -> str:
+        """Event specific per Freebox entry to signal update in home devices."""
+        return f"{DOMAIN}-{self._host}-home-device-update"
 
     @property
     def sensors(self) -> dict[str, Any]:
@@ -196,3 +237,8 @@ class FreeboxRouter:
     def wifi(self) -> Wifi:
         """Return the wifi."""
         return self._api.wifi
+
+    @property
+    def api(self) -> Freepybox:
+        """Return the call."""
+        return self._api
