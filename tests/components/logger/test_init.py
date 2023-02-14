@@ -1,6 +1,7 @@
 """The tests for the Logger component."""
 from collections import defaultdict
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -179,7 +180,9 @@ async def test_can_set_level_from_yaml(hass: HomeAssistant) -> None:
     _reset_logging()
 
 
-async def test_can_set_level_from_store(hass, hass_storage):
+async def test_can_set_level_from_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test setting up logs from store."""
     hass_storage["core.logger"] = {
         "data": {
@@ -308,7 +311,9 @@ def _reset_logging():
     logging.getLogger(INTEGRATION_NS).orig_setLevel(logging.NOTSET)
 
 
-async def test_can_set_integration_level_from_store(hass, hass_storage):
+async def test_can_set_integration_level_from_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test setting up integration logs from store."""
     hass_storage["core.logger"] = {
         "data": {
@@ -331,7 +336,9 @@ async def test_can_set_integration_level_from_store(hass, hass_storage):
     _reset_logging()
 
 
-async def test_chattier_log_level_wins_1(hass, hass_storage):
+async def test_chattier_log_level_wins_1(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test chattier log level in store takes precedence."""
     hass_storage["core.logger"] = {
         "data": {
@@ -364,7 +371,9 @@ async def test_chattier_log_level_wins_1(hass, hass_storage):
     _reset_logging()
 
 
-async def test_chattier_log_level_wins_2(hass, hass_storage):
+async def test_chattier_log_level_wins_2(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test chattier log level in yaml takes precedence."""
     hass_storage["core.logger"] = {
         "data": {
@@ -389,7 +398,9 @@ async def test_chattier_log_level_wins_2(hass, hass_storage):
     _reset_logging()
 
 
-async def test_log_once_removed_from_store(hass, hass_storage):
+async def test_log_once_removed_from_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test logs with persistence "once" are removed from the store at startup."""
     hass_storage["core.logger"] = {
         "data": {

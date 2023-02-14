@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.2
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.55
+AIOAladdinConnect==0.1.56
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -156,7 +156,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.1.0
+aioesphomeapi==13.3.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -492,7 +492,7 @@ brunt==1.2.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.5.1
+bthome-ble==2.5.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -563,7 +563,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.84.0
+dbus-fast==1.84.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.6
@@ -586,7 +586,7 @@ deluge-client==1.7.1
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==0.10.12
+denonavr==0.11.1
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
@@ -798,7 +798,7 @@ glances_api==0.4.1
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.18
+goodwe==0.2.25
 
 # homeassistant.components.google_mail
 google-api-python-client==2.71.0
@@ -837,7 +837,7 @@ greeneye_monitor==3.0.3
 greenwavereality==0.5.1
 
 # homeassistant.components.pure_energie
-gridnet==4.0.0
+gridnet==4.2.0
 
 # homeassistant.components.growatt_server
 growattServer==1.3.0
@@ -967,7 +967,7 @@ iglo==1.2.7
 ihcsdk==2.7.6
 
 # homeassistant.components.incomfort
-incomfort-client==0.4.4
+incomfort-client==0.5.0
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1429,6 +1429,9 @@ py-canary==0.5.3
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
 
+# homeassistant.components.dormakaba_dkey
+py-dormakaba-dkey==1.0.2
+
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
 
@@ -1470,7 +1473,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.12
+pyTibber==0.26.13
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1564,7 +1567,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.8.0
+pydaikin==2.9.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1786,7 +1789,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.1.1
+pymodbus==3.1.3
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1831,13 +1834,13 @@ pynzbgetapi==0.2.0
 pyobihai==1.3.2
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.9
+pyoctoprintapi==0.1.11
 
 # homeassistant.components.ombi
 pyombi==0.1.10
 
 # homeassistant.components.openuv
-pyopenuv==2023.01.0
+pyopenuv==2023.02.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -2231,7 +2234,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.4.0
+reolink-aio==0.4.1
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2623,7 +2626,7 @@ whirlpool-sixth-sense==0.18.2
 whois==0.9.27
 
 # homeassistant.components.wiffi
-wiffi==1.1.0
+wiffi==1.1.2
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
@@ -2647,7 +2650,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.16.3
 
 # homeassistant.components.knx
-xknx==2.4.0
+xknx==2.5.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2694,7 +2697,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.47.1
+zeroconf==0.47.3
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.0
@@ -2727,7 +2730,7 @@ zigpy==0.53.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.45.1
+zwave-js-server-python==0.45.2
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.3.1

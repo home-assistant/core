@@ -124,7 +124,7 @@ def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.loop.run_in_executor.mock_calls) == 1
+    assert len(hass.loop.run_in_executor.mock_calls) == 2
 
 
 def test_async_create_task_schedule_coroutine(event_loop):
@@ -205,7 +205,7 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
     assert stop_calls[-1] == "async_block_till_done"
 
 
-async def test_pending_sheduler(hass: HomeAssistant) -> None:
+async def test_pending_scheduler(hass: HomeAssistant) -> None:
     """Add a coro to pending tasks."""
     call_count = []
 
@@ -216,9 +216,9 @@ async def test_pending_sheduler(hass: HomeAssistant) -> None:
     for _ in range(3):
         hass.async_add_job(test_coro())
 
-    await asyncio.wait(hass._pending_tasks)
+    await asyncio.wait(hass._tasks)
 
-    assert len(hass._pending_tasks) == 3
+    assert len(hass._tasks) == 0
     assert len(call_count) == 3
 
 
@@ -240,7 +240,7 @@ async def test_async_add_job_pending_tasks_coro(hass: HomeAssistant) -> None:
 
     await wait_finish_callback()
 
-    assert len(hass._pending_tasks) == 2
+    assert len(hass._tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
 
@@ -263,7 +263,7 @@ async def test_async_create_task_pending_tasks_coro(hass: HomeAssistant) -> None
 
     await wait_finish_callback()
 
-    assert len(hass._pending_tasks) == 2
+    assert len(hass._tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
 
@@ -286,7 +286,6 @@ async def test_async_add_job_pending_tasks_executor(hass: HomeAssistant) -> None
 
     await wait_finish_callback()
 
-    assert len(hass._pending_tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
 
@@ -312,7 +311,7 @@ async def test_async_add_job_pending_tasks_callback(hass: HomeAssistant) -> None
 
     await hass.async_block_till_done()
 
-    assert len(hass._pending_tasks) == 0
+    assert len(hass._tasks) == 0
     assert len(call_count) == 2
 
 
@@ -1144,11 +1143,10 @@ async def test_start_taking_too_long(event_loop, caplog):
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant()
     caplog.set_level(logging.WARNING)
+    hass.async_create_task(asyncio.sleep(0))
 
     try:
-        with patch.object(
-            hass, "async_block_till_done", side_effect=asyncio.TimeoutError
-        ):
+        with patch("asyncio.wait", return_value=(set(), {asyncio.Future()})):
             await hass.async_start()
 
         assert hass.state == ha.CoreState.running
@@ -1157,21 +1155,6 @@ async def test_start_taking_too_long(event_loop, caplog):
     finally:
         await hass.async_stop()
         assert hass.state == ha.CoreState.stopped
-
-
-async def test_track_task_functions(event_loop):
-    """Test function to start/stop track task and initial state."""
-    hass = ha.HomeAssistant()
-    try:
-        assert hass._track_task
-
-        hass.async_stop_track_tasks()
-        assert not hass._track_task
-
-        hass.async_track_tasks()
-        assert hass._track_task
-    finally:
-        await hass.async_stop()
 
 
 async def test_service_executed_with_subservices(hass: HomeAssistant) -> None:

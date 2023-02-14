@@ -10,6 +10,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
@@ -72,7 +73,7 @@ async def webhook_id(hass, gpslogger_client):
     return result["result"].data["webhook_id"]
 
 
-async def test_missing_data(hass, gpslogger_client, webhook_id):
+async def test_missing_data(hass: HomeAssistant, gpslogger_client, webhook_id) -> None:
     """Test missing data."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -98,7 +99,9 @@ async def test_missing_data(hass, gpslogger_client, webhook_id):
     assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
+async def test_enter_and_exit(
+    hass: HomeAssistant, gpslogger_client, webhook_id
+) -> None:
     """Test when there is a known zone."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -135,7 +138,9 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     assert len(ent_reg.entities) == 1
 
 
-async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
+async def test_enter_with_attrs(
+    hass: HomeAssistant, gpslogger_client, webhook_id
+) -> None:
     """Test when additional attributes are present."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -195,7 +200,9 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
 @pytest.mark.xfail(
     reason="The device_tracker component does not support unloading yet."
 )
-async def test_load_unload_entry(hass, gpslogger_client, webhook_id):
+async def test_load_unload_entry(
+    hass: HomeAssistant, gpslogger_client, webhook_id
+) -> None:
     """Test that the appropriate dispatch signals are added and removed."""
     url = f"/api/webhook/{webhook_id}"
     data = {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE, "device": "123"}
