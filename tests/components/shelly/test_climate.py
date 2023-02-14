@@ -131,7 +131,7 @@ async def test_climate_set_preset_mode(hass, mock_block_device, monkeypatch):
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", None)
-    await init_integration(hass, 1, sleep_period=1000)
+    await init_integration(hass, 1, sleep_period=1000, model="SHTRV-01")
 
     # Make device online
     mock_block_device.mock_update()
