@@ -8,12 +8,13 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.smart_meter_texas.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, setup_integration
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that no config is successful."""
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()

@@ -7,6 +7,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.meater import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +26,7 @@ def mock_meater(mock_client):
         yield mock_
 
 
-async def test_duplicate_error(hass):
+async def test_duplicate_error(hass: HomeAssistant) -> None:
     """Test that errors are shown when duplicates are added."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 

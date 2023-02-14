@@ -12,7 +12,7 @@ from pywizlight.discovery import DiscoveredBulb
 
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -174,9 +174,7 @@ FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
 )
 
 
-async def setup_integration(
-    hass: HomeAssistantType,
-) -> MockConfigEntry:
+async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock ConfigEntry in Home Assistant."""
 
     entry = MockConfigEntry(

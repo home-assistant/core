@@ -15,7 +15,7 @@ SUPERVISOR_HARD_TIMEOUT = 220
 TIMEOUT_SAFETY_MARGIN = 10
 
 
-async def test_cumulative_shutdown_timeout_less_than_supervisor():
+async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     """Verify the cumulative shutdown timeout is at least 10s less than the supervisor."""
     assert (
         core.STAGE_1_SHUTDOWN_TIMEOUT
@@ -137,3 +137,22 @@ async def test_unhandled_exception_traceback(hass, caplog):
     assert "Task exception was never retrieved" in caplog.text
     assert "This is unhandled" in caplog.text
     assert "_unhandled_exception" in caplog.text
+
+
+def test__enable_posix_spawn():
+    """Test that we can enable posix_spawn on Alpine."""
+
+    def _mock_alpine_exists(path):
+        return path == "/etc/alpine-release"
+
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
+        runner.os.path, "exists", _mock_alpine_exists
+    ):
+        runner._enable_posix_spawn()
+        assert runner.subprocess._USE_POSIX_SPAWN is True
+
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
+        runner.os.path, "exists", return_value=False
+    ):
+        runner._enable_posix_spawn()
+        assert runner.subprocess._USE_POSIX_SPAWN is False

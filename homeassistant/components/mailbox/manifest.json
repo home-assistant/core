@@ -1,9 +1,9 @@
 {
   "domain": "mailbox",
   "name": "Mailbox",
-  "documentation": "https://www.home-assistant.io/integrations/mailbox",
-  "dependencies": ["http"],
   "codeowners": [],
-  "quality_scale": "internal",
-  "integration_type": "entity"
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/mailbox",
+  "integration_type": "entity",
+  "quality_scale": "internal"
 }

@@ -1,9 +1,9 @@
 """Common test tools."""
 from __future__ import annotations
 
-from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import rfxtrx
@@ -80,13 +80,12 @@ async def rfxtrx_automatic_fixture(hass, rfxtrx):
 async def timestep(hass):
     """Step system time forward."""
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = utcnow()
+    with freeze_time(utcnow()) as frozen_time:
 
         async def delay(seconds):
             """Trigger delay in system."""
-            mock_utcnow.return_value += timedelta(seconds=seconds)
-            async_fire_time_changed(hass, mock_utcnow.return_value)
+            frozen_time.tick(delta=seconds)
+            async_fire_time_changed(hass)
             await hass.async_block_till_done()
 
         yield delay

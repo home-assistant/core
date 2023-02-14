@@ -7,6 +7,8 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
@@ -15,6 +17,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_ZERO_SUPPRESS,
     MODBUS_DOMAIN,
     DataType,
 )
@@ -37,7 +40,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -210,7 +213,7 @@ async def test_config_sensor(hass, mock_modbus):
                     },
                 ]
             },
-            f"Error in sensor {TEST_ENTITY_NAME}. The `structure` field can not be empty",
+            f"Error in sensor {TEST_ENTITY_NAME}. The `structure` field cannot be empty",
         ),
         (
             {
@@ -537,6 +540,42 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
         (
             {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_MAX_VALUE: int(0x02010400),
+            },
+            [0x0201, 0x0403],
+            False,
+            str(int(0x02010400)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_MIN_VALUE: int(0x02010404),
+            },
+            [0x0201, 0x0403],
+            False,
+            str(int(0x02010404)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_ZERO_SUPPRESS: int(0x00000001),
+            },
+            [0x0000, 0x0002],
+            False,
+            str(int(0x00000002)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_ZERO_SUPPRESS: int(0x00000002),
+            },
+            [0x0000, 0x0002],
+            False,
+            str(int(0)),
+        ),
+        (
+            {
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 CONF_DATA_TYPE: DataType.FLOAT32,
                 CONF_PRECISION: 2,
@@ -855,7 +894,7 @@ async def test_wrap_sensor(hass, mock_do_cycle, expected):
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, "117"), State(f"{ENTITY_ID}_1", "119"))],
+    [(State(ENTITY_ID, "unknown"), State(f"{ENTITY_ID}_1", "119"))],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -915,7 +954,9 @@ async def test_service_sensor_update(hass, mock_modbus, mock_ha):
     assert hass.states.get(ENTITY_ID).state == "32"
 
 
-async def test_no_discovery_info_sensor(hass, caplog):
+async def test_no_discovery_info_sensor(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert SENSOR_DOMAIN not in hass.config.components
     assert await async_setup_component(

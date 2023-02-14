@@ -23,8 +23,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -195,7 +195,9 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
-    def __init__(self, data, device, description: BinarySensorEntityDescription):
+    def __init__(
+        self, data, device, description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
@@ -235,7 +237,9 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     entity_description: AugustBinarySensorEntityDescription
 
-    def __init__(self, data, device, description: AugustBinarySensorEntityDescription):
+    def __init__(
+        self, data, device, description: AugustBinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description

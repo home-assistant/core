@@ -19,10 +19,10 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory, EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -51,8 +51,8 @@ async def async_setup_entry(
         entities.append(ISYSwitchProgramEntity(name, status, actions))
 
     for node, control in isy_data.aux_properties[Platform.SWITCH]:
-        # Currently only used for enable switches, will need to be updated for NS support
-        # by making sure control == TAG_ENABLED
+        # Currently only used for enable switches, will need to be updated for
+        # NS support by making sure control == TAG_ENABLED
         description = SwitchEntityDescription(
             key=control,
             device_class=SwitchDeviceClass.SWITCH,
