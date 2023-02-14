@@ -1,6 +1,4 @@
 """Test the OralB sensors."""
-
-
 from homeassistant.components.oralb.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -76,7 +74,7 @@ async def test_sensors_io_series_4(
     await hass.async_block_till_done()
 
 
-async def test_sensors_battery(hass: HomeAssistant):
+async def test_sensors_battery(hass: HomeAssistant) -> None:
     """Test receiving battery percentage."""
     entry = MockConfigEntry(
         domain=DOMAIN,

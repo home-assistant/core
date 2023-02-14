@@ -10,6 +10,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.lyric.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -30,7 +31,7 @@ async def mock_impl(hass):
     )
 
 
-async def test_abort_if_no_configuration(hass):
+async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow abort when no configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

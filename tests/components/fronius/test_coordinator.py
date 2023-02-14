@@ -6,14 +6,18 @@ from pyfronius import BadStatusError, FroniusError
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
 from . import mock_responses, setup_fronius_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_adaptive_update_interval(hass, aioclient_mock):
+async def test_adaptive_update_interval(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test coordinators changing their update interval when inverter not available."""
     with patch("pyfronius.Fronius.current_inverter_data") as mock_inverter_data:
         mock_responses(aioclient_mock)

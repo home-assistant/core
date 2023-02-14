@@ -14,7 +14,7 @@ from . import MOCK_FAILED_TO_LOGIN_MSG, MOCK_INVALID_TOKEN_MGS
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     coordinator_data = json.loads(load_fixture("switchbee.json", "switchbee"))
@@ -101,7 +101,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle an unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -124,7 +124,7 @@ async def test_form_unknown_error(hass):
     assert form_result["errors"] == {"base": "unknown"}
 
 
-async def test_form_entry_exists(hass):
+async def test_form_entry_exists(hass: HomeAssistant) -> None:
     """Test we handle an already existing entry."""
 
     coordinator_data = json.loads(load_fixture("switchbee.json", "switchbee"))

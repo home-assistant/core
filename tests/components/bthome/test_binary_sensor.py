@@ -1,11 +1,11 @@
 """Test BTHome binary sensors."""
-
 import logging
 
 import pytest
 
 from homeassistant.components.bthome.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v1_adv, make_bthome_v2_adv
 
@@ -66,12 +66,12 @@ _LOGGER = logging.getLogger(__name__)
     ],
 )
 async def test_v1_binary_sensors(
-    hass,
+    hass: HomeAssistant,
     mac_address,
     advertisement,
     bind_key,
     result,
-):
+) -> None:
     """Test the different BTHome v1 binary sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -152,12 +152,12 @@ async def test_v1_binary_sensors(
     ],
 )
 async def test_v2_binary_sensors(
-    hass,
+    hass: HomeAssistant,
     mac_address,
     advertisement,
     bind_key,
     result,
-):
+) -> None:
     """Test the different BTHome v2 binary sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
