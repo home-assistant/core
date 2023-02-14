@@ -365,6 +365,7 @@ class MQTT:
         self.conf = conf
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
+        self._last_message: dict[str, str] = {}
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -559,16 +560,23 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
+        callback_job = HassJob(msg_callback)
         subscription = Subscription(
-            topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
+            topic, _matcher_for_topic(topic), callback_job, qos, encoding
         )
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
         if self.connected:
-            self._last_subscribe = time.time()
-            await self._async_perform_subscriptions(((topic, qos),))
+            if _is_simple and len(self._simple_subscriptions.get(topic)) > 1:
+                _LOGGER.debug("Skipped duplicate subscribe for %s", topic)
+                if topic in self._last_message:
+                    self.hass.async_run_hass_job(callback_job, self._last_message.get(topic))
+                    self._mqtt_data.state_write_requests.process_write_state_requests()
+            else:
+                self._last_subscribe = time.time()
+                await self._async_perform_subscriptions(((topic, qos),))
 
         @callback
         def async_remove() -> None:
@@ -577,7 +585,9 @@ class MQTT:
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
-            if self.connected:
+            if self.connected and not (_is_simple and topic in self._simple_subscriptions):
+                if _is_simple:
+                    del self._last_message[topic]
                 self.hass.async_create_task(self._async_unsubscribe(topic))
 
         return async_remove
@@ -759,17 +769,17 @@ class MQTT:
                         subscription.job,
                     )
                     continue
-            self.hass.async_run_hass_job(
-                subscription.job,
-                ReceiveMessage(
-                    msg.topic,
-                    payload,
-                    msg.qos,
-                    msg.retain,
-                    subscription.topic,
-                    timestamp,
-                ),
+            receive_msg = ReceiveMessage(
+                msg.topic,
+                payload,
+                msg.qos,
+                msg.retain,
+                subscription.topic,
+                timestamp,
             )
+            if msg.topic in self._simple_subscriptions:
+                self._last_message[msg.topic] = receive_msg
+            self.hass.async_run_hass_job(subscription.job, receive_msg)
         self._mqtt_data.state_write_requests.process_write_state_requests()
 
     def _mqtt_on_callback(
