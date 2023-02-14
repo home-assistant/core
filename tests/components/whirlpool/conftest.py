@@ -174,5 +174,7 @@ def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
         mock_sensor_api.side_effect = [
             mock_sensor1_api,
             mock_sensor2_api,
+            mock_sensor1_api,
+            mock_sensor2_api,
         ]
         yield mock_sensor_api

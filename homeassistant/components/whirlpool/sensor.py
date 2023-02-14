@@ -266,6 +266,7 @@ class WasherDryerTimeClass(RestoreSensor):
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
+        self._wd.unregister_attr_callback(self.update_from_latest_data)
         await self._wd.disconnect()
 
     @property
