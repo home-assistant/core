@@ -1,7 +1,8 @@
 """Test honeywell setup process."""
-from unittest.mock import create_autospec, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
 import aiosomecomfort
+import pytest
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
