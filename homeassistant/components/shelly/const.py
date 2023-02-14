@@ -103,6 +103,7 @@ RPC_INPUTS_EVENTS_TYPES: Final = {
     "single_push",
     "double_push",
     "long_push",
+    "triple_push",
 }
 
 BLOCK_INPUTS_EVENTS_TYPES: Final = {
