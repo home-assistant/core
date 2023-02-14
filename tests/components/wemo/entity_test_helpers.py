@@ -67,7 +67,8 @@ async def _async_multiple_call_helper(hass, pywemo_device, call1, call2):
     # One of these two calls will block on `event`. The other will return right
     # away because the `_update_lock` is held.
     done, pending = await asyncio.wait(
-        [call1(), call2()], return_when=asyncio.FIRST_COMPLETED
+        [asyncio.create_task(call1()), asyncio.create_task(call2())],
+        return_when=asyncio.FIRST_COMPLETED,
     )
     _ = [d.result() for d in done]  # Allow any exceptions to be raised.
 
