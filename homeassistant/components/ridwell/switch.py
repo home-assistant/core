@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aioridwell.errors import RidwellError
-from aioridwell.model import EventState, RidwellAccount
+from aioridwell.model import EventState
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -38,19 +38,7 @@ async def async_setup_entry(
 
 
 class RidwellSwitch(RidwellEntity, SwitchEntity):
-    """Define a Ridwell switch."""
-
-    def __init__(
-        self,
-        coordinator: RidwellDataUpdateCoordinator,
-        account: RidwellAccount,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, account)
-
-        self._attr_unique_id = f"{account.account_id}_{description.key}"
-        self.entity_description = description
+    """Define a Ridwell button."""
 
     @property
     def is_on(self) -> bool:
