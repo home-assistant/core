@@ -18,7 +18,7 @@ bluetooth-data-tools==0.3.1
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==39.0.1
-dbus-fast==1.84.0
+dbus-fast==1.84.1
 fnvhash==0.1.0
 hass-nabucasa==0.61.0
 hassil==0.2.6
