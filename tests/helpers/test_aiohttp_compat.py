@@ -3,23 +3,21 @@
 import asyncio
 from contextlib import suppress
 
-from aiohttp import client, web
+from aiohttp import client, web, web_protocol
 import pytest
 
-from homeassistant.helpers.aiohttp_compat import (
-    restore_original_aiohttp_cancel_behavior,
-)
+from homeassistant.helpers.aiohttp_compat import CancelOnDisconnectRequestHandler
 
 
 @pytest.mark.allow_hosts(["127.0.0.1"])
-async def test_handler_cancellation(socket_enabled, aiohttp_unused_port) -> None:
+async def test_handler_cancellation(socket_enabled, unused_tcp_port_factory) -> None:
     """Test that handler cancels the request on disconnect.
 
     From aiohttp tests/test_web_server.py
     """
-    restore_original_aiohttp_cancel_behavior()
+    assert web_protocol.RequestHandler is CancelOnDisconnectRequestHandler
     event = asyncio.Event()
-    port = aiohttp_unused_port()
+    port = unused_tcp_port_factory()
 
     async def on_request(_: web.Request) -> web.Response:
         nonlocal event
@@ -34,7 +32,7 @@ async def test_handler_cancellation(socket_enabled, aiohttp_unused_port) -> None
     app = web.Application()
     app.router.add_route("GET", "/", on_request)
 
-    runner = web.AppRunner(app, handler_cancellation=True)
+    runner = web.AppRunner(app)
     await runner.setup()
 
     site = web.TCPSite(runner, host="127.0.0.1", port=port)
