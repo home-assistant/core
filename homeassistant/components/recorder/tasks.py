@@ -317,3 +317,14 @@ class PostSchemaMigrationTask(RecorderTask):
         instance._post_schema_migration(  # pylint: disable=[protected-access]
             self.old_version, self.new_version
         )
+
+
+@dataclass
+class StatisticsTimestampMigrationCleanupTask(RecorderTask):
+    """An object to insert into the recorder queue to run a statistics migration cleanup task."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run statistics timestamp cleanup task."""
+        if not statistics.cleanup_statistics_timestamp_migration(instance):
+            # Schedule a new statistics migration task if this one didn't finish
+            instance.queue_task(StatisticsTimestampMigrationCleanupTask())

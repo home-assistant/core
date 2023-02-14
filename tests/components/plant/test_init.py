@@ -43,7 +43,7 @@ GOOD_CONFIG = {
 }
 
 
-async def test_valid_data(hass):
+async def test_valid_data(hass: HomeAssistant) -> None:
     """Test processing valid data."""
     sensor = plant.Plant("my plant", GOOD_CONFIG)
     sensor.entity_id = "sensor.mqtt_plant_battery"
@@ -61,7 +61,7 @@ async def test_valid_data(hass):
         assert attrib[reading] == value
 
 
-async def test_low_battery(hass):
+async def test_low_battery(hass: HomeAssistant) -> None:
     """Test processing with low battery data and limit set."""
     sensor = plant.Plant("other plant", GOOD_CONFIG)
     sensor.entity_id = "sensor.mqtt_plant_battery"
@@ -75,7 +75,7 @@ async def test_low_battery(hass):
     assert sensor.extra_state_attributes["problem"] == "battery low"
 
 
-async def test_initial_states(hass):
+async def test_initial_states(hass: HomeAssistant) -> None:
     """Test plant initialises attributes if sensor already exists."""
     hass.states.async_set(MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY})
     plant_name = "some_plant"
@@ -87,7 +87,7 @@ async def test_initial_states(hass):
     assert state.attributes[plant.READING_MOISTURE] == 5
 
 
-async def test_update_states(hass):
+async def test_update_states(hass: HomeAssistant) -> None:
     """Test updating the state of a sensor.
 
     Make sure that plant processes this correctly.
@@ -103,7 +103,7 @@ async def test_update_states(hass):
     assert state.attributes[plant.READING_MOISTURE] == 5
 
 
-async def test_unavailable_state(hass):
+async def test_unavailable_state(hass: HomeAssistant) -> None:
     """Test updating the state with unavailable.
 
     Make sure that plant processes this correctly.
@@ -121,7 +121,7 @@ async def test_unavailable_state(hass):
     assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
 
-async def test_state_problem_if_unavailable(hass):
+async def test_state_problem_if_unavailable(hass: HomeAssistant) -> None:
     """Test updating the state with unavailable after setting it to valid value.
 
     Make sure that plant processes this correctly.
@@ -170,7 +170,7 @@ async def test_load_from_db(recorder_mock, hass):
     assert max_brightness == 30
 
 
-async def test_brightness_history(hass):
+async def test_brightness_history(hass: HomeAssistant) -> None:
     """Test the min_brightness check."""
     plant_name = "some_plant"
     assert await async_setup_component(

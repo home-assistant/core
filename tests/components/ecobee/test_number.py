@@ -12,7 +12,7 @@ VENTILATOR_MIN_AWAY_ID = "number.ecobee_ventilator_min_time_away"
 THERMOSTAT_ID = 0
 
 
-async def test_ventilator_min_on_home_attributes(hass):
+async def test_ventilator_min_on_home_attributes(hass: HomeAssistant) -> None:
     """Test the ventilator number on home attributes are correct."""
     await setup_platform(hass, DOMAIN)
 
@@ -25,7 +25,7 @@ async def test_ventilator_min_on_home_attributes(hass):
     assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
 
 
-async def test_ventilator_min_on_away_attributes(hass):
+async def test_ventilator_min_on_away_attributes(hass: HomeAssistant) -> None:
     """Test the ventilator number on away attributes are correct."""
     await setup_platform(hass, DOMAIN)
 
@@ -38,7 +38,7 @@ async def test_ventilator_min_on_away_attributes(hass):
     assert state.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
 
 
-async def test_set_min_time_home(hass: HomeAssistant):
+async def test_set_min_time_home(hass: HomeAssistant) -> None:
     """Test the number can set min time home."""
     target_value = 40
     with patch(

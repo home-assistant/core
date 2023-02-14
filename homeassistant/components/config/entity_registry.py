@@ -266,7 +266,6 @@ def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     data["aliases"] = entry.aliases
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
-    data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
     return data

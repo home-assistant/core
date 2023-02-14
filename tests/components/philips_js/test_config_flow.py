@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_CONFIG,
@@ -206,7 +207,7 @@ async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup_entry):
     }
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

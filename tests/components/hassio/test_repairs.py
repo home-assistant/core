@@ -1,5 +1,4 @@
 """Test repairs from supervisor issues."""
-
 from __future__ import annotations
 
 import os
@@ -15,6 +14,7 @@ from homeassistant.setup import async_setup_component
 from .test_init import MOCK_ENVIRON
 
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -148,8 +148,8 @@ def assert_repair_in_list(issues: list[dict[str, Any]], unhealthy: bool, reason:
 async def test_unhealthy_repairs(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test repairs added for unhealthy systems."""
     mock_resolution_info(aioclient_mock, unhealthy=["docker", "setup"])
 
@@ -169,8 +169,8 @@ async def test_unhealthy_repairs(
 async def test_unsupported_repairs(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test repairs added for unsupported systems."""
     mock_resolution_info(aioclient_mock, unsupported=["content_trust", "os"])
 
@@ -192,8 +192,8 @@ async def test_unsupported_repairs(
 async def test_unhealthy_repairs_add_remove(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test unhealthy repairs added and removed from dispatches."""
     mock_resolution_info(aioclient_mock)
 
@@ -248,8 +248,8 @@ async def test_unhealthy_repairs_add_remove(
 async def test_unsupported_repairs_add_remove(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test unsupported repairs added and removed from dispatches."""
     mock_resolution_info(aioclient_mock)
 
@@ -304,8 +304,8 @@ async def test_unsupported_repairs_add_remove(
 async def test_reset_repairs_supervisor_restart(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Unsupported/unhealthy repairs reset on supervisor restart."""
     mock_resolution_info(aioclient_mock, unsupported=["os"], unhealthy=["docker"])
 
@@ -347,8 +347,8 @@ async def test_reset_repairs_supervisor_restart(
 async def test_reasons_added_and_removed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test an unsupported/unhealthy reasons being added and removed at same time."""
     mock_resolution_info(aioclient_mock, unsupported=["os"], unhealthy=["docker"])
 
@@ -396,8 +396,8 @@ async def test_reasons_added_and_removed(
 async def test_ignored_unsupported_skipped(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Unsupported reasons which have an identical unhealthy reason are ignored."""
     mock_resolution_info(
         aioclient_mock, unsupported=["privileged"], unhealthy=["privileged"]
@@ -418,8 +418,8 @@ async def test_ignored_unsupported_skipped(
 async def test_new_unsupported_unhealthy_reason(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """New unsupported/unhealthy reasons result in a generic repair until next core update."""
     mock_resolution_info(
         aioclient_mock, unsupported=["fake_unsupported"], unhealthy=["fake_unhealthy"]

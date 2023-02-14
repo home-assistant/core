@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.auth import indieauth
+from homeassistant.core import HomeAssistant
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -129,7 +130,7 @@ async def test_verify_redirect_uri() -> None:
         )
 
 
-async def test_find_link_tag(hass, mock_session):
+async def test_find_link_tag(hass: HomeAssistant, mock_session) -> None:
     """Test finding link tag."""
     mock_session.get(
         "http://127.0.0.1:8000",
@@ -150,7 +151,7 @@ async def test_find_link_tag(hass, mock_session):
     assert redirect_uris == ["hass://oauth2_redirect", "http://127.0.0.1:8000/beer"]
 
 
-async def test_find_link_tag_max_size(hass, mock_session):
+async def test_find_link_tag_max_size(hass: HomeAssistant, mock_session) -> None:
     """Test finding link tag."""
     text = "".join(
         [
@@ -169,7 +170,7 @@ async def test_find_link_tag_max_size(hass, mock_session):
     "client_id",
     ["https://home-assistant.io/android", "https://home-assistant.io/iOS"],
 )
-async def test_verify_redirect_uri_android_ios(client_id):
+async def test_verify_redirect_uri_android_ios(client_id) -> None:
     """Test that we verify redirect uri correctly for Android/iOS."""
     with patch.object(indieauth, "fetch_redirect_uris", return_value=[]):
         assert await indieauth.verify_redirect_uri(

@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -20,7 +20,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import EntityCategory, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -130,7 +130,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         entity.installed_version == entity.latest_version
         or entity.latest_version is None
     ):
-        raise HomeAssistantError(f"No update available for {entity.name}")
+        raise HomeAssistantError(f"No update available for {entity.entity_id}")
 
     # If version is specified, but not supported by the entity.
     if (
@@ -138,19 +138,19 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         and not entity.supported_features & UpdateEntityFeature.SPECIFIC_VERSION
     ):
         raise HomeAssistantError(
-            f"Installing a specific version is not supported for {entity.name}"
+            f"Installing a specific version is not supported for {entity.entity_id}"
         )
 
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
     ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
-        raise HomeAssistantError(f"Backup is not supported for {entity.name}")
+        raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
 
     # Update is already in progress.
     if entity.in_progress is not False:
         raise HomeAssistantError(
-            f"Update installation already in progress for {entity.name}"
+            f"Update installation already in progress for {entity.entity_id}"
         )
 
     await entity.async_install_with_progress(version, backup)
@@ -159,7 +159,9 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
 async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to validate the call."""
     if entity.auto_update:
-        raise HomeAssistantError(f"Skipping update is not supported for {entity.name}")
+        raise HomeAssistantError(
+            f"Skipping update is not supported for {entity.entity_id}"
+        )
     await entity.async_skip()
 
 
@@ -167,7 +169,7 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
     """Service call wrapper to validate the call."""
     if entity.auto_update:
         raise HomeAssistantError(
-            f"Clearing skipped update is not supported for {entity.name}"
+            f"Clearing skipped update is not supported for {entity.entity_id}"
         )
     await entity.async_clear_skipped()
 

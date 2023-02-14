@@ -10,10 +10,11 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import Event, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import Entity, EntityCategory, ToggleEntity
+from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_track_state_change_event
 
 
