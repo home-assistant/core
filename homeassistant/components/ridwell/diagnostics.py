@@ -32,11 +32,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "data": [
-                dataclasses.asdict(event)
-                for events in coordinator.data.values()
-                for event in events
-            ],
+            "data": [dataclasses.asdict(event) for event in coordinator.data.values()],
         },
         TO_REDACT,
     )
