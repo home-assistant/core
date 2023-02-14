@@ -5,7 +5,7 @@ import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
-from xknx.secure.keyring import _load_keyring
+from xknx.secure.keyring import sync_load_keyring
 from xknx.telegram import IndividualAddress
 
 from homeassistant import config_entries
@@ -998,8 +998,8 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
     assert not result["errors"]
 
     with patch(
-        "xknx.secure.keyring._load_keyring",
-        return_value=_load_keyring(
+        "xknx.secure.keyring.sync_load_keyring",
+        return_value=sync_load_keyring(
             str(get_fixture_path("fixture.knxkeys", DOMAIN).absolute()),
             FIXTURE_KNXKEYS_PASSWORD,
         ),
@@ -1252,8 +1252,8 @@ async def test_options_flow_secure_manual_to_keyfile(
     assert not result4["errors"]
 
     with patch(
-        "xknx.secure.keyring._load_keyring",
-        return_value=_load_keyring(
+        "xknx.secure.keyring.sync_load_keyring",
+        return_value=sync_load_keyring(
             str(get_fixture_path("fixture.knxkeys", DOMAIN).absolute()),
             FIXTURE_KNXKEYS_PASSWORD,
         ),
