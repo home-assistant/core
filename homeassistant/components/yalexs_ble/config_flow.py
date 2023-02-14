@@ -42,7 +42,7 @@ async def async_validate_lock_or_error(
         bytes.fromhex(key)
     except ValueError:
         return {CONF_KEY: "invalid_key_format"}
-    if not isinstance(slot, int) or not 0 <= slot > 255:
+    if not isinstance(slot, int) or not 0 <= slot <= 255:
         return {CONF_SLOT: "invalid_key_index"}
     try:
         await PushLock(local_name, device.address, device, key, slot).validate()
