@@ -94,6 +94,7 @@ async def test_start(hass: HomeAssistant, mock_socket, mock_time) -> None:
 
     hass.states.async_set("test.entity", STATE_ON)
     await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
