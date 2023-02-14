@@ -1,6 +1,4 @@
 """Test KNX init."""
-from unittest.mock import patch
-
 import pytest
 from xknx.io import (
     DEFAULT_MCAST_GRP,
@@ -10,7 +8,6 @@ from xknx.io import (
     SecureConfig,
 )
 
-from homeassistant.components.knx import async_migrate_entry
 from homeassistant.components.knx.config_flow import DEFAULT_ROUTING_IA
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -113,12 +110,17 @@ from tests.common import MockConfigEntry
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
                 CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
+                CONF_KNX_KNXKEY_FILENAME: "knx/keyfile.knxkeys",
+                CONF_KNX_KNXKEY_PASSWORD: "password",
             },
             ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
                 gateway_ip="192.168.0.2",
                 gateway_port=3675,
                 auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_file_path="keyfile.knxkeys", knxkeys_password="password"
+                ),
                 threaded=True,
             ),
         ),
@@ -247,51 +249,10 @@ async def test_init_connection_handling(
             .secure_config.device_authentication_password
             == connection_config.secure_config.device_authentication_password
         )
-
-
-@pytest.mark.parametrize(
-    "config_entry_data",
-    [
-        {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-            CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
-            CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
-            CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
-            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
-        },
-        {
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
-            CONF_KNX_SECURE_USER_ID: 2,
-            CONF_KNX_SECURE_USER_PASSWORD: "password",
-            CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_auth",
-            CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
-            CONF_KNX_KNXKEY_PASSWORD: "password",
-            CONF_HOST: "192.168.0.1",
-            CONF_PORT: 3675,
-            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
-            CONF_KNX_ROUTE_BACK: False,
-            CONF_KNX_LOCAL_IP: None,
-        },
-    ],
-)
-async def test_config_entry_migration(
-    hass: HomeAssistant,
-    config_entry_data: KNXConfigEntryData,
-):
-    """Test config entry migration."""
-    mock_config_entry = MockConfigEntry(
-        title="KNX",
-        domain=KNX_DOMAIN,
-        data=config_entry_data,
-        version=1,
-    )
-    keyfile_to_move = CONF_KNX_KNXKEY_FILENAME in config_entry_data
-    with patch("pathlib.Path.mkdir") as mkdir_mock, patch(
-        "pathlib.Path.rename"
-    ) as rename_mock:
-        await async_migrate_entry(hass, mock_config_entry)
-        assert mkdir_mock.call_count == keyfile_to_move
-        assert rename_mock.call_count == keyfile_to_move
-    assert mock_config_entry.version == 2
-    assert CONF_KNX_KNXKEY_FILENAME not in mock_config_entry.data
+        if connection_config.secure_config.knxkeys_file_path is not None:
+            assert (
+                connection_config.secure_config.knxkeys_file_path
+                in hass.data[KNX_DOMAIN]
+                .connection_config()
+                .secure_config.knxkeys_file_path
+            )

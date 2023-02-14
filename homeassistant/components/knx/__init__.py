@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
 from typing import Final
 
 import voluptuous as vol
@@ -44,6 +43,7 @@ from .const import (
     CONF_KNX_CONNECTION_TYPE,
     CONF_KNX_EXPOSE,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_KNXKEY_FILENAME,
     CONF_KNX_KNXKEY_PASSWORD,
     CONF_KNX_LOCAL_IP,
     CONF_KNX_MCAST_GRP,
@@ -65,7 +65,6 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    KNX_KEYRING_FILENAME,
     SUPPORTED_PLATFORMS,
 )
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
@@ -220,39 +219,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = dict(conf)
     hass.data[DATA_KNX_CONFIG] = conf
-    return True
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Migrate the config entry upon new versions."""
-    version = entry.version
-    data = {**entry.data}
-
-    _LOGGER.debug("Migrating from version %s", version)
-
-    if version == 1:
-        # - rename .knxkeys file from user specified path to default path
-        # - remove "knxkeys_filename" from config entry data
-        def _move_keyfile(user_keyfile_path: Path) -> None:
-            """Move keyfile to default path."""
-            dest_path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
-            dest_path.mkdir(exist_ok=True)
-            user_keyfile_path.rename(dest_path / KNX_KEYRING_FILENAME)
-
-        knxkeys_filename = data.pop("knxkeys_filename", None)
-        if knxkeys_filename is not None:
-            user_keyfile_path = Path(
-                hass.config.path(
-                    STORAGE_DIR,
-                    knxkeys_filename,
-                )
-            )
-            await hass.async_add_executor_job(_move_keyfile, user_keyfile_path)
-
-        version = entry.version = 2
-        hass.config_entries.async_update_entry(entry, data=data)
-
-    _LOGGER.info("Migration to version %s successful", version)
     return True
 
 
@@ -418,11 +384,14 @@ class KNXModule:
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
         _conn_type: str = self.entry.data[CONF_KNX_CONNECTION_TYPE]
-        _knxkeys_path = (
-            Path(self.hass.config.path(STORAGE_DIR, DOMAIN)) / KNX_KEYRING_FILENAME
+        _knxkeys_file: str | None = (
+            self.hass.config.path(
+                STORAGE_DIR,
+                self.entry.data[CONF_KNX_KNXKEY_FILENAME],
+            )
+            if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
+            else None
         )
-        knxkeys_file = _knxkeys_path if _knxkeys_path.exists() else None
-
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
@@ -432,8 +401,8 @@ class KNXModule:
                 local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
                 secure_config=SecureConfig(
-                    knxkeys_file_path=knxkeys_file,
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
                 ),
                 threaded=True,
             )
@@ -446,8 +415,8 @@ class KNXModule:
                 route_back=self.entry.data.get(CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
                 secure_config=SecureConfig(
-                    knxkeys_file_path=knxkeys_file,
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
                 ),
                 threaded=True,
             )
@@ -458,8 +427,8 @@ class KNXModule:
                 gateway_port=self.entry.data[CONF_PORT],
                 auto_reconnect=True,
                 secure_config=SecureConfig(
-                    knxkeys_file_path=knxkeys_file,
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
                 ),
                 threaded=True,
             )
@@ -474,8 +443,8 @@ class KNXModule:
                     device_authentication_password=self.entry.data.get(
                         CONF_KNX_SECURE_DEVICE_AUTHENTICATION
                     ),
-                    knxkeys_file_path=knxkeys_file,
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
                 ),
                 auto_reconnect=True,
                 threaded=True,
@@ -492,8 +461,8 @@ class KNXModule:
                     latency_ms=self.entry.data.get(
                         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
                     ),
-                    knxkeys_file_path=knxkeys_file,
                     knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
                 ),
                 auto_reconnect=True,
                 threaded=True,
@@ -501,8 +470,8 @@ class KNXModule:
         return ConnectionConfig(
             auto_reconnect=True,
             secure_config=SecureConfig(
-                knxkeys_file_path=knxkeys_file,
                 knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                knxkeys_file_path=_knxkeys_file,
             ),
             threaded=True,
         )

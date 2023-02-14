@@ -49,7 +49,6 @@ from .const import (
     CONF_KNX_TUNNELING_TCP_SECURE,
     DEFAULT_ROUTING_IA,
     DOMAIN,
-    KNX_KEYRING_FILENAME,
     KNXConfigEntryData,
 )
 from .schema import ia_validator, ip_v4_validator
@@ -68,6 +67,7 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
+DEFAULT_KNX_KEYRING_FILENAME: Final = "keyfile.knxkeys"
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
@@ -487,6 +487,7 @@ class KNXCommonFlow(ABC, FlowHandler):
             )
             if not errors and self._keyring:
                 self.new_entry_data |= KNXConfigEntryData(
+                    knxkeys_filename=f"{DOMAIN}/{DEFAULT_KNX_KEYRING_FILENAME}",
                     knxkeys_password=password,
                     backbone_key=None,
                     sync_latency_tolerance=None,
@@ -707,7 +708,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 else:
                     dest_path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
                     dest_path.mkdir(exist_ok=True)
-                    file_path.rename(dest_path / KNX_KEYRING_FILENAME)
+                    file_path.rename(dest_path / DEFAULT_KNX_KEYRING_FILENAME)
             return keyring, errors
 
         keyring, errors = await self.hass.async_add_executor_job(_process_upload)
@@ -718,7 +719,7 @@ class KNXCommonFlow(ABC, FlowHandler):
 class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
     """Handle a KNX config flow."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize KNX options flow."""
