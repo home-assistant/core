@@ -3,7 +3,7 @@
   "name": "OctoPrint",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/octoprint",
-  "requirements": ["pyoctoprintapi==0.1.9"],
+  "requirements": ["pyoctoprintapi==0.1.11"],
   "codeowners": ["@rfleming71"],
   "zeroconf": ["_octoprint._tcp.local."],
   "ssdp": [
