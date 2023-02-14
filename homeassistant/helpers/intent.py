@@ -335,7 +335,9 @@ class ServiceIntentHandler(IntentHandler):
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
     }
 
-    service_timeout: float = 2.0
+    # We use a small timeout in service calls to (hopefully) pass validation
+    # checks, but not try to wait for the call to fully complete.
+    service_timeout: float = 0.2
 
     def __init__(
         self, intent_type: str, domain: str, service: str, speech: str | None = None
@@ -425,17 +427,19 @@ class ServiceIntentHandler(IntentHandler):
 
         # Handle service calls in parallel, noting failures as they occur.
         failed_results: list[IntentResponseTarget] = []
-        for service_coro in asyncio.as_completed(service_coros):
-            success, state = await service_coro
+        for state, service_coro in zip(states, asyncio.as_completed(service_coros)):
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,
                 name=state.name,
                 id=state.entity_id,
             )
-            if success:
+
+            try:
+                await service_coro
                 success_results.append(target)
-            else:
+            except Exception:  # pylint: disable=broad-except
                 failed_results.append(target)
+                _LOGGER.exception("Service call failed for %s", state.entity_id)
 
         if not success_results:
             # If no entities succeeded, raise an error.
@@ -457,12 +461,10 @@ class ServiceIntentHandler(IntentHandler):
 
         return response
 
-    async def async_call_service(
-        self, intent_obj: Intent, state: State
-    ) -> tuple[bool | None, State]:
+    async def async_call_service(self, intent_obj: Intent, state: State) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
-        result = await hass.services.async_call(
+        await hass.services.async_call(
             self.domain,
             self.service,
             {ATTR_ENTITY_ID: state.entity_id},
@@ -470,8 +472,6 @@ class ServiceIntentHandler(IntentHandler):
             blocking=True,
             limit=self.service_timeout,
         )
-
-        return result, state
 
 
 class IntentCategory(Enum):
