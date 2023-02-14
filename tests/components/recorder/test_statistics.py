@@ -1,21 +1,27 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=protected-access,invalid-name
-from datetime import timedelta
+# pylint: disable=invalid-name
+from datetime import datetime, timedelta
 import importlib
 import sys
-from unittest.mock import patch, sentinel
+from unittest.mock import ANY, DEFAULT, MagicMock, patch, sentinel
 
 import pytest
-from pytest import approx
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    datetime_to_timestamp_or_none,
+    process_timestamp,
+)
 from homeassistant.components.recorder.statistics import (
+    STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    _statistics_during_period_with_session,
+    _update_or_add_metadata,
     async_add_external_statistics,
     async_import_statistics,
     delete_statistics_duplicates,
@@ -25,21 +31,36 @@ from homeassistant.components.recorder.statistics import (
     get_latest_short_term_statistics,
     get_metadata,
     list_statistic_ids,
-    statistics_during_period,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.components.sensor import UNIT_CONVERTERS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done, do_adhoc_statistics, wait_recording_done
+from .common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    async_wait_recording_done,
+    do_adhoc_statistics,
+    statistics_during_period,
+    wait_recording_done,
+)
 
 from tests.common import get_test_home_assistant, mock_registry
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
+
+def test_converters_align_with_sensor() -> None:
+    """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
+    for converter in UNIT_CONVERTERS.values():
+        assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+
+    for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+        assert converter in UNIT_CONVERTERS.values()
 
 
 def test_compile_hourly_statistics(hass_recorder):
@@ -49,51 +70,51 @@ def test_compile_hourly_statistics(hass_recorder):
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    stats = get_latest_short_term_statistics(
+        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
     assert stats == {}
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
-        "mean": approx(14.915254237288135),
-        "min": approx(10.0),
-        "max": approx(20.0),
+        "start": process_timestamp(zero).timestamp(),
+        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
     }
     expected_2 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(four),
-        "end": process_timestamp_to_utc_isoformat(four + timedelta(minutes=5)),
-        "mean": approx(20.0),
-        "min": approx(20.0),
-        "max": approx(20.0),
+        "start": process_timestamp(four).timestamp(),
+        "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(20.0),
+        "min": pytest.approx(20.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-        {**expected_2, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_1, "statistic_id": "sensor.test2"},
-        {**expected_2, "statistic_id": "sensor.test2"},
-    ]
+    expected_stats1 = [expected_1, expected_2]
+    expected_stats2 = [expected_1, expected_2]
 
     # Test statistics_during_period
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -119,32 +140,71 @@ def test_compile_hourly_statistics(hass_recorder):
     assert stats == {}
 
     # Test get_last_short_term_statistics and get_latest_short_term_statistics
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
-    stats = get_last_short_term_statistics(hass, 1, "sensor.test1", True)
-    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+    stats = get_last_short_term_statistics(
+        hass,
+        1,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
+    assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
-    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+    stats = get_latest_short_term_statistics(
+        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
+    assert stats == {"sensor.test1": [expected_2]}
 
     metadata = get_metadata(hass, statistic_ids=['sensor.test1"'])
 
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"], metadata=metadata)
-    assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
+    stats = get_latest_short_term_statistics(
+        hass,
+        ["sensor.test1"],
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+        metadata=metadata,
+    )
+    assert stats == {"sensor.test1": [expected_2]}
 
-    stats = get_last_short_term_statistics(hass, 2, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        2,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_short_term_statistics(hass, 3, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        3,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        1,
+        "sensor.test3",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     instance.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
-    stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
+    stats = get_latest_short_term_statistics(
+        hass, ["sensor.test1"], {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
     assert stats == {}
 
 
@@ -218,9 +278,8 @@ def test_compile_periodic_statistics_exception(
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(now),
-        "end": process_timestamp_to_utc_isoformat(now + timedelta(minutes=5)),
+        "start": process_timestamp(now).timestamp(),
+        "end": process_timestamp(now + timedelta(minutes=5)).timestamp(),
         "mean": None,
         "min": None,
         "max": None,
@@ -229,9 +288,8 @@ def test_compile_periodic_statistics_exception(
         "sum": None,
     }
     expected_2 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(now + timedelta(minutes=5)),
-        "end": process_timestamp_to_utc_isoformat(now + timedelta(minutes=10)),
+        "start": process_timestamp(now + timedelta(minutes=5)).timestamp(),
+        "end": process_timestamp(now + timedelta(minutes=10)).timestamp(),
         "mean": None,
         "min": None,
         "max": None,
@@ -239,17 +297,9 @@ def test_compile_periodic_statistics_exception(
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-        {**expected_2, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_2, "statistic_id": "sensor.test2"},
-    ]
-    expected_stats3 = [
-        {**expected_1, "statistic_id": "sensor.test3"},
-        {**expected_2, "statistic_id": "sensor.test3"},
-    ]
+    expected_stats1 = [expected_1, expected_2]
+    expected_stats2 = [expected_2]
+    expected_stats3 = [expected_1, expected_2]
 
     stats = statistics_during_period(hass, now, period="5minute")
     assert stats == {
@@ -281,36 +331,35 @@ def test_rename_entity(hass_recorder):
 
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
-        "mean": approx(14.915254237288135),
-        "min": approx(10.0),
-        "max": approx(20.0),
+        "start": process_timestamp(zero).timestamp(),
+        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_1, "statistic_id": "sensor.test2"},
-    ]
-    expected_stats99 = [
-        {**expected_1, "statistic_id": "sensor.test99"},
-    ]
+    expected_stats1 = [expected_1]
+    expected_stats2 = [expected_1]
+    expected_stats99 = [expected_1]
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
@@ -348,33 +397,34 @@ def test_rename_entity_collision(hass_recorder, caplog):
 
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(
+        hass,
+        0,
+        "sensor.test1",
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert stats == {}
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     expected_1 = {
-        "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
-        "mean": approx(14.915254237288135),
-        "min": approx(10.0),
-        "max": approx(20.0),
+        "start": process_timestamp(zero).timestamp(),
+        "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
     }
-    expected_stats1 = [
-        {**expected_1, "statistic_id": "sensor.test1"},
-    ]
-    expected_stats2 = [
-        {**expected_1, "statistic_id": "sensor.test2"},
-    ]
+    expected_stats1 = [expected_1]
+    expected_stats2 = [expected_1]
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
@@ -412,7 +462,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
@@ -465,7 +515,7 @@ async def test_import_statistics(
 
     zero = dt_util.utcnow()
     last_reset = dt_util.parse_datetime(last_reset_str) if last_reset_str else None
-    last_reset_utc_str = dt_util.as_utc(last_reset).isoformat() if last_reset else None
+    last_reset_utc = dt_util.as_utc(last_reset) if last_reset else None
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
@@ -497,32 +547,31 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -546,19 +595,24 @@ async def test_import_statistics(
             },
         )
     }
-    last_stats = get_last_statistics(hass, 1, statistic_id, True)
+    last_stats = get_last_statistics(
+        hass,
+        1,
+        statistic_id,
+        True,
+        {"last_reset", "max", "mean", "min", "state", "sum"},
+    )
     assert last_stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -576,26 +630,24 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(5.0),
-                "sum": approx(6.0),
+                "state": pytest.approx(5.0),
+                "sum": pytest.approx(6.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -616,6 +668,7 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -643,26 +696,24 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
-                "max": approx(1.0),
-                "mean": approx(2.0),
-                "min": approx(3.0),
-                "last_reset": last_reset_utc_str,
-                "state": approx(4.0),
-                "sum": approx(5.0),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
+                "max": pytest.approx(1.0),
+                "mean": pytest.approx(2.0),
+                "min": pytest.approx(3.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(4.0),
+                "sum": pytest.approx(5.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -686,26 +737,24 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "statistic_id": statistic_id,
-                "start": period1.isoformat(),
-                "end": (period1 + timedelta(hours=1)).isoformat(),
-                "max": approx(1.0),
-                "mean": approx(2.0),
-                "min": approx(3.0),
-                "last_reset": last_reset_utc_str,
-                "state": approx(4.0),
-                "sum": approx(5.0),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
+                "max": pytest.approx(1.0),
+                "mean": pytest.approx(2.0),
+                "min": pytest.approx(3.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(4.0),
+                "sum": pytest.approx(5.0),
             },
             {
-                "statistic_id": statistic_id,
-                "start": period2.isoformat(),
-                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": last_reset_utc_str,
-                "state": approx(1.0),
-                "sum": approx(1000 * 1000 + 3.0),
+                "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(1000 * 1000 + 3.0),
             },
         ]
     }
@@ -947,9 +996,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week1_start.isoformat(),
-                "end": week1_end.isoformat(),
+                "start": week1_start.timestamp(),
+                "end": week1_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -958,9 +1006,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
                 "sum": 3.0,
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week2_start.isoformat(),
-                "end": week2_end.isoformat(),
+                "start": week2_start.timestamp(),
+                "end": week2_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -980,9 +1027,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week1_start.isoformat(),
-                "end": week1_end.isoformat(),
+                "start": week1_start.timestamp(),
+                "end": week1_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -991,9 +1037,8 @@ def test_weekly_statistics(hass_recorder, caplog, timezone):
                 "sum": 3.0,
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": week2_start.isoformat(),
-                "end": week2_end.isoformat(),
+                "start": week2_start.timestamp(),
+                "end": week2_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1085,26 +1130,24 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": sep_start.isoformat(),
-                "end": sep_end.isoformat(),
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": oct_start.isoformat(),
-                "end": oct_end.isoformat(),
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(3.0),
-                "sum": approx(5.0),
+                "state": pytest.approx(3.0),
+                "sum": pytest.approx(5.0),
             },
         ]
     }
@@ -1122,26 +1165,24 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
     assert stats == {
         "test:total_energy_import": [
             {
-                "statistic_id": "test:total_energy_import",
-                "start": sep_start.isoformat(),
-                "end": sep_end.isoformat(),
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
             {
-                "statistic_id": "test:total_energy_import",
-                "start": oct_start.isoformat(),
-                "end": oct_end.isoformat(),
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(3.0),
-                "sum": approx(5.0),
+                "state": pytest.approx(3.0),
+                "sum": pytest.approx(5.0),
             },
         ]
     }
@@ -1397,7 +1438,7 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
             session.add(
                 recorder.db_schema.StatisticsMeta.from_meta(external_energy_metadata_1)
             )
-            for _ in range(3000):
+            for _ in range(1100):
                 session.add(
                     recorder.db_schema.StatisticsMeta.from_meta(
                         external_energy_metadata_1
@@ -1427,15 +1468,15 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    assert "Deleted 3002 duplicated statistics_meta rows" in caplog.text
+    assert "Deleted 1102 duplicated statistics_meta rows" in caplog.text
     with session_scope(hass=hass) as session:
         tmp = session.query(recorder.db_schema.StatisticsMeta).all()
         assert len(tmp) == 3
-        assert tmp[0].id == 3001
+        assert tmp[0].id == 1101
         assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
-        assert tmp[1].id == 3003
+        assert tmp[1].id == 1103
         assert tmp[1].statistic_id == "test:total_energy_import_tariff_2"
-        assert tmp[2].id == 3005
+        assert tmp[2].id == 1105
         assert tmp[2].statistic_id == "test:fossil_percentage"
 
     hass.stop()
@@ -1451,6 +1492,208 @@ def test_delete_metadata_duplicates_no_duplicates(hass_recorder, caplog):
     assert "duplicated statistics_meta rows" not in caplog.text
 
 
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
+@pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
+async def test_validate_db_schema(
+    async_setup_recorder_instance, hass, caplog, db_engine
+):
+    """Test validating DB schema with MySQL and PostgreSQL.
+
+    Note: The test uses SQLite, the purpose is only to exercise the code.
+    """
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
+    ):
+        await async_setup_recorder_instance(hass)
+        await async_wait_recording_done(hass)
+    assert "Schema validation failed" not in caplog.text
+    assert "Detected statistics schema errors" not in caplog.text
+    assert "Database is about to correct DB schema errors" not in caplog.text
+
+
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
+async def test_validate_db_schema_fix_utf8_issue(
+    async_setup_recorder_instance, hass, caplog
+):
+    """Test validating DB schema with MySQL.
+
+    Note: The test uses SQLite, the purpose is only to exercise the code.
+    """
+    orig_error = MagicMock()
+    orig_error.args = [1366]
+    utf8_error = OperationalError("", "", orig=orig_error)
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.dialect_name", "mysql"
+    ), patch(
+        "homeassistant.components.recorder.statistics._update_or_add_metadata",
+        side_effect=[utf8_error, DEFAULT, DEFAULT],
+        wraps=_update_or_add_metadata,
+    ):
+        await async_setup_recorder_instance(hass)
+        await async_wait_recording_done(hass)
+
+    assert "Schema validation failed" not in caplog.text
+    assert (
+        "Database is about to correct DB schema errors: statistics_meta.4-byte UTF-8"
+        in caplog.text
+    )
+    assert (
+        "Updating character set and collation of table statistics_meta to utf8mb4"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
+@pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
+@pytest.mark.parametrize(
+    "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
+)
+@pytest.mark.parametrize(
+    "column, value",
+    (("max", 1.0), ("mean", 1.0), ("min", 1.0), ("state", 1.0), ("sum", 1.0)),
+)
+async def test_validate_db_schema_fix_float_issue(
+    async_setup_recorder_instance,
+    hass,
+    caplog,
+    db_engine,
+    table,
+    replace_index,
+    column,
+    value,
+):
+    """Test validating DB schema with MySQL.
+
+    Note: The test uses SQLite, the purpose is only to exercise the code.
+    """
+    orig_error = MagicMock()
+    orig_error.args = [1366]
+    precise_number = 1.000000000000001
+    precise_time = datetime(2020, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
+    statistics = {
+        "recorder.db_test": [
+            {
+                "last_reset": precise_time.timestamp(),
+                "max": precise_number,
+                "mean": precise_number,
+                "min": precise_number,
+                "start": precise_time.timestamp(),
+                "state": precise_number,
+                "sum": precise_number,
+            }
+        ]
+    }
+    statistics["recorder.db_test"][0][column] = value
+    fake_statistics = [DEFAULT, DEFAULT]
+    fake_statistics[replace_index] = statistics
+
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
+    ), patch(
+        "homeassistant.components.recorder.statistics._statistics_during_period_with_session",
+        side_effect=fake_statistics,
+        wraps=_statistics_during_period_with_session,
+    ), patch(
+        "homeassistant.components.recorder.migration._modify_columns"
+    ) as modify_columns_mock:
+        await async_setup_recorder_instance(hass)
+        await async_wait_recording_done(hass)
+
+    assert "Schema validation failed" not in caplog.text
+    assert (
+        f"Database is about to correct DB schema errors: {table}.double precision"
+        in caplog.text
+    )
+    modification = [
+        "mean DOUBLE PRECISION",
+        "min DOUBLE PRECISION",
+        "max DOUBLE PRECISION",
+        "state DOUBLE PRECISION",
+        "sum DOUBLE PRECISION",
+    ]
+    modify_columns_mock.assert_called_once_with(ANY, ANY, table, modification)
+
+
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
+@pytest.mark.parametrize(
+    "db_engine, modification",
+    (
+        ("mysql", ["last_reset DATETIME(6)", "start DATETIME(6)"]),
+        (
+            "postgresql",
+            [
+                "last_reset TIMESTAMP(6) WITH TIME ZONE",
+                "start TIMESTAMP(6) WITH TIME ZONE",
+            ],
+        ),
+    ),
+)
+@pytest.mark.parametrize(
+    "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
+)
+@pytest.mark.parametrize(
+    "column, value",
+    (
+        ("last_reset", "2020-10-06T00:00:00+00:00"),
+        ("start", "2020-10-06T00:00:00+00:00"),
+    ),
+)
+async def test_validate_db_schema_fix_statistics_datetime_issue(
+    async_setup_recorder_instance,
+    hass,
+    caplog,
+    db_engine,
+    modification,
+    table,
+    replace_index,
+    column,
+    value,
+):
+    """Test validating DB schema with MySQL.
+
+    Note: The test uses SQLite, the purpose is only to exercise the code.
+    """
+    orig_error = MagicMock()
+    orig_error.args = [1366]
+    precise_number = 1.000000000000001
+    precise_time = datetime(2020, 10, 6, microsecond=1, tzinfo=dt_util.UTC)
+    statistics = {
+        "recorder.db_test": [
+            {
+                "last_reset": precise_time,
+                "max": precise_number,
+                "mean": precise_number,
+                "min": precise_number,
+                "start": precise_time,
+                "state": precise_number,
+                "sum": precise_number,
+            }
+        ]
+    }
+    statistics["recorder.db_test"][0][column] = value
+    fake_statistics = [DEFAULT, DEFAULT]
+    fake_statistics[replace_index] = statistics
+
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.dialect_name", db_engine
+    ), patch(
+        "homeassistant.components.recorder.statistics._statistics_during_period_with_session",
+        side_effect=fake_statistics,
+        wraps=_statistics_during_period_with_session,
+    ), patch(
+        "homeassistant.components.recorder.migration._modify_columns"
+    ) as modify_columns_mock:
+        await async_setup_recorder_instance(hass)
+        await async_wait_recording_done(hass)
+
+    assert "Schema validation failed" not in caplog.text
+    assert (
+        f"Database is about to correct DB schema errors: {table}.µs precision"
+        in caplog.text
+    )
+    modify_columns_mock.assert_called_once_with(ANY, ANY, table, modification)
+
+
 def record_states(hass):
     """Record some test states.
 
@@ -1464,7 +1707,7 @@ def record_states(hass):
     sns1_attr = {
         "device_class": "temperature",
         "state_class": "measurement",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
     }
     sns2_attr = {
         "device_class": "humidity",
@@ -1493,13 +1736,18 @@ def record_states(hass):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
-        states[mp].append(
-            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
-        )
         states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=one + timedelta(microseconds=1),
+    ):
+        states[mp].append(
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
+        )
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two

@@ -35,7 +35,6 @@ LOCATION_MESSAGE = {
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
-    pass
 
 
 @pytest.fixture
@@ -137,7 +136,7 @@ async def test_returns_error_missing_device(mock_client):
     assert json == []
 
 
-def test_context_delivers_pending_msg():
+def test_context_delivers_pending_msg() -> None:
     """Test that context is able to hold pending messages while being init."""
     context = owntracks.OwnTracksContext(None, None, None, None, None, None, None, None)
     context.async_see(hello="world")

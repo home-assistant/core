@@ -5,18 +5,10 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 import functools
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
-from adb_shell.exceptions import (
-    AdbTimeoutError,
-    InvalidChecksumError,
-    InvalidCommandError,
-    InvalidResponseError,
-    TcpTimeoutException,
-)
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -43,7 +35,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import get_androidtv_mac
+from . import ADB_PYTHON_EXCEPTIONS, ADB_TCP_EXCEPTIONS, get_androidtv_mac
 from .const import (
     ANDROID_DEV,
     ANDROID_DEV_OPT,
@@ -148,12 +140,13 @@ async def async_setup_entry(
     )
 
 
+_FuncType = Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]
+
+
 def adb_decorator(
     override_available: bool = False,
-) -> Callable[
-    [Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]],
-    Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]],
-]:
+) -> Callable[[_FuncType[_ADBDeviceT, _P, _R]], _ReturnFuncType[_ADBDeviceT, _P, _R]]:
     """Wrap ADB methods and catch exceptions.
 
     Allows for overriding the available status of the ADB connection via the
@@ -161,8 +154,8 @@ def adb_decorator(
     """
 
     def _adb_decorator(
-        func: Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
-    ) -> Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]:
+        func: _FuncType[_ADBDeviceT, _P, _R]
+    ) -> _ReturnFuncType[_ADBDeviceT, _P, _R]:
         """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)
@@ -170,7 +163,6 @@ def adb_decorator(
             self: _ADBDeviceT, *args: _P.args, **kwargs: _P.kwargs
         ) -> _R | None:
             """Call an ADB-related method and catch exceptions."""
-            # pylint: disable=protected-access
             if not self.available and not override_available:
                 return None
 
@@ -179,22 +171,27 @@ def adb_decorator(
             except LockNotAcquiredException:
                 # If the ADB lock could not be acquired, skip this command
                 _LOGGER.info(
-                    "ADB command not executed because the connection is currently in use"
+                    "ADB command not executed because the connection is currently"
+                    " in use"
                 )
                 return None
             except self.exceptions as err:
                 _LOGGER.error(
-                    "Failed to execute an ADB command. ADB connection re-"
-                    "establishing attempt in the next update. Error: %s",
+                    (
+                        "Failed to execute an ADB command. ADB connection re-"
+                        "establishing attempt in the next update. Error: %s"
+                    ),
                     err,
                 )
                 await self.aftv.adb_close()
+                # pylint: disable-next=protected-access
                 self._attr_available = False
                 return None
             except Exception:
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again, then raise the exception.
                 await self.aftv.adb_close()
+                # pylint: disable-next=protected-access
                 self._attr_available = False
                 raise
 
@@ -249,19 +246,10 @@ class ADBDevice(MediaPlayerEntity):
         # ADB exceptions to catch
         if not aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
-            self.exceptions = (
-                AdbTimeoutError,
-                BrokenPipeError,
-                ConnectionResetError,
-                ValueError,
-                InvalidChecksumError,
-                InvalidCommandError,
-                InvalidResponseError,
-                TcpTimeoutException,
-            )
+            self.exceptions = ADB_PYTHON_EXCEPTIONS
         else:
             # Using "pure-python-adb" (communicate with ADB server)
-            self.exceptions = (ConnectionResetError, RuntimeError)
+            self.exceptions = ADB_TCP_EXCEPTIONS
 
         # Property attributes
         self._attr_extra_state_attributes = {
@@ -427,7 +415,10 @@ class ADBDevice(MediaPlayerEntity):
             self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = output
             self.async_write_ha_state()
 
-            msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
+            msg = (
+                f"Output from service '{SERVICE_LEARN_SENDEVENT}' from"
+                f" {self.entity_id}: '{output}'"
+            )
             persistent_notification.async_create(
                 self.hass,
                 msg,

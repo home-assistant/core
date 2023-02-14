@@ -5,10 +5,9 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Any
+from typing import Any, ParamSpec
 
 from pyheos import HeosError, const as heos_const
-from typing_extensions import ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -89,14 +88,14 @@ async def async_setup_entry(
     async_add_entities(devices, True)
 
 
-def log_command_error(
-    command: str,
-) -> Callable[[Callable[_P, Awaitable[Any]]], Callable[_P, Coroutine[Any, Any, None]]]:
+_FuncType = Callable[_P, Awaitable[Any]]
+_ReturnFuncType = Callable[_P, Coroutine[Any, Any, None]]
+
+
+def log_command_error(command: str) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
     """Return decorator that logs command failure."""
 
-    def decorator(
-        func: Callable[_P, Awaitable[Any]]
-    ) -> Callable[_P, Coroutine[Any, Any, None]]:
+    def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
         @wraps(func)
         async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
@@ -413,7 +412,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._source_manager.source_list
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of the player."""
         return PLAY_STATE_TO_STATE[self._player.state]
 

@@ -14,7 +14,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN as ZHA_DOMAIN
-from .core.const import DATA_ZHA, ZHA_DEVICES_LOADED_EVENT, ZHA_EVENT
+from .core.const import ZHA_EVENT
 from .core.helpers import async_get_zha_device
 
 CONF_SUBTYPE = "subtype"
@@ -32,18 +32,16 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    if ZHA_DOMAIN in hass.config.components:
-        await hass.data[DATA_ZHA][ZHA_DEVICES_LOADED_EVENT].wait()
-        trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
-        try:
-            zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
-        except (KeyError, AttributeError, IntegrationError) as err:
-            raise InvalidDeviceAutomationConfig from err
-        if (
-            zha_device.device_automation_triggers is None
-            or trigger not in zha_device.device_automation_triggers
-        ):
-            raise InvalidDeviceAutomationConfig
+    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+    try:
+        zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
+    except (KeyError, AttributeError, IntegrationError) as err:
+        raise InvalidDeviceAutomationConfig from err
+    if (
+        zha_device.device_automation_triggers is None
+        or trigger not in zha_device.device_automation_triggers
+    ):
+        raise InvalidDeviceAutomationConfig(f"device does not have trigger {trigger}")
 
     return config
 
@@ -94,7 +92,7 @@ async def async_get_triggers(
         return []
 
     triggers = []
-    for trigger, subtype in zha_device.device_automation_triggers.keys():
+    for trigger, subtype in zha_device.device_automation_triggers:
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,

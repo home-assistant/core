@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,5 +50,6 @@ class SyncButton(ButtonEntity):
         result = await self._google_config.async_sync_entities(agent_user_id)
         if result != 200:
             raise HomeAssistantError(
-                f"Unable to sync devices with result code: {result}, check log for more info."
+                f"Unable to sync devices with result code: {result}, check log for more"
+                " info."
             )

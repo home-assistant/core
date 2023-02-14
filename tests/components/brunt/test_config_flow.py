@@ -8,13 +8,14 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.brunt.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 CONFIG = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -41,7 +42,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_duplicate_login(hass):
+async def test_form_duplicate_login(hass: HomeAssistant) -> None:
     """Test uniqueness of username."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -70,7 +71,7 @@ async def test_form_duplicate_login(hass):
         (Exception, "unknown"),
     ],
 )
-async def test_form_error(hass, side_effect, error_message):
+async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test we handle cannot connect."""
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
@@ -97,7 +98,9 @@ async def test_form_error(hass, side_effect, error_message):
         ),
     ],
 )
-async def test_reauth(hass, side_effect, result_type, password, step_id, reason):
+async def test_reauth(
+    hass: HomeAssistant, side_effect, result_type, password, step_id, reason
+) -> None:
     """Test uniqueness of username."""
     entry = MockConfigEntry(
         domain=DOMAIN,

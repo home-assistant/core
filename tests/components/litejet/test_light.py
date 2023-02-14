@@ -3,6 +3,7 @@ from homeassistant.components import light
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_TRANSITION
 from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
 
@@ -12,7 +13,7 @@ ENTITY_OTHER_LIGHT = "light.mock_load_2"
 ENTITY_OTHER_LIGHT_NUMBER = 2
 
 
-async def test_on_brightness(hass, mock_litejet):
+async def test_on_brightness(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on with brightness."""
     await async_init_integration(hass)
 
@@ -30,7 +31,7 @@ async def test_on_brightness(hass, mock_litejet):
     mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 39, 0)
 
 
-async def test_default_transition(hass, mock_litejet):
+async def test_default_transition(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on with the default transition option."""
     entry = await async_init_integration(hass)
 
@@ -51,7 +52,7 @@ async def test_default_transition(hass, mock_litejet):
     mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 39, 12)
 
 
-async def test_transition(hass, mock_litejet):
+async def test_transition(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on with transition."""
     await async_init_integration(hass)
 
@@ -79,7 +80,7 @@ async def test_transition(hass, mock_litejet):
     mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 0, 5)
 
 
-async def test_on_off(hass, mock_litejet):
+async def test_on_off(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on and off."""
     await async_init_integration(hass)
 
@@ -105,7 +106,7 @@ async def test_on_off(hass, mock_litejet):
     mock_litejet.deactivate_load.assert_called_with(ENTITY_LIGHT_NUMBER)
 
 
-async def test_activated_event(hass, mock_litejet):
+async def test_activated_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
 
     await async_init_integration(hass)
@@ -113,7 +114,7 @@ async def test_activated_event(hass, mock_litejet):
     # Light 1
     mock_litejet.get_load_level.return_value = 99
     mock_litejet.get_load_level.reset_mock()
-    mock_litejet.load_activated_callbacks[ENTITY_LIGHT_NUMBER]()
+    mock_litejet.load_activated_callbacks[ENTITY_LIGHT_NUMBER](99)
     await hass.async_block_till_done()
 
     mock_litejet.get_load_level.assert_called_once_with(ENTITY_LIGHT_NUMBER)
@@ -128,7 +129,7 @@ async def test_activated_event(hass, mock_litejet):
 
     mock_litejet.get_load_level.return_value = 40
     mock_litejet.get_load_level.reset_mock()
-    mock_litejet.load_activated_callbacks[ENTITY_OTHER_LIGHT_NUMBER]()
+    mock_litejet.load_activated_callbacks[ENTITY_OTHER_LIGHT_NUMBER](40)
     await hass.async_block_till_done()
 
     mock_litejet.get_load_level.assert_called_once_with(ENTITY_OTHER_LIGHT_NUMBER)
@@ -140,14 +141,14 @@ async def test_activated_event(hass, mock_litejet):
     assert hass.states.get(ENTITY_OTHER_LIGHT).attributes.get(ATTR_BRIGHTNESS) == 103
 
 
-async def test_deactivated_event(hass, mock_litejet):
+async def test_deactivated_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
     await async_init_integration(hass)
 
     # Initial state is on.
     mock_litejet.get_load_level.return_value = 99
 
-    mock_litejet.load_activated_callbacks[ENTITY_OTHER_LIGHT_NUMBER]()
+    mock_litejet.load_activated_callbacks[ENTITY_OTHER_LIGHT_NUMBER](99)
     await hass.async_block_till_done()
 
     assert light.is_on(hass, ENTITY_OTHER_LIGHT)
@@ -157,7 +158,7 @@ async def test_deactivated_event(hass, mock_litejet):
     mock_litejet.get_load_level.reset_mock()
     mock_litejet.get_load_level.return_value = 0
 
-    mock_litejet.load_deactivated_callbacks[ENTITY_OTHER_LIGHT_NUMBER]()
+    mock_litejet.load_deactivated_callbacks[ENTITY_OTHER_LIGHT_NUMBER](0)
     await hass.async_block_till_done()
 
     # (Requesting the level is not strictly needed with a deactivated

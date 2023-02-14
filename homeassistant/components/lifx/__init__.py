@@ -17,9 +17,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -142,7 +143,10 @@ class LIFXDiscoveryManager:
                 if migration_complete and migrating_was_in_progress:
                     self.migrating = False
                     _LOGGER.debug(
-                        "LIFX migration complete, switching to normal discovery interval: %s",
+                        (
+                            "LIFX migration complete, switching to normal discovery"
+                            " interval: %s"
+                        ),
                         DISCOVERY_INTERVAL,
                     )
                     self.async_setup_discovery_interval()
@@ -163,7 +167,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         We do not want the discovery task to block startup.
         """
-        asyncio.create_task(discovery_manager.async_discovery())
+        task = asyncio.create_task(discovery_manager.async_discovery())
+
+        @callback
+        def _async_stop(_: Event) -> None:
+            if not task.done():
+                task.cancel()
+
+        # Task must be shut down when home assistant is closing
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
 
     # Let the system settle a bit before starting discovery
     # to reduce the risk we miss devices because the event

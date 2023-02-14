@@ -146,8 +146,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         loc_config = client_v2.installation_info[loc_idx]
     except IndexError:
         _LOGGER.error(
-            "Config error: '%s' = %s, but the valid range is 0-%s. "
-            "Unable to continue. Fix any configuration errors and restart HA",
+            (
+                "Config error: '%s' = %s, but the valid range is 0-%s. "
+                "Unable to continue. Fix any configuration errors and restart HA"
+            ),
             CONF_LOCATION_IDX,
             loc_idx,
             len(client_v2.installation_info) - 1,

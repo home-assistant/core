@@ -40,6 +40,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -279,7 +280,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         )
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this device."""
         return self._device_class
 
@@ -353,8 +354,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     @property
     def entity_picture(self):
-        """
-        Return image of the media playing.
+        """Return image of the media playing.
 
         The universal media player doesn't use the parent class logic, since
         the url is coming from child entity pictures which have already been
@@ -453,9 +453,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._override_or_child_attr(ATTR_MEDIA_SHUFFLE)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        flags = self._child_attr(ATTR_SUPPORTED_FEATURES) or 0
+        flags: MediaPlayerEntityFeature = self._child_attr(
+            ATTR_SUPPORTED_FEATURES
+        ) or MediaPlayerEntityFeature(0)
 
         if SERVICE_TURN_ON in self._cmds:
             flags |= MediaPlayerEntityFeature.TURN_ON

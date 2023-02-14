@@ -35,7 +35,7 @@ def patch_cluster(cluster):
                     zcl_f.ReadAttributeRecord(
                         attr_id,
                         zcl_f.Status.SUCCESS,
-                        zcl_f.TypeValue(python_type=None, value=value),
+                        zcl_f.TypeValue(type=None, value=value),
                     )
                 )
             else:
@@ -77,7 +77,7 @@ def update_attribute_cache(cluster):
             attrid = zigpy.types.uint16_t(attrid)
         attrs.append(make_attribute(attrid, value))
 
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
     hdr.frame_control.disable_default_response = True
     msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
         attribute_reports=attrs
@@ -179,7 +179,7 @@ def async_find_group_entity_id(hass, domain, group):
 
 
 async def async_enable_traffic(hass, zha_devices, enabled=True):
-    """Allow traffic to flow through the gateway and the zha device."""
+    """Allow traffic to flow through the gateway and the ZHA device."""
     for zha_device in zha_devices:
         zha_device.update_available(enabled)
     await hass.async_block_till_done()

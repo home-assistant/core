@@ -145,7 +145,7 @@ async def test_flow_entry_already_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_reauthentication(hass):
+async def test_reauthentication(hass: HomeAssistant) -> None:
     """Test surepetcare reauthentication."""
     old_entry = MockConfigEntry(
         domain="surepetcare",
@@ -182,7 +182,7 @@ async def test_reauthentication(hass):
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_reauthentication_failure(hass):
+async def test_reauthentication_failure(hass: HomeAssistant) -> None:
     """Test surepetcare reauthentication failure."""
     old_entry = MockConfigEntry(
         domain="surepetcare",
@@ -220,7 +220,7 @@ async def test_reauthentication_failure(hass):
     assert result2["errors"]["base"] == "invalid_auth"
 
 
-async def test_reauthentication_cannot_connect(hass):
+async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
     """Test surepetcare reauthentication failure."""
     old_entry = MockConfigEntry(
         domain="surepetcare",
@@ -258,7 +258,7 @@ async def test_reauthentication_cannot_connect(hass):
     assert result2["errors"]["base"] == "cannot_connect"
 
 
-async def test_reauthentication_unknown_failure(hass):
+async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     """Test surepetcare reauthentication failure."""
     old_entry = MockConfigEntry(
         domain="surepetcare",

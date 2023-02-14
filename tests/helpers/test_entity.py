@@ -1,5 +1,5 @@
 """Test the entity helper."""
-# pylint: disable=protected-access
+
 import asyncio
 import dataclasses
 from datetime import timedelta
@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 
 from tests.common import (
@@ -29,13 +29,13 @@ from tests.common import (
 )
 
 
-def test_generate_entity_id_requires_hass_or_ids():
+def test_generate_entity_id_requires_hass_or_ids() -> None:
     """Ensure we require at least hass or current ids."""
     with pytest.raises(ValueError):
         entity.generate_entity_id("test.{}", "hello world")
 
 
-def test_generate_entity_id_given_keys():
+def test_generate_entity_id_given_keys() -> None:
     """Test generating an entity id given current ids."""
     assert (
         entity.generate_entity_id(
@@ -53,7 +53,7 @@ def test_generate_entity_id_given_keys():
     )
 
 
-async def test_async_update_support(hass):
+async def test_async_update_support(hass: HomeAssistant) -> None:
     """Test async update getting called."""
     sync_update = []
     async_update = []
@@ -196,7 +196,7 @@ async def test_warn_slow_device_update_disabled(hass, caplog):
         assert update_call
 
 
-async def test_async_schedule_update_ha_state(hass):
+async def test_async_schedule_update_ha_state(hass: HomeAssistant) -> None:
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
@@ -216,7 +216,7 @@ async def test_async_schedule_update_ha_state(hass):
     assert update_call is True
 
 
-async def test_async_async_request_call_without_lock(hass):
+async def test_async_async_request_call_without_lock(hass: HomeAssistant) -> None:
     """Test for async_requests_call works without a lock."""
     updates = []
 
@@ -238,7 +238,7 @@ async def test_async_async_request_call_without_lock(hass):
         job1 = ent_1.async_request_call(ent_1.testhelper(1))
         job2 = ent_2.async_request_call(ent_2.testhelper(2))
 
-        await asyncio.wait([job1, job2])
+        await asyncio.gather(job1, job2)
         while True:
             if len(updates) >= 2:
                 break
@@ -251,7 +251,7 @@ async def test_async_async_request_call_without_lock(hass):
     assert updates == [1, 2]
 
 
-async def test_async_async_request_call_with_lock(hass):
+async def test_async_async_request_call_with_lock(hass: HomeAssistant) -> None:
     """Test for async_requests_call works with a semaphore."""
     updates = []
 
@@ -302,7 +302,7 @@ async def test_async_async_request_call_with_lock(hass):
     assert updates == [1, 2]
 
 
-async def test_async_parallel_updates_with_zero(hass):
+async def test_async_parallel_updates_with_zero(hass: HomeAssistant) -> None:
     """Test parallel updates with 0 (disabled)."""
     updates = []
     test_lock = asyncio.Event()
@@ -339,7 +339,9 @@ async def test_async_parallel_updates_with_zero(hass):
         test_lock.set()
 
 
-async def test_async_parallel_updates_with_zero_on_sync_update(hass):
+async def test_async_parallel_updates_with_zero_on_sync_update(
+    hass: HomeAssistant,
+) -> None:
     """Test parallel updates with 0 (disabled)."""
     updates = []
     test_lock = threading.Event()
@@ -379,7 +381,7 @@ async def test_async_parallel_updates_with_zero_on_sync_update(hass):
         await asyncio.sleep(0)
 
 
-async def test_async_parallel_updates_with_one(hass):
+async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
     """Test parallel updates with 1 (sequential)."""
     updates = []
     test_lock = asyncio.Lock()
@@ -455,7 +457,7 @@ async def test_async_parallel_updates_with_one(hass):
         test_lock.release()
 
 
-async def test_async_parallel_updates_with_two(hass):
+async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
     """Test parallel updates with 2 (parallel)."""
     updates = []
     test_lock = asyncio.Lock()
@@ -484,7 +486,6 @@ async def test_async_parallel_updates_with_two(hass):
     await test_lock.acquire()
 
     try:
-
         ent_1.async_schedule_update_ha_state(True)
         ent_2.async_schedule_update_ha_state(True)
         ent_3.async_schedule_update_ha_state(True)
@@ -525,7 +526,7 @@ async def test_async_parallel_updates_with_two(hass):
         test_lock.release()
 
 
-async def test_async_remove_no_platform(hass):
+async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
     """Test async_remove method when no platform set."""
     ent = entity.Entity()
     ent.hass = hass
@@ -536,7 +537,7 @@ async def test_async_remove_no_platform(hass):
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_async_remove_runs_callbacks(hass):
+async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
     """Test async_remove method when no platform set."""
     result = []
 
@@ -548,7 +549,7 @@ async def test_async_remove_runs_callbacks(hass):
     assert len(result) == 1
 
 
-async def test_async_remove_ignores_in_flight_polling(hass):
+async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:
     """Test in flight polling is ignored after removing."""
     result = []
 
@@ -564,7 +565,7 @@ async def test_async_remove_ignores_in_flight_polling(hass):
     ent.async_write_ha_state()
 
 
-async def test_set_context(hass):
+async def test_set_context(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
     ent = entity.Entity()
@@ -575,7 +576,7 @@ async def test_set_context(hass):
     assert hass.states.get("hello.world").context == context
 
 
-async def test_set_context_expired(hass):
+async def test_set_context_expired(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
 
@@ -621,7 +622,7 @@ async def test_warn_disabled(hass, caplog):
     assert caplog.text == ""
 
 
-async def test_disabled_in_entity_registry(hass):
+async def test_disabled_in_entity_registry(hass: HomeAssistant) -> None:
     """Test entity is removed if we disable entity registry entry."""
     entry = er.RegistryEntry(
         entity_id="hello.world",
@@ -657,7 +658,7 @@ async def test_disabled_in_entity_registry(hass):
     assert ent.registry_entry == entry2
 
 
-async def test_capability_attrs(hass):
+async def test_capability_attrs(hass: HomeAssistant) -> None:
     """Test we still include capabilities even when unavailable."""
     with patch.object(
         entity.Entity, "available", PropertyMock(return_value=False)
@@ -719,7 +720,7 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
     ) in caplog.text
 
 
-async def test_setup_source(hass):
+async def test_setup_source(hass: HomeAssistant) -> None:
     """Check that we register sources correctly."""
     platform = MockEntityPlatform(hass)
 
@@ -749,7 +750,7 @@ async def test_setup_source(hass):
     assert entity.entity_sources(hass) == {}
 
 
-async def test_removing_entity_unavailable(hass):
+async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:
     """Test removing an entity that is still registered creates an unavailable state."""
     entry = er.RegistryEntry(
         entity_id="hello.world",
@@ -775,19 +776,21 @@ async def test_removing_entity_unavailable(hass):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_get_supported_features_entity_registry(hass):
+async def test_get_supported_features_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test get_supported_features falls back to entity registry."""
-    entity_reg = mock_registry(hass)
-    entity_id = entity_reg.async_get_or_create(
+    entity_id = entity_registry.async_get_or_create(
         "hello", "world", "5678", supported_features=456
     ).entity_id
     assert entity.get_supported_features(hass, entity_id) == 456
 
 
-async def test_get_supported_features_prioritize_state(hass):
+async def test_get_supported_features_prioritize_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test get_supported_features gives priority to state."""
-    entity_reg = mock_registry(hass)
-    entity_id = entity_reg.async_get_or_create(
+    entity_id = entity_registry.async_get_or_create(
         "hello", "world", "5678", supported_features=456
     ).entity_id
     assert entity.get_supported_features(hass, entity_id) == 456
@@ -797,13 +800,13 @@ async def test_get_supported_features_prioritize_state(hass):
     assert entity.get_supported_features(hass, entity_id) == 123
 
 
-async def test_get_supported_features_raises_on_unknown(hass):
+async def test_get_supported_features_raises_on_unknown(hass: HomeAssistant) -> None:
     """Test get_supported_features raises on unknown entity_id."""
     with pytest.raises(HomeAssistantError):
         entity.get_supported_features(hass, "hello.world")
 
 
-async def test_float_conversion(hass):
+async def test_float_conversion(hass: HomeAssistant) -> None:
     """Test conversion of float state to string rounds."""
     assert 2.4 + 1.2 != 3.6
     with patch.object(entity.Entity, "state", PropertyMock(return_value=2.4 + 1.2)):
@@ -817,7 +820,7 @@ async def test_float_conversion(hass):
     assert state.state == "3.6"
 
 
-async def test_attribution_attribute(hass):
+async def test_attribution_attribute(hass: HomeAssistant) -> None:
     """Test attribution attribute."""
     mock_entity = entity.Entity()
     mock_entity.hass = hass
@@ -831,7 +834,7 @@ async def test_attribution_attribute(hass):
     assert state.attributes.get(ATTR_ATTRIBUTION) == "Home Assistant"
 
 
-async def test_entity_category_property(hass):
+async def test_entity_category_property(hass: HomeAssistant) -> None:
     """Test entity category property."""
     mock_entity1 = entity.Entity()
     mock_entity1.hass = hass
@@ -877,7 +880,7 @@ def test_entity_category_schema_error(value):
         schema(value)
 
 
-async def test_entity_description_fallback():
+async def test_entity_description_fallback() -> None:
     """Test entity description has same defaults as entity."""
     ent = entity.Entity()
     ent_with_description = entity.Entity()
@@ -934,3 +937,38 @@ async def test_friendly_name(
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+
+
+async def test_translation_key(hass: HomeAssistant) -> None:
+    """Test translation key property."""
+    mock_entity1 = entity.Entity()
+    mock_entity1.hass = hass
+    mock_entity1.entity_description = entity.EntityDescription(
+        key="abc", translation_key="from_entity_description"
+    )
+    mock_entity1.entity_id = "hello.world"
+    mock_entity1._attr_translation_key = "from_attr"
+    assert mock_entity1.translation_key == "from_attr"
+
+    mock_entity2 = entity.Entity()
+    mock_entity2.hass = hass
+    mock_entity2.entity_description = entity.EntityDescription(
+        key="abc", translation_key="from_entity_description"
+    )
+    mock_entity2.entity_id = "hello.world"
+    assert mock_entity2.translation_key == "from_entity_description"
+
+
+async def test_repr_using_stringify_state() -> None:
+    """Test that repr uses stringify state."""
+
+    class MyEntity(MockEntity):
+        """Mock entity."""
+
+        @property
+        def state(self):
+            """Return the state."""
+            raise ValueError("Boom")
+
+    entity = MyEntity(entity_id="test.test", available=False)
+    assert str(entity) == "<entity test.test=unavailable>"

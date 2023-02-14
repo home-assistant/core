@@ -1,40 +1,50 @@
 """The tests for the Home Assistant API component."""
-# pylint: disable=protected-access
 from http import HTTPStatus
 import json
 from unittest.mock import patch
 
 from aiohttp import web
+from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
 
 from homeassistant import const
+from homeassistant.auth.providers.legacy_api_password import (
+    LegacyApiPasswordAuthProvider,
+)
 from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import MockUser, async_mock_service
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def mock_api_client(hass, hass_client):
+def mock_api_client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Start the Home Assistant HTTP component and return admin API client."""
     hass.loop.run_until_complete(async_setup_component(hass, "api", {}))
     return hass.loop.run_until_complete(hass_client())
 
 
-async def test_api_list_state_entities(hass, mock_api_client):
+async def test_api_list_state_entities(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the debug interface allows us to list state entities."""
     hass.states.async_set("test.entity", "hello")
     resp = await mock_api_client.get(const.URL_API_STATES)
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
 
-    remote_data = [ha.State.from_dict(item) for item in json]
-    assert remote_data == hass.states.async_all()
+    remote_data = [ha.State.from_dict(item).as_dict() for item in json]
+    local_data = [state.as_dict() for state in hass.states.async_all()]
+    assert remote_data == local_data
 
 
-async def test_api_get_state(hass, mock_api_client):
+async def test_api_get_state(hass: HomeAssistant, mock_api_client: TestClient) -> None:
     """Test if the debug interface allows us to get a state."""
     hass.states.async_set("hello.world", "nice", {"attr": 1})
     resp = await mock_api_client.get("/api/states/hello.world")
@@ -50,13 +60,17 @@ async def test_api_get_state(hass, mock_api_client):
     assert data.attributes == state.attributes
 
 
-async def test_api_get_non_existing_state(hass, mock_api_client):
+async def test_api_get_non_existing_state(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the debug interface allows us to get a state."""
     resp = await mock_api_client.get("/api/states/does_not_exist")
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_api_state_change(hass, mock_api_client):
+async def test_api_state_change(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if we can change the state of an entity that exists."""
     hass.states.async_set("test.test", "not_to_be_set")
 
@@ -68,7 +82,9 @@ async def test_api_state_change(hass, mock_api_client):
 
 
 # pylint: disable=invalid-name
-async def test_api_state_change_of_non_existing_entity(hass, mock_api_client):
+async def test_api_state_change_of_non_existing_entity(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if changing a state of a non existing entity is possible."""
     new_state = "debug_state_change"
 
@@ -82,7 +98,9 @@ async def test_api_state_change_of_non_existing_entity(hass, mock_api_client):
 
 
 # pylint: disable=invalid-name
-async def test_api_state_change_with_bad_data(hass, mock_api_client):
+async def test_api_state_change_with_bad_data(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if API sends appropriate error if we omit state."""
     resp = await mock_api_client.post(
         "/api/states/test_entity.that_does_not_exist", json={}
@@ -92,7 +110,9 @@ async def test_api_state_change_with_bad_data(hass, mock_api_client):
 
 
 # pylint: disable=invalid-name
-async def test_api_state_change_to_zero_value(hass, mock_api_client):
+async def test_api_state_change_to_zero_value(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if changing a state to a zero value is possible."""
     resp = await mock_api_client.post(
         "/api/states/test_entity.with_zero_state", json={"state": 0}
@@ -108,7 +128,9 @@ async def test_api_state_change_to_zero_value(hass, mock_api_client):
 
 
 # pylint: disable=invalid-name
-async def test_api_state_change_push(hass, mock_api_client):
+async def test_api_state_change_push(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if we can push a change the state of an entity."""
     hass.states.async_set("test.test", "not_to_be_set")
 
@@ -133,7 +155,9 @@ async def test_api_state_change_push(hass, mock_api_client):
 
 
 # pylint: disable=invalid-name
-async def test_api_fire_event_with_no_data(hass, mock_api_client):
+async def test_api_fire_event_with_no_data(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the API allows us to fire an event."""
     test_value = []
 
@@ -151,7 +175,9 @@ async def test_api_fire_event_with_no_data(hass, mock_api_client):
 
 
 # pylint: disable=invalid-name
-async def test_api_fire_event_with_data(hass, mock_api_client):
+async def test_api_fire_event_with_data(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the API allows us to fire an event."""
     test_value = []
 
@@ -174,7 +200,9 @@ async def test_api_fire_event_with_data(hass, mock_api_client):
 
 
 # pylint: disable=invalid-name
-async def test_api_fire_event_with_invalid_json(hass, mock_api_client):
+async def test_api_fire_event_with_invalid_json(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the API allows us to fire an event."""
     test_value = []
 
@@ -205,7 +233,7 @@ async def test_api_fire_event_with_invalid_json(hass, mock_api_client):
     assert len(test_value) == 0
 
 
-async def test_api_get_config(hass, mock_api_client):
+async def test_api_get_config(hass: HomeAssistant, mock_api_client: TestClient) -> None:
     """Test the return of the configuration."""
     resp = await mock_api_client.get(const.URL_API_CONFIG)
     result = await resp.json()
@@ -221,14 +249,18 @@ async def test_api_get_config(hass, mock_api_client):
     assert hass.config.as_dict() == result
 
 
-async def test_api_get_components(hass, mock_api_client):
+async def test_api_get_components(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test the return of the components."""
     resp = await mock_api_client.get(const.URL_API_COMPONENTS)
     result = await resp.json()
     assert set(result) == hass.config.components
 
 
-async def test_api_get_event_listeners(hass, mock_api_client):
+async def test_api_get_event_listeners(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if we can get the list of events being listened for."""
     resp = await mock_api_client.get(const.URL_API_EVENTS)
     data = await resp.json()
@@ -241,7 +273,9 @@ async def test_api_get_event_listeners(hass, mock_api_client):
     assert len(local) == 0
 
 
-async def test_api_get_services(hass, mock_api_client):
+async def test_api_get_services(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if we can get a dict describing current services."""
     resp = await mock_api_client.get(const.URL_API_SERVICES)
     data = await resp.json()
@@ -253,7 +287,9 @@ async def test_api_get_services(hass, mock_api_client):
         assert serv_domain["services"] == local
 
 
-async def test_api_call_service_no_data(hass, mock_api_client):
+async def test_api_call_service_no_data(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the API allows us to call a service."""
     test_value = []
 
@@ -269,7 +305,9 @@ async def test_api_call_service_no_data(hass, mock_api_client):
     assert len(test_value) == 1
 
 
-async def test_api_call_service_with_data(hass, mock_api_client):
+async def test_api_call_service_with_data(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the API allows us to call a service."""
 
     @ha.callback
@@ -298,7 +336,7 @@ async def test_api_call_service_with_data(hass, mock_api_client):
     assert state["attributes"] == {"data": 1}
 
 
-async def test_api_template(hass, mock_api_client):
+async def test_api_template(hass: HomeAssistant, mock_api_client: TestClient) -> None:
     """Test the template API."""
     hass.states.async_set("sensor.temperature", 10)
 
@@ -312,7 +350,9 @@ async def test_api_template(hass, mock_api_client):
     assert body == "10"
 
 
-async def test_api_template_error(hass, mock_api_client):
+async def test_api_template_error(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test the template API."""
     hass.states.async_set("sensor.temperature", 10)
 
@@ -323,39 +363,41 @@ async def test_api_template_error(hass, mock_api_client):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_stream(hass, mock_api_client):
+async def test_stream(hass: HomeAssistant, mock_api_client: TestClient) -> None:
     """Test the stream."""
     listen_count = _listen_count(hass)
 
-    resp = await mock_api_client.get(const.URL_API_STREAM)
-    assert resp.status == HTTPStatus.OK
-    assert listen_count + 1 == _listen_count(hass)
+    async with mock_api_client.get(const.URL_API_STREAM) as resp:
+        assert resp.status == HTTPStatus.OK
+        assert listen_count + 1 == _listen_count(hass)
 
-    hass.bus.async_fire("test_event")
+        hass.bus.async_fire("test_event")
 
-    data = await _stream_next_event(resp.content)
+        data = await _stream_next_event(resp.content)
 
-    assert data["event_type"] == "test_event"
+        assert data["event_type"] == "test_event"
 
 
-async def test_stream_with_restricted(hass, mock_api_client):
+async def test_stream_with_restricted(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test the stream with restrictions."""
     listen_count = _listen_count(hass)
 
-    resp = await mock_api_client.get(
+    async with mock_api_client.get(
         f"{const.URL_API_STREAM}?restrict=test_event1,test_event3"
-    )
-    assert resp.status == HTTPStatus.OK
-    assert listen_count + 1 == _listen_count(hass)
+    ) as resp:
+        assert resp.status == HTTPStatus.OK
+        assert listen_count + 1 == _listen_count(hass)
 
-    hass.bus.async_fire("test_event1")
-    data = await _stream_next_event(resp.content)
-    assert data["event_type"] == "test_event1"
+        hass.bus.async_fire("test_event1")
+        data = await _stream_next_event(resp.content)
+        assert data["event_type"] == "test_event1"
 
-    hass.bus.async_fire("test_event2")
-    hass.bus.async_fire("test_event3")
-    data = await _stream_next_event(resp.content)
-    assert data["event_type"] == "test_event3"
+        hass.bus.async_fire("test_event2")
+        hass.bus.async_fire("test_event3")
+        data = await _stream_next_event(resp.content)
+        assert data["event_type"] == "test_event3"
 
 
 async def _stream_next_event(stream):
@@ -378,14 +420,17 @@ async def _stream_next_event(stream):
     return json.loads(conv)
 
 
-def _listen_count(hass):
+def _listen_count(hass: HomeAssistant) -> int:
     """Return number of event listeners."""
     return sum(hass.bus.async_listeners().values())
 
 
 async def test_api_error_log(
-    hass, hass_client_no_auth, hass_access_token, hass_admin_user
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_access_token: str,
+    hass_admin_user: MockUser,
+) -> None:
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = "/some/path"
     await async_setup_component(hass, "api", {})
@@ -417,7 +462,9 @@ async def test_api_error_log(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_api_fire_event_context(hass, mock_api_client, hass_access_token):
+async def test_api_fire_event_context(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_access_token: str
+) -> None:
     """Test if the API sets right context if we fire an event."""
     test_value = []
 
@@ -440,7 +487,9 @@ async def test_api_fire_event_context(hass, mock_api_client, hass_access_token):
     assert test_value[0].context.user_id == refresh_token.user.id
 
 
-async def test_api_call_service_context(hass, mock_api_client, hass_access_token):
+async def test_api_call_service_context(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_access_token: str
+) -> None:
     """Test if the API sets right context if we call a service."""
     calls = async_mock_service(hass, "test_domain", "test_service")
 
@@ -456,7 +505,9 @@ async def test_api_call_service_context(hass, mock_api_client, hass_access_token
     assert calls[0].context.user_id == refresh_token.user.id
 
 
-async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
+async def test_api_set_state_context(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_access_token: str
+) -> None:
     """Test if the API sets right context if we set state."""
     await mock_api_client.post(
         "/api/states/light.kitchen",
@@ -470,14 +521,18 @@ async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
     assert state.context.user_id == refresh_token.user.id
 
 
-async def test_event_stream_requires_admin(hass, mock_api_client, hass_admin_user):
+async def test_event_stream_requires_admin(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
     """Test user needs to be admin to access event stream."""
     hass_admin_user.groups = []
     resp = await mock_api_client.get("/api/stream")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_states_view_filters(hass, mock_api_client, hass_admin_user):
+async def test_states_view_filters(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
     """Test filtering only visible states."""
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
     hass.states.async_set("test.entity", "hello")
@@ -489,35 +544,45 @@ async def test_states_view_filters(hass, mock_api_client, hass_admin_user):
     assert json[0]["entity_id"] == "test.entity"
 
 
-async def test_get_entity_state_read_perm(hass, mock_api_client, hass_admin_user):
+async def test_get_entity_state_read_perm(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
     """Test getting a state requires read permission."""
     hass_admin_user.mock_policy({})
     resp = await mock_api_client.get("/api/states/light.test")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_post_entity_state_admin(hass, mock_api_client, hass_admin_user):
+async def test_post_entity_state_admin(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
     """Test updating state requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post("/api/states/light.test")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_delete_entity_state_admin(hass, mock_api_client, hass_admin_user):
+async def test_delete_entity_state_admin(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
     """Test deleting entity requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.delete("/api/states/light.test")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_post_event_admin(hass, mock_api_client, hass_admin_user):
+async def test_post_event_admin(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
     """Test sending event requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post("/api/events/state_changed")
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_rendering_template_admin(hass, mock_api_client, hass_admin_user):
+async def test_rendering_template_admin(
+    hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
+) -> None:
     """Test rendering a template requires admin."""
     hass_admin_user.groups = []
     resp = await mock_api_client.post(const.URL_API_TEMPLATE)
@@ -525,8 +590,11 @@ async def test_rendering_template_admin(hass, mock_api_client, hass_admin_user):
 
 
 async def test_rendering_template_legacy_user(
-    hass, mock_api_client, aiohttp_client, legacy_auth
-):
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    aiohttp_client: ClientSessionGenerator,
+    legacy_auth: LegacyApiPasswordAuthProvider,
+) -> None:
     """Test rendering a template with legacy API password."""
     hass.states.async_set("sensor.temperature", 10)
     client = await aiohttp_client(hass.http.app)
@@ -537,13 +605,17 @@ async def test_rendering_template_legacy_user(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_api_call_service_not_found(hass, mock_api_client):
+async def test_api_call_service_not_found(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the API fails 400 if unknown service."""
     resp = await mock_api_client.post("/api/services/test_domain/test_service")
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_api_call_service_bad_data(hass, mock_api_client):
+async def test_api_call_service_bad_data(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
     """Test if the API fails 400 if unknown service."""
     test_value = []
 

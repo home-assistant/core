@@ -7,9 +7,6 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_STATE_PROPERTY, TARGET_VALUE_PROPERTY
 from zwave_js_server.const.command_class.barrier_operator import BarrierState
 from zwave_js_server.const.command_class.multilevel_switch import (
-    COVER_CLOSE_PROPERTY,
-    COVER_DOWN_PROPERTY,
-    COVER_OFF_PROPERTY,
     COVER_ON_PROPERTY,
     COVER_OPEN_PROPERTY,
     COVER_UP_PROPERTY,
@@ -132,7 +129,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         if self.info.primary_value.value is None:
             # guard missing value
             return None
-        return round((self.info.primary_value.value / 99) * 100)
+        return round((cast(int, self.info.primary_value.value) / 99) * 100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -156,23 +153,14 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        open_value = (
+        cover_property = (
             self.get_zwave_value(COVER_OPEN_PROPERTY)
             or self.get_zwave_value(COVER_UP_PROPERTY)
             or self.get_zwave_value(COVER_ON_PROPERTY)
         )
-        if open_value:
-            # Stop the cover if it's opening
-            await self.info.node.async_set_value(open_value, False)
-
-        close_value = (
-            self.get_zwave_value(COVER_CLOSE_PROPERTY)
-            or self.get_zwave_value(COVER_DOWN_PROPERTY)
-            or self.get_zwave_value(COVER_OFF_PROPERTY)
-        )
-        if close_value:
-            # Stop the cover if it's closing
-            await self.info.node.async_set_value(close_value, False)
+        if cover_property:
+            # Stop the cover, will stop regardless of the actual direction of travel.
+            await self.info.node.async_set_value(cover_property, False)
 
 
 class ZWaveTiltCover(ZWaveCover):

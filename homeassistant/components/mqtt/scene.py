@@ -24,7 +24,6 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .util import valid_publish_topic
@@ -41,35 +40,19 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_OBJECT_ID): cv.string,
-        # CONF_ENABLED_BY_DEFAULT is not added by default because we are not using the common schema here
+        # CONF_ENABLED_BY_DEFAULT is not added by default because
+        # we are not using the common schema here
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
-# Configuring MQTT Scenes under the scene platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Scenes under the scene platform key was deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
     warn_for_legacy_schema(scene.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT scene configured under the scene platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        scene.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
 
 
 async def async_setup_entry(
@@ -77,7 +60,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT scene through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT scene through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

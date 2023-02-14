@@ -1,9 +1,9 @@
 {
   "domain": "splunk",
   "name": "Splunk",
-  "documentation": "https://www.home-assistant.io/integrations/splunk",
-  "requirements": ["hass_splunk==0.1.1"],
   "codeowners": ["@Bre77"],
+  "documentation": "https://www.home-assistant.io/integrations/splunk",
   "iot_class": "local_push",
-  "loggers": ["hass_splunk"]
+  "loggers": ["hass_splunk"],
+  "requirements": ["hass_splunk==0.1.1"]
 }

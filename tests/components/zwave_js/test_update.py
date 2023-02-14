@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
-from zwave_js_server.model.firmware import FirmwareUpdateStatus
+from zwave_js_server.model.node.firmware import NodeFirmwareUpdateStatus
 
 from homeassistant.components.update import (
     ATTR_AUTO_UPDATE,
@@ -72,7 +72,6 @@ async def test_update_entity_states(
     hass,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
-    controller_node,
     integration,
     caplog,
     hass_ws_client,
@@ -376,7 +375,7 @@ async def test_update_entity_progress(
             "event": "firmware update finished",
             "nodeId": node.node_id,
             "result": {
-                "status": FirmwareUpdateStatus.OK_NO_RESTART,
+                "status": NodeFirmwareUpdateStatus.OK_NO_RESTART,
                 "success": True,
                 "reInterview": False,
             },
@@ -467,7 +466,7 @@ async def test_update_entity_install_failed(
             "event": "firmware update finished",
             "nodeId": node.node_id,
             "result": {
-                "status": FirmwareUpdateStatus.ERROR_TIMEOUT,
+                "status": NodeFirmwareUpdateStatus.ERROR_TIMEOUT,
                 "success": False,
                 "reInterview": False,
             },

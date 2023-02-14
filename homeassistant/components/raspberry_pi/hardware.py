@@ -36,7 +36,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     if (os_info := get_os_info(hass)) is None:
         raise HomeAssistantError
-    board: str
+    board: str | None
     if (board := os_info.get("board")) is None:
         raise HomeAssistantError
     if not board.startswith("rpi"):

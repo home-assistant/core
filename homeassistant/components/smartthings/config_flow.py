@@ -40,7 +40,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a new instance of the flow handler."""
         self.access_token = None
         self.app_id = None
@@ -66,7 +66,9 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 reason="invalid_webhook_url",
                 description_placeholders={
                     "webhook_url": webhook_url,
-                    "component_url": "https://www.home-assistant.io/integrations/smartthings/",
+                    "component_url": (
+                        "https://www.home-assistant.io/integrations/smartthings/"
+                    ),
                 },
             )
 
@@ -216,7 +218,9 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "token_url": "https://account.smartthings.com/tokens",
-                "component_url": "https://www.home-assistant.io/integrations/smartthings/",
+                "component_url": (
+                    "https://www.home-assistant.io/integrations/smartthings/"
+                ),
             },
         )
 

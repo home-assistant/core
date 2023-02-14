@@ -15,8 +15,9 @@ from homeassistant.components.tellduslive import (
 )
 from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 def init_config_flow(hass, side_effect=None):
@@ -56,7 +57,7 @@ def mock_tellduslive(supports_local_api, authorize):
         yield Session, tellduslive_supports_local_api
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if TelldusLive is already setup."""
     flow = init_config_flow(hass)
 

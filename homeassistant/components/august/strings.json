@@ -24,7 +24,7 @@
           "username": "[%key:common::config_flow::data::username%]",
           "login_method": "Login Method"
         },
-        "title": "Setup an August account"
+        "title": "Set up an August account"
       },
       "reauth_validate": {
         "description": "Enter the password for {username}.",

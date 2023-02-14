@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import subarulink.const as sc
 
@@ -13,16 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-)
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,8 +48,8 @@ _LOGGER = logging.getLogger(__name__)
 FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
 FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 
-L_PER_GAL = VolumeConverter.convert(1, VOLUME_GALLONS, VOLUME_LITERS)
-KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
+L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
+KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOMETERS)
 
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
@@ -67,7 +58,7 @@ SAFETY_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:road-variant",
         name="Odometer",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]
@@ -86,49 +77,35 @@ API_GEN_2_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:gas-station",
         name="Range",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FR",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RR",
-        native_unit_of_measurement=PRESSURE_HPA,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=sc.EXTERNAL_TEMP,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        name="External temp",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=sc.BATTERY_VOLTAGE,
-        device_class=SensorDeviceClass.VOLTAGE,
-        name="12V battery voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -140,7 +117,7 @@ EV_SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:ev-station",
         name="EV range",
-        native_unit_of_measurement=LENGTH_MILES,
+        native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -154,7 +131,6 @@ EV_SENSORS = [
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         device_class=SensorDeviceClass.TIMESTAMP,
         name="EV time to full charge",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
@@ -231,11 +207,11 @@ class SubaruSensor(
             return None
 
         if unit in LENGTH_UNITS:
-            return round(unit_system.length(current_value, unit), 1)
+            return round(unit_system.length(current_value, cast(str, unit)), 1)
 
         if unit in PRESSURE_UNITS and unit_system == US_CUSTOMARY_SYSTEM:
             return round(
-                unit_system.pressure(current_value, unit),
+                unit_system.pressure(current_value, cast(str, unit)),
                 1,
             )
 
@@ -292,7 +268,8 @@ async def _async_migrate_entries(
     all_sensors.extend(API_GEN_2_SENSORS)
     all_sensors.extend(SAFETY_SENSORS)
 
-    # Old unique_id is (previously title-cased) sensor name (e.g. "VIN_Avg Fuel Consumption")
+    # Old unique_id is (previously title-cased) sensor name
+    # (e.g. "VIN_Avg Fuel Consumption")
     replacements = {str(s.name).upper(): s.key for s in all_sensors}
 
     @callback

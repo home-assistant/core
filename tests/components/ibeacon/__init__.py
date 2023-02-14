@@ -1,4 +1,6 @@
 """Tests for the ibeacon integration."""
+from typing import Any
+
 from bleak.backends.device import BLEDevice
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -115,3 +117,18 @@ FEASY_BEACON_SERVICE_INFO_2 = BluetoothServiceInfo(
     ],
     source="local",
 )
+
+
+def bluetooth_service_info_replace(
+    info: BluetoothServiceInfo, **kwargs: Any
+) -> BluetoothServiceInfo:
+    """Replace attributes of a BluetoothServiceInfoBleak."""
+    return BluetoothServiceInfo(
+        address=kwargs.get("address", info.address),
+        name=kwargs.get("name", info.name),
+        rssi=kwargs.get("rssi", info.rssi),
+        manufacturer_data=kwargs.get("manufacturer_data", info.manufacturer_data),
+        service_data=kwargs.get("service_data", info.service_data),
+        service_uuids=kwargs.get("service_uuids", info.service_uuids),
+        source=kwargs.get("source", info.source),
+    )

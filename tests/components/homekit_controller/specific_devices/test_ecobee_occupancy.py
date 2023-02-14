@@ -1,5 +1,4 @@
-"""
-Regression tests for Ecobee occupancy.
+"""Regression tests for Ecobee occupancy.
 
 https://github.com/home-assistant/core/issues/31827
 """

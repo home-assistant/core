@@ -12,6 +12,7 @@ from sense_energy import (
 from homeassistant import config_entries
 from homeassistant.components.sense.const import DOMAIN
 from homeassistant.const import CONF_CODE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -22,6 +23,8 @@ MOCK_CONFIG = {
     "access_token": "ABC",
     "user_id": "123",
     "monitor_id": "456",
+    "device_id": "789",
+    "refresh_token": "XYZ",
 }
 
 
@@ -36,6 +39,8 @@ def mock_sense():
         mock_sense.return_value.sense_access_token = "ABC"
         mock_sense.return_value.sense_user_id = "123"
         mock_sense.return_value.sense_monitor_id = "456"
+        mock_sense.return_value.device_id = "789"
+        mock_sense.return_value.refresh_token = "XYZ"
         yield mock_sense
 
 
@@ -64,7 +69,7 @@ async def test_form(hass, mock_sense):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -190,7 +195,7 @@ async def test_form_mfa_required_exception(hass, mock_sense):
     assert result3["errors"] == {"base": "unknown"}
 
 
-async def test_form_timeout(hass):
+async def test_form_timeout(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -209,7 +214,7 @@ async def test_form_timeout(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -228,7 +233,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_exception(hass):
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

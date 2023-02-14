@@ -210,43 +210,33 @@ class MockClient:
 
     async def panic(self, code):
         """Handle panic."""
-        pass
 
     async def disarm(self, code):
         """Handle disarm."""
-        pass
 
     async def arm_away(self, code):
         """Handle arm_away."""
-        pass
 
     async def arm_home(self, code):
         """Handle arm_home."""
-        pass
 
     async def aux(self, output_id, state):
         """Handle auxiliary control."""
-        pass
 
     async def keepalive(self):
         """Handle keepalive."""
-        pass
 
     async def update(self):
         """Handle update."""
-        pass
 
     def on_zone_change(self):
         """Handle on_zone_change."""
-        pass
 
     def on_state_change(self):
         """Handle on_state_change."""
-        pass
 
     async def close(self):
         """Handle close."""
-        pass
 
 
 @pytest.fixture

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from cpuinfo import cpuinfo
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import FREQUENCY_GIGAHERTZ
+from homeassistant.const import UnitOfFrequency
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,9 +32,10 @@ async def async_setup_entry(
 class CPUSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
+    _attr_device_class = SensorDeviceClass.FREQUENCY
     _attr_icon = "mdi:pulse"
     _attr_has_entity_name = True
-    _attr_native_unit_of_measurement = FREQUENCY_GIGAHERTZ
+    _attr_native_unit_of_measurement = UnitOfFrequency.GIGAHERTZ
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the CPU sensor."""

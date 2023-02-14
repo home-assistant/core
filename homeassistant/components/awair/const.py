@@ -19,8 +19,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    SOUND_PRESSURE_WEIGHTED_DBA,
-    TEMP_CELSIUS,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
 )
 
 API_CO2 = "carbon_dioxide"
@@ -87,8 +87,8 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     ),
     AwairSensorEntityDescription(
         key=API_SPL_A,
-        icon="mdi:ear-hearing",
-        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         name="Sound level",
         unique_id_tag="sound_level",
         state_class=SensorStateClass.MEASUREMENT,
@@ -104,7 +104,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Temperature",
         unique_id_tag="TEMP",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,

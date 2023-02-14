@@ -199,7 +199,7 @@ async def test_on_node_added_not_ready(
     device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
     assert len(hass.states.async_all()) == 0
-    assert not dev_reg.devices
+    assert len(dev_reg.devices) == 1
 
     node_state = deepcopy(zp3111_not_ready_state)
     node_state["isSecure"] = False
@@ -911,12 +911,12 @@ async def test_removed_device(
     driver = client.driver
     assert driver
     # Verify how many nodes are available
-    assert len(driver.controller.nodes) == 2
+    assert len(driver.controller.nodes) == 3
 
     # Make sure there are the same number of devices
     dev_reg = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
-    assert len(device_entries) == 2
+    assert len(device_entries) == 3
 
     # Check how many entities there are
     ent_reg = er.async_get(hass)
@@ -931,7 +931,7 @@ async def test_removed_device(
     # Assert that the node and all of it's entities were removed from the device and
     # entity registry
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
-    assert len(device_entries) == 1
+    assert len(device_entries) == 2
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 18
     assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None

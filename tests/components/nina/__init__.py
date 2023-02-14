@@ -19,8 +19,15 @@ def mocked_request_function(url: str) -> dict[str, Any]:
         load_fixture("sample_regions.json", "nina")
     )
 
+    dummy_response_labels: dict[str, Any] = json.loads(
+        load_fixture("sample_labels.json", "nina")
+    )
+
     if "https://warnung.bund.de/api31/dashboard/" in url:
         return dummy_response
+
+    if "https://warnung.bund.de/api/appdata/gsb/labels/de_labels.json" in url:
+        return dummy_response_labels
 
     if (
         url

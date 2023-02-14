@@ -25,7 +25,7 @@ async def test_entry_diagnostics(recorder_mock, hass, hass_client, config_entry)
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
-        "homes": {},
+        "homes": [],
     }
 
     with patch(
@@ -35,13 +35,13 @@ async def test_entry_diagnostics(recorder_mock, hass, hass_client, config_entry)
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
-        "homes": {
-            "home_id": {
+        "homes": [
+            {
                 "last_data_timestamp": "2016-01-01T12:48:57",
                 "has_active_subscription": True,
                 "has_real_time_consumption": False,
                 "last_cons_data_timestamp": "2016-01-01T12:44:57",
                 "country": "NO",
             }
-        },
+        ],
     }

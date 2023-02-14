@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from . import FibaroAuthFailed, FibaroConnectFailed, FibaroController
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
@@ -54,6 +53,18 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     }
 
 
+def _normalize_url(url: str) -> str:
+    """Try to fix errors in the entered url.
+
+    We know that the url should be in the format http://<HOST>/api/
+    """
+    if url.endswith("/api"):
+        return f"{url}/"
+    if not url.endswith("/api/"):
+        return f"{url}api/" if url.endswith("/") else f"{url}/api/"
+    return url
+
+
 class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fibaro."""
 
@@ -71,6 +82,7 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
                 info = await _validate_input(self.hass, user_input)
             except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
@@ -84,10 +96,6 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
-        """Import a config entry."""
-        return await self.async_step_user(import_config)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauthentication."""

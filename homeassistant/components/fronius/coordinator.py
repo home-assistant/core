@@ -86,8 +86,7 @@ class FroniusCoordinatorBase(
         async_add_entities: AddEntitiesCallback,
         entity_constructor: type[_FroniusEntityT],
     ) -> None:
-        """
-        Add entities for received keys and registers listener for future seen keys.
+        """Add entities for received keys and registers listener for future seen keys.
 
         Called from a platforms `async_setup_entry`.
         """

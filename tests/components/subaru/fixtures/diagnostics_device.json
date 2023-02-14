@@ -6,11 +6,12 @@
     "pin": "**REDACTED**",
     "device_id": "**REDACTED**"
   },
-  "options": { "update_enabled": true },
+  "options": {
+    "update_enabled": true
+  },
   "data": {
     "status": {
       "AVG_FUEL_CONSUMPTION": 2.3,
-      "BATTERY_VOLTAGE": 12.0,
       "DISTANCE_TO_EMPTY_FUEL": 707,
       "DOOR_BOOT_LOCK_STATUS": "UNKNOWN",
       "DOOR_BOOT_POSITION": "CLOSED",
@@ -32,7 +33,6 @@
       "EV_STATE_OF_CHARGE_MODE": "EV_MODE",
       "EV_STATE_OF_CHARGE_PERCENT": 20,
       "EV_TIME_TO_FULLY_CHARGED_UTC": "2020-07-24T03:06:40+00:00",
-      "EXT_EXTERNAL_TEMP": 21.5,
       "ODOMETER": "**REDACTED**",
       "POSITION_HEADING_DEGREE": 150,
       "POSITION_SPEED_KMPH": "0",
@@ -60,7 +60,7 @@
       "TYRE_PRESSURE_FRONT_LEFT": 0,
       "TYRE_PRESSURE_FRONT_RIGHT": 2550,
       "TYRE_PRESSURE_REAR_LEFT": 2450,
-      "TYRE_PRESSURE_REAR_RIGHT": 2350,
+      "TYRE_PRESSURE_REAR_RIGHT": null,
       "TYRE_STATUS_FRONT_LEFT": "UNKNOWN",
       "TYRE_STATUS_FRONT_RIGHT": "UNKNOWN",
       "TYRE_STATUS_REAR_LEFT": "UNKNOWN",
@@ -72,9 +72,9 @@
       "WINDOW_REAR_LEFT_STATUS": "UNKNOWN",
       "WINDOW_REAR_RIGHT_STATUS": "UNKNOWN",
       "WINDOW_SUNROOF_STATUS": "UNKNOWN",
-      "heading": 170,
-      "latitude": "**REDACTED**",
-      "longitude": "**REDACTED**"
+      "HEADING": 170,
+      "LATITUDE": "**REDACTED**",
+      "LONGITUDE": "**REDACTED**"
     }
   }
 }

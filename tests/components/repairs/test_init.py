@@ -6,8 +6,10 @@ from aiohttp import ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.repairs import repairs_flow_manager
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.components.repairs.issue_handler import (
+    RepairsFlowManager,
     async_process_repairs_platforms,
 )
 from homeassistant.const import __version__ as ha_version
@@ -457,7 +459,7 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     """Test non-compliant platforms are not registered."""
 
     hass.config.components.add("fake_integration")
-    hass.config.components.add("integration_without_diagnostics")
+    hass.config.components.add("integration_without_repairs")
     mock_platform(
         hass,
         "fake_integration.repairs",
@@ -465,7 +467,7 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     )
     mock_platform(
         hass,
-        "integration_without_diagnostics.repairs",
+        "integration_without_repairs.repairs",
         Mock(spec=[]),
     )
     assert await async_setup_component(hass, DOMAIN, {})
@@ -538,3 +540,14 @@ async def test_sync_methods(
 
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+
+async def test_flow_manager_helper(hass: HomeAssistant) -> None:
+    """Test accessing the repairs flow manager with the helper."""
+    assert repairs_flow_manager(hass) is None
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    flow_manager = repairs_flow_manager(hass)
+    assert flow_manager is not None
+    assert isinstance(flow_manager, RepairsFlowManager)

@@ -1,4 +1,5 @@
 """Tests for the UpCloud config flow."""
+from unittest.mock import patch
 
 import requests.exceptions
 from requests_mock import ANY
@@ -7,6 +8,7 @@ from upcloud_api import UpCloudAPIError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.upcloud.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +22,7 @@ FIXTURE_USER_INPUT_OPTIONS = {
 }
 
 
-async def test_show_set_form(hass):
+async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -73,13 +75,17 @@ async def test_success(hass, requests_mock):
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options produce expected data."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=FIXTURE_USER_INPUT, options=FIXTURE_USER_INPUT_OPTIONS
     )
     config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.upcloud.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.FORM

@@ -12,6 +12,7 @@ from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
     DOMAIN,
+    PROTOCOL_TELNET,
 )
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import SOURCE_USER
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -33,8 +35,8 @@ SSH_KEY = "1234"
 
 CONFIG_DATA = {
     CONF_HOST: HOST,
-    CONF_PORT: 22,
-    CONF_PROTOCOL: "telnet",
+    CONF_PORT: 23,
+    CONF_PROTOCOL: PROTOCOL_TELNET,
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "ap",
@@ -75,7 +77,7 @@ def mock_controller_connect(mock_unique_id):
     "unique_id",
     [{}, {"label_mac": MAC_ADDR}],
 )
-async def test_user(hass, mock_unique_id, unique_id):
+async def test_user(hass: HomeAssistant, mock_unique_id, unique_id) -> None:
     """Test user config."""
     mock_unique_id.update(unique_id)
     flow_result = await hass.config_entries.flow.async_init(
@@ -106,7 +108,7 @@ async def test_user(hass, mock_unique_id, unique_id):
         ({CONF_SSH_KEY: SSH_KEY}, "pwd_and_ssh"),
     ],
 )
-async def test_error_wrong_password_ssh(hass, config, error):
+async def test_error_wrong_password_ssh(hass: HomeAssistant, config, error) -> None:
     """Test we abort for wrong password and ssh file combination."""
     config_data = CONFIG_DATA.copy()
     config_data.update(config)
@@ -120,7 +122,7 @@ async def test_error_wrong_password_ssh(hass, config, error):
     assert result["errors"] == {"base": error}
 
 
-async def test_error_invalid_ssh(hass):
+async def test_error_invalid_ssh(hass: HomeAssistant) -> None:
     """Test we abort if invalid ssh file is provided."""
     config_data = CONFIG_DATA.copy()
     config_data.pop(CONF_PASSWORD)
@@ -140,7 +142,7 @@ async def test_error_invalid_ssh(hass):
         assert result["errors"] == {"base": "ssh_not_file"}
 
 
-async def test_error_invalid_host(hass):
+async def test_error_invalid_host(hass: HomeAssistant) -> None:
     """Test we abort if host name is invalid."""
     with patch(
         "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
@@ -156,7 +158,7 @@ async def test_error_invalid_host(hass):
         assert result["errors"] == {"base": "invalid_host"}
 
 
-async def test_abort_if_not_unique_id_setup(hass):
+async def test_abort_if_not_unique_id_setup(hass: HomeAssistant) -> None:
     """Test we abort if component without uniqueid is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -173,7 +175,7 @@ async def test_abort_if_not_unique_id_setup(hass):
 
 
 @pytest.mark.usefixtures("connect")
-async def test_update_uniqueid_exist(hass, mock_unique_id):
+async def test_update_uniqueid_exist(hass: HomeAssistant, mock_unique_id) -> None:
     """Test we update entry if uniqueid is already configured."""
     mock_unique_id.update({"label_mac": MAC_ADDR})
     existing_entry = MockConfigEntry(
@@ -200,7 +202,7 @@ async def test_update_uniqueid_exist(hass, mock_unique_id):
 
 
 @pytest.mark.usefixtures("connect")
-async def test_abort_invalid_unique_id(hass):
+async def test_abort_invalid_unique_id(hass: HomeAssistant) -> None:
     """Test we abort if uniqueid not available."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -226,7 +228,7 @@ async def test_abort_invalid_unique_id(hass):
         (None, "cannot_connect"),
     ],
 )
-async def test_on_connect_failed(hass, side_effect, error):
+async def test_on_connect_failed(hass: HomeAssistant, side_effect, error) -> None:
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -248,8 +250,8 @@ async def test_on_connect_failed(hass, side_effect, error):
         assert result["errors"] == {"base": error}
 
 
-async def test_options_flow(hass):
-    """Test config flow options."""
+async def test_options_flow_ap(hass: HomeAssistant) -> None:
+    """Test config flow options for ap mode."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
@@ -264,6 +266,7 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
+        assert CONF_REQUIRE_IP in result["data_schema"].schema
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -282,3 +285,37 @@ async def test_options_flow(hass):
         assert config_entry.options[CONF_INTERFACE] == "aaa"
         assert config_entry.options[CONF_DNSMASQ] == "bbb"
         assert config_entry.options[CONF_REQUIRE_IP] is False
+
+
+async def test_options_flow_router(hass: HomeAssistant) -> None:
+    """Test config flow options for router mode."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_DATA, CONF_MODE: "router"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with PATCH_SETUP_ENTRY:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert CONF_REQUIRE_IP not in result["data_schema"].schema
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CONSIDER_HOME: 20,
+                CONF_TRACK_UNKNOWN: True,
+                CONF_INTERFACE: "aaa",
+                CONF_DNSMASQ: "bbb",
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert config_entry.options[CONF_CONSIDER_HOME] == 20
+        assert config_entry.options[CONF_TRACK_UNKNOWN] is True
+        assert config_entry.options[CONF_INTERFACE] == "aaa"
+        assert config_entry.options[CONF_DNSMASQ] == "bbb"

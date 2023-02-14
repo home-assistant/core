@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -697,7 +698,7 @@ async def test_setup_with_limited_credentials(hass, entry, setup_plex_server):
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_integration_discovery(hass):
+async def test_integration_discovery(hass: HomeAssistant) -> None:
     """Test integration self-discovery."""
     mock_gdm = MockGDM()
 
@@ -822,7 +823,7 @@ async def test_trigger_reauth_multiple_servers_available(
     assert entry.data[PLEX_SERVER_CONFIG][CONF_TOKEN] == "BRAND_NEW_TOKEN"
 
 
-async def test_client_request_missing(hass):
+async def test_client_request_missing(hass: HomeAssistant) -> None:
     """Test when client headers are not set properly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -832,11 +833,10 @@ async def test_client_request_missing(hass):
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value=None
-    ):
-        with pytest.raises(RuntimeError):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={}
-            )
+    ), pytest.raises(RuntimeError):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
 
 async def test_client_header_issues(hass, current_request_with_host):
@@ -855,8 +855,9 @@ async def test_client_header_issues(hass, current_request_with_host):
         "plexauth.PlexAuth.token", return_value=None
     ), patch(
         "homeassistant.components.http.current_request.get", return_value=MockRequest()
+    ), pytest.raises(
+        RuntimeError
     ):
-        with pytest.raises(RuntimeError):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={}
-            )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )

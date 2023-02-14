@@ -78,7 +78,9 @@ from .const import (  # noqa: F401
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
+    CONF_MAX_VALUE,
     CONF_MIN_TEMP,
+    CONF_MIN_VALUE,
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_PRECISION,
@@ -104,6 +106,7 @@ from .const import (  # noqa: F401
     CONF_TARGET_TEMP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    CONF_ZERO_SUPPRESS,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
@@ -249,7 +252,10 @@ CLIMATE_SCHEMA = vol.All(
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING,): vol.In(
+        vol.Optional(
+            CONF_INPUT_TYPE,
+            default=CALL_TYPE_REGISTER_HOLDING,
+        ): vol.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,
@@ -285,6 +291,9 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
+            vol.Optional(CONF_MIN_VALUE): number_validator,
+            vol.Optional(CONF_MAX_VALUE): number_validator,
+            vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
         }
     ),
 )
@@ -386,4 +395,3 @@ async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> No
     hubs = hass.data[DOMAIN]
     for name in hubs:
         await hubs[name].async_close()
-    del hass.data[DOMAIN]

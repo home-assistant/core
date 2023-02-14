@@ -146,8 +146,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for platform in enabled_platforms:
         if platform in DEFAULT_ENABLED:
             logger.warning(
-                "Please remove %s from your discovery.enable configuration "
-                "as it is now enabled by default",
+                (
+                    "Please remove %s from your discovery.enable configuration "
+                    "as it is now enabled by default"
+                ),
                 platform,
             )
 

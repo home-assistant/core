@@ -10,15 +10,15 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DATA_BYTES,
-    ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_UNKNOWN,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -42,7 +42,8 @@ async def test_sensors(
     state = hass.states.get("sensor.wled_rgb_light_estimated_current")
     assert state
     assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_MILLIAMPERE
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfElectricCurrent.MILLIAMPERE
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
     assert state.state == "470"
@@ -66,7 +67,7 @@ async def test_sensors(
     state = hass.states.get("sensor.wled_rgb_light_free_memory")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:memory"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_BYTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.BYTES
     assert state.state == "14600"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 

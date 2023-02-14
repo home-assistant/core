@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import loader as yaml_loader
@@ -25,7 +25,7 @@ def entities(hass):
     """Initialize the test light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
-    yield platform.ENTITIES[0:2]
+    return platform.ENTITIES[0:2]
 
 
 async def test_config_yaml_alias_anchor(hass, entities, enable_custom_integrations):
@@ -216,7 +216,7 @@ async def activate(hass, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
-async def test_services_registered(hass):
+async def test_services_registered(hass: HomeAssistant) -> None:
     """Test we register services with empty config."""
     assert await async_setup_component(hass, "scene", {})
     assert hass.services.has_service("scene", "reload")

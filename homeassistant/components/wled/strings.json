@@ -30,5 +30,16 @@
         }
       }
     }
+  },
+  "entity": {
+    "select": {
+      "live_override": {
+        "state": {
+          "0": "[%key:common::state::off%]",
+          "1": "[%key:common::state::on%]",
+          "2": "Until device restarts"
+        }
+      }
+    }
   }
 }
