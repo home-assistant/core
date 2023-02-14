@@ -260,55 +260,6 @@ class CoreState(enum.Enum):
         return self.value
 
 
-class BackgroundTasks:
-    """Class to manage background tasks."""
-
-    def __init__(self) -> None:
-        """Initialize the background task runner."""
-        self._tasks: set[asyncio.Task[Any]] = set()
-        self._loop = asyncio.get_running_loop()
-        self._running = True
-
-    def async_create_task(
-        self,
-        target: Coroutine[Any, Any, _R],
-        name: str,
-    ) -> asyncio.Task[_R]:
-        """Create a task and add it to the set of tasks."""
-        if not self._running:
-            raise RuntimeError("BackgroundTasks is no longer running")
-        task = self._loop.create_task(target, name=name)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        return task
-
-    async def async_cancel_all(self) -> None:
-        """Cancel all tasks."""
-        self._running = False
-
-        if not self._tasks:
-            return
-
-        tasks = list(self._tasks)
-
-        for task in tasks:
-            task.cancel()
-
-        await asyncio.wait(tasks)
-
-        for task in tasks:
-            if (exception := task.exception()) is None or isinstance(
-                exception, asyncio.CancelledError
-            ):
-                continue
-
-            _LOGGER.error(
-                "Error canceling background task %s - received exception",
-                task,
-                exc_info=(type(exception), exception, exception.__traceback__),
-            )
-
-
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
@@ -326,7 +277,6 @@ class HomeAssistant:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
-        self.background_tasks = BackgroundTasks()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -737,7 +687,6 @@ class HomeAssistant:
 
         # stage 1
         self.state = CoreState.stopping
-        self.async_create_task(self.background_tasks.async_cancel_all())
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
