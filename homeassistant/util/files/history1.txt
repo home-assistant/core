@@ -1,0 +1,2 @@
+| id | device |    date    | additionals |
+| 01 | Alexa  | 03-01-2023 | Alexa was called 5 times this day, interacting for 60 minutes. |

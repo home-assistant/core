@@ -1,0 +1,3 @@
+| id | device |    date    | additionals |
+| 1 | Alexa | 01-23-2023 | Alexa was called 5 times this day, interacting for 60 minutes. |
+| 2 | Thermometer | 02-01-2023 | The average temperature this day was 25°C. |
