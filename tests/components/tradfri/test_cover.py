@@ -1,38 +1,18 @@
 """Tradfri cover (recognised as blinds in the IKEA ecosystem) platform tests."""
 from __future__ import annotations
 
-import json
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
 import pytest
 from pytradfri.const import ATTR_REACHABLE_STATE
-from pytradfri.device import Device
 from pytradfri.device.blind import Blind
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, DOMAIN as COVER_DOMAIN
-from homeassistant.components.tradfri.const import DOMAIN
 from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration, trigger_observe_callback
-
-from tests.common import load_fixture
-
-
-@pytest.fixture(scope="module")
-def blind_response() -> dict[str, Any]:
-    """Return a blind response."""
-    return json.loads(load_fixture("blind.json", DOMAIN))
-
-
-@pytest.fixture
-def blind(blind_response: dict[str, Any]) -> Blind:
-    """Return blind."""
-    device = Device(blind_response)
-    blind_control = device.blind_control
-    assert blind_control
-    return blind_control.blinds[0]
 
 
 async def test_cover_available(
