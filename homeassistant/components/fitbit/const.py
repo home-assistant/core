@@ -220,7 +220,6 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Weight",
         unit_type="weight",
         icon="mdi:human",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.WEIGHT,
     ),
     FitbitSensorEntityDescription(
