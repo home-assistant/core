@@ -2,6 +2,7 @@
   "domain": "rflink",
   "name": "RFLink",
   "codeowners": ["@javicalle"],
+  "disabled": "py311-incompat",
   "documentation": "https://www.home-assistant.io/integrations/rflink",
   "iot_class": "assumed_state",
   "loggers": ["rflink"],

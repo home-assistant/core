@@ -2,6 +2,7 @@
   "domain": "fido",
   "name": "Fido",
   "codeowners": [],
+  "disabled": "py311-incompat",
   "documentation": "https://www.home-assistant.io/integrations/fido",
   "iot_class": "cloud_polling",
   "loggers": ["pyfido"],

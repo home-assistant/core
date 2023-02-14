@@ -22,7 +22,6 @@ from homeassistant.helpers.service import async_register_admin_service
 from .const import DOMAIN
 
 SERVICE_START = "start"
-SERVICE_MEMORY = "memory"
 SERVICE_START_LOG_OBJECTS = "start_log_objects"
 SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
@@ -32,7 +31,6 @@ SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
 
 SERVICES = (
     SERVICE_START,
-    SERVICE_MEMORY,
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
     SERVICE_DUMP_LOG_OBJECTS,
@@ -57,10 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _async_run_profile(call: ServiceCall) -> None:
         async with lock:
             await _async_generate_profile(hass, call)
-
-    async def _async_run_memory_profile(call: ServiceCall) -> None:
-        async with lock:
-            await _async_generate_memory_profile(hass, call)
 
     async def _async_start_log_objects(call: ServiceCall) -> None:
         if LOG_INTERVAL_SUB in domain_data:
@@ -165,16 +159,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_MEMORY,
-        _async_run_memory_profile,
-        schema=vol.Schema(
-            {vol.Optional(CONF_SECONDS, default=60.0): vol.Coerce(float)}
-        ),
-    )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
         SERVICE_START_LOG_OBJECTS,
         _async_start_log_objects,
         schema=vol.Schema(
@@ -265,37 +249,6 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
 
 
-async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall):
-    # Imports deferred to avoid loading modules
-    # in memory since usually only one part of this
-    # integration is used at a time
-    from guppy import hpy  # pylint: disable=import-outside-toplevel
-
-    start_time = int(time.time() * 1000000)
-    persistent_notification.async_create(
-        hass,
-        (
-            "The memory profile has started. This notification will be updated when it"
-            " is complete."
-        ),
-        title="Profile Started",
-        notification_id=f"memory_profiler_{start_time}",
-    )
-    heap_profiler = hpy()
-    heap_profiler.setref()
-    await asyncio.sleep(float(call.data[CONF_SECONDS]))
-    heap = heap_profiler.heap()
-
-    heap_path = hass.config.path(f"heap_profile.{start_time}.hpy")
-    await hass.async_add_executor_job(_write_memory_profile, heap, heap_path)
-    persistent_notification.async_create(
-        hass,
-        f"Wrote heapy memory profile to {heap_path}",
-        title="Profile Complete",
-        notification_id=f"memory_profiler_{start_time}",
-    )
-
-
 def _write_profile(profiler, cprofile_path, callgrind_path):
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
@@ -305,10 +258,6 @@ def _write_profile(profiler, cprofile_path, callgrind_path):
     profiler.create_stats()
     profiler.dump_stats(cprofile_path)
     convert(profiler.getstats(), callgrind_path)
-
-
-def _write_memory_profile(heap, heap_path):
-    heap.byrcs.dump(heap_path)
 
 
 def _log_objects(*_):

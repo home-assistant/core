@@ -344,9 +344,6 @@ apcaccess==0.0.13
 # homeassistant.components.apprise
 apprise==1.2.1
 
-# homeassistant.components.aprs
-aprslib==0.7.0
-
 # homeassistant.components.aqualogic
 aqualogic==2.6
 
@@ -765,9 +762,6 @@ geniushub-client==0.7.0
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
 
-# homeassistant.components.aprs
-geopy==2.3.0
-
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.6
 
@@ -847,9 +841,6 @@ gspread==5.5.0
 
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
-
-# homeassistant.components.profiler
-guppy3==3.1.2
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -1521,9 +1512,6 @@ pybalboa==1.0.0
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
 
-# homeassistant.components.blackbird
-pyblackbird==0.5
-
 # homeassistant.components.bluetooth_tracker
 # pybluez==0.22
 
@@ -1622,9 +1610,6 @@ pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
 pyfibaro==0.6.6
-
-# homeassistant.components.fido
-pyfido==2.1.1
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
@@ -2077,9 +2062,6 @@ python-kasa==0.5.0
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
-# homeassistant.components.matter
-python-matter-server==2.0.2
-
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
 
@@ -2153,7 +2135,7 @@ pytrafikverket==0.2.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.6.2
+pyunifiprotect==4.7.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2241,9 +2223,6 @@ restrictedpython==6.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
-
-# homeassistant.components.rflink
-rflink==0.0.63
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
