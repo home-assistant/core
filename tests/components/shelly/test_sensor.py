@@ -48,7 +48,8 @@ async def test_energy_sensor(hass: HomeAssistant, mock_block_device) -> None:
     await init_integration(hass, 1)
 
     state = hass.states.get(entity_id)
-    assert state.state == "20576.1315"
+    # 1234567.89 Wmin / 60 / 1000 = 20.5761315 kWh
+    assert state.state == "20.5761315"
     # suggested unit is KWh
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
@@ -70,7 +71,8 @@ async def test_power_factory_unit_migration(
     await init_integration(hass, 1)
 
     state = hass.states.get(entity_id)
-    assert state.state == "0.98"
+    # Value of 0.98 is converted to 98.0%
+    assert state.state == "98.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
