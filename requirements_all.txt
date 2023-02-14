@@ -1843,7 +1843,7 @@ pyopenuv==2023.01.0
 pyopnsense==0.2.0
 
 # homeassistant.components.opple
-pyoppleio==1.0.5
+pyoppleio-310==1.0.8
 
 # homeassistant.components.opentherm_gw
 pyotgw==2.1.3
