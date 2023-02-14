@@ -335,6 +335,8 @@ class ServiceIntentHandler(IntentHandler):
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
     }
 
+    service_timeout: float = 2.0
+
     def __init__(
         self, intent_type: str, domain: str, service: str, speech: str | None = None
     ) -> None:
@@ -402,7 +404,8 @@ class ServiceIntentHandler(IntentHandler):
         area: area_registry.AreaEntry | None = None,
     ) -> IntentResponse:
         """Complete action on matched entity states."""
-        assert states
+        assert states, "No states"
+        hass = intent_obj.hass
         success_results: list[IntentResponseTarget] = []
         response = intent_obj.create_response()
 
@@ -444,6 +447,9 @@ class ServiceIntentHandler(IntentHandler):
         response.async_set_results(
             success_results=success_results, failed_results=failed_results
         )
+
+        # Update all states
+        states = [hass.states.get(state.entity_id) or state for state in states]
         response.async_set_states(states)
 
         if self.speech is not None:
@@ -453,7 +459,7 @@ class ServiceIntentHandler(IntentHandler):
 
     async def async_call_service(
         self, intent_obj: Intent, state: State
-    ) -> tuple[bool, State]:
+    ) -> tuple[bool | None, State]:
         """Call service on entity."""
         hass = intent_obj.hass
         result = await hass.services.async_call(
@@ -462,9 +468,10 @@ class ServiceIntentHandler(IntentHandler):
             {ATTR_ENTITY_ID: state.entity_id},
             context=intent_obj.context,
             blocking=True,
+            limit=self.service_timeout,
         )
 
-        return result is True, state
+        return result, state
 
 
 class IntentCategory(Enum):

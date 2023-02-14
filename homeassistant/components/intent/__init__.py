@@ -63,7 +63,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
 
     async def async_call_service(
         self, intent_obj: intent.Intent, state: State
-    ) -> tuple[bool, State]:
+    ) -> tuple[bool | None, State]:
         """Call service on entity with special case for covers."""
         hass = intent_obj.hass
 
@@ -78,9 +78,10 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 {ATTR_ENTITY_ID: state.entity_id},
                 context=intent_obj.context,
                 blocking=True,
+                limit=self.service_timeout,
             )
 
-            return result is True, state
+            return result, state
 
         if not hass.services.has_service(state.domain, self.service):
             _LOGGER.warning(
