@@ -7,12 +7,7 @@ from typing import Any, Final
 
 import orjson
 
-JsonValueType = (
-    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
-)
-"""Any data that can be returned by the standard JSON deserializing process."""
-JsonObjectType = dict[str, JsonValueType]
-"""Dictionary that can be returned by the standard JSON deserializing process."""
+from homeassistant.util.json import JsonObjectType, JsonValueType
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
 JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
