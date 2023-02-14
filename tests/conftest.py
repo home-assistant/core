@@ -955,7 +955,7 @@ def yaml_configuration_files(yaml_configuration: str | None) -> dict[str, str] |
 
 @pytest.fixture
 def mock_yaml_config(
-    hass: HomeAssistant, yaml_configuration_file: dict[str, str] | None
+    hass: HomeAssistant, yaml_configuration_files: dict[str, str] | None
 ) -> Generator[None, None, None]:
     """Fixture to mock the configuration.yaml file content.
 
