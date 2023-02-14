@@ -13,8 +13,10 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.sensor import (  # pylint disable-next=hass-deprecated-import
+    DEVICE_CLASS_STATE_CLASSES,
+)
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_STATE_CLASSES,  # pylint disable-next=hass-deprecated-import
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -398,7 +400,9 @@ class StatisticsSensor(SensorEntity):
             if source_device_class is None:
                 return None
             sensor_device_class = SensorDeviceClass(source_device_class)
-            sensor_state_classes = DEVICE_CLASS_STATE_CLASSES.get(sensor_device_class, set())
+            sensor_state_classes = DEVICE_CLASS_STATE_CLASSES.get(
+                sensor_device_class, set()
+            )
             if SensorStateClass.MEASUREMENT not in sensor_state_classes:
                 return None
             return sensor_device_class
