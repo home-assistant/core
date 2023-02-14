@@ -20,6 +20,8 @@ DOMAIN: Final = "knx"
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
 
+KNX_KEYRING_FILENAME: Final = "keyfile.knxkeys"
+
 CONF_INVERT: Final = "invert"
 CONF_KNX_EXPOSE: Final = "expose"
 CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"

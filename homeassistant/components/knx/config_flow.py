@@ -49,6 +49,7 @@ from .const import (
     CONF_KNX_TUNNELING_TCP_SECURE,
     DEFAULT_ROUTING_IA,
     DOMAIN,
+    KNX_KEYRING_FILENAME,
     KNXConfigEntryData,
 )
 from .schema import ia_validator, ip_v4_validator
@@ -706,7 +707,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 else:
                     dest_path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
                     dest_path.mkdir(exist_ok=True)
-                    file_path.rename(dest_path / "keyfile.knxkeys")
+                    file_path.rename(dest_path / KNX_KEYRING_FILENAME)
             return keyring, errors
 
         keyring, errors = await self.hass.async_add_executor_job(_process_upload)
@@ -717,7 +718,7 @@ class KNXCommonFlow(ABC, FlowHandler):
 class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
     """Handle a KNX config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize KNX options flow."""
