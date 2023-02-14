@@ -6088,7 +6088,7 @@
       "iot_class": "cloud_polling"
     },
     "waterkotte_heatpump": {
-      "name": "Heatpump",
+      "name": "Waterkotte Heatpump",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"

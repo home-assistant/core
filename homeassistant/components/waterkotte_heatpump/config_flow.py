@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pywaterkotte.ecotouch import (
+from pywaterkotte import (
     AuthenticationException,
     ConnectionException,
     Ecotouch,

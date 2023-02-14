@@ -1,9 +1,9 @@
 {
   "domain": "waterkotte_heatpump",
-  "name": "Heatpump",
+  "name": "Waterkotte Heatpump",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waterkotte_heatpump",
-  "requirements": ["pywaterkotte==0.0.1"],
+  "requirements": ["pywaterkotte==0.1.2"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

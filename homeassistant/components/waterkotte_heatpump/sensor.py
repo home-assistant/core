@@ -208,8 +208,8 @@ async def async_setup_entry(
             name="heatpump",
             manufacturer="Waterkotte GmbH",
             model=coordinator.heatpump.decode_heatpump_series(heatpump_type),
-            sw_version="1.2.3",
-            hw_version="13",
+            sw_version=coordinator.heatpump.read_value(EcotouchTags.FIRMWARE_VERSION),
+            hw_version=coordinator.heatpump.read_value(EcotouchTags.HARDWARE_REVISION),
             configuration_url=f'http://{entry.data.get("host")}',
         )
 
