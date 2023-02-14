@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
 from typing import Final
 
 import voluptuous as vol
@@ -333,6 +334,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update a given config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+
+    def remove_keyring_files(file_path: Path) -> None:
+        """Remove keyring files."""
+        if file_path.exists():
+            file_path.unlink()
+
+    if (_knxkeys_file := entry.data.get(CONF_KNX_KNXKEY_FILENAME)) is not None:
+        file_path = Path(hass.config.path(STORAGE_DIR)) / _knxkeys_file
+        await hass.async_add_executor_job(remove_keyring_files, file_path)
 
 
 class KNXModule:
