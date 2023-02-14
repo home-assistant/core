@@ -63,6 +63,14 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.util.json import (
+    JsonArrayType,
+    JsonObjectType,
+    JsonValueType,
+    json_loads,
+    json_loads_array,
+    json_loads_object,
+)
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -426,6 +434,30 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text()
+
+
+@lru_cache
+def load_json_value_fixture(
+    filename: str, integration: str | None = None
+) -> JsonValueType:
+    """Load a JSON value from a fixture."""
+    return json_loads(load_fixture(filename, integration))
+
+
+@lru_cache
+def load_json_array_fixture(
+    filename: str, integration: str | None = None
+) -> JsonArrayType:
+    """Load a JSON array from a fixture."""
+    return json_loads_array(load_fixture(filename, integration))
+
+
+@lru_cache
+def load_json_object_fixture(
+    filename: str, integration: str | None = None
+) -> JsonObjectType:
+    """Load a JSON object from a fixture."""
+    return json_loads_object(load_fixture(filename, integration))
 
 
 def mock_state_change_event(

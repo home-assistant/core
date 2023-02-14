@@ -18,6 +18,8 @@ JsonValueType = (
     dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
 )
 """Any data that can be returned by the standard JSON deserializing process."""
+JsonArrayType = list[JsonValueType]
+"""List that can be returned by the standard JSON deserializing process."""
 JsonObjectType = dict[str, JsonValueType]
 """Dictionary that can be returned by the standard JSON deserializing process."""
 
@@ -32,6 +34,15 @@ class SerializationError(HomeAssistantError):
 json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
 json_loads = orjson.loads
 """Parse JSON data."""
+
+
+def json_loads_array(__obj: bytes | bytearray | memoryview | str) -> JsonArrayType:
+    """Parse JSON data and ensure result is a list."""
+    value: JsonValueType = json_loads(__obj)
+    # Avoid isinstance overhead as we are not interested in list subclasses
+    if type(value) is list:  # pylint: disable=unidiomatic-typecheck
+        return value
+    raise ValueError(f"Expected JSON to be parsed as a list got {type(value)}")
 
 
 def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObjectType:
