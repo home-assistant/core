@@ -421,6 +421,12 @@ class MQTT:
                 retain=will_message.retain,
             )
 
+    def _is_active_subscription(self, topic: str) -> bool:
+        """Check if a topic has an active subscription."""
+        if topic in self._simple_subscriptions:
+            return True
+        return any(other.topic == topic for other in self._wildcard_subscriptions)
+
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
@@ -545,7 +551,7 @@ class MQTT:
             return mid
 
         async with self._paho_lock:
-            if any(other.topic == topic for other in self.subscriptions):
+            if self._is_active_subscription(topic):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
 
