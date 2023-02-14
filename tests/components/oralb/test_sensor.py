@@ -3,6 +3,8 @@
 
 from homeassistant.components.oralb.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     ORALB_IO_SERIES_4_SERVICE_INFO,
@@ -17,7 +19,7 @@ from tests.components.bluetooth import (
 )
 
 
-async def test_sensors(hass, entity_registry_enabled_by_default):
+async def test_sensors(hass: HomeAssistant, entity_registry_enabled_by_default):
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -47,7 +49,9 @@ async def test_sensors(hass, entity_registry_enabled_by_default):
     await hass.async_block_till_done()
 
 
-async def test_sensors_io_series_4(hass, entity_registry_enabled_by_default):
+async def test_sensors_io_series_4(
+    hass: HomeAssistant, entity_registry_enabled_by_default
+):
     """Test setting up creates the sensors with an io series 4."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -72,7 +76,7 @@ async def test_sensors_io_series_4(hass, entity_registry_enabled_by_default):
     await hass.async_block_till_done()
 
 
-async def test_sensors_battery(hass):
+async def test_sensors_battery(hass: HomeAssistant):
     """Test receiving battery percentage."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -91,3 +95,25 @@ async def test_sensors_battery(hass):
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_no_battery_no_poll(hass: HomeAssistant):
+    """Test that when a user disables battery - we don't poll."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ORALB_IO_SERIES_6_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    inject_bluetooth_service_info_bleak(hass, ORALB_IO_SERIES_6_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 7
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get("sensor.io_series_6_7_1dcf_battery")
+    entity = entity_registry.async_update_entity(
+        entity_id=entity.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.async_block_till_done()
+    assert entity.disabled
