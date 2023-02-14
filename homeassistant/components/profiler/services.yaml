@@ -11,19 +11,6 @@ start:
           min: 1
           max: 3600
           unit_of_measurement: seconds
-memory:
-  name: Memory
-  description: Start the Memory Profiler
-  fields:
-    seconds:
-      name: Seconds
-      description: The number of seconds to run the memory profiler.
-      default: 60.0
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
 start_log_objects:
   name: Start log objects
   description: Start logging growth of objects in memory

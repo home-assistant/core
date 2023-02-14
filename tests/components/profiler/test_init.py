@@ -10,7 +10,6 @@ from homeassistant.components.profiler import (
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_LOG_THREAD_FRAMES,
-    SERVICE_MEMORY,
     SERVICE_START,
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
@@ -48,36 +47,6 @@ async def test_basic_usage(hass, tmpdir):
         )
 
     assert os.path.exists(last_filename)
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_memory_usage(hass, tmpdir):
-    """Test we can setup and the service is registered."""
-    test_dir = tmpdir.mkdir("profiles")
-
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.services.has_service(DOMAIN, SERVICE_MEMORY)
-
-    last_filename = None
-
-    def _mock_path(filename):
-        nonlocal last_filename
-        last_filename = f"{test_dir}/{filename}"
-        return last_filename
-
-    with patch("guppy.hpy") as mock_hpy, patch.object(hass.config, "path", _mock_path):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_MEMORY, {CONF_SECONDS: 0.000001}, blocking=True
-        )
-
-        mock_hpy.assert_called_once()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
