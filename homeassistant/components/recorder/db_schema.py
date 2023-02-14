@@ -537,6 +537,8 @@ class StatisticsBase:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
+            created=None,
+            created_ts=time.time(),
             start=None,
             start_ts=dt_util.utc_to_timestamp(stats["start"]),
             mean=stats.get("mean"),
