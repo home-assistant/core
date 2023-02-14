@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import json
 import logging
 from typing import Any
 
@@ -57,9 +58,39 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     return {} if default is None else default
 
 
+def save_json(
+    filename: str,
+    data: list | dict,
+    private: bool = False,
+    *,
+    encoder: type[json.JSONEncoder] | None = None,
+    atomic_writes: bool = False,
+) -> None:
+    """Save JSON data to a file."""
+    # pylint: disable-next=import-outside-toplevel
+    import homeassistant.helpers.json as json_helper
+
+    json_helper.save_json(
+        filename, data, private, encoder=encoder, atomic_writes=atomic_writes
+    )
+
+
 def format_unserializable_data(data: dict[str, Any]) -> str:
     """Format output of find_paths in a friendly way.
 
     Format is comma separated: <path>=<value>(<type>)
     """
     return ", ".join(f"{path}={value}({type(value)}" for path, value in data.items())
+
+
+def find_paths_unserializable_data(
+    bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
+) -> dict[str, Any]:
+    """Find the paths to unserializable data.
+
+    This method is slow! Only use for error handling.
+    """
+    # pylint: disable-next=import-outside-toplevel
+    import homeassistant.helpers.json as json_helper
+
+    return json_helper.find_paths_unserializable_data(bad_data, dump=dump)

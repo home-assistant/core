@@ -12,7 +12,12 @@ import orjson
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import format_unserializable_data
+from homeassistant.util.json import (  # pylint: disable=unused-import # noqa: F401
+    JSON_DECODE_EXCEPTIONS,
+    JSON_ENCODE_EXCEPTIONS,
+    format_unserializable_data,
+    json_loads,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,10 +172,7 @@ def save_json(
     encoder: type[json.JSONEncoder] | None = None,
     atomic_writes: bool = False,
 ) -> None:
-    """Save JSON data to a file.
-
-    Returns True on success.
-    """
+    """Save JSON data to a file."""
     dump: Callable[[Any], Any]
     try:
         # For backwards compatibility, if they pass in the
