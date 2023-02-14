@@ -123,7 +123,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=list(TANK_FILL.values()),
         value_fn=lambda WasherDryer: TANK_FILL.get(
-            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level"), None
+            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ),
     ),
 )

@@ -152,14 +152,19 @@ async def test_washer_sensor_values(
     assert entry
     assert entry.disabled
     assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
-    update_entry = registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
-    )
+
+    update_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
     await hass.async_block_till_done()
+
     assert update_entry != entry
     assert update_entry.disabled is False
     state = hass.states.get(state_id)
     assert state is None
+
+    await hass.config_entries.async_reload(entry.config_entry_id)
+    state = hass.states.get(state_id)
+    assert state is not None
+    assert state.state == "50"
 
     # Test the washer cycle states
     mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
