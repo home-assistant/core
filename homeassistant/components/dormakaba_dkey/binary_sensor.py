@@ -57,7 +57,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the lock platform for Dormakaba dKey."""
+    """Set up the binary sensor platform for Dormakaba dKey."""
     data: DormakabaDkeyData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         DormakabaDkeyBinarySensor(data.coordinator, data.lock, description)
