@@ -138,7 +138,7 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     EcotouchTags.SOURCEPUMP_ELECTRIC_CONSUMPTION_YEAR: SensorEntityDescription(
         key="sourcepump_power_consumption_year",
@@ -146,7 +146,7 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     EcotouchTags.ELECTRICAL_HEATER_ELECTRIC_CONSUMPTION_YEAR: SensorEntityDescription(
         key="electrical_heater_power_consumption_year",
@@ -154,7 +154,7 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     EcotouchTags.HEATING_ENERGY_PRODUCED_YEAR: SensorEntityDescription(
         key="heating_energy_produced_year",
@@ -162,7 +162,7 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     EcotouchTags.HOT_WATER_ENERGY_PRODUCED_YEAR: SensorEntityDescription(
         key="hot_water_energy_produced_year",
@@ -170,7 +170,7 @@ SENSOR_DESCRIPTIONS = {
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     EcotouchTags.ELECTRICAL_POWER: SensorEntityDescription(
         key="electrical_power",
