@@ -414,7 +414,7 @@ async def test_routing_secure_keyfile(
     assert routing_secure_knxkeys["data"] == {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING_SECURE,
-        CONF_KNX_KNXKEY_FILENAME: "knx/keyfile.knxkeys",
+        CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
         CONF_KNX_KNXKEY_PASSWORD: "password",
         CONF_KNX_ROUTING_BACKBONE_KEY: None,
         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
@@ -1073,7 +1073,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
     assert secure_knxkeys["data"] == {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
-        CONF_KNX_KNXKEY_FILENAME: "knx/keyfile.knxkeys",
+        CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
         CONF_KNX_KNXKEY_PASSWORD: "test",
         CONF_KNX_ROUTING_BACKBONE_KEY: None,
         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
@@ -1293,7 +1293,7 @@ async def test_options_flow_secure_manual_to_keyfile(
     assert mock_config_entry.data == {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
-        CONF_KNX_KNXKEY_FILENAME: "knx/keyfile.knxkeys",
+        CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
         CONF_KNX_KNXKEY_PASSWORD: "test",
         CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
         CONF_KNX_SECURE_USER_ID: None,
@@ -1389,7 +1389,7 @@ async def test_options_update_keyfile(hass: HomeAssistant, knx_setup) -> None:
     assert not result2.get("data")
     assert mock_config_entry.data == {
         **start_data,
-        CONF_KNX_KNXKEY_FILENAME: "knx/keyfile.knxkeys",
+        CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
         CONF_KNX_KNXKEY_PASSWORD: "password",
         CONF_KNX_ROUTING_BACKBONE_KEY: None,
         CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
@@ -1447,7 +1447,7 @@ async def test_options_keyfile_upload(hass: HomeAssistant, knx_setup) -> None:
     assert not result3.get("data")
     assert mock_config_entry.data == {
         **start_data,
-        CONF_KNX_KNXKEY_FILENAME: "knx/keyfile.knxkeys",
+        CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
         CONF_KNX_KNXKEY_PASSWORD: "password",
         CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.1",
         CONF_KNX_SECURE_USER_ID: None,

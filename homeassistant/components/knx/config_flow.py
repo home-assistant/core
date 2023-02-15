@@ -67,7 +67,7 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
-DEFAULT_KNX_KEYRING_FILENAME: Final = "keyfile.knxkeys"
+DEFAULT_KNX_KEYRING_FILENAME: Final = "keyring.knxkeys"
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {

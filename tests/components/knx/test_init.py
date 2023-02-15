@@ -113,7 +113,7 @@ from tests.common import MockConfigEntry
                 CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
                 CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
                 CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
-                CONF_KNX_KNXKEY_FILENAME: "knx/keyfile.knxkeys",
+                CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
             ConnectionConfig(
@@ -122,7 +122,7 @@ from tests.common import MockConfigEntry
                 gateway_port=3675,
                 auto_reconnect=True,
                 secure_config=SecureConfig(
-                    knxkeys_file_path="keyfile.knxkeys", knxkeys_password="password"
+                    knxkeys_file_path="keyring.knxkeys", knxkeys_password="password"
                 ),
                 threaded=True,
             ),
