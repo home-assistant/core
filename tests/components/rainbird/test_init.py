@@ -27,7 +27,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_data,initial_response",
+    ("yaml_config", "config_entry_data", "initial_response"),
     [
         ({}, CONFIG_ENTRY_DATA, None),
         (
@@ -65,7 +65,7 @@ async def test_init_success(
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_data,responses,config_entry_states",
+    ("yaml_config", "config_entry_data", "responses", "config_entry_states"),
     [
         ({}, CONFIG_ENTRY_DATA, [UNAVAILABLE_RESPONSE], [ConfigEntryState.SETUP_RETRY]),
         (

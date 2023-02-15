@@ -130,7 +130,7 @@ def alarm_control_panel_platform_only():
 
 
 @pytest.mark.parametrize(
-    "config,valid",
+    ("config", "valid"),
     [
         (
             {
@@ -235,7 +235,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
 
 
 @pytest.mark.parametrize(
-    "service,payload",
+    ("service", "payload"),
     [
         (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
@@ -272,7 +272,7 @@ async def test_publish_mqtt_no_code(
 
 
 @pytest.mark.parametrize(
-    "service,payload",
+    ("service", "payload"),
     [
         (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
@@ -328,7 +328,7 @@ async def test_publish_mqtt_with_code(
 
 
 @pytest.mark.parametrize(
-    "service,payload",
+    ("service", "payload"),
     [
         (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
@@ -375,7 +375,7 @@ async def test_publish_mqtt_with_remote_code(
 
 
 @pytest.mark.parametrize(
-    "service,payload",
+    ("service", "payload"),
     [
         (SERVICE_ALARM_ARM_HOME, "ARM_HOME"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY"),
@@ -422,7 +422,7 @@ async def test_publish_mqtt_with_remote_code_text(
 
 
 @pytest.mark.parametrize(
-    "service,payload,disable_code",
+    ("service", "payload", "disable_code"),
     [
         (SERVICE_ALARM_ARM_HOME, "ARM_HOME", "code_arm_required"),
         (SERVICE_ALARM_ARM_AWAY, "ARM_AWAY", "code_arm_required"),
@@ -889,7 +889,7 @@ async def test_discovery_broken(
 
 
 @pytest.mark.parametrize(
-    "topic,value",
+    ("topic", "value"),
     [
         ("state_topic", "armed_home"),
         ("state_topic", "disarmed"),
@@ -1001,7 +1001,7 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template,tpl_par,tpl_output",
+    ("service", "topic", "parameters", "payload", "template", "tpl_par", "tpl_output"),
     [
         (
             alarm_control_panel.SERVICE_ALARM_ARM_AWAY,

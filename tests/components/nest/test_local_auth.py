@@ -2,7 +2,8 @@
 from urllib.parse import parse_qsl
 
 import pytest
-import requests_mock as rmock
+import requests_mock
+from requests_mock import create_response
 
 from homeassistant.components.nest import config_flow, const
 from homeassistant.components.nest.legacy import local_auth
@@ -15,7 +16,7 @@ def registered_flow(hass):
     return hass.data[config_flow.DATA_FLOW_IMPL][const.DOMAIN]
 
 
-async def test_generate_auth_url(registered_flow):
+async def test_generate_auth_url(registered_flow) -> None:
     """Test generating an auth url.
 
     Mainly testing that it doesn't blow up.
@@ -24,7 +25,9 @@ async def test_generate_auth_url(registered_flow):
     assert url is not None
 
 
-async def test_convert_code(requests_mock, registered_flow):
+async def test_convert_code(
+    requests_mock: requests_mock.Mocker, registered_flow
+) -> None:
     """Test converting a code."""
     from nest.nest import ACCESS_TOKEN_URL
 
@@ -40,9 +43,7 @@ async def test_convert_code(requests_mock, registered_flow):
             "grant_type": "authorization_code",
         }
 
-        return rmock.create_response(
-            request, json={"access_token": "TEST-ACCESS-TOKEN"}
-        )
+        return create_response(request, json={"access_token": "TEST-ACCESS-TOKEN"})
 
     requests_mock.add_matcher(token_matcher)
 

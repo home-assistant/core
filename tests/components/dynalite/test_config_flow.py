@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "first_con, second_con,exp_type, exp_result, exp_reason",
+    ("first_con", "second_con", "exp_type", "exp_result", "exp_reason"),
     [
         (True, True, "create_entry", config_entries.ConfigEntryState.LOADED, ""),
         (False, False, "abort", None, "no_connection"),

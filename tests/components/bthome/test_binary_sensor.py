@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "mac_address, advertisement, bind_key, result",
+    ("mac_address", "advertisement", "bind_key", "result"),
     [
         (
             "A4:C1:38:8D:18:B2",
@@ -102,7 +102,7 @@ async def test_v1_binary_sensors(
 
 
 @pytest.mark.parametrize(
-    "mac_address, advertisement, bind_key, result",
+    ("mac_address", "advertisement", "bind_key", "result"),
     [
         (
             "A4:C1:38:8D:18:B2",

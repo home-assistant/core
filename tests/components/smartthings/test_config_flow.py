@@ -35,7 +35,9 @@ async def test_import_shows_user_step(hass: HomeAssistant) -> None:
     ] == smartapp.get_webhook_url(hass)
 
 
-async def test_entry_created(hass, app, app_oauth_client, location, smartthings_mock):
+async def test_entry_created(
+    hass: HomeAssistant, app, app_oauth_client, location, smartthings_mock
+) -> None:
     """Test local webhook, new app, install event creates entry."""
     token = str(uuid4())
     installed_app_id = str(uuid4())
@@ -105,8 +107,8 @@ async def test_entry_created(hass, app, app_oauth_client, location, smartthings_
 
 
 async def test_entry_created_from_update_event(
-    hass, app, app_oauth_client, location, smartthings_mock
-):
+    hass: HomeAssistant, app, app_oauth_client, location, smartthings_mock
+) -> None:
     """Test local webhook, new app, update event creates entry."""
     token = str(uuid4())
     installed_app_id = str(uuid4())
@@ -176,8 +178,8 @@ async def test_entry_created_from_update_event(
 
 
 async def test_entry_created_existing_app_new_oauth_client(
-    hass, app, app_oauth_client, location, smartthings_mock
-):
+    hass: HomeAssistant, app, app_oauth_client, location, smartthings_mock
+) -> None:
     """Test entry is created with an existing app and generation of a new oauth client."""
     token = str(uuid4())
     installed_app_id = str(uuid4())
@@ -247,8 +249,8 @@ async def test_entry_created_existing_app_new_oauth_client(
 
 
 async def test_entry_created_existing_app_copies_oauth_client(
-    hass, app, location, smartthings_mock
-):
+    hass: HomeAssistant, app, location, smartthings_mock
+) -> None:
     """Test entry is created with an existing app and copies the oauth client from another entry."""
     token = str(uuid4())
     installed_app_id = str(uuid4())
@@ -337,8 +339,8 @@ async def test_entry_created_existing_app_copies_oauth_client(
 
 
 async def test_entry_created_with_cloudhook(
-    hass, app, app_oauth_client, location, smartthings_mock
-):
+    hass: HomeAssistant, app, app_oauth_client, location, smartthings_mock
+) -> None:
     """Test cloud, new app, install event creates entry."""
     hass.config.components.add("cloud")
     # Unload the endpoint so we can reload it under the cloud.
@@ -473,7 +475,9 @@ async def test_invalid_token_shows_error(hass: HomeAssistant) -> None:
     assert "component_url" in result["description_placeholders"]
 
 
-async def test_unauthorized_token_shows_error(hass, smartthings_mock):
+async def test_unauthorized_token_shows_error(
+    hass: HomeAssistant, smartthings_mock
+) -> None:
     """Test an error is shown for unauthorized token formats."""
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
@@ -510,7 +514,9 @@ async def test_unauthorized_token_shows_error(hass, smartthings_mock):
     assert "component_url" in result["description_placeholders"]
 
 
-async def test_forbidden_token_shows_error(hass, smartthings_mock):
+async def test_forbidden_token_shows_error(
+    hass: HomeAssistant, smartthings_mock
+) -> None:
     """Test an error is shown for forbidden token formats."""
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
@@ -547,7 +553,9 @@ async def test_forbidden_token_shows_error(hass, smartthings_mock):
     assert "component_url" in result["description_placeholders"]
 
 
-async def test_webhook_problem_shows_error(hass, smartthings_mock):
+async def test_webhook_problem_shows_error(
+    hass: HomeAssistant, smartthings_mock
+) -> None:
     """Test an error is shown when there's an problem with the webhook endpoint."""
     token = str(uuid4())
     data = {"error": {}}
@@ -590,7 +598,7 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
     assert "component_url" in result["description_placeholders"]
 
 
-async def test_api_error_shows_error(hass, smartthings_mock):
+async def test_api_error_shows_error(hass: HomeAssistant, smartthings_mock) -> None:
     """Test an error is shown when other API errors occur."""
     token = str(uuid4())
     data = {"error": {}}
@@ -632,7 +640,9 @@ async def test_api_error_shows_error(hass, smartthings_mock):
     assert "component_url" in result["description_placeholders"]
 
 
-async def test_unknown_response_error_shows_error(hass, smartthings_mock):
+async def test_unknown_response_error_shows_error(
+    hass: HomeAssistant, smartthings_mock
+) -> None:
     """Test an error is shown when there is an unknown API error."""
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
@@ -670,7 +680,7 @@ async def test_unknown_response_error_shows_error(hass, smartthings_mock):
     assert "component_url" in result["description_placeholders"]
 
 
-async def test_unknown_error_shows_error(hass, smartthings_mock):
+async def test_unknown_error_shows_error(hass: HomeAssistant, smartthings_mock) -> None:
     """Test an error is shown when there is an unknown API error."""
     token = str(uuid4())
     smartthings_mock.apps.side_effect = Exception("Unknown error")
@@ -705,8 +715,8 @@ async def test_unknown_error_shows_error(hass, smartthings_mock):
 
 
 async def test_no_available_locations_aborts(
-    hass, app, app_oauth_client, location, smartthings_mock
-):
+    hass: HomeAssistant, app, app_oauth_client, location, smartthings_mock
+) -> None:
     """Test select location aborts if no available locations."""
     token = str(uuid4())
     smartthings_mock.apps.return_value = []

@@ -1,10 +1,11 @@
 """Tests for rainforest eagle sensors."""
 from homeassistant.components.rainforest_eagle.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_200_RESPONSE_WITH_PRICE
 
 
-async def test_sensors_200(hass, setup_rainforest_200):
+async def test_sensors_200(hass: HomeAssistant, setup_rainforest_200) -> None:
     """Test the sensors."""
     assert len(hass.states.async_all()) == 3
 
@@ -37,7 +38,7 @@ async def test_sensors_200(hass, setup_rainforest_200):
     assert price.attributes["unit_of_measurement"] == "USD/kWh"
 
 
-async def test_sensors_100(hass, setup_rainforest_100):
+async def test_sensors_100(hass: HomeAssistant, setup_rainforest_100) -> None:
     """Test the sensors."""
     assert len(hass.states.async_all()) == 3
 

@@ -34,8 +34,18 @@ env:
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
-  MARIADB_VERSIONS: "['mariadb:10.9.3']"
-  POSTGRESQL_VERSIONS: "['postgres:15.0']"
+  # 10.3 is the oldest supported version
+  # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
+  # 10.6 is the current long-term-support
+  # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
+  # 10.10 is the latest short-term-support
+  # - 10.10.3 is the latest (as of 6 Feb 2023)
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3']"
+  # 12 is the oldest supported version
+  # - 12.14 is the latest (as of 9 Feb 2023)
+  # 15 is the latest version
+  # - 15.2 is the latest (as of 9 Feb 2023)
+  POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -948,7 +958,7 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     name: >-
-      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.mariadb-group }})
+      Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -991,7 +1001,7 @@ jobs:
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 15
+        timeout-minutes: 20
         shell: bash
         run: |
           . venv/bin/activate
@@ -1008,7 +1018,10 @@ jobs:
             --durations=10 \
             -p no:sugar \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
-            tests/components/recorder
+            tests/components/history \
+            tests/components/logbook \
+            tests/components/recorder \
+            tests/components/sensor
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.2
         with:
@@ -1047,7 +1060,7 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     name: >-
-      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.postgresql-group }})
+      Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -1094,7 +1107,7 @@ jobs:
           . venv/bin/activate
           pip install psycopg2 sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 10
+        timeout-minutes: 20
         shell: bash
         run: |
           . venv/bin/activate
@@ -1112,7 +1125,10 @@ jobs:
             --durations-min=10 \
             -p no:sugar \
             --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
-            tests/components/recorder
+            tests/components/history \
+            tests/components/logbook \
+            tests/components/recorder \
+            tests/components/sensor
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
         with:
