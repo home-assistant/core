@@ -500,12 +500,12 @@ class MQTT:
     def async_restore_subscriptions(self, subscriptions: list[Subscription]) -> None:
         """Restore subscriptions after reconnect."""
         for subscription in self.subscriptions:
-            self._async_add_subscription(subscription)
+            self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
     @callback
-    def _async_add_subscription(self, subscription: Subscription) -> None:
-        """Add a subscription.
+    def _async_track_subscription(self, subscription: Subscription) -> None:
+        """Track a subscription.
 
         This method does not send a SUBSCRIBE message to the broker.
         """
@@ -517,8 +517,8 @@ class MQTT:
             self._wildcard_subscriptions.append(subscription)
 
     @callback
-    def _async_remove_subscription(self, subscription: Subscription) -> None:
-        """Remove a subscription.
+    def _async_untrack_subscription(self, subscription: Subscription) -> None:
+        """Untrack a subscription.
 
         This method does not send an UNSUBSCRIBE message to the broker.
         """
@@ -550,7 +550,7 @@ class MQTT:
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
-        self._async_add_subscription(subscription)
+        self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
@@ -561,7 +561,7 @@ class MQTT:
         @callback
         def async_remove() -> None:
             """Remove subscription."""
-            self._async_remove_subscription(subscription)
+            self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
