@@ -251,6 +251,7 @@ select = [
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
     "SIM201", # Use {left} != {right} instead of not {left} == {right}
+    "SIM212", # Use {a} if {a} else {b} instead of {b} if not {a} else {a}
     "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
     "SIM401", # Use get from dict with default instead of an if block
     "T20",  # flake8-print
