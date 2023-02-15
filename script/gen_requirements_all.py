@@ -153,9 +153,6 @@ matplotlib==3.6.1
 # pyOpenSSL 23.0.0 or later required to avoid import errors when
 # cryptography 39.0.0 is installed with botocore
 pyOpenSSL>=23.0.0
-
-# cmake is required to build uamqp
-cmake==3.25.2
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
