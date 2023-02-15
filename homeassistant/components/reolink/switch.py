@@ -51,6 +51,22 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.ir_enabled(ch),
         method=lambda api, ch, value: api.set_ir_lights(ch, value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="record_audio",
+        name="Record audio",
+        icon="mdi:microphone",
+        supported=lambda api, ch: api.supported(ch, "audio"),
+        value=lambda api, ch: api.audio_record(ch),
+        method=lambda api, ch, value: api.set_audio(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="siren_on_event",
+        name="Siren on event",
+        icon="mdi:alarm-light",
+        supported=lambda api, ch: api.supported(ch, "siren"),
+        value=lambda api, ch: api.audio_alarm_enabled(ch),
+        method=lambda api, ch, value: api.set_audio_alarm(ch, value),
+    ),
 )
 
 
