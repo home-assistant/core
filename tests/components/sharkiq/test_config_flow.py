@@ -50,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (TypeError, "unknown"),
     ],
 )
-async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str):
+async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) -> None:
     """Test form errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -66,7 +66,7 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str):
     assert result2["errors"].get("base") == base_error
 
 
-async def test_reauth_success(hass: HomeAssistant):
+async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test reauth flow."""
     with patch("sharkiq.AylaApi.async_sign_in", return_value=True):
         mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
@@ -96,7 +96,7 @@ async def test_reauth(
     result_type: str,
     msg_field: str,
     msg: str,
-):
+) -> None:
     """Test reauth failures."""
     with patch("sharkiq.AylaApi.async_sign_in", side_effect=side_effect):
         result = await hass.config_entries.flow.async_init(

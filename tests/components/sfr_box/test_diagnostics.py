@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
 
@@ -21,7 +22,7 @@ def override_platforms() -> Generator[None, None, None]:
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, hass_client
+    hass: HomeAssistant, config_entry: ConfigEntry, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     await hass.config_entries.async_setup(config_entry.entry_id)

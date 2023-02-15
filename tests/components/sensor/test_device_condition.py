@@ -11,7 +11,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN, EntityCategory
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -33,8 +34,11 @@ def calls(hass):
 
 
 async def test_get_conditions(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected conditions from a sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -86,12 +90,12 @@ async def test_get_conditions(
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -125,7 +129,11 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_get_conditions_no_state(hass, device_registry, entity_registry):
+async def test_get_conditions_no_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a sensor."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -177,13 +185,13 @@ async def test_get_conditions_no_state(hass, device_registry, entity_registry):
     ),
 )
 async def test_get_conditions_no_unit_or_stateclass(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     state_class,
     unit,
     condition_types,
-):
+) -> None:
     """Test we get the expected conditions from an entity with no unit or state class."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -224,15 +232,15 @@ async def test_get_conditions_no_unit_or_stateclass(
     ],
 )
 async def test_get_condition_capabilities(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     device_class_reg,
     device_class_state,
     unit_reg,
     unit_state,
-):
+) -> None:
     """Test we get the expected capabilities from a sensor condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -285,7 +293,9 @@ async def test_get_condition_capabilities(
         assert capabilities == expected_capabilities
 
 
-async def test_get_condition_capabilities_none(hass, enable_custom_integrations):
+async def test_get_condition_capabilities_none(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we get the expected capabilities from a sensor condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -322,8 +332,11 @@ async def test_get_condition_capabilities_none(hass, enable_custom_integrations)
 
 
 async def test_if_state_not_above_below(
-    hass, calls, caplog, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for bad value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -357,7 +370,9 @@ async def test_if_state_not_above_below(
     assert "must contain at least one of below, above" in caplog.text
 
 
-async def test_if_state_above(hass, calls, enable_custom_integrations):
+async def test_if_state_above(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -415,7 +430,9 @@ async def test_if_state_above(hass, calls, enable_custom_integrations):
     assert calls[0].data["some"] == "event - test_event1"
 
 
-async def test_if_state_below(hass, calls, enable_custom_integrations):
+async def test_if_state_below(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -473,7 +490,9 @@ async def test_if_state_below(hass, calls, enable_custom_integrations):
     assert calls[0].data["some"] == "event - test_event1"
 
 
-async def test_if_state_between(hass, calls, enable_custom_integrations):
+async def test_if_state_between(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
