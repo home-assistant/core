@@ -201,6 +201,7 @@ async def async_setup_entry(
     coordinator: EcotouchCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     def get_device_info() -> DeviceInfo:
+        """Create DeviceInfo object."""
         heatpump_type = coordinator.heatpump.read_value(EcotouchTags.HEATPUMP_TYPE)
         serial_nr = coordinator.heatpump.read_value(EcotouchTags.SERIAL_NUMBER)
         return DeviceInfo(

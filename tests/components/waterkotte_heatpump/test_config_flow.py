@@ -8,6 +8,8 @@ from homeassistant.components.waterkotte_heatpump.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -96,8 +98,30 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_device_already_configured(hass: HomeAssistant) -> None:
+    """Test if we find out if device is configured twice."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="test-heatpup", data={"host": "1.1.1.1"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
 async def test_unexpected_exception(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle unexpected exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

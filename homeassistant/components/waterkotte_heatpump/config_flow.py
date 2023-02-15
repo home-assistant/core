@@ -17,15 +17,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username", default="waterkotte"): str,
-        vol.Required("password", default="waterkotte"): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME, default="waterkotte"): str,
+        vol.Required(CONF_PASSWORD, default="waterkotte"): str,
     }
 )
 
@@ -37,8 +37,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
 
     def get_heatpump() -> Ecotouch:
-        heatpump = Ecotouch(data["host"])
-        heatpump.login(data["username"], data["password"])
+        """Prepare heatpump instance."""
+        heatpump = Ecotouch(data[CONF_HOST])
+        heatpump.login(data[CONF_USERNAME], data[CONF_PASSWORD])
         return heatpump
 
     try:
@@ -76,7 +77,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
+            if self.host_already_configured(user_input[CONF_HOST]):
+                return self.async_abort(reason="already_configured")
+
             info = await validate_input(self.hass, user_input)
+
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -90,6 +95,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    def host_already_configured(self, host: str) -> bool:
+        """Test if there is already a heatpump with this host."""
+        existing_hosts = {
+            entry.data[CONF_HOST] for entry in self._async_current_entries()
+        }
+        return host in existing_hosts
 
 
 class CannotConnect(HomeAssistantError):
