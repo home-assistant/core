@@ -499,7 +499,7 @@ class MQTT:
     @callback
     def async_restore_subscriptions(self, subscriptions: list[Subscription]) -> None:
         """Restore subscriptions after reconnect."""
-        for subscription in self.subscriptions:
+        for subscription in subscriptions:
             self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
