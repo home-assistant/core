@@ -14,6 +14,7 @@ from homeassistant.components.sonos.switch import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.util import dt
 
@@ -22,7 +23,7 @@ from .conftest import SonosMockEvent
 from tests.common import async_fire_time_changed
 
 
-async def test_entity_registry(hass, async_autosetup_sonos):
+async def test_entity_registry(hass: HomeAssistant, async_autosetup_sonos) -> None:
     """Test sonos device with alarm registered in the device registry."""
     entity_registry = ent_reg.async_get(hass)
 
@@ -37,7 +38,9 @@ async def test_entity_registry(hass, async_autosetup_sonos):
     assert "switch.zone_a_touch_controls" in entity_registry.entities
 
 
-async def test_switch_attributes(hass, async_autosetup_sonos, soco, fire_zgs_event):
+async def test_switch_attributes(
+    hass: HomeAssistant, async_autosetup_sonos, soco, fire_zgs_event
+) -> None:
     """Test for correct Sonos switch states."""
     entity_registry = ent_reg.async_get(hass)
 
@@ -126,8 +129,13 @@ async def test_switch_attributes(hass, async_autosetup_sonos, soco, fire_zgs_eve
 
 
 async def test_alarm_create_delete(
-    hass, async_setup_sonos, soco, alarm_clock, alarm_clock_extended, alarm_event
-):
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    alarm_clock,
+    alarm_clock_extended,
+    alarm_event,
+) -> None:
     """Test for correct creation and deletion of alarms during runtime."""
     entity_registry = ent_reg.async_get(hass)
 

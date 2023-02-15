@@ -15,7 +15,9 @@ from homeassistant.data_entry_flow import FlowResultType
 VALID_AUTH_CODE = "code12345123451234512345123451234512345123451"
 
 
-async def test_duplicate_error(config_entry, hass, setup_simplisafe):
+async def test_duplicate_error(
+    config_entry, hass: HomeAssistant, setup_simplisafe
+) -> None:
     """Test that errors are shown when duplicates are added."""
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
@@ -68,7 +70,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth"}
 
 
-async def test_options_flow(config_entry, hass):
+async def test_options_flow(config_entry, hass: HomeAssistant) -> None:
     """Test config flow options."""
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
@@ -87,7 +89,7 @@ async def test_options_flow(config_entry, hass):
         assert config_entry.options == {CONF_CODE: "4321"}
 
 
-async def test_step_reauth(config_entry, hass, setup_simplisafe):
+async def test_step_reauth(config_entry, hass: HomeAssistant, setup_simplisafe) -> None:
     """Test the re-auth step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -111,7 +113,9 @@ async def test_step_reauth(config_entry, hass, setup_simplisafe):
 
 
 @pytest.mark.parametrize("unique_id", ["some_other_id"])
-async def test_step_reauth_wrong_account(config_entry, hass, setup_simplisafe):
+async def test_step_reauth_wrong_account(
+    config_entry, hass: HomeAssistant, setup_simplisafe
+) -> None:
     """Test the re-auth step where the wrong account is used during login."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -143,7 +147,13 @@ async def test_step_reauth_wrong_account(config_entry, hass, setup_simplisafe):
         ),
     ],
 )
-async def test_step_user(auth_code, caplog, hass, log_statement, setup_simplisafe):
+async def test_step_user(
+    auth_code,
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+    log_statement,
+    setup_simplisafe,
+) -> None:
     """Test successfully completion of the user step."""
     caplog.set_level = logging.DEBUG
 
@@ -168,7 +178,7 @@ async def test_step_user(auth_code, caplog, hass, log_statement, setup_simplisaf
     assert config_entry.data == {CONF_USERNAME: "12345", CONF_TOKEN: "token123"}
 
 
-async def test_unknown_error(hass, setup_simplisafe):
+async def test_unknown_error(hass: HomeAssistant, setup_simplisafe) -> None:
     """Test that an unknown error shows ohe correct error."""
     with patch(
         "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
