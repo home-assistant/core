@@ -43,7 +43,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
                 break
 
             homekit_dict[model] = {
-                "integration": domain,
+                "domain": domain,
                 "iot_class": integration.manifest["iot_class"],
             }
 

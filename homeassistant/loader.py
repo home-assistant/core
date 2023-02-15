@@ -421,7 +421,6 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
 
 async def async_get_homekit(hass: HomeAssistant) -> dict[str, HomeKitModel]:
     """Return cached list of homekit models."""
-
     homekit: dict[str, HomeKitModel] = {
         model: HomeKitModel(details["domain"], details["iot_class"])
         for model, details in HOMEKIT.items()
