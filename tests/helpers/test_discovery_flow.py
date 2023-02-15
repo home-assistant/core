@@ -56,8 +56,11 @@ async def test_async_create_flow_deferred_until_started(hass, mock_flow_init):
     ]
 
 
-async def test_async_create_flow_checks_existing_flows(hass, mock_flow_init):
-    """Test existing flows prevent an identical one from being creates."""
+async def test_async_create_flow_checks_existing_flows_after_startup(
+    hass, mock_flow_init
+):
+    """Test existing flows prevent an identical ones from being after startup."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     with patch(
         "homeassistant.data_entry_flow.FlowManager.async_has_matching_flow",
         return_value=True,
@@ -69,3 +72,26 @@ async def test_async_create_flow_checks_existing_flows(hass, mock_flow_init):
             {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
         assert not mock_flow_init.mock_calls
+
+
+async def test_async_create_flow_checks_existing_flows_before_startup(
+    hass, mock_flow_init
+):
+    """Test existing flows prevent an identical ones from being created before startup."""
+    hass.state = CoreState.stopped
+    for _ in range(2):
+        discovery_flow.async_create_flow(
+            hass,
+            "hue",
+            {"source": config_entries.SOURCE_HOMEKIT},
+            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert mock_flow_init.mock_calls == [
+        call(
+            "hue",
+            context={"source": "homekit"},
+            data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        )
+    ]
