@@ -151,7 +151,7 @@ def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObject
     # Avoid isinstance overhead as we are not interested in dict subclasses
     if type(value) is dict:  # pylint: disable=unidiomatic-typecheck
         return value
-    raise ValueError(f"Expected JSON to be parsed as a dict got {value}")
+    raise ValueError(f"Expected JSON to be parsed as a dict got {type(value)}")
 
 
 JSON_DUMP: Final = json_dumps
