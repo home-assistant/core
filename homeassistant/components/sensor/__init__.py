@@ -548,7 +548,7 @@ class SensorEntity(Entity):
         numerical_value: int | float | Decimal
         if not isinstance(value, (int, float, Decimal)):
             try:
-                if isinstance(value, str) and "." not in value:
+                if isinstance(value, str) and "." not in value and "e" not in value:
                     numerical_value = int(value)
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
