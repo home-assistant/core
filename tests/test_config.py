@@ -568,7 +568,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "minor_version, users, user_data, default_language",
+    ("minor_version", "users", "user_data", "default_language"),
     (
         (2, (), {}, "en"),
         (2, ({"is_owner": True},), {}, "en"),
@@ -692,7 +692,7 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "unit_system_name, expected_unit_system",
+    ("unit_system_name", "expected_unit_system"),
     [
         (CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
         (CONF_UNIT_SYSTEM_IMPERIAL, US_CUSTOMARY_SYSTEM),
@@ -1262,7 +1262,7 @@ async def test_component_config_exceptions(hass, caplog):
 
 
 @pytest.mark.parametrize(
-    "domain, schema, expected",
+    ("domain", "schema", "expected"),
     [
         ("zone", vol.Schema({vol.Optional("zone", default=list): [int]}), "list"),
         ("zone", vol.Schema({vol.Optional("zone", default=[]): [int]}), "list"),

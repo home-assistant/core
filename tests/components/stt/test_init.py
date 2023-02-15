@@ -134,7 +134,7 @@ async def test_stream_audio(
 
 
 @pytest.mark.parametrize(
-    "header,status,error",
+    ("header", "status", "error"),
     (
         (None, 400, "Missing X-Speech-Content header"),
         (

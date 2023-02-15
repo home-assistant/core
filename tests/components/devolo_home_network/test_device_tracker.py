@@ -30,7 +30,7 @@ STATION = CONNECTED_STATIONS[0]
 SERIAL = DISCOVERY_INFO.properties["SN"]
 
 
-async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice):
+async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test device tracker states."""
     state_key = (
         f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
@@ -82,7 +82,7 @@ async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_restoring_clients(hass: HomeAssistant, mock_device: MockDevice):
+async def test_restoring_clients(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test restoring existing device_tracker entities."""
     state_key = (
         f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"

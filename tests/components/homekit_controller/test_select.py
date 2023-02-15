@@ -3,6 +3,7 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import Helper, get_next_aid, setup_test_component
@@ -21,7 +22,7 @@ def create_service_with_ecobee_mode(accessory: Accessory):
     return service
 
 
-async def test_migrate_unique_id(hass, utcnow):
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     """Test we can migrate a select unique id."""
     entity_registry = er.async_get(hass)
     aid = get_next_aid()
@@ -40,7 +41,7 @@ async def test_migrate_unique_id(hass, utcnow):
     )
 
 
-async def test_read_current_mode(hass, utcnow):
+async def test_read_current_mode(hass: HomeAssistant, utcnow) -> None:
     """Test that Ecobee mode can be correctly read and show as human readable text."""
     helper = await setup_test_component(hass, create_service_with_ecobee_mode)
 
@@ -78,7 +79,7 @@ async def test_read_current_mode(hass, utcnow):
     assert state.state == "away"
 
 
-async def test_write_current_mode(hass, utcnow):
+async def test_write_current_mode(hass: HomeAssistant, utcnow) -> None:
     """Test can set a specific mode."""
     helper = await setup_test_component(hass, create_service_with_ecobee_mode)
     helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)

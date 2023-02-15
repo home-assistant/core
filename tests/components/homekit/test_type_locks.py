@@ -16,11 +16,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_lock_unlock(hass, hk_driver, events):
+async def test_lock_unlock(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if accessory and HA are updated accordingly."""
     code = "1234"
     config = {ATTR_CODE: code}
@@ -96,7 +97,7 @@ async def test_lock_unlock(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize("config", [{}, {ATTR_CODE: None}])
-async def test_no_code(hass, hk_driver, config, events):
+async def test_no_code(hass: HomeAssistant, hk_driver, config, events) -> None:
     """Test accessory if lock doesn't require a code."""
     entity_id = "lock.kitchen_door"
 

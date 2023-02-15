@@ -66,9 +66,9 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
 
 
 def format_freq_mhz(value: StateType) -> tuple[StateType, UnitOfFrequency]:
-    """Format a frequency value for which source is in tens of MHz."""
+    """Format a frequency value for which source is in tenths of MHz."""
     return (
-        round(int(value) / 10) if value is not None else None,
+        float(value) / 10 if value is not None else None,
         UnitOfFrequency.MEGAHERTZ,
     )
 
@@ -237,6 +237,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="ltedlfreq",
                 name="LTE downlink frequency",
                 format_fn=format_freq_mhz,
+                suggested_display_precision=0,
                 device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
@@ -244,6 +245,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="lteulfreq",
                 name="LTE uplink frequency",
                 format_fn=format_freq_mhz,
+                suggested_display_precision=0,
                 device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),

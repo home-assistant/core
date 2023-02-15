@@ -7,7 +7,11 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_action
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -21,7 +25,7 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_action_types",
+    ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
         (False, 0, 0, []),
         (False, const.HumidifierEntityFeature.MODES, 0, ["set_mode"]),
@@ -30,14 +34,14 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
     ],
 )
 async def test_get_actions(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     features_reg,
     features_state,
     expected_action_types,
-):
+) -> None:
     """Test we get the expected actions from a humidifier."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -85,7 +89,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -94,12 +98,12 @@ async def test_get_actions(
     ),
 )
 async def test_get_actions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -263,7 +267,13 @@ async def test_action(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "set_state,capabilities_reg,capabilities_state,action,expected_capabilities",
+    (
+        "set_state",
+        "capabilities_reg",
+        "capabilities_state",
+        "action",
+        "expected_capabilities",
+    ),
     [
         (
             False,
@@ -350,15 +360,15 @@ async def test_action(hass: HomeAssistant) -> None:
     ],
 )
 async def test_capabilities(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     capabilities_reg,
     capabilities_state,
     action,
     expected_capabilities,
-):
+) -> None:
     """Test getting capabilities."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -401,13 +411,15 @@ async def test_capabilities(
 
 
 @pytest.mark.parametrize(
-    "action,capability_name,extra",
+    ("action", "capability_name", "extra"),
     [
         ("set_humidity", "humidity", {"type": "integer"}),
         ("set_mode", "mode", {"type": "select", "options": []}),
     ],
 )
-async def test_capabilities_missing_entity(hass, action, capability_name, extra):
+async def test_capabilities_missing_entity(
+    hass: HomeAssistant, action, capability_name, extra
+) -> None:
     """Test getting capabilities."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

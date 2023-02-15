@@ -97,6 +97,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
             'echo "template_value" "3 4"',
             shell=True,  # nosec # shell by design
             timeout=15,
+            close_fds=False,
         )
 
 

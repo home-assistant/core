@@ -104,7 +104,9 @@ async def test_user_step_device_added_between_steps_1(hass: HomeAssistant) -> No
     assert result["reason"] == "already_configured"
 
 
-async def test_async_step_user_takes_precedence_over_discovery(hass):
+async def test_async_step_user_takes_precedence_over_discovery(
+    hass: HomeAssistant,
+) -> None:
     """Test manual setup takes precedence over discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -198,7 +200,7 @@ async def test_bluetooth_step_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_bluetooth_step_already_in_progress(hass):
+async def test_bluetooth_step_already_in_progress(hass: HomeAssistant) -> None:
     """Test we can't start a flow for the same device twice."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -218,7 +220,7 @@ async def test_bluetooth_step_already_in_progress(hass):
 
 
 @pytest.mark.parametrize(
-    "exc, error",
+    ("exc", "error"),
     (
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
@@ -257,7 +259,7 @@ async def test_bluetooth_step_cannot_connect(hass: HomeAssistant, exc, error) ->
 
 
 @pytest.mark.parametrize(
-    "exc, error",
+    ("exc", "error"),
     (
         (dkey_errors.InvalidActivationCode, "invalid_code"),
         (dkey_errors.WrongActivationCode, "wrong_code"),

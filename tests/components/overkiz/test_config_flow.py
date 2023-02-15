@@ -82,7 +82,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error",
+    ("side_effect", "error"),
     [
         (BadCredentialsException, "invalid_auth"),
         (TooManyRequestsException, "too_many_requests"),
@@ -114,7 +114,7 @@ async def test_form_invalid_auth(
 
 
 @pytest.mark.parametrize(
-    "side_effect, error",
+    ("side_effect", "error"),
     [
         (BadCredentialsException, "unsupported_hardware"),
     ],

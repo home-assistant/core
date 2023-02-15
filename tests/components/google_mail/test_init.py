@@ -61,7 +61,7 @@ async def test_expired_token_refresh_success(
 
 
 @pytest.mark.parametrize(
-    "expires_at,status,expected_state",
+    ("expires_at", "status", "expected_state"),
     [
         (
             time.time() - 3600,

@@ -13,6 +13,7 @@ import time
 from typing import TYPE_CHECKING, Any, cast
 import uuid
 
+import async_timeout
 import attr
 import certifi
 
@@ -358,6 +359,8 @@ class MQTT:
         self.config_entry = config_entry
         self.conf = conf
         self.subscriptions: list[Subscription] = []
+        self._simple_subscriptions: dict[str, list[Subscription]] = {}
+        self._wildcard_subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -418,6 +421,12 @@ class MQTT:
                 retain=will_message.retain,
             )
 
+    def _is_active_subscription(self, topic: str) -> bool:
+        """Check if a topic has an active subscription."""
+        return topic in self._simple_subscriptions or any(
+            other.topic == topic for other in self._wildcard_subscriptions
+        )
+
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
@@ -470,7 +479,7 @@ class MQTT:
 
         def no_more_acks() -> bool:
             """Return False if there are unprocessed ACKs."""
-            return not bool(self._pending_operations)
+            return not any(not op.is_set() for op in self._pending_operations.values())
 
         # wait for ACKs to be processed
         async with self._pending_operations_condition:
@@ -498,6 +507,10 @@ class MQTT:
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
         self.subscriptions.append(subscription)
+        if _is_simple := "+" not in topic and "#" not in topic:
+            self._simple_subscriptions.setdefault(topic, []).append(subscription)
+        else:
+            self._wildcard_subscriptions.append(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
@@ -511,6 +524,12 @@ class MQTT:
             if subscription not in self.subscriptions:
                 raise HomeAssistantError("Can't remove subscription twice")
             self.subscriptions.remove(subscription)
+            if _is_simple:
+                self._simple_subscriptions[topic].remove(subscription)
+                if not self._simple_subscriptions[topic]:
+                    del self._simple_subscriptions[topic]
+            else:
+                self._wildcard_subscriptions.remove(subscription)
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
@@ -531,11 +550,11 @@ class MQTT:
             _raise_on_error(result)
             return mid
 
-        if any(other.topic == topic for other in self.subscriptions):
-            # Other subscriptions on topic remaining - don't unsubscribe.
-            return
-
         async with self._paho_lock:
+            if self._is_active_subscription(topic):
+                # Other subscriptions on topic remaining - don't unsubscribe.
+                return
+
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
@@ -545,6 +564,18 @@ class MQTT:
         self, subscriptions: Iterable[tuple[str, int]]
     ) -> None:
         """Perform MQTT client subscriptions."""
+
+        # Section 3.3.1.3 in the specification:
+        # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+        # When sending a PUBLISH Packet to a Client the Server MUST
+        # set the RETAIN flag to 1 if a message is sent as a result of a
+        # new subscription being made by a Client [MQTT-3.3.1-8].
+        # It MUST set the RETAIN flag to 0 when a PUBLISH Packet is sent to
+        # a Client because it matches an established subscription regardless
+        # of how the flag was set in the message it received [MQTT-3.3.1-9].
+        #
+        # Since we do not know if a published value is retained we need to
+        # (re)subscribe, to ensure retained messages are replayed
 
         def _process_client_subscriptions() -> list[tuple[int, int]]:
             """Initiate all subscriptions on the MQTT client and return the results."""
@@ -644,10 +675,12 @@ class MQTT:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
 
-    @lru_cache(2048)
+    @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
         subscriptions: list[Subscription] = []
-        for subscription in self.subscriptions:
+        if topic in self._simple_subscriptions:
+            subscriptions.extend(self._simple_subscriptions[topic])
+        for subscription in self._wildcard_subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
@@ -704,13 +737,15 @@ class MQTT:
         # The callback signature for on_unsubscribe is different from on_subscribe
         # see https://github.com/eclipse/paho.mqtt.python/issues/687
         # properties and reasoncodes are not used in Home Assistant
-        self.hass.add_job(self._mqtt_handle_mid, mid)
+        self.hass.create_task(self._mqtt_handle_mid(mid))
 
     async def _mqtt_handle_mid(self, mid: int) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        await self._register_mid(mid)
-        self._pending_operations[mid].set()
+        async with self._pending_operations_condition:
+            if mid not in self._pending_operations:
+                self._pending_operations[mid] = asyncio.Event()
+            self._pending_operations[mid].set()
 
     async def _register_mid(self, mid: int) -> None:
         """Create Event for an expected ACK."""
@@ -741,7 +776,8 @@ class MQTT:
         # may be executed first.
         await self._register_mid(mid)
         try:
-            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
+            async with async_timeout.timeout(TIMEOUT_ACK):
+                await self._pending_operations[mid].wait()
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid

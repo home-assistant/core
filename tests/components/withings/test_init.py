@@ -107,11 +107,11 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["exception"],
+    "exception",
     [
-        [UnauthorizedException("401")],
-        [UnauthorizedException("401")],
-        [Exception("401, this is the message")],
+        UnauthorizedException("401"),
+        UnauthorizedException("401"),
+        Exception("401, this is the message"),
     ],
 )
 @patch("homeassistant.components.withings.common._RETRY_COEFFICIENT", 0)

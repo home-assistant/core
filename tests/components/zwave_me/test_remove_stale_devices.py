@@ -27,7 +27,7 @@ async def mock_connection(controller):
 
 
 @pytest.mark.parametrize(
-    "identifier,should_exist",
+    ("identifier", "should_exist"),
     [
         (DEFAULT_DEVICE_INFO.id, False),
         (DEFAULT_DEVICE_INFO.deviceIdentifier, True),
@@ -50,7 +50,7 @@ async def test_remove_stale_devices(
         identifiers={("zwave_me", f"{config_entry.unique_id}-{identifier}")},
     )
     with patch(
-        "zwave_me_ws.ZWaveMe.get_connection",
+        "homeassistant.components.zwave_me.ZWaveMe.get_connection",
         mock_connection,
     ), patch(
         "homeassistant.components.zwave_me.async_setup_platforms",

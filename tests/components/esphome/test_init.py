@@ -5,11 +5,14 @@ from aioesphomeapi import DeviceInfo
 
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_unique_id_updated_to_mac(hass, mock_client, mock_zeroconf):
+async def test_unique_id_updated_to_mac(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None
+) -> None:
     """Test we update config entry unique ID to MAC address."""
     entry = MockConfigEntry(
         domain=DOMAIN,

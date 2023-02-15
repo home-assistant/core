@@ -174,7 +174,7 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_form_with_auth_errors(hass, error):
+async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
     """Test we handle errors when auth is required."""
     exc, base_error = error
     with patch(
@@ -213,7 +213,7 @@ async def test_form_with_auth_errors(hass, error):
         (ValueError, "unknown"),
     ],
 )
-async def test_form_errors(hass, error):
+async def test_form_errors(hass: HomeAssistant, error) -> None:
     """Test we handle errors."""
     exc, base_error = error
     with patch(
@@ -391,7 +391,7 @@ async def test_zeroconf_host_already_configured(hass: HomeAssistant) -> None:
         (CannotGetMac("Cannot get MAC address from device"), "device_unsupported"),
     ],
 )
-async def test_zeroconf_errors(hass, error):
+async def test_zeroconf_errors(hass: HomeAssistant, error) -> None:
     """Test we handle errors."""
     exc, reason = error
     with patch(
