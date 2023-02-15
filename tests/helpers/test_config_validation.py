@@ -699,6 +699,12 @@ def test_multi_select() -> None:
     schema(["robban", "paulus"])
 
 
+def test_maybe_in_serializer() -> None:
+    """Test vol.Maybe with custom_serializer."""
+    assert cv.custom_serializer(vol.Maybe(cv.string)) == {"type": "string"}
+    assert cv.custom_serializer(vol.Any(None, cv.boolean)) == {"type": "boolean"}
+
+
 def test_multi_select_in_serializer() -> None:
     """Test multi_select with custom_serializer."""
     assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {

@@ -955,6 +955,11 @@ def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
     from . import selector  # pylint: disable=import-outside-toplevel
 
+    # Is it vol.Maybe?
+    if isinstance(schema, vol.Any):
+        if len(schema.validators) == 2 and schema.validators[0] is None:
+            return custom_serializer(schema.validators[1])
+
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
