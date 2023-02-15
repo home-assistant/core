@@ -4,6 +4,7 @@ from __future__ import annotations
 import enum
 import functools
 import numbers
+import sys
 from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
@@ -442,8 +443,10 @@ class SmartEnergyMetering(Sensor):
         if self._channel.device_type is not None:
             attrs["device_type"] = self._channel.device_type
         if (status := self._channel.status) is not None:
-            if isinstance(status, enum.IntFlag):
-                attrs["status"] = str(status).split(".", 1)[-1]
+            if isinstance(status, enum.IntFlag) and sys.version_info >= (3, 11):
+                attrs["status"] = str(
+                    status.name if status.name is not None else status.value
+                )
             else:
                 attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
