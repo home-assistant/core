@@ -191,3 +191,23 @@ def test_find_unserializable_data() -> None:
         BadData(),
         dump=partial(dumps, cls=MockJSONEncoder),
     ) == {"$(BadData).bla": bad_data}
+
+
+async def test_deprecated_test_find_unserializable_data(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deprecated test_find_unserializable_data logs a warning."""
+    find_paths_unserializable_data(1)
+    assert (
+        "uses find_paths_unserializable_data from homeassistant.util.json"
+        in caplog.text
+    )
+    assert "should be updated to use homeassistant.helpers.json module" in caplog.text
+
+
+async def test_deprecated_save_json(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated save_json logs a warning."""
+    fname = _path_for("test1")
+    save_json(fname, TEST_JSON_A)
+    assert "uses save_json from homeassistant.util.json" in caplog.text
+    assert "should be updated to use homeassistant.helpers.json module" in caplog.text
