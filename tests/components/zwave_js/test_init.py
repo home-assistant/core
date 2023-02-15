@@ -569,18 +569,16 @@ async def test_addon_info_failure(
 
 @pytest.mark.parametrize(
     (
-        (
-            "old_device",
-            "new_device",
-            "old_s0_legacy_key",
-            "new_s0_legacy_key",
-            "old_s2_access_control_key",
-            "new_s2_access_control_key",
-            "old_s2_authenticated_key",
-            "new_s2_authenticated_key",
-            "old_s2_unauthenticated_key",
-            "new_s2_unauthenticated_key",
-        )
+        "old_device",
+        "new_device",
+        "old_s0_legacy_key",
+        "new_s0_legacy_key",
+        "old_s2_access_control_key",
+        "new_s2_access_control_key",
+        "old_s2_authenticated_key",
+        "new_s2_authenticated_key",
+        "old_s2_unauthenticated_key",
+        "new_s2_unauthenticated_key",
     ),
     [
         (
