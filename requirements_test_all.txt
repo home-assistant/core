@@ -1474,7 +1474,7 @@ python-juicenet==1.1.0
 python-kasa==0.5.0
 
 # homeassistant.components.matter
-python-matter-server==2.0.2
+python-matter-server==2.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
