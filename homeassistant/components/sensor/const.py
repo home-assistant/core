@@ -522,10 +522,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.DATE: set(),
     SensorDeviceClass.DISTANCE: set(SensorStateClass),
     SensorDeviceClass.DURATION: set(SensorStateClass),
-    SensorDeviceClass.ENERGY: {
-        SensorStateClass.TOTAL,
-        SensorStateClass.TOTAL_INCREASING,
-    },
+    SensorDeviceClass.ENERGY: set(SensorStateClass),
     SensorDeviceClass.ENUM: set(),
     SensorDeviceClass.FREQUENCY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.GAS: {SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING},
@@ -555,14 +552,11 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.TIMESTAMP: set(),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLTAGE: {SensorStateClass.MEASUREMENT},
-    SensorDeviceClass.VOLUME: {
-        SensorStateClass.TOTAL,
-        SensorStateClass.TOTAL_INCREASING,
-    },
+    SensorDeviceClass.VOLUME: set(SensorStateClass),
     SensorDeviceClass.WATER: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
-    SensorDeviceClass.WEIGHT: {SensorStateClass.TOTAL},
+    SensorDeviceClass.WEIGHT: set(SensorStateClass),
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
 }
