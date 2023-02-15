@@ -1,6 +1,7 @@
 """Test the Profiler config flow."""
 from datetime import timedelta
 import os
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -53,6 +54,9 @@ async def test_basic_usage(hass: HomeAssistant, tmpdir) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 11), reason="not yet available on python 3.11"
+)
 async def test_memory_usage(hass: HomeAssistant, tmpdir) -> None:
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
@@ -81,6 +85,16 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="still works on python 3.10")
+async def test_memory_usage_py311(hass: HomeAssistant, tmpdir) -> None:
+    """Test raise an error on python3.11."""
+    assert hass.services.has_service(DOMAIN, SERVICE_MEMORY)
+    with pytest.raises(HomeAssistant, match="not yet available on python 3.11"):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_MEMORY, {CONF_SECONDS: 0.000001}, blocking=True
+        )
 
 
 async def test_object_growth_logging(
