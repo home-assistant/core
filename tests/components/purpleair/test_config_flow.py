@@ -25,7 +25,7 @@ TEST_LONGITUDE = -0.2416796
     ],
 )
 @pytest.mark.parametrize(
-    "get_nearby_sensors_mock,get_nearby_sensors_errors",
+    ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
     [
         (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),

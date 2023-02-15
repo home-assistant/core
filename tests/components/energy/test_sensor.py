@@ -138,10 +138,10 @@ async def test_cost_sensor_attributes(
     ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -342,10 +342,10 @@ async def test_cost_sensor_price_entity_total_increasing(
     ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -550,10 +550,10 @@ async def test_cost_sensor_price_entity_total(
     ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
