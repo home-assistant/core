@@ -272,11 +272,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if (
-            not self._position_template
-            and not self._position_script
-            and not self._optimistic
-        ):
+        if not self._position_template and not self._template and not self._optimistic:
             return None
 
         return self._position == 0
