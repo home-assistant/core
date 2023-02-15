@@ -3,6 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
+        "description": "By default, this integration uses a Telnet connection to your receiver to receive real-time updates. Only one Telnet connection to your receiver can be established at a time. The Telnet connection can be disabled after setting up the integration.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         },
@@ -40,7 +41,8 @@
           "show_all_sources": "Show all sources",
           "zone2": "Set up Zone 2",
           "zone3": "Set up Zone 3",
-          "update_audyssey": "Update Audyssey settings"
+          "update_audyssey": "Update Audyssey settings",
+          "use_telnet": "Use Telnet connection"
         }
       }
     }

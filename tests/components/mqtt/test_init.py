@@ -1290,7 +1290,7 @@ async def test_subscribe_same_topic(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
-    """Test subscring to same topic twice and simulate retained messages.
+    """Test subscribing to same topic twice and simulate retained messages.
 
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages.
@@ -1944,7 +1944,6 @@ async def test_delayed_birth_message(
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"].client,
-        spec_set=hass.data["mqtt"].client,
         wraps=hass.data["mqtt"].client,
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
