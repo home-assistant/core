@@ -56,6 +56,7 @@
       "btn_up": "{subtype} button up",
       "single_push": "{subtype} single push",
       "double_push": "{subtype} double push",
+      "triple_push": "{subtype} triple push",
       "long_push": "{subtype} long push"
     }
   },
