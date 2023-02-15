@@ -10,7 +10,7 @@ from homeassistant.helpers import area_registry, device_registry, intent
 from tests.common import MockConfigEntry
 
 
-async def test_default_prompt(hass, mock_init_component):
+async def test_default_prompt(hass: HomeAssistant, mock_init_component) -> None:
     """Test that the default prompt works."""
     device_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
@@ -115,7 +115,7 @@ Smart home: """
     )
 
 
-async def test_error_handling(hass, mock_init_component):
+async def test_error_handling(hass: HomeAssistant, mock_init_component) -> None:
     """Test that the default prompt works."""
     with patch("openai.Completion.acreate", side_effect=error.ServiceUnavailableError):
         result = await conversation.async_converse(hass, "hello", None, Context())
