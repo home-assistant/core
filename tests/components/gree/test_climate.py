@@ -376,7 +376,7 @@ async def test_send_power_off_device_timeout(
 
 
 @pytest.mark.parametrize(
-    "units,temperature",
+    ("units", "temperature"),
     [(UnitOfTemperature.CELSIUS, 26), (UnitOfTemperature.FAHRENHEIT, 74)],
 )
 async def test_send_target_temperature(
@@ -415,7 +415,7 @@ async def test_send_target_temperature(
 
 
 @pytest.mark.parametrize(
-    "units,temperature",
+    ("units", "temperature"),
     [(UnitOfTemperature.CELSIUS, 25), (UnitOfTemperature.FAHRENHEIT, 74)],
 )
 async def test_send_target_temperature_device_timeout(
@@ -445,7 +445,7 @@ async def test_send_target_temperature_device_timeout(
 
 
 @pytest.mark.parametrize(
-    "units,temperature",
+    ("units", "temperature"),
     [(UnitOfTemperature.CELSIUS, 25), (UnitOfTemperature.FAHRENHEIT, 74)],
 )
 async def test_update_target_temperature(

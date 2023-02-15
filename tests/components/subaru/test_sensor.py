@@ -58,7 +58,7 @@ async def test_sensors_missing_vin_data(hass, ev_entry):
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -90,7 +90,7 @@ async def test_sensor_migrate_unique_ids(
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {

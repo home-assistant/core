@@ -1194,7 +1194,7 @@ async def test_max_mireds(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template,tpl_par,tpl_output",
+    ("service", "topic", "parameters", "payload", "template", "tpl_par", "tpl_output"),
     [
         (
             light.SERVICE_TURN_ON,
@@ -1265,7 +1265,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value,init_payload",
+    ("topic", "value", "attribute", "attribute_value", "init_payload"),
     [
         ("state_topic", "on", None, "on", None),
     ],

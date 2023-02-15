@@ -209,7 +209,7 @@ async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
 
 
 @pytest.mark.parametrize(
-    "nest_test_config,delete_called",
+    ("nest_test_config", "delete_called"),
     [
         (
             TEST_CONFIG_YAML_ONLY,

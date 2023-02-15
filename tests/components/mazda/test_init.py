@@ -201,7 +201,7 @@ async def test_device_no_nickname(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service, service_data, expected_args",
+    ("service", "service_data", "expected_args"),
     [
         (
             "send_poi",

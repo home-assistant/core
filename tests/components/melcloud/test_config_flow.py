@@ -75,7 +75,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
 
 
 @pytest.mark.parametrize(
-    "error,reason",
+    ("error", "reason"),
     [(ClientError(), "cannot_connect"), (asyncio.TimeoutError(), "cannot_connect")],
 )
 async def test_form_errors(
@@ -96,7 +96,7 @@ async def test_form_errors(
 
 
 @pytest.mark.parametrize(
-    "error,message",
+    ("error", "message"),
     [
         (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
         (HTTPStatus.FORBIDDEN, "invalid_auth"),

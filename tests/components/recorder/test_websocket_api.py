@@ -787,7 +787,7 @@ async def test_statistic_during_period_hole(recorder_mock, hass, hass_ws_client)
 
 @freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
 @pytest.mark.parametrize(
-    "calendar_period, start_time, end_time",
+    ("calendar_period", "start_time", "end_time"),
     (
         (
             {"period": "hour"},
@@ -870,7 +870,7 @@ async def test_statistic_during_period_calendar(
 
 
 @pytest.mark.parametrize(
-    "attributes, state, value, custom_units, converted_value",
+    ("attributes", "state", "value", "custom_units", "converted_value"),
     [
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
@@ -970,7 +970,7 @@ async def test_statistics_during_period_unit_conversion(
 
 
 @pytest.mark.parametrize(
-    "attributes, state, value, custom_units, converted_value",
+    ("attributes", "state", "value", "custom_units", "converted_value"),
     [
         (ENERGY_SENSOR_KWH_ATTRIBUTES, 10, 10, {"energy": "kWh"}, 10),
         (ENERGY_SENSOR_KWH_ATTRIBUTES, 10, 10, {"energy": "MWh"}, 0.010),
@@ -1319,7 +1319,7 @@ async def test_statistics_during_period_empty_statistic_ids(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, display_unit, statistics_unit, unit_class",
+    ("units", "attributes", "display_unit", "statistics_unit", "unit_class"),
     [
         (US_CUSTOMARY_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
@@ -1491,7 +1491,7 @@ async def test_list_statistic_ids(
 
 
 @pytest.mark.parametrize(
-    "attributes, attributes2, display_unit, statistics_unit, unit_class",
+    ("attributes", "attributes2", "display_unit", "statistics_unit", "unit_class"),
     [
         (
             DISTANCE_SENSOR_M_ATTRIBUTES,
@@ -1751,7 +1751,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
 
 
 @pytest.mark.parametrize(
-    "new_unit, new_unit_class, new_display_unit",
+    ("new_unit", "new_unit_class", "new_display_unit"),
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
 )
 async def test_update_statistics_metadata(
@@ -2278,7 +2278,7 @@ async def test_backup_end_without_start(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit, unit_class",
+    ("units", "attributes", "unit", "unit_class"),
     [
         (METRIC_SYSTEM, ENERGY_SENSOR_KWH_ATTRIBUTES, "kWh", "energy"),
         (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "kWh", "energy"),
@@ -2438,7 +2438,7 @@ async def test_get_statistics_metadata(
 
 
 @pytest.mark.parametrize(
-    "source, statistic_id",
+    ("source", "statistic_id"),
     (
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
@@ -2665,7 +2665,7 @@ async def test_import_statistics(
 
 
 @pytest.mark.parametrize(
-    "source, statistic_id",
+    ("source", "statistic_id"),
     (
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
@@ -2856,7 +2856,7 @@ async def test_adjust_sum_statistics_energy(
 
 
 @pytest.mark.parametrize(
-    "source, statistic_id",
+    ("source", "statistic_id"),
     (
         ("test", "test:total_gas"),
         ("recorder", "sensor.total_gas"),
@@ -3047,7 +3047,14 @@ async def test_adjust_sum_statistics_gas(
 
 
 @pytest.mark.parametrize(
-    "state_unit, statistic_unit, unit_class, factor, valid_units, invalid_units",
+    (
+        "state_unit",
+        "statistic_unit",
+        "unit_class",
+        "factor",
+        "valid_units",
+        "invalid_units",
+    ),
     (
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("MWh", "MWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),

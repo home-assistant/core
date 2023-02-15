@@ -45,7 +45,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "config_entry_data,connection_config",
+    ("config_entry_data", "connection_config"),
     [
         (
             {

@@ -594,7 +594,7 @@ async def mock_modbus_read_pymodbus_fixture(
 
 
 @pytest.mark.parametrize(
-    "do_domain, do_group,do_type,do_scan_interval",
+    ("do_domain", "do_group", "do_type", "do_scan_interval"),
     [
         [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10],
         [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10],

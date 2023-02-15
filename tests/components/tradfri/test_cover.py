@@ -43,7 +43,7 @@ async def test_cover_available(
 
 
 @pytest.mark.parametrize(
-    "service, service_data, expected_state, expected_position",
+    ("service", "service_data", "expected_state", "expected_position"),
     [
         ("set_cover_position", {"position": 100}, STATE_OPEN, 100),
         ("set_cover_position", {"position": 0}, STATE_CLOSED, 0),

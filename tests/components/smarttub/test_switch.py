@@ -6,7 +6,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 
 
 @pytest.mark.parametrize(
-    "pump_id,entity_suffix,pump_state",
+    ("pump_id", "entity_suffix", "pump_state"),
     [
         ("CP", "circulation_pump", "off"),
         ("P1", "jet_p1", "off"),

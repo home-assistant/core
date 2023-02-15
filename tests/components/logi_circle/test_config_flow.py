@@ -142,7 +142,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,error",
+    ("side_effect", "error"),
     [
         (asyncio.TimeoutError, "authorize_url_timeout"),
         (AuthorizationFailed, "invalid_auth"),

@@ -166,7 +166,7 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("raw_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("raw_data", "expected"), TEST_DATA)
 async def test_select(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, raw_data, expected
 ) -> None:

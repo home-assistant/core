@@ -74,7 +74,7 @@ async def test_fail_setup_without_command_topic(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -122,7 +122,7 @@ async def test_no_pending(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -171,7 +171,7 @@ async def test_no_pending_when_code_not_req(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -243,7 +243,7 @@ async def test_with_pending(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -291,7 +291,7 @@ async def test_with_invalid_code(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -340,7 +340,7 @@ async def test_with_template_code(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -1319,7 +1319,7 @@ async def test_disarm_with_template_code(
 
 
 @pytest.mark.parametrize(
-    "config,expected_state",
+    ("config", "expected_state"),
     [
         ("payload_arm_away", STATE_ALARM_ARMED_AWAY),
         ("payload_arm_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS),

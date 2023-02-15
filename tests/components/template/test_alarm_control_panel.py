@@ -87,7 +87,7 @@ TEMPLATE_ALARM_CONFIG = {
 }
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -124,7 +124,7 @@ async def test_template_state_text(hass, start_ha):
     assert state.state == "unknown"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -159,7 +159,7 @@ async def test_optimistic_states(hass, start_ha):
         assert hass.states.get(TEMPLATE_NAME).state == set_state
 
 
-@pytest.mark.parametrize("count,domain", [(0, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(0, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config,msg",
     [
@@ -229,7 +229,7 @@ async def test_template_syntax_error(hass, msg, start_ha, caplog_setup_text):
     assert (msg) in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -254,7 +254,7 @@ async def test_name(hass, start_ha):
     assert state.attributes.get("friendly_name") == "Template Alarm Panel"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -289,7 +289,7 @@ async def test_actions(hass, service, start_ha, service_calls):
     assert service_calls[0].data["service_data"]["code"] == TEMPLATE_NAME
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -315,7 +315,7 @@ async def test_unique_id(hass, start_ha):
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
     "config,code_format,code_arm_required",
     [
