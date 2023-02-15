@@ -1290,7 +1290,7 @@ async def test_subscribe_same_topic(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
-    """Test subscring to same topic twice and simulate retained messages.
+    """Test subscribing to same topic twice and simulate retained messages.
 
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages.
