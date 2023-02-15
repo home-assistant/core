@@ -373,7 +373,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     "homeassistant.util.json": [
         ObsoleteImportMatch(
             reason="moved to homeassistant.helpers.json",
-            constant=re.compile(r"^save_json|format_unserializable_data$"),
+            constant=re.compile(r"^save_json|find_paths_unserializable_data$"),
         ),
     ],
 }
