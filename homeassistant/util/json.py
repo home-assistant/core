@@ -77,6 +77,18 @@ def save_json(
 ) -> None:
     """Save JSON data to a file."""
     # pylint: disable-next=import-outside-toplevel
+    from homeassistant.helpers.frame import report
+
+    report(
+        (
+            "uses save_json from homeassistant.util.json module."
+            " This is deprecated and will stop working in Home Assistant 2022.4, it"
+            " should be updated to use homeassistant.helpers.json module instead"
+        ),
+        error_if_core=False,
+    )
+
+    # pylint: disable-next=import-outside-toplevel
     import homeassistant.helpers.json as json_helper
 
     json_helper.save_json(
@@ -99,6 +111,18 @@ def find_paths_unserializable_data(
 
     This method is slow! Only use for error handling.
     """
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.helpers.frame import report
+
+    report(
+        (
+            "uses find_paths_unserializable_data from homeassistant.util.json module."
+            " This is deprecated and will stop working in Home Assistant 2022.4, it"
+            " should be updated to use homeassistant.helpers.json module instead"
+        ),
+        error_if_core=False,
+    )
+
     # pylint: disable-next=import-outside-toplevel
     import homeassistant.helpers.json as json_helper
 
