@@ -5,9 +5,10 @@ from collections import deque
 from collections.abc import Callable
 import contextlib
 from datetime import datetime, timedelta
+from enum import Enum
 import logging
 import statistics
-from typing import Any, Literal, cast
+from typing import Any, Literal, TypeVar, cast
 
 import voluptuous as vol
 
@@ -48,7 +49,6 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, PLATFORMS
 
@@ -769,3 +769,16 @@ class StatisticsSensor(SensorEntity):
         if len(self.states) > 0:
             return 100.0 / len(self.states) * self.states.count(True)
         return None
+
+
+_EnumT = TypeVar("_EnumT", bound=Enum)
+
+
+def try_parse_enum(cls: type[_EnumT], value: Any) -> _EnumT | None:
+    """Try to parse the value into an Enum.
+
+    Return None if parsing fails.
+    """
+    with contextlib.suppress(ValueError):
+        return cls(value)
+    return None
