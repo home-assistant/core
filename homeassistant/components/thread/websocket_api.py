@@ -16,6 +16,7 @@ from . import dataset_store, discovery
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the sensor websocket API."""
     websocket_api.async_register_command(hass, ws_add_dataset)
+    websocket_api.async_register_command(hass, ws_delete_dataset)
     websocket_api.async_register_command(hass, ws_discover_routers)
     websocket_api.async_register_command(hass, ws_get_dataset)
     websocket_api.async_register_command(hass, ws_list_datasets)
@@ -43,6 +44,33 @@ async def ws_add_dataset(
         connection.send_error(
             msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(exc)
         )
+        return
+
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "thread/delete_dataset",
+        vol.Required("dataset_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_delete_dataset(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Delete a thread dataset."""
+    dataset_id = msg["dataset_id"]
+
+    store = await dataset_store.async_get_store(hass)
+    try:
+        store.async_delete(dataset_id)
+    except KeyError as exc:
+        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(exc))
+        return
+    except dataset_store.DatasetPreferredError as exc:
+        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc))
         return
 
     connection.send_result(msg["id"])
