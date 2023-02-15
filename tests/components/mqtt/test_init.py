@@ -2051,19 +2051,16 @@ async def test_mqtt_subscribes_topics_on_connect(
     await mqtt.async_subscribe(hass, "still/pending", record_calls)
     await mqtt.async_subscribe(hass, "still/pending", record_calls, 1)
 
-    with patch.object(hass, "add_job") as hass_jobs:
-        mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        assert mqtt_client_mock.disconnect.call_count == 0
+    assert mqtt_client_mock.disconnect.call_count == 0
 
-        assert len(hass_jobs.mock_calls) == 1
-        assert set(hass_jobs.mock_calls[0][1][1]) == {
-            ("home/sensor", 2),
-            ("still/pending", 1),
-            ("topic/test", 0),
-        }
+    assert mqtt_client_mock.subscribe.call_count == 3
+    mqtt_client_mock.subscribe.assert_any_call("topic/test", 0)
+    mqtt_client_mock.subscribe.assert_any_call("home/sensor", 2)
+    mqtt_client_mock.subscribe.assert_any_call("still/pending", 1)
 
 
 async def test_setup_entry_with_config_override(

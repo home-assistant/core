@@ -389,6 +389,14 @@ class MQTT:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
         )
 
+    @property
+    def subscriptions(self) -> list[Subscription]:
+        """Return the subscriptions."""
+        return [
+            *chain.from_iterable(self._simple_subscriptions.values()),
+            *self._wildcard_subscriptions,
+        ]
+
     def cleanup(self) -> None:
         """Clean up listeners."""
         while self._cleanup_on_unload:
@@ -666,14 +674,7 @@ class MQTT:
                 # Re-subscribe with the highest requested qos
                 (topic, max(subscription.qos for subscription in subs))
                 for topic, subs in groupby(
-                    sorted(
-                        (
-                            *chain.from_iterable(self._simple_subscriptions.values()),
-                            *self._wildcard_subscriptions,
-                        ),
-                        key=keyfunc,
-                    ),
-                    keyfunc,
+                    sorted(self.subscriptions, key=keyfunc), keyfunc
                 )
             ]
         )
