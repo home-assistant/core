@@ -351,7 +351,7 @@ async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
     [(None, STATUS_CALLS), (DeviceException("dummy exception"), [])],
 )
 @pytest.mark.parametrize(
-    "service, service_data, device_method, device_method_call",
+    ("service", "service_data", "device_method", "device_method_call"),
     [
         (
             SERVICE_START_REMOTE_CONTROL,

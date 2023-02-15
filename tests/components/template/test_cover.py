@@ -48,7 +48,7 @@ OPEN_CLOSE_COVER_CONFIG = {
 
 @pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config, states",
+    ("config", "states"),
     [
         (
             {
@@ -509,7 +509,7 @@ async def test_set_position(hass, start_ha, calls):
     ],
 )
 @pytest.mark.parametrize(
-    "service,attr,tilt_position",
+    ("service", "attr", "tilt_position"),
     [
         (
             SERVICE_SET_COVER_TILT_POSITION,

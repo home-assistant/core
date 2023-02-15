@@ -240,7 +240,7 @@ async def slow_server_version(*args):
     ],
 )
 @pytest.mark.parametrize(
-    "url, server_version_side_effect, server_version_timeout, error",
+    ("url", "server_version_side_effect", "server_version_timeout", "error"),
     [
         (
             "not-ws-url",

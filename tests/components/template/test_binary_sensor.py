@@ -34,7 +34,7 @@ OFF = "off"
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id,name,attributes",
+    ("config", "domain", "entity_id", "name", "attributes"),
     [
         (
             {
@@ -78,7 +78,7 @@ async def test_setup_minimal(hass, start_ha, entity_id, name, attributes):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id",
+    ("config", "domain", "entity_id"),
     [
         (
             {
@@ -122,7 +122,7 @@ async def test_setup(hass, start_ha, entity_id):
 
 @pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
-    "config,domain",
+    ("config", "domain"),
     [
         # No legacy binary sensors
         (
@@ -185,7 +185,7 @@ async def test_setup_invalid_sensors(hass, count, start_ha):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id",
+    ("config", "domain", "entity_id"),
     [
         (
             {
@@ -237,7 +237,7 @@ async def test_icon_template(hass, start_ha, entity_id):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id",
+    ("config", "domain", "entity_id"),
     [
         (
             {
@@ -289,7 +289,7 @@ async def test_entity_picture_template(hass, start_ha, entity_id):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id",
+    ("config", "domain", "entity_id"),
     [
         (
             {
@@ -548,7 +548,7 @@ async def test_template_delay_on_off(hass, start_ha):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id",
+    ("config", "domain", "entity_id"),
     [
         (
             {
@@ -593,7 +593,7 @@ async def test_available_without_availability_template(hass, start_ha, entity_id
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id",
+    ("config", "domain", "entity_id"),
     [
         (
             {
@@ -860,7 +860,7 @@ async def test_template_validation_error(hass, caplog, start_ha):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "config,domain,entity_id",
+    ("config", "domain", "entity_id"),
     [
         (
             {
@@ -934,7 +934,7 @@ async def test_availability_icon_picture(hass, start_ha, entity_id):
     ],
 )
 @pytest.mark.parametrize(
-    "extra_config, restored_state, initial_state",
+    ("extra_config", "restored_state", "initial_state"),
     [
         ({}, ON, OFF),
         ({}, OFF, OFF),
@@ -1156,7 +1156,7 @@ async def test_template_with_trigger_templated_delay_on(hass, start_ha):
     ],
 )
 @pytest.mark.parametrize(
-    "restored_state, initial_state, initial_attributes",
+    ("restored_state", "initial_state", "initial_attributes"),
     [
         (ON, ON, ["entity_picture", "icon", "plus_one"]),
         (OFF, OFF, ["entity_picture", "icon", "plus_one"]),

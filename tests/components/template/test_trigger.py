@@ -64,7 +64,7 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
-    "config, call_setup",
+    ("config", "call_setup"),
     [
         (
             {
@@ -275,7 +275,7 @@ async def test_general(hass, call_setup, start_ha, calls):
 
 @pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
-    "config, call_setup",
+    ("config", "call_setup"),
     [
         (
             {

@@ -137,7 +137,7 @@ async def create_entity(hass: HomeAssistant, **kwargs):
     "native_unit", (UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS)
 )
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfTemperature.CELSIUS, METRIC_SYSTEM),
         (UnitOfTemperature.FAHRENHEIT, US_CUSTOMARY_SYSTEM),
@@ -173,7 +173,7 @@ async def test_temperature(
 
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfTemperature.CELSIUS, METRIC_SYSTEM),
         (UnitOfTemperature.FAHRENHEIT, US_CUSTOMARY_SYSTEM),
@@ -209,7 +209,7 @@ async def test_temperature_no_unit(
 
 @pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure(
@@ -239,7 +239,7 @@ async def test_pressure(
 
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure_no_unit(
@@ -276,7 +276,7 @@ async def test_pressure_no_unit(
     ),
 )
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
         (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
@@ -312,7 +312,7 @@ async def test_wind_speed(
 
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
         (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
@@ -348,7 +348,7 @@ async def test_wind_speed_no_unit(
 
 @pytest.mark.parametrize("native_unit", (UnitOfLength.MILES, UnitOfLength.KILOMETERS))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfLength.KILOMETERS, METRIC_SYSTEM),
         (UnitOfLength.MILES, US_CUSTOMARY_SYSTEM),
@@ -379,7 +379,7 @@ async def test_visibility(
 
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfLength.KILOMETERS, METRIC_SYSTEM),
         (UnitOfLength.MILES, US_CUSTOMARY_SYSTEM),
@@ -410,7 +410,7 @@ async def test_visibility_no_unit(
 
 @pytest.mark.parametrize("native_unit", (UnitOfLength.INCHES, UnitOfLength.MILLIMETERS))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfLength.MILLIMETERS, METRIC_SYSTEM),
         (UnitOfLength.INCHES, US_CUSTOMARY_SYSTEM),
@@ -443,7 +443,7 @@ async def test_precipitation(
 
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
-    "state_unit, unit_system",
+    ("state_unit", "unit_system"),
     (
         (UnitOfLength.MILLIMETERS, METRIC_SYSTEM),
         (UnitOfLength.INCHES, US_CUSTOMARY_SYSTEM),

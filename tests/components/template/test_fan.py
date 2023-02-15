@@ -186,7 +186,7 @@ async def test_templates_with_entities(hass, start_ha):
 
 @pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config,entity,tests",
+    ("config", "entity", "tests"),
     [
         (
             {
@@ -281,7 +281,7 @@ async def test_availability_template_with_entities(hass, start_ha):
 
 @pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config, states",
+    ("config", "states"),
     [
         (
             {

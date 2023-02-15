@@ -311,7 +311,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "nanoleaf_conf_file, remove_config",
+    ("nanoleaf_conf_file", "remove_config"),
     [
         ({TEST_DEVICE_ID: {"token": TEST_TOKEN}}, True),
         ({TEST_HOST: {"token": TEST_TOKEN}}, True),

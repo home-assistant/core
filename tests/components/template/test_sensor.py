@@ -120,7 +120,7 @@ async def test_entity_picture_template(hass, start_ha):
 
 @pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
-    "attribute,config,expected",
+    ("attribute", "config", "expected"),
     [
         (
             "friendly_name",
@@ -1449,7 +1449,7 @@ async def test_entity_device_class_errors_works(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "restored_state, restored_native_value, initial_state, initial_attributes",
+    ("restored_state", "restored_native_value", "initial_state", "initial_attributes"),
     [
         # the native value should be used, not the state
         ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),

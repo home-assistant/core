@@ -491,7 +491,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
 
 @pytest.mark.parametrize("last_reset_str", ("2022-01-01T00:00:00+02:00", None))
 @pytest.mark.parametrize(
-    "source, statistic_id, import_fn",
+    ("source", "statistic_id", "import_fn"),
     (
         ("test", "test:total_energy_import", async_add_external_statistics),
         ("recorder", "sensor.total_energy_import", async_import_statistics),
@@ -1546,10 +1546,10 @@ async def test_validate_db_schema_fix_utf8_issue(
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
 @pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
 @pytest.mark.parametrize(
-    "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
+    ("table", "replace_index"), (("statistics", 0), ("statistics_short_term", 1))
 )
 @pytest.mark.parametrize(
-    "column, value",
+    ("column", "value"),
     (("max", 1.0), ("mean", 1.0), ("min", 1.0), ("state", 1.0), ("sum", 1.0)),
 )
 async def test_validate_db_schema_fix_float_issue(
@@ -1616,7 +1616,7 @@ async def test_validate_db_schema_fix_float_issue(
 
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
 @pytest.mark.parametrize(
-    "db_engine, modification",
+    ("db_engine", "modification"),
     (
         ("mysql", ["last_reset DATETIME(6)", "start DATETIME(6)"]),
         (
@@ -1629,10 +1629,10 @@ async def test_validate_db_schema_fix_float_issue(
     ),
 )
 @pytest.mark.parametrize(
-    "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
+    ("table", "replace_index"), (("statistics", 0), ("statistics_short_term", 1))
 )
 @pytest.mark.parametrize(
-    "column, value",
+    ("column", "value"),
     (
         ("last_reset", "2020-10-06T00:00:00+00:00"),
         ("start", "2020-10-06T00:00:00+00:00"),
