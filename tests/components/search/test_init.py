@@ -11,6 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import WebSocketGenerator
 
 MOCK_ENTITY_SOURCES = {
     "light.platform_config_source": {
@@ -411,7 +412,7 @@ async def test_area_lookup(
     }
 
 
-async def test_person_lookup(hass):
+async def test_person_lookup(hass: HomeAssistant) -> None:
     """Test searching persons."""
     assert await async_setup_component(
         hass,
@@ -441,7 +442,7 @@ async def test_person_lookup(hass):
     }
 
 
-async def test_ws_api(hass, hass_ws_client):
+async def test_ws_api(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
     """Test WS API."""
     assert await async_setup_component(hass, "search", {})
 

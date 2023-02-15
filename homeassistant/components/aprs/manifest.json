@@ -1,0 +1,9 @@
+{
+  "domain": "aprs",
+  "name": "APRS",
+  "codeowners": ["@PhilRW"],
+  "documentation": "https://www.home-assistant.io/integrations/aprs",
+  "iot_class": "cloud_push",
+  "loggers": ["aprslib", "geographiclib", "geopy"],
+  "requirements": ["aprslib==0.7.0", "geopy==2.3.0"]
+}

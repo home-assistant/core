@@ -13,7 +13,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN, EntityCategory
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -37,8 +38,11 @@ def calls(hass):
 
 
 async def test_get_triggers(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected triggers from a sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -90,12 +94,12 @@ async def test_get_triggers(
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -140,13 +144,13 @@ async def test_get_triggers_hidden_auxiliary(
     ),
 )
 async def test_get_triggers_no_unit_or_stateclass(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     state_class,
     unit,
     trigger_types,
-):
+) -> None:
     """Test we get the expected triggers from an entity with no unit or state class."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -187,15 +191,15 @@ async def test_get_triggers_no_unit_or_stateclass(
     ],
 )
 async def test_get_trigger_capabilities(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     device_class_reg,
     device_class_state,
     unit_reg,
     unit_state,
-):
+) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -249,7 +253,9 @@ async def test_get_trigger_capabilities(
         assert capabilities == expected_capabilities
 
 
-async def test_get_trigger_capabilities_none(hass, enable_custom_integrations):
+async def test_get_trigger_capabilities_none(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -286,8 +292,11 @@ async def test_get_trigger_capabilities_none(hass, enable_custom_integrations):
 
 
 async def test_if_fires_not_on_above_below(
-    hass, calls, caplog, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -317,7 +326,9 @@ async def test_if_fires_not_on_above_below(
     assert "must contain at least one of below, above" in caplog.text
 
 
-async def test_if_fires_on_state_above(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_above(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -375,7 +386,9 @@ async def test_if_fires_on_state_above(hass, calls, enable_custom_integrations):
     )
 
 
-async def test_if_fires_on_state_below(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_below(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -433,7 +446,9 @@ async def test_if_fires_on_state_below(hass, calls, enable_custom_integrations):
     )
 
 
-async def test_if_fires_on_state_between(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_between(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -504,8 +519,8 @@ async def test_if_fires_on_state_between(hass, calls, enable_custom_integrations
 
 
 async def test_if_fires_on_state_change_with_for(
-    hass, calls, enable_custom_integrations
-):
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for triggers firing with delay."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

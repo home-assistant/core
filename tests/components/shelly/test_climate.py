@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -32,7 +32,9 @@ DEVICE_BLOCK_ID = 4
 ENTITY_ID = f"{CLIMATE_DOMAIN}.test_name"
 
 
-async def test_climate_hvac_mode(hass, mock_block_device, monkeypatch):
+async def test_climate_hvac_mode(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test climate hvac mode service."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(
@@ -91,7 +93,9 @@ async def test_climate_hvac_mode(hass, mock_block_device, monkeypatch):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_climate_set_temperature(hass, mock_block_device, monkeypatch):
+async def test_climate_set_temperature(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test climate set temperature service."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
@@ -131,7 +135,9 @@ async def test_climate_set_temperature(hass, mock_block_device, monkeypatch):
     )
 
 
-async def test_climate_set_preset_mode(hass, mock_block_device, monkeypatch):
+async def test_climate_set_preset_mode(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test climate set preset mode service."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
@@ -183,7 +189,9 @@ async def test_climate_set_preset_mode(hass, mock_block_device, monkeypatch):
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
 
-async def test_block_restored_climate(hass, mock_block_device, device_reg, monkeypatch):
+async def test_block_restored_climate(
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored climate."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
@@ -243,8 +251,8 @@ async def test_block_restored_climate(hass, mock_block_device, device_reg, monke
 
 
 async def test_block_restored_climate_us_customery(
-    hass, mock_block_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored climate with US CUSTOMATY unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
@@ -310,8 +318,8 @@ async def test_block_restored_climate_us_customery(
 
 
 async def test_block_restored_climate_unavailable(
-    hass, mock_block_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored climate unavailable state."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
@@ -334,8 +342,8 @@ async def test_block_restored_climate_unavailable(
 
 
 async def test_block_restored_climate_set_preset_before_online(
-    hass, mock_block_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored climate set preset before device is online."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
@@ -366,7 +374,9 @@ async def test_block_restored_climate_set_preset_before_online(
     mock_block_device.http_request.assert_not_called()
 
 
-async def test_block_set_mode_connection_error(hass, mock_block_device, monkeypatch):
+async def test_block_set_mode_connection_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device set mode connection error."""
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.setattr(
@@ -389,7 +399,9 @@ async def test_block_set_mode_connection_error(hass, mock_block_device, monkeypa
         )
 
 
-async def test_block_set_mode_auth_error(hass, mock_block_device, monkeypatch):
+async def test_block_set_mode_auth_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device set mode authentication error."""
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.setattr(
@@ -427,8 +439,8 @@ async def test_block_set_mode_auth_error(hass, mock_block_device, monkeypatch):
 
 
 async def test_block_restored_climate_auth_error(
-    hass, mock_block_device, device_reg, monkeypatch
-):
+    hass: HomeAssistant, mock_block_device, device_reg, monkeypatch
+) -> None:
     """Test block restored climate with authentication error during init."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
