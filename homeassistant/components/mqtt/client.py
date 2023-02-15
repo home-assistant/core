@@ -365,7 +365,7 @@ class MQTT:
         self.conf = conf
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
-        self._last_message: dict[str, str] = {}
+        self._last_message: dict[str, ReceiveMessage] = {}
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -572,7 +572,9 @@ class MQTT:
             if already_active_subscription:
                 _LOGGER.debug("Skipped duplicate subscribe for %s", topic)
                 if topic in self._last_message:
-                    self.hass.async_run_hass_job(subscription.job, self._last_message.get(topic))
+                    self.hass.async_run_hass_job(
+                        subscription.job, self._last_message.get(topic)
+                    )
                     self._mqtt_data.state_write_requests.process_write_state_requests()
             else:
                 self._last_subscribe = time.time()
@@ -607,7 +609,8 @@ class MQTT:
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
 
-            del self._last_message[topic]
+            if topic in self._last_message:
+                del self._last_message[topic]
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 

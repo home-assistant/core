@@ -1292,8 +1292,9 @@ async def test_subscribe_same_topic(
 ) -> None:
     """Test subscribing to same topic twice and simulate retained messages.
 
-    When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
-    for it to resend any retained messages.
+    When subscribing to the same topic again, the last value sent to the topic
+    should be sent to the new subscriber (simulating exactly what happened with
+    the initial SUBSCRIBE call).
     """
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
@@ -1313,13 +1314,10 @@ async def test_subscribe_same_topic(
 
     calls_b = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_b)
-    async_fire_mqtt_message(
-        hass, "test/state", "online"
-    )  # Simulate a (retained) message
     await hass.async_block_till_done()
-    assert calls_a.called
+    assert not calls_a.called
     assert calls_b.called
-    mqtt_client_mock.subscribe.assert_called()
+    mqtt_client_mock.subscribe.assert_not_called()
 
 
 async def test_not_calling_unsubscribe_with_active_subscribers(
@@ -1428,8 +1426,6 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 
     expected = [
         call("test/state", 2),
-        call("test/state", 0),
-        call("test/state", 1),
     ]
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
