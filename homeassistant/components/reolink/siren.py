@@ -7,7 +7,7 @@ from typing import Any
 
 from reolink_aio.api import Host
 
-from homeassistant.components.siren import SirenEntity, SirenEntityDescription, SirenEntityFeature
+from homeassistant.components.siren import SirenEntity, SirenEntityDescription, SirenEntityFeature, ATTR_DURATION
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
