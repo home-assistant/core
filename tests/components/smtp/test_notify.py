@@ -131,7 +131,9 @@ EMAIL_DATA = [
         "Tests when image type cannot be detected or is of wrong type.",
     ],
 )
-def test_send_message(message_data, data, content_type, hass, message):
+def test_send_message(
+    message_data, data, content_type, hass: HomeAssistant, message
+) -> None:
     """Verify if we can send messages of all types correctly."""
     sample_email = "<mock@mock>"
     with patch("email.utils.make_msgid", return_value=sample_email):
@@ -139,7 +141,7 @@ def test_send_message(message_data, data, content_type, hass, message):
         assert content_type in result
 
 
-def test_send_text_message(hass, message):
+def test_send_text_message(hass: HomeAssistant, message) -> None:
     """Verify if we can send simple text message."""
     expected = (
         '^Content-Type: text/plain; charset="us-ascii"\n'
@@ -172,7 +174,7 @@ def test_send_text_message(hass, message):
         "Verify email recipient can be overwritten by target arg.",
     ],
 )
-def test_send_target_message(target, hass, message):
+def test_send_target_message(target, hass: HomeAssistant, message) -> None:
     """Verify if we can send email to correct recipient."""
     sample_email = "<mock@mock>"
     message_data = "Test msg"
