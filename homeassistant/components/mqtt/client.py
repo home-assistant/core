@@ -504,21 +504,34 @@ class MQTT:
         self._matching_subscriptions.cache_clear()
 
     @callback
-    def _async_add_subscription(self, subscription: Subscription) -> bool:
+    def _async_add_subscription(self, subscription: Subscription) -> None:
         """Add a subscription.
 
         This method does not send a SUBSCRIBE message to the broker.
         """
-        if (
-            _is_simple := "+" not in subscription.topic
-            and "#" not in subscription.topic
-        ):
+        if "+" not in subscription.topic and "#" not in subscription.topic:
             self._simple_subscriptions.setdefault(subscription.topic, []).append(
                 subscription
             )
         else:
             self._wildcard_subscriptions.append(subscription)
-        return _is_simple
+
+    @callback
+    def _async_remove_subscription(self, subscription: Subscription) -> None:
+        """Remove a subscription.
+
+        This method does not send an UNSUBSCRIBE message to the broker.
+        """
+        topic = subscription.topic
+        try:
+            if "+" not in subscription.topic and "#" not in subscription.topic:
+                self._simple_subscriptions[topic].remove(subscription)
+                if not self._simple_subscriptions[topic]:
+                    del self._simple_subscriptions[topic]
+            else:
+                self._wildcard_subscriptions.remove(subscription)
+        except (KeyError, ValueError) as ex:
+            raise HomeAssistantError("Can't remove subscription twice") from ex
 
     async def async_subscribe(
         self,
@@ -537,7 +550,7 @@ class MQTT:
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
-        _is_simple = self._async_add_subscription(subscription)
+        self._async_add_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
@@ -548,15 +561,7 @@ class MQTT:
         @callback
         def async_remove() -> None:
             """Remove subscription."""
-            try:
-                if _is_simple:
-                    self._simple_subscriptions[topic].remove(subscription)
-                    if not self._simple_subscriptions[topic]:
-                        del self._simple_subscriptions[topic]
-                else:
-                    self._wildcard_subscriptions.remove(subscription)
-            except (KeyError, ValueError) as ex:
-                raise HomeAssistantError("Can't remove subscription twice") from ex
+            self._async_remove_subscription(subscription)
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
