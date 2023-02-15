@@ -2,21 +2,20 @@
 
 import dataclasses
 
+from aiohomekit.controller import TransportType
 import pytest
 
-from aiohomekit.controller import TransportType
-
-from homeassistant.components.thread import async_add_dataset
 from homeassistant.components.homekit_controller.const import (
     DOMAIN,
-    KNOWN_DEVICES,
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
+    KNOWN_DEVICES,
 )
+from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
 from .common import setup_accessories_from_file, setup_platform, setup_test_accessories
 
