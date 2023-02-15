@@ -565,6 +565,18 @@ class MQTT:
     ) -> None:
         """Perform MQTT client subscriptions."""
 
+        # Section 3.3.1.3 in the specification:
+        # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+        # When sending a PUBLISH Packet to a Client the Server MUST
+        # set the RETAIN flag to 1 if a message is sent as a result of a
+        # new subscription being made by a Client [MQTT-3.3.1-8].
+        # It MUST set the RETAIN flag to 0 when a PUBLISH Packet is sent to
+        # a Client because it matches an established subscription regardless
+        # of how the flag was set in the message it received [MQTT-3.3.1-9].
+        #
+        # Since we do not know if a published value is retained we need to
+        # (re)subscribe, to ensure retained messages are replayed
+
         def _process_client_subscriptions() -> list[tuple[int, int]]:
             """Initiate all subscriptions on the MQTT client and return the results."""
             subscribe_result_list = []
