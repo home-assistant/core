@@ -17,10 +17,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("pywaterkotte.ecotouch.Ecotouch.login", return_value=True,), patch(
+    with patch(
+        "pywaterkotte.ecotouch.Ecotouch.login",
+        return_value=True,
+    ), patch(
         "homeassistant.components.waterkotte_heatpump.async_setup_entry",
         return_value=True,
-    ), patch("pywaterkotte.ecotouch.Ecotouch.read_value", return_value=42,), patch(
+    ), patch(
+        "pywaterkotte.ecotouch.Ecotouch.read_value",
+        return_value=42,
+    ), patch(
         "pywaterkotte.ecotouch.Ecotouch.decode_heatpump_series",
         return_value="heatpump type",
     ) as mock_setup_entry:

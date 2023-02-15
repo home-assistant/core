@@ -1,13 +1,13 @@
 {
   "domain": "waterkotte_heatpump",
   "name": "Waterkotte Heatpump",
+  "codeowners": ["@chboland"],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/waterkotte_heatpump",
+  "homekit": {},
+  "iot_class": "local_polling",
   "requirements": ["pywaterkotte==0.1.2"],
   "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "codeowners": ["@chboland"],
-  "iot_class": "local_polling"
+  "zeroconf": []
 }

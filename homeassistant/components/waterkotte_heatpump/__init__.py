@@ -26,7 +26,7 @@ class EcotouchCoordinator(DataUpdateCoordinator[dict[TagData, Any]]):
     """heatpump coordinator."""
 
     def __init__(self, heatpump: Ecotouch, hass: HomeAssistant) -> None:
-        """init coordinator."""
+        """Init coordinator."""
         self._heatpump = heatpump
 
         self.alltags: set[TagData] = set()
@@ -46,12 +46,12 @@ class EcotouchCoordinator(DataUpdateCoordinator[dict[TagData, Any]]):
         )
 
     def get_tag_value(self, tag: TagData) -> StateType:
-        """return a tag value."""
+        """Return a tag value."""
         return self.data.get(tag, None)
 
     @property
     def heatpump(self) -> Ecotouch:
-        """heatpump api."""
+        """Heatpump api."""
         return self._heatpump
 
 

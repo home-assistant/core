@@ -21,7 +21,7 @@ class EcotouchEntity(CoordinatorEntity[EcotouchCoordinator]):
         entity_config: EntityDescription,
         device_info: DeviceInfo,
     ) -> None:
-        """initialize entity."""
+        """Initialize entity."""
         super().__init__(coordinator)
         self.entity_description = entity_config
 
