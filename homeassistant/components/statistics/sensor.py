@@ -481,8 +481,8 @@ class StatisticsSensor(SensorEntity):
         if timestamp := self._next_to_purge_timestamp():
             _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
             if self._update_listener:
-                self._update_listener()  # pragma: no cover
-                self._update_listener = None  # pragma: no cover
+                self._update_listener()
+                self._update_listener = None
 
             @callback
             def _scheduled_update(now: datetime) -> None:
