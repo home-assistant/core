@@ -10,7 +10,6 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
-    KNOWN_DEVICES,
 )
 from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant
@@ -184,7 +183,7 @@ async def test_migrate_ble_unique_id(hass: HomeAssistant) -> None:
 
 async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
     """Test that we don't migrate to thread when there are no creds available."""
-    accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
+    accessories = await setup_accessories_from_file(hass, "nanoleaf_strip_nl55.json")
 
     fake_controller = await setup_platform(hass)
     await fake_controller.add_paired_device(accessories, "02:03:EF:02:03:EF")
@@ -204,7 +203,14 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with pytest.raises(HomeAssistantError):
-        await hass.data[KNOWN_DEVICES]["02:03:EF:02:03:EF"].async_thread_provision()
+        await hass.services.async_call(
+            "button",
+            "press",
+            {
+                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+            },
+            blocking=True,
+        )
 
 
 async def test_thread_provision(hass: HomeAssistant) -> None:
@@ -217,7 +223,7 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
         "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8",
     )
 
-    accessories = await setup_accessories_from_file(hass, "hue_bridge.json")
+    accessories = await setup_accessories_from_file(hass, "nanoleaf_strip_nl55.json")
 
     fake_controller = await setup_platform(hass)
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
@@ -244,7 +250,14 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"].async_thread_provision()
+    await hass.services.async_call(
+        "button",
+        "press",
+        {
+            "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+        },
+        blocking=True,
+    )
 
     assert config_entry.data["Connection"] == "CoAP"
 
@@ -259,7 +272,7 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
         "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8",
     )
 
-    accessories = await setup_accessories_from_file(hass, "hue_bridge.json")
+    accessories = await setup_accessories_from_file(hass, "nanoleaf_strip_nl55.json")
 
     fake_controller = await setup_platform(hass)
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
@@ -285,6 +298,13 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
     del fake_controller.discoveries["00:00:00:00:00:00"]
 
     with pytest.raises(HomeAssistantError):
-        await hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"].async_thread_provision()
+        await hass.services.async_call(
+            "button",
+            "press",
+            {
+                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
+            },
+            blocking=True,
+        )
 
     assert config_entry.data["Connection"] == "BLE"
