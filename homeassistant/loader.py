@@ -124,7 +124,7 @@ class HomeKitDiscoveredIntegration:
     """HomeKit model."""
 
     domain: str
-    iot_class: str | None
+    always_discover: bool
 
 
 class Manifest(TypedDict, total=False):
@@ -419,12 +419,28 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     return usb
 
 
+def _should_homekit_always_discover(iot_class: str | None) -> bool:
+    """Return if we should offer HomeKit control for a device."""
+    #
+    # Since we prefer local control, if the integration that is being
+    # discovered is cloud AND the HomeKit device is UNPAIRED we still
+    # want to discovery it.
+    #
+    # Additionally if the integration is polling, HKC offers a local
+    # push experience for the user to control the device so we want
+    # to offer that as well.
+    #
+    return not iot_class or (iot_class.startswith("cloud") or "polling" in iot_class)
+
+
 async def async_get_homekit(
     hass: HomeAssistant,
 ) -> dict[str, HomeKitDiscoveredIntegration]:
     """Return cached list of homekit models."""
     homekit: dict[str, HomeKitDiscoveredIntegration] = {
-        model: HomeKitDiscoveredIntegration(details["domain"], details["iot_class"])
+        model: HomeKitDiscoveredIntegration(
+            details["domain"], _should_homekit_always_discover(details["iot_class"])
+        )
         for model, details in HOMEKIT.items()
     }
 
@@ -438,7 +454,8 @@ async def async_get_homekit(
             continue
         for model in integration.homekit["models"]:
             homekit[model] = HomeKitDiscoveredIntegration(
-                integration.domain, integration.iot_class
+                integration.domain,
+                _should_homekit_always_discover(integration.iot_class),
             )
 
     return homekit
