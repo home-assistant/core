@@ -19,6 +19,7 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
@@ -41,7 +42,9 @@ SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
 
 
-async def test_block_reload_on_cfg_change(hass, mock_block_device, monkeypatch):
+async def test_block_reload_on_cfg_change(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block reload on config change."""
     await init_integration(hass, 1)
 
@@ -68,7 +71,9 @@ async def test_block_reload_on_cfg_change(hass, mock_block_device, monkeypatch):
     assert hass.states.get("switch.test_name_channel_1") is None
 
 
-async def test_block_no_reload_on_bulb_changes(hass, mock_block_device, monkeypatch):
+async def test_block_no_reload_on_bulb_changes(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block no reload on bulb mode/effect change."""
     await init_integration(hass, 1, model="SHBLB-1")
 
@@ -112,7 +117,9 @@ async def test_block_no_reload_on_bulb_changes(hass, mock_block_device, monkeypa
     assert hass.states.get("switch.test_name_channel_1") is not None
 
 
-async def test_block_polling_auth_error(hass, mock_block_device, monkeypatch):
+async def test_block_polling_auth_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device polling authentication error."""
     monkeypatch.setattr(
         mock_block_device,
@@ -143,7 +150,9 @@ async def test_block_polling_auth_error(hass, mock_block_device, monkeypatch):
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_block_rest_update_auth_error(hass, mock_block_device, monkeypatch):
+async def test_block_rest_update_auth_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block REST update authentication error."""
     register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
@@ -174,7 +183,9 @@ async def test_block_rest_update_auth_error(hass, mock_block_device, monkeypatch
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_block_polling_connection_error(hass, mock_block_device, monkeypatch):
+async def test_block_polling_connection_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device polling connection error."""
     monkeypatch.setattr(
         mock_block_device,
@@ -194,7 +205,9 @@ async def test_block_polling_connection_error(hass, mock_block_device, monkeypat
     assert hass.states.get("switch.test_name_channel_1").state == STATE_UNAVAILABLE
 
 
-async def test_block_rest_update_connection_error(hass, mock_block_device, monkeypatch):
+async def test_block_rest_update_connection_error(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block REST update connection error."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": True})
@@ -214,7 +227,9 @@ async def test_block_rest_update_connection_error(hass, mock_block_device, monke
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_block_sleeping_device_no_periodic_updates(hass, mock_block_device):
+async def test_block_sleeping_device_no_periodic_updates(
+    hass: HomeAssistant, mock_block_device
+) -> None:
     """Test block sleeping device no periodic updates."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
     await init_integration(hass, 1, sleep_period=1000)
@@ -234,7 +249,9 @@ async def test_block_sleeping_device_no_periodic_updates(hass, mock_block_device
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_block_button_click_event(hass, mock_block_device, events, monkeypatch):
+async def test_block_button_click_event(
+    hass: HomeAssistant, mock_block_device, events, monkeypatch
+) -> None:
     """Test block click event for Shelly button."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "sensor_ids", {})
     monkeypatch.setattr(
@@ -275,7 +292,9 @@ async def test_block_button_click_event(hass, mock_block_device, events, monkeyp
     assert len(events) == 1
 
 
-async def test_rpc_reload_on_cfg_change(hass, mock_rpc_device, monkeypatch):
+async def test_rpc_reload_on_cfg_change(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC reload on config change."""
     await init_integration(hass, 2)
 
@@ -316,7 +335,9 @@ async def test_rpc_reload_on_cfg_change(hass, mock_rpc_device, monkeypatch):
     assert hass.states.get("switch.test_switch_0") is None
 
 
-async def test_rpc_click_event(hass, mock_rpc_device, events, monkeypatch):
+async def test_rpc_click_event(
+    hass: HomeAssistant, mock_rpc_device, events, monkeypatch
+) -> None:
     """Test RPC click event."""
     entry = await init_integration(hass, 2)
 
@@ -351,7 +372,9 @@ async def test_rpc_click_event(hass, mock_rpc_device, events, monkeypatch):
     }
 
 
-async def test_rpc_update_entry_sleep_period(hass, mock_rpc_device, monkeypatch):
+async def test_rpc_update_entry_sleep_period(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC update entry sleep period."""
     entry = await init_integration(hass, 2, sleep_period=600)
     register_entity(
@@ -379,8 +402,8 @@ async def test_rpc_update_entry_sleep_period(hass, mock_rpc_device, monkeypatch)
 
 
 async def test_rpc_sleeping_device_no_periodic_updates(
-    hass, mock_rpc_device, monkeypatch
-):
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC sleeping device no periodic updates."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
     entry = await init_integration(hass, 2, sleep_period=1000)
@@ -407,7 +430,9 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_rpc_reconnect_auth_error(hass, mock_rpc_device, monkeypatch):
+async def test_rpc_reconnect_auth_error(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC reconnect authentication error."""
     entry = await init_integration(hass, 2)
 
@@ -442,7 +467,9 @@ async def test_rpc_reconnect_auth_error(hass, mock_rpc_device, monkeypatch):
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_rpc_polling_auth_error(hass, mock_rpc_device, monkeypatch) -> None:
+async def test_rpc_polling_auth_error(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC polling authentication error."""
     register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     entry = await init_integration(hass, 2)
@@ -473,7 +500,9 @@ async def test_rpc_polling_auth_error(hass, mock_rpc_device, monkeypatch) -> Non
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_rpc_reconnect_error(hass, mock_rpc_device, monkeypatch):
+async def test_rpc_reconnect_error(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC reconnect error."""
     await init_integration(hass, 2)
 
@@ -497,7 +526,9 @@ async def test_rpc_reconnect_error(hass, mock_rpc_device, monkeypatch):
     assert hass.states.get("switch.test_switch_0").state == STATE_UNAVAILABLE
 
 
-async def test_rpc_polling_connection_error(hass, mock_rpc_device, monkeypatch) -> None:
+async def test_rpc_polling_connection_error(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC polling connection error."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     await init_integration(hass, 2)
@@ -517,7 +548,9 @@ async def test_rpc_polling_connection_error(hass, mock_rpc_device, monkeypatch) 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_rpc_polling_disconnected(hass, mock_rpc_device, monkeypatch) -> None:
+async def test_rpc_polling_disconnected(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test RPC polling device disconnected."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     await init_integration(hass, 2)

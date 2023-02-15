@@ -7,5 +7,5 @@
   "disabled": "py311-incompat",
   "documentation": "https://www.home-assistant.io/integrations/matter",
   "iot_class": "local_push",
-  "requirements": ["python-matter-server==2.0.2"]
+  "requirements": ["python-matter-server==2.1.0"]
 }
