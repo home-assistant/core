@@ -51,7 +51,7 @@ dependencies    = [
     "requests==2.28.1",
     "typing-extensions>=4.4.0,<5.0",
     "voluptuous==0.13.1",
-    "voluptuous-serialize==2.5.0",
+    "voluptuous-serialize==2.6.0",
     "yarl==1.8.1",
 ]
 
@@ -243,7 +243,7 @@ select = [
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
-    "ICN001", # import concentions; {name} should be imported as {asname} 
+    "ICN001", # import concentions; {name} should be imported as {asname}
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
