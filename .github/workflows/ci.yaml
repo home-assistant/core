@@ -34,7 +34,13 @@ env:
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
-  MARIADB_VERSIONS: "['mariadb:10.9.3']"
+  # 10.3 is the oldest supported version
+  # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
+  # 10.6 is the current long-term-support
+  # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
+  # 10.10 is the latest short-term-support
+  # - 10.10.3 is the latest (as of 6 Feb 2023)
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3']"
   POSTGRESQL_VERSIONS: "['postgres:15.0']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
@@ -202,7 +208,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.2.4
+        uses: actions/cache@v3.2.5
         with:
           path: venv
           key: >-
@@ -217,7 +223,7 @@ jobs:
           pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.2.4
+        uses: actions/cache@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -246,7 +252,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -255,7 +261,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -292,7 +298,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -301,7 +307,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -341,7 +347,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -350,7 +356,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -390,7 +396,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -399,7 +405,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -428,7 +434,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -437,7 +443,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -552,7 +558,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.2.4
+        uses: actions/cache@v3.2.5
         with:
           path: venv
           key: >-
@@ -560,7 +566,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.2.4
+        uses: actions/cache@v3.2.5
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -614,7 +620,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -646,7 +652,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -679,7 +685,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -730,7 +736,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -738,7 +744,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v3.2.4
+        uses: actions/cache@v3.2.5
         with:
           path: .mypy_cache
           key: >-
@@ -789,7 +795,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -842,7 +848,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -967,7 +973,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.4
+        uses: actions/cache/restore@v3.2.5
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1008,7 +1014,10 @@ jobs:
             --durations=10 \
             -p no:sugar \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
-            tests/components/recorder
+            tests/components/history \
+            tests/components/logbook \
+            tests/components/recorder \
+            tests/components/sensor
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.2
         with:
@@ -1066,7 +1075,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.5
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -1112,7 +1121,10 @@ jobs:
             --durations-min=10 \
             -p no:sugar \
             --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
-            tests/components/recorder
+            tests/components/history \
+            tests/components/logbook \
+            tests/components/recorder \
+            tests/components/sensor
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
         with:

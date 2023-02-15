@@ -1,8 +1,8 @@
 """Test the Fibaro config flow."""
 from unittest.mock import Mock, patch
 
-from fiblary3.common.exceptions import HTTPException
 import pytest
+from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components.fibaro import DOMAIN
@@ -25,37 +25,31 @@ TEST_VERSION = "4.360"
 def fibaro_client_fixture():
     """Mock common methods and attributes of fibaro client."""
     info_mock = Mock()
-    info_mock.get.return_value = Mock(
-        serialNumber=TEST_SERIALNUMBER, hcName=TEST_NAME, softVersion=TEST_VERSION
-    )
-
-    array_mock = Mock()
-    array_mock.list.return_value = []
+    info_mock.return_value.serial_number = TEST_SERIALNUMBER
+    info_mock.return_value.hc_name = TEST_NAME
+    info_mock.return_value.current_version = TEST_VERSION
 
     client_mock = Mock()
     client_mock.base_url.return_value = TEST_URL
 
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.__init__",
+        "homeassistant.components.fibaro.FibaroClient.__init__",
         return_value=None,
     ), patch(
-        "homeassistant.components.fibaro.FibaroClientV4.info",
+        "homeassistant.components.fibaro.FibaroClient.read_info",
         info_mock,
         create=True,
     ), patch(
-        "homeassistant.components.fibaro.FibaroClientV4.rooms",
-        array_mock,
-        create=True,
+        "homeassistant.components.fibaro.FibaroClient.read_rooms",
+        return_value=[],
     ), patch(
-        "homeassistant.components.fibaro.FibaroClientV4.devices",
-        array_mock,
-        create=True,
+        "homeassistant.components.fibaro.FibaroClient.read_devices",
+        return_value=[],
     ), patch(
-        "homeassistant.components.fibaro.FibaroClientV4.scenes",
-        array_mock,
-        create=True,
+        "homeassistant.components.fibaro.FibaroClient.read_scenes",
+        return_value=[],
     ), patch(
-        "homeassistant.components.fibaro.FibaroClientV4.client",
+        "homeassistant.components.fibaro.FibaroClient._rest_client",
         client_mock,
         create=True,
     ):
@@ -72,10 +66,9 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    login_mock = Mock()
-    login_mock.get.return_value = Mock(status=True)
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClient.connect",
+        return_value=True,
     ), patch(
         "homeassistant.components.fibaro.async_setup_entry",
         return_value=True,
@@ -109,10 +102,9 @@ async def test_config_flow_user_initiated_connect_failure(hass: HomeAssistant) -
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    login_mock = Mock()
-    login_mock.get.return_value = Mock(status=False)
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClient.connect",
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -139,9 +131,9 @@ async def test_config_flow_user_initiated_auth_failure(hass: HomeAssistant) -> N
     assert result["errors"] == {}
 
     login_mock = Mock()
-    login_mock.get.side_effect = HTTPException(details="Forbidden")
+    login_mock.side_effect = HTTPError(response=Mock(status_code=403))
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClient.connect", login_mock, create=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -170,9 +162,9 @@ async def test_config_flow_user_initiated_unknown_failure_1(
     assert result["errors"] == {}
 
     login_mock = Mock()
-    login_mock.get.side_effect = HTTPException(details="Any")
+    login_mock.side_effect = HTTPError(response=Mock(status_code=500))
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClient.connect", login_mock, create=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -200,49 +192,23 @@ async def test_config_flow_user_initiated_unknown_failure_2(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_config_flow_import(hass: HomeAssistant) -> None:
-    """Test for importing config from configuration.yaml."""
     login_mock = Mock()
-    login_mock.get.return_value = Mock(status=True)
+    login_mock.side_effect = Exception()
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
-    ), patch(
-        "homeassistant.components.fibaro.async_setup_entry",
-        return_value=True,
+        "homeassistant.components.fibaro.FibaroClient.connect", login_mock, create=True
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
                 CONF_URL: TEST_URL,
                 CONF_USERNAME: TEST_USERNAME,
                 CONF_PASSWORD: TEST_PASSWORD,
-                CONF_IMPORT_PLUGINS: False,
             },
         )
 
-        assert result["type"] == "create_entry"
-        assert result["title"] == TEST_NAME
-        assert result["data"] == {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_IMPORT_PLUGINS: False,
-        }
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
@@ -271,10 +237,8 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
-    login_mock = Mock()
-    login_mock.get.return_value = Mock(status=True)
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClient.connect", return_value=True
     ), patch(
         "homeassistant.components.fibaro.async_setup_entry",
         return_value=True,
@@ -315,9 +279,9 @@ async def test_reauth_connect_failure(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     login_mock = Mock()
-    login_mock.get.return_value = Mock(status=False)
+    login_mock.side_effect = Exception()
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClient.connect", login_mock, create=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -356,9 +320,9 @@ async def test_reauth_auth_failure(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     login_mock = Mock()
-    login_mock.get.side_effect = HTTPException(details="Forbidden")
+    login_mock.side_effect = HTTPError(response=Mock(status_code=403))
     with patch(
-        "homeassistant.components.fibaro.FibaroClientV4.login", login_mock, create=True
+        "homeassistant.components.fibaro.FibaroClient.connect", login_mock, create=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

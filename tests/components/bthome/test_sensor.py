@@ -1,6 +1,4 @@
 """Test the BTHome sensors."""
-
-
 import logging
 
 import pytest
@@ -8,6 +6,7 @@ import pytest
 from homeassistant.components.bthome.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v1_adv, make_bthome_v2_adv, make_encrypted_bthome_v1_adv
 
@@ -332,12 +331,12 @@ _LOGGER = logging.getLogger(__name__)
     ],
 )
 async def test_v1_sensors(
-    hass,
+    hass: HomeAssistant,
     mac_address,
     advertisement,
     bind_key,
     result,
-):
+) -> None:
     """Test the different BTHome V1 sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -948,12 +947,12 @@ async def test_v1_sensors(
     ],
 )
 async def test_v2_sensors(
-    hass,
+    hass: HomeAssistant,
     mac_address,
     advertisement,
     bind_key,
     result,
-):
+) -> None:
     """Test the different BTHome V2 sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -3,6 +3,8 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.config import area_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 
 from tests.common import ANY
 
@@ -14,7 +16,9 @@ def client(hass, hass_ws_client):
     return hass.loop.run_until_complete(hass_ws_client(hass))
 
 
-async def test_list_areas(hass, client, area_registry):
+async def test_list_areas(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test list entries."""
     area1 = area_registry.async_create("mock 1")
     area2 = area_registry.async_create(
@@ -40,7 +44,9 @@ async def test_list_areas(hass, client, area_registry):
     ]
 
 
-async def test_create_area(hass, client, area_registry):
+async def test_create_area(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test create entry."""
     # Create area with only mandatory parameters
     await client.send_json(
@@ -79,7 +85,9 @@ async def test_create_area(hass, client, area_registry):
     assert len(area_registry.areas) == 2
 
 
-async def test_create_area_with_name_already_in_use(hass, client, area_registry):
+async def test_create_area_with_name_already_in_use(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test create entry that should fail."""
     area_registry.async_create("mock")
 
@@ -95,7 +103,9 @@ async def test_create_area_with_name_already_in_use(hass, client, area_registry)
     assert len(area_registry.areas) == 1
 
 
-async def test_delete_area(hass, client, area_registry):
+async def test_delete_area(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test delete entry."""
     area = area_registry.async_create("mock")
 
@@ -109,7 +119,9 @@ async def test_delete_area(hass, client, area_registry):
     assert not area_registry.areas
 
 
-async def test_delete_non_existing_area(hass, client, area_registry):
+async def test_delete_non_existing_area(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test delete entry that should fail."""
     area_registry.async_create("mock")
 
@@ -125,7 +137,9 @@ async def test_delete_non_existing_area(hass, client, area_registry):
     assert len(area_registry.areas) == 1
 
 
-async def test_update_area(hass, client, area_registry):
+async def test_update_area(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
 
@@ -171,7 +185,9 @@ async def test_update_area(hass, client, area_registry):
     assert len(area_registry.areas) == 1
 
 
-async def test_update_area_with_same_name(hass, client, area_registry):
+async def test_update_area_with_same_name(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
 
@@ -191,7 +207,9 @@ async def test_update_area_with_same_name(hass, client, area_registry):
     assert len(area_registry.areas) == 1
 
 
-async def test_update_area_with_name_already_in_use(hass, client, area_registry):
+async def test_update_area_with_name_already_in_use(
+    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
     area_registry.async_create("mock 2")

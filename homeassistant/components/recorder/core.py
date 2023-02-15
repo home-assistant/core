@@ -185,6 +185,9 @@ class Recorder(threading.Thread):
         self.engine: Engine | None = None
         self.run_history = RunHistory()
 
+        # The entity_filter is exposed on the recorder instance so that
+        # it can be used to see if an entity is being recorded and is called
+        # by is_entity_recorder and the sensor recorder.
         self.entity_filter = entity_filter
         self.exclude_t = set(exclude_t)
 
@@ -638,10 +641,8 @@ class Recorder(threading.Thread):
             else:
                 persistent_notification.create(
                     self.hass,
-                    (
-                        "The database migration failed, check [the logs](/config/logs)."
-                        "Database Migration Failed"
-                    ),
+                    "The database migration failed, check [the logs](/config/logs).",
+                    "Database Migration Failed",
                     "recorder_database_migration",
                 )
                 self.hass.add_job(self.async_set_db_ready)
@@ -730,8 +731,10 @@ class Recorder(threading.Thread):
             (
                 "System performance will temporarily degrade during the database"
                 " upgrade. Do not power down or restart the system until the upgrade"
-                " completes. Integrations that read the database, such as logbook and"
-                " history, may return inconsistent results until the upgrade completes."
+                " completes. Integrations that read the database, such as logbook,"
+                " history, and statistics may return inconsistent results until the "
+                " upgrade completes. This notification will be automatically dismissed"
+                " when the upgrade completes."
             ),
             "Database upgrade in progress",
             "recorder_database_migration",
@@ -989,8 +992,10 @@ class Recorder(threading.Thread):
 
     def _handle_sqlite_corruption(self) -> None:
         """Handle the sqlite3 database being corrupt."""
-        self._close_event_session()
-        self._close_connection()
+        try:
+            self._close_event_session()
+        finally:
+            self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
         self.run_history.reset()
         self._setup_recorder()
@@ -1027,11 +1032,7 @@ class Recorder(threading.Thread):
 
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
-        assert self.engine is not None
-        assert self.event_session is not None
-        migration.post_schema_migration(
-            self.engine, self.event_session, old_version, new_version
-        )
+        migration.post_schema_migration(self, old_version, new_version)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
@@ -1217,18 +1218,21 @@ class Recorder(threading.Thread):
         """End the recorder session."""
         if self.event_session is None:
             return
-        try:
+        if self.run_history.active:
             self.run_history.end(self.event_session)
+        try:
             self._commit_event_session_or_retry()
-            self.event_session.close()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Error saving the event session during shutdown: %s", err)
 
+        self.event_session.close()
         self.run_history.clear()
 
     def _shutdown(self) -> None:
         """Save end time for current run."""
         self.hass.add_job(self._async_stop_listeners)
         self._stop_executor()
-        self._end_session()
-        self._close_connection()
+        try:
+            self._end_session()
+        finally:
+            self._close_connection()

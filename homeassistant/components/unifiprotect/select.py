@@ -29,7 +29,7 @@ import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -38,7 +38,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
 
 from .const import ATTR_DURATION, ATTR_MESSAGE, DISPATCH_ADOPT, DOMAIN, TYPE_EMPTY_VALUE
@@ -136,7 +135,7 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     for item in messages:
         msg_type = item.type.value
         if item.type == DoorbellMessageType.CUSTOM_MESSAGE:
-            msg_type = f"{DoorbellMessageType.CUSTOM_MESSAGE}:{item.text}"
+            msg_type = f"{DoorbellMessageType.CUSTOM_MESSAGE.value}:{item.text}"
 
         built_messages.append({"id": msg_type, "name": item.text})
 

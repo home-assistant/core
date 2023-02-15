@@ -29,6 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -37,7 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.helpers.update_coordinator import (
@@ -635,13 +636,20 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
 
                 statistics = []
 
+                last_stats_time_dt = (
+                    dt_util.utc_from_timestamp(last_stats_time)
+                    if last_stats_time
+                    else None
+                )
+
                 for data in hourly_data:
                     if data.get(sensor_type) is None:
                         continue
 
                     from_time = dt_util.parse_datetime(data["from"])
                     if from_time is None or (
-                        last_stats_time is not None and from_time <= last_stats_time
+                        last_stats_time_dt is not None
+                        and from_time <= last_stats_time_dt
                     ):
                         continue
 

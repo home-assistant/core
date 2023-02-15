@@ -12,6 +12,7 @@ from homeassistant import setup
 from homeassistant.components import emulated_hue
 from homeassistant.components.emulated_hue import upnp
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.core import HomeAssistant
 
 from tests.common import get_test_instance_port
 
@@ -149,7 +150,7 @@ MX:3
     assert mock_transport.sends == []
 
 
-async def test_description_xml(hass, hue_client):
+async def test_description_xml(hass: HomeAssistant, hue_client) -> None:
     """Test the description."""
     await setup_hue(hass)
     client = await hue_client()
@@ -166,7 +167,7 @@ async def test_description_xml(hass, hue_client):
         pytest.fail("description.xml is not valid XML!")
 
 
-async def test_create_username(hass, hue_client):
+async def test_create_username(hass: HomeAssistant, hue_client) -> None:
     """Test the creation of an username."""
     await setup_hue(hass)
     client = await hue_client()
@@ -184,7 +185,7 @@ async def test_create_username(hass, hue_client):
     assert "username" in success_json["success"]
 
 
-async def test_unauthorized_view(hass, hue_client):
+async def test_unauthorized_view(hass: HomeAssistant, hue_client) -> None:
     """Test unauthorized view."""
     await setup_hue(hass)
     client = await hue_client()
@@ -210,7 +211,7 @@ async def test_unauthorized_view(hass, hue_client):
     assert "1" in error_json["type"]
 
 
-async def test_valid_username_request(hass, hue_client):
+async def test_valid_username_request(hass: HomeAssistant, hue_client) -> None:
     """Test request with a valid username."""
     await setup_hue(hass)
     client = await hue_client()
