@@ -70,9 +70,7 @@ async def ws_delete_dataset(
         connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(exc))
         return
     except dataset_store.DatasetPreferredError as exc:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_SUPPORTED, str(exc)
-        )
+        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc))
         return
 
     connection.send_result(msg["id"])

@@ -89,7 +89,7 @@ async def test_delete_dataset(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {
-        "code": "not_supported",
+        "code": "not_allowed",
         "message": "attempt to remove preferred dataset",
     }
 
