@@ -623,8 +623,8 @@ async def test_get_homekit(hass: HomeAssistant) -> None:
             "test_2": test_2_integration,
         }
         homekit = await loader.async_get_homekit(hass)
-        assert homekit["test_1"] == loader.HomeKitDiscoveredIntegration("test_1", None)
-        assert homekit["test_2"] == loader.HomeKitDiscoveredIntegration("test_2", None)
+        assert homekit["test_1"] == loader.HomeKitDiscoveredIntegration("test_1", True)
+        assert homekit["test_2"] == loader.HomeKitDiscoveredIntegration("test_2", True)
 
 
 async def test_get_ssdp(hass: HomeAssistant) -> None:
