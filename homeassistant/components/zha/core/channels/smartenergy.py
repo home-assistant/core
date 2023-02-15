@@ -168,11 +168,7 @@ class Metering(ZigbeeChannel):
             return None
         if self.cluster.get("metering_device_type") == 0:
             # Electric metering device type
-            if status == 0:
-                return self.DeviceStatusElectric.NO_ALARMS
             return self.DeviceStatusElectric(status)
-        if status == 0:
-            return self.DeviceStatusDefault.NO_ALARMS
         return self.DeviceStatusDefault(status)
 
     @property
