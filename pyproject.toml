@@ -246,6 +246,7 @@ select = [
     "ICN001", # import concentions; {name} should be imported as {asname} 
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
+    "RUF006", # Store a reference to the return value of `asyncio.create_task`
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
