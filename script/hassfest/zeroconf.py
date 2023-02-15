@@ -12,7 +12,7 @@ from .serializer import format_python_namespace
 def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate zeroconf data."""
     service_type_dict = defaultdict(list)
-    homekit_dict: dict[str, dict[str, str]] = {}
+    homekit_dict: dict[str, str] = {}
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -42,10 +42,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
                 )
                 break
 
-            homekit_dict[model] = {
-                "domain": domain,
-                "iot_class": integration.manifest["iot_class"],
-            }
+            homekit_dict[model] = domain
 
     # HomeKit models are matched on starting string, make sure none overlap.
     warned = set()

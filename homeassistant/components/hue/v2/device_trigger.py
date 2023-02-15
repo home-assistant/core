@@ -62,7 +62,7 @@ DEVICE_SPECIFIC_EVENT_TYPES = {
 
 
 async def async_validate_trigger_config(
-    bridge: "HueBridge",
+    bridge: HueBridge,
     device_entry: DeviceEntry,
     config: ConfigType,
 ) -> ConfigType:
@@ -71,7 +71,7 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    bridge: "HueBridge",
+    bridge: HueBridge,
     device_entry: DeviceEntry,
     config: ConfigType,
     action: TriggerActionType,
