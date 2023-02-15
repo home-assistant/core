@@ -106,7 +106,7 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda prev, val: prev if not val else val,
+        value=lambda prev, val: val if val else prev,
         available=lambda entity: entity.coordinator.data is not None,
     ),
     "C": GoodweSensorEntityDescription(
