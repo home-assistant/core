@@ -15,6 +15,7 @@ from homeassistant.helpers.json import JSONEncoder as DefaultHASSJSONEncoder
 from homeassistant.util.json import (
     SerializationError,
     find_paths_unserializable_data,
+    json_loads_object,
     load_json,
     save_json,
 )
@@ -191,6 +192,23 @@ def test_find_unserializable_data() -> None:
         BadData(),
         dump=partial(dumps, cls=MockJSONEncoder),
     ) == {"$(BadData).bla": bad_data}
+
+
+def test_json_loads_object() -> None:
+    """Test json_loads_object validates result."""
+    assert json_loads_object('{"c":1.2}') == {"c": 1.2}
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'list'>"
+    ):
+        json_loads_object("[]")
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'bool'>"
+    ):
+        json_loads_object("true")
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'NoneType'>"
+    ):
+        json_loads_object("null")
 
 
 async def test_deprecated_test_find_unserializable_data(
