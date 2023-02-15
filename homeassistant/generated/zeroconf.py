@@ -4,65 +4,242 @@ To update, run python3 -m script.hassfest
 """
 
 HOMEKIT = {
-    "3810X": "roku",
-    "3820X": "roku",
-    "4660X": "roku",
-    "7820X": "roku",
-    "819LMB": "myq",
-    "AC02": "tado",
-    "Abode": "abode",
-    "BSB002": "hue",
-    "C105X": "roku",
-    "C135X": "roku",
-    "EB-*": "ecobee",
-    "Escea": "escea",
-    "HHKBridge*": "hive",
-    "Healty Home Coach": "netatmo",
-    "Iota": "abode",
-    "LIFX A19": "lifx",
-    "LIFX BR30": "lifx",
-    "LIFX Beam": "lifx",
-    "LIFX Candle": "lifx",
-    "LIFX Clean": "lifx",
-    "LIFX Color": "lifx",
-    "LIFX DLCOL": "lifx",
-    "LIFX DLWW": "lifx",
-    "LIFX Dlight": "lifx",
-    "LIFX Downlight": "lifx",
-    "LIFX Filament": "lifx",
-    "LIFX GU10": "lifx",
-    "LIFX Lightstrip": "lifx",
-    "LIFX Mini": "lifx",
-    "LIFX Nightvision": "lifx",
-    "LIFX Pls": "lifx",
-    "LIFX Plus": "lifx",
-    "LIFX Tile": "lifx",
-    "LIFX White": "lifx",
-    "LIFX Z": "lifx",
-    "MYQ": "myq",
-    "NL29": "nanoleaf",
-    "NL42": "nanoleaf",
-    "NL47": "nanoleaf",
-    "NL48": "nanoleaf",
-    "NL52": "nanoleaf",
-    "NL59": "nanoleaf",
-    "Netatmo Relay": "netatmo",
-    "PowerView": "hunterdouglas_powerview",
-    "Presence": "netatmo",
-    "Rachio": "rachio",
-    "SPK5": "rainmachine",
-    "Sensibo": "sensibo",
-    "Smart Bridge": "lutron_caseta",
-    "Socket": "wemo",
-    "TRADFRI": "tradfri",
-    "Touch HD": "rainmachine",
-    "Welcome": "netatmo",
-    "Wemo": "wemo",
-    "YL*": "yeelight",
-    "ecobee*": "ecobee",
-    "iSmartGate": "gogogate2",
-    "iZone": "izone",
-    "tado": "tado",
+    "3810X": {
+        "integration": "roku",
+        "iot_class": "local_polling",
+    },
+    "3820X": {
+        "integration": "roku",
+        "iot_class": "local_polling",
+    },
+    "4660X": {
+        "integration": "roku",
+        "iot_class": "local_polling",
+    },
+    "7820X": {
+        "integration": "roku",
+        "iot_class": "local_polling",
+    },
+    "819LMB": {
+        "integration": "myq",
+        "iot_class": "cloud_polling",
+    },
+    "AC02": {
+        "integration": "tado",
+        "iot_class": "cloud_polling",
+    },
+    "Abode": {
+        "integration": "abode",
+        "iot_class": "cloud_push",
+    },
+    "BSB002": {
+        "integration": "hue",
+        "iot_class": "local_push",
+    },
+    "C105X": {
+        "integration": "roku",
+        "iot_class": "local_polling",
+    },
+    "C135X": {
+        "integration": "roku",
+        "iot_class": "local_polling",
+    },
+    "EB-*": {
+        "integration": "ecobee",
+        "iot_class": "cloud_polling",
+    },
+    "Escea": {
+        "integration": "escea",
+        "iot_class": "local_push",
+    },
+    "HHKBridge*": {
+        "integration": "hive",
+        "iot_class": "cloud_polling",
+    },
+    "Healty Home Coach": {
+        "integration": "netatmo",
+        "iot_class": "cloud_polling",
+    },
+    "Iota": {
+        "integration": "abode",
+        "iot_class": "cloud_push",
+    },
+    "LIFX A19": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX BR30": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Beam": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Candle": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Clean": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Color": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX DLCOL": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX DLWW": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Dlight": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Downlight": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Filament": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX GU10": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Lightstrip": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Mini": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Nightvision": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Pls": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Plus": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Tile": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX White": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "LIFX Z": {
+        "integration": "lifx",
+        "iot_class": "local_polling",
+    },
+    "MYQ": {
+        "integration": "myq",
+        "iot_class": "cloud_polling",
+    },
+    "NL29": {
+        "integration": "nanoleaf",
+        "iot_class": "local_push",
+    },
+    "NL42": {
+        "integration": "nanoleaf",
+        "iot_class": "local_push",
+    },
+    "NL47": {
+        "integration": "nanoleaf",
+        "iot_class": "local_push",
+    },
+    "NL48": {
+        "integration": "nanoleaf",
+        "iot_class": "local_push",
+    },
+    "NL52": {
+        "integration": "nanoleaf",
+        "iot_class": "local_push",
+    },
+    "NL59": {
+        "integration": "nanoleaf",
+        "iot_class": "local_push",
+    },
+    "Netatmo Relay": {
+        "integration": "netatmo",
+        "iot_class": "cloud_polling",
+    },
+    "PowerView": {
+        "integration": "hunterdouglas_powerview",
+        "iot_class": "local_polling",
+    },
+    "Presence": {
+        "integration": "netatmo",
+        "iot_class": "cloud_polling",
+    },
+    "Rachio": {
+        "integration": "rachio",
+        "iot_class": "cloud_push",
+    },
+    "SPK5": {
+        "integration": "rainmachine",
+        "iot_class": "local_polling",
+    },
+    "Sensibo": {
+        "integration": "sensibo",
+        "iot_class": "cloud_polling",
+    },
+    "Smart Bridge": {
+        "integration": "lutron_caseta",
+        "iot_class": "local_push",
+    },
+    "Socket": {
+        "integration": "wemo",
+        "iot_class": "local_push",
+    },
+    "TRADFRI": {
+        "integration": "tradfri",
+        "iot_class": "local_polling",
+    },
+    "Touch HD": {
+        "integration": "rainmachine",
+        "iot_class": "local_polling",
+    },
+    "Welcome": {
+        "integration": "netatmo",
+        "iot_class": "cloud_polling",
+    },
+    "Wemo": {
+        "integration": "wemo",
+        "iot_class": "local_push",
+    },
+    "YL*": {
+        "integration": "yeelight",
+        "iot_class": "local_push",
+    },
+    "ecobee*": {
+        "integration": "ecobee",
+        "iot_class": "cloud_polling",
+    },
+    "iSmartGate": {
+        "integration": "gogogate2",
+        "iot_class": "local_polling",
+    },
+    "iZone": {
+        "integration": "izone",
+        "iot_class": "local_polling",
+    },
+    "tado": {
+        "integration": "tado",
+        "iot_class": "cloud_polling",
+    },
 }
 
 ZEROCONF = {

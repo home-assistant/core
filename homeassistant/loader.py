@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
+from dataclasses import dataclass
 import functools as ft
 import importlib
 import logging
@@ -116,6 +117,14 @@ class USBMatcherOptional(TypedDict, total=False):
 
 class USBMatcher(USBMatcherRequired, USBMatcherOptional):
     """Matcher for the bluetooth integration."""
+
+
+@dataclass
+class HomeKitModel:
+    """HomeKit model."""
+
+    domain: str
+    iot_class: str | None
 
 
 class Manifest(TypedDict, total=False):
@@ -410,10 +419,13 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     return usb
 
 
-async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
+async def async_get_homekit(hass: HomeAssistant) -> dict[str, HomeKitModel]:
     """Return cached list of homekit models."""
 
-    homekit: dict[str, str] = HOMEKIT.copy()
+    homekit: dict[str, HomeKitModel] = {
+        model: HomeKitModel(details["domain"], details["iot_class"])
+        for model, details in HOMEKIT.items()
+    }
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -424,7 +436,7 @@ async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
         ):
             continue
         for model in integration.homekit["models"]:
-            homekit[model] = integration.domain
+            homekit[model] = HomeKitModel(integration.domain, integration.iot_class)
 
     return homekit
 
