@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.55
+AIOAladdinConnect==0.1.56
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -1073,7 +1073,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.26.12
+pyTibber==0.26.13
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1317,10 +1317,10 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.9
+pyoctoprintapi==0.1.11
 
 # homeassistant.components.openuv
-pyopenuv==2023.01.0
+pyopenuv==2023.02.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -1468,7 +1468,7 @@ python-juicenet==1.1.0
 python-kasa==0.5.0
 
 # homeassistant.components.matter
-python-matter-server==2.0.2
+python-matter-server==2.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -1572,7 +1572,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.11
 
 # homeassistant.components.reolink
-reolink-aio==0.4.0
+reolink-aio==0.4.2
 
 # homeassistant.components.python_script
 restrictedpython==6.0
