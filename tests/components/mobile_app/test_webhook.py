@@ -421,9 +421,8 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -434,8 +433,7 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
@@ -466,9 +464,8 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -479,8 +476,7 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
@@ -536,16 +532,7 @@ async def test_webhook_handle_decryption_legacy_upgrade(
     )
 
     assert resp.status == HTTPStatus.OK
-
-    webhook_json = await resp.json()
-    assert "encrypted_data" in webhook_json
-
-    # The response should be empty, encrypted with the new method
-    with pytest.raises(Exception):
-        decrypt_payload_legacy(key, webhook_json["encrypted_data"])
-    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
-
-    assert decrypted_data == {}
+    assert await resp.json() == {}
 
 
 async def test_webhook_requires_encryption(
@@ -1090,6 +1077,22 @@ async def test_sending_sensor_state(
 
     assert reg_resp.status == HTTPStatus.CREATED
 
+    # Now with a list.
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Health",
+                "state": "good",
+                "type": "sensor",
+                "unique_id": "health-id",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
     ent_reg = er.async_get(hass)
     entry = ent_reg.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 Battery State"
@@ -1105,15 +1108,26 @@ async def test_sending_sensor_state(
     assert state is not None
     assert state.state == "100"
 
+    state = hass.states.get("sensor.test_1_battery_health")
+    assert state is not None
+    assert state.state == "good"
+
     reg_resp = await webhook_client.post(
         webhook_url,
         json={
             "type": "update_sensor_states",
-            "data": {
-                "state": 50.0000,
-                "type": "sensor",
-                "unique_id": "abcd",
-            },
+            "data": [
+                {
+                    "state": 50.0000,
+                    "type": "sensor",
+                    "unique_id": "abcd",
+                },
+                {
+                    "state": "okay-ish",
+                    "type": "sensor",
+                    "unique_id": "health-id",
+                },
+            ],
         },
     )
 
@@ -1122,3 +1136,7 @@ async def test_sending_sensor_state(
     state = hass.states.get("sensor.test_1_battery_state")
     assert state is not None
     assert state.state == "50.0"
+
+    state = hass.states.get("sensor.test_1_battery_health")
+    assert state is not None
+    assert state.state == "okay-ish"
