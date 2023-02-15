@@ -127,7 +127,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_device_tracker_conf": "list[Device]",
     "mock_get_source_ip": "None",
     "mock_zeroconf": "None",
-    "mock_yaml_config": "None",
+    "mock_yaml_configuration": "None",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",

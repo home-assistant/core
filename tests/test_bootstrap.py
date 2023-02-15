@@ -455,7 +455,7 @@ def mock_ensure_config_exists():
 
 @pytest.mark.parametrize("yaml_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass(
-    mock_yaml_config: None,
+    mock_yaml_configuration: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
@@ -505,7 +505,7 @@ async def test_setup_hass(
 
 @pytest.mark.parametrize("yaml_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass_takes_longer_than_log_slow_startup(
-    mock_yaml_config: None,
+    mock_yaml_configuration: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
@@ -547,7 +547,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
 
 @pytest.mark.parametrize("yaml_config", {"invalid_config_key": None})
 async def test_setup_hass_invalid_yaml(
-    mock_yaml_config: None,
+    mock_yaml_configuration: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
@@ -634,7 +634,7 @@ async def test_setup_hass_safe_mode(
 
 @pytest.mark.parametrize("yaml_config", [{"homeassistant": {"non-existing": 1}}])
 async def test_setup_hass_invalid_core_config(
-    mock_yaml_config: None,
+    mock_yaml_configuration: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
@@ -672,7 +672,7 @@ async def test_setup_hass_invalid_core_config(
     ],
 )
 async def test_setup_safe_mode_if_no_frontend(
-    mock_yaml_config: None,
+    mock_yaml_configuration: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
