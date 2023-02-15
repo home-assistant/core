@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models.server_information import ServerInfo
 import pytest
 
@@ -45,6 +46,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
             sdk_version="2022.11.1",
             wifi_credentials_set=True,
             thread_credentials_set=True,
+            min_supported_schema_version=SCHEMA_VERSION,
         )
 
         yield client
