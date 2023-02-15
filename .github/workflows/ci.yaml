@@ -1001,7 +1001,7 @@ jobs:
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 15
+        timeout-minutes: 20
         shell: bash
         run: |
           . venv/bin/activate
@@ -1107,7 +1107,7 @@ jobs:
           . venv/bin/activate
           pip install psycopg2 sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 10
+        timeout-minutes: 20
         shell: bash
         run: |
           . venv/bin/activate
