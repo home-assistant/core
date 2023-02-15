@@ -19,10 +19,7 @@ async def async_setup_entry(
     """Set up Velbus select based on config_entry."""
     await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities = []
-    for channel in cntrl.get_all("select"):
-        entities.append(VelbusSelect(channel))
-    async_add_entities(entities)
+    async_add_entities(VelbusSelect(channel) for channel in cntrl.get_all("select"))
 
 
 class VelbusSelect(VelbusEntity, SelectEntity):
