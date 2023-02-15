@@ -1579,7 +1579,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.4.1
+reolink-aio==0.4.2
 
 # homeassistant.components.zcs_azzurro_inverter
 requests==2.28.1
