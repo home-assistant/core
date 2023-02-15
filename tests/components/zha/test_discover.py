@@ -230,7 +230,7 @@ def test_discover_entities(m1, m2):
 
 
 @pytest.mark.parametrize(
-    "device_type, component, hit",
+    ("device_type", "component", "hit"),
     [
         (zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT, Platform.LIGHT, True),
         (zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST, Platform.SWITCH, True),
@@ -441,7 +441,7 @@ def test_single_input_cluster_device_class_by_cluster_class() -> None:
 
 
 @pytest.mark.parametrize(
-    "override, entity_id",
+    ("override", "entity_id"),
     [
         (None, "light.manufacturer_model_light"),
         ("switch", "switch.manufacturer_model_switch"),

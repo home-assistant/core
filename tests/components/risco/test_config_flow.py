@@ -90,7 +90,7 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception, error",
+    ("exception", "error"),
     [
         (UnauthorizedError, "invalid_auth"),
         (CannotConnectError, "cannot_connect"),
@@ -253,7 +253,7 @@ async def test_local_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception, error",
+    ("exception", "error"),
     [
         (UnauthorizedError, "invalid_auth"),
         (CannotConnectError, "cannot_connect"),

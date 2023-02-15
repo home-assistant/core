@@ -186,7 +186,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
 
 
 @pytest.mark.parametrize(
-    "attr, initial_value, new_value",
+    ("attr", "initial_value", "new_value"),
     (
         ("on_off_transition_time", 20, 5),
         ("on_level", 255, 50),
@@ -326,7 +326,7 @@ async def test_level_control_number(
 
 
 @pytest.mark.parametrize(
-    "attr, initial_value, new_value",
+    ("attr", "initial_value", "new_value"),
     (("start_up_color_temperature", 500, 350),),
 )
 async def test_color_number(

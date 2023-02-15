@@ -24,7 +24,7 @@ OPTIMISTIC_LOCK_CONFIG = {
 }
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -52,7 +52,7 @@ async def test_template_state(hass, start_ha):
     assert state.state == lock.STATE_UNLOCKED
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -70,7 +70,7 @@ async def test_template_state_boolean_on(hass, start_ha):
     assert state.state == lock.STATE_LOCKED
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -88,7 +88,7 @@ async def test_template_state_boolean_off(hass, start_ha):
     assert state.state == lock.STATE_UNLOCKED
 
 
-@pytest.mark.parametrize("count,domain", [(0, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -143,7 +143,7 @@ async def test_template_syntax_error(hass, start_ha):
     assert hass.states.async_all("lock") == []
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -166,7 +166,7 @@ async def test_template_static(hass, start_ha):
     assert state.state == lock.STATE_LOCKED
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -197,7 +197,7 @@ async def test_lock_action(hass, start_ha, calls):
     assert calls[0].data["caller"] == "lock.template_lock"
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -228,7 +228,7 @@ async def test_unlock_action(hass, start_ha, calls):
     assert calls[0].data["caller"] == "lock.template_lock"
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -252,7 +252,7 @@ async def test_lock_state(hass, test_state, start_ha):
     assert state.state == test_state
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -282,7 +282,7 @@ async def test_available_template_with_entities(hass, start_ha):
     assert hass.states.get("lock.template_lock").state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -303,7 +303,7 @@ async def test_invalid_availability_template_keeps_component_available(
     assert ("UndefinedError: 'x' is undefined") in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [

@@ -65,7 +65,7 @@ def tuya_setup_fixture() -> None:
 
 
 @pytest.mark.parametrize(
-    "app_type,side_effects, project_type",
+    ("app_type", "side_effects", "project_type"),
     [
         ("", [RESPONSE_SUCCESS], 1),
         (TUYA_SMART_APP, [RESPONSE_ERROR, RESPONSE_SUCCESS], 0),

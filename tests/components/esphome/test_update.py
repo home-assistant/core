@@ -18,7 +18,7 @@ def stub_reconnect():
 
 
 @pytest.mark.parametrize(
-    "devices_payload,expected_state,expected_attributes",
+    ("devices_payload", "expected_state", "expected_attributes"),
     [
         (
             [

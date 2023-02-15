@@ -181,7 +181,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception, base_error",
+    ("exception", "base_error"),
     [
         (CannotConnect, "cannot_connect"),
         (InvalidAuth, "invalid_auth"),

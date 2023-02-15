@@ -111,7 +111,7 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_base",
+    ("side_effect", "error_base"),
     [
         (WizLightTimeOutError, "bulb_time_out"),
         (WizLightConnectionError, "no_wiz_light"),
@@ -163,7 +163,7 @@ async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
@@ -185,7 +185,7 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data, bulb_type, extended_white_range, name",
+    ("source", "data", "bulb_type", "extended_white_range", "name"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -284,7 +284,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
@@ -313,7 +313,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
@@ -510,7 +510,7 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
