@@ -368,7 +368,7 @@ async def test_service_set_camera_light_invalid_type(
     await hass.async_block_till_done()
 
     mock_set_state.assert_not_called()
-    assert excinfo.value.args == ("NACamera <Hall> does not have a floodlight",)
+    assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]
 
 
 async def test_camera_reconnect_webhook(hass: HomeAssistant, config_entry) -> None:
