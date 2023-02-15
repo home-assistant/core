@@ -62,7 +62,7 @@ async def test_validation_empty_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "state_class, energy_unit, extra",
+    ("state_class", "energy_unit", "extra"),
     [
         ("total_increasing", UnitOfEnergy.KILO_WATT_HOUR, {}),
         ("total_increasing", UnitOfEnergy.MEGA_WATT_HOUR, {}),
@@ -688,7 +688,7 @@ async def test_validation_grid_auto_cost_entity_errors(
 
 
 @pytest.mark.parametrize(
-    "state, unit, expected",
+    ("state", "unit", "expected"),
     (
         (
             "123,123.12",

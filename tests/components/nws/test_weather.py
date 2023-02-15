@@ -32,7 +32,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "units,result_observation,result_forecast",
+    ("units", "result_observation", "result_forecast"),
     [
         (
             US_CUSTOMARY_SYSTEM,

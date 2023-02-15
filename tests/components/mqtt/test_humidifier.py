@@ -744,7 +744,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "ON", None, "on"),
         (CONF_MODE_STATE_TOPIC, "auto", ATTR_MODE, "auto"),
@@ -829,7 +829,7 @@ async def test_attributes(
 
 
 @pytest.mark.parametrize(
-    "config,valid",
+    ("config", "valid"),
     [
         (
             {
@@ -920,7 +920,7 @@ async def test_validity_configurations(hass: HomeAssistant, config, valid) -> No
 
 
 @pytest.mark.parametrize(
-    "name,config,success,features",
+    ("name", "config", "success", "features"),
     [
         (
             "test1",
@@ -1304,7 +1304,7 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             humidifier.SERVICE_TURN_ON,

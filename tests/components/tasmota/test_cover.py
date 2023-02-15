@@ -49,7 +49,7 @@ async def test_missing_relay(hass, mqtt_mock, setup_tasmota):
 
 
 @pytest.mark.parametrize(
-    "relay_config, num_covers",
+    ("relay_config", "num_covers"),
     [
         ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3], 4),
         ([3, 3, 3, 3, 0, 0, 0, 0], 2),

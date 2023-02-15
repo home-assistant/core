@@ -66,7 +66,7 @@ def _get_expected_actions(data):
 
 
 @pytest.mark.parametrize(
-    "device,expected",
+    ("device", "expected"),
     [
         [
             DEVICE_LIGHTING_1,
@@ -100,7 +100,7 @@ async def test_get_actions(hass, device_registry: dr.DeviceRegistry, device, exp
 
 
 @pytest.mark.parametrize(
-    "device,config,expected",
+    ("device", "config", "expected"),
     [
         [
             DEVICE_LIGHTING_1,

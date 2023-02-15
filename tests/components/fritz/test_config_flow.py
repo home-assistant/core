@@ -246,7 +246,7 @@ async def test_reauth_successful(
 
 
 @pytest.mark.parametrize(
-    "side_effect,error",
+    ("side_effect", "error"),
     [
         (FritzAuthorizationError, ERROR_AUTH_INVALID),
         (FritzConnectionException, ERROR_CANNOT_CONNECT),

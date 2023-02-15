@@ -226,7 +226,7 @@ def create_battery_event_data(
 
 
 @pytest.mark.parametrize(
-    "device_type,device_traits",
+    ("device_type", "device_traits"),
     [
         (
             "sdm.devices.types.THERMOSTAT",
@@ -1310,7 +1310,7 @@ async def test_media_store_load_filesystem_error(
         )
 
 
-@pytest.mark.parametrize("device_traits,cache_size", [(BATTERY_CAMERA_TRAITS, 5)])
+@pytest.mark.parametrize(("device_traits", "cache_size"), [(BATTERY_CAMERA_TRAITS, 5)])
 async def test_camera_event_media_eviction(
     hass: HomeAssistant,
     auth,

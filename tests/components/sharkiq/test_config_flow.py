@@ -43,7 +43,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exc,base_error",
+    ("exc", "base_error"),
     [
         (SharkIqAuthError, "invalid_auth"),
         (aiohttp.ClientError, "cannot_connect"),
@@ -83,7 +83,7 @@ async def test_reauth_success(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "side_effect,result_type,msg_field,msg",
+    ("side_effect", "result_type", "msg_field", "msg"),
     [
         (SharkIqAuthError, "form", "errors", "invalid_auth"),
         (aiohttp.ClientError, "abort", "reason", "cannot_connect"),

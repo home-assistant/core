@@ -201,7 +201,7 @@ async def test_temperature_climate(
 
 
 @pytest.mark.parametrize(
-    "do_config,result,register_words",
+    ("do_config", "result", "register_words"),
     [
         (
             {
@@ -291,7 +291,7 @@ async def test_service_climate_update(
 
 
 @pytest.mark.parametrize(
-    "temperature, result, do_config",
+    ("temperature", "result", "do_config"),
     [
         (
             35,
@@ -372,7 +372,7 @@ async def test_service_climate_set_temperature(
 
 
 @pytest.mark.parametrize(
-    "hvac_mode, result, do_config",
+    ("hvac_mode", "result", "do_config"),
     [
         (
             HVACMode.COOL,

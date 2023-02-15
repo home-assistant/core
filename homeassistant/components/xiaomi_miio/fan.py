@@ -204,7 +204,7 @@ async def async_setup_entry(
     entities: list[FanEntity] = []
     entity: FanEntity
 
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     hass.data.setdefault(DATA_KEY, {})

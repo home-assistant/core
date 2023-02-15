@@ -116,7 +116,7 @@ async def test_invalid_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "schedule,error",
+    ("schedule", "error"),
     (
         (
             [
@@ -593,7 +593,7 @@ async def test_ws_delete(
 
 @pytest.mark.freeze_time("2022-08-10 20:10:00-07:00")
 @pytest.mark.parametrize(
-    "to, next_event, saved_to",
+    ("to", "next_event", "saved_to"),
     (
         ("23:59:59", "2022-08-10T23:59:59-07:00", "23:59:59"),
         ("24:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
@@ -663,7 +663,7 @@ async def test_update(
 
 @pytest.mark.freeze_time("2022-08-11 8:52:00-07:00")
 @pytest.mark.parametrize(
-    "to, next_event, saved_to",
+    ("to", "next_event", "saved_to"),
     (
         ("14:00:00", "2022-08-15T14:00:00-07:00", "14:00:00"),
         ("24:00", "2022-08-16T00:00:00-07:00", "24:00:00"),

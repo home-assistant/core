@@ -78,7 +78,7 @@ async def test_public_weather_sensor(
 
 
 @pytest.mark.parametrize(
-    "strength, expected",
+    ("strength", "expected"),
     [(50, "Full"), (60, "High"), (80, "Medium"), (90, "Low")],
 )
 async def test_process_wifi(strength, expected) -> None:
@@ -87,7 +87,7 @@ async def test_process_wifi(strength, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "strength, expected",
+    ("strength", "expected"),
     [(50, "Full"), (70, "High"), (80, "Medium"), (90, "Low")],
 )
 async def test_process_rf(strength, expected) -> None:
@@ -96,7 +96,7 @@ async def test_process_rf(strength, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "health, expected",
+    ("health", "expected"),
     [(4, "Unhealthy"), (3, "Poor"), (2, "Fair"), (1, "Fine"), (0, "Healthy")],
 )
 async def test_process_health(health, expected) -> None:
@@ -105,7 +105,7 @@ async def test_process_health(health, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "uid, name, expected",
+    ("uid", "name", "expected"),
     [
         ("12:34:56:03:1b:e4-reachable", "villa_garden_reachable", "True"),
         ("12:34:56:03:1b:e4-rf_status", "villa_garden_radio", "Full"),

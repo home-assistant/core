@@ -240,7 +240,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice) 
 
 
 @pytest.mark.parametrize(
-    "name, get_method, update_interval",
+    ("name", "get_method", "update_interval"),
     [
         ["enable_guest_wifi", "async_get_wifi_guest_access", SHORT_UPDATE_INTERVAL],
         ["enable_leds", "async_get_led_setting", SHORT_UPDATE_INTERVAL],
@@ -275,7 +275,7 @@ async def test_device_failure(
 
 
 @pytest.mark.parametrize(
-    "name, set_method",
+    ("name", "set_method"),
     [
         ["enable_guest_wifi", "async_set_wifi_guest_access"],
         ["enable_leds", "async_set_led_setting"],

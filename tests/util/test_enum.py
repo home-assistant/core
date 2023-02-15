@@ -22,7 +22,7 @@ class _AnIntFlag(IntFlag):
 
 
 @pytest.mark.parametrize(
-    "enum_type,value,expected",
+    ("enum_type", "value", "expected"),
     [
         # StrEnum valid checks
         (_AStrEnum, _AStrEnum.VALUE, _AStrEnum.VALUE),

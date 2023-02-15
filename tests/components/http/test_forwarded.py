@@ -47,7 +47,7 @@ async def test_x_forwarded_for_without_trusted_proxy(
 
 
 @pytest.mark.parametrize(
-    "trusted_proxies,x_forwarded_for,remote",
+    ("trusted_proxies", "x_forwarded_for", "remote"),
     [
         (
             ["127.0.0.0/24", "1.1.1.1", "10.10.10.0/24"],
@@ -198,7 +198,7 @@ async def test_x_forwarded_for_with_multiple_headers(
 
 
 @pytest.mark.parametrize(
-    "x_forwarded_for,remote,x_forwarded_proto,secure",
+    ("x_forwarded_for", "remote", "x_forwarded_proto", "secure"),
     [
         ("10.10.10.10, 127.0.0.1, 127.0.0.2", "10.10.10.10", "https, http, http", True),
         ("10.10.10.10, 127.0.0.1, 127.0.0.2", "10.10.10.10", "https,http,http", True),
@@ -358,7 +358,7 @@ async def test_x_forwarded_proto_empty_element(
 
 
 @pytest.mark.parametrize(
-    "x_forwarded_for,x_forwarded_proto,expected,got",
+    ("x_forwarded_for", "x_forwarded_proto", "expected", "got"),
     [
         ("1.1.1.1, 2.2.2.2", "https, https, https", 2, 3),
         ("1.1.1.1, 2.2.2.2, 3.3.3.3, 4.4.4.4", "https, https, https", 4, 3),

@@ -243,7 +243,7 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     (
         (True, MediaPlayerEnqueue.ADD),
         (False, MediaPlayerEnqueue.PLAY),

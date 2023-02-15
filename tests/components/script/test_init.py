@@ -168,7 +168,7 @@ async def test_setup_with_invalid_configs(hass, value):
 
 
 @pytest.mark.parametrize(
-    "object_id, broken_config, problem, details",
+    ("object_id", "broken_config", "problem", "details"),
     (
         (
             "Bad Script",
@@ -1000,7 +1000,7 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "script_mode,warning_msg",
+    ("script_mode", "warning_msg"),
     (
         (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
@@ -1048,7 +1048,7 @@ async def test_recursive_script(hass, script_mode, warning_msg, caplog):
 
 
 @pytest.mark.parametrize(
-    "script_mode,warning_msg",
+    ("script_mode", "warning_msg"),
     (
         (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
@@ -1321,7 +1321,7 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "blueprint_inputs, problem, details",
+    ("blueprint_inputs", "problem", "details"),
     (
         (
             # No input

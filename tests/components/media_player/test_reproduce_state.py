@@ -40,7 +40,7 @@ ENTITY_2 = "media_player.test2"
 
 
 @pytest.mark.parametrize(
-    "service,state,supported_feature",
+    ("service", "state", "supported_feature"),
     [
         (SERVICE_TURN_ON, STATE_ON, MediaPlayerEntityFeature.TURN_ON),
         (SERVICE_TURN_OFF, STATE_OFF, MediaPlayerEntityFeature.TURN_OFF),
@@ -196,7 +196,7 @@ async def test_attribute_no_state(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,attribute,supported_feature",
+    ("service", "attribute", "supported_feature"),
     [
         (
             SERVICE_VOLUME_SET,

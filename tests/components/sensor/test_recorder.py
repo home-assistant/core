@@ -93,7 +93,16 @@ def set_time_zone():
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, "%", "%", "%", "unitless", 13.050847, -10, 30),
         ("battery", "%", "%", "%", "unitless", 13.050847, -10, 30),
@@ -177,7 +186,7 @@ def test_compile_hourly_statistics(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class",
+    ("device_class", "state_unit", "display_unit", "statistics_unit", "unit_class"),
     [
         (None, "%", "%", "%", "unitless"),
     ],
@@ -897,7 +906,17 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
 
 
 @pytest.mark.parametrize(
-    "entity_id, device_class, state_unit, display_unit, statistics_unit, unit_class, offset, warning_1, warning_2",
+    (
+        "entity_id",
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "offset",
+        "warning_1",
+        "warning_2",
+    ),
     [
         (
             "sensor.test1",
@@ -1030,7 +1049,14 @@ def test_compile_hourly_sum_statistics_negative_state(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
         ("energy", "Wh", "Wh", "Wh", "energy", 1),
@@ -1134,7 +1160,14 @@ def test_compile_hourly_sum_statistics_total_no_reset(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
         ("energy", "Wh", "Wh", "Wh", "energy", 1),
@@ -1239,7 +1272,14 @@ def test_compile_hourly_sum_statistics_total_increasing(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [("energy", "kWh", "kWh", "kWh", "energy", 1)],
 )
 def test_compile_hourly_sum_statistics_total_increasing_small_dip(
@@ -1619,7 +1659,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "device_class,state_unit,value",
+    ("device_class", "state_unit", "value"),
     [
         ("battery", "%", 30),
         ("battery", None, 30),
@@ -1712,7 +1752,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "device_class,state_unit,value",
+    ("device_class", "state_unit", "value"),
     [
         ("battery", "%", 30),
         ("battery", None, 30),
@@ -1796,7 +1836,15 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "state_class, device_class, state_unit, display_unit, statistics_unit, unit_class, statistic_type",
+    (
+        "state_class",
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "statistic_type",
+    ),
     [
         ("measurement", "battery", "%", "%", "%", "unitless", "mean"),
         ("measurement", "battery", None, None, None, "unitless", "mean"),
@@ -1919,7 +1967,7 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, state_unit2, unit_class, mean, min, max",
+    ("device_class", "state_unit", "state_unit2", "unit_class", "mean", "min", "max"),
     [
         (None, None, "cats", "unitless", 13.050847, -10, 30),
         (None, "%", "cats", "unitless", 13.050847, -10, 30),
@@ -2038,7 +2086,16 @@ def test_compile_hourly_statistics_changing_units_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
@@ -2102,7 +2159,16 @@ def test_compile_hourly_statistics_changing_units_2(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
@@ -2216,7 +2282,7 @@ def test_compile_hourly_statistics_changing_units_3(
 
 
 @pytest.mark.parametrize(
-    "state_unit_1, state_unit_2, unit_class, mean, min, max, factor",
+    ("state_unit_1", "state_unit_2", "unit_class", "mean", "min", "max", "factor"),
     [
         (None, "%", "unitless", 13.050847, -10, 30, 100),
         ("%", None, "unitless", 13.050847, -10, 30, 0.01),
@@ -2342,7 +2408,17 @@ def test_compile_hourly_statistics_convert_units_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, state_unit2, unit_class, unit_class2, mean, mean2, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "state_unit2",
+        "unit_class",
+        "unit_class2",
+        "mean",
+        "mean2",
+        "min",
+        "max",
+    ),
     [
         (None, "RPM", "rpm", None, None, 13.050847, 13.333333, -10, 30),
         (None, "rpm", "RPM", None, None, 13.050847, 13.333333, -10, 30),
@@ -2462,7 +2538,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, state_unit2, unit_class, mean, min, max",
+    ("device_class", "state_unit", "state_unit2", "unit_class", "mean", "min", "max"),
     [
         (None, "RPM", "rpm", None, 13.333333, -10, 30),
         (None, "rpm", "RPM", None, 13.333333, -10, 30),
@@ -2539,7 +2615,16 @@ def test_compile_hourly_statistics_equivalent_units_2(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, statistic_unit, unit_class, mean1, mean2, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "statistic_unit",
+        "unit_class",
+        "mean1",
+        "mean2",
+        "min",
+        "max",
+    ),
     [
         ("power", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
@@ -2727,7 +2812,17 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistic_unit, unit_class, mean, mean2, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistic_unit",
+        "unit_class",
+        "mean",
+        "mean2",
+        "min",
+        "max",
+    ),
     [
         ("power", "kW", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
@@ -2852,7 +2947,16 @@ def test_compile_hourly_statistics_changing_device_class_2(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, None, None, None, "unitless", 13.050847, -10, 30),
     ],
@@ -3440,7 +3544,7 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit, unit2, supported_unit",
+    ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
         (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
@@ -3578,7 +3682,7 @@ async def test_validate_unit_change_convertible(
 
 
 @pytest.mark.parametrize(
-    "units, attributes",
+    ("units", "attributes"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES),
     ],
@@ -3632,7 +3736,7 @@ async def test_validate_statistics_unit_ignore_device_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit, unit2, supported_unit",
+    ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
         (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
@@ -3777,7 +3881,7 @@ async def test_validate_statistics_unit_change_no_device_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -3841,7 +3945,7 @@ async def test_validate_statistics_unsupported_state_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -3904,7 +4008,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -3964,7 +4068,7 @@ async def test_validate_statistics_sensor_not_recorded(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -4022,7 +4126,7 @@ async def test_validate_statistics_sensor_removed(
 
 
 @pytest.mark.parametrize(
-    "attributes, unit1, unit2",
+    ("attributes", "unit1", "unit2"),
     [
         (BATTERY_SENSOR_ATTRIBUTES, "cats", "dogs"),
         (NONE_SENSOR_ATTRIBUTES, "cats", "dogs"),
@@ -4147,7 +4251,7 @@ async def test_validate_statistics_unit_change_no_conversion(
 
 
 @pytest.mark.parametrize(
-    "attributes, unit1, unit2",
+    ("attributes", "unit1", "unit2"),
     [
         (NONE_SENSOR_ATTRIBUTES, "m3", "m³"),
         (NONE_SENSOR_ATTRIBUTES, "rpm", "RPM"),
@@ -4228,7 +4332,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
 
 
 @pytest.mark.parametrize(
-    "attributes, unit1, unit2, supported_unit",
+    ("attributes", "unit1", "unit2", "supported_unit"),
     [
         (NONE_SENSOR_ATTRIBUTES, "m³", "m3", "CCF, L, fl. oz., ft³, gal, mL, m³"),
     ],

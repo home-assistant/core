@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.sensor import (  # pylint: disable=hass-deprecated-import
+from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -481,8 +481,8 @@ class StatisticsSensor(SensorEntity):
         if timestamp := self._next_to_purge_timestamp():
             _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
             if self._update_listener:
-                self._update_listener()  # pragma: no cover
-                self._update_listener = None  # pragma: no cover
+                self._update_listener()
+                self._update_listener = None
 
             @callback
             def _scheduled_update(now: datetime) -> None:
