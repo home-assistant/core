@@ -836,7 +836,7 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "states,group_state",
+    ("states", "group_state"),
     [
         (("locked", "locked", "unlocked"), "unlocked"),
         (("locked", "locked", "locked"), "locked"),
@@ -1433,7 +1433,7 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "group_type,member_state,extra_options",
+    ("group_type", "member_state", "extra_options"),
     (
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
@@ -1497,7 +1497,7 @@ async def test_setup_and_remove_config_entry(
 
 
 @pytest.mark.parametrize(
-    "hide_members,hidden_by_initial,hidden_by",
+    ("hide_members", "hidden_by_initial", "hidden_by"),
     (
         (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),

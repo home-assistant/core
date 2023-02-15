@@ -48,7 +48,7 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.mark.parametrize(
-    "gen, model",
+    ("gen", "model"),
     [
         (1, "SHSW-1"),
         (2, "SNSW-002P16EU"),
@@ -90,7 +90,7 @@ async def test_form(hass, gen, model, mock_block_device, mock_rpc_device):
 
 
 @pytest.mark.parametrize(
-    "gen, model, user_input, username",
+    ("gen", "model", "user_input", "username"),
     [
         (
             1,
@@ -154,7 +154,7 @@ async def test_form_auth(
 
 
 @pytest.mark.parametrize(
-    "exc, base_error",
+    ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
         (ValueError, "unknown"),
@@ -249,7 +249,7 @@ async def test_form_missing_model_key_zeroconf(
 
 
 @pytest.mark.parametrize(
-    "exc, base_error",
+    ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
         (ValueError, "unknown"),
@@ -361,7 +361,7 @@ async def test_form_firmware_unsupported(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exc, base_error",
+    ("exc", "base_error"),
     [
         (InvalidAuthError, "invalid_auth"),
         (DeviceConnectionError, "cannot_connect"),
@@ -396,7 +396,7 @@ async def test_form_auth_errors_test_connection_gen1(hass, exc, base_error):
 
 
 @pytest.mark.parametrize(
-    "exc, base_error",
+    ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
         (InvalidAuthError, "invalid_auth"),
@@ -430,7 +430,7 @@ async def test_form_auth_errors_test_connection_gen2(hass, exc, base_error):
 
 
 @pytest.mark.parametrize(
-    "gen, model, get_info",
+    ("gen", "model", "get_info"),
     [
         (
             1,
@@ -709,7 +709,7 @@ async def test_zeroconf_require_auth(hass, mock_block_device):
 
 
 @pytest.mark.parametrize(
-    "gen, user_input",
+    ("gen", "user_input"),
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),
@@ -747,7 +747,7 @@ async def test_reauth_successful(
 
 
 @pytest.mark.parametrize(
-    "gen, user_input",
+    ("gen", "user_input"),
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),

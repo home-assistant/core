@@ -184,7 +184,7 @@ def h264_mov_video():
 
 
 @pytest.mark.parametrize(
-    "audio_codec,expected_audio_streams",
+    ("audio_codec", "expected_audio_streams"),
     [
         ("aac", 1),  # aac is a valid mp4 codec
         ("pcm_mulaw", 0),  # G.711 is not a valid mp4 codec

@@ -32,7 +32,7 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "platform,device_type,event_types",
+    ("platform", "device_type", "event_types"),
     [
         ("camera", "Smart Outdoor Camera", OUTDOOR_CAMERA_TRIGGERS),
         ("camera", "Smart Indoor Camera", INDOOR_CAMERA_TRIGGERS),
@@ -96,7 +96,7 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "platform,camera_type,event_type",
+    ("platform", "camera_type", "event_type"),
     [("camera", "Smart Outdoor Camera", trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
     + [("camera", "Smart Indoor Camera", trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
     + [
@@ -179,7 +179,7 @@ async def test_if_fires_on_event(
 
 
 @pytest.mark.parametrize(
-    "platform,camera_type,event_type,sub_type",
+    ("platform", "camera_type", "event_type", "sub_type"),
     [
         ("climate", "Smart Valve", trigger, subtype)
         for trigger in SUBTYPES
@@ -266,7 +266,7 @@ async def test_if_fires_on_event_with_subtype(
 
 
 @pytest.mark.parametrize(
-    "platform,device_type,event_type",
+    ("platform", "device_type", "event_type"),
     [("climate", "NAPlug", trigger) for trigger in CLIMATE_TRIGGERS],
 )
 async def test_if_invalid_device(

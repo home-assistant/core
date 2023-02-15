@@ -53,7 +53,7 @@ async def test_config_entry_withings_api(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["user_id", "arg_user_id", "arg_appli", "expected_code"],
+    ("user_id", "arg_user_id", "arg_appli", "expected_code"),
     [
         [0, 0, NotifyAppli.WEIGHT.value, 0],  # Success
         [0, None, 1, 0],  # Success, we ignore the user_id.

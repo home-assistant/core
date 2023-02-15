@@ -32,7 +32,7 @@ TEMP_FREEDOM_ATTRS = {
 
 
 @pytest.mark.parametrize(
-    "old_state,new_state,attrs,result",
+    ("old_state", "new_state", "attrs", "result"),
     [
         ("0", "1", AQI_ATTRS, True),
         ("1", "0", AQI_ATTRS, True),

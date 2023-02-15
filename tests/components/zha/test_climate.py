@@ -475,7 +475,7 @@ async def test_climate_hvac_action_pi_demand(hass, device_climate):
 
 
 @pytest.mark.parametrize(
-    "sys_mode, hvac_mode",
+    ("sys_mode", "hvac_mode"),
     (
         (Thermostat.SystemMode.Auto, HVACMode.HEAT_COOL),
         (Thermostat.SystemMode.Cool, HVACMode.COOL),
@@ -510,7 +510,7 @@ async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
 
 
 @pytest.mark.parametrize(
-    "seq_of_op, modes",
+    ("seq_of_op", "modes"),
     (
         (0xFF, {HVACMode.OFF}),
         (0x00, {HVACMode.OFF, HVACMode.COOL}),
@@ -533,7 +533,7 @@ async def test_hvac_modes(hass, device_climate_mock, seq_of_op, modes):
 
 
 @pytest.mark.parametrize(
-    "sys_mode, preset, target_temp",
+    ("sys_mode", "preset", "target_temp"),
     (
         (Thermostat.SystemMode.Heat, None, 22),
         (Thermostat.SystemMode.Heat, PRESET_AWAY, 16),
@@ -572,7 +572,7 @@ async def test_target_temperature(
 
 
 @pytest.mark.parametrize(
-    "preset, unoccupied, target_temp",
+    ("preset", "unoccupied", "target_temp"),
     (
         (None, 1800, 17),
         (PRESET_AWAY, 1800, 18),
@@ -608,7 +608,7 @@ async def test_target_temperature_high(
 
 
 @pytest.mark.parametrize(
-    "preset, unoccupied, target_temp",
+    ("preset", "unoccupied", "target_temp"),
     (
         (None, 1600, 21),
         (PRESET_AWAY, 1600, 16),
@@ -644,7 +644,7 @@ async def test_target_temperature_low(
 
 
 @pytest.mark.parametrize(
-    "hvac_mode, sys_mode",
+    ("hvac_mode", "sys_mode"),
     (
         (HVACMode.AUTO, None),
         (HVACMode.COOL, Thermostat.SystemMode.Cool),

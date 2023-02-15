@@ -78,7 +78,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -168,7 +168,15 @@ async def test_get_action_capabilities(
 
 
 @pytest.mark.parametrize(
-    "set_state,expected_actions,supported_features_reg,supported_features_state,capabilities_reg,attributes_state,expected_capabilities",
+    (
+        "set_state",
+        "expected_actions",
+        "supported_features_reg",
+        "supported_features_state",
+        "capabilities_reg",
+        "attributes_state",
+        "expected_capabilities",
+    ),
     [
         (
             False,

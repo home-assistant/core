@@ -57,7 +57,7 @@ async def setup_entry(hass, devices):
 
 
 @pytest.mark.parametrize(
-    "event,expected",
+    ("event", "expected"),
     [
         [
             EVENT_LIGHTING_1,

@@ -339,7 +339,7 @@ async def test_webhook_returns_error_incorrect_json(
 
 
 @pytest.mark.parametrize(
-    "msg,generate_response",
+    ("msg", "generate_response"),
     (
         (RENDER_TEMPLATE, lambda hass: {"one": "Hello world"}),
         (

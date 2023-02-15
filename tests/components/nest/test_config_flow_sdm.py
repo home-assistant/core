@@ -518,7 +518,7 @@ async def test_reauth_multiple_config_entries(
 
 
 @pytest.mark.parametrize(
-    "nest_test_config,auth_implementation", [(TEST_CONFIG_HYBRID, APP_AUTH_DOMAIN)]
+    ("nest_test_config", "auth_implementation"), [(TEST_CONFIG_HYBRID, APP_AUTH_DOMAIN)]
 )
 async def test_app_auth_yaml_reauth(
     hass: HomeAssistant, oauth, setup_platform, config_entry
@@ -583,7 +583,8 @@ async def test_app_auth_yaml_reauth(
 
 
 @pytest.mark.parametrize(
-    "nest_test_config,auth_implementation", [(TEST_CONFIG_YAML_ONLY, WEB_AUTH_DOMAIN)]
+    ("nest_test_config", "auth_implementation"),
+    [(TEST_CONFIG_YAML_ONLY, WEB_AUTH_DOMAIN)],
 )
 async def test_web_auth_yaml_reauth(
     hass: HomeAssistant, oauth, setup_platform, config_entry

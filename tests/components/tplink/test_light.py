@@ -58,7 +58,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "bulb, transition", [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
+    ("bulb", "transition"), [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
 )
 async def test_color_light(
     hass: HomeAssistant, bulb: MagicMock, transition: float | None
@@ -198,7 +198,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "bulb, is_color", [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
+    ("bulb", "is_color"), [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
 )
 async def test_color_temp_light(
     hass: HomeAssistant, bulb: MagicMock, is_color: bool

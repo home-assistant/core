@@ -1456,7 +1456,7 @@ class SlowEntity(MockEntity):
 
 
 @pytest.mark.parametrize(
-    "has_entity_name, entity_name, expected_entity_id",
+    ("has_entity_name", "entity_name", "expected_entity_id"),
     (
         (False, "Entity Blu", "test_domain.entity_blu"),
         (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>

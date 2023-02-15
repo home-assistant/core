@@ -150,7 +150,7 @@ async def test_restore_number_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_max, native_min, native_value, native_value_type, extra_data",
+    ("native_max", "native_min", "native_value", "native_value_type", "extra_data"),
     [
         (5, 1, "Hello", str, RESTORE_DATA),
         (255, 1, None, type(None), None),

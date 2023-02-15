@@ -509,7 +509,7 @@ async def test_services_play_media(
 
 
 @pytest.mark.parametrize(
-    "content_type, content_id, resolved_name, resolved_format",
+    ("content_type", "content_id", "resolved_name", "resolved_format"),
     [
         (MediaType.URL, "http://localhost/media.m4a", "media.m4a", "m4a"),
         (MediaType.MUSIC, "http://localhost/media.m4a", "media.m4a", "m4a"),
@@ -554,7 +554,7 @@ async def test_services_play_media_audio(
 
 
 @pytest.mark.parametrize(
-    "content_type, content_id, resolved_name, resolved_format",
+    ("content_type", "content_id", "resolved_name", "resolved_format"),
     [
         (MediaType.URL, "http://localhost/media.mp4", "media.mp4", "mp4"),
         (MediaType.VIDEO, "http://localhost/media.m4v", "media.m4v", "mp4"),

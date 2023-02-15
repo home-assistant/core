@@ -439,9 +439,21 @@ async def test_deprecated_methods(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, state_unit, initial_native_value, initial_state_value, "
-    "updated_native_value, updated_state_value, native_max_value, state_max_value, "
-    "native_min_value, state_min_value, native_step, state_step",
+    (
+        "unit_system",
+        "native_unit",
+        "state_unit",
+        "initial_native_value",
+        "initial_state_value",
+        "updated_native_value",
+        "updated_state_value",
+        "native_max_value",
+        "state_max_value",
+        "native_min_value",
+        "state_min_value",
+        "native_step",
+        "state_step",
+    ),
     [
         (
             US_CUSTOMARY_SYSTEM,
@@ -634,7 +646,16 @@ async def test_restore_number_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_max_value, native_min_value, native_step, native_value, native_value_type, extra_data, device_class, uom",
+    (
+        "native_max_value",
+        "native_min_value",
+        "native_step",
+        "native_value",
+        "native_value_type",
+        "extra_data",
+        "device_class",
+        "uom",
+    ),
     [
         (
             200.0,
@@ -702,7 +723,14 @@ async def test_restore_number_restore_state(
 
 
 @pytest.mark.parametrize(
-    "device_class,native_unit,custom_unit,state_unit,native_value,custom_value",
+    (
+        "device_class",
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "custom_value",
+    ),
     [
         # Not a supported temperature unit
         (
@@ -772,7 +800,15 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
-    "native_unit, custom_unit, used_custom_unit, default_unit, native_value, custom_value, default_value",
+    (
+        "native_unit",
+        "custom_unit",
+        "used_custom_unit",
+        "default_unit",
+        "native_value",
+        "custom_value",
+        "default_value",
+    ),
     [
         (
             UnitOfTemperature.CELSIUS,

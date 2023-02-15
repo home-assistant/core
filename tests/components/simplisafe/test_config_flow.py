@@ -131,7 +131,7 @@ async def test_step_reauth_wrong_account(config_entry, hass, setup_simplisafe):
 
 
 @pytest.mark.parametrize(
-    "auth_code,log_statement",
+    ("auth_code", "log_statement"),
     [
         (
             VALID_AUTH_CODE,

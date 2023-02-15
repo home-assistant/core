@@ -656,7 +656,7 @@ async def test_bad_certificate(
 
 
 @pytest.mark.parametrize(
-    "input_value, error",
+    ("input_value", "error"),
     [
         ("", True),
         ("-10", True),
@@ -1015,7 +1015,7 @@ async def test_option_flow_default_suggested_values(
 
 
 @pytest.mark.parametrize(
-    "advanced_options, step_id", [(False, "options"), (True, "broker")]
+    ("advanced_options", "step_id"), [(False, "options"), (True, "broker")]
 )
 async def test_skipping_advanced_options(
     hass: HomeAssistant,

@@ -46,7 +46,7 @@ def mock_tcp_adapter_fixture():
 
 
 @pytest.mark.parametrize(
-    "mapping,expected",
+    ("mapping", "expected"),
     [
         ({}, []),
         (
@@ -276,7 +276,7 @@ async def test_service_update_devices(hass: HomeAssistant, create_hdmi_network) 
 
 
 @pytest.mark.parametrize(
-    "count,calls",
+    ("count", "calls"),
     [
         (3, 3),
         (1, 1),
@@ -312,7 +312,7 @@ async def test_service_volume_x_times(
         )
 
 
-@pytest.mark.parametrize("direction,key", [("up", 65), ("down", 66)])
+@pytest.mark.parametrize(("direction", "key"), [("up", 65), ("down", 66)])
 async def test_service_volume_press(
     hass: HomeAssistant, create_hdmi_network, direction, key
 ) -> None:
@@ -333,7 +333,7 @@ async def test_service_volume_press(
     assert arg.dst == 5
 
 
-@pytest.mark.parametrize("direction,key", [("up", 65), ("down", 66)])
+@pytest.mark.parametrize(("direction", "key"), [("up", 65), ("down", 66)])
 async def test_service_volume_release(
     hass: HomeAssistant, create_hdmi_network, direction, key
 ) -> None:
@@ -354,7 +354,7 @@ async def test_service_volume_release(
 
 
 @pytest.mark.parametrize(
-    "attr,key",
+    ("attr", "key"),
     [
         ("toggle", 67),
         ("on", 101),
@@ -387,7 +387,7 @@ async def test_service_volume_mute(
 
 
 @pytest.mark.parametrize(
-    "data,expected",
+    ("data", "expected"),
     [
         ({"raw": "20:0D"}, "20:0d"),
         pytest.param(
@@ -460,7 +460,7 @@ async def test_service_send_command(
 
 
 @pytest.mark.parametrize(
-    "adapter_initialized_value, watchdog_actions", [(False, 1), (True, 0)]
+    ("adapter_initialized_value", "watchdog_actions"), [(False, 1), (True, 0)]
 )
 async def test_watchdog(
     hass: HomeAssistant,

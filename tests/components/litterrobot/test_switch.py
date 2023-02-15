@@ -34,7 +34,7 @@ async def test_switch(hass: HomeAssistant, mock_account: MagicMock) -> None:
 
 
 @pytest.mark.parametrize(
-    "entity_id,robot_command,updated_field",
+    ("entity_id", "robot_command", "updated_field"),
     [
         (NIGHT_LIGHT_MODE_ENTITY_ID, "set_night_light", "nightLightActive"),
         (PANEL_LOCKOUT_ENTITY_ID, "set_panel_lockout", "panelLockActive"),

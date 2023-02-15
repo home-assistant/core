@@ -62,7 +62,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]):
 
 
 @pytest.mark.parametrize(
-    "exception_type, expected_error",
+    ("exception_type", "expected_error"),
     [[DeviceNotFound, "cannot_connect"], [Exception, "unknown"]],
 )
 async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -> None:

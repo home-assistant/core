@@ -77,7 +77,7 @@ async def test_get_conditions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -167,7 +167,7 @@ async def test_get_conditions_no_state(hass, device_registry, entity_registry):
 
 
 @pytest.mark.parametrize(
-    "state_class,unit,condition_types",
+    ("state_class", "unit", "condition_types"),
     (
         (SensorStateClass.MEASUREMENT, None, ["is_value"]),
         (SensorStateClass.TOTAL, None, ["is_value"]),
@@ -217,7 +217,7 @@ async def test_get_conditions_no_unit_or_stateclass(
 
 
 @pytest.mark.parametrize(
-    "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
+    ("set_state", "device_class_reg", "device_class_state", "unit_reg", "unit_state"),
     [
         (False, SensorDeviceClass.BATTERY, None, PERCENTAGE, None),
         (True, None, SensorDeviceClass.BATTERY, None, PERCENTAGE),

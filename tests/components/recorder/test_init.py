@@ -240,7 +240,7 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "dialect_name, expected_attributes",
+    ("dialect_name", "expected_attributes"),
     (
         (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
         (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
@@ -1798,7 +1798,7 @@ async def test_async_block_till_done(async_setup_recorder_instance, hass):
 
 
 @pytest.mark.parametrize(
-    "db_url, echo",
+    ("db_url", "echo"),
     (
         ("sqlite://blabla", None),
         ("mariadb://blabla", False),
@@ -1828,7 +1828,7 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
 
 @pytest.mark.parametrize(
-    "config_url, expected_connect_args",
+    ("config_url", "expected_connect_args"),
     (
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",

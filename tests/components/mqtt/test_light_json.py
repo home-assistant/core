@@ -208,7 +208,7 @@ async def test_fail_setup_if_color_mode_deprecated(
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes,error",
+    ("supported_color_modes", "error"),
     [
         (["onoff", "rgb"], "Unknown error calling mqtt CONFIG_SCHEMA"),
         (["brightness", "rgb"], "Unknown error calling mqtt CONFIG_SCHEMA"),
@@ -2216,7 +2216,7 @@ async def test_max_mireds(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template,tpl_par,tpl_output",
+    ("service", "topic", "parameters", "payload", "template", "tpl_par", "tpl_output"),
     [
         (
             light.SERVICE_TURN_ON,
@@ -2287,7 +2287,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value,init_payload",
+    ("topic", "value", "attribute", "attribute_value", "init_payload"),
     [
         (
             "state_topic",

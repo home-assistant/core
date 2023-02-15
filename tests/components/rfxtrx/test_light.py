@@ -89,7 +89,9 @@ async def test_one_light(hass, rfxtrx):
     ]
 
 
-@pytest.mark.parametrize("state,brightness", [["on", 100], ["on", 50], ["off", None]])
+@pytest.mark.parametrize(
+    ("state", "brightness"), [["on", 100], ["on", 50], ["off", None]]
+)
 async def test_state_restore(hass, rfxtrx, state, brightness):
     """State restoration."""
 

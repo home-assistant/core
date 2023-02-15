@@ -27,7 +27,7 @@ async def mock_connection(controller):
 
 
 @pytest.mark.parametrize(
-    "identifier,should_exist",
+    ("identifier", "should_exist"),
     [
         (DEFAULT_DEVICE_INFO.id, False),
         (DEFAULT_DEVICE_INFO.deviceIdentifier, True),

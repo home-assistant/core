@@ -131,7 +131,7 @@ async def test_enable_output(hass, device, main_zone):
 
 
 @pytest.mark.parametrize(
-    "cursor,method",
+    ("cursor", "method"),
     [
         (yamaha.CURSOR_TYPE_DOWN, "menu_down"),
         (yamaha.CURSOR_TYPE_LEFT, "menu_left"),

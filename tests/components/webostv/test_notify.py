@@ -117,7 +117,7 @@ async def test_icon_not_found(hass, caplog, client, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "side_effect,error",
+    ("side_effect", "error"),
     [
         (WebOsTvPairError, "Pairing with TV failed"),
         (ConnectionRefusedError, "TV unreachable"),

@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 @freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
 @pytest.mark.parametrize(
-    "old_unique_id,new_unique_id,migration_needed",
+    ("old_unique_id", "new_unique_id", "migration_needed"),
     [
         (
             f"Station Name_{TEST_COORDINATES_WAVERTREE}",

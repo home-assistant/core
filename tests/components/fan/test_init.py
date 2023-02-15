@@ -66,7 +66,7 @@ async def test_async_fanentity(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "attribute_name, attribute_value",
+    ("attribute_name", "attribute_value"),
     [
         ("current_direction", "forward"),
         ("oscillating", True),

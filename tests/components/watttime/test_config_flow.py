@@ -26,7 +26,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.parametrize(
-    "exc,error", [(InvalidCredentialsError, "invalid_auth"), (Exception, "unknown")]
+    ("exc", "error"),
+    [(InvalidCredentialsError, "invalid_auth"), (Exception, "unknown")],
 )
 async def test_auth_errors(
     hass: HomeAssistant, config_auth, config_location_type, exc, error
@@ -44,7 +45,7 @@ async def test_auth_errors(
 
 
 @pytest.mark.parametrize(
-    "get_grid_region,errors",
+    ("get_grid_region", "errors"),
     [
         (
             AsyncMock(side_effect=CoordinatesNotFoundError),

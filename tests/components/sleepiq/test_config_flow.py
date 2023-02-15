@@ -51,7 +51,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,error",
+    ("side_effect", "error"),
     [
         (SleepIQLoginException, "invalid_auth"),
         (SleepIQTimeoutException, "cannot_connect"),

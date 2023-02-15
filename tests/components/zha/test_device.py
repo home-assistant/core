@@ -261,7 +261,7 @@ async def test_ota_sw_version(hass, ota_zha_device):
 
 
 @pytest.mark.parametrize(
-    "device, last_seen_delta, is_available",
+    ("device", "last_seen_delta", "is_available"),
     (
         ("zigpy_device", 0, True),
         (

@@ -231,7 +231,7 @@ async def test_template_syntax_error(hass, setup_light):
 
 
 @pytest.mark.parametrize(
-    "light_config, count",
+    ("light_config", "count"),
     [
         (
             {

@@ -183,7 +183,7 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
 
 @pytest.mark.parametrize(
-    "initial_uptime,event_uptime,new_uptime",
+    ("initial_uptime", "event_uptime", "new_uptime"),
     [
         # Uptime listed in epoch time should never change
         (1609462800, 1609462800, 1612141200),

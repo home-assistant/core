@@ -37,7 +37,7 @@ async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "brightness,expected", [(32, "on"), (256, "xdim 255"), (64, "xdim 63")]
+    ("brightness", "expected"), [(32, "on"), (256, "xdim 255"), (64, "xdim 63")]
 )
 async def test_turn_on_with_no_brightness(light_mock, expected) -> None:
     """Test turn_on."""
@@ -46,7 +46,7 @@ async def test_turn_on_with_no_brightness(light_mock, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "brightness,expected",
+    ("brightness", "expected"),
     [
         (32, [mock.call("on"), mock.call("dim 25")]),
         (256, [mock.call("xdim 45")]),

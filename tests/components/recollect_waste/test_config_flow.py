@@ -17,7 +17,7 @@ from .conftest import TEST_PLACE_ID, TEST_SERVICE_ID
 
 
 @pytest.mark.parametrize(
-    "get_pickup_events_mock,get_pickup_events_errors",
+    ("get_pickup_events_mock", "get_pickup_events_errors"),
     [
         (
             AsyncMock(side_effect=RecollectError),

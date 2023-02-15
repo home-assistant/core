@@ -36,7 +36,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception,expected_reason",
+    ("exception", "expected_reason"),
     [
         (livisi_errors.ShcUnreachableException(), "cannot_connect"),
         (livisi_errors.IncorrectIpAddressException(), "wrong_ip_address"),

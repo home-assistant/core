@@ -26,7 +26,7 @@ def channels(channel):
 
 
 @pytest.mark.parametrize(
-    "rule, matched",
+    ("rule", "matched"),
     [
         (registries.MatchRule(), False),
         (registries.MatchRule(channel_names={"level"}), True),
@@ -131,7 +131,7 @@ def test_registry_matching(rule, matched, channels):
 
 
 @pytest.mark.parametrize(
-    "rule, matched",
+    ("rule", "matched"),
     [
         (registries.MatchRule(), False),
         (registries.MatchRule(channel_names={"level"}), True),
@@ -225,7 +225,7 @@ def test_match_rule_claim_channels_color(channel):
 
 
 @pytest.mark.parametrize(
-    "rule, match",
+    ("rule", "match"),
     [
         (registries.MatchRule(channel_names={"level"}), {"level"}),
         (registries.MatchRule(channel_names={"level", "no match"}), {"level"}),
@@ -263,7 +263,7 @@ def entity_registry():
 
 
 @pytest.mark.parametrize(
-    "manufacturer, model, match_name",
+    ("manufacturer", "model", "match_name"),
     (
         ("random manufacturer", "random model", "OnOff"),
         ("random manufacturer", MODEL, "OnOffModel"),

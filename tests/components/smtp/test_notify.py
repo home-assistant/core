@@ -122,7 +122,7 @@ EMAIL_DATA = [
 
 
 @pytest.mark.parametrize(
-    "message_data, data, content_type",
+    ("message_data", "data", "content_type"),
     EMAIL_DATA,
     ids=[
         "Tests when sending text message and images.",

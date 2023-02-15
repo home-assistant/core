@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "input_data, entry_data",
+    ("input_data", "entry_data"),
     [
         (
             {
@@ -178,7 +178,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error, connect_side_effect, login_side_effect",
+    ("error", "connect_side_effect", "login_side_effect"),
     [
         ("invalid_auth", None, AuthError),
         ("cannot_connect", ConnectError, None),
@@ -294,7 +294,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error, connect_side_effect, login_side_effect",
+    ("error", "connect_side_effect", "login_side_effect"),
     [
         ("invalid_auth", None, AuthError),
         ("cannot_connect", ConnectError, None),

@@ -8,7 +8,7 @@ from smarttub import SpaLight
 # service_name with service_params, and expect the resultant call to
 # SpaLight.set_mode to have set_mode_args parameters
 @pytest.mark.parametrize(
-    "light_zone,light_state,service_name,service_params,set_mode_args",
+    ("light_zone", "light_state", "service_name", "service_params", "set_mode_args"),
     [
         (1, "off", "turn_on", {}, (SpaLight.LightMode.PURPLE, 50)),
         (1, "off", "turn_on", {"brightness": 255}, (SpaLight.LightMode.PURPLE, 100)),

@@ -271,7 +271,14 @@ async def async_test_device_temperature(hass, cluster, entity_id):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, entity_suffix, test_func, report_count, read_plug, unsupported_attrs",
+    (
+        "cluster_id",
+        "entity_suffix",
+        "test_func",
+        "report_count",
+        "read_plug",
+        "unsupported_attrs",
+    ),
     (
         (
             measurement.RelativeHumidity.cluster_id,
@@ -513,7 +520,7 @@ def core_rs(hass_storage):
 
 
 @pytest.mark.parametrize(
-    "uom, raw_temp, expected, restore",
+    ("uom", "raw_temp", "expected", "restore"),
     [
         (UnitOfTemperature.CELSIUS, 2900, 29, False),
         (UnitOfTemperature.CELSIUS, 2900, 29, True),
@@ -636,7 +643,7 @@ async def test_electrical_measurement_init(
 
 
 @pytest.mark.parametrize(
-    "cluster_id, unsupported_attributes, entity_ids, missing_entity_ids",
+    ("cluster_id", "unsupported_attributes", "entity_ids", "missing_entity_ids"),
     (
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -747,7 +754,7 @@ async def test_unsupported_attributes_sensor(
 
 
 @pytest.mark.parametrize(
-    "raw_uom, raw_value, expected_state, expected_uom",
+    ("raw_uom", "raw_value", "expected_state", "expected_uom"),
     (
         (
             1,
@@ -868,7 +875,7 @@ async def test_se_summation_uom(
 
 
 @pytest.mark.parametrize(
-    "raw_measurement_type, expected_type",
+    ("raw_measurement_type", "expected_type"),
     (
         (1, "ACTIVE_MEASUREMENT"),
         (8, "PHASE_A_MEASUREMENT"),

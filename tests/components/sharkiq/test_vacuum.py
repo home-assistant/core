@@ -134,7 +134,7 @@ async def test_simple_properties(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "attribute,target_value",
+    ("attribute", "target_value"),
     [
         (ATTR_SUPPORTED_FEATURES, EXPECTED_FEATURES),
         (ATTR_BATTERY_LEVEL, 50),
@@ -155,7 +155,7 @@ async def test_initial_attributes(
 
 
 @pytest.mark.parametrize(
-    "service,target_state",
+    ("service", "target_state"),
     [
         (SERVICE_STOP, STATE_IDLE),
         (SERVICE_PAUSE, STATE_PAUSED),
@@ -183,7 +183,7 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "device_property,target_value",
+    ("device_property", "target_value"),
     [
         ("manufacturer", "Shark"),
         ("model", "RV1001AE"),
@@ -209,7 +209,7 @@ async def test_locate(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,success",
+    ("side_effect", "success"),
     [
         (None, True),
         (SharkIqAuthError, False),

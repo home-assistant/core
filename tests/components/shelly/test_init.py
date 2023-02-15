@@ -106,7 +106,7 @@ async def test_device_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-@pytest.mark.parametrize("entry_sleep, device_sleep", [(None, 0), (1000, 1000)])
+@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (1000, 1000)])
 async def test_sleeping_block_device_online(
     hass, entry_sleep, device_sleep, mock_block_device, device_reg, caplog
 ):
@@ -126,7 +126,7 @@ async def test_sleeping_block_device_online(
     assert entry.data["sleep_period"] == device_sleep
 
 
-@pytest.mark.parametrize("entry_sleep, device_sleep", [(None, 0), (1000, 1000)])
+@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (1000, 1000)])
 async def test_sleeping_rpc_device_online(
     hass, entry_sleep, device_sleep, mock_rpc_device, caplog
 ):
@@ -140,7 +140,7 @@ async def test_sleeping_rpc_device_online(
 
 
 @pytest.mark.parametrize(
-    "gen, entity_id",
+    ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
         (2, "switch.test_switch_0"),
@@ -161,7 +161,7 @@ async def test_entry_unload(hass, gen, entity_id, mock_block_device, mock_rpc_de
 
 
 @pytest.mark.parametrize(
-    "gen, entity_id",
+    ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
         (2, "switch.test_switch_0"),

@@ -21,7 +21,7 @@ SWING_OFF_EID = BASE_ENTITY_ID + "_vertical_swing_off"
 
 
 @pytest.mark.parametrize(
-    "entity, state",
+    ("entity", "state"),
     [
         (ASSUME_ON_EID, DeviceState.ON),
         (ASSUME_OFF_EID, DeviceState.OFF),
@@ -52,7 +52,7 @@ async def test_assume_button(hass: HomeAssistant, entity, state, mock_bridge, mo
 
 
 @pytest.mark.parametrize(
-    "entity, swing",
+    ("entity", "swing"),
     [
         (SWING_ON_EID, ThermostatSwing.ON),
         (SWING_OFF_EID, ThermostatSwing.OFF),

@@ -912,7 +912,7 @@ async def test_user_port_config(probe_mock, hass):
 
 
 @pytest.mark.parametrize(
-    "old_type,new_type",
+    ("old_type", "new_type"),
     [
         ("ezsp", "ezsp"),
         ("ti_cc", "znp"),  # only one that should change

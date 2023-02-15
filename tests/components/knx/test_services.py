@@ -11,7 +11,7 @@ from tests.common import async_capture_events
 
 
 @pytest.mark.parametrize(
-    "service_payload,expected_telegrams,expected_apci",
+    ("service_payload", "expected_telegrams", "expected_apci"),
     [
         # send DPT 1 telegram
         (

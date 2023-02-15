@@ -56,7 +56,7 @@ def set_utc(hass):
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_config",
+    ("yaml_config", "config_entry_config"),
     (
         (
             {
@@ -251,7 +251,7 @@ async def test_not_unique_tariffs(hass, yaml_config):
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_config",
+    ("yaml_config", "config_entry_config"),
     (
         (
             {
@@ -349,7 +349,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "yaml_config,entity_id, name",
+    ("yaml_config", "entity_id", "name"),
     (
         (
             {
@@ -404,7 +404,7 @@ async def test_entity_name(hass, yaml_config, entity_id, name):
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_configs",
+    ("yaml_config", "config_entry_configs"),
     (
         (
             {
@@ -492,7 +492,7 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_config",
+    ("yaml_config", "config_entry_config"),
     (
         (
             {
@@ -649,7 +649,7 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_config",
+    ("yaml_config", "config_entry_config"),
     (
         (
             {
@@ -717,7 +717,7 @@ async def test_net_consumption(hass, yaml_config, config_entry_config):
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_config",
+    ("yaml_config", "config_entry_config"),
     (
         (
             {
@@ -796,7 +796,7 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplo
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_config",
+    ("yaml_config", "config_entry_config"),
     (
         (
             {

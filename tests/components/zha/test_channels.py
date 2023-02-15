@@ -104,7 +104,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, bind_count, attrs",
+    ("cluster_id", "bind_count", "attrs"),
     [
         (zigpy.zcl.clusters.general.Basic.cluster_id, 0, {}),
         (
@@ -264,7 +264,7 @@ async def test_in_channel_config(
 
 
 @pytest.mark.parametrize(
-    "cluster_id, bind_count",
+    ("cluster_id", "bind_count"),
     [
         (0x0000, 0),
         (0x0001, 1),

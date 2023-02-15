@@ -112,7 +112,7 @@ async def test_fan_reset_filter_service(hass, pywemo_device, wemo_entity):
 
 
 @pytest.mark.parametrize(
-    "test_input,expected",
+    ("test_input", "expected"),
     [
         (0, DesiredHumidity.FortyFivePercent),
         (45, DesiredHumidity.FortyFivePercent),
@@ -139,7 +139,7 @@ async def test_fan_set_humidity_service(
 
 
 @pytest.mark.parametrize(
-    "percentage,expected_fan_mode",
+    ("percentage", "expected_fan_mode"),
     [
         (0, FanMode.Off),
         (10, FanMode.Minimum),

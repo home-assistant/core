@@ -227,7 +227,7 @@ async def slow_server_version(*args):
 
 
 @pytest.mark.parametrize(
-    "flow, flow_params",
+    ("flow", "flow_params"),
     [
         (
             "flow",
@@ -365,7 +365,7 @@ async def test_supervisor_discovery(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, server_version_side_effect",
+    ("discovery_info", "server_version_side_effect"),
     [({"config": ADDON_DISCOVERY_INFO}, asyncio.TimeoutError())],
 )
 async def test_supervisor_discovery_cannot_connect(
@@ -1066,8 +1066,11 @@ async def test_addon_running(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, discovery_info_side_effect, server_version_side_effect, "
-        "addon_info_side_effect, abort_reason"
+        "discovery_info",
+        "discovery_info_side_effect",
+        "server_version_side_effect",
+        "addon_info_side_effect",
+        "abort_reason",
     ),
     [
         (
@@ -1258,7 +1261,7 @@ async def test_addon_installed(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, start_addon_side_effect",
+    ("discovery_info", "start_addon_side_effect"),
     [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
 )
 async def test_addon_installed_start_failure(
@@ -1324,7 +1327,7 @@ async def test_addon_installed_start_failure(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, server_version_side_effect",
+    ("discovery_info", "server_version_side_effect"),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1399,7 +1402,7 @@ async def test_addon_installed_failures(
 
 
 @pytest.mark.parametrize(
-    "set_addon_options_side_effect, discovery_info",
+    ("set_addon_options_side_effect", "discovery_info"),
     [(HassioAPIError(), {"config": ADDON_DISCOVERY_INFO})],
 )
 async def test_addon_installed_set_options_failure(
@@ -1747,8 +1750,11 @@ async def test_options_not_addon(hass, client, supervisor, integration):
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, entry_data, old_addon_options, new_addon_options,"
-        " disconnect_calls"
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
     ),
     [
         (
@@ -1881,7 +1887,7 @@ async def test_options_addon_running(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options",
+    ("discovery_info", "entry_data", "old_addon_options", "new_addon_options"),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1991,8 +1997,12 @@ async def different_device_server_version(*args):
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, entry_data, old_addon_options, new_addon_options,"
-        " disconnect_calls, server_version_side_effect"
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+        "server_version_side_effect",
     ),
     [
         (
@@ -2142,8 +2152,12 @@ async def test_options_different_device(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, entry_data, old_addon_options, new_addon_options,"
-        " disconnect_calls, restart_addon_side_effect"
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+        "restart_addon_side_effect",
     ),
     [
         (
@@ -2294,8 +2308,12 @@ async def test_options_addon_restart_failed(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, entry_data, old_addon_options, new_addon_options,"
-        " disconnect_calls, server_version_side_effect"
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
+        "server_version_side_effect",
     ),
     [
         (
@@ -2381,8 +2399,11 @@ async def test_options_addon_running_server_info_failure(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, entry_data, old_addon_options, new_addon_options,"
-        " disconnect_calls"
+        "discovery_info",
+        "entry_data",
+        "old_addon_options",
+        "new_addon_options",
+        "disconnect_calls",
     ),
     [
         (

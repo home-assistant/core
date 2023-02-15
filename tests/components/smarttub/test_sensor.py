@@ -5,7 +5,7 @@ import smarttub
 
 
 @pytest.mark.parametrize(
-    "entity_suffix,expected_state",
+    ("entity_suffix", "expected_state"),
     [
         ("state", "normal"),
         ("flow_switch", "open"),

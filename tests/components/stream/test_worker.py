@@ -749,7 +749,7 @@ test_worker_log_cases = (
 )
 
 
-@pytest.mark.parametrize("stream_url, redacted_url", test_worker_log_cases)
+@pytest.mark.parametrize(("stream_url", "redacted_url"), test_worker_log_cases)
 async def test_worker_log(hass, caplog, stream_url, redacted_url):
     """Test that the worker logs the url without username and password."""
     stream = Stream(

@@ -16,7 +16,7 @@ async def mock_handler(request):
 
 
 @pytest.mark.parametrize(
-    "request_path,request_params",
+    ("request_path", "request_params"),
     [
         ("/", {}),
         ("/lovelace/dashboard", {}),
@@ -42,7 +42,7 @@ async def test_ok_requests(
 
 
 @pytest.mark.parametrize(
-    "request_path,request_params,fail_on_query_string",
+    ("request_path", "request_params", "fail_on_query_string"),
     [
         ("/proc/self/environ", {}, False),
         ("/", {"test": "/test/../../api"}, True),

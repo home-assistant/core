@@ -13,7 +13,7 @@ from .conftest import TEST_PASSWORD, TEST_USERNAME
 
 
 @pytest.mark.parametrize(
-    "get_client_response,errors",
+    ("get_client_response", "errors"),
     [
         (AsyncMock(side_effect=InvalidCredentialsError), {"base": "invalid_auth"}),
         (AsyncMock(side_effect=RidwellError), {"base": "unknown"}),

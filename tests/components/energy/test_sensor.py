@@ -134,7 +134,9 @@ async def test_cost_sensor_attributes(
     assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
+@pytest.mark.parametrize(
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
+)
 @pytest.mark.parametrize(
     "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
 )
@@ -336,7 +338,9 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert statistics["stat"]["sum"] == 38.0
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
+@pytest.mark.parametrize(
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
+)
 @pytest.mark.parametrize(
     "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
 )
@@ -542,7 +546,9 @@ async def test_cost_sensor_price_entity_total(
     assert statistics["stat"]["sum"] == 38.0
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
+@pytest.mark.parametrize(
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
+)
 @pytest.mark.parametrize(
     "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
 )
@@ -724,7 +730,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
 
 
 @pytest.mark.parametrize(
-    "energy_unit,factor",
+    ("energy_unit", "factor"),
     [
         (UnitOfEnergy.WATT_HOUR, 1000),
         (UnitOfEnergy.KILO_WATT_HOUR, 1),
@@ -794,7 +800,7 @@ async def test_cost_sensor_handle_energy_units(
 
 
 @pytest.mark.parametrize(
-    "price_unit,factor",
+    ("price_unit", "factor"),
     [
         (f"EUR/{UnitOfEnergy.WATT_HOUR}", 0.001),
         (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
@@ -973,7 +979,7 @@ async def test_cost_sensor_handle_gas_kwh(
 
 
 @pytest.mark.parametrize(
-    "unit_system,usage_unit,growth",
+    ("unit_system", "usage_unit", "growth"),
     (
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),

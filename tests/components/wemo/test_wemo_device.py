@@ -200,7 +200,7 @@ class TestInsight:
         return pywemo_device
 
     @pytest.mark.parametrize(
-        "subscribed,state,expected_calls",
+        ("subscribed", "state", "expected_calls"),
         [
             (False, 0, [call(), call(True), call(), call()]),
             (False, 1, [call(), call(True), call(), call()]),

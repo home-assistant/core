@@ -2887,7 +2887,7 @@ async def test_firmware_upload_view_invalid_payload(
 
 
 @pytest.mark.parametrize(
-    "method, url",
+    ("method", "url"),
     [("post", "/api/zwave_js/firmware/upload/{}")],
 )
 async def test_node_view_non_admin_user(
@@ -2903,7 +2903,7 @@ async def test_node_view_non_admin_user(
 
 
 @pytest.mark.parametrize(
-    "method, url",
+    ("method", "url"),
     [
         ("post", "/api/zwave_js/firmware/upload/{}"),
     ],
@@ -2920,7 +2920,7 @@ async def test_view_unloaded_config_entry(
 
 
 @pytest.mark.parametrize(
-    "method, url",
+    ("method", "url"),
     [("post", "/api/zwave_js/firmware/upload/INVALID")],
 )
 async def test_view_invalid_device_id(integration, hass_client, method, url):

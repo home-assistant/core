@@ -31,7 +31,7 @@ from tests.common import (
 
 
 @pytest.mark.parametrize(
-    "button_type, is_valid",
+    ("button_type", "is_valid"),
     [
         ("momentary", True),
         ("momentary_on_release", True),

@@ -87,7 +87,7 @@ async def test_connection_error(hass: HomeAssistant, mock_auth) -> None:
 
 
 @pytest.mark.parametrize(
-    "code, alarm_service, alarm_state",
+    ("code", "alarm_service", "alarm_state"),
     [
         (Status.ARMED, SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (Status.PARTIALLY, SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),

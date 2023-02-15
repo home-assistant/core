@@ -524,7 +524,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -592,7 +592,7 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -812,7 +812,7 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,

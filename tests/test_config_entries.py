@@ -3135,7 +3135,7 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "matchers, reason",
+    ("matchers", "reason"),
     [
         ({}, "already_configured"),
         ({"host": "3.3.3.3"}, "no_match"),
