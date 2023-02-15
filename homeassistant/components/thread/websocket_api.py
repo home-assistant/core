@@ -147,13 +147,13 @@ async def ws_discover_routers(
     @callback
     def stop_discovery() -> None:
         """Stop discovery."""
-        hass.async_create_task(thread_disovery.async_stop())
+        hass.async_create_task(thread_discovery.async_stop())
 
     # Start Thread router discovery
-    thread_disovery = discovery.ThreadRouterDiscovery(
+    thread_discovery = discovery.ThreadRouterDiscovery(
         hass, router_discovered, router_removed
     )
-    await thread_disovery.async_start()
+    await thread_discovery.async_start()
     connection.subscriptions[msg["id"]] = stop_discovery
 
     connection.send_message(websocket_api.result_message(msg["id"]))
