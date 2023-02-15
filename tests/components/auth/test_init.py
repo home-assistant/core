@@ -386,7 +386,7 @@ async def test_refresh_token_provider_rejected(
 
 
 @pytest.mark.parametrize(
-    "url,base_data", [("/auth/token", {"action": "revoke"}), ("/auth/revoke", {})]
+    ("url", "base_data"), [("/auth/token", {"action": "revoke"}), ("/auth/revoke", {})]
 )
 async def test_revoking_refresh_token(
     url, base_data, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator

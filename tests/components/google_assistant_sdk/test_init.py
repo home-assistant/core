@@ -85,7 +85,7 @@ async def test_expired_token_refresh_success(
 
 
 @pytest.mark.parametrize(
-    "expires_at,status,expected_state",
+    ("expires_at", "status", "expected_state"),
     [
         (
             time.time() - 3600,
@@ -122,7 +122,7 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    "configured_language_code,expected_language_code",
+    ("configured_language_code", "expected_language_code"),
     [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],
     ids=["default", "english", "spanish"],
 )
@@ -187,7 +187,7 @@ async def test_send_text_commands(
 
 
 @pytest.mark.parametrize(
-    "status,requires_reauth",
+    ("status", "requires_reauth"),
     [
         (
             http.HTTPStatus.UNAUTHORIZED,

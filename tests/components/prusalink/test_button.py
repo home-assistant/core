@@ -20,7 +20,7 @@ def setup_button_platform_only():
 
 
 @pytest.mark.parametrize(
-    "object_id, method",
+    ("object_id", "method"),
     (
         ("mock_title_cancel_job", "cancel_job"),
         ("mock_title_pause_job", "pause_job"),
@@ -65,7 +65,7 @@ async def test_button_pause_cancel(
 
 
 @pytest.mark.parametrize(
-    "object_id, method",
+    ("object_id", "method"),
     (("mock_title_resume_job", "resume_job"),),
 )
 async def test_button_resume(

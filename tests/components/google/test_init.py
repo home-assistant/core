@@ -297,7 +297,7 @@ async def test_multiple_config_entries(
 
 
 @pytest.mark.parametrize(
-    "date_fields,expected_error,error_match",
+    ("date_fields", "expected_error", "error_match"),
     [
         (
             {},
@@ -436,7 +436,7 @@ async def test_add_event_invalid_params(
 
 
 @pytest.mark.parametrize(
-    "date_fields,start_timedelta,end_timedelta",
+    ("date_fields", "start_timedelta", "end_timedelta"),
     [
         (
             {"in": {"days": 3}},
@@ -682,7 +682,7 @@ async def test_expired_token_requires_reauth(
 
 
 @pytest.mark.parametrize(
-    "calendars_config,expect_write_calls",
+    ("calendars_config", "expect_write_calls"),
     [
         (
             [
@@ -799,7 +799,7 @@ async def test_assign_unique_id(
 
 
 @pytest.mark.parametrize(
-    "config_entry_unique_id,request_status,config_entry_status",
+    ("config_entry_unique_id", "request_status", "config_entry_status"),
     [
         (None, http.HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_RETRY),
         (

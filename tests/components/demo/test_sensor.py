@@ -12,7 +12,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_restore_cache_with_extra_data
 
 
-@pytest.mark.parametrize("entity_id, delta", (("sensor.total_energy_kwh", 0.5),))
+@pytest.mark.parametrize(("entity_id", "delta"), (("sensor.total_energy_kwh", 0.5),))
 async def test_energy_sensor(hass: HomeAssistant, entity_id, delta, freezer) -> None:
     """Test energy sensors increase periodically."""
     assert await async_setup_component(
@@ -31,7 +31,7 @@ async def test_energy_sensor(hass: HomeAssistant, entity_id, delta, freezer) -> 
     assert state.state == str(delta)
 
 
-@pytest.mark.parametrize("entity_id, delta", (("sensor.total_energy_kwh", 0.5),))
+@pytest.mark.parametrize(("entity_id", "delta"), (("sensor.total_energy_kwh", 0.5),))
 async def test_restore_state(hass: HomeAssistant, entity_id, delta, freezer) -> None:
     """Test energy sensors restore state."""
     fake_state = ha.State(

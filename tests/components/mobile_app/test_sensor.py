@@ -17,7 +17,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 
 @pytest.mark.parametrize(
-    "unit_system, state_unit, state1, state2",
+    ("unit_system", "state_unit", "state1", "state2"),
     (
         (METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
         (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT, "212", "253"),
@@ -127,7 +127,7 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
-    "unique_id, unit_system, state_unit, state1, state2",
+    ("unique_id", "unit_system", "state_unit", "state1", "state2"),
     (
         ("battery_temperature", METRIC_SYSTEM, UnitOfTemperature.CELSIUS, "100", "123"),
         (
@@ -437,7 +437,7 @@ async def test_update_sensor_no_state(
 
 
 @pytest.mark.parametrize(
-    "device_class,native_value,state_value",
+    ("device_class", "native_value", "state_value"),
     [
         (SensorDeviceClass.DATE, "2021-11-18", "2021-11-18"),
         (

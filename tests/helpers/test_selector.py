@@ -78,7 +78,7 @@ def _test_selector(
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (None, ("abc123",), (None,)),
         ({}, ("abc123",), (None,)),
@@ -115,7 +115,7 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         ({}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
         ({"integration": "zha"}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
@@ -175,7 +175,7 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         ({}, ("abc123",), (None,)),
         ({"entity": {}}, ("abc123",), (None,)),
@@ -222,7 +222,7 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {"min": 10, "max": 50},
@@ -269,7 +269,7 @@ def test_number_selector_schema_error(schema):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123",), (None,)),),
 )
 def test_addon_selector_schema(schema, valid_selections, invalid_selections):
@@ -278,7 +278,7 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, (1, "one", None), ()),),  # Everything can be coarced to bool
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
@@ -293,7 +293,7 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -313,7 +313,7 @@ def test_config_entry_selector_schema(schema, valid_selections, invalid_selectio
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, ("00:00:00",), ("blah", None)),),
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections):
@@ -322,7 +322,7 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {"entity_id": "sensor.abc"},
@@ -337,7 +337,7 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         ({}, ({"entity_id": ["sensor.abc123"]},), ("abc123", None)),
         ({"entity": {}}, (), ()),
@@ -371,7 +371,7 @@ def test_target_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123",), ()),),
 )
 def test_action_selector_schema(schema, valid_selections, invalid_selections):
@@ -380,7 +380,7 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123",), ()),),
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections):
@@ -389,7 +389,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         ({}, ("abc123",), (None,)),
         ({"multiline": True}, (), ()),
@@ -402,7 +402,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {"options": ["red", "green", "blue"]},
@@ -492,7 +492,7 @@ def test_select_selector_schema_error(schema):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {"entity_id": "sensor.abc"},
@@ -512,7 +512,7 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -535,7 +535,7 @@ def test_duration_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -550,7 +550,7 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -565,7 +565,7 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -604,7 +604,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -637,7 +637,7 @@ def test_location_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -653,7 +653,7 @@ def test_rgb_color_selector_schema(schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -674,7 +674,7 @@ def test_color_tempselector_schema(schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -690,7 +690,7 @@ def test_date_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {},
@@ -706,7 +706,7 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!")),),
 )
 def test_template_selector_schema(schema, valid_selections, invalid_selections):
@@ -715,7 +715,7 @@ def test_template_selector_schema(schema, valid_selections, invalid_selections):
 
 
 @pytest.mark.parametrize(
-    "schema,valid_selections,invalid_selections",
+    ("schema", "valid_selections", "invalid_selections"),
     (
         (
             {"accept": "image/*"},

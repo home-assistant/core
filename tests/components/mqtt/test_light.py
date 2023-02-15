@@ -2892,7 +2892,7 @@ async def test_max_mireds(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template,tpl_par,tpl_output",
+    ("service", "topic", "parameters", "payload", "template", "tpl_par", "tpl_output"),
     [
         (
             light.SERVICE_TURN_ON,
@@ -3028,7 +3028,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value,init_payload",
+    ("topic", "value", "attribute", "attribute_value", "init_payload"),
     [
         ("state_topic", "ON", None, "on", None),
         (
@@ -3095,7 +3095,7 @@ async def test_encoding_subscribable_topics(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value,init_payload",
+    ("topic", "value", "attribute", "attribute_value", "init_payload"),
     [
         ("brightness_state_topic", "60", "brightness", 60, ("state_topic", "ON")),
     ],

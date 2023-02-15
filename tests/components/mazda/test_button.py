@@ -109,7 +109,7 @@ async def test_button_setup_electric_vehicle(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "entity_id_suffix, api_method_name",
+    ("entity_id_suffix", "api_method_name"),
     [
         ("start_engine", "start_engine"),
         ("stop_engine", "stop_engine"),

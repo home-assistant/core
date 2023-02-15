@@ -53,7 +53,7 @@ async def test_user_flow(
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (FullyKioskError("error", "status"), "cannot_connect"),
         (ClientConnectorError(None, Mock()), "cannot_connect"),

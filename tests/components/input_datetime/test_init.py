@@ -765,7 +765,7 @@ async def test_timestamp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "config, error",
+    ("config", "error"),
     [
         (
             {"has_time": True, "has_date": True, "initial": "abc"},

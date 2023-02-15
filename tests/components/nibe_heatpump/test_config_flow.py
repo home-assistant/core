@@ -157,7 +157,7 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -178,7 +178,7 @@ async def test_read_timeout(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -199,7 +199,7 @@ async def test_write_timeout(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -220,7 +220,7 @@ async def test_unexpected_exception(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -244,7 +244,7 @@ async def test_nibegw_invalid_host(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),

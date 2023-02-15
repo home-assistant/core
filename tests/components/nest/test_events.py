@@ -117,7 +117,7 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
 
 
 @pytest.mark.parametrize(
-    "device_type,device_traits,event_trait,expected_model,expected_type",
+    ("device_type", "device_traits", "event_trait", "expected_model", "expected_type"),
     [
         (
             "sdm.devices.types.DOORBELL",

@@ -246,7 +246,7 @@ async def test_reauth_flow_update_configuration(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,
@@ -349,7 +349,7 @@ async def test_discovery_flow(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,
@@ -401,7 +401,7 @@ async def test_discovered_device_already_configured(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info,expected_port",
+    ("source", "discovery_info", "expected_port"),
     [
         (
             SOURCE_DHCP,
@@ -477,7 +477,7 @@ async def test_discovery_flow_updated_configuration(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,
@@ -526,7 +526,7 @@ async def test_discovery_flow_ignore_non_axis_device(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,

@@ -76,7 +76,7 @@ async def test_form(hass, client):
 
 
 @pytest.mark.parametrize(
-    "apps, inputs",
+    ("apps", "inputs"),
     [
         # Live TV in apps (default)
         (MOCK_APPS, MOCK_INPUTS),
@@ -320,7 +320,7 @@ async def test_reauth_successful(hass, client, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (WebOsTvPairError, "error_pairing"),
         (ConnectionRefusedError, "reauth_unsuccessful"),

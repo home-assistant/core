@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "units,result_observation,result_forecast",
+    ("units", "result_observation", "result_forecast"),
     [
         (
             US_CUSTOMARY_SYSTEM,
