@@ -1052,6 +1052,22 @@ async def test_sending_sensor_state(hass, create_registrations, webhook_client, 
 
     assert reg_resp.status == HTTPStatus.CREATED
 
+    # Now with a list.
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Health",
+                "state": "good",
+                "type": "sensor",
+                "unique_id": "health-id",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
     ent_reg = er.async_get(hass)
     entry = ent_reg.async_get("sensor.test_1_battery_state")
     assert entry.original_name == "Test 1 Battery State"
@@ -1067,15 +1083,26 @@ async def test_sending_sensor_state(hass, create_registrations, webhook_client, 
     assert state is not None
     assert state.state == "100"
 
+    state = hass.states.get("sensor.test_1_battery_health")
+    assert state is not None
+    assert state.state == "good"
+
     reg_resp = await webhook_client.post(
         webhook_url,
         json={
             "type": "update_sensor_states",
-            "data": {
-                "state": 50.0000,
-                "type": "sensor",
-                "unique_id": "abcd",
-            },
+            "data": [
+                {
+                    "state": 50.0000,
+                    "type": "sensor",
+                    "unique_id": "abcd",
+                },
+                {
+                    "state": "okay-ish",
+                    "type": "sensor",
+                    "unique_id": "health-id",
+                },
+            ],
         },
     )
 
@@ -1084,3 +1111,7 @@ async def test_sending_sensor_state(hass, create_registrations, webhook_client, 
     state = hass.states.get("sensor.test_1_battery_state")
     assert state is not None
     assert state.state == "50.0"
+
+    state = hass.states.get("sensor.test_1_battery_health")
+    assert state is not None
+    assert state.state == "okay-ish"

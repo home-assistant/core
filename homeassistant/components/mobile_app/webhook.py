@@ -231,8 +231,8 @@ async def handle_webhook(
                     _LOGGER.warning("Ignoring invalid JSON in encrypted payload")
             else:
                 _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
-        except ValueError:
-            _LOGGER.warning("Ignoring invalid JSON in encrypted payload")
+        except ValueError as err:
+            _LOGGER.warning("Ignoring invalid JSON in encrypted payload: %s", err)
     else:
         webhook_payload = req_data.get(ATTR_WEBHOOK_DATA, {})
 
