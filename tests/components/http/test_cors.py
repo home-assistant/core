@@ -60,7 +60,7 @@ def client(event_loop, aiohttp_client):
     return event_loop.run_until_complete(aiohttp_client(app))
 
 
-async def test_cors_requests(client):
+async def test_cors_requests(client) -> None:
     """Test cross origin requests."""
     req = await client.get("/", headers={ORIGIN: TRUSTED_ORIGIN})
     assert req.status == HTTPStatus.OK
@@ -88,7 +88,7 @@ async def test_cors_requests(client):
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
 
 
-async def test_cors_preflight_allowed(client):
+async def test_cors_preflight_allowed(client) -> None:
     """Test cross origin resource sharing preflight (OPTIONS) request."""
     req = await client.options(
         "/",

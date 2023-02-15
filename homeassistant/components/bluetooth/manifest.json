@@ -20,6 +20,6 @@
     "bluetooth-adapters==0.15.2",
     "bluetooth-auto-recovery==1.0.3",
     "bluetooth-data-tools==0.3.1",
-    "dbus-fast==1.84.0"
+    "dbus-fast==1.84.1"
   ]
 }
