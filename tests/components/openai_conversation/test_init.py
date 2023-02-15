@@ -103,7 +103,7 @@ Test Area 2:
 - Test Device 4
 - 1 (3)
 
-Answer the users questions about the world truthfully.
+Answer the user's questions about the world truthfully.
 
 If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 
