@@ -9,16 +9,16 @@
             "wrong_password": "The password is incorrect."
         },
         "step": {
+            "reauth_confirm": {
+                "description": "The LIVISI integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "IP Address",
                     "password": "Password"
                 },
                 "description": "Enter the IP address and the (local) password of the SHC."
-            },
-            "reauth_confirm": {
-                "description": "The LIVISI integration needs to re-authenticate your account",
-                "title": "Reauthenticate Integration"
             }
         }
     }
