@@ -533,13 +533,12 @@ class MQTT:
         """
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
-        matching_subscriptions = self._matching_subscriptions
 
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
         _is_simple = self._async_add_subscription(subscription)
-        matching_subscriptions.cache_clear()
+        self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
         if self.connected:
@@ -558,7 +557,7 @@ class MQTT:
                     self._wildcard_subscriptions.remove(subscription)
             except (KeyError, ValueError) as ex:
                 raise HomeAssistantError("Can't remove subscription twice") from ex
-            matching_subscriptions.cache_clear()
+            self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
             if self.connected:
