@@ -646,7 +646,16 @@ class MqttClimate(MqttEntity, ClimateEntity):
         ) -> None:
             """Handle climate attributes coming via MQTT."""
             payload = render_template(msg, template_name)
-
+            if not payload:
+                _LOGGER.debug(
+                    "Invalid empty payload for attribute %s, ignoring update",
+                    attr,
+                )
+                return
+            if payload == PAYLOAD_NONE:
+                setattr(self, attr, None)
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
             try:
                 setattr(self, attr, float(payload))
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)

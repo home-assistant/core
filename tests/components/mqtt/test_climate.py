@@ -1109,7 +1109,9 @@ async def test_get_target_temperature_low_high_with_templates(
     assert state.attributes.get("target_temp_high") == 1032
 
     # Temperature - with invalid value
-    async_fire_mqtt_message(hass, "temperature-state", '"-INVALID-"')
+    async_fire_mqtt_message(
+        hass, "temperature-state", '{"temp_low": "INVALID", "temp_high": "INVALID"}'
+    )
     state = hass.states.get(ENTITY_CLIMATE)
     # make sure, the invalid value gets logged...
     assert "Could not parse temperature_low_state_template from" in caplog.text
@@ -1117,6 +1119,32 @@ async def test_get_target_temperature_low_high_with_templates(
     # ... but the actual value stays unchanged.
     assert state.attributes.get("target_temp_low") == 1031
     assert state.attributes.get("target_temp_high") == 1032
+
+    # Reset the high and low values using a "None" of JSON null value
+    async_fire_mqtt_message(
+        hass, "temperature-state", '{"temp_low": "None", "temp_high": null}'
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+
+    assert state.attributes.get("target_temp_low") is None
+    assert state.attributes.get("target_temp_high") is None
+
+    # Test ignoring an empty state works okay
+    caplog.clear()
+    async_fire_mqtt_message(
+        hass, "temperature-state", '{"temp_low": "", "temp_high": "21"}'
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("target_temp_low") is None
+    assert state.attributes.get("target_temp_high") == 21.0
+    async_fire_mqtt_message(
+        hass, "temperature-state", '{"temp_low": "18", "temp_high": ""}'
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("target_temp_low") == 18.0
+    assert state.attributes.get("target_temp_high") == 21.0
+    assert "Could not parse temperature_low_state_template from" not in caplog.text
+    assert "Could not parse temperature_high_state_template from" not in caplog.text
 
 
 async def test_get_with_templates(
@@ -1180,6 +1208,11 @@ async def test_get_with_templates(
     # ... but the actual value stays unchanged.
     assert state.attributes.get("temperature") == 1031
 
+    # Temperature - with JSON null value
+    async_fire_mqtt_message(hass, "temperature-state", "null")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("temperature") is None
+
     # Humidity - with valid value
     assert state.attributes.get("humidity") is None
     async_fire_mqtt_message(hass, "humidity-state", '"82"')
@@ -1195,6 +1228,11 @@ async def test_get_with_templates(
     )
     # ... but the actual value stays unchanged.
     assert state.attributes.get("humidity") == 82
+
+    # reset the humidity
+    async_fire_mqtt_message(hass, "humidity-state", "null")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("humidity") is None
 
     # Preset Mode
     assert state.attributes.get("preset_mode") == "none"
@@ -1223,11 +1261,18 @@ async def test_get_with_templates(
     async_fire_mqtt_message(hass, "current-temperature", '"74656"')
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("current_temperature") == 74656
+    # Test resetting the current temperature using a JSON null value
+    async_fire_mqtt_message(hass, "current-temperature", "null")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("current_temperature") is None
 
     # Current humidity
     async_fire_mqtt_message(hass, "current-humidity", '"35"')
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("current_humidity") == 35
+    async_fire_mqtt_message(hass, "current-humidity", "null")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("current_humidity") is None
 
     # Action
     async_fire_mqtt_message(hass, "action", '"cooling"')
@@ -1272,7 +1317,7 @@ async def test_set_and_templates(
 
     # Preset Mode
     await common.async_set_preset_mode(hass, PRESET_ECO, ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 1
+    assert mqtt_mock.async_publish.call_count == 1
     mqtt_mock.async_publish.assert_any_call(
         "preset-mode-topic", "preset_mode: eco", 0, False
     )
