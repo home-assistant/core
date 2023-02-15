@@ -48,6 +48,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, PLATFORMS
 
@@ -391,13 +392,15 @@ class StatisticsSensor(SensorEntity):
         if self._state_characteristic in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         if self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
-            _source_state = self.hass.states.get(self._source_entity_id)
-            if _source_state is None:
+            source_state = self.hass.states.get(self._source_entity_id)
+            if source_state is None:
                 return None
-            source_device_class = _source_state.attributes.get(ATTR_DEVICE_CLASS)
+            source_device_class = source_state.attributes.get(ATTR_DEVICE_CLASS)
             if source_device_class is None:
                 return None
-            sensor_device_class = SensorDeviceClass(source_device_class)
+            sensor_device_class = try_parse_enum(SensorDeviceClass, source_device_class)
+            if sensor_device_class is None:
+                return None
             sensor_state_classes = DEVICE_CLASS_STATE_CLASSES.get(
                 sensor_device_class, set()
             )
