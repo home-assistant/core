@@ -98,7 +98,7 @@ def sensor_platforms_only() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_storage(hass_storage: Generator[dict[str, Any], None, None]) -> None:
+def mock_storage(hass_storage: dict[str, Any]) -> None:
     """Autouse hass_storage for the TestCase tests."""
 
 
@@ -1944,7 +1944,6 @@ async def test_delayed_birth_message(
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"].client,
-        spec_set=hass.data["mqtt"].client,
         wraps=hass.data["mqtt"].client,
     )
     mqtt_component_mock._mqttc = mqtt_client_mock

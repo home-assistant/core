@@ -842,7 +842,7 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
         (("locked", "locked", "locked"), "locked"),
     ],
 )
-async def test_group_locks(hass, states, group_state):
+async def test_group_locks(hass: HomeAssistant, states, group_state) -> None:
     """Test group of locks."""
     hass.states.async_set("lock.one", states[0])
     hass.states.async_set("lock.two", states[1])

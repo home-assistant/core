@@ -1,7 +1,7 @@
 {
   "domain": "growatt_server",
   "name": "Growatt",
-  "codeowners": ["@indykoning", "@muppet3000", "@JasperPlant"],
+  "codeowners": ["@muppet3000"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/growatt_server/",
   "iot_class": "cloud_polling",
