@@ -10,24 +10,16 @@ from typing import Any, Final
 import orjson
 
 from homeassistant.core import Event, State
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.json import (  # pylint: disable=unused-import # noqa: F401
     JSON_DECODE_EXCEPTIONS,
     JSON_ENCODE_EXCEPTIONS,
+    SerializationError,
     format_unserializable_data,
     json_loads,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class SerializationError(HomeAssistantError):
-    """Error serializing the data to JSON."""
-
-
-class WriteError(HomeAssistantError):
-    """Error writing the data."""
 
 
 class JSONEncoder(json.JSONEncoder):

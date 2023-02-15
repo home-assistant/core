@@ -24,6 +24,15 @@ JsonObjectType = dict[str, JsonValueType]
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
 JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
 
+
+class SerializationError(HomeAssistantError):
+    """Error serializing the data to JSON."""
+
+
+class WriteError(HomeAssistantError):
+    """Error writing the data."""
+
+
 json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
 json_loads = orjson.loads
 """Parse JSON data."""
