@@ -61,7 +61,9 @@ def setup_scanner(
 class GoogleMapsScanner:
     """Representation of an Google Maps location sharing account."""
 
-    def __init__(self, hass, config: ConfigType, see: SeeCallback) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigType, see: SeeCallback
+    ) -> None:
         """Initialize the scanner."""
         self.see = see
         self.username = config[CONF_USERNAME]

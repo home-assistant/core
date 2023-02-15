@@ -1,5 +1,4 @@
-"""
-Provide a mock alarm_control_panel platform.
+"""Provide a mock alarm_control_panel platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

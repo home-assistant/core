@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -39,7 +40,7 @@ async def async_setup_gree(hass):
         ENTITY_ID_XFAN,
     ],
 )
-async def test_send_switch_on(hass, entity):
+async def test_send_switch_on(hass: HomeAssistant, entity) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -64,7 +65,9 @@ async def test_send_switch_on(hass, entity):
         ENTITY_ID_XFAN,
     ],
 )
-async def test_send_switch_on_device_timeout(hass, device, entity):
+async def test_send_switch_on_device_timeout(
+    hass: HomeAssistant, device, entity
+) -> None:
     """Test for sending power on command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -91,7 +94,7 @@ async def test_send_switch_on_device_timeout(hass, device, entity):
         ENTITY_ID_XFAN,
     ],
 )
-async def test_send_switch_off(hass, entity):
+async def test_send_switch_off(hass: HomeAssistant, entity) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -116,7 +119,7 @@ async def test_send_switch_off(hass, entity):
         ENTITY_ID_XFAN,
     ],
 )
-async def test_send_switch_toggle(hass, entity):
+async def test_send_switch_toggle(hass: HomeAssistant, entity) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -158,7 +161,7 @@ async def test_send_switch_toggle(hass, entity):
 
 
 @pytest.mark.parametrize(
-    "entity,name",
+    ("entity", "name"),
     [
         (ENTITY_ID_LIGHT_PANEL, "Panel Light"),
         (ENTITY_ID_QUIET, "Quiet"),
@@ -166,7 +169,7 @@ async def test_send_switch_toggle(hass, entity):
         (ENTITY_ID_XFAN, "XFan"),
     ],
 )
-async def test_entity_name(hass, entity, name):
+async def test_entity_name(hass: HomeAssistant, entity, name) -> None:
     """Test for name property."""
     await async_setup_gree(hass)
     state = hass.states.get(entity)

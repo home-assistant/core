@@ -4,8 +4,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.prosegur import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -15,7 +17,7 @@ from tests.common import MockConfigEntry
         ConnectionError,
     ],
 )
-async def test_setup_entry_fail_retrieve(hass, error):
+async def test_setup_entry_fail_retrieve(hass: HomeAssistant, error) -> None:
     """Test loading the Prosegur entry."""
 
     config_entry = MockConfigEntry(
@@ -38,7 +40,9 @@ async def test_setup_entry_fail_retrieve(hass, error):
         await hass.async_block_till_done()
 
 
-async def test_unload_entry(hass, aioclient_mock):
+async def test_unload_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test unloading the Prosegur entry."""
 
     aioclient_mock.post(

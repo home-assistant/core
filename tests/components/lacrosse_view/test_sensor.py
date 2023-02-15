@@ -44,7 +44,9 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.test_temperature")
 
 
-async def test_sensor_permission(hass: HomeAssistant, caplog) -> None:
+async def test_sensor_permission(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if it raises a warning when there is no permission to read the sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -63,7 +65,9 @@ async def test_sensor_permission(hass: HomeAssistant, caplog) -> None:
     assert "This account does not have permission to read Test" in caplog.text
 
 
-async def test_field_not_supported(hass: HomeAssistant, caplog) -> None:
+async def test_field_not_supported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if it raises a warning when the field is not supported."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -84,7 +88,7 @@ async def test_field_not_supported(hass: HomeAssistant, caplog) -> None:
 
 
 @pytest.mark.parametrize(
-    "test_input,expected,entity_id",
+    ("test_input", "expected", "entity_id"),
     [
         (TEST_FLOAT_SENSOR, "2.3", "temperature"),
         (TEST_STRING_SENSOR, "dry", "wet_dry"),
@@ -114,7 +118,7 @@ async def test_field_types(
     assert hass.states.get(f"sensor.test_{entity_id}").state == expected
 
 
-async def test_no_field(hass: HomeAssistant, caplog: Any) -> None:
+async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test behavior when the expected field is not present."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)

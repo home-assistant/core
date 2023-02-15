@@ -9,6 +9,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +28,7 @@ DEVICE_CONFIG = {"www_basicauth_enabled": False}
 DEVICE_CONFIG_AUTH = {"www_basicauth_enabled": True}
 
 
-async def test_form_create_entry_without_auth(hass):
+async def test_form_create_entry_without_auth(hass: HomeAssistant) -> None:
     """Test that the user step without auth works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -57,7 +58,7 @@ async def test_form_create_entry_without_auth(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_create_entry_with_auth(hass):
+async def test_form_create_entry_with_auth(hass: HomeAssistant) -> None:
     """Test that the user step with auth works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -97,7 +98,7 @@ async def test_form_create_entry_with_auth(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth_successful(hass):
+async def test_reauth_successful(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -132,7 +133,7 @@ async def test_reauth_successful(hass):
         assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_unsuccessful(hass):
+async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -173,7 +174,7 @@ async def test_reauth_unsuccessful(hass):
         (ValueError, "unknown"),
     ],
 )
-async def test_form_with_auth_errors(hass, error):
+async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
     """Test we handle errors when auth is required."""
     exc, base_error = error
     with patch(
@@ -212,7 +213,7 @@ async def test_form_with_auth_errors(hass, error):
         (ValueError, "unknown"),
     ],
 )
-async def test_form_errors(hass, error):
+async def test_form_errors(hass: HomeAssistant, error) -> None:
     """Test we handle errors."""
     exc, base_error = error
     with patch(
@@ -228,7 +229,7 @@ async def test_form_errors(hass, error):
     assert result["errors"] == {"base": base_error}
 
 
-async def test_form_abort(hass):
+async def test_form_abort(hass: HomeAssistant) -> None:
     """Test we handle abort after error."""
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
@@ -247,7 +248,7 @@ async def test_form_abort(hass):
     assert result["reason"] == "device_unsupported"
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test that errors are shown when duplicates are added."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", data=VALID_CONFIG
@@ -277,7 +278,7 @@ async def test_form_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_zeroconf(hass):
+async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test we get the form."""
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
@@ -318,7 +319,7 @@ async def test_zeroconf(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_with_auth(hass):
+async def test_zeroconf_with_auth(hass: HomeAssistant) -> None:
     """Test that the zeroconf step with auth works."""
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
@@ -366,7 +367,7 @@ async def test_zeroconf_with_auth(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_host_already_configured(hass):
+async def test_zeroconf_host_already_configured(hass: HomeAssistant) -> None:
     """Test that errors are shown when host is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", data=VALID_CONFIG
@@ -390,7 +391,7 @@ async def test_zeroconf_host_already_configured(hass):
         (CannotGetMac("Cannot get MAC address from device"), "device_unsupported"),
     ],
 )
-async def test_zeroconf_errors(hass, error):
+async def test_zeroconf_errors(hass: HomeAssistant, error) -> None:
     """Test we handle errors."""
     exc, reason = error
     with patch(

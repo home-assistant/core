@@ -12,6 +12,7 @@ from homeassistant.components.azure_event_hub.const import (
     STEP_CONN_STRING,
     STEP_SAS,
 )
+from homeassistant.core import HomeAssistant
 
 from .const import (
     BASE_CONFIG_CS,
@@ -30,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "step1_config, step_id, step2_config, data_config",
+    ("step1_config", "step_id", "step2_config", "data_config"),
     [
         (BASE_CONFIG_CS, STEP_CONN_STRING, CS_CONFIG, CS_CONFIG_FULL),
         (BASE_CONFIG_SAS, STEP_SAS, SAS_CONFIG, SAS_CONFIG_FULL),
@@ -38,14 +39,14 @@ _LOGGER = logging.getLogger(__name__)
     ids=["connection_string", "sas"],
 )
 async def test_form(
-    hass,
+    hass: HomeAssistant,
     mock_setup_entry,
     mock_from_connection_string,
     step1_config,
     step_id,
     step2_config,
     data_config,
-):
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -69,7 +70,7 @@ async def test_form(
     mock_setup_entry.assert_called_once()
 
 
-async def test_import(hass, mock_setup_entry):
+async def test_import(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test we get the form."""
 
     import_config = IMPORT_CONFIG.copy()
@@ -95,7 +96,7 @@ async def test_import(hass, mock_setup_entry):
     [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT],
     ids=["user", "import"],
 )
-async def test_single_instance(hass, source):
+async def test_single_instance(hass: HomeAssistant, source) -> None:
     """Test uniqueness of username."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -114,16 +115,16 @@ async def test_single_instance(hass, source):
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [(EventHubError("test"), "cannot_connect"), (Exception, "unknown")],
     ids=["cannot_connect", "unknown"],
 )
 async def test_connection_error_sas(
-    hass,
+    hass: HomeAssistant,
     mock_get_eventhub_properties,
     side_effect,
     error_message,
-):
+) -> None:
     """Test we handle connection errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -143,16 +144,16 @@ async def test_connection_error_sas(
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [(EventHubError("test"), "cannot_connect"), (Exception, "unknown")],
     ids=["cannot_connect", "unknown"],
 )
 async def test_connection_error_cs(
-    hass,
+    hass: HomeAssistant,
     mock_from_connection_string,
     side_effect,
     error_message,
-):
+) -> None:
     """Test we handle connection errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -172,7 +173,7 @@ async def test_connection_error_cs(
     assert result2["errors"] == {"base": error_message}
 
 
-async def test_options_flow(hass, entry):
+async def test_options_flow(hass: HomeAssistant, entry) -> None:
     """Test options flow."""
     result = await hass.config_entries.options.async_init(entry.entry_id)
 

@@ -93,7 +93,16 @@ def set_time_zone():
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, "%", "%", "%", "unitless", 13.050847, -10, 30),
         ("battery", "%", "%", "%", "unitless", 13.050847, -10, 30),
@@ -162,8 +171,8 @@ def test_compile_hourly_statistics(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -177,7 +186,7 @@ def test_compile_hourly_statistics(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class",
+    ("device_class", "state_unit", "display_unit", "statistics_unit", "unit_class"),
     [
         (None, "%", "%", "%", "unitless"),
     ],
@@ -236,8 +245,8 @@ def test_compile_hourly_statistics_purged_state_changes(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -345,8 +354,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(13.050847),
                 "min": pytest.approx(-10.0),
                 "max": pytest.approx(30.0),
@@ -357,8 +366,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test2": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": 13.05084745762712,
                 "min": -10.0,
                 "max": 30.0,
@@ -369,8 +378,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test3": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": 13.05084745762712,
                 "min": -10.0,
                 "max": 30.0,
@@ -381,8 +390,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test6": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(13.050847),
                 "min": pytest.approx(-10.0),
                 "max": pytest.approx(30.0),
@@ -393,8 +402,8 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
         ],
         "sensor.test7": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(13.050847),
                 "min": pytest.approx(-10.0),
                 "max": pytest.approx(30.0),
@@ -503,32 +512,32 @@ async def test_compile_hourly_sum_statistics_amount(
     expected_stats = {
         "sensor.test1": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(period0),
+                "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(factor * seq[2]),
                 "sum": pytest.approx(factor * 10.0),
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(factor * seq[5]),
                 "sum": pytest.approx(factor * 40.0),
             },
             {
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(factor * seq[8]),
                 "sum": pytest.approx(factor * 70.0),
             },
@@ -695,22 +704,22 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(dt_util.as_local(one)),
+                "last_reset": process_timestamp(dt_util.as_local(one)).timestamp(),
                 "state": pytest.approx(factor * seq[7]),
                 "sum": pytest.approx(factor * (sum(seq) - seq[0])),
             },
             {
-                "start": process_timestamp(zero + timedelta(minutes=5)),
-                "end": process_timestamp(zero + timedelta(minutes=10)),
+                "start": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(dt_util.as_local(two)),
+                "last_reset": process_timestamp(dt_util.as_local(two)).timestamp(),
                 "state": pytest.approx(factor * seq[7]),
                 "sum": pytest.approx(factor * (2 * sum(seq) - seq[0])),
             },
@@ -794,12 +803,12 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(dt_util.as_local(one)),
+                "last_reset": process_timestamp(dt_util.as_local(one)).timestamp(),
                 "state": pytest.approx(factor * seq[7]),
                 "sum": pytest.approx(factor * (sum(seq) - seq[0] - seq[3])),
             },
@@ -880,12 +889,12 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(one),
+                "last_reset": process_timestamp(one).timestamp(),
                 "state": pytest.approx(factor * seq[7]),
                 "sum": pytest.approx(
                     factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])
@@ -897,7 +906,17 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
 
 
 @pytest.mark.parametrize(
-    "entity_id, device_class, state_unit, display_unit, statistics_unit, unit_class, offset, warning_1, warning_2",
+    (
+        "entity_id",
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "offset",
+        "warning_1",
+        "warning_2",
+    ),
     [
         (
             "sensor.test1",
@@ -1008,8 +1027,8 @@ def test_compile_hourly_sum_statistics_negative_state(
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats[entity_id] == [
         {
-            "start": process_timestamp(zero),
-            "end": process_timestamp(zero + timedelta(minutes=5)),
+            "start": process_timestamp(zero).timestamp(),
+            "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
             "max": None,
             "mean": None,
             "min": None,
@@ -1030,7 +1049,14 @@ def test_compile_hourly_sum_statistics_negative_state(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
         ("energy", "Wh", "Wh", "Wh", "energy", 1),
@@ -1099,8 +1125,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1109,8 +1135,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "sum": pytest.approx(factor * 10.0),
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1119,8 +1145,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "sum": pytest.approx(factor * 30.0),
             },
             {
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1134,7 +1160,14 @@ def test_compile_hourly_sum_statistics_total_no_reset(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
         ("energy", "Wh", "Wh", "Wh", "energy", 1),
@@ -1201,8 +1234,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1211,8 +1244,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "sum": pytest.approx(factor * 10.0),
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1221,8 +1254,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "sum": pytest.approx(factor * 50.0),
             },
             {
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1239,7 +1272,14 @@ def test_compile_hourly_sum_statistics_total_increasing(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [("energy", "kWh", "kWh", "kWh", "energy", 1)],
 )
 def test_compile_hourly_sum_statistics_total_increasing_small_dip(
@@ -1315,8 +1355,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         "sensor.test1": [
             {
                 "last_reset": None,
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1325,8 +1365,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
             },
             {
                 "last_reset": None,
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1335,8 +1375,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
             },
             {
                 "last_reset": None,
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1408,32 +1448,32 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(period0),
+                "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(20.0),
                 "sum": pytest.approx(10.0),
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(40.0),
                 "sum": pytest.approx(40.0),
             },
             {
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(70.0),
                 "sum": pytest.approx(70.0),
             },
@@ -1520,96 +1560,96 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(period0),
+                "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(20.0),
                 "sum": pytest.approx(10.0),
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(40.0),
                 "sum": pytest.approx(40.0),
             },
             {
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(70.0),
                 "sum": pytest.approx(70.0),
             },
         ],
         "sensor.test2": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(period0),
+                "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(130.0),
                 "sum": pytest.approx(20.0),
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(45.0),
                 "sum": pytest.approx(-65.0),
             },
             {
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(75.0),
                 "sum": pytest.approx(-35.0),
             },
         ],
         "sensor.test3": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(period0),
+                "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(5.0),
                 "sum": pytest.approx(5.0),
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(50.0),
                 "sum": pytest.approx(60.0),
             },
             {
-                "start": process_timestamp(period2),
-                "end": process_timestamp(period2_end),
+                "start": process_timestamp(period2).timestamp(),
+                "end": process_timestamp(period2_end).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp(four),
+                "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(90.0),
                 "sum": pytest.approx(100.0),
             },
@@ -1619,7 +1659,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "device_class,state_unit,value",
+    ("device_class", "state_unit", "value"),
     [
         ("battery", "%", 30),
         ("battery", None, 30),
@@ -1665,8 +1705,8 @@ def test_compile_hourly_statistics_unchanged(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(four),
-                "end": process_timestamp(four + timedelta(minutes=5)),
+                "start": process_timestamp(four).timestamp(),
+                "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(value),
                 "min": pytest.approx(value),
                 "max": pytest.approx(value),
@@ -1697,8 +1737,8 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(21.1864406779661),
                 "min": pytest.approx(10.0),
                 "max": pytest.approx(25.0),
@@ -1712,7 +1752,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "device_class,state_unit,value",
+    ("device_class", "state_unit", "value"),
     [
         ("battery", "%", 30),
         ("battery", None, 30),
@@ -1766,8 +1806,8 @@ def test_compile_hourly_statistics_unavailable(
     assert stats == {
         "sensor.test2": [
             {
-                "start": process_timestamp(four),
-                "end": process_timestamp(four + timedelta(minutes=5)),
+                "start": process_timestamp(four).timestamp(),
+                "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(value),
                 "min": pytest.approx(value),
                 "max": pytest.approx(value),
@@ -1796,7 +1836,15 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize(
-    "state_class, device_class, state_unit, display_unit, statistics_unit, unit_class, statistic_type",
+    (
+        "state_class",
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "statistic_type",
+    ),
     [
         ("measurement", "battery", "%", "%", "%", "unitless", "mean"),
         ("measurement", "battery", None, None, None, "unitless", "mean"),
@@ -1919,7 +1967,7 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, state_unit2, unit_class, mean, min, max",
+    ("device_class", "state_unit", "state_unit2", "unit_class", "mean", "min", "max"),
     [
         (None, None, "cats", "unitless", 13.050847, -10, 30),
         (None, "%", "cats", "unitless", 13.050847, -10, 30),
@@ -1988,8 +2036,8 @@ def test_compile_hourly_statistics_changing_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2023,8 +2071,8 @@ def test_compile_hourly_statistics_changing_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2038,7 +2086,16 @@ def test_compile_hourly_statistics_changing_units_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
@@ -2102,7 +2159,16 @@ def test_compile_hourly_statistics_changing_units_2(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
@@ -2166,8 +2232,8 @@ def test_compile_hourly_statistics_changing_units_3(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2201,8 +2267,8 @@ def test_compile_hourly_statistics_changing_units_3(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2216,7 +2282,7 @@ def test_compile_hourly_statistics_changing_units_3(
 
 
 @pytest.mark.parametrize(
-    "state_unit_1, state_unit_2, unit_class, mean, min, max, factor",
+    ("state_unit_1", "state_unit_2", "unit_class", "mean", "min", "max", "factor"),
     [
         (None, "%", "unitless", 13.050847, -10, 30, 100),
         ("%", None, "unitless", 13.050847, -10, 30, 0.01),
@@ -2274,8 +2340,8 @@ def test_compile_hourly_statistics_convert_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2317,8 +2383,8 @@ def test_compile_hourly_statistics_convert_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean * factor),
                 "min": pytest.approx(min * factor),
                 "max": pytest.approx(max * factor),
@@ -2327,8 +2393,8 @@ def test_compile_hourly_statistics_convert_units_1(
                 "sum": None,
             },
             {
-                "start": process_timestamp(zero + timedelta(minutes=10)),
-                "end": process_timestamp(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2342,7 +2408,17 @@ def test_compile_hourly_statistics_convert_units_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, state_unit2, unit_class, unit_class2, mean, mean2, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "state_unit2",
+        "unit_class",
+        "unit_class2",
+        "mean",
+        "mean2",
+        "min",
+        "max",
+    ),
     [
         (None, "RPM", "rpm", None, None, 13.050847, 13.333333, -10, 30),
         (None, "rpm", "RPM", None, None, 13.050847, 13.333333, -10, 30),
@@ -2406,8 +2482,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2437,8 +2513,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2447,8 +2523,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
                 "sum": None,
             },
             {
-                "start": process_timestamp(zero + timedelta(minutes=10)),
-                "end": process_timestamp(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
                 "mean": pytest.approx(mean2),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2462,7 +2538,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, state_unit2, unit_class, mean, min, max",
+    ("device_class", "state_unit", "state_unit2", "unit_class", "mean", "min", "max"),
     [
         (None, "RPM", "rpm", None, 13.333333, -10, 30),
         (None, "rpm", "RPM", None, 13.333333, -10, 30),
@@ -2521,8 +2597,10 @@ def test_compile_hourly_statistics_equivalent_units_2(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero + timedelta(seconds=30 * 5)),
-                "end": process_timestamp(zero + timedelta(seconds=30 * 15)),
+                "start": process_timestamp(
+                    zero + timedelta(seconds=30 * 5)
+                ).timestamp(),
+                "end": process_timestamp(zero + timedelta(seconds=30 * 15)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2537,7 +2615,16 @@ def test_compile_hourly_statistics_equivalent_units_2(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, statistic_unit, unit_class, mean1, mean2, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "statistic_unit",
+        "unit_class",
+        "mean1",
+        "mean2",
+        "min",
+        "max",
+    ),
     [
         ("power", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
@@ -2590,8 +2677,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean1),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2635,8 +2722,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean1),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2645,8 +2732,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "sum": None,
             },
             {
-                "start": process_timestamp(zero + timedelta(minutes=10)),
-                "end": process_timestamp(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
                 "mean": pytest.approx(mean2),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2690,8 +2777,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean1),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2700,8 +2787,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "sum": None,
             },
             {
-                "start": process_timestamp(zero + timedelta(minutes=10)),
-                "end": process_timestamp(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
                 "mean": pytest.approx(mean2),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2710,8 +2797,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "sum": None,
             },
             {
-                "start": process_timestamp(zero + timedelta(minutes=20)),
-                "end": process_timestamp(zero + timedelta(minutes=25)),
+                "start": process_timestamp(zero + timedelta(minutes=20)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=25)).timestamp(),
                 "mean": pytest.approx(mean2),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2725,7 +2812,17 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistic_unit, unit_class, mean, mean2, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistic_unit",
+        "unit_class",
+        "mean",
+        "mean2",
+        "min",
+        "max",
+    ),
     [
         ("power", "kW", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
@@ -2780,8 +2877,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2825,8 +2922,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero),
-                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2835,8 +2932,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
                 "sum": None,
             },
             {
-                "start": process_timestamp(zero + timedelta(minutes=10)),
-                "end": process_timestamp(zero + timedelta(minutes=15)),
+                "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=15)).timestamp(),
                 "mean": pytest.approx(mean2),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2850,7 +2947,16 @@ def test_compile_hourly_statistics_changing_device_class_2(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
     [
         (None, None, None, None, "unitless", 13.050847, -10, 30),
     ],
@@ -2954,8 +3060,8 @@ def test_compile_hourly_statistics_changing_state_class(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(period0),
-                "end": process_timestamp(period0_end),
+                "start": process_timestamp(period0).timestamp(),
+                "end": process_timestamp(period0_end).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -2964,8 +3070,8 @@ def test_compile_hourly_statistics_changing_state_class(
                 "sum": None,
             },
             {
-                "start": process_timestamp(period1),
-                "end": process_timestamp(period1_end),
+                "start": process_timestamp(period1).timestamp(),
+                "end": process_timestamp(period1_end).timestamp(),
                 "mean": None,
                 "min": None,
                 "max": None,
@@ -3092,7 +3198,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
                 sum_attributes,
                 seq[j : j + 1],
             )
-            start_meter = start + timedelta(minutes=1)
+            start_meter += timedelta(minutes=1)
             states["sensor.test4"] += _states["sensor.test4"]
         last_state = last_states["sensor.test4"]
         expected_states["sensor.test4"].append(seq[-1])
@@ -3204,8 +3310,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "start": process_timestamp(start),
-                    "end": process_timestamp(end),
+                    "start": process_timestamp(start).timestamp(),
+                    "end": process_timestamp(end).timestamp(),
                     "mean": pytest.approx(expected_average),
                     "min": pytest.approx(expected_minimum),
                     "max": pytest.approx(expected_maximum),
@@ -3261,8 +3367,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "start": process_timestamp(start),
-                    "end": process_timestamp(end),
+                    "start": process_timestamp(start).timestamp(),
+                    "end": process_timestamp(end).timestamp(),
                     "mean": pytest.approx(expected_average),
                     "min": pytest.approx(expected_minimum),
                     "max": pytest.approx(expected_maximum),
@@ -3318,8 +3424,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "start": process_timestamp(start),
-                    "end": process_timestamp(end),
+                    "start": process_timestamp(start).timestamp(),
+                    "end": process_timestamp(end).timestamp(),
                     "mean": pytest.approx(expected_average),
                     "min": pytest.approx(expected_minimum),
                     "max": pytest.approx(expected_maximum),
@@ -3375,8 +3481,8 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             )
             expected_stats[entity_id].append(
                 {
-                    "start": process_timestamp(start),
-                    "end": process_timestamp(end),
+                    "start": process_timestamp(start).timestamp(),
+                    "end": process_timestamp(end).timestamp(),
                     "mean": pytest.approx(expected_average),
                     "min": pytest.approx(expected_minimum),
                     "max": pytest.approx(expected_maximum),
@@ -3438,7 +3544,7 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit, unit2, supported_unit",
+    ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
         (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
@@ -3576,7 +3682,7 @@ async def test_validate_unit_change_convertible(
 
 
 @pytest.mark.parametrize(
-    "units, attributes",
+    ("units", "attributes"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES),
     ],
@@ -3630,7 +3736,7 @@ async def test_validate_statistics_unit_ignore_device_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit, unit2, supported_unit",
+    ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
         (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
@@ -3775,7 +3881,7 @@ async def test_validate_statistics_unit_change_no_device_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -3839,7 +3945,7 @@ async def test_validate_statistics_unsupported_state_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -3892,15 +3998,17 @@ async def test_validate_statistics_sensor_no_longer_recorded(
             }
         ],
     }
-    with patch(
-        "homeassistant.components.sensor.recorder.is_entity_recorded",
+    instance = get_instance(hass)
+    with patch.object(
+        instance,
+        "entity_filter",
         return_value=False,
     ):
         await assert_validation_result(client, expected)
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -3943,8 +4051,10 @@ async def test_validate_statistics_sensor_not_recorded(
             }
         ],
     }
-    with patch(
-        "homeassistant.components.sensor.recorder.is_entity_recorded",
+    instance = get_instance(hass)
+    with patch.object(
+        instance,
+        "entity_filter",
         return_value=False,
     ):
         hass.states.async_set("sensor.test", 10, attributes=attributes)
@@ -3958,7 +4068,7 @@ async def test_validate_statistics_sensor_not_recorded(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    ("units", "attributes", "unit"),
     [
         (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
     ],
@@ -4016,7 +4126,7 @@ async def test_validate_statistics_sensor_removed(
 
 
 @pytest.mark.parametrize(
-    "attributes, unit1, unit2",
+    ("attributes", "unit1", "unit2"),
     [
         (BATTERY_SENSOR_ATTRIBUTES, "cats", "dogs"),
         (NONE_SENSOR_ATTRIBUTES, "cats", "dogs"),
@@ -4141,7 +4251,7 @@ async def test_validate_statistics_unit_change_no_conversion(
 
 
 @pytest.mark.parametrize(
-    "attributes, unit1, unit2",
+    ("attributes", "unit1", "unit2"),
     [
         (NONE_SENSOR_ATTRIBUTES, "m3", "m³"),
         (NONE_SENSOR_ATTRIBUTES, "rpm", "RPM"),
@@ -4222,7 +4332,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
 
 
 @pytest.mark.parametrize(
-    "attributes, unit1, unit2, supported_unit",
+    ("attributes", "unit1", "unit2", "supported_unit"),
     [
         (NONE_SENSOR_ATTRIBUTES, "m³", "m3", "CCF, L, fl. oz., ft³, gal, mL, m³"),
     ],

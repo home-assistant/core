@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
 import socket
 from typing import cast
@@ -150,7 +151,12 @@ async def async_create_upnp_datagram_endpoint(
     ssdp_socket.setblocking(False)
 
     # Required for receiving multicast
+    # Note: some code duplication from async_upnp_client/ssdp.py here.
     ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    with suppress(AttributeError):
+        ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
+    ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     ssdp_socket.setsockopt(
         socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(host_ip_addr)

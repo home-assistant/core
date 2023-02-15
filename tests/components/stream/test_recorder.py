@@ -184,7 +184,7 @@ def h264_mov_video():
 
 
 @pytest.mark.parametrize(
-    "audio_codec,expected_audio_streams",
+    ("audio_codec", "expected_audio_streams"),
     [
         ("aac", 1),  # aac is a valid mp4 codec
         ("pcm_mulaw", 0),  # G.711 is not a valid mp4 codec
@@ -199,8 +199,7 @@ async def test_record_stream_audio(
     expected_audio_streams,
     h264_mov_video,
 ):
-    """
-    Test treatment of different audio inputs.
+    """Test treatment of different audio inputs.
 
     Record stream output should have an audio channel when input has
     a valid codec and audio packets and no audio channel otherwise.

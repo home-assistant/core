@@ -42,10 +42,12 @@ def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElem
 
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return select(func.min(States.attributes_id)).where(States.attributes_id == attr)
 
 
-def attributes_ids_exist_in_states_sqlite(
+def attributes_ids_exist_in_states_with_fast_in_distinct(
     attributes_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find attributes ids that exist in the states table."""
@@ -268,7 +270,7 @@ def attributes_ids_exist_in_states(
     )
 
 
-def data_ids_exist_in_events_sqlite(
+def data_ids_exist_in_events_with_fast_in_distinct(
     data_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find data ids that exist in the events table."""
@@ -279,6 +281,8 @@ def data_ids_exist_in_events_sqlite(
 
 def _event_data_id_exist(data_id: int | None) -> Select:
     """Check if a event data id exists in the events table."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return select(func.min(Events.data_id)).where(Events.data_id == data_id)
 
 
@@ -600,9 +604,10 @@ def find_short_term_statistics_to_purge(
     purge_before: datetime,
 ) -> StatementLambdaElement:
     """Find short term statistics to purge."""
+    purge_before_ts = purge_before.timestamp()
     return lambda_stmt(
         lambda: select(StatisticsShortTerm.id)
-        .filter(StatisticsShortTerm.start < purge_before)
+        .filter(StatisticsShortTerm.start_ts < purge_before_ts)
         .limit(MAX_ROWS_TO_PURGE)
     )
 
@@ -620,6 +625,8 @@ def find_statistics_runs_to_purge(
 
 def find_latest_statistics_runs_run_id() -> StatementLambdaElement:
     """Find the latest statistics_runs run_id."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(StatisticsRuns.run_id)))
 
 
@@ -639,4 +646,6 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
 
 def find_legacy_row() -> StatementLambdaElement:
     """Check if there are still states in the table with an event_id."""
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(States.event_id)))

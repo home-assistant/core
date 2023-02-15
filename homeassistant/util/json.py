@@ -16,17 +16,17 @@ from homeassistant.helpers.json import (
     json_encoder_default as default_hass_orjson_encoder,
 )
 
-from .file import write_utf8_file, write_utf8_file_atomic
+from .file import (  # pylint: disable=unused-import # noqa: F401
+    WriteError,
+    write_utf8_file,
+    write_utf8_file_atomic,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class SerializationError(HomeAssistantError):
     """Error serializing the data to JSON."""
-
-
-class WriteError(HomeAssistantError):
-    """Error writing the data."""
 
 
 def load_json(filename: str, default: list | dict | None = None) -> list | dict:

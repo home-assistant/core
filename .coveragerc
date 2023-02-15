@@ -104,7 +104,6 @@ omit =
     homeassistant/components/baf/sensor.py
     homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
-    homeassistant/components/balboa/__init__.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -213,6 +212,11 @@ omit =
     homeassistant/components/doorbird/camera.py
     homeassistant/components/doorbird/entity.py
     homeassistant/components/doorbird/util.py
+    homeassistant/components/dormakaba_dkey/__init__.py
+    homeassistant/components/dormakaba_dkey/binary_sensor.py
+    homeassistant/components/dormakaba_dkey/entity.py
+    homeassistant/components/dormakaba_dkey/lock.py
+    homeassistant/components/dormakaba_dkey/sensor.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
     homeassistant/components/dsmr_reader/__init__.py
@@ -1009,6 +1013,7 @@ omit =
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/entity.py
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
     homeassistant/components/screenlogic/sensor.py
@@ -1269,6 +1274,10 @@ omit =
     homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink_lte/*
+    homeassistant/components/tplink_omada/__init__.py
+    homeassistant/components/tplink_omada/coordinator.py
+    homeassistant/components/tplink_omada/entity.py
+    homeassistant/components/tplink_omada/switch.py
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py

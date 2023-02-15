@@ -107,7 +107,7 @@ class QBittorrentSensor(SensorEntity):
         qbittorrent_client,
         client_name,
         exception,
-    ):
+    ) -> None:
         """Initialize the qBittorrent sensor."""
         self.entity_description = description
         self.client = qbittorrent_client

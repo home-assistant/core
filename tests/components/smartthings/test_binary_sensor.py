@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings binary_sensor platform.
+"""Test for the SmartThings binary_sensor platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -13,22 +12,21 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.smartthings import binary_sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_platform
 
 
-async def test_mapping_integrity():
+async def test_mapping_integrity() -> None:
     """Test ensures the map dicts have proper integrity."""
     # Ensure every CAPABILITY_TO_ATTRIB key is in CAPABILITIES
     # Ensure every CAPABILITY_TO_ATTRIB value is in ATTRIB_TO_CLASS keys
     for capability, attrib in binary_sensor.CAPABILITY_TO_ATTRIB.items():
         assert capability in CAPABILITIES, capability
         assert attrib in ATTRIBUTES, attrib
-        assert attrib in binary_sensor.ATTRIB_TO_CLASS.keys(), attrib
+        assert attrib in binary_sensor.ATTRIB_TO_CLASS, attrib
     # Ensure every ATTRIB_TO_CLASS value is in DEVICE_CLASSES
     for attrib, device_class in binary_sensor.ATTRIB_TO_CLASS.items():
         assert attrib in ATTRIBUTES, attrib

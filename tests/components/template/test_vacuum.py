@@ -11,6 +11,7 @@ from homeassistant.components.vacuum import (
     STATE_RETURNING,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import assert_setup_component
@@ -24,7 +25,7 @@ _FAN_SPEED_INPUT_SELECT = "input_select.fan_speed"
 _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "vacuum")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "vacuum")])
 @pytest.mark.parametrize(
     "parm1,parm2,config",
     [
@@ -97,7 +98,7 @@ async def test_valid_configs(hass, count, parm1, parm2, start_ha):
     _verify(hass, parm1, parm2)
 
 
-@pytest.mark.parametrize("count,domain", [(0, "vacuum")])
+@pytest.mark.parametrize(("count", "domain"), [(0, "vacuum")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -119,7 +120,7 @@ async def test_invalid_configs(hass, count, start_ha):
 
 
 @pytest.mark.parametrize(
-    "count,domain,config",
+    ("count", "domain", "config"),
     [
         (
             1,
@@ -150,7 +151,7 @@ async def test_templates_with_entities(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "count,domain,config",
+    ("count", "domain", "config"),
     [
         (
             1,
@@ -188,7 +189,7 @@ async def test_available_template_with_entities(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "count,domain,config",
+    ("count", "domain", "config"),
     [
         (
             1,
@@ -216,7 +217,7 @@ async def test_invalid_availability_template_keeps_component_available(
 
 
 @pytest.mark.parametrize(
-    "count,domain,config",
+    ("count", "domain", "config"),
     [
         (
             1,
@@ -251,7 +252,7 @@ async def test_attribute_templates(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "count,domain,config",
+    ("count", "domain", "config"),
     [
         (
             1,
@@ -281,7 +282,7 @@ async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
 
 
 @pytest.mark.parametrize(
-    "count,domain,config",
+    ("count", "domain", "config"),
     [
         (
             1,
@@ -311,7 +312,7 @@ async def test_unique_id(hass, start_ha):
     assert len(hass.states.async_all("vacuum")) == 1
 
 
-async def test_unused_services(hass):
+async def test_unused_services(hass: HomeAssistant) -> None:
     """Test calling unused services should not crash."""
     await _register_basic_vacuum(hass)
 

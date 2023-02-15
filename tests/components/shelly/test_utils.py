@@ -138,7 +138,7 @@ async def test_is_block_momentary_input(mock_block_device, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "settings, sleep_period",
+    ("settings", "sleep_period"),
     [
         ({}, 0),
         ({"sleep_mode": {"period": 1000, "unit": "m"}}, 1000 * 60),
@@ -151,7 +151,7 @@ async def test_get_block_device_sleep_period(settings, sleep_period):
 
 
 @freeze_time("2019-01-10 18:43:00+00:00")
-async def test_get_device_uptime():
+async def test_get_device_uptime() -> None:
     """Test block test get device uptime."""
     assert get_device_uptime(
         55, dt.as_utc(dt.parse_datetime("2019-01-10 18:42:00+00:00"))
@@ -215,11 +215,12 @@ async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch):
     """Test get RPC input triggers."""
     monkeypatch.setattr(mock_rpc_device, "config", {"input:0": {"type": "button"}})
     assert set(get_rpc_input_triggers(mock_rpc_device)) == {
-        ("long_push", "button1"),
-        ("single_push", "button1"),
         ("btn_down", "button1"),
-        ("double_push", "button1"),
         ("btn_up", "button1"),
+        ("single_push", "button1"),
+        ("double_push", "button1"),
+        ("triple_push", "button1"),
+        ("long_push", "button1"),
     }
 
     monkeypatch.setattr(mock_rpc_device, "config", {"input:0": {"type": "switch"}})

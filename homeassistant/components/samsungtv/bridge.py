@@ -280,7 +280,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
             CONF_PORT: None,
-            # We need this high timeout because waiting for auth popup is just an open socket
+            # We need this high timeout because waiting for auth popup
+            # is just an open socket
             CONF_TIMEOUT: TIMEOUT_REQUEST,
         }
         try:
@@ -310,7 +311,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 LOGGER.debug("Create SamsungTVLegacyBridge for %s", self.host)
                 self._remote = Remote(self.config.copy())
             # This is only happening when the auth was switched to DENY
-            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
+            # A removed auth will lead to socket timeout because waiting
+            # for auth popup is just an open socket
             except AccessDenied:
                 self._notify_reauth_callback()
                 raise
@@ -386,7 +388,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
         """Tells if the TV is on."""
         LOGGER.debug("Checking if TV %s is on using websocket", self.host)
         if remote := await self._async_get_remote():
-            return remote.is_alive()  # type: ignore[no-any-return]
+            return remote.is_alive()
         return False
 
     async def _async_send_commands(self, commands: list[_CommandT]) -> None:
@@ -397,7 +399,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
             for _ in range(retry_count + 1):
                 try:
                     if remote := await self._async_get_remote():
-                        await remote.send_commands(commands)
+                        await remote.send_commands(commands)  # type: ignore[arg-type]
                     break
                 except (
                     BrokenPipeError,
@@ -414,7 +416,7 @@ class SamsungTVWSBaseBridge(SamsungTVBridge, Generic[_RemoteT, _CommandT]):
         """Create or return a remote control instance."""
         if (remote := self._remote) and remote.is_alive():
             # If we have one then try to use it
-            return remote  # type: ignore[no-any-return]
+            return remote
 
         async with self._remote_lock:
             # If we don't have one make sure we do it under the lock
@@ -483,7 +485,8 @@ class SamsungTVWSBridge(
                 CONF_HOST: self.host,
                 CONF_METHOD: self.method,
                 CONF_PORT: self.port,
-                # We need this high timeout because waiting for auth popup is just an open socket
+                # We need this high timeout because waiting for auth popup
+                # is just an open socket
                 CONF_TIMEOUT: TIMEOUT_REQUEST,
             }
 

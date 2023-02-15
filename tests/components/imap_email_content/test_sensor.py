@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from homeassistant.components.imap_email_content import sensor as imap_email_content
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.template import Template
 
@@ -28,7 +29,7 @@ class FakeEMailReader:
         return self._messages.popleft()
 
 
-async def test_allowed_sender(hass):
+async def test_allowed_sender(hass: HomeAssistant) -> None:
     """Test emails from allowed sender."""
     test_message = email.message.Message()
     test_message["From"] = "sender@test.com"
@@ -57,7 +58,7 @@ async def test_allowed_sender(hass):
     )
 
 
-async def test_multi_part_with_text(hass):
+async def test_multi_part_with_text(hass: HomeAssistant) -> None:
     """Test multi part emails."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
@@ -87,7 +88,7 @@ async def test_multi_part_with_text(hass):
     assert sensor.extra_state_attributes["body"] == "Test Message"
 
 
-async def test_multi_part_only_html(hass):
+async def test_multi_part_only_html(hass: HomeAssistant) -> None:
     """Test multi part emails with only HTML."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
@@ -117,7 +118,7 @@ async def test_multi_part_only_html(hass):
     )
 
 
-async def test_multi_part_only_other_text(hass):
+async def test_multi_part_only_other_text(hass: HomeAssistant) -> None:
     """Test multi part emails with only other text."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
@@ -144,7 +145,7 @@ async def test_multi_part_only_other_text(hass):
     assert sensor.extra_state_attributes["body"] == "Test Message"
 
 
-async def test_multiple_emails(hass):
+async def test_multiple_emails(hass: HomeAssistant) -> None:
     """Test multiple emails."""
     states = []
 
@@ -186,7 +187,7 @@ async def test_multiple_emails(hass):
     assert sensor.extra_state_attributes["body"] == "Test Message 2"
 
 
-async def test_sender_not_allowed(hass):
+async def test_sender_not_allowed(hass: HomeAssistant) -> None:
     """Test not whitelisted emails."""
     test_message = email.message.Message()
     test_message["From"] = "sender@test.com"
@@ -208,7 +209,7 @@ async def test_sender_not_allowed(hass):
     assert sensor.state is None
 
 
-async def test_template(hass):
+async def test_template(hass: HomeAssistant) -> None:
     """Test value template."""
     test_message = email.message.Message()
     test_message["From"] = "sender@test.com"

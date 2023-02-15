@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
@@ -346,7 +346,7 @@ async def setup_mock():
         yield _update_state
 
 
-@pytest.mark.parametrize("count,domain", [(1, binary_sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, binary_sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -377,7 +377,7 @@ async def test_match_all(hass, setup_mock, start_ha):
     assert len(setup_mock.mock_calls) == init_calls
 
 
-@pytest.mark.parametrize("count,domain", [(1, binary_sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, binary_sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -408,7 +408,7 @@ async def test_event(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "config,count,domain",
+    ("config", "count", "domain"),
     [
         (
             {
@@ -646,7 +646,7 @@ async def test_availability_template(hass, start_ha, entity_id):
     assert state.attributes[ATTR_DEVICE_CLASS] == "motion"
 
 
-@pytest.mark.parametrize("count,domain", [(1, binary_sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, binary_sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -673,7 +673,7 @@ async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
     assert ("TemplateError") in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, binary_sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, binary_sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -699,7 +699,9 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-async def test_no_update_template_match_all(hass, caplog):
+async def test_no_update_template_match_all(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we do not update sensors that match on all."""
 
     hass.state = CoreState.not_running
@@ -765,7 +767,7 @@ async def test_no_update_template_match_all(hass, caplog):
     assert hass.states.get("binary_sensor.all_attribute").state == OFF
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -813,7 +815,7 @@ async def test_unique_id(hass, start_ha):
     )
 
 
-@pytest.mark.parametrize("count,domain", [(1, binary_sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, binary_sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -917,7 +919,7 @@ async def test_availability_icon_picture(hass, start_ha, entity_id):
     }
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -981,7 +983,7 @@ async def test_restore_state(
     assert state.state == initial_state
 
 
-@pytest.mark.parametrize("count,domain", [(2, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1083,7 +1085,7 @@ async def test_trigger_entity(hass, start_ha):
     assert state.attributes.get("another") == "si"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1131,7 +1133,7 @@ async def test_template_with_trigger_templated_delay_on(hass, start_ha):
     assert state.state == OFF
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1213,7 +1215,7 @@ async def test_trigger_entity_restore_state(
     assert state.attributes["another"] == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1274,7 +1276,7 @@ async def test_trigger_entity_restore_state_auto_off(
     assert state.state == OFF
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
