@@ -849,7 +849,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.2
+guppy3==3.1.2;python_version<'3.11'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
