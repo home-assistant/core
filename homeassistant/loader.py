@@ -419,8 +419,8 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     return usb
 
 
-def _should_homekit_always_discover(iot_class: str | None) -> bool:
-    """Return if we should offer HomeKit control for a device."""
+def homekit_always_discover(iot_class: str | None) -> bool:
+    """Return if we should always offer HomeKit control for a device."""
     #
     # Since we prefer local control, if the integration that is being
     # discovered is cloud AND the HomeKit device is UNPAIRED we still
@@ -439,7 +439,7 @@ async def async_get_homekit(
     """Return cached list of homekit models."""
     homekit: dict[str, HomeKitDiscoveredIntegration] = {
         model: HomeKitDiscoveredIntegration(
-            details["domain"], _should_homekit_always_discover(details["iot_class"])
+            cast(str, details["domain"]), cast(bool, details["always_discover"])
         )
         for model, details in HOMEKIT.items()
     }
@@ -455,7 +455,7 @@ async def async_get_homekit(
         for model in integration.homekit["models"]:
             homekit[model] = HomeKitDiscoveredIntegration(
                 integration.domain,
-                _should_homekit_always_discover(integration.iot_class),
+                homekit_always_discover(integration.iot_class),
             )
 
     return homekit

@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from homeassistant.loader import async_process_zeroconf_match_dict
+from homeassistant.loader import (
+    async_process_zeroconf_match_dict,
+    homekit_always_discover,
+)
 
 from .model import Config, Integration
 from .serializer import format_python_namespace
@@ -44,7 +47,9 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 
             homekit_dict[model] = {
                 "domain": domain,
-                "iot_class": integration.manifest["iot_class"],
+                "always_discover": homekit_always_discover(
+                    integration.manifest["iot_class"]
+                ),
             }
 
     # HomeKit models are matched on starting string, make sure none overlap.

@@ -5,240 +5,240 @@ To update, run python3 -m script.hassfest
 
 HOMEKIT = {
     "3810X": {
+        "always_discover": True,
         "domain": "roku",
-        "iot_class": "local_polling",
     },
     "3820X": {
+        "always_discover": True,
         "domain": "roku",
-        "iot_class": "local_polling",
     },
     "4660X": {
+        "always_discover": True,
         "domain": "roku",
-        "iot_class": "local_polling",
     },
     "7820X": {
+        "always_discover": True,
         "domain": "roku",
-        "iot_class": "local_polling",
     },
     "819LMB": {
+        "always_discover": True,
         "domain": "myq",
-        "iot_class": "cloud_polling",
     },
     "AC02": {
+        "always_discover": True,
         "domain": "tado",
-        "iot_class": "cloud_polling",
     },
     "Abode": {
+        "always_discover": True,
         "domain": "abode",
-        "iot_class": "cloud_push",
     },
     "BSB002": {
+        "always_discover": False,
         "domain": "hue",
-        "iot_class": "local_push",
     },
     "C105X": {
+        "always_discover": True,
         "domain": "roku",
-        "iot_class": "local_polling",
     },
     "C135X": {
+        "always_discover": True,
         "domain": "roku",
-        "iot_class": "local_polling",
     },
     "EB-*": {
+        "always_discover": True,
         "domain": "ecobee",
-        "iot_class": "cloud_polling",
     },
     "Escea": {
+        "always_discover": False,
         "domain": "escea",
-        "iot_class": "local_push",
     },
     "HHKBridge*": {
+        "always_discover": True,
         "domain": "hive",
-        "iot_class": "cloud_polling",
     },
     "Healty Home Coach": {
+        "always_discover": True,
         "domain": "netatmo",
-        "iot_class": "cloud_polling",
     },
     "Iota": {
+        "always_discover": True,
         "domain": "abode",
-        "iot_class": "cloud_push",
     },
     "LIFX A19": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX BR30": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Beam": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Candle": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Clean": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Color": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX DLCOL": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX DLWW": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Dlight": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Downlight": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Filament": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX GU10": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Lightstrip": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Mini": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Nightvision": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Pls": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Plus": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Tile": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX White": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "LIFX Z": {
+        "always_discover": True,
         "domain": "lifx",
-        "iot_class": "local_polling",
     },
     "MYQ": {
+        "always_discover": True,
         "domain": "myq",
-        "iot_class": "cloud_polling",
     },
     "NL29": {
+        "always_discover": False,
         "domain": "nanoleaf",
-        "iot_class": "local_push",
     },
     "NL42": {
+        "always_discover": False,
         "domain": "nanoleaf",
-        "iot_class": "local_push",
     },
     "NL47": {
+        "always_discover": False,
         "domain": "nanoleaf",
-        "iot_class": "local_push",
     },
     "NL48": {
+        "always_discover": False,
         "domain": "nanoleaf",
-        "iot_class": "local_push",
     },
     "NL52": {
+        "always_discover": False,
         "domain": "nanoleaf",
-        "iot_class": "local_push",
     },
     "NL59": {
+        "always_discover": False,
         "domain": "nanoleaf",
-        "iot_class": "local_push",
     },
     "Netatmo Relay": {
+        "always_discover": True,
         "domain": "netatmo",
-        "iot_class": "cloud_polling",
     },
     "PowerView": {
+        "always_discover": True,
         "domain": "hunterdouglas_powerview",
-        "iot_class": "local_polling",
     },
     "Presence": {
+        "always_discover": True,
         "domain": "netatmo",
-        "iot_class": "cloud_polling",
     },
     "Rachio": {
+        "always_discover": True,
         "domain": "rachio",
-        "iot_class": "cloud_push",
     },
     "SPK5": {
+        "always_discover": True,
         "domain": "rainmachine",
-        "iot_class": "local_polling",
     },
     "Sensibo": {
+        "always_discover": True,
         "domain": "sensibo",
-        "iot_class": "cloud_polling",
     },
     "Smart Bridge": {
+        "always_discover": False,
         "domain": "lutron_caseta",
-        "iot_class": "local_push",
     },
     "Socket": {
+        "always_discover": False,
         "domain": "wemo",
-        "iot_class": "local_push",
     },
     "TRADFRI": {
+        "always_discover": True,
         "domain": "tradfri",
-        "iot_class": "local_polling",
     },
     "Touch HD": {
+        "always_discover": True,
         "domain": "rainmachine",
-        "iot_class": "local_polling",
     },
     "Welcome": {
+        "always_discover": True,
         "domain": "netatmo",
-        "iot_class": "cloud_polling",
     },
     "Wemo": {
+        "always_discover": False,
         "domain": "wemo",
-        "iot_class": "local_push",
     },
     "YL*": {
+        "always_discover": False,
         "domain": "yeelight",
-        "iot_class": "local_push",
     },
     "ecobee*": {
+        "always_discover": True,
         "domain": "ecobee",
-        "iot_class": "cloud_polling",
     },
     "iSmartGate": {
+        "always_discover": True,
         "domain": "gogogate2",
-        "iot_class": "local_polling",
     },
     "iZone": {
+        "always_discover": True,
         "domain": "izone",
-        "iot_class": "local_polling",
     },
     "tado": {
+        "always_discover": True,
         "domain": "tado",
-        "iot_class": "cloud_polling",
     },
 }
 
