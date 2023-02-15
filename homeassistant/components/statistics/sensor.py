@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.sensor import (  # pylint: disable=hass-deprecated-import
+from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
