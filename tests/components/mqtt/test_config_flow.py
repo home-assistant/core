@@ -843,7 +843,7 @@ async def test_invalid_discovery_prefix(
 
 def get_default(schema: vol.Schema, key: str) -> Any:
     """Get default value for key in voluptuous schema."""
-    for schema_key in schema.keys():
+    for schema_key in schema:
         if schema_key == key:
             if schema_key.default == vol.UNDEFINED:
                 return None
@@ -852,7 +852,7 @@ def get_default(schema: vol.Schema, key: str) -> Any:
 
 def get_suggested(schema: vol.Schema, key: str) -> Any:
     """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema.keys():
+    for schema_key in schema:
         if schema_key == key:
             if (
                 schema_key.description is None

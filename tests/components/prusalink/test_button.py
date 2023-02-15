@@ -1,5 +1,4 @@
 """Test Prusalink buttons."""
-
 from unittest.mock import patch
 
 from pyprusalink import Conflict
@@ -9,6 +8,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +30,7 @@ async def test_button_pause_cancel(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     mock_job_api_printing,
     object_id,
     method,
@@ -71,7 +72,7 @@ async def test_button_resume(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     mock_job_api_paused,
     object_id,
     method,
