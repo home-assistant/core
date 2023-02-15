@@ -50,7 +50,7 @@ ENTITY_2 = "media_player.test2"
         (SERVICE_MEDIA_PAUSE, STATE_PAUSED, MediaPlayerEntityFeature.PAUSE),
     ],
 )
-async def test_state(hass, service, state, supported_feature):
+async def test_state(hass: HomeAssistant, service, state, supported_feature) -> None:
     """Test that we can turn a state into a service call."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
     if service != SERVICE_TURN_ON:
@@ -220,7 +220,9 @@ async def test_attribute_no_state(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_attribute(hass, service, attribute, supported_feature):
+async def test_attribute(
+    hass: HomeAssistant, service, attribute, supported_feature
+) -> None:
     """Test that service call is made for each attribute."""
     hass.states.async_set(
         ENTITY_1,

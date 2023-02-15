@@ -118,7 +118,9 @@ async def test_button_setup_electric_vehicle(hass: HomeAssistant) -> None:
         ("refresh_status", "refresh_vehicle_status"),
     ],
 )
-async def test_button_press(hass, entity_id_suffix, api_method_name) -> None:
+async def test_button_press(
+    hass: HomeAssistant, entity_id_suffix, api_method_name
+) -> None:
     """Test pressing the button entities."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 
