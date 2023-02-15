@@ -3829,7 +3829,7 @@ async def test_script_mode_single(hass, caplog):
 
 @pytest.mark.parametrize("max_exceeded", [None, "WARNING", "INFO", "ERROR", "SILENT"])
 @pytest.mark.parametrize(
-    "script_mode,max_runs", [("single", 1), ("parallel", 2), ("queued", 2)]
+    ("script_mode", "max_runs"), [("single", 1), ("parallel", 2), ("queued", 2)]
 )
 async def test_max_exceeded(hass, caplog, max_exceeded, script_mode, max_runs):
     """Test max_exceeded option."""
