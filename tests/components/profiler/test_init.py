@@ -19,6 +19,7 @@ from homeassistant.components.profiler import (
 from homeassistant.components.profiler.const import DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -90,8 +91,16 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir) -> None:
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="still works on python 3.10")
 async def test_memory_usage_py311(hass: HomeAssistant, tmpdir) -> None:
     """Test raise an error on python3.11."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     assert hass.services.has_service(DOMAIN, SERVICE_MEMORY)
-    with pytest.raises(HomeAssistant, match="not yet available on python 3.11"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Memory profiling is not supported on Python 3.11. Please use Python 3.10.",
+    ):
         await hass.services.async_call(
             DOMAIN, SERVICE_MEMORY, {CONF_SECONDS: 0.000001}, blocking=True
         )
