@@ -7,7 +7,12 @@ from typing import Any
 
 from reolink_aio.api import Host
 
-from homeassistant.components.siren import SirenEntity, SirenEntityDescription, SirenEntityFeature, ATTR_DURATION
+from homeassistant.components.siren import (
+    ATTR_DURATION,
+    SirenEntity,
+    SirenEntityDescription,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -88,7 +93,9 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
     async def async_turn_on(self, **kwargs):
         """Turn on the siren."""
         duration = kwargs.get(ATTR_DURATION, 2)
-        await self.entity_description.method(self._host.api, self._channel, True, duration)
+        await self.entity_description.method(
+            self._host.api, self._channel, True, duration
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn off the siren."""
