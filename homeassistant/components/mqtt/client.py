@@ -497,8 +497,10 @@ class MQTT:
             await self.hass.async_add_executor_job(stop)
 
     @callback
-    def async_restore_subscriptions(self, subscriptions: list[Subscription]) -> None:
-        """Restore subscriptions after reconnect."""
+    def async_restore_tracked_subscriptions(
+        self, subscriptions: list[Subscription]
+    ) -> None:
+        """Restore tracked subscriptions after reconnect."""
         for subscription in subscriptions:
             self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
