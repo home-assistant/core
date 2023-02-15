@@ -127,7 +127,7 @@ async def test_query_mssql_no_result(
 
 
 @pytest.mark.parametrize(
-    "url,expected_patterns,not_expected_patterns",
+    ("url", "expected_patterns", "not_expected_patterns"),
     [
         (
             "sqlite://homeassistant:hunter2@homeassistant.local",
@@ -256,7 +256,7 @@ async def test_config_from_old_yaml(
 
 
 @pytest.mark.parametrize(
-    "url,expected_patterns,not_expected_patterns",
+    ("url", "expected_patterns", "not_expected_patterns"),
     [
         (
             "sqlite://homeassistant:hunter2@homeassistant.local",

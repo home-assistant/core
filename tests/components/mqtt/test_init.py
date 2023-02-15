@@ -1290,7 +1290,7 @@ async def test_subscribe_same_topic(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
-    """Test subscring to same topic twice and simulate retained messages.
+    """Test subscribing to same topic twice and simulate retained messages.
 
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages.
@@ -1746,7 +1746,7 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
 
 
 @pytest.mark.parametrize(
-    "config, insecure_param",
+    ("config", "insecure_param"),
     [
         ({"certificate": "auto"}, "not set"),
         ({"certificate": "auto", "tls_insecure": False}, False),
@@ -3148,7 +3148,7 @@ async def test_disabling_and_enabling_entry(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 @pytest.mark.parametrize(
-    "config, unique",
+    ("config", "unique"),
     [
         (
             [

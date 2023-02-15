@@ -297,7 +297,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -338,7 +338,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,

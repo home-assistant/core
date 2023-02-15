@@ -332,7 +332,7 @@ async def test_discovered_by_dhcp_discovery_finds_non_steamist_device(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, DISCOVERY_30303),
@@ -364,7 +364,7 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, DISCOVERY_30303),

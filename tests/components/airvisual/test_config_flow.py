@@ -34,7 +34,7 @@ from .conftest import (
 
 
 @pytest.mark.parametrize(
-    "integration_type,input_form_step,patched_method,config,entry_title",
+    ("integration_type", "input_form_step", "patched_method", "config", "entry_title"),
     [
         (
             INTEGRATION_TYPE_GEOGRAPHY_COORDS,

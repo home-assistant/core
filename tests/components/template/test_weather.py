@@ -14,7 +14,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import ATTR_ATTRIBUTION
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [

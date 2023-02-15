@@ -31,7 +31,7 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_condition_types",
+    ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
         (False, 0, 0, []),
         (False, const.HumidifierEntityFeature.MODES, 0, ["is_mode"]),
@@ -97,7 +97,7 @@ async def test_get_conditions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -247,7 +247,13 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
 
 
 @pytest.mark.parametrize(
-    "set_state,capabilities_reg,capabilities_state,condition,expected_capabilities",
+    (
+        "set_state",
+        "capabilities_reg",
+        "capabilities_state",
+        "condition",
+        "expected_capabilities",
+    ),
     [
         (
             False,
@@ -411,7 +417,7 @@ async def test_capabilities(
 
 
 @pytest.mark.parametrize(
-    "condition,capability_name,extra",
+    ("condition", "capability_name", "extra"),
     [
         ("is_mode", "mode", {"type": "select", "options": []}),
     ],

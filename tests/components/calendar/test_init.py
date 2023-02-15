@@ -88,7 +88,7 @@ async def test_calendars_http_api(
 
 
 @pytest.mark.parametrize(
-    "payload,code",
+    ("payload", "code"),
     [
         (
             {
@@ -198,7 +198,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "date_fields,expected_error,error_match",
+    ("date_fields", "expected_error", "error_match"),
     [
         (
             {},

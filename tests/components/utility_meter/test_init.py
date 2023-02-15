@@ -380,7 +380,7 @@ async def test_setup_missing_discovery(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "tariffs,expected_entities",
+    ("tariffs", "expected_entities"),
     (
         (
             [],

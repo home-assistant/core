@@ -68,7 +68,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception, error",
+    ("exception", "error"),
     [
         (UnauthorizedError, "invalid_auth"),
         (CannotConnectError, "cannot_connect"),

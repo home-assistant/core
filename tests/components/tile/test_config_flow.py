@@ -13,7 +13,7 @@ from .conftest import TEST_PASSWORD, TEST_USERNAME
 
 
 @pytest.mark.parametrize(
-    "mock_login_response,errors",
+    ("mock_login_response", "errors"),
     [
         (AsyncMock(side_effect=InvalidAuthError), {"base": "invalid_auth"}),
         (AsyncMock(side_effect=TileError), {"base": "unknown"}),
