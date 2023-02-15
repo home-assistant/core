@@ -18,6 +18,7 @@ class _AnIntEnum(IntEnum):
 
 class _AnIntFlag(IntFlag):
     VALUE = 1
+    SECOND = 2
 
 
 @pytest.mark.parametrize(

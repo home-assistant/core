@@ -127,47 +127,47 @@ def sensor_fixture(hass, port):
     return sensor
 
 
-async def test_name(port, sensor):
+async def test_name(port, sensor) -> None:
     """Test the name."""
     assert port.label == sensor.name
 
 
-async def test_uom_temp(port, sensor):
+async def test_uom_temp(port, sensor) -> None:
     """Test the UOM temperature."""
     port.tag = "temperature"
     assert sensor.unit_of_measurement == UnitOfTemperature.CELSIUS
     assert sensor.device_class is SensorDeviceClass.TEMPERATURE
 
 
-async def test_uom_power(port, sensor):
+async def test_uom_power(port, sensor) -> None:
     """Test the UOEM power."""
     port.tag = "active_pwr"
     assert sensor.unit_of_measurement == "Watts"
     assert sensor.device_class is None
 
 
-async def test_uom_digital(port, sensor):
+async def test_uom_digital(port, sensor) -> None:
     """Test the UOM digital input."""
     port.model = "Input Digital"
     assert sensor.unit_of_measurement is None
     assert sensor.device_class is None
 
 
-async def test_uom_unknown(port, sensor):
+async def test_uom_unknown(port, sensor) -> None:
     """Test the UOM."""
     port.tag = "balloons"
     assert sensor.unit_of_measurement == "balloons"
     assert sensor.device_class is None
 
 
-async def test_uom_uninitialized(port, sensor):
+async def test_uom_uninitialized(port, sensor) -> None:
     """Test that the UOM defaults if not initialized."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
     assert sensor.unit_of_measurement is None
     assert sensor.device_class is None
 
 
-async def test_state_digital(port, sensor):
+async def test_state_digital(port, sensor) -> None:
     """Test the digital input."""
     port.model = "Input Digital"
     port.value = 0
@@ -178,7 +178,7 @@ async def test_state_digital(port, sensor):
     assert sensor.state == mfi.STATE_ON
 
 
-async def test_state_digits(port, sensor):
+async def test_state_digits(port, sensor) -> None:
     """Test the state of digits."""
     port.tag = "didyoucheckthedict?"
     port.value = 1.25
@@ -188,13 +188,13 @@ async def test_state_digits(port, sensor):
         assert sensor.state == 1.0
 
 
-async def test_state_uninitialized(port, sensor):
+async def test_state_uninitialized(port, sensor) -> None:
     """Test the state of uninitialized sensorfs."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
     assert sensor.state == mfi.STATE_OFF
 
 
-async def test_update(port, sensor):
+async def test_update(port, sensor) -> None:
     """Test the update."""
     sensor.update()
     assert port.refresh.call_count == 1

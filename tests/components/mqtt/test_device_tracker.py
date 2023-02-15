@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import device_tracker, mqtt
-from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.device_tracker import legacy
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -590,7 +590,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 
 
 async def test_setup_with_modern_schema(
-    hass: HomeAssistant, mock_device_tracker_conf: list[Device]
+    hass: HomeAssistant, mock_device_tracker_conf: list[legacy.Device]
 ) -> None:
     """Test setup using the modern schema."""
     dev_id = "jan"

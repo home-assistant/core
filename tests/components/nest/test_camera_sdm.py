@@ -3,7 +3,6 @@
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
-
 import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
@@ -26,6 +25,7 @@ from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 from .conftest import FakeAuth
 
 from tests.common import async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 PLATFORM = "camera"
 CAMERA_DEVICE_TYPE = "sdm.devices.types.CAMERA"
@@ -178,7 +178,7 @@ async def fire_alarm(hass, point_in_time):
         await hass.async_block_till_done()
 
 
-async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
+async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup) -> None:
     """Test configuration that returns no devices."""
     await setup_platform()
     assert len(hass.states.async_all()) == 0
@@ -186,7 +186,7 @@ async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
 
 async def test_ineligible_device(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test configuration with devices that do not support cameras."""
     create_device.create(
         {
@@ -202,7 +202,7 @@ async def test_ineligible_device(
 
 async def test_camera_device(
     hass: HomeAssistant, setup_platform: PlatformSetup, camera_device: None
-):
+) -> None:
     """Test a basic camera with a live stream."""
     await setup_platform()
 
@@ -230,7 +230,7 @@ async def test_camera_stream(
     camera_device: None,
     auth: FakeAuth,
     mock_create_stream: Mock,
-):
+) -> None:
     """Test a basic camera and fetch its live stream."""
     auth.responses = [make_stream_url_response()]
     await setup_platform()
@@ -248,13 +248,13 @@ async def test_camera_stream(
 
 
 async def test_camera_ws_stream(
-    hass,
+    hass: HomeAssistant,
     setup_platform,
     camera_device,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     auth,
     mock_create_stream,
-):
+) -> None:
     """Test a basic camera that supports web rtc."""
     auth.responses = [make_stream_url_response()]
     await setup_platform()
@@ -284,8 +284,12 @@ async def test_camera_ws_stream(
 
 
 async def test_camera_ws_stream_failure(
-    hass, setup_platform, camera_device, hass_ws_client, auth
-):
+    hass: HomeAssistant,
+    setup_platform,
+    camera_device,
+    hass_ws_client: WebSocketGenerator,
+    auth,
+) -> None:
     """Test a basic camera that supports web rtc."""
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     await setup_platform()
@@ -312,7 +316,9 @@ async def test_camera_ws_stream_failure(
     assert msg["error"]["message"].startswith("Nest API error")
 
 
-async def test_camera_stream_missing_trait(hass, setup_platform, create_device):
+async def test_camera_stream_missing_trait(
+    hass: HomeAssistant, setup_platform, create_device
+) -> None:
     """Test fetching a video stream when not supported by the API."""
     create_device.create(
         {
@@ -346,7 +352,7 @@ async def test_refresh_expired_stream_token(
     setup_platform: PlatformSetup,
     auth: FakeAuth,
     camera_device: None,
-):
+) -> None:
     """Test a camera stream expiration and refresh."""
     now = utcnow()
     stream_1_expiration = now + datetime.timedelta(seconds=90)
@@ -423,7 +429,7 @@ async def test_stream_response_already_expired(
     auth: FakeAuth,
     setup_platform: PlatformSetup,
     camera_device: None,
-):
+) -> None:
     """Test a API response returning an expired stream url."""
     now = utcnow()
     stream_1_expiration = now + datetime.timedelta(seconds=-90)
@@ -456,7 +462,7 @@ async def test_camera_removed(
     camera_device: None,
     subscriber: FakeSubscriber,
     setup_platform: PlatformSetup,
-):
+) -> None:
     """Test case where entities are removed and stream tokens revoked."""
     await setup_platform()
     # Simplify test setup
@@ -486,7 +492,7 @@ async def test_camera_remove_failure(
     auth: FakeAuth,
     camera_device: None,
     setup_platform: PlatformSetup,
-):
+) -> None:
     """Test case where revoking the stream token fails on unload."""
     await setup_platform()
 
@@ -516,7 +522,7 @@ async def test_refresh_expired_stream_failure(
     auth: FakeAuth,
     setup_platform: PlatformSetup,
     camera_device: None,
-):
+) -> None:
     """Tests a failure when refreshing the stream."""
     now = utcnow()
     stream_1_expiration = now + datetime.timedelta(seconds=90)
@@ -569,8 +575,12 @@ async def test_refresh_expired_stream_failure(
 
 
 async def test_camera_web_rtc(
-    hass, auth, hass_ws_client, webrtc_camera_device, setup_platform
-):
+    hass: HomeAssistant,
+    auth,
+    hass_ws_client: WebSocketGenerator,
+    webrtc_camera_device,
+    setup_platform,
+) -> None:
     """Test a basic camera that supports web rtc."""
     expiration = utcnow() + datetime.timedelta(seconds=100)
     auth.responses = [
@@ -614,8 +624,12 @@ async def test_camera_web_rtc(
 
 
 async def test_camera_web_rtc_unsupported(
-    hass, auth, hass_ws_client, camera_device, setup_platform
-):
+    hass: HomeAssistant,
+    auth,
+    hass_ws_client: WebSocketGenerator,
+    camera_device,
+    setup_platform,
+) -> None:
     """Test a basic camera that supports web rtc."""
     await setup_platform()
 
@@ -644,8 +658,12 @@ async def test_camera_web_rtc_unsupported(
 
 
 async def test_camera_web_rtc_offer_failure(
-    hass, auth, hass_ws_client, webrtc_camera_device, setup_platform
-):
+    hass: HomeAssistant,
+    auth,
+    hass_ws_client: WebSocketGenerator,
+    webrtc_camera_device,
+    setup_platform,
+) -> None:
     """Test a basic camera that supports web rtc."""
     auth.responses = [
         aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST),
@@ -676,8 +694,13 @@ async def test_camera_web_rtc_offer_failure(
 
 
 async def test_camera_multiple_streams(
-    hass, auth, hass_ws_client, create_device, setup_platform, mock_create_stream
-):
+    hass: HomeAssistant,
+    auth,
+    hass_ws_client: WebSocketGenerator,
+    create_device,
+    setup_platform,
+    mock_create_stream,
+) -> None:
     """Test a camera supporting multiple stream types."""
     expiration = utcnow() + datetime.timedelta(seconds=100)
     auth.responses = [

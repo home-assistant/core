@@ -421,6 +421,12 @@ class MQTT:
                 retain=will_message.retain,
             )
 
+    def _is_active_subscription(self, topic: str) -> bool:
+        """Check if a topic has an active subscription."""
+        return topic in self._simple_subscriptions or any(
+            other.topic == topic for other in self._wildcard_subscriptions
+        )
+
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
@@ -544,11 +550,11 @@ class MQTT:
             _raise_on_error(result)
             return mid
 
-        if any(other.topic == topic for other in self.subscriptions):
-            # Other subscriptions on topic remaining - don't unsubscribe.
-            return
-
         async with self._paho_lock:
+            if self._is_active_subscription(topic):
+                # Other subscriptions on topic remaining - don't unsubscribe.
+                return
+
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
@@ -558,6 +564,18 @@ class MQTT:
         self, subscriptions: Iterable[tuple[str, int]]
     ) -> None:
         """Perform MQTT client subscriptions."""
+
+        # Section 3.3.1.3 in the specification:
+        # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+        # When sending a PUBLISH Packet to a Client the Server MUST
+        # set the RETAIN flag to 1 if a message is sent as a result of a
+        # new subscription being made by a Client [MQTT-3.3.1-8].
+        # It MUST set the RETAIN flag to 0 when a PUBLISH Packet is sent to
+        # a Client because it matches an established subscription regardless
+        # of how the flag was set in the message it received [MQTT-3.3.1-9].
+        #
+        # Since we do not know if a published value is retained we need to
+        # (re)subscribe, to ensure retained messages are replayed
 
         def _process_client_subscriptions() -> list[tuple[int, int]]:
             """Initiate all subscriptions on the MQTT client and return the results."""
