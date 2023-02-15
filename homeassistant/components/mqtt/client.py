@@ -341,6 +341,11 @@ class MqttClientSetup:
         return self._client
 
 
+def _is_simple_match(topic: str) -> bool:
+    """Return if a topic is a simple match."""
+    return not ("+" in topic or "#" in topic)
+
+
 class MQTT:
     """Home Assistant MQTT client."""
 
@@ -513,7 +518,7 @@ class MQTT:
 
         The caller is responsible clearing the cache of _matching_subscriptions.
         """
-        if "+" not in subscription.topic and "#" not in subscription.topic:
+        if _is_simple_match(subscription.topic):
             self._simple_subscriptions.setdefault(subscription.topic, []).append(
                 subscription
             )
@@ -530,7 +535,7 @@ class MQTT:
         """
         topic = subscription.topic
         try:
-            if "+" not in subscription.topic and "#" not in subscription.topic:
+            if _is_simple_match(topic):
                 self._simple_subscriptions[topic].remove(subscription)
                 if not self._simple_subscriptions[topic]:
                     del self._simple_subscriptions[topic]
