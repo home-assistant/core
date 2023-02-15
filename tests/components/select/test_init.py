@@ -88,7 +88,9 @@ async def test_select(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_custom_integration_and_validation(hass, enable_custom_integrations):
+async def test_custom_integration_and_validation(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we can only select valid options."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

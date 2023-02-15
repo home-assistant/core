@@ -103,7 +103,7 @@ async def test_passing_variables(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("toggle", [False, True])
-async def test_turn_on_off_toggle(hass, toggle):
+async def test_turn_on_off_toggle(hass: HomeAssistant, toggle) -> None:
     """Verify turn_on, turn_off & toggle services."""
     event = "test_event"
     event_mock = Mock()
@@ -158,7 +158,7 @@ invalid_configs = [
 
 
 @pytest.mark.parametrize("value", invalid_configs)
-async def test_setup_with_invalid_configs(hass, value):
+async def test_setup_with_invalid_configs(hass: HomeAssistant, value) -> None:
     """Test setup with invalid configs."""
     assert await async_setup_component(
         hass, "script", {"script": value}
@@ -198,8 +198,13 @@ async def test_setup_with_invalid_configs(hass, value):
     ),
 )
 async def test_bad_config_validation(
-    hass: HomeAssistant, caplog, object_id, broken_config, problem, details
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    object_id,
+    broken_config,
+    problem,
+    details,
+) -> None:
     """Test bad script configuration which can be detected during validation."""
     assert await async_setup_component(
         hass,
@@ -229,7 +234,7 @@ async def test_bad_config_validation(
 
 
 @pytest.mark.parametrize("running", ["no", "same", "different"])
-async def test_reload_service(hass, running):
+async def test_reload_service(hass: HomeAssistant, running) -> None:
     """Verify the reload service."""
     event = "test_event"
     event_flag = asyncio.Event()
@@ -287,7 +292,7 @@ async def test_reload_service(hass, running):
         assert hass.services.has_service(script.DOMAIN, "test")
 
 
-async def test_reload_unchanged_does_not_stop(hass, calls):
+async def test_reload_unchanged_does_not_stop(hass: HomeAssistant, calls) -> None:
     """Test that reloading stops any running actions as appropriate."""
     test_entity = "test.entity"
 
@@ -373,7 +378,9 @@ async def test_reload_unchanged_does_not_stop(hass, calls):
         },
     ),
 )
-async def test_reload_unchanged_script(hass, calls, script_config):
+async def test_reload_unchanged_script(
+    hass: HomeAssistant, calls, script_config
+) -> None:
     """Test an unmodified script is not reloaded."""
     with patch(
         "homeassistant.components.script.ScriptEntity", wraps=ScriptEntity
@@ -746,7 +753,7 @@ async def test_logbook_humanify_script_started_event(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.parametrize("concurrently", [False, True])
-async def test_concurrent_script(hass, concurrently):
+async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
     """Test calling script concurrently or not."""
     if concurrently:
         call_script_2 = {
@@ -1008,7 +1015,9 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
         (SCRIPT_MODE_SINGLE, "Already running"),
     ),
 )
-async def test_recursive_script(hass, script_mode, warning_msg, caplog):
+async def test_recursive_script(
+    hass: HomeAssistant, script_mode, warning_msg, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test recursive script calls does not deadlock."""
     # Make sure we cover all script modes
     assert [
@@ -1056,7 +1065,9 @@ async def test_recursive_script(hass, script_mode, warning_msg, caplog):
         (SCRIPT_MODE_SINGLE, "Already running"),
     ),
 )
-async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog):
+async def test_recursive_script_indirect(
+    hass: HomeAssistant, script_mode, warning_msg, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test recursive script calls does not deadlock."""
     # Make sure we cover all script modes
     assert [
@@ -1116,7 +1127,9 @@ async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog)
 @pytest.mark.parametrize(
     "script_mode", [SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED, SCRIPT_MODE_RESTART]
 )
-async def test_recursive_script_turn_on(hass: HomeAssistant, script_mode, caplog):
+async def test_recursive_script_turn_on(
+    hass: HomeAssistant, script_mode, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test script turning itself on.
 
     - Illegal recursion detection should not be triggered
@@ -1348,8 +1361,12 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
     ),
 )
 async def test_blueprint_script_bad_config(
-    hass, caplog, blueprint_inputs, problem, details
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    blueprint_inputs,
+    problem,
+    details,
+) -> None:
     """Test blueprint script with bad inputs."""
     assert await async_setup_component(
         hass,
