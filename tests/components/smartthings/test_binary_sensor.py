@@ -26,7 +26,7 @@ async def test_mapping_integrity() -> None:
     for capability, attrib in binary_sensor.CAPABILITY_TO_ATTRIB.items():
         assert capability in CAPABILITIES, capability
         assert attrib in ATTRIBUTES, attrib
-        assert attrib in binary_sensor.ATTRIB_TO_CLASS.keys(), attrib
+        assert attrib in binary_sensor.ATTRIB_TO_CLASS, attrib
     # Ensure every ATTRIB_TO_CLASS value is in DEVICE_CLASSES
     for attrib, device_class in binary_sensor.ATTRIB_TO_CLASS.items():
         assert attrib in ATTRIBUTES, attrib
