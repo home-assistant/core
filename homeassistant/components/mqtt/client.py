@@ -510,6 +510,8 @@ class MQTT:
         """Track a subscription.
 
         This method does not send a SUBSCRIBE message to the broker.
+
+        The caller is responsible clearing the cache of _matching_subscriptions.
         """
         if "+" not in subscription.topic and "#" not in subscription.topic:
             self._simple_subscriptions.setdefault(subscription.topic, []).append(
@@ -523,6 +525,8 @@ class MQTT:
         """Untrack a subscription.
 
         This method does not send an UNSUBSCRIBE message to the broker.
+
+        The caller is responsible clearing the cache of _matching_subscriptions.
         """
         topic = subscription.topic
         try:
