@@ -1,8 +1,8 @@
 """Test the SmartTub switch platform."""
-
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
@@ -13,7 +13,9 @@ from homeassistant.const import STATE_OFF, STATE_ON
         ("P2", "jet_p2", "on"),
     ],
 )
-async def test_pumps(spa, setup_entry, hass, pump_id, pump_state, entity_suffix):
+async def test_pumps(
+    spa, setup_entry, hass: HomeAssistant, pump_id, pump_state, entity_suffix
+) -> None:
     """Test pump entities."""
 
     status = await spa.get_status_full()

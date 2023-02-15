@@ -1,7 +1,8 @@
 """Test the SmartTub light platform."""
-
 import pytest
 from smarttub import SpaLight
+
+from homeassistant.core import HomeAssistant
 
 
 # the light in light_zone should have initial state light_state. we will call
@@ -18,13 +19,13 @@ from smarttub import SpaLight
 async def test_light(
     spa,
     setup_entry,
-    hass,
+    hass: HomeAssistant,
     light_zone,
     light_state,
     service_name,
     service_params,
     set_mode_args,
-):
+) -> None:
     """Test light entity."""
 
     entity_id = f"light.{spa.brand}_{spa.model}_light_{light_zone}"
