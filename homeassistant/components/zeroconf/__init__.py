@@ -459,24 +459,15 @@ class ZeroconfDiscovery:
             # We only send updates to homekit_controller
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
-            if not is_homekit_paired(props):
-                # Since we prefer local control, if the integration that is being
-                # discovered is cloud AND the homekit device is UNPAIRED we still
-                # want to discovery it.
+            if not is_homekit_paired(props) and not homekit_model.always_discover:
+                # If the device is paired with HomeKit we must send on
+                # the update to homekit_controller so it can see when
+                # the 'c#' field is updated. This is used to detect
+                # when the device has been reset or updated.
                 #
-                # Additionally if the integration is polling, HKC offers a local
-                # push experience for the user to control the device so we want
-                # to offer that as well.
-                #
-                # As soon as the device becomes paired, the config flow will be
-                # dismissed in the event the user does not want to pair
-                # with Home Assistant.
-                #
-                if not homekit_model.iot_class or (
-                    not homekit_model.iot_class.startswith("cloud")
-                    and "polling" not in homekit_model.iot_class
-                ):
-                    return
+                # If the device is not paired and we should not always
+                # discover it, we can stop here.
+                return
 
         match_data: dict[str, str] = {}
         for key in LOWER_MATCH_ATTRS:
