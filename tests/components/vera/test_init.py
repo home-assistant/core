@@ -178,10 +178,10 @@ async def test_async_setup_entry_error(
 
 
 @pytest.mark.parametrize(
-    ["options"],
+    "options",
     [
-        [{CONF_LIGHTS: [4, 10, 12, "AAA"], CONF_EXCLUDE: [1, "BBB"]}],
-        [{CONF_LIGHTS: ["4", "10", "12", "AAA"], CONF_EXCLUDE: ["1", "BBB"]}],
+        {CONF_LIGHTS: [4, 10, 12, "AAA"], CONF_EXCLUDE: [1, "BBB"]},
+        {CONF_LIGHTS: ["4", "10", "12", "AAA"], CONF_EXCLUDE: ["1", "BBB"]},
     ],
 )
 async def test_exclude_and_light_ids(

@@ -23,7 +23,7 @@ async def test_get_info(
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
     websocket_client,
-):
+) -> None:
     """Test async_get_info."""
 
     mock_response = (
@@ -54,7 +54,7 @@ async def test_get_info_no_entry(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     websocket_client,
-):
+) -> None:
     """Test async_get_info."""
     await async_setup_component(hass, "otbr", {})
     await websocket_client.send_json(
@@ -75,7 +75,7 @@ async def test_get_info_fetch_fails(
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
     websocket_client,
-):
+) -> None:
     """Test async_get_info."""
     await async_setup_component(hass, "otbr", {})
 

@@ -21,7 +21,7 @@ def mock_temp_dir():
 
 
 @pytest.mark.parametrize(
-    "option,content,file_created",
+    ("option", "content", "file_created"),
     [
         (mqtt.CONF_CERTIFICATE, "auto", False),
         (mqtt.CONF_CERTIFICATE, "### CA CERTIFICATE ###", True),

@@ -922,7 +922,7 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             vacuum.SERVICE_TURN_ON,
@@ -1011,7 +1011,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         (CONF_BATTERY_LEVEL_TOPIC, '{ "battery_level": 60 }', "battery_level", 60),
         (CONF_CHARGING_TOPIC, '{ "charging": true }', "status", "Stopped"),

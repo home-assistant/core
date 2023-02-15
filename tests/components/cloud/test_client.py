@@ -135,7 +135,7 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "intent,response_payload",
+    ("intent", "response_payload"),
     [
         ("action.devices.SYNC", {"agentUserId": "myUserName", "devices": []}),
         ("action.devices.QUERY", {"errorCode": "deviceTurnedOff"}),

@@ -161,7 +161,7 @@ async def test_send_switch_toggle(hass: HomeAssistant, entity) -> None:
 
 
 @pytest.mark.parametrize(
-    "entity,name",
+    ("entity", "name"),
     [
         (ENTITY_ID_LIGHT_PANEL, "Panel Light"),
         (ENTITY_ID_QUIET, "Quiet"),

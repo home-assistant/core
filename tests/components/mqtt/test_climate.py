@@ -135,7 +135,7 @@ async def test_preset_none_in_preset_modes(
 
 
 @pytest.mark.parametrize(
-    "parameter,config_value",
+    ("parameter", "config_value"),
     [
         ("away_mode_command_topic", "away-mode-command-topic"),
         ("away_mode_state_topic", "away-mode-state-topic"),
@@ -1544,7 +1544,7 @@ async def test_unique_id(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("action_topic", "heating", ATTR_HVAC_ACTION, "heating"),
         ("action_topic", "cooling", ATTR_HVAC_ACTION, "cooling"),
@@ -1789,7 +1789,7 @@ async def test_precision_whole(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             climate.SERVICE_TURN_ON,
@@ -1903,7 +1903,7 @@ async def test_publishing_with_custom_encoding(
 
 
 @pytest.mark.parametrize(
-    "config,valid",
+    ("config", "valid"),
     [
         (
             {

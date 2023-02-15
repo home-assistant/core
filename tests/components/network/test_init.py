@@ -1,5 +1,6 @@
 """Test the Network Configuration."""
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import ifaddr
@@ -14,6 +15,7 @@ from homeassistant.components.network.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -68,7 +70,9 @@ def _generate_mock_adapters():
     return [mock_eth0, mock_lo0, mock_eth1, mock_vtun0]
 
 
-async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_storage):
+async def test_async_detect_interfaces_setting_non_loopback_route(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test without default interface config and the route returns a non-loopback address."""
     with patch(
         "homeassistant.components.network.util.socket.socket",
@@ -130,7 +134,9 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
     ]
 
 
-async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage):
+async def test_async_detect_interfaces_setting_loopback_route(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test without default interface config and the route returns a loopback address."""
     with patch(
         "homeassistant.components.network.util.socket.socket",
@@ -191,7 +197,9 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
     ]
 
 
-async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
+async def test_async_detect_interfaces_setting_empty_route(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test without default interface config and the route returns nothing."""
     with patch(
         "homeassistant.components.network.util.socket.socket",
@@ -252,7 +260,9 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
     ]
 
 
-async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
+async def test_async_detect_interfaces_setting_exception(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test without default interface config and the route throws an exception."""
     with patch(
         "homeassistant.components.network.util.socket.socket",
@@ -313,7 +323,9 @@ async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
     ]
 
 
-async def test_interfaces_configured_from_storage(hass, hass_storage):
+async def test_interfaces_configured_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test settings from storage are preferred over auto configure."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -381,8 +393,8 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
 
 
 async def test_interfaces_configured_from_storage_websocket_update(
-    hass, hass_ws_client, hass_storage
-):
+    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+) -> None:
     """Test settings from storage can be updated via websocket api."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -510,7 +522,9 @@ async def test_interfaces_configured_from_storage_websocket_update(
     ]
 
 
-async def test_async_get_source_ip_matching_interface(hass, hass_storage):
+async def test_async_get_source_ip_matching_interface(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test getting the source ip address with interface matching."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -531,7 +545,9 @@ async def test_async_get_source_ip_matching_interface(hass, hass_storage):
         assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
 
 
-async def test_async_get_source_ip_interface_not_match(hass, hass_storage):
+async def test_async_get_source_ip_interface_not_match(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test getting the source ip address with interface does not match."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -552,7 +568,9 @@ async def test_async_get_source_ip_interface_not_match(hass, hass_storage):
         assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "169.254.3.2"
 
 
-async def test_async_get_source_ip_cannot_determine_target(hass, hass_storage):
+async def test_async_get_source_ip_cannot_determine_target(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test getting the source ip address when getsockname fails."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -573,7 +591,9 @@ async def test_async_get_source_ip_cannot_determine_target(hass, hass_storage):
         assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
 
 
-async def test_async_get_ipv4_broadcast_addresses_default(hass, hass_storage):
+async def test_async_get_ipv4_broadcast_addresses_default(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test getting ipv4 broadcast addresses when only the default address is enabled."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -596,7 +616,9 @@ async def test_async_get_ipv4_broadcast_addresses_default(hass, hass_storage):
     }
 
 
-async def test_async_get_ipv4_broadcast_addresses_multiple(hass, hass_storage):
+async def test_async_get_ipv4_broadcast_addresses_multiple(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test getting ipv4 broadcast addresses when multiple adapters are enabled."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -621,7 +643,9 @@ async def test_async_get_ipv4_broadcast_addresses_multiple(hass, hass_storage):
     }
 
 
-async def test_async_get_source_ip_no_enabled_addresses(hass, hass_storage, caplog):
+async def test_async_get_source_ip_no_enabled_addresses(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test getting the source ip address when all adapters are disabled."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -645,8 +669,8 @@ async def test_async_get_source_ip_no_enabled_addresses(hass, hass_storage, capl
 
 
 async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses(
-    hass, hass_storage, caplog
-):
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test getting the source ip address when all adapters are disabled and getting it fails."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,
@@ -667,7 +691,9 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
             await network.async_get_source_ip(hass, MDNS_TARGET_IP)
 
 
-async def test_async_get_source_ip_no_ip_loopback(hass, hass_storage, caplog):
+async def test_async_get_source_ip_no_ip_loopback(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test getting the source ip address when all adapters are disabled no target is specified."""
     hass_storage[STORAGE_KEY] = {
         "version": STORAGE_VERSION,

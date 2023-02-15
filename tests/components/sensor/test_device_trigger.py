@@ -81,7 +81,7 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -130,7 +130,7 @@ async def test_get_triggers_hidden_auxiliary(
 
 
 @pytest.mark.parametrize(
-    "state_class,unit,trigger_types",
+    ("state_class", "unit", "trigger_types"),
     (
         (SensorStateClass.MEASUREMENT, None, ["value"]),
         (SensorStateClass.TOTAL, None, ["value"]),
@@ -180,7 +180,7 @@ async def test_get_triggers_no_unit_or_stateclass(
 
 
 @pytest.mark.parametrize(
-    "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
+    ("set_state", "device_class_reg", "device_class_state", "unit_reg", "unit_state"),
     [
         (False, SensorDeviceClass.BATTERY, None, PERCENTAGE, None),
         (True, None, SensorDeviceClass.BATTERY, None, PERCENTAGE),

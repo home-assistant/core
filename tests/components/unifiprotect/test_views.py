@@ -40,7 +40,7 @@ async def test_thumbnail_bad_nvr_id(
     ufp.api.get_event_thumbnail.assert_not_called
 
 
-@pytest.mark.parametrize("width,height", [("test", None), (None, "test")])
+@pytest.mark.parametrize(("width", "height"), [("test", None), (None, "test")])
 async def test_thumbnail_bad_params(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -332,7 +332,7 @@ async def test_video_bad_camera_perms(
     ufp.api.request.assert_not_called
 
 
-@pytest.mark.parametrize("start,end", [("test", None), (None, "test")])
+@pytest.mark.parametrize(("start", "end"), [("test", None), (None, "test")])
 async def test_video_bad_params(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
