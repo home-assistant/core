@@ -394,10 +394,10 @@ async def test_routing_secure_keyfile(
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
-        {"next_step_id": "knxkeys_upload"},
+        {"next_step_id": "secure_knxkeys"},
     )
     assert result4["type"] == FlowResultType.FORM
-    assert result4["step_id"] == "knxkeys_upload"
+    assert result4["step_id"] == "secure_knxkeys"
     assert not result4["errors"]
 
     with patch_file_upload():
@@ -1046,10 +1046,10 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         menu_step["flow_id"],
-        {"next_step_id": "knxkeys_upload"},
+        {"next_step_id": "secure_knxkeys"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "knxkeys_upload"
+    assert result["step_id"] == "secure_knxkeys"
     assert not result["errors"]
 
     with patch_file_upload():
@@ -1096,10 +1096,10 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -
 
     result = await hass.config_entries.flow.async_configure(
         menu_step["flow_id"],
-        {"next_step_id": "knxkeys_upload"},
+        {"next_step_id": "secure_knxkeys"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "knxkeys_upload"
+    assert result["step_id"] == "secure_knxkeys"
     assert not result["errors"]
 
     with patch_file_upload(
@@ -1126,10 +1126,10 @@ async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) 
 
     result = await hass.config_entries.flow.async_configure(
         menu_step["flow_id"],
-        {"next_step_id": "knxkeys_upload"},
+        {"next_step_id": "secure_knxkeys"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "knxkeys_upload"
+    assert result["step_id"] == "secure_knxkeys"
     assert not result["errors"]
 
     with patch_file_upload(return_value=Mock()) as mock_keyring:
@@ -1266,10 +1266,10 @@ async def test_options_flow_secure_manual_to_keyfile(
 
     result4 = await hass.config_entries.options.async_configure(
         result3["flow_id"],
-        {"next_step_id": "knxkeys_upload"},
+        {"next_step_id": "secure_knxkeys"},
     )
     assert result4["type"] == FlowResultType.FORM
-    assert result4["step_id"] == "knxkeys_upload"
+    assert result4["step_id"] == "secure_knxkeys"
     assert not result4["errors"]
 
     with patch_file_upload():
@@ -1371,10 +1371,10 @@ async def test_options_update_keyfile(hass: HomeAssistant, knx_setup) -> None:
 
     result = await hass.config_entries.options.async_configure(
         menu_step["flow_id"],
-        {"next_step_id": "knxkeys_upload"},
+        {"next_step_id": "secure_knxkeys"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "knxkeys_upload"
+    assert result["step_id"] == "secure_knxkeys"
 
     with patch_file_upload():
         result2 = await hass.config_entries.options.async_configure(
@@ -1419,10 +1419,10 @@ async def test_options_keyfile_upload(hass: HomeAssistant, knx_setup) -> None:
 
     result = await hass.config_entries.options.async_configure(
         menu_step["flow_id"],
-        {"next_step_id": "knxkeys_upload"},
+        {"next_step_id": "secure_knxkeys"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "knxkeys_upload"
+    assert result["step_id"] == "secure_knxkeys"
 
     with patch_file_upload():
         result2 = await hass.config_entries.options.async_configure(

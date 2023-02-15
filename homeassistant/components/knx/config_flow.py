@@ -229,7 +229,7 @@ class KNXCommonFlow(ABC, FlowHandler):
             if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
                 return self.async_show_menu(
                     step_id="secure_key_source",
-                    menu_options=["knxkeys_upload", "secure_tunnel_manual"],
+                    menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                 )
             self.new_title = f"Tunneling @ {self._selected_tunnel}"
             return self.finish_flow()
@@ -305,7 +305,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 if selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return self.async_show_menu(
                         step_id="secure_key_source",
-                        menu_options=["knxkeys_upload", "secure_tunnel_manual"],
+                        menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                     )
                 self.new_title = (
                     "Tunneling "
@@ -473,7 +473,7 @@ class KNXCommonFlow(ABC, FlowHandler):
             errors=errors,
         )
 
-    async def async_step_knxkeys_upload(
+    async def async_step_secure_knxkeys(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage upload of new KNX Keyring file."""
@@ -515,7 +515,7 @@ class KNXCommonFlow(ABC, FlowHandler):
             ): selector.TextSelector(),
         }
         return self.async_show_form(
-            step_id="knxkeys_upload",
+            step_id="secure_knxkeys",
             data_schema=vol.Schema(fields),
             errors=errors,
         )
@@ -555,7 +555,7 @@ class KNXCommonFlow(ABC, FlowHandler):
             )
             return self.finish_flow()
 
-        # this step is only called from async_step_knxkeys_upload so self._keyring is always set
+        # this step is only called from async_step_secure_knxkeys so self._keyring is always set
         assert self._keyring
 
         # Filter for selected tunnel
@@ -659,7 +659,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                     self.new_title = f"Secure Routing as {_individual_address}"
                     return self.async_show_menu(
                         step_id="secure_key_source",
-                        menu_options=["knxkeys_upload", "secure_routing_manual"],
+                        menu_options=["secure_knxkeys", "secure_routing_manual"],
                     )
                 self.new_title = f"Routing as {_individual_address}"
                 return self.finish_flow()
@@ -777,7 +777,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             menu_options=[
                 "connection_type",
                 "communication_settings",
-                "knxkeys_upload",
+                "secure_knxkeys",
             ],
         )
 

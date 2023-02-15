@@ -36,12 +36,12 @@
         "title": "KNX IP-Secure",
         "description": "Select how you want to configure KNX/IP Secure.",
         "menu_options": {
-          "knxkeys_upload": "Use a `.knxkeys` file containing IP secure keys",
+          "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
           "secure_tunnel_manual": "Configure IP secure credentials manually",
           "secure_routing_manual": "Configure IP secure backbone key manually"
         }
       },
-      "knxkeys_upload": {
+      "secure_knxkeys": {
         "title": "Import KNX Keyring",
         "description": "Please select a `.knxkeys` file to import.",
         "data": {
@@ -126,7 +126,7 @@
         "menu_options": {
           "connection_type": "Configure KNX interface",
           "communication_settings": "Communication settings",
-          "knxkeys_upload": "Import a `.knxkeys` file"
+          "secure_knxkeys": "Import a `.knxkeys` file"
         }
       },
       "communication_settings": {
@@ -175,20 +175,20 @@
         "title": "[%key:component::knx::config::step::secure_key_source::title%]",
         "description": "[%key:component::knx::config::step::secure_key_source::description%]",
         "menu_options": {
-          "knxkeys_upload": "[%key:component::knx::config::step::secure_key_source::menu_options::knxkeys_upload%]",
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source::menu_options::secure_knxkeys%]",
           "secure_tunnel_manual": "[%key:component::knx::config::step::secure_key_source::menu_options::secure_tunnel_manual%]",
           "secure_routing_manual": "[%key:component::knx::config::step::secure_key_source::menu_options::secure_routing_manual%]"
         }
       },
-      "knxkeys_upload": {
-        "title": "[%key:component::knx::config::step::knxkeys_upload::title%]",
-        "description": "[%key:component::knx::config::step::knxkeys_upload::description%]",
+      "secure_knxkeys": {
+        "title": "[%key:component::knx::config::step::secure_knxkeys::title%]",
+        "description": "[%key:component::knx::config::step::secure_knxkeys::description%]",
         "data": {
-          "knxkeys_file": "[%key:component::knx::config::step::knxkeys_upload::data::knxkeys_file%]",
-          "knxkeys_password": "[%key:component::knx::config::step::knxkeys_upload::data::knxkeys_password%]"
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
+          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
         },
         "data_description": {
-          "knxkeys_password": "[%key:component::knx::config::step::knxkeys_upload::data_description::knxkeys_password%]"
+          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
         }
       },
       "knxkeys_tunnel_select": {
