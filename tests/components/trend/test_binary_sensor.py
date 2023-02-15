@@ -382,7 +382,7 @@ class TestTrendBinarySensor:
         assert self.hass.states.all("binary_sensor") == []
 
     @pytest.mark.parametrize(
-        "sample_duration,min_samples,max_samples",
+        ("sample_duration", "min_samples", "max_samples"),
         [
             (-1, 2, 2),
             (0, 1, 2),
@@ -414,7 +414,7 @@ class TestTrendBinarySensor:
         assert self.hass.states.all("binary_sensor") == []
 
     @pytest.mark.parametrize(
-        "max_samples,data",
+        ("max_samples", "data"),
         [
             (
                 3,
