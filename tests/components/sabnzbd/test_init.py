@@ -4,7 +4,8 @@ from unittest.mock import patch
 from homeassistant.components.sabnzbd import DEFAULT_NAME, DOMAIN, OLD_SENSOR_KEYS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +26,11 @@ MOCK_ENTRY_VERSION_1 = MockConfigEntry(
 )
 
 
-async def test_unique_id_migrate(hass, device_registry, entity_registry):
+async def test_unique_id_migrate(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
     mock_entry = MOCK_ENTRY_VERSION_1

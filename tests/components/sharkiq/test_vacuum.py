@@ -121,7 +121,7 @@ async def setup_integration(hass):
     await hass.async_block_till_done()
 
 
-async def test_simple_properties(hass: HomeAssistant):
+async def test_simple_properties(hass: HomeAssistant) -> None:
     """Test that simple properties work as intended."""
     state = hass.states.get(VAC_ENTITY_ID)
     registry = er.async_get(hass)
@@ -148,7 +148,7 @@ async def test_simple_properties(hass: HomeAssistant):
 )
 async def test_initial_attributes(
     hass: HomeAssistant, attribute: str, target_value: Any
-):
+) -> None:
     """Test initial config attributes."""
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(attribute) == target_value
@@ -163,7 +163,9 @@ async def test_initial_attributes(
         (SERVICE_START, STATE_CLEANING),
     ],
 )
-async def test_cleaning_states(hass: HomeAssistant, service: str, target_state: str):
+async def test_cleaning_states(
+    hass: HomeAssistant, service: str, target_state: str
+) -> None:
     """Test cleaning states."""
     service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
     await hass.services.async_call("vacuum", service, service_data, blocking=True)
@@ -193,7 +195,7 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
 )
 async def test_device_properties(
     hass: HomeAssistant, device_property: str, target_value: str
-):
+) -> None:
     """Test device properties."""
     registry = dr.async_get(hass)
     device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")})
