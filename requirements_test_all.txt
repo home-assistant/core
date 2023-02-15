@@ -1100,6 +1100,9 @@ pyaussiebb==0.0.15
 # homeassistant.components.balboa
 pybalboa==1.0.0
 
+# homeassistant.components.blackbird
+pyblackbird==0.5
+
 # homeassistant.components.neato
 pybotvac==0.0.23
 
@@ -1150,6 +1153,9 @@ pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
 pyfibaro==0.6.6
+
+# homeassistant.components.fido
+pyfido==2.1.1
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
@@ -1565,6 +1571,9 @@ reolink-aio==0.4.1
 
 # homeassistant.components.python_script
 restrictedpython==6.0
+
+# homeassistant.components.rflink
+rflink==0.0.63
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
