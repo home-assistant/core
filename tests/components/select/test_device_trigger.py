@@ -12,8 +12,11 @@ from homeassistant.components.select.device_trigger import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -33,7 +36,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    entity_registry: EntityRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we get the expected triggers from a select."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -64,19 +67,19 @@ async def test_get_triggers(
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
     (
-        (RegistryEntryHider.INTEGRATION, None),
-        (RegistryEntryHider.USER, None),
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -109,7 +112,7 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "select.entity", "option1", {"options": ["option1", "option2", "option3"]}
