@@ -91,7 +91,7 @@ def _decrypt_payload_helper(
     return message
 
 
-def _decrypt_payload(key: str | None, ciphertext: str) -> JsonValueType | None:
+def decrypt_payload(key: str | None, ciphertext: str) -> JsonValueType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> str:
@@ -100,7 +100,7 @@ def _decrypt_payload(key: str | None, ciphertext: str) -> JsonValueType | None:
     return _decrypt_payload_helper(key, ciphertext, get_key_bytes, HexEncoder)
 
 
-def _decrypt_payload_legacy(key: str | None, ciphertext: str) -> JsonValueType | None:
+def decrypt_payload_legacy(key: str | None, ciphertext: str) -> JsonValueType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> bytes:

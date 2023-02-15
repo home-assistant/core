@@ -108,8 +108,8 @@ from .const import (
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import (
-    _decrypt_payload,
-    _decrypt_payload_legacy,
+    decrypt_payload,
+    decrypt_payload_legacy,
     empty_okay_response,
     error_response,
     registration_context,
@@ -213,14 +213,14 @@ async def handle_webhook(
     if ATTR_WEBHOOK_ENCRYPTED in req_data:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         try:
-            webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+            webhook_payload = decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
             if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
                 data = {**config_entry.data, ATTR_NO_LEGACY_ENCRYPTION: True}
                 hass.config_entries.async_update_entry(config_entry, data=data)
         except CryptoError:
             if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
                 try:
-                    webhook_payload = _decrypt_payload_legacy(
+                    webhook_payload = decrypt_payload_legacy(
                         config_entry.data[CONF_SECRET], enc_data
                     )
                 except CryptoError:
