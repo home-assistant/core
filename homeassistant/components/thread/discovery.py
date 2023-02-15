@@ -28,6 +28,7 @@ class ThreadRouterDiscoveryData:
     brand: str | None
     extended_pan_id: str | None
     model_name: str | None
+    name: str | None
     network_name: str | None
     vendor_name: str | None
 
@@ -82,21 +83,32 @@ class ThreadRouterDiscovery:
                 _LOGGER.debug("_add_update_service failed to add %s, %s", type_, name)
                 return
 
+            def try_decode(value: bytes | None) -> str | None:
+                """Try decoding UTF-8."""
+                if value is None:
+                    return None
+                try:
+                    return value.decode()
+                except UnicodeDecodeError:
+                    return None
+
             _LOGGER.debug("_add_update_service %s %s", name, service)
+            # We use the extended mac address as key, bail out if it's missing
             try:
                 extended_mac_address = service.properties[b"xa"].hex()
-                extended_pan_id = service.properties[b"xp"].hex()
-                network_name = service.properties[b"nn"].decode()
-                model_name = service.properties[b"mn"].decode()
-                vendor_name = service.properties[b"vn"].decode()
             except (KeyError, UnicodeDecodeError) as err:
                 _LOGGER.debug("_add_update_service failed to parse service %s", err)
                 return
+            ext_pan_id = service.properties.get(b"xp")
+            network_name = try_decode(service.properties.get(b"nn"))
+            model_name = try_decode(service.properties.get(b"mn"))
+            vendor_name = try_decode(service.properties.get(b"vn"))
             data = ThreadRouterDiscoveryData(
                 brand=KNOWN_BRANDS.get(vendor_name),
-                extended_pan_id=extended_pan_id,
+                extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
                 network_name=network_name,
                 model_name=model_name,
+                name=name,
                 vendor_name=vendor_name,
             )
             if name in self._known_routers and self._known_routers[name] == (
