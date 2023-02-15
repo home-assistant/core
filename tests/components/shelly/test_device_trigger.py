@@ -31,7 +31,7 @@ from tests.common import (
 
 
 @pytest.mark.parametrize(
-    "button_type, is_valid",
+    ("button_type", "is_valid"),
     [
         ("momentary", True),
         ("momentary_on_release", True),
@@ -91,7 +91,14 @@ async def test_get_triggers_rpc_device(hass, mock_rpc_device):
             CONF_SUBTYPE: "button1",
             "metadata": {},
         }
-        for type in ["btn_down", "btn_up", "single_push", "double_push", "long_push"]
+        for type in [
+            "btn_down",
+            "btn_up",
+            "single_push",
+            "double_push",
+            "triple_push",
+            "long_push",
+        ]
     ]
 
     triggers = await async_get_device_automations(

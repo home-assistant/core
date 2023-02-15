@@ -96,7 +96,7 @@ async def test_pt2262_unconfigured(hass, rfxtrx):
 
 
 @pytest.mark.parametrize(
-    "state,event",
+    ("state", "event"),
     [["on", "0b1100cd0213c7f230010f71"], ["off", "0b1100cd0213c7f230000f71"]],
 )
 async def test_state_restore(hass, rfxtrx, state, event):

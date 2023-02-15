@@ -143,7 +143,7 @@ def mock_all(aioclient_mock, request):
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected",
+    ("entity_id", "expected"),
     [
         ("sensor.home_assistant_operating_system_version", "1.0.0"),
         ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),

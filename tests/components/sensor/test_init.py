@@ -39,7 +39,7 @@ from tests.common import mock_restore_cache_with_extra_data
 
 
 @pytest.mark.parametrize(
-    "unit_system,native_unit,state_unit,native_value,state_value",
+    ("unit_system", "native_unit", "state_unit", "native_value", "state_value"),
     [
         (
             US_CUSTOMARY_SYSTEM,
@@ -199,7 +199,7 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
 
 
 @pytest.mark.parametrize(
-    "device_class,state_value,provides",
+    ("device_class", "state_value", "provides"),
     [
         (SensorDeviceClass.DATE, "2021-01-09", "date"),
         (SensorDeviceClass.TIMESTAMP, "2021-01-09T12:00:00+00:00", "datetime"),
@@ -283,7 +283,7 @@ RESTORE_DATA = {
 
 # None | str | int | float | date | datetime | Decimal:
 @pytest.mark.parametrize(
-    "native_value, native_value_type, expected_extra_data, device_class, uom",
+    ("native_value", "native_value_type", "expected_extra_data", "device_class", "uom"),
     [
         ("abc123", str, RESTORE_DATA["str"], None, None),
         (
@@ -353,7 +353,7 @@ async def test_restore_sensor_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_value, native_value_type, extra_data, device_class, uom",
+    ("native_value", "native_value_type", "extra_data", "device_class", "uom"),
     [
         ("abc123", str, RESTORE_DATA["str"], None, None),
         (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE, "°F"),
@@ -418,7 +418,14 @@ async def test_restore_sensor_restore_state(
 
 
 @pytest.mark.parametrize(
-    "device_class, native_unit, custom_unit, state_unit, native_value, custom_state",
+    (
+        "device_class",
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "custom_state",
+    ),
     [
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
@@ -519,7 +526,15 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
-    "native_unit, custom_unit, state_unit, native_value, native_state, custom_state, device_class",
+    (
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "native_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -788,9 +803,19 @@ async def test_custom_unit_change(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit,"
-    "native_value, native_state, automatic_state, suggested_state, custom_state,"
-    "device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "automatic_unit",
+        "suggested_unit",
+        "custom_unit",
+        "native_value",
+        "native_state",
+        "automatic_state",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -921,9 +946,20 @@ async def test_unit_conversion_priority(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit,"
-    "suggested_precision, native_value, native_state, automatic_state, suggested_state,"
-    "custom_state, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "automatic_unit",
+        "suggested_unit",
+        "custom_unit",
+        "suggested_precision",
+        "native_value",
+        "native_state",
+        "automatic_state",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -1062,7 +1098,15 @@ async def test_unit_conversion_priority_precision(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, original_unit, suggested_unit, native_value, original_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "original_unit",
+        "suggested_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -1143,8 +1187,15 @@ async def test_unit_conversion_priority_suggested_unit_change(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, integration_suggested_precision,"
-    "options_suggested_precision, native_value, device_class, extra_options",
+    (
+        "unit_system",
+        "native_unit",
+        "integration_suggested_precision",
+        "options_suggested_precision",
+        "native_value",
+        "device_class",
+        "extra_options",
+    ),
     [
         # Distance
         (
@@ -1208,8 +1259,17 @@ async def test_suggested_precision_option(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, suggested_unit, old_precision, new_precision,"
-    "opt_precision, native_value, device_class, extra_options",
+    (
+        "unit_system",
+        "native_unit",
+        "suggested_unit",
+        "old_precision",
+        "new_precision",
+        "opt_precision",
+        "native_value",
+        "device_class",
+        "extra_options",
+    ),
     [
         # Distance
         (
@@ -1301,7 +1361,14 @@ async def test_suggested_precision_option_update(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, original_unit, native_value, original_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "original_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -1552,7 +1619,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit",
+    ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
@@ -1603,7 +1670,7 @@ async def test_non_numeric_validation_warn(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit,precision", ((None, None, None, 1),)
+    ("device_class", "state_class", "unit", "precision"), ((None, None, None, 1),)
 )
 @pytest.mark.parametrize(
     "native_value,expected",
@@ -1648,7 +1715,7 @@ async def test_non_numeric_validation_raise(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit",
+    ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
@@ -1762,7 +1829,13 @@ async def test_device_classes_with_invalid_state_class(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,native_unit_of_measurement,suggested_precision,is_numeric",
+    (
+        "device_class",
+        "state_class",
+        "native_unit_of_measurement",
+        "suggested_precision",
+        "is_numeric",
+    ),
     [
         (SensorDeviceClass.ENUM, None, None, None, False),
         (SensorDeviceClass.DATE, None, None, None, False),
@@ -1807,7 +1880,21 @@ async def test_numeric_state_expected_helper(
 
 
 @pytest.mark.parametrize(
-    "unit_system_1, unit_system_2, native_unit, automatic_unit_1, automatic_unit_2, suggested_unit, custom_unit, native_value, automatic_state_1, automatic_state_2, suggested_state, custom_state, device_class",
+    (
+        "unit_system_1",
+        "unit_system_2",
+        "native_unit",
+        "automatic_unit_1",
+        "automatic_unit_2",
+        "suggested_unit",
+        "custom_unit",
+        "native_value",
+        "automatic_state_1",
+        "automatic_state_2",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (

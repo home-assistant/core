@@ -201,7 +201,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
 
 
 @pytest.mark.parametrize(
-    "test_data,expected_result",
+    ("test_data", "expected_result"),
     [
         (MOCK_SSDP_DATA["ip4_valid"], FlowResultType.FORM),
         (MOCK_SSDP_DATA["ip6_valid"], FlowResultType.FORM),

@@ -73,7 +73,7 @@ def lock_platform_only():
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ("LOCKED", STATE_LOCKED),
         ("LOCKING", STATE_LOCKING),
@@ -122,7 +122,7 @@ async def test_controlling_state_via_topic(
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ("closed", STATE_LOCKED),
         ("closing", STATE_LOCKING),
@@ -170,7 +170,7 @@ async def test_controlling_non_default_state_via_topic(
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ('{"val":"LOCKED"}', STATE_LOCKED),
         ('{"val":"LOCKING"}', STATE_LOCKING),
@@ -218,7 +218,7 @@ async def test_controlling_state_via_topic_and_json_message(
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ('{"val":"closed"}', STATE_LOCKED),
         ('{"val":"closing"}', STATE_LOCKING),
@@ -929,7 +929,7 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             SERVICE_LOCK,
@@ -983,7 +983,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "LOCKED", None, "locked"),
     ],

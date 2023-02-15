@@ -470,7 +470,7 @@ async def app_controller(hass, setup_zha):
 
 
 @pytest.mark.parametrize(
-    "params, duration, node",
+    ("params", "duration", "node"),
     (
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),
@@ -520,7 +520,7 @@ IC_TEST_PARAMS = (
 )
 
 
-@pytest.mark.parametrize("params, src_ieee, code", IC_TEST_PARAMS)
+@pytest.mark.parametrize(("params", "src_ieee", "code"), IC_TEST_PARAMS)
 async def test_permit_with_install_code(
     hass, app_controller, hass_admin_user, params, src_ieee, code
 ):
@@ -609,7 +609,7 @@ IC_QR_CODE_TEST_PARAMS = (
 )
 
 
-@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
+@pytest.mark.parametrize(("params", "src_ieee", "code"), IC_QR_CODE_TEST_PARAMS)
 async def test_permit_with_qr_code(
     hass, app_controller, hass_admin_user, params, src_ieee, code
 ):
@@ -625,7 +625,7 @@ async def test_permit_with_qr_code(
     assert app_controller.permit_with_key.await_args[1]["code"] == code
 
 
-@pytest.mark.parametrize("params, src_ieee, code", IC_QR_CODE_TEST_PARAMS)
+@pytest.mark.parametrize(("params", "src_ieee", "code"), IC_QR_CODE_TEST_PARAMS)
 async def test_ws_permit_with_qr_code(
     app_controller, zha_client, params, src_ieee, code
 ):
@@ -665,7 +665,7 @@ async def test_ws_permit_with_install_code_fail(app_controller, zha_client, para
 
 
 @pytest.mark.parametrize(
-    "params, duration, node",
+    ("params", "duration", "node"),
     (
         ({}, 60, None),
         ({ATTR_DURATION: 30}, 30, None),

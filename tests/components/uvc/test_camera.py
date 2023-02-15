@@ -249,7 +249,7 @@ async def test_setup_incomplete_config(hass, mock_remote, config):
 
 
 @pytest.mark.parametrize(
-    "error, ready_states",
+    ("error", "ready_states"),
     [
         (nvr.NotAuthorized, 0),
         (nvr.NvrError, 2),
@@ -280,7 +280,7 @@ async def test_setup_nvr_errors_during_indexing(hass, mock_remote, error, ready_
 
 
 @pytest.mark.parametrize(
-    "error, ready_states",
+    ("error", "ready_states"),
     [
         (nvr.NotAuthorized, 0),
         (nvr.NvrError, 2),
@@ -506,7 +506,7 @@ async def test_login_fails_both_properly(hass, mock_remote, camera_v320):
 
 
 @pytest.mark.parametrize(
-    "source_error, raised_error, snapshot_calls",
+    ("source_error", "raised_error", "snapshot_calls"),
     [
         (camera.CameraConnectError, HomeAssistantError, 1),
         (camera.CameraAuthError, camera.CameraAuthError, 2),

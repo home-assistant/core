@@ -216,7 +216,7 @@ def mock_sia():
 
 
 @pytest.mark.parametrize(
-    "field, value, error",
+    ("field", "value", "error"),
     [
         ("encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
         ("encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
@@ -243,7 +243,7 @@ async def test_validation_errors_user(
 
 
 @pytest.mark.parametrize(
-    "field, value, error",
+    ("field", "value", "error"),
     [
         ("encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
         ("encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
