@@ -68,18 +68,14 @@ def test_simple_dict(try_both_loaders):
     assert doc["key"] == "value"
 
 
-@pytest.mark.parametrize(
-    "yaml_configuration_files", [{YAML_CONFIG_FILE: "message:\n  {{ states.state }}"}]
-)
+@pytest.mark.parametrize("yaml_configuration", ["message:\n  {{ states.state }}"])
 def test_unhashable_key(mock_yaml_configuration: None) -> None:
     """Test an unhashable key."""
     with pytest.raises(HomeAssistantError):
         load_yaml_config_file(YAML_CONFIG_FILE)
 
 
-@pytest.mark.parametrize(
-    "yaml_configuration_files", [{YAML_CONFIG_FILE: "a: a\nnokeyhere"}]
-)
+@pytest.mark.parametrize("yaml_configuration", ["a: a\nnokeyhere"])
 def test_no_key(try_both_loaders, mock_yaml_configuration: None) -> None:
     """Test item without a key."""
     with pytest.raises(HomeAssistantError):
@@ -112,7 +108,7 @@ def test_invalid_environment_variable(try_both_loaders):
 
 
 @pytest.mark.parametrize(
-    "yaml_configuration_files,value",
+    ("yaml_configuration_files", "value"),
     [({"test.yaml": "value"}, "value"), ({"test.yaml": None}, {})],
 )
 def test_include_yaml(

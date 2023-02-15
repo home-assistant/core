@@ -70,7 +70,7 @@ def test_config_platform_valid(
 
 
 @pytest.mark.parametrize(
-    "yaml_configuration,platforms,error",
+    ("yaml_configuration", "platforms", "error"),
     [
         (
             BASE_CONFIG + "beer:",
