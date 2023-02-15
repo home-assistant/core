@@ -1,5 +1,6 @@
 """Test APRS device tracker."""
-from unittest.mock import Mock, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, Mock, patch
 
 import aprslib
 from aprslib import IS
@@ -18,7 +19,7 @@ TEST_PASSWORD = "testpass"
 
 
 @pytest.fixture(name="mock_ais")
-def mock_ais():
+def mock_ais() -> Generator[MagicMock, None, None]:
     """Mock aprslib."""
     with patch("aprslib.IS") as mock_ais:
         yield mock_ais
@@ -94,7 +95,7 @@ def test_gps_accuracy_invalid_float() -> None:
         pass
 
 
-def test_aprs_listener(mock_ais) -> None:
+def test_aprs_listener(mock_ais: MagicMock) -> None:
     """Test listener thread."""
     callsign = TEST_CALLSIGN
     password = TEST_PASSWORD
@@ -143,7 +144,7 @@ def test_aprs_listener_start_fail() -> None:
         assert listener.start_message == "Unable to connect."
 
 
-def test_aprs_listener_stop(mock_ais) -> None:
+def test_aprs_listener_stop(mock_ais: MagicMock) -> None:
     """Test listener thread stop."""
     callsign = TEST_CALLSIGN
     password = TEST_PASSWORD
@@ -168,7 +169,7 @@ def test_aprs_listener_stop(mock_ais) -> None:
     listener.ais.close.assert_called_with()
 
 
-def test_aprs_listener_rx_msg(mock_ais) -> None:
+def test_aprs_listener_rx_msg(mock_ais: MagicMock) -> None:
     """Test rx_msg."""
     callsign = TEST_CALLSIGN
     password = TEST_PASSWORD
@@ -204,7 +205,7 @@ def test_aprs_listener_rx_msg(mock_ais) -> None:
     )
 
 
-def test_aprs_listener_rx_msg_ambiguity(mock_ais) -> None:
+def test_aprs_listener_rx_msg_ambiguity(mock_ais: MagicMock) -> None:
     """Test rx_msg with posambiguity."""
     callsign = TEST_CALLSIGN
     password = TEST_PASSWORD
@@ -240,7 +241,7 @@ def test_aprs_listener_rx_msg_ambiguity(mock_ais) -> None:
     )
 
 
-def test_aprs_listener_rx_msg_ambiguity_invalid(mock_ais) -> None:
+def test_aprs_listener_rx_msg_ambiguity_invalid(mock_ais: MagicMock) -> None:
     """Test rx_msg with invalid posambiguity."""
     callsign = TEST_CALLSIGN
     password = TEST_PASSWORD
@@ -274,7 +275,7 @@ def test_aprs_listener_rx_msg_ambiguity_invalid(mock_ais) -> None:
     )
 
 
-def test_aprs_listener_rx_msg_no_position(mock_ais) -> None:
+def test_aprs_listener_rx_msg_no_position(mock_ais: MagicMock) -> None:
     """Test rx_msg with non-position report."""
     callsign = TEST_CALLSIGN
     password = TEST_PASSWORD
