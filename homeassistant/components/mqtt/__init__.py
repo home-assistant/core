@@ -60,9 +60,12 @@ from .config_integration import (
 )
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
+    ATTR_PAYLOAD_TEMPLATE,
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    ATTR_TOPIC_TEMPLATE,
+    CLIENT_KEY_AUTH_MSG,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_CERTIFICATE,
@@ -89,6 +92,9 @@ from .const import (  # noqa: F401
     MQTT_DISCONNECTED,
     PLATFORMS,
     RELOADABLE_PLATFORMS,
+    SERVICE_CERTIFICATE,
+    SERVICE_DUMP,
+    SERVICE_PUBLISH,
 )
 from .models import (  # noqa: F401
     MqttCommandTemplate,
@@ -109,13 +115,7 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PUBLISH = "publish"
-SERVICE_DUMP = "dump"
-
 MANDATORY_DEFAULT_VALUES = (CONF_PORT, CONF_DISCOVERY_PREFIX)
-
-ATTR_TOPIC_TEMPLATE = "topic_template"
-ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
@@ -169,9 +169,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-# Service call validation schema
-MQTT_PUBLISH_SCHEMA = vol.All(
+# Service `publish` validation schema
+MQTT_PUBLISH_SERVICE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
@@ -184,6 +183,25 @@ MQTT_PUBLISH_SCHEMA = vol.All(
         required=True,
     ),
     cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
+)
+
+# Service `dump` validation schema
+MQTT_DUMP_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("topic"): valid_subscribe_topic,
+        vol.Optional("duration", default=5): int,
+    }
+)
+
+# Service `certificate` validation schema
+MQTT_CERTIFICATE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CERTIFICATE): str,
+        vol.Inclusive(CONF_CLIENT_KEY, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG): str,
+        vol.Inclusive(
+            CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
+        ): str,
+    }
 )
 
 
@@ -436,7 +454,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+        DOMAIN,
+        SERVICE_PUBLISH,
+        async_publish_service,
+        schema=MQTT_PUBLISH_SERVICE_SCHEMA,
     )
 
     async def async_dump_service(call: ServiceCall) -> None:
@@ -465,12 +486,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         SERVICE_DUMP,
         async_dump_service,
-        schema=vol.Schema(
-            {
-                vol.Required("topic"): valid_subscribe_topic,
-                vol.Optional("duration", default=5): int,
-            }
-        ),
+        schema=MQTT_DUMP_SERVICE_SCHEMA,
+    )
+
+    async def async_certificate_service(call: ServiceCall) -> None:
+        """Handle MQTT certificate service calls."""
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CERTIFICATE,
+        async_certificate_service,
+        schema=MQTT_CERTIFICATE_SERVICE_SCHEMA,
     )
 
     # setup platforms and discovery
@@ -695,6 +721,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_remove(
         DOMAIN,
         SERVICE_DUMP,
+    )
+    hass.services.async_remove(
+        DOMAIN,
+        SERVICE_CERTIFICATE,
     )
 
     # Stop the discovery

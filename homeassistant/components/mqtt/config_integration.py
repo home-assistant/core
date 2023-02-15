@@ -37,6 +37,7 @@ from . import (
     vacuum as vacuum_platform,
 )
 from .const import (
+    CLIENT_KEY_AUTH_MSG,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_CERTIFICATE,
@@ -77,6 +78,7 @@ DEFAULT_VALUES = {
     CONF_WILL_MESSAGE: DEFAULT_WILL,
     CONF_KEEPALIVE: DEFAULT_KEEPALIVE,
 }
+
 
 PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
     {
@@ -161,11 +163,6 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
             [vacuum_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
     }
-)
-
-
-CLIENT_KEY_AUTH_MSG = (
-    "client_key and client_cert must both be present in the MQTT broker configuration"
 )
 
 CONFIG_SCHEMA_ENTRY = vol.Schema(

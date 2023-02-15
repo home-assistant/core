@@ -5,9 +5,11 @@ ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
 ATTR_DISCOVERY_TOPIC = "discovery_topic"
 ATTR_PAYLOAD = "payload"
+ATTR_PAYLOAD_TEMPLATE = "payload_template"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
 ATTR_TOPIC = "topic"
+ATTR_TOPIC_TEMPLATE = "topic_template"
 
 CONF_AVAILABILITY = "availability"
 CONF_BROKER = "broker"
@@ -35,6 +37,11 @@ CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
 
+CLIENT_KEY_AUTH_MSG = (
+    "client_key and client_cert must both be present in the MQTT broker configuration"
+)
+
+
 DATA_MQTT = "mqtt"
 
 DEFAULT_PREFIX = "homeassistant"
@@ -53,6 +60,10 @@ PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
 PROTOCOL_5 = "5"
 SUPPORTED_PROTOCOLS = [PROTOCOL_31, PROTOCOL_311, PROTOCOL_5]
+
+SERVICE_CERTIFICATE = "certificate"
+SERVICE_DUMP = "dump"
+SERVICE_PUBLISH = "publish"
 
 TRANSPORT_TCP = "tcp"
 TRANSPORT_WEBSOCKETS = "websockets"

@@ -64,6 +64,32 @@ dump:
           max: 300
           unit_of_measurement: "seconds"
 
+certificate:
+  name: Certificate enrollment
+  description: Updates the broker ca certificate or enrolls client certificate and key.
+  fields:
+    certificate:
+      name: Certificate
+      description: PEM encoded broker CA certificate for broker certificate validation.
+      required: false
+      selector:
+        text:
+          multiline: true
+    client_cert:
+      name: Client certificate
+      description: PEM encoded client certificate used for broker authentication.
+      required: false
+      selector:
+        text:
+          multiline: true
+    client_key:
+      name: Client certificate key
+      description: PEM encoded client key used for broker authentication.
+      required: false
+      selector:
+        text:
+          multiline: true
+
 reload:
   name: Reload
   description: Reload all MQTT entities from YAML.
