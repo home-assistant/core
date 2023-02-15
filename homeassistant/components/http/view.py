@@ -20,8 +20,9 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
-from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS, json_bytes, json_dumps
+from homeassistant.helpers.json import json_bytes, json_dumps
 from homeassistant.util.json import (
+    JSON_ENCODE_EXCEPTIONS,
     find_paths_unserializable_data,
     format_unserializable_data,
 )
