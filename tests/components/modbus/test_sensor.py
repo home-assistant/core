@@ -153,7 +153,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
 
 @pytest.mark.parametrize("check_config_loaded", [False])
 @pytest.mark.parametrize(
-    "do_config,error_message",
+    ("do_config", "error_message"),
     [
         (
             {
@@ -270,7 +270,7 @@ async def test_config_wrong_struct_sensor(
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words,do_exception,expected",
+    ("config_addon", "register_words", "do_exception", "expected"),
     [
         (
             {
@@ -612,7 +612,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words,do_exception,expected",
+    ("config_addon", "register_words", "do_exception", "expected"),
     [
         (
             {
@@ -703,7 +703,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words",
+    ("config_addon", "register_words"),
     [
         (
             {
@@ -740,7 +740,7 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,start_expect,end_expect",
+    ("register_words", "do_exception", "start_expect", "end_expect"),
     [
         (
             [0x8000],
@@ -779,7 +779,7 @@ async def test_lazy_error_sensor(
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words,expected",
+    ("config_addon", "register_words", "expected"),
     [
         (
             {
@@ -833,7 +833,7 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words,expected",
+    ("config_addon", "register_words", "expected"),
     [
         (
             {

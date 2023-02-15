@@ -161,7 +161,7 @@ async def test_optimistic_states(hass, start_ha):
 
 @pytest.mark.parametrize(("count", "domain"), [(0, "alarm_control_panel")])
 @pytest.mark.parametrize(
-    "config,msg",
+    ("config", "msg"),
     [
         (
             {
@@ -317,7 +317,7 @@ async def test_unique_id(hass, start_ha):
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
-    "config,code_format,code_arm_required",
+    ("config", "code_format", "code_arm_required"),
     [
         (
             {

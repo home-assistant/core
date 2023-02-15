@@ -27,7 +27,7 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "vacuum")])
 @pytest.mark.parametrize(
-    "parm1,parm2,config",
+    ("parm1", "parm2", "config"),
     [
         (
             STATE_UNKNOWN,
