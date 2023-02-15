@@ -8,7 +8,6 @@ import logging
 
 from aiokef import AsyncKefSpeaker
 from aiokef.aiokef import DSP_OPTION_MAPPING
-import getmac
 from getmac import get_mac_address
 import voluptuous as vol
 
@@ -118,7 +117,6 @@ async def async_setup_platform(
     )
 
     mode = get_ip_mode(host)
-    getmac.getmac.FORCE_METHOD="ArpFile"
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
     if mac is None:
         raise PlatformNotReady("Cannot get the ip address of kef speaker.")
