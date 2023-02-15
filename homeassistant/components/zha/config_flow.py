@@ -162,7 +162,7 @@ class BaseZhaFlow(FlowHandler):
         """Choose a serial port."""
         ports = await list_serial_ports(self.hass)
         list_of_ports = [
-            f"{p}, s/n: {p.serial_number or 'n/a'}"
+            f"{p}{', s/n: ' + p.serial_number if p.serial_number else ''}"
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]
@@ -186,7 +186,7 @@ class BaseZhaFlow(FlowHandler):
                 return await self.async_step_manual_pick_radio_type()
 
             self._title = (
-                f"{port.description}, s/n: {port.serial_number or 'n/a'}"
+                f"{port.description}{', s/n: ' + port.serial_number if port.serial_number else ''}"
                 f" - {port.manufacturer}"
                 if port.manufacturer
                 else ""
