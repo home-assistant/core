@@ -95,6 +95,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/apprise/ @caronc
 /tests/components/apprise/ @caronc
 /homeassistant/components/aprs/ @PhilRW
+/tests/components/aprs/ @PhilRW
 /homeassistant/components/aranet/ @aschmitz
 /tests/components/aranet/ @aschmitz
 /homeassistant/components/arcam_fmj/ @elupus

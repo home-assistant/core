@@ -344,6 +344,9 @@ apcaccess==0.0.13
 # homeassistant.components.apprise
 apprise==1.2.1
 
+# homeassistant.components.aprs
+aprslib==0.7.0
+
 # homeassistant.components.aqualogic
 aqualogic==2.6
 
@@ -761,6 +764,9 @@ geniushub-client==0.7.0
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
+
+# homeassistant.components.aprs
+geopy==2.3.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.6
