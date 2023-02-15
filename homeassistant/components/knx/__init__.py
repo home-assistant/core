@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from pathlib import Path
 from typing import Final
@@ -341,8 +342,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     def remove_keyring_files(file_path: Path) -> None:
         """Remove keyring files."""
-        if file_path.exists():
+        with contextlib.suppress(FileNotFoundError):
             file_path.unlink()
+        with contextlib.suppress(FileNotFoundError, OSError):
+            file_path.parent.rmdir()
 
     if (_knxkeys_file := entry.data.get(CONF_KNX_KNXKEY_FILENAME)) is not None:
         file_path = Path(hass.config.path(STORAGE_DIR)) / _knxkeys_file

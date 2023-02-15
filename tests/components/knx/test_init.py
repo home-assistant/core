@@ -276,12 +276,12 @@ async def test_async_remove_entry(
     knx.mock_config_entry = config_entry
     await knx.setup_integration({})
 
-    with patch("pathlib.Path.exists", return_value=True) as exists_mock, patch(
-        "pathlib.Path.unlink"
-    ) as unlink_mock:
+    with patch("pathlib.Path.unlink") as unlink_mock, patch(
+        "pathlib.Path.rmdir"
+    ) as rmdir_mock:
         assert await hass.config_entries.async_remove(config_entry.entry_id)
-        exists_mock.assert_called_once()
         unlink_mock.assert_called_once()
+        rmdir_mock.assert_called_once()
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries() == []
