@@ -28,8 +28,8 @@ class ThreadRouterDiscoveryData:
     brand: str | None
     extended_pan_id: str | None
     model_name: str | None
-    name: str | None
     network_name: str | None
+    server: str | None
     vendor_name: str | None
 
 
@@ -102,13 +102,14 @@ class ThreadRouterDiscovery:
             ext_pan_id = service.properties.get(b"xp")
             network_name = try_decode(service.properties.get(b"nn"))
             model_name = try_decode(service.properties.get(b"mn"))
+            server = service.server
             vendor_name = try_decode(service.properties.get(b"vn"))
             data = ThreadRouterDiscoveryData(
                 brand=KNOWN_BRANDS.get(vendor_name),
                 extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
-                network_name=network_name,
                 model_name=model_name,
-                name=name,
+                network_name=network_name,
+                server=server,
                 vendor_name=vendor_name,
             )
             if name in self._known_routers and self._known_routers[name] == (

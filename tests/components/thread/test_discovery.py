@@ -70,8 +70,8 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf) -> Non
             brand="homeassistant",
             extended_pan_id="e60fc7c186212ce5",
             model_name="OpenThreadBorderRouter",
-            name="HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
             network_name="OpenThread HC",
+            server="core-silabs-multiprotocol.local.",
             vendor_name="HomeAssistant",
         ),
     )
@@ -92,8 +92,8 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf) -> Non
             brand="google",
             extended_pan_id="9e75e256f61409a3",
             model_name="Google Nest Hub",
-            name="Google-Nest-Hub-#ABED._meshcop._udp.local.",
             network_name="NEST-PAN-E1AF",
+            server="2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",
             vendor_name="Google Inc.",
         ),
     )
@@ -160,8 +160,8 @@ async def test_discover_routers_bad_data(
             brand=None,
             extended_pan_id="e60fc7c186212ce5",
             model_name="OpenThreadBorderRouter",
-            name="HomeAssistant OpenThreadBorderRouter #0BBF._meshcop._udp.local.",
             network_name="OpenThread HC",
+            server="core-silabs-multiprotocol.local.",
             vendor_name=None,
         ),
     )
