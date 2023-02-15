@@ -443,7 +443,7 @@ class SmartEnergyMetering(Sensor):
             attrs["device_type"] = self._channel.device_type
         if (status := self._channel.status) is not None:
             if isinstance(status, enum.IntFlag):
-                attrs["status"] = str(status.name)
+                attrs["status"] = str(status).split(".", 1)[-1]
             else:
                 attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
