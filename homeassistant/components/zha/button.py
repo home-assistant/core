@@ -184,3 +184,18 @@ class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     _attribute_name = "feeding"
     _attr_name = "Feed"
     _attribute_value = 1
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer", manufacturers={"_TZE200_n9clpsht"}
+)
+class ZigbeeWirelessKeypadResetButton(
+    ZHAAttributeButton, id_suffix="reset_wireless_keypad"
+):
+    """Defines a reset button for the Zigbee Wireless Keypad."""
+
+    _attribute_name = "reset"
+    _attr_name = "Reset"
+    _attribute_value = 1
+    _attr_device_class = ButtonDeviceClass.RESTART
+    _attr_entity_category = EntityCategory.CONFIG

@@ -477,3 +477,69 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_n9clpsht"},
+)
+class ZigbeeWirelessKeypadKeypadBeeps(
+    ZHASwitchConfigurationEntity, id_suffix="keypad_beeps"
+):
+    """Representation of a keypad beeps configuration entity."""
+
+    _zcl_attribute: str = "keypad_beeps"
+    _attr_name = "Keypad beeps"
+    _attr_icon: str = "mdi:bell-ring"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_n9clpsht"},
+)
+class ZigbeewirelessKeypadArmDelayBeeps(
+    ZHASwitchConfigurationEntity, id_suffix="arm_delay_beeps"
+):
+    """Representation of a arm delay beeps configuration entity."""
+
+    _zcl_attribute: str = "arm_delay_beeps"
+    _attr_name = "Arm delay beeps"
+    _attr_icon: str = "mdi:bell-ring"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_n9clpsht"},
+)
+class ZigbeeWirelessKeypadQuickArm(ZHASwitchConfigurationEntity, id_suffix="quick_arm"):
+    """Representation of a quick arm configuration entity."""
+
+    _zcl_attribute: str = "quick_arm"
+    _attr_name = "Quick arm"
+    _attr_icon: str = "mdi:fast-forward"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_n9clpsht"},
+)
+class ZigbeeWirelessKeypadQuickDisarm(
+    ZHASwitchConfigurationEntity, id_suffix="quick_disarm"
+):
+    """Representation of a quick disarm configuration entity."""
+
+    _zcl_attribute: str = "quick_disarm"
+    _attr_name = "Quick disarm"
+    _attr_icon: str = "mdi:fast-forward"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_n9clpsht"},
+)
+class ZigbeeWirelessKeypadQuickSOS(ZHASwitchConfigurationEntity, id_suffix="quick_sos"):
+    """Representation of a quick sos configuration entity."""
+
+    _zcl_attribute: str = "quick_sos"
+    _attr_name = "Quick sos"
+    _attr_icon: str = "mdi:fast-forward"

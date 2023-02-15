@@ -11,7 +11,7 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfMass
+from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -861,3 +861,20 @@ class AqaraPetFeederPortionWeight(
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
     _attr_icon: str = "mdi:weight-gram"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer", manufacturers={"_TZE200_n9clpsht"}
+)
+class ZigbeeWirelessKeypadArmDelayTime(
+    ZHANumberConfigurationEntity, id_suffix="arm_delay_time"
+):
+    """Zigbee Wireless Keypad Arm Delay Time configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 180
+    _zcl_attribute: str = "arm_delay_time"
+    _attr_name: str = "Arm delay time"
+    _attr_native_unit_of_measurement: str = UnitOfTime.SECONDS
+    _attr_icon: str = "mdi:timer"
