@@ -3,10 +3,13 @@ from unittest.mock import patch
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as ent_reg
 
 
-async def test_number_entities(hass, async_autosetup_sonos, soco):
+async def test_number_entities(
+    hass: HomeAssistant, async_autosetup_sonos, soco
+) -> None:
     """Test number entities."""
     entity_registry = ent_reg.async_get(hass)
 
