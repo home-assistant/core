@@ -74,7 +74,7 @@ async def test_overall_timeout_reached(caplog):
     iexecutor = InterruptibleThreadPoolExecutor()
 
     def _loop_sleep_in_executor():
-        time.sleep(2)
+        time.sleep(1)
 
     for _ in range(6):
         iexecutor.submit(_loop_sleep_in_executor)
@@ -84,6 +84,6 @@ async def test_overall_timeout_reached(caplog):
         iexecutor.shutdown()
     finish = time.monotonic()
 
-    assert finish - start < 1.5
+    assert finish - start < 1.2
 
     iexecutor.shutdown()
