@@ -423,14 +423,11 @@ async def async_get_homekit(
     hass: HomeAssistant,
 ) -> dict[str, HomeKitDiscoveredIntegration]:
     """Return cached list of homekit models."""
-    all_domains = set(HOMEKIT.values())
-    integrations_by_domain = await async_get_integrations(hass, all_domains)
     homekit: dict[str, HomeKitDiscoveredIntegration] = {
-        model: HomeKitDiscoveredIntegration(domain, integration_or_exception.iot_class)
-        for model, domain in HOMEKIT.items()
-        if (integration_or_exception := integrations_by_domain.get(domain))
-        and isinstance(integration_or_exception, Integration)
+        model: HomeKitDiscoveredIntegration(details["domain"], details["iot_class"])
+        for model, details in HOMEKIT.items()
     }
+
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if (
