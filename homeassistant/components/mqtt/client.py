@@ -496,6 +496,30 @@ class MQTT:
         async with self._paho_lock:
             await self.hass.async_add_executor_job(stop)
 
+    @callback
+    def async_restore_subscriptions(self, subscriptions: list[Subscription]) -> None:
+        """Restore subscriptions after reconnect."""
+        for subscription in self.subscriptions:
+            self._async_add_subscription(subscription)
+        self._matching_subscriptions.cache_clear()
+
+    @callback
+    def _async_add_subscription(self, subscription: Subscription) -> bool:
+        """Add a subscription.
+
+        This method does not send a SUBSCRIBE message to the broker.
+        """
+        if (
+            _is_simple := "+" not in subscription.topic
+            and "#" not in subscription.topic
+        ):
+            self._simple_subscriptions.setdefault(subscription.topic, []).append(
+                subscription
+            )
+        else:
+            self._wildcard_subscriptions.append(subscription)
+        return _is_simple
+
     async def async_subscribe(
         self,
         topic: str,
@@ -514,10 +538,7 @@ class MQTT:
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
-        if _is_simple := "+" not in topic and "#" not in topic:
-            self._simple_subscriptions.setdefault(topic, []).append(subscription)
-        else:
-            self._wildcard_subscriptions.append(subscription)
+        _is_simple = self._async_add_subscription(subscription)
         matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
