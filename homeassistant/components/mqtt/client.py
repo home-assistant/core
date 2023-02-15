@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
-from itertools import groupby
+from itertools import chain, groupby
 import logging
 from operator import attrgetter
 import ssl
@@ -358,7 +358,6 @@ class MQTT:
         self.hass = hass
         self.config_entry = config_entry
         self.conf = conf
-        self.subscriptions: list[Subscription] = []
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
         self.connected = False
@@ -502,16 +501,16 @@ class MQTT:
         """
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
+        matching_subscriptions = self._matching_subscriptions
 
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
-        self.subscriptions.append(subscription)
         if _is_simple := "+" not in topic and "#" not in topic:
             self._simple_subscriptions.setdefault(topic, []).append(subscription)
         else:
             self._wildcard_subscriptions.append(subscription)
-        self._matching_subscriptions.cache_clear()
+        matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
         if self.connected:
@@ -521,16 +520,16 @@ class MQTT:
         @callback
         def async_remove() -> None:
             """Remove subscription."""
-            if subscription not in self.subscriptions:
-                raise HomeAssistantError("Can't remove subscription twice")
-            self.subscriptions.remove(subscription)
-            if _is_simple:
-                self._simple_subscriptions[topic].remove(subscription)
-                if not self._simple_subscriptions[topic]:
-                    del self._simple_subscriptions[topic]
-            else:
-                self._wildcard_subscriptions.remove(subscription)
-            self._matching_subscriptions.cache_clear()
+            try:
+                if _is_simple:
+                    self._simple_subscriptions[topic].remove(subscription)
+                    if not self._simple_subscriptions[topic]:
+                        del self._simple_subscriptions[topic]
+                else:
+                    self._wildcard_subscriptions.remove(subscription)
+            except (KeyError, ValueError) as ex:
+                raise HomeAssistantError("Can't remove subscription twice") from ex
+            matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
             if self.connected:
@@ -636,18 +635,7 @@ class MQTT:
             result_code,
         )
 
-        # Group subscriptions to only re-subscribe once for each topic.
-        keyfunc = attrgetter("topic")
-        self.hass.add_job(
-            self._async_perform_subscriptions,
-            [
-                # Re-subscribe with the highest requested qos
-                (topic, max(subscription.qos for subscription in subs))
-                for topic, subs in groupby(
-                    sorted(self.subscriptions, key=keyfunc), keyfunc
-                )
-            ],
-        )
+        self.hass.create_task(self._async_resubscribe())
 
         if (
             CONF_BIRTH_MESSAGE in self.conf
@@ -668,6 +656,27 @@ class MQTT:
             asyncio.run_coroutine_threadsafe(
                 publish_birth_message(birth_message), self.hass.loop
             )
+
+    async def _async_resubscribe(self) -> None:
+        """Resubscribe on reconnect."""
+        # Group subscriptions to only re-subscribe once for each topic.
+        keyfunc = attrgetter("topic")
+        await self._async_perform_subscriptions(
+            [
+                # Re-subscribe with the highest requested qos
+                (topic, max(subscription.qos for subscription in subs))
+                for topic, subs in groupby(
+                    sorted(
+                        (
+                            *chain.from_iterable(self._simple_subscriptions.values()),
+                            *self._wildcard_subscriptions,
+                        ),
+                        key=keyfunc,
+                    ),
+                    keyfunc,
+                )
+            ]
+        )
 
     def _mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
