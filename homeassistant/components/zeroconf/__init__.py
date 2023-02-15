@@ -35,7 +35,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
-    HomeKitModel,
+    HomeKitDiscoveredIntegration,
     async_get_homekit,
     async_get_zeroconf,
     bind_hass,
@@ -347,7 +347,7 @@ class ZeroconfDiscovery:
         hass: HomeAssistant,
         zeroconf: HaZeroconf,
         zeroconf_types: dict[str, list[dict[str, str | dict[str, str]]]],
-        homekit_models: dict[str, HomeKitModel],
+        homekit_models: dict[str, HomeKitDiscoveredIntegration],
         ipv6: bool,
     ) -> None:
         """Init discovery."""
@@ -514,8 +514,8 @@ class ZeroconfDiscovery:
 
 
 def async_get_homekit_discovery_domain(
-    homekit_models: dict[str, HomeKitModel], props: dict[str, Any]
-) -> HomeKitModel | None:
+    homekit_models: dict[str, HomeKitDiscoveredIntegration], props: dict[str, Any]
+) -> HomeKitDiscoveredIntegration | None:
     """Handle a HomeKit discovery.
 
     Return the domain to forward the discovery data to
