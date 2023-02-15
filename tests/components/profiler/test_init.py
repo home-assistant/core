@@ -23,7 +23,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_basic_usage(hass, tmpdir):
+async def test_basic_usage(hass: HomeAssistant, tmpdir) -> None:
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 
@@ -53,7 +53,7 @@ async def test_basic_usage(hass, tmpdir):
     await hass.async_block_till_done()
 
 
-async def test_memory_usage(hass, tmpdir):
+async def test_memory_usage(hass: HomeAssistant, tmpdir) -> None:
     """Test we can setup and the service is registered."""
     test_dir = tmpdir.mkdir("profiles")
 

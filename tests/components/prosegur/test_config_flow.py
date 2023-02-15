@@ -188,7 +188,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_reauth_flow_error(hass, exception, base_error):
+async def test_reauth_flow_error(hass: HomeAssistant, exception, base_error) -> None:
     """Test a reauthentication flow with errors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
