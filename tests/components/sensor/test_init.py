@@ -39,7 +39,7 @@ from tests.common import mock_restore_cache_with_extra_data
 
 
 @pytest.mark.parametrize(
-    "unit_system,native_unit,state_unit,native_value,state_value",
+    ("unit_system", "native_unit", "state_unit", "native_value", "state_value"),
     [
         (
             US_CUSTOMARY_SYSTEM,
@@ -199,7 +199,7 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
 
 
 @pytest.mark.parametrize(
-    "device_class,state_value,provides",
+    ("device_class", "state_value", "provides"),
     [
         (SensorDeviceClass.DATE, "2021-01-09", "date"),
         (SensorDeviceClass.TIMESTAMP, "2021-01-09T12:00:00+00:00", "datetime"),
@@ -283,7 +283,7 @@ RESTORE_DATA = {
 
 # None | str | int | float | date | datetime | Decimal:
 @pytest.mark.parametrize(
-    "native_value, native_value_type, expected_extra_data, device_class, uom",
+    ("native_value", "native_value_type", "expected_extra_data", "device_class", "uom"),
     [
         ("abc123", str, RESTORE_DATA["str"], None, None),
         (
@@ -353,7 +353,7 @@ async def test_restore_sensor_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_value, native_value_type, extra_data, device_class, uom",
+    ("native_value", "native_value_type", "extra_data", "device_class", "uom"),
     [
         ("abc123", str, RESTORE_DATA["str"], None, None),
         (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE, "°F"),
@@ -418,7 +418,14 @@ async def test_restore_sensor_restore_state(
 
 
 @pytest.mark.parametrize(
-    "device_class, native_unit, custom_unit, state_unit, native_value, custom_state",
+    (
+        "device_class",
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "custom_state",
+    ),
     [
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
@@ -519,7 +526,15 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
-    "native_unit, custom_unit, state_unit, native_value, native_state, custom_state, device_class",
+    (
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "native_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -788,7 +803,19 @@ async def test_custom_unit_change(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit, native_value, native_state, automatic_state, suggested_state, custom_state, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "automatic_unit",
+        "suggested_unit",
+        "custom_unit",
+        "native_value",
+        "native_state",
+        "automatic_state",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -919,7 +946,167 @@ async def test_unit_conversion_priority(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, original_unit, suggested_unit, native_value, original_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "automatic_unit",
+        "suggested_unit",
+        "custom_unit",
+        "suggested_precision",
+        "native_value",
+        "native_state",
+        "automatic_state",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
+            UnitOfLength.METERS,
+            UnitOfLength.YARDS,
+            2,
+            1000,
+            "1000",
+            621.371,
+            1000000,
+            1093613,
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_precision(
+    hass,
+    enable_custom_integrations,
+    unit_system,
+    native_unit,
+    automatic_unit,
+    suggested_unit,
+    custom_unit,
+    suggested_precision,
+    native_value,
+    native_state,
+    automatic_state,
+    suggested_state,
+    custom_state,
+    device_class,
+):
+    """Test priority of unit conversion for sensors with suggested_display_precision."""
+
+    hass.config.units = unit_system
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    platform.ENTITIES["2"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity2 = platform.ENTITIES["2"]
+
+    platform.ENTITIES["3"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=suggested_unit,
+    )
+    entity3 = platform.ENTITIES["3"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow automatic unit conversion
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(automatic_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
+    # Assert the automatic unit conversion is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options == {
+        "sensor": {"suggested_display_precision": 2},
+        "sensor.private": {"suggested_unit_of_measurement": automatic_unit},
+    }
+
+    # Unregistered entity -> Follow native unit
+    state = hass.states.get(entity1.entity_id)
+    assert state.state == native_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    # Registered entity with suggested unit
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == pytest.approx(suggested_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity2.entity_id)
+    assert entry.options == {
+        "sensor": {"suggested_display_precision": 2},
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit},
+    }
+
+    # Unregistered entity with suggested unit
+    state = hass.states.get(entity3.entity_id)
+    assert float(state.state) == pytest.approx(suggested_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+    # Set a custom unit, this should have priority over the automatic unit conversion
+    entity_registry.async_update_entity_options(
+        entity0.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(custom_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    entity_registry.async_update_entity_options(
+        entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity2.entity_id)
+    assert float(state.state) == pytest.approx(custom_state)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+
+@pytest.mark.parametrize(
+    (
+        "unit_system",
+        "native_unit",
+        "original_unit",
+        "suggested_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -1000,26 +1187,52 @@ async def test_unit_conversion_priority_suggested_unit_change(
 
 
 @pytest.mark.parametrize(
-    "native_unit, suggested_precision, native_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "integration_suggested_precision",
+        "options_suggested_precision",
+        "native_value",
+        "device_class",
+        "extra_options",
+    ),
     [
         # Distance
         (
+            METRIC_SYSTEM,
             UnitOfLength.KILOMETERS,
+            4,
             4,
             1000,
             SensorDeviceClass.DISTANCE,
+            {},
+        ),
+        # Air pressure
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfPressure.HPA,
+            0,
+            1,
+            1000,
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
         ),
     ],
 )
 async def test_suggested_precision_option(
     hass,
     enable_custom_integrations,
+    unit_system,
     native_unit,
-    suggested_precision,
+    integration_suggested_precision,
+    options_suggested_precision,
     native_value,
     device_class,
+    extra_options,
 ):
     """Test suggested precision is stored in the registry."""
+
+    hass.config.units = unit_system
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
@@ -1030,7 +1243,7 @@ async def test_suggested_precision_option(
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
-        suggested_display_precision=suggested_precision,
+        suggested_display_precision=integration_suggested_precision,
         unique_id="very_unique",
     )
     entity0 = platform.ENTITIES["0"]
@@ -1040,33 +1253,66 @@ async def test_suggested_precision_option(
 
     # Assert the suggested precision is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
-    assert entry.options == {
-        "sensor": {"suggested_display_precision": suggested_precision}
+    assert entry.options == extra_options | {
+        "sensor": {"suggested_display_precision": options_suggested_precision}
     }
 
 
 @pytest.mark.parametrize(
-    "native_unit, old_precision, new_precision, native_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "suggested_unit",
+        "old_precision",
+        "new_precision",
+        "opt_precision",
+        "native_value",
+        "device_class",
+        "extra_options",
+    ),
     [
+        # Distance
         (
+            METRIC_SYSTEM,
+            UnitOfLength.KILOMETERS,
             UnitOfLength.KILOMETERS,
             4,
             1,
+            1,
             1000,
             SensorDeviceClass.DISTANCE,
+            {},
+        ),
+        # Air pressure
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+            1,
+            1,
+            2,
+            1000,
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            {"sensor.private": {"suggested_unit_of_measurement": "inHg"}},
         ),
     ],
 )
 async def test_suggested_precision_option_update(
     hass,
     enable_custom_integrations,
+    unit_system,
     native_unit,
+    suggested_unit,
     old_precision,
     new_precision,
+    opt_precision,
     native_value,
     device_class,
+    extra_options,
 ):
     """Test suggested precision stored in the registry is updated."""
+
+    hass.config.units = unit_system
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
@@ -1085,7 +1331,7 @@ async def test_suggested_precision_option_update(
         entry.entity_id,
         "sensor.private",
         {
-            "suggested_unit_of_measurement": native_unit,
+            "suggested_unit_of_measurement": suggested_unit,
         },
     )
 
@@ -1106,16 +1352,23 @@ async def test_suggested_precision_option_update(
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.options == {
         "sensor": {
-            "suggested_display_precision": new_precision,
+            "suggested_display_precision": opt_precision,
         },
         "sensor.private": {
-            "suggested_unit_of_measurement": native_unit,
+            "suggested_unit_of_measurement": suggested_unit,
         },
     }
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, original_unit, native_value, original_value, device_class",
+    (
+        "unit_system",
+        "native_unit",
+        "original_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
     [
         # Distance
         (
@@ -1366,7 +1619,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit",
+    ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
@@ -1417,7 +1670,7 @@ async def test_non_numeric_validation_warn(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit,precision", ((None, None, None, 1),)
+    ("device_class", "state_class", "unit", "precision"), ((None, None, None, 1),)
 )
 @pytest.mark.parametrize(
     "native_value,expected",
@@ -1462,7 +1715,7 @@ async def test_non_numeric_validation_raise(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,unit",
+    ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
@@ -1576,7 +1829,13 @@ async def test_device_classes_with_invalid_state_class(
 
 
 @pytest.mark.parametrize(
-    "device_class,state_class,native_unit_of_measurement,suggested_precision,is_numeric",
+    (
+        "device_class",
+        "state_class",
+        "native_unit_of_measurement",
+        "suggested_precision",
+        "is_numeric",
+    ),
     [
         (SensorDeviceClass.ENUM, None, None, None, False),
         (SensorDeviceClass.DATE, None, None, None, False),
@@ -1621,7 +1880,21 @@ async def test_numeric_state_expected_helper(
 
 
 @pytest.mark.parametrize(
-    "unit_system_1, unit_system_2, native_unit, automatic_unit_1, automatic_unit_2, suggested_unit, custom_unit, native_value, automatic_state_1, automatic_state_2, suggested_state, custom_state, device_class",
+    (
+        "unit_system_1",
+        "unit_system_2",
+        "native_unit",
+        "automatic_unit_1",
+        "automatic_unit_2",
+        "suggested_unit",
+        "custom_unit",
+        "native_value",
+        "automatic_state_1",
+        "automatic_state_2",
+        "suggested_state",
+        "custom_state",
+        "device_class",
+    ),
     [
         # Distance
         (

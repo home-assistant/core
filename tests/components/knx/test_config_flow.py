@@ -5,7 +5,7 @@ import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
-from xknx.secure.keyring import _load_keyring
+from xknx.secure.keyring import sync_load_keyring
 from xknx.telegram import IndividualAddress
 
 from homeassistant import config_entries
@@ -100,7 +100,7 @@ class GatewayScannerMock:
             yield gateway
 
 
-async def test_user_single_instance(hass):
+async def test_user_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -403,7 +403,7 @@ async def test_routing_secure_keyfile(
 
 
 @pytest.mark.parametrize(
-    "user_input,config_entry_data",
+    ("user_input", "config_entry_data"),
     [
         (
             {
@@ -901,7 +901,7 @@ async def _get_menu_step(hass: HomeAssistant) -> FlowResult:
 async def test_get_secure_menu_step_manual_tunnelling(
     _request_description_mock,
     hass: HomeAssistant,
-):
+) -> None:
     """Test flow reaches secure_tunnellinn menu step from manual tunnelling configuration."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
@@ -948,7 +948,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     assert result3["step_id"] == "secure_key_source"
 
 
-async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup):
+async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) -> None:
     """Test configure tunnelling secure keys manually."""
     menu_step = await _get_menu_step(hass)
 
@@ -985,7 +985,7 @@ async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup):
     knx_setup.assert_called_once()
 
 
-async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup):
+async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
     """Test configure secure knxkeys."""
     menu_step = await _get_menu_step(hass)
 
@@ -998,8 +998,8 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup):
     assert not result["errors"]
 
     with patch(
-        "xknx.secure.keyring._load_keyring",
-        return_value=_load_keyring(
+        "xknx.secure.keyring.sync_load_keyring",
+        return_value=sync_load_keyring(
             str(get_fixture_path("fixture.knxkeys", DOMAIN).absolute()),
             FIXTURE_KNXKEYS_PASSWORD,
         ),
@@ -1040,7 +1040,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup):
     knx_setup.assert_called_once()
 
 
-async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
+async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step(hass)
 
@@ -1068,7 +1068,7 @@ async def test_configure_secure_knxkeys_file_not_found(hass: HomeAssistant):
         assert secure_knxkeys["errors"][CONF_KNX_KNXKEY_FILENAME] == "keyfile_not_found"
 
 
-async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
+async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step(hass)
 
@@ -1099,7 +1099,7 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant):
         )
 
 
-async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant):
+async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step(hass)
 
@@ -1252,8 +1252,8 @@ async def test_options_flow_secure_manual_to_keyfile(
     assert not result4["errors"]
 
     with patch(
-        "xknx.secure.keyring._load_keyring",
-        return_value=_load_keyring(
+        "xknx.secure.keyring.sync_load_keyring",
+        return_value=sync_load_keyring(
             str(get_fixture_path("fixture.knxkeys", DOMAIN).absolute()),
             FIXTURE_KNXKEYS_PASSWORD,
         ),

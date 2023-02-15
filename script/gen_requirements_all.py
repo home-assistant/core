@@ -143,9 +143,6 @@ iso4217!=1.10.20220401
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
 pandas==1.4.3
 
-# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
-uamqp==1.6.0
-
 # Matplotlib 3.6.2 has issues building wheels on armhf/armv7
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
@@ -153,10 +150,6 @@ matplotlib==3.6.1
 # pyOpenSSL 23.0.0 or later required to avoid import errors when
 # cryptography 39.0.0 is installed with botocore
 pyOpenSSL>=23.0.0
-
-# virtualenv 20.18 only compatible with <3
-# https://github.com/pypa/virtualenv/issues/2499
-platformdirs<3
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

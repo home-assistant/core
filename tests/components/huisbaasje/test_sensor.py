@@ -26,7 +26,7 @@ from .test_data import MOCK_CURRENT_MEASUREMENTS, MOCK_LIMITED_CURRENT_MEASUREME
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant):
+async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test for successfully loading sensor states."""
     with patch(
         "energyflip.EnergyFlip.authenticate", return_value=None
@@ -353,7 +353,7 @@ async def test_setup_entry(hass: HomeAssistant):
         assert len(mock_current_measurements.mock_calls) == 1
 
 
-async def test_setup_entry_absent_measurement(hass: HomeAssistant):
+async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
     """Test for successfully loading sensor states when response does not contain all measurements."""
     with patch(
         "energyflip.EnergyFlip.authenticate", return_value=None

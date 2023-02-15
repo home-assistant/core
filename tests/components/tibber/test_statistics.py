@@ -43,7 +43,7 @@ async def test_async_setup_entry(recorder_mock, hass):
         assert len(stats[statistic_id]) == 3
         _sum = 0
         for k, stat in enumerate(stats[statistic_id]):
-            assert stat["start"] == dt_util.parse_datetime(data[k]["from"])
+            assert stat["start"] == dt_util.parse_datetime(data[k]["from"]).timestamp()
             assert stat["state"] == data[k][key]
             assert stat["mean"] is None
             assert stat["min"] is None

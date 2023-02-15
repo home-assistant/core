@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

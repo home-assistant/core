@@ -203,9 +203,10 @@ def test_setup_connection_for_dialect_mysql(mysql_version):
 
     util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
 
-    assert len(execute_args) == 2
+    assert len(execute_args) == 3
     assert execute_args[0] == "SET session wait_timeout=28800"
     assert execute_args[1] == "SELECT VERSION()"
+    assert execute_args[2] == "SET time_zone = '+00:00'"
 
 
 @pytest.mark.parametrize(
@@ -317,7 +318,7 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
 
 @pytest.mark.parametrize(
-    "mysql_version,message",
+    ("mysql_version", "message"),
     [
         (
             "10.2.0-MariaDB",
@@ -396,7 +397,7 @@ def test_supported_mysql(caplog, mysql_version):
 
 
 @pytest.mark.parametrize(
-    "pgsql_version,message",
+    ("pgsql_version", "message"),
     [
         (
             "11.12 (Debian 11.12-1.pgdg100+1)",
@@ -476,7 +477,7 @@ def test_supported_pgsql(caplog, pgsql_version):
 
 
 @pytest.mark.parametrize(
-    "sqlite_version,message",
+    ("sqlite_version", "message"),
     [
         (
             "3.30.0",
@@ -559,7 +560,7 @@ def test_supported_sqlite(caplog, sqlite_version):
 
 
 @pytest.mark.parametrize(
-    "dialect,message",
+    ("dialect", "message"),
     [
         ("mssql", "Database mssql is not supported"),
         ("oracle", "Database oracle is not supported"),
@@ -580,7 +581,7 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
 
 
 @pytest.mark.parametrize(
-    "mysql_version,min_version",
+    ("mysql_version", "min_version"),
     [
         (
             "10.5.16-MariaDB",
@@ -926,7 +927,7 @@ def test_execute_stmt_lambda_element(hass_recorder):
 
 
 @freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
-async def test_resolve_period(hass):
+async def test_resolve_period(hass: HomeAssistant) -> None:
     """Test statistic_during_period."""
 
     now = dt_util.utcnow()

@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -17,7 +17,8 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import MockConfigEntry, MockUser, async_mock_service
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [None, conversation.AgentManager.HOME_ASSISTANT_AGENT]
 
@@ -45,8 +46,12 @@ async def init_components(hass):
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_http_processing_intent(
-    hass, init_components, hass_client, hass_admin_user, agent_id
-):
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    agent_id,
+) -> None:
     """Test processing intent via HTTP API."""
     # Add an alias
     entities = entity_registry.async_get(hass)
@@ -87,8 +92,12 @@ async def test_http_processing_intent(
 
 
 async def test_http_processing_intent_target_ha_agent(
-    hass, init_components, hass_client, hass_admin_user, mock_agent
-):
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    mock_agent,
+) -> None:
     """Test processing intent can be processed via HTTP API with picking agent."""
     # Add an alias
     entities = entity_registry.async_get(hass)
@@ -129,8 +138,11 @@ async def test_http_processing_intent_target_ha_agent(
 
 
 async def test_http_processing_intent_entity_added(
-    hass, init_components, hass_client, hass_admin_user
-):
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
     """Test processing intent via HTTP API with entities added later.
 
     We want to ensure that adding an entity later busts the cache
@@ -267,7 +279,9 @@ async def test_http_processing_intent_entity_added(
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
-async def test_turn_on_intent(hass, init_components, sentence, agent_id):
+async def test_turn_on_intent(
+    hass: HomeAssistant, init_components, sentence, agent_id
+) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
@@ -286,7 +300,7 @@ async def test_turn_on_intent(hass, init_components, sentence, agent_id):
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
-async def test_turn_off_intent(hass, init_components, sentence):
+async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_off")
@@ -303,7 +317,9 @@ async def test_turn_off_intent(hass, init_components, sentence):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_http_api_no_match(hass, init_components, hass_client):
+async def test_http_api_no_match(
+    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+) -> None:
     """Test the HTTP conversation API with an intent match failure."""
     client = await hass_client()
 
@@ -330,7 +346,9 @@ async def test_http_api_no_match(hass, init_components, hass_client):
     }
 
 
-async def test_http_api_handle_failure(hass, init_components, hass_client):
+async def test_http_api_handle_failure(
+    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+) -> None:
     """Test the HTTP conversation API with an error during handling."""
     client = await hass_client()
 
@@ -367,7 +385,9 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
     }
 
 
-async def test_http_api_unexpected_failure(hass, init_components, hass_client):
+async def test_http_api_unexpected_failure(
+    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+) -> None:
     """Test the HTTP conversation API with an unexpected error during handling."""
     client = await hass_client()
 
@@ -404,7 +424,9 @@ async def test_http_api_unexpected_failure(hass, init_components, hass_client):
     }
 
 
-async def test_http_api_wrong_data(hass, init_components, hass_client):
+async def test_http_api_wrong_data(
+    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+) -> None:
     """Test the HTTP conversation API."""
     client = await hass_client()
 
@@ -416,7 +438,13 @@ async def test_http_api_wrong_data(hass, init_components, hass_client):
 
 
 @pytest.mark.parametrize("agent_id", (None, "mock-entry"))
-async def test_custom_agent(hass, hass_client, hass_admin_user, mock_agent, agent_id):
+async def test_custom_agent(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    mock_agent,
+    agent_id,
+) -> None:
     """Test a custom conversation agent."""
     assert await async_setup_component(hass, "conversation", {})
 
@@ -488,7 +516,9 @@ async def test_custom_agent(hass, hass_client, hass_admin_user, mock_agent, agen
         },
     ],
 )
-async def test_ws_api(hass, hass_ws_client, payload):
+async def test_ws_api(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload
+) -> None:
     """Test the Websocket conversation API."""
     assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
@@ -516,7 +546,9 @@ async def test_ws_api(hass, hass_ws_client, payload):
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
-async def test_ws_prepare(hass, hass_ws_client, agent_id):
+async def test_ws_prepare(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, agent_id
+) -> None:
     """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "conversation", {})
     agent = await conversation._get_agent_manager(hass).async_get_agent()
@@ -544,7 +576,9 @@ async def test_ws_prepare(hass, hass_ws_client, agent_id):
     assert agent._lang_intents.get(hass.config.language)
 
 
-async def test_custom_sentences(hass, hass_client, hass_admin_user):
+async def test_custom_sentences(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
     """Test custom sentences with a custom intent."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
@@ -584,7 +618,9 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
         }
 
 
-async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
+async def test_custom_sentences_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
     """Test custom sentences with a custom intent in config."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
@@ -633,7 +669,7 @@ async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
     }
 
 
-async def test_prepare_reload(hass):
+async def test_prepare_reload(hass: HomeAssistant) -> None:
     """Test calling the reload service."""
     language = hass.config.language
     assert await async_setup_component(hass, "conversation", {})
@@ -654,7 +690,7 @@ async def test_prepare_reload(hass):
     assert not agent._lang_intents.get(language)
 
 
-async def test_prepare_fail(hass):
+async def test_prepare_fail(hass: HomeAssistant) -> None:
     """Test calling prepare with a non-existent language."""
     assert await async_setup_component(hass, "conversation", {})
 
@@ -667,7 +703,7 @@ async def test_prepare_fail(hass):
     assert not agent._lang_intents.get("not-a-language")
 
 
-async def test_language_region(hass, init_components):
+async def test_language_region(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
@@ -691,7 +727,7 @@ async def test_language_region(hass, init_components):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_reload_on_new_component(hass):
+async def test_reload_on_new_component(hass: HomeAssistant) -> None:
     """Test intents being reloaded when a new component is loaded."""
     language = hass.config.language
     assert await async_setup_component(hass, "conversation", {})
@@ -716,7 +752,7 @@ async def test_reload_on_new_component(hass):
     assert {"light"} == (lang_intents.loaded_components - loaded_components)
 
 
-async def test_non_default_response(hass, init_components):
+async def test_non_default_response(hass: HomeAssistant, init_components) -> None:
     """Test intent response that is not the default."""
     hass.states.async_set("cover.front_door", "closed")
     async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
@@ -735,7 +771,7 @@ async def test_non_default_response(hass, init_components):
     assert result.response.speech["plain"]["speech"] == "Opened front door"
 
 
-async def test_turn_on_area(hass, init_components):
+async def test_turn_on_area(hass: HomeAssistant, init_components) -> None:
     """Test turning on an area."""
     er = entity_registry.async_get(hass)
     dr = device_registry.async_get(hass)
@@ -801,7 +837,7 @@ async def test_turn_on_area(hass, init_components):
     assert call.data == {"entity_id": "light.stove"}
 
 
-async def test_light_area_same_name(hass, init_components):
+async def test_light_area_same_name(hass: HomeAssistant, init_components) -> None:
     """Test turning on a light with the same name as an area."""
     entities = entity_registry.async_get(hass)
     devices = device_registry.async_get(hass)
@@ -849,7 +885,7 @@ async def test_light_area_same_name(hass, init_components):
     assert call.data == {"entity_id": kitchen_light.entity_id}
 
 
-async def test_agent_id_validator_invalid_agent(hass):
+async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
     """Test validating agent id."""
     with pytest.raises(vol.Invalid):
         conversation.agent_id_validator("invalid_agent")
@@ -857,7 +893,9 @@ async def test_agent_id_validator_invalid_agent(hass):
     conversation.agent_id_validator(conversation.AgentManager.HOME_ASSISTANT_AGENT)
 
 
-async def test_get_agent_list(hass, init_components, mock_agent, hass_ws_client):
+async def test_get_agent_list(
+    hass: HomeAssistant, init_components, mock_agent, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting agent info."""
     client = await hass_ws_client(hass)
 

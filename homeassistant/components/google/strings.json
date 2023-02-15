@@ -21,7 +21,8 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "api_disabled": "You must enable the Google Calendar API in the Google Cloud Console"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

@@ -341,14 +341,20 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         if to_update:
             tasks.append(
-                alexa_state_report.async_send_add_or_update_message(
-                    self.hass, self, to_update
+                asyncio.create_task(
+                    alexa_state_report.async_send_add_or_update_message(
+                        self.hass, self, to_update
+                    )
                 )
             )
 
         if to_remove:
             tasks.append(
-                alexa_state_report.async_send_delete_message(self.hass, self, to_remove)
+                asyncio.create_task(
+                    alexa_state_report.async_send_delete_message(
+                        self.hass, self, to_remove
+                    )
+                )
             )
 
         try:

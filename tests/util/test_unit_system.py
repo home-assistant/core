@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor.const import DEVICE_CLASS_UNITS
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
@@ -18,6 +19,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import (
@@ -312,7 +314,7 @@ def test_properties() -> None:
 
 
 @pytest.mark.parametrize(
-    "key, expected_system",
+    ("key", "expected_system"),
     [
         (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
         (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
@@ -333,7 +335,7 @@ def test_get_unit_system_invalid(key: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "device_class, original_unit, state_unit",
+    ("device_class", "original_unit", "state_unit"),
     (
         # Test atmospheric pressure
         (
@@ -361,9 +363,45 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test gas meter conversion
+        (
+            SensorDeviceClass.GAS,
+            UnitOfVolume.CENTUM_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test precipitation conversion
+        (
+            SensorDeviceClass.PRECIPITATION,
+            UnitOfLength.INCHES,
+            UnitOfLength.MILLIMETERS,
+        ),
+        (SensorDeviceClass.PRECIPITATION, UnitOfLength.CENTIMETERS, None),
+        (SensorDeviceClass.PRECIPITATION, UnitOfLength.MILLIMETERS, None),
+        (SensorDeviceClass.PRECIPITATION, "very_much", None),
+        # Test precipitation intensity conversion
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        ),
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+            None,
+        ),
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+            None,
+        ),
+        (SensorDeviceClass.PRECIPITATION_INTENSITY, "very_heavy", None),
         # Test pressure conversion
         (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, UnitOfPressure.KPA),
         (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, None),
@@ -382,8 +420,25 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.SPEED, UnitOfSpeed.KILOMETERS_PER_HOUR, None),
         (SensorDeviceClass.SPEED, UnitOfSpeed.KNOTS, None),
         (SensorDeviceClass.SPEED, UnitOfSpeed.METERS_PER_SECOND, None),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        ),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        ),
+        (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY, None),
+        (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR, None),
         (SensorDeviceClass.SPEED, "very_fast", None),
         # Test volume conversion
+        (
+            SensorDeviceClass.VOLUME,
+            UnitOfVolume.CENTUM_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, UnitOfVolume.MILLILITERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
@@ -392,6 +447,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, None),
         (SensorDeviceClass.VOLUME, "very_much", None),
         # Test water meter conversion
+        (
+            SensorDeviceClass.WATER,
+            UnitOfVolume.CENTUM_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, None),
@@ -409,8 +469,81 @@ def test_get_metric_converted_unit_(
     assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
 
 
+UNCONVERTED_UNITS_METRIC_SYSTEM = {
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
+    SensorDeviceClass.DISTANCE: (
+        UnitOfLength.CENTIMETERS,
+        UnitOfLength.KILOMETERS,
+        UnitOfLength.METERS,
+        UnitOfLength.MILLIMETERS,
+    ),
+    SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
+    SensorDeviceClass.PRECIPITATION: (
+        UnitOfLength.CENTIMETERS,
+        UnitOfLength.MILLIMETERS,
+    ),
+    SensorDeviceClass.PRECIPITATION_INTENSITY: (
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
+    SensorDeviceClass.PRESSURE: (
+        UnitOfPressure.BAR,
+        UnitOfPressure.CBAR,
+        UnitOfPressure.HPA,
+        UnitOfPressure.KPA,
+        UnitOfPressure.MBAR,
+        UnitOfPressure.MMHG,
+        UnitOfPressure.PA,
+    ),
+    SensorDeviceClass.SPEED: (
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_SECOND,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
+    SensorDeviceClass.VOLUME: (
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLILITERS,
+    ),
+    SensorDeviceClass.WATER: (
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+    ),
+}
+
+
 @pytest.mark.parametrize(
-    "device_class, original_unit, state_unit",
+    "device_class",
+    (
+        SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        SensorDeviceClass.DISTANCE,
+        SensorDeviceClass.GAS,
+        SensorDeviceClass.PRECIPITATION,
+        SensorDeviceClass.PRECIPITATION_INTENSITY,
+        SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.SPEED,
+        SensorDeviceClass.VOLUME,
+        SensorDeviceClass.WATER,
+    ),
+)
+def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
+    """Test unit conversion rules are in place for all units."""
+    unit_system = METRIC_SYSTEM
+    # Make sure excluded_units is not stale
+    for unit in UNCONVERTED_UNITS_METRIC_SYSTEM[device_class]:
+        assert unit in DEVICE_CLASS_UNITS[device_class]
+
+    for unit in DEVICE_CLASS_UNITS[device_class]:
+        if unit in UNCONVERTED_UNITS_METRIC_SYSTEM[device_class]:
+            assert (device_class, unit) not in unit_system._conversions
+            continue
+        assert (device_class, unit) in unit_system._conversions
+
+
+@pytest.mark.parametrize(
+    ("device_class", "original_unit", "state_unit"),
     (
         # Test atmospheric pressure
         (
@@ -438,9 +571,45 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test gas meter conversion
+        (SensorDeviceClass.GAS, UnitOfVolume.CENTUM_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test precipitation conversion
+        (
+            SensorDeviceClass.PRECIPITATION,
+            UnitOfLength.CENTIMETERS,
+            UnitOfLength.INCHES,
+        ),
+        (
+            SensorDeviceClass.PRECIPITATION,
+            UnitOfLength.MILLIMETERS,
+            UnitOfLength.INCHES,
+        ),
+        (SensorDeviceClass.PRECIPITATION, UnitOfLength.INCHES, None),
+        (SensorDeviceClass.PRECIPITATION, "very_much", None),
+        # Test precipitation intensity conversion
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+        ),
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+            None,
+        ),
+        (
+            SensorDeviceClass.PRECIPITATION_INTENSITY,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+            None,
+        ),
+        (SensorDeviceClass.PRECIPITATION_INTENSITY, "very_heavy", None),
         # Test pressure conversion
         (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, UnitOfPressure.PSI),
         (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, None),
@@ -459,11 +628,24 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.SPEED, UnitOfSpeed.FEET_PER_SECOND, None),
         (SensorDeviceClass.SPEED, UnitOfSpeed.KNOTS, None),
         (SensorDeviceClass.SPEED, UnitOfSpeed.MILES_PER_HOUR, None),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+        ),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ),
+        (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.INCHES_PER_DAY, None),
+        (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.INCHES_PER_HOUR, None),
         (SensorDeviceClass.SPEED, "very_fast", None),
         # Test volume conversion
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, UnitOfVolume.FLUID_OUNCES),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.CENTUM_CUBIC_FEET, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, None),
@@ -471,6 +653,7 @@ def test_get_metric_converted_unit_(
         # Test water meter conversion
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.WATER, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
+        (SensorDeviceClass.WATER, UnitOfVolume.CENTUM_CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.WATER, "very_much", None),
@@ -484,3 +667,67 @@ def test_get_us_converted_unit(
     """Test unit conversion rules."""
     unit_system = US_CUSTOMARY_SYSTEM
     assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
+
+
+UNCONVERTED_UNITS_US_SYSTEM = {
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.INHG,),
+    SensorDeviceClass.DISTANCE: (
+        UnitOfLength.FEET,
+        UnitOfLength.INCHES,
+        UnitOfLength.MILES,
+        UnitOfLength.YARDS,
+    ),
+    SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
+    SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
+    SensorDeviceClass.PRECIPITATION_INTENSITY: (
+        UnitOfVolumetricFlux.INCHES_PER_DAY,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR,
+    ),
+    SensorDeviceClass.PRESSURE: (UnitOfPressure.INHG, UnitOfPressure.PSI),
+    SensorDeviceClass.SPEED: (
+        UnitOfSpeed.FEET_PER_SECOND,
+        UnitOfSpeed.KNOTS,
+        UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfVolumetricFlux.INCHES_PER_DAY,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR,
+    ),
+    SensorDeviceClass.VOLUME: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.FLUID_OUNCES,
+        UnitOfVolume.GALLONS,
+    ),
+    SensorDeviceClass.WATER: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.GALLONS,
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    (
+        SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        SensorDeviceClass.DISTANCE,
+        SensorDeviceClass.GAS,
+        SensorDeviceClass.PRECIPITATION,
+        SensorDeviceClass.PRECIPITATION_INTENSITY,
+        SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.SPEED,
+        SensorDeviceClass.VOLUME,
+        SensorDeviceClass.WATER,
+    ),
+)
+def test_imperial_converted_units(device_class: SensorDeviceClass) -> None:
+    """Test unit conversion rules are in place for all units."""
+    unit_system = US_CUSTOMARY_SYSTEM
+    # Make sure excluded_units is not stale
+    for unit in UNCONVERTED_UNITS_US_SYSTEM[device_class]:
+        assert unit in DEVICE_CLASS_UNITS[device_class]
+
+    for unit in DEVICE_CLASS_UNITS[device_class]:
+        if unit in UNCONVERTED_UNITS_US_SYSTEM[device_class]:
+            assert (device_class, unit) not in unit_system._conversions
+            continue
+        assert (device_class, unit) in unit_system._conversions

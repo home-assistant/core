@@ -12,11 +12,14 @@ from homeassistant.components.guardian.config_flow import (
 )
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_duplicate_error(hass, config, config_entry, setup_guardian):
+async def test_duplicate_error(
+    hass: HomeAssistant, config, config_entry, setup_guardian
+) -> None:
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -25,7 +28,7 @@ async def test_duplicate_error(hass, config, config_entry, setup_guardian):
     assert result["reason"] == "already_configured"
 
 
-async def test_connect_error(hass, config):
+async def test_connect_error(hass: HomeAssistant, config) -> None:
     """Test that the config entry errors out if the device cannot connect."""
     with patch(
         "aioguardian.client.Client.connect",
@@ -50,7 +53,7 @@ async def test_get_pin_from_uid() -> None:
     assert pin == "3456"
 
 
-async def test_step_user(hass, config, setup_guardian):
+async def test_step_user(hass: HomeAssistant, config, setup_guardian) -> None:
     """Test the user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -70,7 +73,7 @@ async def test_step_user(hass, config, setup_guardian):
     }
 
 
-async def test_step_zeroconf(hass, setup_guardian):
+async def test_step_zeroconf(hass: HomeAssistant, setup_guardian) -> None:
     """Test the zeroconf step."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.100",
@@ -100,7 +103,7 @@ async def test_step_zeroconf(hass, setup_guardian):
     }
 
 
-async def test_step_zeroconf_already_in_progress(hass):
+async def test_step_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
     """Test the zeroconf step aborting because it's already in progress."""
     zeroconf_data = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.100",
@@ -125,7 +128,7 @@ async def test_step_zeroconf_already_in_progress(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_step_dhcp(hass, setup_guardian):
+async def test_step_dhcp(hass: HomeAssistant, setup_guardian) -> None:
     """Test the dhcp step."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip="192.168.1.100",
@@ -151,7 +154,7 @@ async def test_step_dhcp(hass, setup_guardian):
     }
 
 
-async def test_step_dhcp_already_in_progress(hass):
+async def test_step_dhcp_already_in_progress(hass: HomeAssistant) -> None:
     """Test the zeroconf step aborting because it's already in progress."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip="192.168.1.100",
@@ -172,7 +175,7 @@ async def test_step_dhcp_already_in_progress(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_step_dhcp_already_setup_match_mac(hass):
+async def test_step_dhcp_already_setup_match_mac(hass: HomeAssistant) -> None:
     """Test we abort if the device is already setup with matching unique id and discovered via DHCP."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"}, unique_id="guardian_ABCD"
@@ -192,7 +195,7 @@ async def test_step_dhcp_already_setup_match_mac(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_step_dhcp_already_setup_match_ip(hass):
+async def test_step_dhcp_already_setup_match_ip(hass: HomeAssistant) -> None:
     """Test we abort if the device is already setup with matching ip and discovered via DHCP."""
     entry = MockConfigEntry(
         domain=DOMAIN,

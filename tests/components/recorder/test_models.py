@@ -147,9 +147,13 @@ def test_from_event_to_delete_state() -> None:
     assert db_state.last_updated_ts == event.time_fired.timestamp()
 
 
-def test_entity_ids() -> None:
+def test_entity_ids(recorder_db_url: str) -> None:
     """Test if entity ids helper method works."""
-    engine = create_engine("sqlite://")
+    if recorder_db_url.startswith("mysql://"):
+        # Dropping the database after this test will fail on MySQL
+        # because it will create an InnoDB deadlock.
+        return
+    engine = create_engine(recorder_db_url)
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine)
 

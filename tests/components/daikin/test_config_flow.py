@@ -10,6 +10,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.daikin.const import KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -42,7 +43,7 @@ def mock_daikin_discovery():
         yield Discovery
 
 
-async def test_user(hass, mock_daikin):
+async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         "daikin",
@@ -63,7 +64,7 @@ async def test_user(hass, mock_daikin):
     assert result["data"][KEY_MAC] == MAC
 
 
-async def test_abort_if_already_setup(hass, mock_daikin):
+async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
     """Test we abort if Daikin is already setup."""
     MockConfigEntry(domain="daikin", unique_id=MAC).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -77,7 +78,7 @@ async def test_abort_if_already_setup(hass, mock_daikin):
 
 
 @pytest.mark.parametrize(
-    "s_effect,reason",
+    ("s_effect", "reason"),
     [
         (asyncio.TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
@@ -86,7 +87,7 @@ async def test_abort_if_already_setup(hass, mock_daikin):
         (Exception, "unknown"),
     ],
 )
-async def test_device_abort(hass, mock_daikin, s_effect, reason):
+async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) -> None:
     """Test device abort."""
     mock_daikin.factory.side_effect = s_effect
 
@@ -100,7 +101,7 @@ async def test_device_abort(hass, mock_daikin, s_effect, reason):
     assert result["step_id"] == "user"
 
 
-async def test_api_password_abort(hass):
+async def test_api_password_abort(hass: HomeAssistant) -> None:
     """Test device abort."""
     result = await hass.config_entries.flow.async_init(
         "daikin",
@@ -113,7 +114,7 @@ async def test_api_password_abort(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data, unique_id",
+    ("source", "data", "unique_id"),
     [
         (
             SOURCE_ZEROCONF,
@@ -131,8 +132,8 @@ async def test_api_password_abort(hass):
     ],
 )
 async def test_discovery_zeroconf(
-    hass, mock_daikin, mock_daikin_discovery, source, data, unique_id
-):
+    hass: HomeAssistant, mock_daikin, mock_daikin_discovery, source, data, unique_id
+) -> None:
     """Test discovery/zeroconf step."""
     result = await hass.config_entries.flow.async_init(
         "daikin",

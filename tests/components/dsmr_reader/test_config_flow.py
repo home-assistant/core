@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_import_step(hass: HomeAssistant):
+async def test_import_step(hass: HomeAssistant) -> None:
     """Test the import step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -22,7 +22,7 @@ async def test_import_step(hass: HomeAssistant):
     assert second_result["reason"] == "single_instance_allowed"
 
 
-async def test_user_step(hass: HomeAssistant):
+async def test_user_step(hass: HomeAssistant) -> None:
     """Test the user step call."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

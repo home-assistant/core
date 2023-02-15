@@ -5,11 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from pyatmo.const import ALL_SCOPES
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -49,7 +50,7 @@ FAKE_WEBHOOK = {
 }
 
 
-async def test_setup_component(hass, config_entry):
+async def test_setup_component(hass: HomeAssistant, config_entry) -> None:
     """Test setup and teardown of the netatmo component."""
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
@@ -81,7 +82,7 @@ async def test_setup_component(hass, config_entry):
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_component_with_config(hass, config_entry):
+async def test_setup_component_with_config(hass: HomeAssistant, config_entry) -> None:
     """Test setup of the netatmo component with dev account."""
     fake_post_hits = 0
 
@@ -118,7 +119,9 @@ async def test_setup_component_with_config(hass, config_entry):
     assert len(hass.states.async_all()) > 0
 
 
-async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
+async def test_setup_component_with_webhook(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test setup and teardown of the netatmo component with webhook registration."""
     with selected_platforms(["camera", "climate", "light", "sensor"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -147,7 +150,9 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-async def test_setup_without_https(hass, config_entry, caplog):
+async def test_setup_without_https(
+    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
     with patch(
@@ -173,7 +178,7 @@ async def test_setup_without_https(hass, config_entry, caplog):
     assert "https and port 443 is required to register the webhook" in caplog.text
 
 
-async def test_setup_with_cloud(hass, config_entry):
+async def test_setup_with_cloud(hass: HomeAssistant, config_entry) -> None:
     """Test if set up with active cloud subscription."""
     await mock_cloud(hass)
     await hass.async_block_till_done()
@@ -222,7 +227,7 @@ async def test_setup_with_cloud(hass, config_entry):
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_with_cloudhook(hass):
+async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
     """Test if set up with active cloud subscription and cloud hook."""
     config_entry = MockConfigEntry(
         domain="netatmo",
@@ -287,7 +292,7 @@ async def test_setup_with_cloudhook(hass):
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_component_with_delay(hass, config_entry):
+async def test_setup_component_with_delay(hass: HomeAssistant, config_entry) -> None:
     """Test setup of the netatmo component with delayed startup."""
     hass.state = CoreState.not_running
 
@@ -341,7 +346,7 @@ async def test_setup_component_with_delay(hass, config_entry):
         mock_dropwebhook.assert_called_once()
 
 
-async def test_setup_component_invalid_token_scope(hass):
+async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
     """Test handling of invalid token scope."""
     config_entry = MockConfigEntry(
         domain="netatmo",
@@ -392,7 +397,7 @@ async def test_setup_component_invalid_token_scope(hass):
         await hass.config_entries.async_remove(config_entry.entry_id)
 
 
-async def test_setup_component_invalid_token(hass, config_entry):
+async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) -> None:
     """Test handling of invalid token."""
 
     async def fake_ensure_valid_token(*args, **kwargs):

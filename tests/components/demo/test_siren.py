@@ -44,7 +44,7 @@ def test_all_setup_params(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_AVAILABLE_TONES) == ["fire", "alarm"]
 
 
-async def test_turn_on(hass):
+async def test_turn_on(hass: HomeAssistant) -> None:
     """Test turn on device."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
@@ -68,7 +68,7 @@ async def test_turn_on(hass):
         )
 
 
-async def test_turn_off(hass):
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test turn off device."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
@@ -83,7 +83,7 @@ async def test_turn_off(hass):
     assert state.state == STATE_OFF
 
 
-async def test_toggle(hass):
+async def test_toggle(hass: HomeAssistant) -> None:
     """Test toggle device."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
@@ -104,7 +104,7 @@ async def test_toggle(hass):
     assert state.state == STATE_ON
 
 
-async def test_turn_on_strip_attributes(hass):
+async def test_turn_on_strip_attributes(hass: HomeAssistant) -> None:
     """Test attributes are stripped from turn_on service call when not supported."""
     with patch(
         "homeassistant.components.demo.siren.DemoSiren.async_turn_on"

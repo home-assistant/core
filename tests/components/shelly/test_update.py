@@ -446,7 +446,7 @@ async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch
 
 
 @pytest.mark.parametrize(
-    "exc, error",
+    ("exc", "error"),
     [
         (DeviceConnectionError, "Error starting OTA update"),
         (RpcCallError(-1, "error"), "OTA update request error"),

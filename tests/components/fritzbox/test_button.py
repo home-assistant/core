@@ -17,7 +17,7 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock):
+async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     """Test if is initialized correctly."""
     template = FritzEntityBaseMock()
     assert await setup_config_entry(
@@ -30,7 +30,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_apply_template(hass: HomeAssistant, fritz: Mock):
+async def test_apply_template(hass: HomeAssistant, fritz: Mock) -> None:
     """Test if applies works."""
     template = FritzEntityBaseMock()
     assert await setup_config_entry(
