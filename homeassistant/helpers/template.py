@@ -166,7 +166,7 @@ def is_complex(value: Any) -> bool:
     if isinstance(value, list):
         return any(is_complex(val) for val in value)
     if isinstance(value, collections.abc.Mapping):
-        return any(is_complex(val) for val in value.keys()) or any(
+        return any(is_complex(val) for val in value) or any(
             is_complex(val) for val in value.values()
         )
     return False
