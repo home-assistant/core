@@ -20,7 +20,7 @@ from tests.common import get_test_config_dir, patch_yaml_files
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
 def try_both_loaders(request):
     """Disable the yaml c loader."""
-    if not request.param == "disable_c_loader":
+    if request.param != "disable_c_loader":
         yield
         return
     try:
@@ -37,7 +37,7 @@ def try_both_loaders(request):
 @pytest.fixture(params=["enable_c_dumper", "disable_c_dumper"])
 def try_both_dumpers(request):
     """Disable the yaml c dumper."""
-    if not request.param == "disable_c_dumper":
+    if request.param != "disable_c_dumper":
         yield
         return
     try:
