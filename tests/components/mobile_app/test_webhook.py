@@ -409,9 +409,8 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -422,8 +421,7 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
@@ -454,9 +452,8 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -467,8 +464,7 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
@@ -524,16 +520,7 @@ async def test_webhook_handle_decryption_legacy_upgrade(
     )
 
     assert resp.status == HTTPStatus.OK
-
-    webhook_json = await resp.json()
-    assert "encrypted_data" in webhook_json
-
-    # The response should be empty, encrypted with the new method
-    with pytest.raises(Exception):
-        decrypt_payload_legacy(key, webhook_json["encrypted_data"])
-    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
-
-    assert decrypted_data == {}
+    assert await resp.json() == {}
 
 
 async def test_webhook_requires_encryption(webhook_client, create_registrations):

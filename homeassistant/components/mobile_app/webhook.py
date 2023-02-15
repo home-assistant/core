@@ -128,13 +128,20 @@ WEBHOOK_COMMANDS: Registry[
 
 SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)
 
-WEBHOOK_PAYLOAD_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
-        vol.Required(ATTR_WEBHOOK_DATA, default={}): vol.Any(dict, list),
-        vol.Optional(ATTR_WEBHOOK_ENCRYPTED, default=False): cv.boolean,
-        vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
-    }
+WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            vol.Optional(ATTR_WEBHOOK_DATA): vol.Any(dict, list),
+        }
+    ),
+    vol.Schema(
+        {
+            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            vol.Required(ATTR_WEBHOOK_ENCRYPTED): True,
+            vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
+        }
+    ),
 )
 
 
@@ -201,9 +208,9 @@ async def handle_webhook(
 
     webhook_type = req_data[ATTR_WEBHOOK_TYPE]
 
-    webhook_payload = req_data.get(ATTR_WEBHOOK_DATA, {})
+    webhook_payload = None
 
-    if req_data[ATTR_WEBHOOK_ENCRYPTED]:
+    if ATTR_WEBHOOK_ENCRYPTED in req_data:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         try:
             webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
@@ -221,11 +228,16 @@ async def handle_webhook(
                         "Ignoring encrypted payload because unable to decrypt"
                     )
                 except ValueError:
-                    _LOGGER.warning("Ignoring invalid encrypted payload")
+                    _LOGGER.warning("Ignoring invalid JSON in encrypted payload")
             else:
                 _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
         except ValueError:
-            _LOGGER.warning("Ignoring invalid encrypted payload")
+            _LOGGER.warning("Ignoring invalid JSON in encrypted payload")
+    else:
+        webhook_payload = req_data.get(ATTR_WEBHOOK_DATA, {})
+
+    if webhook_payload is None:
+        return empty_okay_response()
 
     if webhook_type not in WEBHOOK_COMMANDS:
         _LOGGER.error(
