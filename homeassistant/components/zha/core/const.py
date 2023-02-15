@@ -139,6 +139,7 @@ CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
+CONF_USE_THREAD = "use_thread"
 CONF_ZIGPY = "zigpy_config"
 
 CONF_CONSIDER_UNAVAILABLE_MAINS = "consider_unavailable_mains"
