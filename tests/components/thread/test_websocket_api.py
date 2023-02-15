@@ -17,6 +17,8 @@ from . import (
     ROUTER_DISCOVERY_HASS,
 )
 
+from tests.typing import WebSocketGenerator
+
 
 async def test_add_dataset(hass: HomeAssistant, hass_ws_client) -> None:
     """Test we can add a dataset."""
@@ -52,6 +54,62 @@ async def test_add_invalid_dataset(hass: HomeAssistant, hass_ws_client) -> None:
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "invalid_format", "message": "unknown type 222"}
+
+
+async def test_delete_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test we can delete a dataset."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "thread/add_dataset_tlv", "source": "test", "tlv": DATASET_1}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json_auto_id(
+        {"type": "thread/add_dataset_tlv", "source": "test", "tlv": DATASET_2}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json_auto_id({"type": "thread/list_datasets"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    datasets = msg["result"]["datasets"]
+
+    # Try deleting the preferred dataset
+    await client.send_json_auto_id(
+        {"type": "thread/delete_dataset", "dataset_id": datasets[0]["dataset_id"]}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_allowed",
+        "message": "attempt to remove preferred dataset",
+    }
+
+    # Try deleting a non preferred dataset
+    await client.send_json_auto_id(
+        {"type": "thread/delete_dataset", "dataset_id": datasets[1]["dataset_id"]}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # Try deleting the same dataset again
+    await client.send_json_auto_id(
+        {"type": "thread/delete_dataset", "dataset_id": datasets[1]["dataset_id"]}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": f"'{datasets[1]['dataset_id']}'",
+    }
 
 
 async def test_list_get_dataset(hass: HomeAssistant, hass_ws_client) -> None:
