@@ -74,7 +74,6 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.black]
-target-version = ["py310"]
 extend-exclude = "/generated/"
 
 [tool.isort]
