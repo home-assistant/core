@@ -7,6 +7,7 @@ import json
 from typing import Any
 
 import serial.tools.list_ports
+from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
@@ -14,9 +15,13 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from homeassistant import config_entries
 from homeassistant.components import onboarding, usb, zeroconf
 from homeassistant.components.file_upload import process_uploaded_file
+from homeassistant.components.hassio import AddonError, AddonState
+from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
+from homeassistant.components.homeassistant_yellow import hardware
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowHandler, FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt
 
@@ -72,6 +77,41 @@ def _format_backup_choice(
     return f"{dt.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
+async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
+    """List all serial ports, including the Yellow radio and the multi-PAN addon."""
+    ports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
+
+    # Add useful info to the Yellow's serial port selection screen
+    try:
+        hardware.async_info(hass)
+    except HomeAssistantError:
+        pass
+    else:
+        yellow_radio = next(p for p in ports if p.device == "/dev/ttyAMA1")
+        yellow_radio.description = "Yellow Radio"
+        yellow_radio.manufacturer = "Nabu Casa"
+
+    # Present the multi-PAN addon as a setup option, if it's available
+    addon_manager = silabs_multiprotocol_addon.get_addon_manager(hass)
+
+    try:
+        addon_info = await addon_manager.async_get_addon_info()
+    except AddonError:
+        addon_info = None
+
+    if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
+        addon_port = ListPortInfo(
+            device=silabs_multiprotocol_addon.get_zigbee_socket(hass, addon_info),
+            skip_link_detection=True,
+        )
+
+        addon_port.description = "Multi-PAN Addon"
+        addon_port.manufacturer = "Nabu Casa"
+        ports.append(addon_port)
+
+    return ports
+
+
 class BaseZhaFlow(FlowHandler):
     """Mixin for common ZHA flow steps and forms."""
 
@@ -120,7 +160,7 @@ class BaseZhaFlow(FlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Choose a serial port."""
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        ports = await list_serial_ports(self.hass)
         list_of_ports = [
             f"{p}, s/n: {p.serial_number or 'n/a'}"
             + (f" - {p.manufacturer}" if p.manufacturer else "")
