@@ -403,7 +403,7 @@ async def test_routing_secure_keyfile(
 
 
 @pytest.mark.parametrize(
-    "user_input,config_entry_data",
+    ("user_input", "config_entry_data"),
     [
         (
             {

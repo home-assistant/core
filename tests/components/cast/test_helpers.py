@@ -17,7 +17,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
-    "url,fixture,content_type",
+    ("url", "fixture", "content_type"),
     (
         (
             "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
@@ -47,7 +47,7 @@ async def test_hls_playlist_supported(
 
 
 @pytest.mark.parametrize(
-    "url,fixture,content_type,expected_playlist",
+    ("url", "fixture", "content_type", "expected_playlist"),
     (
         (
             "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
@@ -115,7 +115,7 @@ async def test_parse_playlist(
 
 
 @pytest.mark.parametrize(
-    "url,fixture",
+    ("url", "fixture"),
     (
         ("http://sverigesradio.se/164-hi-aac.pls", "164-hi-aac_invalid_entries.pls"),
         ("http://sverigesradio.se/164-hi-aac.pls", "164-hi-aac_invalid_file.pls"),
@@ -139,7 +139,7 @@ async def test_parse_bad_playlist(
 
 
 @pytest.mark.parametrize(
-    "url,exc",
+    ("url", "exc"),
     (
         ("http://sverigesradio.se/164-hi-aac.pls", asyncio.TimeoutError),
         ("http://sverigesradio.se/164-hi-aac.pls", client_exceptions.ClientError),

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
-    "connect_mock,connect_errors",
+    ("connect_mock", "connect_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidAuthenticationError), {"base": "invalid_auth"}),
@@ -84,7 +84,7 @@ async def test_step_import(hass: HomeAssistant, config, setup_airvisual_pro) -> 
 
 
 @pytest.mark.parametrize(
-    "connect_mock,connect_errors",
+    ("connect_mock", "connect_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidAuthenticationError), {"base": "invalid_auth"}),

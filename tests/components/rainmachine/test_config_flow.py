@@ -35,7 +35,7 @@ async def test_invalid_password(hass: HomeAssistant, config) -> None:
 
 
 @pytest.mark.parametrize(
-    "platform,entity_name,entity_id,old_unique_id,new_unique_id",
+    ("platform", "entity_name", "entity_id", "old_unique_id", "new_unique_id"),
     [
         (
             "binary_sensor",

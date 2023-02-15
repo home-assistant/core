@@ -138,7 +138,7 @@ async def test_is_block_momentary_input(mock_block_device, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "settings, sleep_period",
+    ("settings", "sleep_period"),
     [
         ({}, 0),
         ({"sleep_mode": {"period": 1000, "unit": "m"}}, 1000 * 60),
