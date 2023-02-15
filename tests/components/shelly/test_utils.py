@@ -215,11 +215,12 @@ async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch):
     """Test get RPC input triggers."""
     monkeypatch.setattr(mock_rpc_device, "config", {"input:0": {"type": "button"}})
     assert set(get_rpc_input_triggers(mock_rpc_device)) == {
-        ("long_push", "button1"),
-        ("single_push", "button1"),
         ("btn_down", "button1"),
-        ("double_push", "button1"),
         ("btn_up", "button1"),
+        ("single_push", "button1"),
+        ("double_push", "button1"),
+        ("triple_push", "button1"),
+        ("long_push", "button1"),
     }
 
     monkeypatch.setattr(mock_rpc_device, "config", {"input:0": {"type": "switch"}})
