@@ -13,7 +13,6 @@ from homeassistant.helpers.json import (
     json_bytes_strip_null,
     json_dumps,
     json_dumps_sorted,
-    json_loads_object,
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
@@ -136,20 +135,3 @@ def test_json_bytes_strip_null() -> None:
         json_bytes_strip_null([[{"k1": {"k2": ["silly\0stuff"]}}]])
         == b'[[{"k1":{"k2":["silly"]}}]]'
     )
-
-
-def test_json_loads_object():
-    """Test json_loads_object validates result."""
-    assert json_loads_object('{"c":1.2}') == {"c": 1.2}
-    with pytest.raises(
-        ValueError, match="Expected JSON to be parsed as a dict got <class 'list'>"
-    ):
-        json_loads_object("[]")
-    with pytest.raises(
-        ValueError, match="Expected JSON to be parsed as a dict got <class 'bool'>"
-    ):
-        json_loads_object("true")
-    with pytest.raises(
-        ValueError, match="Expected JSON to be parsed as a dict got <class 'NoneType'>"
-    ):
-        json_loads_object("null")
