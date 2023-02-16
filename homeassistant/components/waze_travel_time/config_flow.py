@@ -62,11 +62,11 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_INCL_FILTER,
                         default=self.config_entry.options.get(CONF_INCL_FILTER, ""),
-                    ): cv.string,
+                    ): vol.Maybe(cv.string),
                     vol.Optional(
                         CONF_EXCL_FILTER,
                         default=self.config_entry.options.get(CONF_EXCL_FILTER, ""),
-                    ): cv.string,
+                    ): vol.Maybe(cv.string),
                     vol.Optional(
                         CONF_REALTIME,
                         default=self.config_entry.options[CONF_REALTIME],
