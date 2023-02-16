@@ -524,10 +524,10 @@ class HomeAssistant:
 
         target: target to call.
 
-        If background is True, the task will not block startup and
-        when will be automatically cancelled on shutdown. If you are using
-        this in your integration, make sure you also cancel the task when
-        the config entry your task belongs to is unloaded.
+        If background is True, the task will not block startup and will be
+        automatically cancelled on shutdown. If you are using this in your
+        integration, make sure you also cancel the task when the config entry
+        your task belongs to is unloaded.
         """
         if background:
             if name is None:
