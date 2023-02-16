@@ -10,6 +10,7 @@ ATTR_STATE_BATTERY_LOW: Final = "battery_low"
 ATTR_STATE_HOLIDAY_MODE: Final = "holiday_mode"
 ATTR_STATE_SUMMER_MODE: Final = "summer_mode"
 ATTR_STATE_WINDOW_OPEN: Final = "window_open"
+ATTR_STATE_WINDOW_OPEN_ENDTIME: Final = "window_open_endtime"
 
 COLOR_MODE: Final = "1"
 COLOR_TEMP_MODE: Final = "4"

@@ -16,6 +16,7 @@ class ClimateExtraAttributes(TypedDict, total=False):
     holiday_mode: bool
     summer_mode: bool
     window_open: bool
+    window_open_endtime: float
 
 
 @dataclass
