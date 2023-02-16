@@ -2014,9 +2014,8 @@ def _sorted_statistics_to_dict(  # noqa: C901
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
+    assert stats, "stats must not be empty"  # Guard against implementation error
     result: dict = defaultdict(list)
-    if not stats:
-        return result
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     start_time_ts = start_time.timestamp() if start_time else None
