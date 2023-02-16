@@ -396,7 +396,7 @@ class MQTT:
 
     @property
     def subscriptions(self) -> list[Subscription]:
-        """Return the subscriptions."""
+        """Return the tracked subscriptions."""
         return [
             *chain.from_iterable(self._simple_subscriptions.values()),
             *self._wildcard_subscriptions,
