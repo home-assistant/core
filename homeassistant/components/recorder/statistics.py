@@ -2076,7 +2076,14 @@ def _sorted_statistics_to_dict(  # noqa: C901
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
-        ent_results = result[statistic_id]
+        ent_results_append = result[statistic_id].append
+        #
+        # The below loop is a red hot path for energy, and every
+        # optimization counts in here.
+        #
+        # Specifically, we want to avoid function calls,
+        # attribute lookups, and dict lookups as much as possible.
+        #
         for db_state in stats_list:
             row: dict[str, Any] = {
                 "start": (start_ts := db_state[start_ts_idx]),
@@ -2106,7 +2113,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
                     row["state"] = db_state[state_idx]
                 if _want_sum:
                     row["sum"] = db_state[sum_idx]
-            ent_results.append(row)
+            ent_results_append(row)
 
     return result
 
