@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+from decimal import Decimal
 import json
 import logging
 
@@ -13,6 +14,7 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
 from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN
@@ -150,7 +152,18 @@ class SunWEGInverter(SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(
+        self,
+    ) -> (
+        StateType
+        | str
+        | int
+        | float
+        | None
+        | datetime.date
+        | datetime.datetime
+        | Decimal
+    ):
         """Return the state of the sensor."""
         result = self.probe.get_data(self.entity_description)
         if self.entity_description.precision is not None:
