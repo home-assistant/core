@@ -1879,7 +1879,7 @@ async def test_tls_version(
         await mqtt_mock_entry_with_yaml_config()
 
         assert calls
-        assert calls[0][3] == ssl.PROTOCOL_TLS
+        assert calls[0][3] == ssl.PROTOCOL_TLS_CLIENT
 
 
 @pytest.mark.parametrize(
