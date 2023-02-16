@@ -2030,9 +2030,8 @@ def _sorted_statistics_to_dict(  # noqa: C901
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
+    assert stats, "stats must not be empty"  # Guard against implementation error
     result: dict = defaultdict(list)
-    if not stats:
-        return result
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     start_time_ts = start_time.timestamp() if start_time else None
@@ -2068,6 +2067,9 @@ def _sorted_statistics_to_dict(  # noqa: C901
             for stat in tmp:
                 stats_by_meta_id[stat[metadata_id_idx]].insert(0, stat)
 
+    # Figure out which fields we need to extract from the SQL result
+    # and which indices they have in the result so we can avoid the overhead
+    # of doing a dict lookup for each row
     if _want_mean := "mean" in types:
         mean_idx = field_map["mean"]
     if _want_min := "min" in types:
@@ -2092,7 +2094,14 @@ def _sorted_statistics_to_dict(  # noqa: C901
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
-        ent_results = result[statistic_id]
+        ent_results_append = result[statistic_id].append
+        #
+        # The below loop is a red hot path for energy, and every
+        # optimization counts in here.
+        #
+        # Specifically, we want to avoid function calls,
+        # attribute lookups, and dict lookups as much as possible.
+        #
         for db_state in stats_list:
             row: dict[str, Any] = {
                 "start": (start_ts := db_state[start_ts_idx]),
@@ -2122,7 +2131,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
                     row["state"] = db_state[state_idx]
                 if _want_sum:
                     row["sum"] = db_state[sum_idx]
-            ent_results.append(row)
+            ent_results_append(row)
 
     return result
 
