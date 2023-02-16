@@ -24,7 +24,7 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
 
 
 @pytest.mark.parametrize(
-    "function_name, value, expected",
+    ("function_name", "value", "expected"),
     [
         ("liter_to_gallon", 2, pytest.approx(0.528344)),
         ("gallon_to_liter", 2, 7.570823568),
@@ -96,7 +96,7 @@ def test_convert_from_cubic_feet() -> None:
 
 
 @pytest.mark.parametrize(
-    "source_unit,target_unit,expected",
+    ("source_unit", "target_unit", "expected"),
     [
         (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS, 14.1584233),
         (VOLUME_CUBIC_FEET, VOLUME_FLUID_OUNCE, 478753.2467),

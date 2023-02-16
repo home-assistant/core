@@ -48,7 +48,7 @@ async def test_switch_setup(hass: HomeAssistant, mock_device) -> None:
     )
 
 
-@pytest.mark.parametrize("saved_state, level", [(STATE_ON, 1), (STATE_OFF, 0)])
+@pytest.mark.parametrize(("saved_state", "level"), [(STATE_ON, 1), (STATE_OFF, 0)])
 async def test_switch_restore_state(
     hass: HomeAssistant, mock_device, saved_state, level
 ) -> None:

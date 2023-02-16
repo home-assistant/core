@@ -1733,7 +1733,7 @@ async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
 
 
 @pytest.mark.parametrize(
-    "key,config",
+    ("key", "config"),
     (
         ("trigger", {"platform": "event", "event_type": "hello"}),
         (
@@ -1755,7 +1755,7 @@ async def test_validate_config_works(websocket_client, key, config):
 
 
 @pytest.mark.parametrize(
-    "key,config,error",
+    ("key", "config", "error"),
     (
         (
             "trigger",

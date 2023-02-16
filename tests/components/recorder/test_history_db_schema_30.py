@@ -132,7 +132,7 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
 
 
 @pytest.mark.parametrize(
-    "attributes, no_attributes, limit",
+    ("attributes", "no_attributes", "limit"),
     [
         ({"attr": True}, False, 5000),
         ({}, True, 5000),

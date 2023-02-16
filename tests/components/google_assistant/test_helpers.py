@@ -315,7 +315,7 @@ async def test_report_state_all(agents) -> None:
 
 
 @pytest.mark.parametrize(
-    "agents, result",
+    ("agents", "result"),
     [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
 )
 async def test_sync_entities_all(agents, result) -> None:

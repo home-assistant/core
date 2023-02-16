@@ -97,19 +97,19 @@ def mock_update():
         yield mock_update_store
 
 
-async def test_setup_component(hass, mock_update):
+async def test_setup_component(hass: HomeAssistant, mock_update) -> None:
     """Set up component."""
     with assert_setup_component(3, mf.DOMAIN):
         await async_setup_component(hass, mf.DOMAIN, CONFIG)
 
 
-async def test_setup_component_wrong_api_key(hass, mock_update):
+async def test_setup_component_wrong_api_key(hass: HomeAssistant, mock_update) -> None:
     """Set up component without api key."""
     with assert_setup_component(0, mf.DOMAIN):
         await async_setup_component(hass, mf.DOMAIN, {mf.DOMAIN: {}})
 
 
-async def test_setup_component_test_service(hass, mock_update):
+async def test_setup_component_test_service(hass: HomeAssistant, mock_update) -> None:
     """Set up component."""
     with assert_setup_component(3, mf.DOMAIN):
         await async_setup_component(hass, mf.DOMAIN, CONFIG)
@@ -157,7 +157,9 @@ async def test_setup_component_test_entities(
     assert entity_group2.attributes["David"] == "2ae4935b-9659-44c3-977f-61fac20d0538"
 
 
-async def test_service_groups(hass, mock_update, aioclient_mock):
+async def test_service_groups(
+    hass: HomeAssistant, mock_update, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up component, test groups services."""
     aioclient_mock.put(
         ENDPOINT_URL.format("persongroups/service_group"),
@@ -241,7 +243,9 @@ async def test_service_person(
     assert "Hans" not in entity_group1.attributes
 
 
-async def test_service_train(hass, mock_update, aioclient_mock):
+async def test_service_train(
+    hass: HomeAssistant, mock_update, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up component, test train groups services."""
     with assert_setup_component(3, mf.DOMAIN):
         await async_setup_component(hass, mf.DOMAIN, CONFIG)
@@ -301,7 +305,9 @@ async def test_service_face(
     assert aioclient_mock.mock_calls[3][2] == b"Test"
 
 
-async def test_service_status_400(hass, mock_update, aioclient_mock):
+async def test_service_status_400(
+    hass: HomeAssistant, mock_update, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up component, test groups services with error."""
     aioclient_mock.put(
         ENDPOINT_URL.format("persongroups/service_group"),
@@ -320,7 +326,9 @@ async def test_service_status_400(hass, mock_update, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_status_timeout(hass, mock_update, aioclient_mock):
+async def test_service_status_timeout(
+    hass: HomeAssistant, mock_update, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up component, test groups services with timeout."""
     aioclient_mock.put(
         ENDPOINT_URL.format("persongroups/service_group"),

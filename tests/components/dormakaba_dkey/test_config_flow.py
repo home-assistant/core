@@ -220,7 +220,7 @@ async def test_bluetooth_step_already_in_progress(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exc, error",
+    ("exc", "error"),
     (
         (BleakError, "cannot_connect"),
         (Exception, "unknown"),
@@ -259,7 +259,7 @@ async def test_bluetooth_step_cannot_connect(hass: HomeAssistant, exc, error) ->
 
 
 @pytest.mark.parametrize(
-    "exc, error",
+    ("exc", "error"),
     (
         (dkey_errors.InvalidActivationCode, "invalid_code"),
         (dkey_errors.WrongActivationCode, "wrong_code"),

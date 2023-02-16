@@ -131,7 +131,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "err_str,err_code",
+    ("err_str", "err_code"),
     [
         ("Invalid authentication credentials", "invalid_auth"),
         ("API rate limit exceeded.", "api_ratelimit"),
