@@ -28,11 +28,12 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import EventType, StateType
 from homeassistant.util import Throttle

@@ -12,10 +12,9 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -167,8 +166,10 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("raw_data, expected", TEST_DATA)
-async def test_select(hass, aioclient_mock, raw_data, expected):
+@pytest.mark.parametrize(("raw_data", "expected"), TEST_DATA)
+async def test_select(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, raw_data, expected
+) -> None:
     """Test successful creation of button entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)

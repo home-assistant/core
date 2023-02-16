@@ -63,7 +63,9 @@ async def test_form_invalid_auth(hass: HomeAssistant, laundrify_exchange_code) -
     assert result["errors"] == {CONF_CODE: "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, laundrify_exchange_code):
+async def test_form_cannot_connect(
+    hass: HomeAssistant, laundrify_exchange_code
+) -> None:
     """Test we handle cannot connect error."""
     laundrify_exchange_code.side_effect = exceptions.ApiConnectionException
     result = await hass.config_entries.flow.async_init(
@@ -76,7 +78,9 @@ async def test_form_cannot_connect(hass: HomeAssistant, laundrify_exchange_code)
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unkown_exception(hass: HomeAssistant, laundrify_exchange_code):
+async def test_form_unkown_exception(
+    hass: HomeAssistant, laundrify_exchange_code
+) -> None:
     """Test we handle all other errors."""
     laundrify_exchange_code.side_effect = Exception
     result = await hass.config_entries.flow.async_init(
@@ -107,7 +111,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
 
 
-async def test_integration_already_exists(hass: HomeAssistant):
+async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     create_entry(hass)
     result = await hass.config_entries.flow.async_init(

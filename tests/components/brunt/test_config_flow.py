@@ -63,7 +63,7 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [
         (ServerDisconnectedError, "cannot_connect"),
         (ClientResponseError(Mock(), None, status=403), "invalid_auth"),
@@ -71,7 +71,7 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_form_error(hass, side_effect, error_message):
+async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test we handle cannot connect."""
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
@@ -86,7 +86,7 @@ async def test_form_error(hass, side_effect, error_message):
 
 
 @pytest.mark.parametrize(
-    "side_effect, result_type, password, step_id, reason",
+    ("side_effect", "result_type", "password", "step_id", "reason"),
     [
         (None, data_entry_flow.FlowResultType.ABORT, "test", None, "reauth_successful"),
         (
@@ -98,7 +98,9 @@ async def test_form_error(hass, side_effect, error_message):
         ),
     ],
 )
-async def test_reauth(hass, side_effect, result_type, password, step_id, reason):
+async def test_reauth(
+    hass: HomeAssistant, side_effect, result_type, password, step_id, reason
+) -> None:
     """Test uniqueness of username."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -1,5 +1,6 @@
 """The tests for the androidtv platform."""
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
@@ -219,7 +220,9 @@ def _setup(config):
         CONFIG_FIRETV_ADB_SERVER,
     ],
 )
-async def test_reconnect(hass, caplog, config):
+async def test_reconnect(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config: dict[str, Any]
+) -> None:
     """Test that the error and reconnection attempts are logged correctly.
 
     "Handles device/service unavailable. Log a warning once when
@@ -278,7 +281,9 @@ async def test_reconnect(hass, caplog, config):
         CONFIG_FIRETV_ADB_SERVER,
     ],
 )
-async def test_adb_shell_returns_none(hass, config):
+async def test_adb_shell_returns_none(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
     """Test the case that the ADB shell command returns `None`.
 
     The state should be `None` and the device should be unavailable.
@@ -330,7 +335,7 @@ async def test_setup_with_adbkey(hass: HomeAssistant) -> None:
         CONFIG_FIRETV_DEFAULT,
     ],
 )
-async def test_sources(hass, config):
+async def test_sources(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that sources (i.e., apps) are handled correctly for Android TV and Fire TV devices."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -390,13 +395,15 @@ async def test_sources(hass, config):
 
 
 @pytest.mark.parametrize(
-    ["config", "expected_sources"],
+    ("config", "expected_sources"),
     [
         (CONFIG_ANDROIDTV_DEFAULT, ["TEST 1"]),
         (CONFIG_FIRETV_DEFAULT, ["TEST 1"]),
     ],
 )
-async def test_exclude_sources(hass, config, expected_sources):
+async def test_exclude_sources(
+    hass: HomeAssistant, config: dict[str, Any], expected_sources: list[str]
+) -> None:
     """Test that sources (i.e., apps) are handled correctly when the `exclude_unnamed_apps` config parameter is provided."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -475,7 +482,7 @@ async def _test_select_source(
 
 
 @pytest.mark.parametrize(
-    ["source", "expected_arg", "method_patch"],
+    ("source", "expected_arg", "method_patch"),
     [
         ("com.app.test1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
         ("TEST 1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
@@ -487,7 +494,9 @@ async def _test_select_source(
         ("!com.app.test3", "com.app.test3", patchers.PATCH_STOP_APP),
     ],
 )
-async def test_select_source_androidtv(hass, source, expected_arg, method_patch):
+async def test_select_source_androidtv(
+    hass: HomeAssistant, source, expected_arg, method_patch
+) -> None:
     """Test that an app can be launched for AndroidTV."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -517,7 +526,7 @@ async def test_androidtv_select_source_overridden_app_name(hass: HomeAssistant) 
 
 
 @pytest.mark.parametrize(
-    ["source", "expected_arg", "method_patch"],
+    ("source", "expected_arg", "method_patch"),
     [
         ("com.app.test1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
         ("TEST 1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
@@ -529,7 +538,9 @@ async def test_androidtv_select_source_overridden_app_name(hass: HomeAssistant) 
         ("!com.app.test3", "com.app.test3", patchers.PATCH_STOP_APP),
     ],
 )
-async def test_select_source_firetv(hass, source, expected_arg, method_patch):
+async def test_select_source_firetv(
+    hass: HomeAssistant, source, expected_arg, method_patch
+) -> None:
     """Test that an app can be launched for FireTV."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -541,7 +552,7 @@ async def test_select_source_firetv(hass, source, expected_arg, method_patch):
 
 
 @pytest.mark.parametrize(
-    ["config", "connect"],
+    ("config", "connect"),
     [
         (CONFIG_ANDROIDTV_DEFAULT, False),
         (CONFIG_FIRETV_DEFAULT, False),
@@ -549,7 +560,9 @@ async def test_select_source_firetv(hass, source, expected_arg, method_patch):
         (CONFIG_FIRETV_DEFAULT, True),
     ],
 )
-async def test_setup_fail(hass, config, connect):
+async def test_setup_fail(
+    hass: HomeAssistant, config: dict[str, Any], connect: bool
+) -> None:
     """Test that the entity is not created when the ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)

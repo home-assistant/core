@@ -319,6 +319,7 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert result["zwave_plus_version"] == 1
     assert result["highest_security_class"] == SecurityClass.S0_LEGACY
     assert not result["is_controller_node"]
+    assert not result["has_firmware_update_cc"]
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -2886,7 +2887,7 @@ async def test_firmware_upload_view_invalid_payload(
 
 
 @pytest.mark.parametrize(
-    "method, url",
+    ("method", "url"),
     [("post", "/api/zwave_js/firmware/upload/{}")],
 )
 async def test_node_view_non_admin_user(
@@ -2902,7 +2903,7 @@ async def test_node_view_non_admin_user(
 
 
 @pytest.mark.parametrize(
-    "method, url",
+    ("method", "url"),
     [
         ("post", "/api/zwave_js/firmware/upload/{}"),
     ],
@@ -2919,7 +2920,7 @@ async def test_view_unloaded_config_entry(
 
 
 @pytest.mark.parametrize(
-    "method, url",
+    ("method", "url"),
     [("post", "/api/zwave_js/firmware/upload/INVALID")],
 )
 async def test_view_invalid_device_id(integration, hass_client, method, url):

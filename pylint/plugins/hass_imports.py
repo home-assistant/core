@@ -215,7 +215,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     "homeassistant.components.sensor": [
         ObsoleteImportMatch(
             reason="replaced by SensorDeviceClass enum",
-            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+            constant=re.compile(r"^DEVICE_CLASS_(?!STATE_CLASSES)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by SensorStateClass enum",
@@ -350,6 +350,14 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DISABLED_(\w*)$"),
         ),
     ],
+    "homeassistant.helpers.json": [
+        ObsoleteImportMatch(
+            reason="moved to homeassistant.util.json",
+            constant=re.compile(
+                r"^JSON_DECODE_EXCEPTIONS|JSON_ENCODE_EXCEPTIONS|json_loads$"
+            ),
+        ),
+    ],
     "homeassistant.util": [
         ObsoleteImportMatch(
             reason="replaced by unit_conversion.***Converter",
@@ -360,6 +368,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by US_CUSTOMARY_SYSTEM",
             constant=re.compile(r"^IMPERIAL_SYSTEM$"),
+        ),
+    ],
+    "homeassistant.util.json": [
+        ObsoleteImportMatch(
+            reason="moved to homeassistant.helpers.json",
+            constant=re.compile(r"^save_json|find_paths_unserializable_data$"),
         ),
     ],
 }

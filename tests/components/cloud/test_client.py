@@ -69,7 +69,7 @@ async def test_handler_alexa(hass: HomeAssistant) -> None:
     assert device["manufacturerName"] == "Home Assistant"
 
 
-async def test_handler_alexa_disabled(hass, mock_cloud_fixture):
+async def test_handler_alexa_disabled(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test handler Alexa when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
     cloud = hass.data["cloud"]
@@ -135,15 +135,15 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "intent,response_payload",
+    ("intent", "response_payload"),
     [
         ("action.devices.SYNC", {"agentUserId": "myUserName", "devices": []}),
         ("action.devices.QUERY", {"errorCode": "deviceTurnedOff"}),
     ],
 )
 async def test_handler_google_actions_disabled(
-    hass, mock_cloud_fixture, intent, response_payload
-):
+    hass: HomeAssistant, mock_cloud_fixture, intent, response_payload
+) -> None:
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
@@ -241,7 +241,9 @@ async def test_webhook_msg(
     assert '{"nonexisting": "payload"}' in caplog.text
 
 
-async def test_google_config_expose_entity(hass, mock_cloud_setup, mock_cloud_login):
+async def test_google_config_expose_entity(
+    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+) -> None:
     """Test Google config exposing entity method uses latest config."""
     cloud_client = hass.data[DOMAIN].client
     state = State("light.kitchen", "on")
@@ -256,7 +258,9 @@ async def test_google_config_expose_entity(hass, mock_cloud_setup, mock_cloud_lo
     assert not gconf.should_expose(state)
 
 
-async def test_google_config_should_2fa(hass, mock_cloud_setup, mock_cloud_login):
+async def test_google_config_should_2fa(
+    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+) -> None:
     """Test Google config disabling 2FA method uses latest config."""
     cloud_client = hass.data[DOMAIN].client
     gconf = await cloud_client.get_google_config()

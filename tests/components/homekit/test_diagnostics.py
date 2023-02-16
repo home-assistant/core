@@ -8,17 +8,22 @@ from homeassistant.components.homekit.const import (
     HOMEKIT_MODE_ACCESSORY,
 )
 from homeassistant.const import CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_not_running(
-    hass, hass_client, hk_driver, mock_async_zeroconf
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hk_driver,
+    mock_async_zeroconf: None,
+) -> None:
     """Test generating diagnostics for a config entry."""
     entry = await async_init_integration(hass)
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
@@ -33,7 +38,12 @@ async def test_config_entry_not_running(
     }
 
 
-async def test_config_entry_running(hass, hass_client, hk_driver, mock_async_zeroconf):
+async def test_config_entry_running(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hk_driver,
+    mock_async_zeroconf: None,
+) -> None:
     """Test generating diagnostics for a bridge config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
@@ -139,8 +149,11 @@ async def test_config_entry_running(hass, hass_client, hk_driver, mock_async_zer
 
 
 async def test_config_entry_accessory(
-    hass, hass_client, hk_driver, mock_async_zeroconf
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hk_driver,
+    mock_async_zeroconf: None,
+) -> None:
     """Test generating diagnostics for an accessory config entry."""
     hass.states.async_set("light.demo", "on")
 
@@ -295,15 +308,15 @@ async def test_config_entry_accessory(
 
 
 async def test_config_entry_with_trigger_accessory(
-    hass,
-    hass_client,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     hk_driver,
-    mock_async_zeroconf,
+    mock_async_zeroconf: None,
     events,
     demo_cleanup,
     device_reg,
     entity_reg,
-):
+) -> None:
     """Test generating diagnostics for a bridge config entry with a trigger accessory."""
     assert await async_setup_component(hass, "demo", {"demo": {}})
     hk_driver.publish = MagicMock()

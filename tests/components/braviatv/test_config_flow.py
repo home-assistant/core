@@ -192,14 +192,14 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [
         (BraviaAuthError, "invalid_auth"),
         (BraviaNotSupported, "unsupported_model"),
         (BraviaConnectionError, "cannot_connect"),
     ],
 )
-async def test_pin_form_error(hass, side_effect, error_message):
+async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test that PIN form errors are correct."""
     with patch(
         "pybravia.BraviaClient.connect",
@@ -219,14 +219,14 @@ async def test_pin_form_error(hass, side_effect, error_message):
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [
         (BraviaAuthError, "invalid_auth"),
         (BraviaNotSupported, "unsupported_model"),
         (BraviaConnectionError, "cannot_connect"),
     ],
 )
-async def test_psk_form_error(hass, side_effect, error_message):
+async def test_psk_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test that PSK form errors are correct."""
     with patch(
         "pybravia.BraviaClient.connect",
@@ -376,13 +376,13 @@ async def test_create_entry_psk(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "use_psk, new_pin",
+    ("use_psk", "new_pin"),
     [
         (True, "7777"),
         (False, "newpsk"),
     ],
 )
-async def test_reauth_successful(hass, use_psk, new_pin):
+async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
     """Test that the reauthorization is successful."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

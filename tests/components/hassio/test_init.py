@@ -1,6 +1,7 @@
 """The tests for the hassio component."""
 from datetime import timedelta
 import os
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -278,7 +279,11 @@ async def test_setup_api_push_api_data_server_host(
     assert not aioclient_mock.mock_calls[1][2]["watchdog"]
 
 
-async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storage):
+async def test_setup_api_push_api_data_default(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
@@ -304,7 +309,11 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
         pytest.fail("refresh token not found")
 
 
-async def test_setup_adds_admin_group_to_user(hass, aioclient_mock, hass_storage):
+async def test_setup_adds_admin_group_to_user(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test setup with API push default data."""
     # Create user without admin
     user = await hass.auth.async_create_system_user("Hass.io")
@@ -324,7 +333,11 @@ async def test_setup_adds_admin_group_to_user(hass, aioclient_mock, hass_storage
     assert user.is_admin
 
 
-async def test_setup_migrate_user_name(hass, aioclient_mock, hass_storage):
+async def test_setup_migrate_user_name(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test setup with migrating the user name."""
     # Create user with old name
     user = await hass.auth.async_create_system_user("Hass.io")
@@ -343,7 +356,11 @@ async def test_setup_migrate_user_name(hass, aioclient_mock, hass_storage):
     assert user.name == "Supervisor"
 
 
-async def test_setup_api_existing_hassio_user(hass, aioclient_mock, hass_storage):
+async def test_setup_api_existing_hassio_user(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Hass.io test")
     token = await hass.auth.async_create_refresh_token(user)
@@ -416,7 +433,7 @@ async def test_warn_when_cannot_connect(
     assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
-async def test_service_register(hassio_env, hass):
+async def test_service_register(hassio_env, hass: HomeAssistant) -> None:
     """Check if service will be setup."""
     assert await async_setup_component(hass, "hassio", {})
     assert hass.services.has_service("hassio", "addon_start")
@@ -433,7 +450,12 @@ async def test_service_register(hassio_env, hass):
     assert hass.services.has_service("hassio", "restore_partial")
 
 
-async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
+async def test_service_calls(
+    hassio_env,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Call service and check the API calls behind that."""
     assert await async_setup_component(hass, "hassio", {})
 
@@ -517,7 +539,9 @@ async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     }
 
 
-async def test_service_calls_core(hassio_env, hass, aioclient_mock):
+async def test_service_calls_core(
+    hassio_env, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Call core service and check the API calls behind that."""
     assert await async_setup_component(hass, "hassio", {})
 
@@ -771,7 +795,7 @@ async def test_coordinator_updates(
 
 
 @pytest.mark.parametrize(
-    "extra_os_info, integration",
+    ("extra_os_info", "integration"),
     [
         ({"board": "odroid-c2"}, "hardkernel"),
         ({"board": "odroid-c4"}, "hardkernel"),
@@ -785,7 +809,9 @@ async def test_coordinator_updates(
         ({"board": "yellow"}, "homeassistant_yellow"),
     ],
 )
-async def test_setup_hardware_integration(hass, aioclient_mock, integration):
+async def test_setup_hardware_integration(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, integration
+) -> None:
     """Test setup initiates hardware integration."""
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
@@ -800,7 +826,9 @@ async def test_setup_hardware_integration(hass, aioclient_mock, integration):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_get_store_addon_info(hass, hassio_stubs, aioclient_mock):
+async def test_get_store_addon_info(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test get store add-on info from Supervisor API."""
     aioclient_mock.clear_requests()
     aioclient_mock.get(

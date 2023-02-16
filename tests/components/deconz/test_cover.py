@@ -41,7 +41,9 @@ async def test_no_covers(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_cover(hass, aioclient_mock, mock_deconz_websocket):
+async def test_cover(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported cover entities are created."""
     data = {
         "lights": {
