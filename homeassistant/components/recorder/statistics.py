@@ -2001,7 +2001,7 @@ def _statistics_at_time(
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
-def _sorted_statistics_to_dict(
+def _sorted_statistics_to_dict(  # noqa: C901
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
@@ -2069,7 +2069,6 @@ def _sorted_statistics_to_dict(
     for meta_id, stats_list in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
-        ent_results = result[statistic_id]
         if convert_units:
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
@@ -2077,126 +2076,39 @@ def _sorted_statistics_to_dict(
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
-        if convert:
-            _build_converted_statistic_entries(
-                ent_results,
-                stats_list,
-                convert,
-                table_duration_seconds,
-                _want_last_reset,
-                _want_mean,
-                _want_min,
-                _want_max,
-                _want_state,
-                _want_sum,
-                start_ts_idx,
-                last_reset_ts_idx,
-                mean_idx,
-                min_idx,
-                max_idx,
-                state_idx,
-                sum_idx,
-            )
-        else:
-            _build_raw_statistic_entries(
-                ent_results,
-                stats_list,
-                table_duration_seconds,
-                _want_last_reset,
-                _want_mean,
-                _want_min,
-                _want_max,
-                _want_state,
-                _want_sum,
-                start_ts_idx,
-                last_reset_ts_idx,
-                mean_idx,
-                min_idx,
-                max_idx,
-                state_idx,
-                sum_idx,
-            )
+        ent_results = result[statistic_id]
+        for db_state in stats_list:
+            row: dict[str, Any] = {
+                "start": (start_ts := db_state[start_ts_idx]),
+                "end": start_ts + table_duration_seconds,
+            }
+            if _want_last_reset:
+                row["last_reset"] = db_state[last_reset_ts_idx]
+            if convert:
+                if _want_mean:
+                    row["mean"] = convert(db_state[mean_idx])
+                if _want_min:
+                    row["min"] = convert(db_state[min_idx])
+                if _want_max:
+                    row["max"] = convert(db_state[max_idx])
+                if _want_state:
+                    row["state"] = convert(db_state[state_idx])
+                if _want_sum:
+                    row["sum"] = convert(db_state[sum_idx])
+            else:
+                if _want_mean:
+                    row["mean"] = db_state[mean_idx]
+                if _want_min:
+                    row["min"] = db_state[min_idx]
+                if _want_max:
+                    row["max"] = db_state[max_idx]
+                if _want_state:
+                    row["state"] = db_state[state_idx]
+                if _want_sum:
+                    row["sum"] = db_state[sum_idx]
+            ent_results.append(row)
 
     return result
-
-
-def _build_raw_statistic_entries(
-    ent_results: list[dict[str, Any]],
-    stats_list: list[Row],
-    table_duration_seconds: float,
-    _want_last_reset: bool,
-    _want_mean: bool,
-    _want_min: bool,
-    _want_max: bool,
-    _want_state: bool,
-    _want_sum: bool,
-    start_ts_idx: int,
-    last_reset_ts_idx: int,
-    mean_idx: int,
-    min_idx: int,
-    max_idx: int,
-    state_idx: int,
-    sum_idx: int,
-) -> None:
-    """Build statistic entries without unit conversion."""
-    for db_state in stats_list:
-        row: dict[str, Any] = {
-            "start": (start_ts := db_state[start_ts_idx]),
-            "end": start_ts + table_duration_seconds,
-        }
-        if _want_last_reset:
-            row["last_reset"] = db_state[last_reset_ts_idx]
-        if _want_mean:
-            row["mean"] = db_state[mean_idx]
-        if _want_min:
-            row["min"] = db_state[min_idx]
-        if _want_max:
-            row["max"] = db_state[max_idx]
-        if _want_state:
-            row["state"] = db_state[state_idx]
-        if _want_sum:
-            row["sum"] = db_state[sum_idx]
-        ent_results.append(row)
-
-
-def _build_converted_statistic_entries(
-    ent_results: list[dict[str, Any]],
-    stats_list: list[Row],
-    convert: Callable[[Any], Any],
-    table_duration_seconds: float,
-    _want_last_reset: bool,
-    _want_mean: bool,
-    _want_min: bool,
-    _want_max: bool,
-    _want_state: bool,
-    _want_sum: bool,
-    start_ts_idx: int,
-    last_reset_ts_idx: int,
-    mean_idx: int,
-    min_idx: int,
-    max_idx: int,
-    state_idx: int,
-    sum_idx: int,
-) -> None:
-    """Build statistic entries with unit conversion."""
-    for db_state in stats_list:
-        row: dict[str, Any] = {
-            "start": (start_ts := db_state[start_ts_idx]),
-            "end": start_ts + table_duration_seconds,
-        }
-        if _want_last_reset:
-            row["last_reset"] = db_state[last_reset_ts_idx]
-        if _want_mean:
-            row["mean"] = convert(db_state[mean_idx])
-        if _want_min:
-            row["min"] = convert(db_state[min_idx])
-        if _want_max:
-            row["max"] = convert(db_state[max_idx])
-        if _want_state:
-            row["state"] = convert(db_state[state_idx])
-        if _want_sum:
-            row["sum"] = convert(db_state[sum_idx])
-        ent_results.append(row)
 
 
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
