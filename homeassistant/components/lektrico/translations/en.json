@@ -2,12 +2,20 @@
     "config": {
         "abort": {
             "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "single_instance_allowed": "Already configured. Only a single configuration possible",
+            "already_configured": "Device is already configured",
+            "missing_id": "Discovery has no id",
+            "missing_underline_in_id": "The id from discovery does not have the format <type>_<serial_number>"
         },
-        "flow_title": "{serial_number}",
+        "error": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{friendly_name}_{serial_number}",
         "step": {
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "user": {
                 "data": {
@@ -19,6 +27,16 @@
             "zeroconf_confirm": {
                 "description": "Do you want to add the Lektrico Station with serial number `{serial_number}` to Home Assistant?",
                 "title": "Discovered Lektrico Station device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Friendly Name"
+                },
+                "title": "Lektrico configuration"
             }
         }
     }

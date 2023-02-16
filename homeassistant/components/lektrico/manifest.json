@@ -4,7 +4,14 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lektrico",
   "requirements": ["lektricowifi==0.0.20"],
-  "dependencies": [],
+  "dependencies": ["zeroconf"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "lektrico*"
+    }
+  ],
   "codeowners": ["@mtarjoianu"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "integration_type": "device"
 }

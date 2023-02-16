@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 
 from lektricowifi import ChargerConnectionError, lektricowifi
 
@@ -13,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 # List the platforms that you want to support.
 PLATFORMS = [
@@ -24,7 +23,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
-_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=10)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
@@ -86,7 +84,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._update_fail_count = 0
         self._info = None
         super().__init__(
-            hass, _LOGGER, name=f"{DOMAIN}-{self._name}", update_interval=SCAN_INTERVAL
+            hass, LOGGER, name=f"{DOMAIN}-{self._name}", update_interval=SCAN_INTERVAL
         )
 
     async def _async_update_data(self) -> lektricowifi.Info:
