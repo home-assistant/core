@@ -481,7 +481,7 @@ SHABBAT_TEST_IDS = [
 
 @pytest.mark.parametrize("language", ["english", "hebrew"])
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "candle_lighting",
         "havdalah",
@@ -490,7 +490,7 @@ SHABBAT_TEST_IDS = [
         "latitude",
         "longitude",
         "result",
-    ],
+    ),
     SHABBAT_PARAMS,
     ids=SHABBAT_TEST_IDS,
 )

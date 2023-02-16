@@ -36,14 +36,14 @@ async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     assert DOMAIN not in hass.config_entries.async_domains()
 
 
-async def test_setup_ev(hass, ev_entry):
+async def test_setup_ev(hass: HomeAssistant, ev_entry) -> None:
     """Test setup with an EV vehicle."""
     check_entry = hass.config_entries.async_get_entry(ev_entry.entry_id)
     assert check_entry
     assert check_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_g2(hass, subaru_config_entry):
+async def test_setup_g2(hass: HomeAssistant, subaru_config_entry) -> None:
     """Test setup with a G2 vehcile ."""
     await setup_subaru_config_entry(
         hass,
@@ -57,7 +57,7 @@ async def test_setup_g2(hass, subaru_config_entry):
     assert check_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_g1(hass, subaru_config_entry):
+async def test_setup_g1(hass: HomeAssistant, subaru_config_entry) -> None:
     """Test setup with a G1 vehicle."""
     await setup_subaru_config_entry(
         hass,
@@ -70,7 +70,7 @@ async def test_setup_g1(hass, subaru_config_entry):
     assert check_entry.state is ConfigEntryState.LOADED
 
 
-async def test_unsuccessful_connect(hass, subaru_config_entry):
+async def test_unsuccessful_connect(hass: HomeAssistant, subaru_config_entry) -> None:
     """Test unsuccessful connect due to connectivity."""
     await setup_subaru_config_entry(
         hass,
@@ -85,7 +85,7 @@ async def test_unsuccessful_connect(hass, subaru_config_entry):
     assert check_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_invalid_credentials(hass, subaru_config_entry):
+async def test_invalid_credentials(hass: HomeAssistant, subaru_config_entry) -> None:
     """Test invalid credentials."""
     await setup_subaru_config_entry(
         hass,
@@ -100,7 +100,9 @@ async def test_invalid_credentials(hass, subaru_config_entry):
     assert check_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_update_skip_unsubscribed(hass, subaru_config_entry):
+async def test_update_skip_unsubscribed(
+    hass: HomeAssistant, subaru_config_entry
+) -> None:
     """Test update function skips vehicles without subscription."""
     await setup_subaru_config_entry(
         hass,
@@ -121,7 +123,7 @@ async def test_update_skip_unsubscribed(hass, subaru_config_entry):
         mock_fetch.assert_not_called()
 
 
-async def test_update_disabled(hass, ev_entry):
+async def test_update_disabled(hass: HomeAssistant, ev_entry) -> None:
     """Test update function disable option."""
     with patch(
         MOCK_API_FETCH,
@@ -139,7 +141,7 @@ async def test_update_disabled(hass, ev_entry):
         mock_update.assert_not_called()
 
 
-async def test_fetch_failed(hass, subaru_config_entry):
+async def test_fetch_failed(hass: HomeAssistant, subaru_config_entry) -> None:
     """Tests when fetch fails."""
     await setup_subaru_config_entry(
         hass,
@@ -154,7 +156,7 @@ async def test_fetch_failed(hass, subaru_config_entry):
     assert test_entity.state == "unavailable"
 
 
-async def test_unload_entry(hass, ev_entry):
+async def test_unload_entry(hass: HomeAssistant, ev_entry) -> None:
     """Test that entry is unloaded."""
     assert ev_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(ev_entry.entry_id)
