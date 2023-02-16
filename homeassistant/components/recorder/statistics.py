@@ -10,7 +10,7 @@ from functools import lru_cache, partial
 from itertools import chain, groupby
 import json
 import logging
-from operator import attrgetter
+from operator import itemgetter
 import os
 import re
 from statistics import mean
@@ -2042,7 +2042,7 @@ def _sorted_statistics_to_dict(
     start_ts_ = field_map["start_ts"]
     stats_by_meta_id: dict[int, list[Row]] = {}
     seen_statistic_ids: set[str] = set()
-    key_func = attrgetter("metadata_id")
+    key_func = itemgetter(metadata_id_)
     for meta_id, group in groupby(stats, key_func):
         stats_list = stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
