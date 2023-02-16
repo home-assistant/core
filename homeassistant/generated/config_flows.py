@@ -418,6 +418,7 @@ FLOWS = {
         "stookwijzer",
         "subaru",
         "sun",
+        "sunweg",
         "surepetcare",
         "switchbee",
         "switchbot",

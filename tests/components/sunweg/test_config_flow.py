@@ -1,0 +1,163 @@
+"""Tests for the Sun WEG server config flow."""
+from copy import deepcopy
+from datetime import datetime
+from unittest.mock import patch
+
+from sunweg.plant import Plant
+
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.sunweg.const import CONF_PLANT_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+FIXTURE_USER_INPUT = {
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+}
+
+SUNWEG_PLANT_LIST_RESPONSE = [
+    Plant(
+        123456,
+        "Plant #123",
+        29.5,
+        0.5,
+        0,
+        12.786912,
+        24.0,
+        332.2,
+        0.012296,
+        datetime(2023, 2, 16, 14, 22, 37),
+    )
+]
+
+SUNWEG_LOGIN_RESPONSE = True
+
+
+async def test_show_authenticate_form(hass: HomeAssistant) -> None:
+    """Test that the setup form is served."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_incorrect_login(hass: HomeAssistant) -> None:
+    """Test that it shows the appropriate error when an incorrect username/password/server is entered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "sunweg.api.APIHelper.authenticate",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_no_plants_on_account(hass: HomeAssistant) -> None:
+    """Test registering an integration and finishing flow with an entered plant_id."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = FIXTURE_USER_INPUT.copy()
+    plant_list = []
+
+    with patch(
+        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch("sunweg.api.APIHelper.listPlants", return_value=plant_list):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_plants"
+
+
+async def test_multiple_plant_ids(hass: HomeAssistant) -> None:
+    """Test registering an integration and finishing flow with an entered plant_id."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = FIXTURE_USER_INPUT.copy()
+    plant_list = deepcopy(SUNWEG_PLANT_LIST_RESPONSE)
+    plant_list.append(plant_list[0])
+
+    with patch(
+        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch("sunweg.api.APIHelper.listPlants", return_value=plant_list), patch(
+        "homeassistant.components.sunweg.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "plant"
+
+        user_input = {CONF_PLANT_ID: 123456}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result["data"][CONF_PLANT_ID] == 123456
+
+
+async def test_one_plant_on_account(hass: HomeAssistant) -> None:
+    """Test registering an integration and finishing flow with an entered plant_id."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = FIXTURE_USER_INPUT.copy()
+
+    with patch(
+        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch(
+        "sunweg.api.APIHelper.listPlants",
+        return_value=SUNWEG_PLANT_LIST_RESPONSE,
+    ), patch(
+        "homeassistant.components.sunweg.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result["data"][CONF_PLANT_ID] == 123456
+
+
+async def test_existing_plant_configured(hass: HomeAssistant) -> None:
+    """Test entering an existing plant_id."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=123456)
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = FIXTURE_USER_INPUT.copy()
+
+    with patch(
+        "sunweg.api.APIHelper.authenticate", return_value=SUNWEG_LOGIN_RESPONSE
+    ), patch(
+        "sunweg.api.APIHelper.listPlants",
+        return_value=SUNWEG_PLANT_LIST_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
