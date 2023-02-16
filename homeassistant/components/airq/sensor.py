@@ -350,7 +350,6 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         self.entity_description: AirQEntityDescription = description
 
         self._attr_device_info = coordinator.device_info
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
         self._attr_native_value = description.value(coordinator.data)
 
