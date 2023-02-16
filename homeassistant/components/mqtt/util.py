@@ -41,6 +41,11 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
 
 
+def wildcard_topic(topic: str) -> bool:
+    """Determine if this is a wildcard topic."""
+    return "+" in topic or "#" in topic
+
+
 def valid_topic(topic: Any) -> str:
     """Validate that this is a valid topic name/filter."""
     validated_topic = cv.string(topic)

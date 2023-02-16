@@ -36,6 +36,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -74,7 +75,12 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_file_path, get_mqtt_data, mqtt_config_entry_enabled
+from .util import (
+    get_file_path,
+    get_mqtt_data,
+    mqtt_config_entry_enabled,
+    wildcard_topic,
+)
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -83,6 +89,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+SUBSCRIBE_COOLDOWN = 0.1  # 100ms
 DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 10
 
@@ -365,13 +372,23 @@ class MQTT:
         self.conf = conf
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
-        self._last_message: dict[str, ReceiveMessage] = {}
+        self._pending_subscriptions: dict[str, int] = {}
+        self._subscription_debouncer = Debouncer(
+            self.hass,
+            _LOGGER,
+            cooldown=SUBSCRIBE_COOLDOWN,
+            immediate=False,
+            function=self._async_perform_subscriptions,
+        )
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
+        self._subscriptions_lock = (
+            asyncio.Lock()
+        )  # Prevents parallel calls to the MQTT client
         self._pending_operations: dict[int, asyncio.Event] = {}
         self._pending_operations_condition = asyncio.Condition()
 
@@ -560,7 +577,6 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
-        already_active_subscription = self._is_active_subscription(topic)
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
@@ -569,16 +585,12 @@ class MQTT:
 
         # Only subscribe if currently connected.
         if self.connected:
-            if already_active_subscription:
-                _LOGGER.debug("Skipped duplicate subscribe for %s", topic)
-                if topic in self._last_message:
-                    self.hass.async_run_hass_job(
-                        subscription.job, self._last_message.get(topic)
-                    )
-                    self._mqtt_data.state_write_requests.process_write_state_requests()
-            else:
-                self._last_subscribe = time.time()
-                await self._async_perform_subscriptions(((topic, qos),))
+            async with self._subscriptions_lock:
+                if (topic not in self._pending_subscriptions) or (
+                    qos > self._pending_subscriptions[topic]
+                ):
+                    self._pending_subscriptions[topic] = qos
+            self.hass.async_create_task(self._subscription_debouncer.async_call())
 
         @callback
         def async_remove() -> None:
@@ -609,56 +621,29 @@ class MQTT:
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
 
-            if topic in self._last_message:
-                del self._last_message[topic]
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
         self.hass.async_create_task(self._wait_for_mid(mid))
 
-    async def _async_perform_subscriptions(
-        self, subscriptions: Iterable[tuple[str, int]]
-    ) -> None:
+    async def _async_perform_subscriptions(self) -> None:
         """Perform MQTT client subscriptions."""
 
-        # Section 3.3.1.3 in the specification:
-        # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
-        # When sending a PUBLISH Packet to a Client the Server MUST
-        # set the RETAIN flag to 1 if a message is sent as a result of a
-        # new subscription being made by a Client [MQTT-3.3.1-8].
-        # It MUST set the RETAIN flag to 0 when a PUBLISH Packet is sent to
-        # a Client because it matches an established subscription regardless
-        # of how the flag was set in the message it received [MQTT-3.3.1-9].
-        #
-        # Since we do not know if a published value is retained we need to
-        # (re)subscribe, to ensure retained messages are replayed
-
-        def _process_client_subscriptions() -> list[tuple[int, int]]:
-            """Initiate all subscriptions on the MQTT client and return the results."""
-            subscribe_result_list = []
-            for topic, qos in subscriptions:
-                result, mid = self._mqttc.subscribe(topic, qos)
-                subscribe_result_list.append((result, mid))
-                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-            return subscribe_result_list
+        async with self._subscriptions_lock:
+            subscriptions = list(self._pending_subscriptions.items())
+            self._pending_subscriptions = {}
+        _LOGGER.debug("Subscribing to %s", subscriptions)
 
         async with self._paho_lock:
-            results = await self.hass.async_add_executor_job(
-                _process_client_subscriptions
+            result, mid = await self.hass.async_add_executor_job(
+                self._mqttc.subscribe, subscriptions
             )
+        self._last_subscribe = time.time()
 
-        tasks: list[Coroutine[Any, Any, None]] = []
-        errors: list[int] = []
-        for result, mid in results:
-            if result == 0:
-                tasks.append(self._wait_for_mid(mid))
-            else:
-                errors.append(result)
-
-        if tasks:
-            await asyncio.gather(*tasks)
-        if errors:
-            _raise_on_errors(errors)
+        if result == 0:
+            await self._wait_for_mid(mid)
+        else:
+            _raise_on_error(result)
 
     def _mqtt_on_connect(
         self,
@@ -718,15 +703,10 @@ class MQTT:
         """Resubscribe on reconnect."""
         # Group subscriptions to only re-subscribe once for each topic.
         keyfunc = attrgetter("topic")
-        await self._async_perform_subscriptions(
-            [
-                # Re-subscribe with the highest requested qos
-                (topic, max(subscription.qos for subscription in subs))
-                for topic, subs in groupby(
-                    sorted(self.subscriptions, key=keyfunc), keyfunc
-                )
-            ]
-        )
+        self._pending_subscriptions = {
+            topic: max(subscription.qos for subscription in subs)
+            for topic, subs in groupby(sorted(self.subscriptions, key=keyfunc), keyfunc)
+        }
 
     def _mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
@@ -771,18 +751,18 @@ class MQTT:
                         subscription.job,
                     )
                     continue
-            receive_msg = ReceiveMessage(
-                msg.topic,
-                payload,
-                msg.qos,
-                msg.retain,
-                subscription.topic,
-                timestamp,
+
+            self.hass.async_run_hass_job(
+                subscription.job,
+                ReceiveMessage(
+                    msg.topic,
+                    payload,
+                    msg.qos,
+                    msg.retain,
+                    subscription.topic,
+                    timestamp,
+                ),
             )
-            # Only cache messages for simple topics
-            if msg.topic in self._simple_subscriptions:
-                self._last_message[msg.topic] = receive_msg
-            self.hass.async_run_hass_job(subscription.job, receive_msg)
         self._mqtt_data.state_write_requests.process_write_state_requests()
 
     def _mqtt_on_callback(
