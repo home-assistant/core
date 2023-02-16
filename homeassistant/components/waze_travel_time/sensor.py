@@ -1,6 +1,7 @@
 """Support for Waze travel time sensor."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any
@@ -85,7 +86,7 @@ class WazeTravelTime(SensorEntity):
         configuration_url="https://www.waze.com",
     )
 
-    def __init__(self, unique_id, name, origin, destination, waze_data):
+    def __init__(self, unique_id, name, origin, destination, waze_data) -> None:
         """Initialize the Waze travel time sensor."""
         self._attr_unique_id = unique_id
         self._waze_data = waze_data
@@ -142,7 +143,7 @@ class WazeTravelTime(SensorEntity):
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
-    def __init__(self, origin, destination, region, config_entry):
+    def __init__(self, origin, destination, region, config_entry) -> None:
         """Set up WazeRouteCalculator."""
         self.origin = origin
         self.destination = destination
