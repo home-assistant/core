@@ -512,7 +512,11 @@ class HomeAssistant:
 
     @callback
     def async_create_task(
-        self, target: Coroutine[Any, Any, _R], background: bool = False
+        self,
+        target: Coroutine[Any, Any, _R],
+        *,
+        name: str | None = None,
+        background: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
@@ -525,8 +529,15 @@ class HomeAssistant:
         this in your integration, make sure you also cancel the task when
         the config entry your task belongs to is unloaded.
         """
-        task = self.loop.create_task(target)
-        tasks = self._background_tasks if background else self._tasks
+        if background:
+            if name is None:
+                raise ValueError("Background tasks must have a name")
+            tasks = self._background_tasks
+        else:
+            tasks = self._tasks
+
+        task = self.loop.create_task(target, name=name)
+
         tasks.add(task)
         task.add_done_callback(tasks.remove)
 

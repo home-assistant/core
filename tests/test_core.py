@@ -1946,7 +1946,8 @@ async def test_background_task(hass):
             result.set_result(hass.state)
             raise
 
-    hass.async_create_task(test_task(), True)
+    task = hass.async_create_task(test_task(), background=True, name="happy task")
+    assert "happy task" in str(task)
     await asyncio.sleep(0)
     await hass.async_stop()
     assert result.result() == ha.CoreState.stopping

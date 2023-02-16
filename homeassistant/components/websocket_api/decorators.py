@@ -32,6 +32,7 @@ def async_response(
     func: const.AsyncWebSocketCommandHandler,
 ) -> const.WebSocketCommandHandler:
     """Decorate an async function to handle WebSocket API messages."""
+    task_name = f"websocket_api.async:{func.__name__}"
 
     @callback
     @wraps(func)
@@ -42,7 +43,9 @@ def async_response(
         # As the webserver is now started before the start
         # event we do not want to block for websocket responders
         hass.async_create_task(
-            _handle_async_response(func, hass, connection, msg), True
+            _handle_async_response(func, hass, connection, msg),
+            background=True,
+            name=task_name,
         )
 
     return schedule_handler
