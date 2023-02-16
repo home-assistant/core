@@ -534,7 +534,7 @@ class StatisticsBase:
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
-        """Create object from a statistics."""
+        """Create object from a statistics with datatime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
@@ -546,6 +546,24 @@ class StatisticsBase:
             max=stats.get("max"),
             last_reset=None,
             last_reset_ts=datetime_to_timestamp_or_none(stats.get("last_reset")),
+            state=stats.get("state"),
+            sum=stats.get("sum"),
+        )
+
+    @classmethod
+    def from_stats_ts(cls, metadata_id: int, stats: StatisticData) -> Self:
+        """Create object from a statistics with timestamps."""
+        return cls(  # type: ignore[call-arg]
+            metadata_id=metadata_id,
+            created=None,
+            created_ts=time.time(),
+            start=None,
+            start_ts=stats["start"],
+            mean=stats.get("mean"),
+            min=stats.get("min"),
+            max=stats.get("max"),
+            last_reset=None,
+            last_reset_ts=stats.get("last_reset"),
             state=stats.get("state"),
             sum=stats.get("sum"),
         )
