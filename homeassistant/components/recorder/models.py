@@ -56,26 +56,26 @@ class StatisticDataBase(TypedDict):
     start: datetime
 
 
-class StatisticData(StatisticDataBase, total=False):
+class StatisticMixIn(TypedDict, total=False):
+    """Mandatory fields for statistic data class."""
+
+    state: float
+    sum: float
+    min: float
+    max: float
+    mean: float
+
+
+class StatisticData(StatisticDataBase, StatisticMixIn, total=False):
     """Statistic data class."""
 
-    mean: float
-    min: float
-    max: float
     last_reset: datetime | None
-    state: float
-    sum: float
 
 
-class StatisticDataTimestamp(StatisticDataTimestampBase, total=False):
+class StatisticDataTimestamp(StatisticDataTimestampBase, StatisticMixIn, total=False):
     """Statistic data class with a timestamp."""
 
-    mean: float
-    min: float
-    max: float
     last_reset_ts: float | None
-    state: float
-    sum: float
 
 
 class StatisticMetaData(TypedDict):
