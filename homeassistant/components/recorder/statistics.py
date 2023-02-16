@@ -2022,15 +2022,15 @@ def _sorted_statistics_to_dict(
     start_time_ts = start_time.timestamp() if start_time else None
     # Identify metadata IDs for which no data was available at the requested start time
     field_map: dict[str, int] = {key: idx for idx, key in enumerate(stats[0]._fields)}
-    metadata_id_ = field_map["metadata_id"]
-    start_ts_ = field_map["start_ts"]
+    metadata_id_idx = field_map["metadata_id"]
+    start_ts_idx = field_map["start_ts"]
     stats_by_meta_id: dict[int, list[Row]] = {}
     seen_statistic_ids: set[str] = set()
-    key_func = itemgetter(metadata_id_)
+    key_func = itemgetter(metadata_id_idx)
     for meta_id, group in groupby(stats, key_func):
         stats_list = stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
-        first_start_time_ts = stats_list[0].start_ts
+        first_start_time_ts = stats_list[0][start_ts_idx]
         if start_time_ts and first_start_time_ts > start_time_ts:
             need_stat_at_start_time.add(meta_id)
 
@@ -2050,20 +2050,20 @@ def _sorted_statistics_to_dict(
             session, need_stat_at_start_time, table, start_time, types
         ):
             for stat in tmp:
-                stats_by_meta_id[stat[metadata_id_]].insert(0, stat)
+                stats_by_meta_id[stat[metadata_id_idx]].insert(0, stat)
 
     if _want_mean := "mean" in types:
-        mean_ = field_map["mean"]
+        mean_idx = field_map["mean"]
     if _want_min := "min" in types:
-        min_ = field_map["min"]
+        min_idx = field_map["min"]
     if _want_max := "max" in types:
-        max_ = field_map["max"]
+        max_idx = field_map["max"]
     if _want_last_reset := "last_reset" in types:
-        last_reset_ts_ = field_map["last_reset_ts"]
+        last_reset_ts_idx = field_map["last_reset_ts"]
     if _want_state := "state" in types:
-        state_ = field_map["state"]
+        state_idx = field_map["state"]
     if _want_sum := "sum" in types:
-        sum_ = field_map["sum"]
+        sum_idx = field_map["sum"]
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -2079,23 +2079,31 @@ def _sorted_statistics_to_dict(
         ent_results = result[statistic_id]
         for db_state in stats_list:
             row: dict[str, Any] = {
-                "start": (start_ts := db_state[start_ts_]),
+                "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
             }
             if _want_mean:
-                row["mean"] = convert(db_state[mean_]) if convert else db_state[mean_]
+                row["mean"] = (
+                    convert(db_state[mean_idx]) if convert else db_state[mean_idx]
+                )
             if _want_min:
-                row["min"] = convert(db_state[min_]) if convert else db_state[min_]
+                row["min"] = (
+                    convert(db_state[min_idx]) if convert else db_state[min_idx]
+                )
             if _want_max:
-                row["max"] = convert(db_state[max_]) if convert else db_state[max_]
+                row["max"] = (
+                    convert(db_state[max_idx]) if convert else db_state[max_idx]
+                )
             if _want_last_reset:
-                row["last_reset"] = db_state[last_reset_ts_]
+                row["last_reset"] = db_state[last_reset_ts_idx]
             if _want_state:
                 row["state"] = (
-                    convert(db_state[state_]) if convert else db_state[state_]
+                    convert(db_state[state_idx]) if convert else db_state[state_idx]
                 )
             if _want_sum:
-                row["sum"] = convert(db_state[sum_]) if convert else db_state[sum_]
+                row["sum"] = (
+                    convert(db_state[sum_idx]) if convert else db_state[sum_idx]
+                )
             ent_results.append(row)
 
     return result
