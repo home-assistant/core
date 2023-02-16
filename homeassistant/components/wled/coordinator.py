@@ -25,6 +25,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
     keep_master_light: bool
     config_entry: ConfigEntry
+    _listen_task: asyncio.Task | None = None
 
     def __init__(
         self,
@@ -95,7 +96,12 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
 
         # Start listening
-        asyncio.create_task(listen())
+        def _done_callback(_: asyncio.Future) -> None:
+            """Cleanup hard task reference when future is done."""
+            self._listen_task = None
+
+        self._listen_task = asyncio.create_task(listen())
+        self._listen_task.add_done_callback(_done_callback)
 
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
