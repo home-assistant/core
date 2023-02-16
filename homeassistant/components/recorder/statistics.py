@@ -2072,18 +2072,12 @@ def _sorted_statistics_to_dict(  # noqa: C901
     # Figure out which fields we need to extract from the SQL result
     # and which indices they have in the result so we can avoid the overhead
     # of doing a dict lookup for each row
-    if _want_mean := "mean" in types:
-        mean_idx = field_map["mean"]
-    if _want_min := "min" in types:
-        min_idx = field_map["min"]
-    if _want_max := "max" in types:
-        max_idx = field_map["max"]
-    if _want_last_reset := "last_reset" in types:
-        last_reset_ts_idx = field_map["last_reset_ts"]
-    if _want_state := "state" in types:
-        state_idx = field_map["state"]
-    if _want_sum := "sum" in types:
-        sum_idx = field_map["sum"]
+    mean_idx = field_map["mean"] if "mean" in types else None
+    min_idx = field_map["min"] if "min" in types else None
+    max_idx = field_map["max"] if "max" in types else None
+    last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
+    state_idx = field_map["state"] if "state" in types else None
+    sum_idx = field_map["sum"] if "sum" in types else None
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -2109,29 +2103,29 @@ def _sorted_statistics_to_dict(  # noqa: C901
                 "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
             }
-            if _want_last_reset:
+            if last_reset_ts_idx is not None:
                 row["last_reset"] = db_state[last_reset_ts_idx]
             if convert:
-                if _want_mean:
+                if mean_idx is not None:
                     row["mean"] = convert(db_state[mean_idx])
-                if _want_min:
+                if min_idx is not None:
                     row["min"] = convert(db_state[min_idx])
-                if _want_max:
+                if max_idx is not None:
                     row["max"] = convert(db_state[max_idx])
-                if _want_state:
+                if state_idx is not None:
                     row["state"] = convert(db_state[state_idx])
-                if _want_sum:
+                if sum_idx is not None:
                     row["sum"] = convert(db_state[sum_idx])
             else:
-                if _want_mean:
+                if mean_idx is not None:
                     row["mean"] = db_state[mean_idx]
-                if _want_min:
+                if min_idx is not None:
                     row["min"] = db_state[min_idx]
-                if _want_max:
+                if max_idx is not None:
                     row["max"] = db_state[max_idx]
-                if _want_state:
+                if state_idx is not None:
                     row["state"] = db_state[state_idx]
-                if _want_sum:
+                if sum_idx is not None:
                     row["sum"] = db_state[sum_idx]
             ent_results_append(row)
 
