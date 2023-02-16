@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.components.fritzbox.climate import PRESET_WINDOW_OPEN
 from homeassistant.components.fritzbox.const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
@@ -65,11 +66,15 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.attributes[ATTR_MAX_TEMP] == 28
     assert state.attributes[ATTR_MIN_TEMP] == 8
     assert state.attributes[ATTR_PRESET_MODE] is None
-    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_COMFORT]
+    assert state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_ECO,
+        PRESET_COMFORT,
+        PRESET_WINDOW_OPEN,
+    ]
     assert state.attributes[ATTR_STATE_BATTERY_LOW] is True
     assert state.attributes[ATTR_STATE_HOLIDAY_MODE] == "fake_holiday"
     assert state.attributes[ATTR_STATE_SUMMER_MODE] == "fake_summer"
-    assert state.attributes[ATTR_STATE_WINDOW_OPEN] == "fake_window"
+    assert state.attributes[ATTR_STATE_WINDOW_OPEN] is False
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
     assert ATTR_STATE_CLASS not in state.attributes
     assert state.state == HVACMode.HEAT
@@ -366,6 +371,22 @@ async def test_set_preset_mode_eco(hass: HomeAssistant, fritz: Mock) -> None:
         True,
     )
     assert device.set_target_temperature.call_args_list == [call(16)]
+
+
+async def test_set_preset_mode_window_open(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test setting preset mode."""
+    device = FritzDeviceClimateMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_WINDOW_OPEN},
+        True,
+    )
+    assert device.set_window_open.call_args_list == [call(900)]
 
 
 async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:

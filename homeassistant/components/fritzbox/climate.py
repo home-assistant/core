@@ -27,6 +27,7 @@ from .const import (
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
+    ATTR_STATE_WINDOW_OPEN_ENDTIME,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
@@ -37,7 +38,7 @@ OPERATION_LIST = [HVACMode.HEAT, HVACMode.OFF]
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
 
-PRESET_MANUAL = "manual"
+PRESET_WINDOW_OPEN = "Window open"
 
 # special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
 ON_API_TEMPERATURE = 127.0
@@ -100,6 +101,16 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             )
         await self.coordinator.async_refresh()
 
+    async def async_set_window_open(self, open: bool) -> None:
+        """set the thermostate to off (window open) for a pre defined time."""
+        if open:
+            timeout = 60 * 15
+        else:
+            timeout = 0
+
+        await self.hass.async_add_executor_job(self.data.set_window_open, timeout)
+        await self.coordinator.async_refresh()
+
     @property
     def hvac_mode(self) -> str:
         """Return the current operation mode."""
@@ -126,6 +137,8 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
+        if self.data.window_open:
+            return PRESET_WINDOW_OPEN
         if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT
         if self.data.target_temperature == self.data.eco_temperature:
@@ -135,7 +148,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     @property
     def preset_modes(self) -> list[str]:
         """Return supported preset modes."""
-        return [PRESET_ECO, PRESET_COMFORT]
+        return [PRESET_ECO, PRESET_COMFORT, PRESET_WINDOW_OPEN]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
@@ -143,6 +156,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             await self.async_set_temperature(temperature=self.data.comfort_temperature)
         elif preset_mode == PRESET_ECO:
             await self.async_set_temperature(temperature=self.data.eco_temperature)
+
+        if preset_mode == PRESET_WINDOW_OPEN:
+            await self.async_set_window_open(True)
+        else:
+            await self.async_set_window_open(False)
 
     @property
     def min_temp(self) -> int:
@@ -170,5 +188,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             attrs[ATTR_STATE_SUMMER_MODE] = self.data.summer_active
         if self.data.window_open is not None:
             attrs[ATTR_STATE_WINDOW_OPEN] = self.data.window_open
+        if self.data.window_open_endtime is not None:
+            attrs[ATTR_STATE_WINDOW_OPEN_ENDTIME] = self.data.window_open_endtime
 
         return attrs
