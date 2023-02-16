@@ -41,7 +41,7 @@ from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
 from .event import async_track_entity_registry_updated_event
-from .typing import StateType
+from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -219,7 +219,7 @@ class EntityDescription:
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | None = None
+    name: str | None | UndefinedType = UNDEFINED
     translation_key: str | None = None
     unit_of_measurement: str | None = None
 
@@ -320,7 +320,8 @@ class Entity(ABC):
         if hasattr(self, "_attr_name"):
             return self._attr_name
         if hasattr(self, "entity_description"):
-            return self.entity_description.name
+            if (name := self.entity_description.name) is not UNDEFINED:
+                return name
         if self.translation_key is not None:
             assert self.platform
             name_translation_key = (
