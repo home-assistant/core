@@ -2082,30 +2082,28 @@ def _sorted_statistics_to_dict(
                 "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
             }
+            if _want_mean:
+                row["mean"] = (
+                    convert(db_state[mean_idx]) if convert else db_state[mean_idx]
+                )
+            if _want_min:
+                row["min"] = (
+                    convert(db_state[min_idx]) if convert else db_state[min_idx]
+                )
+            if _want_max:
+                row["max"] = (
+                    convert(db_state[max_idx]) if convert else db_state[max_idx]
+                )
             if _want_last_reset:
                 row["last_reset"] = db_state[last_reset_ts_idx]
-            if convert:
-                if _want_mean:
-                    row["mean"] = convert(db_state[mean_idx])
-                if _want_min:
-                    row["min"] = convert(db_state[min_idx])
-                if _want_max:
-                    row["max"] = convert(db_state[max_idx])
-                if _want_state:
-                    row["state"] = convert(db_state[state_idx])
-                if _want_sum:
-                    row["sum"] = convert(db_state[sum_idx])
-            else:
-                if _want_mean:
-                    row["mean"] = db_state[mean_idx]
-                if _want_min:
-                    row["min"] = db_state[min_idx]
-                if _want_max:
-                    row["max"] = db_state[max_idx]
-                if _want_state:
-                    row["state"] = db_state[state_idx]
-                if _want_sum:
-                    row["sum"] = db_state[sum_idx]
+            if _want_state:
+                row["state"] = (
+                    convert(db_state[state_idx]) if convert else db_state[state_idx]
+                )
+            if _want_sum:
+                row["sum"] = (
+                    convert(db_state[sum_idx]) if convert else db_state[sum_idx]
+                )
             ent_results.append(row)
 
     return result
