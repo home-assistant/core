@@ -1,7 +1,10 @@
 """Tests for the LIVISI Smart Home integration."""
 from unittest.mock import patch
 
-from homeassistant.components.livisi.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.components.livisi.const import CONF_HOST, CONF_PASSWORD, DOMAIN
+from homeassistant.config_entries import ConfigEntry
+
+from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     CONF_HOST: "1.1.1.1",
@@ -35,3 +38,9 @@ def mocked_livisi_setup_entry():
         "homeassistant.components.livisi.async_setup_entry",
         return_value=True,
     )
+
+
+def create_entry() -> ConfigEntry:
+    """Add config entry in Home Assistant."""
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id="1234")
+    return entry
