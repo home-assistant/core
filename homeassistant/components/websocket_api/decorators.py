@@ -42,10 +42,9 @@ def async_response(
         """Schedule the handler."""
         # As the webserver is now started before the start
         # event we do not want to block for websocket responders
-        hass.async_create_task(
+        hass.async_create_background_task(
             _handle_async_response(func, hass, connection, msg),
-            background=True,
-            name=task_name,
+            task_name,
         )
 
     return schedule_handler

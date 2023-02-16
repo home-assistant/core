@@ -511,36 +511,36 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(
-        self,
-        target: Coroutine[Any, Any, _R],
-        *,
-        name: str | None = None,
-        background: bool = False,
-    ) -> asyncio.Task[_R]:
+    def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
 
         target: target to call.
+        """
+        task = self.loop.create_task(target)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+        return task
 
-        If background is True, the task will not block startup and will be
+    @callback
+    def async_create_background_task(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the eventloop.
+
+        This is a background task will not block startup and will be
         automatically cancelled on shutdown. If you are using this in your
         integration, make sure you also cancel the task when the config entry
         your task belongs to is unloaded.
+
+        This method must be run in the event loop.
         """
-        if background:
-            if name is None:
-                raise ValueError("Background tasks must have a name")
-            tasks = self._background_tasks
-        else:
-            tasks = self._tasks
-
         task = self.loop.create_task(target, name=name)
-
-        tasks.add(task)
-        task.add_done_callback(tasks.remove)
-
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
     @callback
