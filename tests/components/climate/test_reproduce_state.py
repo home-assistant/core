@@ -93,7 +93,7 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,attribute",
+    ("service", "attribute"),
     [
         (SERVICE_SET_AUX_HEAT, ATTR_AUX_HEAT),
         (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),

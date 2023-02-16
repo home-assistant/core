@@ -16,7 +16,7 @@ async def test_unloading(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_api,
-):
+) -> None:
     """Test unloading prusalink."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -33,7 +33,7 @@ async def test_unloading(
 @pytest.mark.parametrize("exception", [InvalidAuth, PrusaLinkError])
 async def test_failed_update(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_api, exception
-):
+) -> None:
     """Test failed update marks prusalink unavailable."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state == ConfigEntryState.LOADED

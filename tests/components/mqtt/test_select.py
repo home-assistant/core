@@ -669,7 +669,7 @@ async def test_mqtt_payload_not_an_option_warning(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             select.SERVICE_SELECT_OPTION,
@@ -724,7 +724,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "milk", None, "milk"),
         ("state_topic", "beer", None, "beer"),

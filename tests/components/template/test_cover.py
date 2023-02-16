@@ -47,9 +47,9 @@ OPEN_CLOSE_COVER_CONFIG = {
 }
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config, states",
+    ("config", "states"),
     [
         (
             {
@@ -146,7 +146,7 @@ async def test_template_state_text(hass, states, start_ha, caplog):
         assert text in caplog.text
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -169,7 +169,7 @@ async def test_template_state_boolean(hass, start_ha):
     assert state.state == STATE_OPEN
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -205,7 +205,7 @@ async def test_template_position(hass, start_ha):
         assert state.state == test_state
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -252,7 +252,7 @@ async def test_template_tilt(hass, start_ha):
     assert state.attributes.get("current_tilt_position") == 42.0
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -295,7 +295,7 @@ async def test_template_out_of_bounds(hass, start_ha):
     assert state.attributes.get("current_position") is None
 
 
-@pytest.mark.parametrize("count,domain", [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -330,7 +330,7 @@ async def test_template_open_or_position(hass, start_ha, caplog_setup_text):
     assert "Invalid config for [cover.template]" in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -362,7 +362,7 @@ async def test_open_action(hass, start_ha, calls):
     assert calls[0].data["caller"] == "cover.test_template_cover"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -408,7 +408,7 @@ async def test_close_stop_action(hass, start_ha, calls):
     assert calls[1].data["caller"] == "cover.test_template_cover"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "input_number")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "input_number")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -508,7 +508,7 @@ async def test_set_position(hass, start_ha, calls):
     assert calls[-1].data["position"] == 25
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -533,7 +533,7 @@ async def test_set_position(hass, start_ha, calls):
     ],
 )
 @pytest.mark.parametrize(
-    "service,attr,tilt_position",
+    ("service", "attr", "tilt_position"),
     [
         (
             SERVICE_SET_COVER_TILT_POSITION,
@@ -560,7 +560,7 @@ async def test_set_tilt_position(hass, service, attr, start_ha, calls, tilt_posi
     assert calls[-1].data["tilt_position"] == tilt_position
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -605,7 +605,7 @@ async def test_set_position_optimistic(hass, start_ha, calls):
         assert state.state == test_state
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -652,7 +652,7 @@ async def test_set_tilt_position_optimistic(hass, start_ha, calls):
         assert state.attributes.get("current_tilt_position") == pos
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -685,7 +685,7 @@ async def test_icon_template(hass, start_ha):
     assert state.attributes["icon"] == "mdi:check"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -720,7 +720,7 @@ async def test_entity_picture_template(hass, start_ha):
     assert state.attributes["entity_picture"] == "/local/cover.png"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -753,7 +753,7 @@ async def test_availability_template(hass, start_ha):
     assert hass.states.get("cover.test_template_cover").state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -776,7 +776,7 @@ async def test_availability_without_availability_template(hass, start_ha):
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -802,7 +802,7 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -826,7 +826,7 @@ async def test_device_class(hass, start_ha):
     assert state.attributes.get("device_class") == "door"
 
 
-@pytest.mark.parametrize("count,domain", [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -850,7 +850,7 @@ async def test_invalid_device_class(hass, start_ha):
     assert not state
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -878,7 +878,7 @@ async def test_unique_id(hass, start_ha):
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -912,7 +912,7 @@ async def test_state_gets_lowercased(hass, start_ha):
     assert hass.states.get("cover.garage_door").state == STATE_CLOSED
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [

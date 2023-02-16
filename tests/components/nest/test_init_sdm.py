@@ -7,7 +7,6 @@ By default all tests use test fixtures that run in each possible configuration
 mode (e.g. yaml, ConfigEntry, etc) however some tests override and just run in
 relevant modes.
 """
-
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -22,6 +21,7 @@ import pytest
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from .common import (
     PROJECT_ID,
@@ -74,7 +74,7 @@ def failing_subscriber(subscriber_side_effect: Any) -> YieldFixture[FakeSubscrib
         yield subscriber
 
 
-async def test_setup_success(hass, error_caplog, setup_platform):
+async def test_setup_success(hass: HomeAssistant, error_caplog, setup_platform) -> None:
     """Test successful setup."""
     await setup_platform()
     assert not error_caplog.records
@@ -86,8 +86,11 @@ async def test_setup_success(hass, error_caplog, setup_platform):
 
 @pytest.mark.parametrize("subscriber_id", [("invalid-subscriber-format")])
 async def test_setup_configuration_failure(
-    hass, caplog, subscriber_id, setup_base_platform
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    subscriber_id,
+    setup_base_platform,
+) -> None:
     """Test configuration error."""
     await setup_base_platform()
 
@@ -102,8 +105,8 @@ async def test_setup_configuration_failure(
 
 @pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
 async def test_setup_susbcriber_failure(
-    hass, warning_caplog, failing_subscriber, setup_base_platform
-):
+    hass: HomeAssistant, warning_caplog, failing_subscriber, setup_base_platform
+) -> None:
     """Test configuration error."""
     await setup_base_platform()
     assert "Subscriber error:" in warning_caplog.text
@@ -113,7 +116,9 @@ async def test_setup_susbcriber_failure(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_device_manager_failure(hass, warning_caplog, setup_base_platform):
+async def test_setup_device_manager_failure(
+    hass: HomeAssistant, warning_caplog, setup_base_platform
+) -> None:
     """Test device manager api failure."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
@@ -132,8 +137,11 @@ async def test_setup_device_manager_failure(hass, warning_caplog, setup_base_pla
 
 @pytest.mark.parametrize("subscriber_side_effect", [AuthException()])
 async def test_subscriber_auth_failure(
-    hass, caplog, setup_base_platform, failing_subscriber
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    setup_base_platform,
+    failing_subscriber,
+) -> None:
     """Test subscriber throws an authentication error."""
     await setup_base_platform()
 
@@ -147,7 +155,9 @@ async def test_subscriber_auth_failure(
 
 
 @pytest.mark.parametrize("subscriber_id", [(None)])
-async def test_setup_missing_subscriber_id(hass, warning_caplog, setup_base_platform):
+async def test_setup_missing_subscriber_id(
+    hass: HomeAssistant, warning_caplog, setup_base_platform
+) -> None:
     """Test missing susbcriber id from configuration."""
     await setup_base_platform()
     assert "Configuration option" in warning_caplog.text
@@ -159,8 +169,8 @@ async def test_setup_missing_subscriber_id(hass, warning_caplog, setup_base_plat
 
 @pytest.mark.parametrize("subscriber_side_effect", [(ConfigurationException())])
 async def test_subscriber_configuration_failure(
-    hass, error_caplog, setup_base_platform, failing_subscriber
-):
+    hass: HomeAssistant, error_caplog, setup_base_platform, failing_subscriber
+) -> None:
     """Test configuration error."""
     await setup_base_platform()
     assert "Configuration error: " in error_caplog.text
@@ -174,7 +184,9 @@ async def test_subscriber_configuration_failure(
     "nest_test_config",
     [TEST_CONFIGFLOW_APP_CREDS],
 )
-async def test_empty_config(hass, error_caplog, config, setup_platform):
+async def test_empty_config(
+    hass: HomeAssistant, error_caplog, config, setup_platform
+) -> None:
     """Test setup is a no-op with not config."""
     await setup_platform()
     assert not error_caplog.records
@@ -183,7 +195,7 @@ async def test_empty_config(hass, error_caplog, config, setup_platform):
     assert len(entries) == 0
 
 
-async def test_unload_entry(hass, setup_platform):
+async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
     """Test successful unload of a ConfigEntry."""
     await setup_platform()
 
@@ -197,7 +209,7 @@ async def test_unload_entry(hass, setup_platform):
 
 
 @pytest.mark.parametrize(
-    "nest_test_config,delete_called",
+    ("nest_test_config", "delete_called"),
     [
         (
             TEST_CONFIG_YAML_ONLY,
@@ -214,7 +226,9 @@ async def test_unload_entry(hass, setup_platform):
     ],
     ids=["yaml-config-only", "hybrid-config", "config-entry"],
 )
-async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_called):
+async def test_remove_entry(
+    hass: HomeAssistant, nest_test_config, setup_base_platform, delete_called
+) -> None:
     """Test successful unload of a ConfigEntry."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber",
@@ -248,8 +262,8 @@ async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_
     ids=["hyrbid-config", "app-creds"],
 )
 async def test_remove_entry_delete_subscriber_failure(
-    hass, nest_test_config, setup_base_platform
-):
+    hass: HomeAssistant, nest_test_config, setup_base_platform
+) -> None:
     """Test a failure when deleting the subscription."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber",
@@ -275,8 +289,12 @@ async def test_remove_entry_delete_subscriber_failure(
 
 @pytest.mark.parametrize("config_entry_unique_id", [DOMAIN, None])
 async def test_migrate_unique_id(
-    hass, error_caplog, setup_platform, config_entry, config_entry_unique_id
-):
+    hass: HomeAssistant,
+    error_caplog,
+    setup_platform,
+    config_entry,
+    config_entry_unique_id,
+) -> None:
     """Test successful setup."""
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED

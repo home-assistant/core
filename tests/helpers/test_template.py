@@ -351,7 +351,7 @@ def test_bool_filter(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    ("value", "expected"),
     [
         (0, True),
         (0.0, True),
@@ -1537,7 +1537,7 @@ def test_utcnow(mock_is_safe, hass):
 
 
 @pytest.mark.parametrize(
-    "now, expected, expected_midnight, timezone_str",
+    ("now", "expected", "expected_midnight", "timezone_str"),
     [
         # Host clock in UTC
         (
@@ -4272,7 +4272,7 @@ async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "seq, value, expected",
+    ("seq", "value", "expected"),
     [
         ([0], 0, True),
         ([1], 0, False),

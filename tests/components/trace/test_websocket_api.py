@@ -87,7 +87,14 @@ async def _assert_contexts(client, next_id, contexts, domain=None, item_id=None)
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, extra_trace_keys, trigger, context_key, condition_results",
+    (
+        "domain",
+        "prefix",
+        "extra_trace_keys",
+        "trigger",
+        "context_key",
+        "condition_results",
+    ),
     [
         (
             "automation",
@@ -500,7 +507,7 @@ async def test_get_invalid_trace(hass, hass_ws_client, domain):
 
 
 @pytest.mark.parametrize(
-    "domain,stored_traces",
+    ("domain", "stored_traces"),
     [("automation", None), ("automation", 10), ("script", None), ("script", 10)],
 )
 async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
@@ -573,7 +580,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
 
 
 @pytest.mark.parametrize(
-    "domain,num_restored_moon_traces", [("automation", 3), ("script", 1)]
+    ("domain", "num_restored_moon_traces"), [("automation", 3), ("script", 1)]
 )
 async def test_restore_traces_overflow(
     hass, hass_storage, hass_ws_client, domain, num_restored_moon_traces
@@ -648,7 +655,7 @@ async def test_restore_traces_overflow(
 
 
 @pytest.mark.parametrize(
-    "domain,num_restored_moon_traces,restored_run_id",
+    ("domain", "num_restored_moon_traces", "restored_run_id"),
     [("automation", 3, "e2c97432afe9b8a42d7983588ed5e6ef"), ("script", 1, "")],
 )
 async def test_restore_traces_late_overflow(
@@ -753,7 +760,7 @@ async def test_trace_no_traces(hass, hass_ws_client, domain):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, trigger, last_step, script_execution",
+    ("domain", "prefix", "trigger", "last_step", "script_execution"),
     [
         (
             "automation",
@@ -902,7 +909,7 @@ async def test_list_traces(
 
 
 @pytest.mark.parametrize(
-    "domain, prefix, extra_trace_keys",
+    ("domain", "prefix", "extra_trace_keys"),
     [("automation", "action", {"trigger/0"}), ("script", "sequence", set())],
 )
 async def test_nested_traces(hass, hass_ws_client, domain, prefix, extra_trace_keys):
@@ -961,7 +968,7 @@ async def test_nested_traces(hass, hass_ws_client, domain, prefix, extra_trace_k
 
 
 @pytest.mark.parametrize(
-    "domain, prefix", [("automation", "action"), ("script", "sequence")]
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
 )
 async def test_breakpoints(hass, hass_ws_client, domain, prefix):
     """Test script and automation breakpoints."""
@@ -1130,7 +1137,7 @@ async def test_breakpoints(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix", [("automation", "action"), ("script", "sequence")]
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
 )
 async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
     """Test execution resumes and breakpoints are removed after subscription removed."""
@@ -1233,7 +1240,7 @@ async def test_breakpoints_2(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize(
-    "domain, prefix", [("automation", "action"), ("script", "sequence")]
+    ("domain", "prefix"), [("automation", "action"), ("script", "sequence")]
 )
 async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
     """Test breakpoints can be cleared."""
@@ -1379,7 +1386,7 @@ async def test_breakpoints_3(hass, hass_ws_client, domain, prefix):
 
 
 @pytest.mark.parametrize(
-    "script_mode,max_runs,script_execution",
+    ("script_mode", "max_runs", "script_execution"),
     [
         ({"mode": "single"}, 1, "failed_single"),
         ({"mode": "parallel", "max": 2}, 2, "failed_max_runs"),
@@ -1447,7 +1454,7 @@ async def test_script_mode(
 
 
 @pytest.mark.parametrize(
-    "script_mode,script_execution",
+    ("script_mode", "script_execution"),
     [("restart", "cancelled"), ("parallel", "finished")],
 )
 async def test_script_mode_2(hass, hass_ws_client, script_mode, script_execution):

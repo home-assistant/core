@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.5.0
+aiohomekit==2.6.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -849,7 +849,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.2
+guppy3==3.1.2;python_version<'3.11'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -1621,7 +1621,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
-pyfibaro==0.6.6
+pyfibaro==0.6.8
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -2078,7 +2078,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==2.0.2
+python-matter-server==2.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2234,7 +2234,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.4.1
+reolink-aio==0.4.2
 
 # homeassistant.components.python_script
 restrictedpython==6.0

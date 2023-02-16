@@ -215,7 +215,7 @@ async def test_event_start_trigger(hass: HomeAssistant, calls, fake_schedule) ->
 
 
 @pytest.mark.parametrize(
-    "offset_str, offset_delta",
+    ("offset_str", "offset_delta"),
     [
         ("-01:00", datetime.timedelta(hours=-1)),
         ("+01:00", datetime.timedelta(hours=1)),
@@ -278,7 +278,7 @@ async def test_event_end_trigger(hass: HomeAssistant, calls, fake_schedule) -> N
 
 
 @pytest.mark.parametrize(
-    "offset_str, offset_delta",
+    ("offset_str", "offset_delta"),
     [
         ("-01:00", datetime.timedelta(hours=-1)),
         ("+01:00", datetime.timedelta(hours=1)),
@@ -566,7 +566,7 @@ async def test_update_missed(hass: HomeAssistant, calls, fake_schedule) -> None:
 
 
 @pytest.mark.parametrize(
-    "create_data,fire_time,payload_data",
+    ("create_data", "fire_time", "payload_data"),
     [
         (
             {

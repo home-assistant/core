@@ -13,7 +13,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, get_fixture_path
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -76,7 +76,7 @@ async def test_reloadable(hass, start_ha):
     assert hass.states.get("sensor.top_level_2").state == "reload"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -113,7 +113,7 @@ async def test_reloadable_can_remove(hass, start_ha):
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -141,7 +141,7 @@ async def test_reloadable_stops_on_invalid_config(hass, start_ha):
     assert len(hass.states.async_all()) == 2
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -172,7 +172,7 @@ async def test_reloadable_handles_partial_valid_config(hass, start_ha):
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -218,7 +218,7 @@ async def test_reloadable_multiple_platforms(hass, start_ha):
     assert hass.states.get("sensor.top_level_2") is not None
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
