@@ -190,7 +190,6 @@ class SunWEGData:
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update probe data."""
-        # self.api.authenticate()
         _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.sunweg_type)
         try:
             if self.sunweg_type == "total":
