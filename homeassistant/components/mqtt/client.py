@@ -536,9 +536,10 @@ class MQTT:
         topic = subscription.topic
         try:
             if _is_simple_match(topic):
-                self._simple_subscriptions[topic].remove(subscription)
-                if not self._simple_subscriptions[topic]:
-                    del self._simple_subscriptions[topic]
+                simple_subscriptions = self._simple_subscriptions
+                simple_subscriptions[topic].remove(subscription)
+                if not simple_subscriptions[topic]:
+                    del simple_subscriptions[topic]
             else:
                 self._wildcard_subscriptions.remove(subscription)
         except (KeyError, ValueError) as ex:
