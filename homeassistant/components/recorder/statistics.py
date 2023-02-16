@@ -10,6 +10,7 @@ from functools import lru_cache, partial
 from itertools import chain, groupby
 import json
 import logging
+from operator import attrgetter
 import os
 import re
 from statistics import mean
@@ -2036,10 +2037,8 @@ def _sorted_statistics_to_dict(
     # Identify metadata IDs for which no data was available at the requested start time
     stats_by_meta_id: dict[int, list[Row]] = {}
     seen_statistic_ids: set[str] = set()
-    for meta_id, group in groupby(
-        stats,
-        lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
-    ):
+    key_func = attrgetter("metadata_id")
+    for meta_id, group in groupby(stats, key_func):
         stats_list = stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
         first_start_time_ts = stats_list[0].start_ts
