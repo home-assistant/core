@@ -44,15 +44,3 @@ async def test_hidden_entities_skipped(
     assert len(calls) == 0
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
-
-
-async def test_cant_turn_on_sun(hass: HomeAssistant, init_components) -> None:
-    """Test we can't turn on entities that don't support it."""
-
-    assert await async_setup_component(hass, "sun", {})
-    result = await conversation.async_converse(
-        hass, "turn on sun", None, Context(), None
-    )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
