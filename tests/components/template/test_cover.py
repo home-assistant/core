@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 
 from tests.common import assert_setup_component
@@ -202,6 +203,29 @@ async def test_template_position(hass, start_ha):
         state = hass.states.get("cover.test_template_cover")
         assert state.attributes.get("current_position") == pos
         assert state.state == test_state
+
+
+@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover": {
+                        **OPEN_CLOSE_COVER_CONFIG,
+                        "optimistic": False,
+                    }
+                },
+            }
+        },
+    ],
+)
+async def test_template_not_optimistic(hass, start_ha):
+    """Test the is_closed attribute."""
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
