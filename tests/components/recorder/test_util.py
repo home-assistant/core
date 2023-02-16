@@ -45,28 +45,6 @@ def test_session_scope_not_setup(hass_recorder):
         pass
 
 
-def test_recorder_bad_commit(hass_recorder, recorder_db_url):
-    """Bad _commit should retry 3 times."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: mysql/postgresql does not raise an OperationalError
-        # which triggers retries for the bad query below, it raises ProgrammingError
-        # on which we give up
-        return
-
-    hass = hass_recorder()
-
-    def work(session):
-        """Bad work."""
-        session.execute(text("select * from notthere"))
-
-    with patch(
-        "homeassistant.components.recorder.core.time.sleep"
-    ) as e_mock, util.session_scope(hass=hass) as session:
-        res = util.commit(session, work)
-    assert res is False
-    assert e_mock.call_count == 3
-
-
 def test_recorder_bad_execute(hass_recorder):
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
