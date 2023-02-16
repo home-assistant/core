@@ -531,7 +531,7 @@ class HomeAssistant:
     ) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
-        This is a background task will not block startup and will be
+        This is a background task which will not block startup and will be
         automatically cancelled on shutdown. If you are using this in your
         integration, make sure you also cancel the task when the config entry
         your task belongs to is unloaded.
