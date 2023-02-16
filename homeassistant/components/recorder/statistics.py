@@ -2069,7 +2069,6 @@ def _sorted_statistics_to_dict(
     for meta_id, stats_list in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
-        ent_results = result[statistic_id]
         if convert_units:
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
@@ -2077,6 +2076,7 @@ def _sorted_statistics_to_dict(
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
+        ent_results = result[statistic_id]
         args = (
             ent_results,
             stats_list,
