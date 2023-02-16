@@ -1490,6 +1490,23 @@ async def test_reload_entry_with_restored_subscriptions(
     assert calls[0].payload == "test-payload2"
     assert calls[1].topic == "wild/any/card"
     assert calls[1].payload == "wild-card-payload2"
+    calls.clear()
+
+    # Reload the entry again
+    config_yaml_new = {}
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
+
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload3")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload3")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload3"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload3"
 
 
 async def test_initial_setup_logs_error(
