@@ -1,38 +1,19 @@
 """Tests for the Sun WEG server config flow."""
 from copy import deepcopy
-from datetime import datetime
 from unittest.mock import patch
-
-from sunweg.plant import Plant
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sunweg.const import CONF_PLANT_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from .common import (
+    FIXTURE_USER_INPUT,
+    SUNWEG_LOGIN_RESPONSE,
+    SUNWEG_PLANT_LIST_RESPONSE,
+)
+
 from tests.common import MockConfigEntry
-
-FIXTURE_USER_INPUT = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-}
-
-SUNWEG_PLANT_LIST_RESPONSE = [
-    Plant(
-        123456,
-        "Plant #123",
-        29.5,
-        0.5,
-        0,
-        12.786912,
-        24.0,
-        332.2,
-        0.012296,
-        datetime(2023, 2, 16, 14, 22, 37),
-    )
-]
-
-SUNWEG_LOGIN_RESPONSE = True
 
 
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
