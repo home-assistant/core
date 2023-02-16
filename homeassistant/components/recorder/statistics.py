@@ -68,6 +68,7 @@ from .db_schema import (
 )
 from .models import (
     StatisticData,
+    StatisticDataTimestamp,
     StatisticMetaData,
     StatisticResult,
     datetime_to_timestamp_or_none,
@@ -681,7 +682,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     end_time_ts = end_time.timestamp()
 
     # Compute last hour's average, min, max
-    summary: dict[str, StatisticData] = {}
+    summary: dict[str, StatisticDataTimestamp] = {}
     stmt = _compile_hourly_statistics_summary_mean_stmt(start_time_ts, end_time_ts)
     stats = execute_stmt_lambda_element(session, stmt)
 
@@ -689,7 +690,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
         for stat in stats:
             metadata_id, _mean, _min, _max = stat
             summary[metadata_id] = {
-                "start": start_time,
+                "start_ts": start_time_ts,
                 "mean": _mean,
                 "min": _min,
                 "max": _max,
@@ -705,15 +706,15 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             if metadata_id in summary:
                 summary[metadata_id].update(
                     {
-                        "last_reset": last_reset_ts,
+                        "last_reset_ts": last_reset_ts,
                         "state": state,
                         "sum": _sum,
                     }
                 )
             else:
                 summary[metadata_id] = {
-                    "start": start_time,
-                    "last_reset": last_reset_ts,
+                    "start_ts": start_time_ts,
+                    "last_reset_ts": last_reset_ts,
                     "state": state,
                     "sum": _sum,
                 }

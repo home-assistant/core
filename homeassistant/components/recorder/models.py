@@ -44,6 +44,12 @@ class StatisticResult(TypedDict):
     stat: StatisticData
 
 
+class StatisticDataTimestampBase(TypedDict):
+    """Mandatory fields for statistic data class with a timestamp."""
+
+    start_ts: float
+
+
 class StatisticDataBase(TypedDict):
     """Mandatory fields for statistic data class."""
 
@@ -57,6 +63,17 @@ class StatisticData(StatisticDataBase, total=False):
     min: float
     max: float
     last_reset: datetime | None
+    state: float
+    sum: float
+
+
+class StatisticDataTimestamp(StatisticDataTimestampBase, total=False):
+    """Statistic data class with a timestamp."""
+
+    mean: float
+    min: float
+    max: float
+    last_reset_ts: float | None
     state: float
     sum: float
 

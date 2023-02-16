@@ -54,6 +54,7 @@ import homeassistant.util.dt as dt_util
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
+    StatisticDataTimestamp,
     StatisticMetaData,
     datetime_to_timestamp_or_none,
     process_timestamp,
@@ -551,19 +552,19 @@ class StatisticsBase:
         )
 
     @classmethod
-    def from_stats_ts(cls, metadata_id: int, stats: StatisticData) -> Self:
+    def from_stats_ts(cls, metadata_id: int, stats: StatisticDataTimestamp) -> Self:
         """Create object from a statistics with timestamps."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
             created_ts=time.time(),
             start=None,
-            start_ts=stats["start"],
+            start_ts=stats["start_ts"],
             mean=stats.get("mean"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
-            last_reset_ts=stats.get("last_reset"),
+            last_reset_ts=stats.get("last_reset_ts"),
             state=stats.get("state"),
             sum=stats.get("sum"),
         )
