@@ -634,7 +634,10 @@ class Entity(ABC):
 
             if not self.name:
                 return device_entry.name_by_user or device_entry.name
-            return f"{device_entry.name_by_user or device_entry.name} {self.name}"
+            device_name = device_entry.name_by_user or device_entry.name
+            if device_name == self.name:
+                return self.name
+            return f"{device_name} {self.name}"
 
         if (name := (entry and entry.name) or friendly_name()) is not None:
             attr[ATTR_FRIENDLY_NAME] = name

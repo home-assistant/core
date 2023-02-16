@@ -607,7 +607,10 @@ class EntityPlatform:
                     if not entity.name:
                         suggested_object_id = device_name
                     else:
-                        suggested_object_id = f"{device_name} {entity.name}"
+                        if entity.name == device_name:
+                            suggested_object_id = entity.name
+                        else:
+                            suggested_object_id = f"{device_name} {entity.name}"
                 if not suggested_object_id:
                     suggested_object_id = entity.name
 
