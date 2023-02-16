@@ -2077,6 +2077,9 @@ python-kasa==0.5.0
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
+# homeassistant.components.matter
+python-matter-server==2.1.0
+
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
 
