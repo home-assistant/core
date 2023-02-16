@@ -1462,13 +1462,18 @@ async def test_reload_entry_with_restored_subscriptions(
     await hass.async_block_till_done()
 
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload")
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(calls) == 2
     assert calls[0].topic == "test-topic"
     assert calls[0].payload == "test-payload"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload"
+    calls.clear()
 
     # Reload the entry
     config_yaml_new = {}
@@ -1477,11 +1482,14 @@ async def test_reload_entry_with_restored_subscriptions(
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload2")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload2")
 
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].topic == "test-topic"
-    assert calls[1].payload == "test-payload2"
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload2"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload2"
 
 
 async def test_initial_setup_logs_error(
