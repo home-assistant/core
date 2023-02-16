@@ -682,7 +682,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     end_time_ts = end_time.timestamp()
 
     # Compute last hour's average, min, max
-    summary: dict[str, StatisticDataTimestamp] = {}
+    summary: dict[int, StatisticDataTimestamp] = {}
     stmt = _compile_hourly_statistics_summary_mean_stmt(start_time_ts, end_time_ts)
     stats = execute_stmt_lambda_element(session, stmt)
 
@@ -720,8 +720,10 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
                 }
 
     # Insert compiled hourly statistics in the database
-    for metadata_id, summary_item in summary.items():
-        session.add(Statistics.from_stats_ts(metadata_id, summary_item))
+    session.add_all(
+        Statistics.from_stats_ts(metadata_id, summary_item)
+        for metadata_id, summary_item in summary.items()
+    )
 
 
 @retryable_database_job("statistics")
