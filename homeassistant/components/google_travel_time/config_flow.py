@@ -69,7 +69,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     user_input[CONF_DEPARTURE_TIME] = time
             return self.async_create_entry(
                 title="",
-                data={k: v for k, v in user_input.items() if v not in (None, "")},
+                data=user_input,
             )
 
         if CONF_ARRIVAL_TIME in self.config_entry.options:
@@ -99,7 +99,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(CONF_TIME_TYPE, default=default_time_type): vol.In(
                         TIME_TYPES
                     ),
-                    vol.Optional(CONF_TIME, default=default_time): cv.string,
+                    vol.Optional(CONF_TIME, default=default_time): vol.Maybe(cv.string),
                     vol.Optional(
                         CONF_TRAFFIC_MODEL,
                         default=self.config_entry.options.get(CONF_TRAFFIC_MODEL),
