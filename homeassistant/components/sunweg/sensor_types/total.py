@@ -36,6 +36,7 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        never_resets=True,
     ),
     SunWEGSensorEntityDescription(
         key="kwh_per_kwp",

@@ -28,6 +28,7 @@ INVERTER_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         precision=1,
         state_class=SensorStateClass.TOTAL,
+        never_resets=True,
     ),
     SunWEGSensorEntityDescription(
         key="inverter_frequency",
