@@ -17,12 +17,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -58,8 +58,8 @@ SENSOR_TYPES = {
         key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:wifi",
     ),
     "ssid": SensorEntityDescription(
         key="ssid",
@@ -431,6 +431,8 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
             sensor_data = await self.async_get_last_sensor_data()
             if sensor_data is not None:
                 self._value = sensor_data.native_value
+            else:
+                await self.coordinator.async_request_refresh()
 
     @callback
     def async_update_device(self) -> None:

@@ -34,9 +34,6 @@ async def test_initial_state(hass: HomeAssistant):
     assert state.attributes["friendly_name"] == entity.unique_id
     assert state.attributes["icon"] == "mdi:string-lights"
 
-    # Validates that custom properties of the API device_info are propagated through attributes
-    assert state.attributes["uuid"] == entity.unique_id
-
     assert entity.original_name == entity.unique_id
     assert entity.original_icon == "mdi:string-lights"
 
@@ -292,8 +289,7 @@ async def test_turn_off(hass: HomeAssistant):
 
 
 async def test_update_name(hass: HomeAssistant):
-    """
-    Validate device's name update behavior.
+    """Validate device's name update behavior.
 
     Validate that if device name is changed from the Twinkly app,
     then the name of the entity is updated and it's also persisted,

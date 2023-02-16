@@ -29,7 +29,7 @@ DAY3 = datetime(2020, 4, 21, tzinfo=dt_util.UTC)
 
 
 @pytest.mark.parametrize(
-    "now,sign,element,modality",
+    ("now", "sign", "element", "modality"),
     [
         (DAY1, SIGN_SCORPIO, ELEMENT_WATER, MODALITY_FIXED),
         (DAY2, SIGN_ARIES, ELEMENT_FIRE, MODALITY_CARDINAL),

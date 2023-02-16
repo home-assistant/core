@@ -17,10 +17,10 @@ from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
     UnitOfLength,
-    UnitOfPrecipitationDepth,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -248,7 +248,8 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         metric_unit=UnitOfLength.METERS,
         us_customary_unit=UnitOfLength.FEET,
-        value_fn=lambda data, unit: round(cast(float, data[unit][ATTR_VALUE])),
+        value_fn=lambda data, unit: cast(float, data[unit][ATTR_VALUE]),
+        suggested_display_precision=0,
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",
@@ -290,18 +291,20 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Precipitation",
-        device_class=SensorDeviceClass.PRECIPITATION,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         name="Precipitation",
         state_class=SensorStateClass.MEASUREMENT,
-        metric_unit=UnitOfPrecipitationDepth.MILLIMETERS,
-        us_customary_unit=UnitOfPrecipitationDepth.INCHES,
+        metric_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        us_customary_unit=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         value_fn=lambda data, unit: cast(float, data[unit][ATTR_VALUE]),
         attr_fn=lambda data: {"type": data["PrecipitationType"]},
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
+        device_class=SensorDeviceClass.ENUM,
         icon="mdi:gauge",
         name="Pressure tendency",
+        options=["falling", "rising", "steady"],
         translation_key="pressure_tendency",
         value_fn=lambda data, _: cast(str, data["LocalizedText"]).lower(),
     ),
@@ -452,7 +455,7 @@ def _get_sensor_data(
         return sensors[ATTR_FORECAST][forecast_day][kind]
 
     if kind == "Precipitation":
-        return sensors["PrecipitationSummary"][kind]
+        return sensors["PrecipitationSummary"]["PastHour"]
 
     return sensors[kind]
 

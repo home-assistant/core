@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.binary_sensor import DOMAIN
@@ -116,7 +116,9 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     )
 
 
-async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_return_code(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test setting the state with a template."""
     await setup_test_entity(
         hass,

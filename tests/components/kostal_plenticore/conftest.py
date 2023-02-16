@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kostal.plenticore import MeData, VersionData
+from pykoplenti import MeData, VersionData
 import pytest
 
 from homeassistant.components.kostal_plenticore.helper import Plenticore

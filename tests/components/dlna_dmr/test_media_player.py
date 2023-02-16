@@ -71,6 +71,7 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
@@ -434,7 +435,7 @@ async def test_available_device(
     assert device.name == "device_name"
 
     # Check entity state gets updated when device changes state
-    for (dev_state, ent_state) in [
+    for dev_state, ent_state in [
         (None, MediaPlayerState.ON),
         (TransportState.STOPPED, MediaPlayerState.IDLE),
         (TransportState.PLAYING, MediaPlayerState.PLAYING),
@@ -674,7 +675,9 @@ async def test_play_media_stopped(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
@@ -706,7 +709,9 @@ async def test_play_media_playing(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
@@ -739,7 +744,9 @@ async def test_play_media_no_autoplay(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
         },
@@ -770,7 +777,9 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock song",
@@ -800,7 +809,9 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/123.mkv",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/123.mkv"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock show",
@@ -833,7 +844,9 @@ async def test_play_media_local_source(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-            mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+            ),
         },
         blocking=True,
     )
@@ -888,7 +901,9 @@ async def test_play_media_didl_metadata(
             {
                 ATTR_ENTITY_ID: mock_entity_id,
                 mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-                mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                    "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                ),
             },
             blocking=True,
         )
@@ -987,7 +1002,10 @@ async def test_shuffle_repeat_modes(
 
 
 async def test_browse_media(
-    hass: HomeAssistant, hass_ws_client, dmr_device_mock: Mock, mock_entity_id: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
 ) -> None:
     """Test the async_browse_media method."""
     # Based on cast's test_entity_browse_media
@@ -1011,7 +1029,9 @@ async def test_browse_media(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1090,7 +1110,7 @@ async def test_browse_media(
 
 async def test_browse_media_unfiltered(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
     mock_entity_id: str,
@@ -1104,7 +1124,9 @@ async def test_browse_media_unfiltered(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1280,7 +1302,9 @@ async def test_unavailable_device(
             mp_const.SERVICE_PLAY_MEDIA,
             {
                 mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                    "http://198.51.100.20:8200/MediaItems/17621.mp3"
+                ),
                 mp_const.ATTR_MEDIA_ENQUEUE: False,
             },
         ),

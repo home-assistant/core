@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 import logging
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
@@ -34,6 +34,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     PRESSURE_SENSORS,
     SIGNAL_STRENGTH_SENSORS,
     TEMPERATURE_SENSORS,
+    UNIT_A_WEIGHTED_DECIBELS,
     UNIT_AMPERE as SENSOR_UNIT_AMPERE,
     UNIT_BTU_H,
     UNIT_CELSIUS,
@@ -52,6 +53,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     UNIT_INCHES_PER_HOUR,
     UNIT_KILOGRAM,
     UNIT_KILOHERTZ,
+    UNIT_KILOPASCAL,
     UNIT_LITER,
     UNIT_LUX,
     UNIT_M_S,
@@ -69,6 +71,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     UNIT_RSSI,
     UNIT_SECOND,
     UNIT_SYSTOLIC,
+    UNIT_UV_INDEX,
     UNIT_VOLT as SENSOR_UNIT_VOLT,
     UNIT_WATT as SENSOR_UNIT_WATT,
     UNIT_WATT_PER_SQUARE_METER,
@@ -94,8 +97,8 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UV_INDEX,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -105,6 +108,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -134,7 +138,7 @@ from .const import (
 )
 from .helpers import ZwaveValueID
 
-METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
+METER_DEVICE_CLASS_MAP: dict[str, list[MeterScaleType]] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_METER_TYPES,
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: ENERGY_TOTAL_INCREASING_METER_TYPES,
@@ -142,7 +146,7 @@ METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
     ENTITY_DESC_KEY_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
 }
 
-MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
+MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, list[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_CO: CO_SENSORS,
     ENTITY_DESC_KEY_CO2: CO2_SENSORS,
     ENTITY_DESC_KEY_CURRENT: CURRENT_SENSORS,
@@ -156,7 +160,7 @@ MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_SENSORS,
 }
 
-METER_UNIT_MAP: dict[str, set[MeterScaleType]] = {
+METER_UNIT_MAP: dict[str, list[MeterScaleType]] = {
     UnitOfElectricCurrent.AMPERE: METER_UNIT_AMPERE,
     UnitOfVolume.CUBIC_FEET: UNIT_CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS: METER_UNIT_CUBIC_METER,
@@ -166,7 +170,7 @@ METER_UNIT_MAP: dict[str, set[MeterScaleType]] = {
     UnitOfPower.WATT: METER_UNIT_WATT,
 }
 
-MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
+MULTILEVEL_SENSOR_UNIT_MAP: dict[str, list[MultilevelSensorScaleType]] = {
     UnitOfElectricCurrent.AMPERE: SENSOR_UNIT_AMPERE,
     UnitOfPower.BTU_PER_HOUR: UNIT_BTU_H,
     UnitOfTemperature.CELSIUS: UNIT_CELSIUS,
@@ -174,17 +178,19 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: UNIT_CUBIC_FEET_PER_MINUTE,
     UnitOfVolume.CUBIC_METERS: SENSOR_UNIT_CUBIC_METER,
     UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: UNIT_CUBIC_METER_PER_HOUR,
-    SIGNAL_STRENGTH_DECIBELS: UNIT_DECIBEL,
+    UnitOfSoundPressure.DECIBEL: UNIT_DECIBEL,
+    UnitOfSoundPressure.WEIGHTED_DECIBEL_A: UNIT_A_WEIGHTED_DECIBELS,
     DEGREE: UNIT_DEGREES,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: {
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: [
         *UNIT_DENSITY,
         *UNIT_MICROGRAM_PER_CUBIC_METER,
-    },
+    ],
     UnitOfTemperature.FAHRENHEIT: UNIT_FAHRENHEIT,
     UnitOfLength.FEET: UNIT_FEET,
     UnitOfVolume.GALLONS: UNIT_GALLONS,
     UnitOfFrequency.HERTZ: UNIT_HERTZ,
     UnitOfPressure.INHG: UNIT_INCHES_OF_MERCURY,
+    UnitOfPressure.KPA: UNIT_KILOPASCAL,
     UnitOfVolumetricFlux.INCHES_PER_HOUR: UNIT_INCHES_PER_HOUR,
     UnitOfMass.KILOGRAMS: UNIT_KILOGRAM,
     UnitOfFrequency.KILOHERTZ: UNIT_KILOHERTZ,
@@ -197,7 +203,7 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     UnitOfSpeed.MILES_PER_HOUR: UNIT_MPH,
     UnitOfSpeed.METERS_PER_SECOND: UNIT_M_S,
     CONCENTRATION_PARTS_PER_MILLION: UNIT_PARTS_MILLION,
-    PERCENTAGE: {*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI},
+    PERCENTAGE: [*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI],
     UnitOfMass.POUNDS: UNIT_POUNDS,
     UnitOfPressure.PSI: UNIT_POUND_PER_SQUARE_INCH,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT: UNIT_POWER_LEVEL,
@@ -206,6 +212,7 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     UnitOfElectricPotential.VOLT: SENSOR_UNIT_VOLT,
     UnitOfPower.WATT: SENSOR_UNIT_WATT,
     UnitOfIrradiance.WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
+    UV_INDEX: UNIT_UV_INDEX,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -218,8 +225,7 @@ class BaseDiscoverySchemaDataTemplate:
     static_data: Any | None = None
 
     def resolve_data(self, value: ZwaveValue) -> Any:
-        """
-        Resolve helper class data for a discovered value.
+        """Resolve helper class data for a discovered value.
 
         Can optionally be implemented by subclasses if input data needs to be
         transformed once discovered Value is available.
@@ -227,16 +233,14 @@ class BaseDiscoverySchemaDataTemplate:
         return {}
 
     def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue | None]:
-        """
-        Return list of all ZwaveValues resolved by helper that should be watched.
+        """Return list of all ZwaveValues resolved by helper that should be watched.
 
         Should be implemented by subclasses only if there are values to watch.
         """
         return []
 
     def value_ids_to_watch(self, resolved_data: Any) -> set[str]:
-        """
-        Return list of all Value IDs resolved by helper that should be watched.
+        """Return list of all Value IDs resolved by helper that should be watched.
 
         Not to be overwritten by subclasses.
         """
@@ -319,9 +323,9 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
         enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
         set_map: Mapping[
             str,
-            set[MultilevelSensorType]
-            | set[MultilevelSensorScaleType]
-            | set[MeterScaleType],
+            list[MultilevelSensorType]
+            | list[MultilevelSensorScaleType]
+            | list[MeterScaleType],
         ],
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
@@ -423,8 +427,7 @@ class FanValueMapping:
     speeds: list[tuple[int, int]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        """
-        Validate inputs.
+        """Validate inputs.
 
         These inputs are hardcoded in `discovery.py`, so these checks should
         only fail due to developer error.
@@ -460,8 +463,7 @@ class ConfigurableFanValueMappingDataTemplate(
     FanValueMappingDataTemplate,
     ConfigurableFanValueMappingValueMix,
 ):
-    """
-    Gets fan speeds based on a configuration value.
+    """Gets fan speeds based on a configuration value.
 
     Example:
       ZWaveDiscoverySchema(
@@ -490,7 +492,7 @@ class ConfigurableFanValueMappingDataTemplate(
     ) -> dict[str, ZwaveConfigurationValue | None]:
         """Resolve helper class data for a discovered value."""
         zwave_value = cast(
-            Union[ZwaveConfigurationValue, None],
+            ZwaveConfigurationValue | None,
             self._get_value_from_id(value.node, self.configuration_option),
         )
         return {"configuration_value": zwave_value}
@@ -540,8 +542,7 @@ class FixedFanValueMappingDataTemplate(
     FanValueMappingDataTemplate,
     FixedFanValueMappingValueMix,
 ):
-    """
-    Specifies a fixed set of properties for a fan.
+    """Specifies a fixed set of properties for a fan.
 
     Example:
       ZWaveDiscoverySchema(

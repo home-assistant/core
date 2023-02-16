@@ -61,10 +61,10 @@ WIRED_CONNECTION = (EventKey.WIRED_CLIENT_CONNECTED,)
 WIRELESS_CONNECTION = (
     EventKey.WIRELESS_CLIENT_CONNECTED,
     EventKey.WIRELESS_CLIENT_ROAM,
-    EventKey.WIRELESS_CLIENT_ROAMRADIO,
+    EventKey.WIRELESS_CLIENT_ROAM_RADIO,
     EventKey.WIRELESS_GUEST_CONNECTED,
     EventKey.WIRELESS_GUEST_ROAM,
-    EventKey.WIRELESS_GUEST_ROAMRADIO,
+    EventKey.WIRELESS_GUEST_ROAM_RADIO,
 )
 
 
@@ -136,6 +136,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller.register_platform_add_entities(
+        UnifiScannerEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    )
+
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
     @callback
@@ -152,35 +156,6 @@ async def async_setup_entry(
         )
 
     items_added()
-
-    @callback
-    def async_load_entities(description: UnifiEntityDescription) -> None:
-        """Load and subscribe to UniFi devices."""
-        entities: list[ScannerEntity] = []
-        api_handler = description.api_handler_fn(controller.api)
-
-        @callback
-        def async_create_entity(event: ItemEvent, obj_id: str) -> None:
-            """Create UniFi entity."""
-            if not description.allowed_fn(
-                controller, obj_id
-            ) or not description.supported_fn(controller.api, obj_id):
-                return
-
-            entity = UnifiScannerEntity(obj_id, controller, description)
-            if event == ItemEvent.ADDED:
-                async_add_entities([entity])
-                return
-            entities.append(entity)
-
-        for obj_id in api_handler:
-            async_create_entity(ItemEvent.CHANGED, obj_id)
-        async_add_entities(entities)
-
-        api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
-
-    for description in ENTITY_DESCRIPTIONS:
-        async_load_entities(description)
 
 
 @callback
@@ -297,7 +272,6 @@ class UniFiClientTracker(UniFiClientBase, ScannerEntity):
             self.client.last_updated == SOURCE_EVENT
             and not self._only_listen_to_data_source
         ):
-
             if (self.is_wired and self.client.event.key in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.key in WIRELESS_CONNECTION
             ):

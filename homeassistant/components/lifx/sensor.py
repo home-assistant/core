@@ -10,8 +10,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_RSSI, ATTR_ZONES, DOMAIN
@@ -101,7 +101,6 @@ class LIFXRssiSensor(LIFXSensorEntity, SensorEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._attr_native_unit_of_measurement = coordinator.rssi_uom
 

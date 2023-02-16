@@ -34,11 +34,8 @@ def config_schema_validate(withings_config) -> dict:
 
 def config_schema_assert_fail(withings_config) -> None:
     """Assert a schema config will fail."""
-    try:
+    with pytest.raises(vol.MultipleInvalid):
         config_schema_validate(withings_config)
-        assert False, "This line should not have run."
-    except vol.error.MultipleInvalid:
-        assert True
 
 
 def test_config_schema_basic_config() -> None:
@@ -110,11 +107,11 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["exception"],
+    "exception",
     [
-        [UnauthorizedException("401")],
-        [UnauthorizedException("401")],
-        [Exception("401, this is the message")],
+        UnauthorizedException("401"),
+        UnauthorizedException("401"),
+        Exception("401, this is the message"),
     ],
 )
 @patch("homeassistant.components.withings.common._RETRY_COEFFICIENT", 0)

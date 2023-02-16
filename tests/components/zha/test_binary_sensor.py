@@ -1,4 +1,4 @@
-"""Test zha binary sensor."""
+"""Test ZHA binary sensor."""
 from unittest.mock import patch
 
 import pytest
@@ -38,7 +38,7 @@ DEVICE_OCCUPANCY = {
 
 @pytest.fixture(autouse=True)
 def binary_sensor_platform_only():
-    """Only setup the binary_sensor and required base platforms to speed up tests."""
+    """Only set up the binary_sensor and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -76,7 +76,7 @@ async def async_test_iaszone_on_off(hass, cluster, entity_id):
 
 
 @pytest.mark.parametrize(
-    "device, on_off_test, cluster_name, reporting",
+    ("device", "on_off_test", "cluster_name", "reporting"),
     [
         (DEVICE_IAS, async_test_iaszone_on_off, "ias_zone", (0,)),
         # (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", (1,)),

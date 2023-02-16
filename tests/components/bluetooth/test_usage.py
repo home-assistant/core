@@ -1,11 +1,10 @@
 """Tests for the Bluetooth integration."""
-
-
 from unittest.mock import patch
 
 import bleak
 from bleak.backends.device import BLEDevice
 import bleak_retry_connector
+import pytest
 
 from homeassistant.components.bluetooth.usage import (
     install_multiple_bleak_catcher,
@@ -15,6 +14,7 @@ from homeassistant.components.bluetooth.wrappers import (
     HaBleakClientWrapper,
     HaBleakScannerWrapper,
 )
+from homeassistant.core import HomeAssistant
 
 from . import _get_manager
 
@@ -23,7 +23,7 @@ MOCK_BLE_DEVICE = BLEDevice(
 )
 
 
-async def test_multiple_bleak_scanner_instances(hass):
+async def test_multiple_bleak_scanner_instances(hass: HomeAssistant) -> None:
     """Test creating multiple BleakScanners without an integration."""
     install_multiple_bleak_catcher()
 
@@ -39,7 +39,9 @@ async def test_multiple_bleak_scanner_instances(hass):
     assert not isinstance(instance, HaBleakScannerWrapper)
 
 
-async def test_wrapping_bleak_client(hass, enable_bluetooth):
+async def test_wrapping_bleak_client(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test we wrap BleakClient."""
     install_multiple_bleak_catcher()
 
@@ -54,7 +56,9 @@ async def test_wrapping_bleak_client(hass, enable_bluetooth):
     assert not isinstance(instance, HaBleakClientWrapper)
 
 
-async def test_bleak_client_reports_with_address(hass, enable_bluetooth, caplog):
+async def test_bleak_client_reports_with_address(
+    hass: HomeAssistant, enable_bluetooth: None, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we report when we pass an address to BleakClient."""
     install_multiple_bleak_catcher()
 
@@ -80,8 +84,8 @@ async def test_bleak_client_reports_with_address(hass, enable_bluetooth, caplog)
 
 
 async def test_bleak_retry_connector_client_reports_with_address(
-    hass, enable_bluetooth, caplog
-):
+    hass: HomeAssistant, enable_bluetooth: None, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we report when we pass an address to BleakClientWithServiceCache."""
     install_multiple_bleak_catcher()
 

@@ -70,7 +70,7 @@ async def test_if_fires_using_at(hass, calls):
 
 
 @pytest.mark.parametrize(
-    "has_date,has_time", [(True, True), (True, False), (False, True)]
+    ("has_date", "has_time"), [(True, True), (True, False), (False, True)]
 )
 async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time):
     """Test for firing at input_datetime."""

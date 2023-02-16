@@ -53,7 +53,7 @@ async def test_config_entry_withings_api(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["user_id", "arg_user_id", "arg_appli", "expected_code"],
+    ("user_id", "arg_user_id", "arg_appli", "expected_code"),
     [
         [0, 0, NotifyAppli.WEIGHT.value, 0],  # Success
         [0, None, 1, 0],  # Success, we ignore the user_id.
@@ -163,7 +163,6 @@ async def test_data_manager_webhook_subscription(
         WebhookConfig(id="1234", url="http://localhost/api/webhook/1234", enabled=True),
     )
 
-    # pylint: disable=protected-access
     data_manager._notify_subscribe_delay = datetime.timedelta(seconds=0)
     data_manager._notify_unsubscribe_delay = datetime.timedelta(seconds=0)
 
@@ -211,27 +210,21 @@ async def test_data_manager_webhook_subscription(
     api.notify_subscribe.assert_any_call(
         data_manager.webhook_config.url, NotifyAppli.SLEEP
     )
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.USER
         )
-        assert False
-    except AssertionError:
-        pass
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.BED_IN
         )
-        assert False
-    except AssertionError:
-        pass
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.BED_OUT
         )
-        assert False
-    except AssertionError:
-        pass
 
     # Test unsubscribing.
     await data_manager.async_unsubscribe_webhook()

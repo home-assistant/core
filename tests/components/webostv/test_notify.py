@@ -11,6 +11,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
@@ -116,7 +117,7 @@ async def test_icon_not_found(hass, caplog, client, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "side_effect,error",
+    ("side_effect", "error"),
     [
         (WebOsTvPairError, "Pairing with TV failed"),
         (ConnectionRefusedError, "TV unreachable"),
@@ -146,7 +147,9 @@ async def test_connection_errors(hass, caplog, client, monkeypatch, side_effect,
     assert error in caplog.text
 
 
-async def test_no_discovery_info(hass, caplog):
+async def test_no_discovery_info(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert NOTIFY_DOMAIN not in hass.config.components
     assert await async_setup_component(
