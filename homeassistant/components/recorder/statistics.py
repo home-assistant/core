@@ -2051,6 +2051,9 @@ def _sorted_statistics_to_dict(  # noqa: C901
             for stat in tmp:
                 stats_by_meta_id[stat[metadata_id_idx]].insert(0, stat)
 
+    # Figure out which fields we need to extract from the SQL result
+    # and which indices they have in the result so we can avoid the overhead
+    # of doing a dict lookup for each row
     if _want_mean := "mean" in types:
         mean_idx = field_map["mean"]
     if _want_min := "min" in types:
