@@ -462,7 +462,7 @@ TWO_MONTH_SIMPLE = (
 
 
 @pytest.mark.parametrize(
-    "start,months",
+    ("start", "months"),
     [ONE_MONTH_SIMPLE, TWO_MONTH_SIMPLE],
 )
 @freeze_time("2022-09-15 03:00:00-07:00")
@@ -534,7 +534,7 @@ TWO_MONTH_TIMEZONE = (
 
 
 @pytest.mark.parametrize(
-    "start,months",
+    ("start", "months"),
     [ONE_MONTH_TIMEZONE, TWO_MONTH_TIMEZONE],
 )
 @freeze_time("2022-08-31 21:00:00-07:00")

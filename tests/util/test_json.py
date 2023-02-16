@@ -15,6 +15,7 @@ from homeassistant.helpers.json import JSONEncoder as DefaultHASSJSONEncoder
 from homeassistant.util.json import (
     SerializationError,
     find_paths_unserializable_data,
+    json_loads_object,
     load_json,
     save_json,
 )
@@ -22,7 +23,7 @@ from homeassistant.util.json import (
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
 TEST_JSON_B = {"a": "one", "B": 2}
-# Test data that can not be loaded as JSON
+# Test data that cannot be loaded as JSON
 TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 TMP_DIR = None
 
@@ -44,7 +45,7 @@ def _path_for(leaf_name):
     return os.path.join(TMP_DIR, f"{leaf_name}.json")
 
 
-def test_save_and_load():
+def test_save_and_load() -> None:
     """Test saving and loading back."""
     fname = _path_for("test1")
     save_json(fname, TEST_JSON_A)
@@ -52,7 +53,7 @@ def test_save_and_load():
     assert data == TEST_JSON_A
 
 
-def test_save_and_load_int_keys():
+def test_save_and_load_int_keys() -> None:
     """Test saving and loading back stringifies the keys."""
     fname = _path_for("test1")
     save_json(fname, {1: "a", 2: "b"})
@@ -60,7 +61,7 @@ def test_save_and_load_int_keys():
     assert data == {"1": "a", "2": "b"}
 
 
-def test_save_and_load_private():
+def test_save_and_load_private() -> None:
     """Test we can load private files and that they are protected."""
     fname = _path_for("test2")
     save_json(fname, TEST_JSON_A, private=True)
@@ -80,7 +81,7 @@ def test_overwrite_and_reload(atomic_writes):
     assert data == TEST_JSON_B
 
 
-def test_save_bad_data():
+def test_save_bad_data() -> None:
     """Test error from trying to save unserializable data."""
 
     class CannotSerializeMe:
@@ -94,7 +95,7 @@ def test_save_bad_data():
     )
 
 
-def test_load_bad_data():
+def test_load_bad_data() -> None:
     """Test error from trying to load unserialisable data."""
     fname = _path_for("test5")
     with open(fname, "w") as fh:
@@ -103,7 +104,7 @@ def test_load_bad_data():
         load_json(fname)
 
 
-def test_custom_encoder():
+def test_custom_encoder() -> None:
     """Test serializing with a custom encoder."""
 
     class MockJSONEncoder(JSONEncoder):
@@ -119,7 +120,7 @@ def test_custom_encoder():
     assert data == "9"
 
 
-def test_default_encoder_is_passed():
+def test_default_encoder_is_passed() -> None:
     """Test we use orjson if they pass in the default encoder."""
     fname = _path_for("test6")
     with patch(
@@ -134,7 +135,7 @@ def test_default_encoder_is_passed():
     assert data == {"any": [1]}
 
 
-def test_find_unserializable_data():
+def test_find_unserializable_data() -> None:
     """Find unserializeable data."""
     assert find_paths_unserializable_data(1) == {}
     assert find_paths_unserializable_data([1, 2]) == {}
@@ -191,3 +192,40 @@ def test_find_unserializable_data():
         BadData(),
         dump=partial(dumps, cls=MockJSONEncoder),
     ) == {"$(BadData).bla": bad_data}
+
+
+def test_json_loads_object() -> None:
+    """Test json_loads_object validates result."""
+    assert json_loads_object('{"c":1.2}') == {"c": 1.2}
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'list'>"
+    ):
+        json_loads_object("[]")
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'bool'>"
+    ):
+        json_loads_object("true")
+    with pytest.raises(
+        ValueError, match="Expected JSON to be parsed as a dict got <class 'NoneType'>"
+    ):
+        json_loads_object("null")
+
+
+async def test_deprecated_test_find_unserializable_data(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deprecated test_find_unserializable_data logs a warning."""
+    find_paths_unserializable_data(1)
+    assert (
+        "uses find_paths_unserializable_data from homeassistant.util.json"
+        in caplog.text
+    )
+    assert "should be updated to use homeassistant.helpers.json module" in caplog.text
+
+
+async def test_deprecated_save_json(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated save_json logs a warning."""
+    fname = _path_for("test1")
+    save_json(fname, TEST_JSON_A)
+    assert "uses save_json from homeassistant.util.json" in caplog.text
+    assert "should be updated to use homeassistant.helpers.json module" in caplog.text

@@ -1,5 +1,4 @@
 """Test different accessory types: Sensors."""
-
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
@@ -33,11 +32,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
-async def test_temperature(hass, hk_driver):
+async def test_temperature(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.temperature"
 
@@ -79,7 +78,7 @@ async def test_temperature(hass, hk_driver):
     assert acc.char_temp.value == 24
 
 
-async def test_humidity(hass, hk_driver):
+async def test_humidity(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.humidity"
 
@@ -107,7 +106,7 @@ async def test_humidity(hass, hk_driver):
     assert acc.char_humidity.value == 0
 
 
-async def test_air_quality(hass, hk_driver):
+async def test_air_quality(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality"
 
@@ -139,7 +138,7 @@ async def test_air_quality(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_pm10(hass, hk_driver):
+async def test_pm10(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_pm10"
 
@@ -186,7 +185,7 @@ async def test_pm10(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_pm25(hass, hk_driver):
+async def test_pm25(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_pm25"
 
@@ -233,7 +232,7 @@ async def test_pm25(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_no2(hass, hk_driver):
+async def test_no2(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_nitrogen_dioxide"
 
@@ -282,7 +281,7 @@ async def test_no2(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_voc(hass, hk_driver):
+async def test_voc(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.air_quality_volatile_organic_compounds"
 
@@ -331,7 +330,7 @@ async def test_voc(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
-async def test_co(hass, hk_driver):
+async def test_co(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.co"
 
@@ -371,7 +370,7 @@ async def test_co(hass, hk_driver):
     assert acc.char_detected.value == 0
 
 
-async def test_co2(hass, hk_driver):
+async def test_co2(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.co2"
 
@@ -411,7 +410,7 @@ async def test_co2(hass, hk_driver):
     assert acc.char_detected.value == 0
 
 
-async def test_light(hass, hk_driver):
+async def test_light(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.light"
 
@@ -439,7 +438,7 @@ async def test_light(hass, hk_driver):
     assert acc.char_light.value == 0.0001
 
 
-async def test_binary(hass, hk_driver):
+async def test_binary(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "binary_sensor.opening"
 
@@ -476,7 +475,7 @@ async def test_binary(hass, hk_driver):
     assert acc.char_detected.value == 0
 
 
-async def test_motion_uses_bool(hass, hk_driver):
+async def test_motion_uses_bool(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "binary_sensor.motion"
 
@@ -523,7 +522,7 @@ async def test_motion_uses_bool(hass, hk_driver):
     assert acc.char_detected.value is False
 
 
-async def test_binary_device_classes(hass, hk_driver):
+async def test_binary_device_classes(hass: HomeAssistant, hk_driver) -> None:
     """Test if services and characteristics are assigned correctly."""
     entity_id = "binary_sensor.demo"
     aid = 1
@@ -538,7 +537,7 @@ async def test_binary_device_classes(hass, hk_driver):
         assert acc.char_detected.display_name == char
 
 
-async def test_sensor_restore(hass, hk_driver, events):
+async def test_sensor_restore(hass: HomeAssistant, hk_driver, events) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
@@ -569,7 +568,7 @@ async def test_sensor_restore(hass, hk_driver, events):
     assert acc.category == 10
 
 
-async def test_bad_name(hass, hk_driver):
+async def test_bad_name(hass: HomeAssistant, hk_driver) -> None:
     """Test an entity with a bad name."""
     entity_id = "sensor.humidity"
 
@@ -586,7 +585,7 @@ async def test_bad_name(hass, hk_driver):
     assert acc.display_name == "--Humid--"
 
 
-async def test_empty_name(hass, hk_driver):
+async def test_empty_name(hass: HomeAssistant, hk_driver) -> None:
     """Test an entity with a empty name."""
     entity_id = "sensor.humidity"
 

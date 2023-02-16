@@ -254,17 +254,15 @@ class DriverEvents:
                 self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
-        c_node_id = controller.own_node_id
-        controller_node = controller.nodes.get(c_node_id) if c_node_id else None
-        if controller_node:
-            await self.controller_events.async_on_node_added(controller_node)
+        if controller.own_node:
+            await self.controller_events.async_on_node_added(controller.own_node)
 
         # run discovery on all other ready nodes
         await asyncio.gather(
             *(
                 self.controller_events.async_on_node_added(node)
                 for node in controller.nodes.values()
-                if controller_node is None or node != controller_node
+                if node != controller.own_node
             )
         )
 
@@ -396,13 +394,8 @@ class ControllerEvents:
         via_device_id = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
-        if (
-            controller.own_node_id is not None
-            and controller.own_node_id != node.node_id
-        ):
-            via_device_id = get_device_id(
-                driver, controller.nodes[controller.own_node_id]
-            )
+        if controller.own_node and controller.own_node != node:
+            via_device_id = get_device_id(driver, controller.own_node)
 
         # Replace the device if it can be determined that this node is not the
         # same product as it was previously.
@@ -525,7 +518,7 @@ class NodeEvents:
         # Create a firmware update entity for each non-controller device that
         # supports firmware updates
         if not node.is_controller_node and any(
-            CommandClass.FIRMWARE_UPDATE_MD.value == cc.id
+            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
             for cc in node.command_classes
         ):
             await self.controller_events.driver_events.async_setup_platform(

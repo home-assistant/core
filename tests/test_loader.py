@@ -3,14 +3,15 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import core, loader
+from homeassistant import loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
+from homeassistant.core import HomeAssistant, callback
 
 from .common import MockModule, mock_integration
 
 
-async def test_component_dependencies(hass):
+async def test_component_dependencies(hass: HomeAssistant) -> None:
     """Test if we can get the proper load order of components."""
     mock_integration(hass, MockModule("mod1"))
     mock_integration(hass, MockModule("mod2", ["mod1"]))
@@ -41,21 +42,21 @@ async def test_component_dependencies(hass):
         await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
 
-def test_component_loader(hass):
+def test_component_loader(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     assert components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
     assert hass.components.http.CONFIG_SCHEMA is http.CONFIG_SCHEMA
 
 
-def test_component_loader_non_existing(hass):
+def test_component_loader_non_existing(hass: HomeAssistant) -> None:
     """Test loading components."""
     components = loader.Components(hass)
     with pytest.raises(ImportError):
         components.non_existing
 
 
-async def test_component_wrapper(hass):
+async def test_component_wrapper(hass: HomeAssistant) -> None:
     """Test component wrapper."""
     components = loader.Components(hass)
     components.persistent_notification.async_create("message")
@@ -63,13 +64,13 @@ async def test_component_wrapper(hass):
     assert len(hass.states.async_entity_ids("persistent_notification")) == 1
 
 
-async def test_helpers_wrapper(hass):
+async def test_helpers_wrapper(hass: HomeAssistant) -> None:
     """Test helpers wrapper."""
     helpers = loader.Helpers(hass)
 
     result = []
 
-    @core.callback
+    @callback
     def discovery_callback(service, discovered):
         """Handle discovery callback."""
         result.append(discovered)
@@ -138,14 +139,14 @@ async def test_custom_integration_version_not_valid(
     ) in caplog.text
 
 
-async def test_get_integration(hass):
+async def test_get_integration(hass: HomeAssistant) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "hue")
     assert hue == integration.get_component()
     assert hue_light == integration.get_platform("light")
 
 
-async def test_get_integration_exceptions(hass):
+async def test_get_integration_exceptions(hass: HomeAssistant) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "hue")
 
@@ -174,7 +175,7 @@ async def test_get_integration_custom_component(hass, enable_custom_integrations
     assert integration.name == "Test Package"
 
 
-def test_integration_properties(hass):
+def test_integration_properties(hass: HomeAssistant) -> None:
     """Test integration properties."""
     integration = loader.Integration(
         hass,
@@ -293,7 +294,7 @@ def test_integration_properties(hass):
     assert integration.ssdp is None
 
 
-async def test_integrations_only_once(hass):
+async def test_integrations_only_once(hass: HomeAssistant) -> None:
     """Test that we load integrations only once."""
     int_1 = hass.async_create_task(loader.async_get_integration(hass, "hue"))
     int_2 = hass.async_create_task(loader.async_get_integration(hass, "hue"))
@@ -478,7 +479,7 @@ async def test_get_custom_components(hass, enable_custom_integrations):
         mock_get.assert_called_once_with(hass)
 
 
-async def test_get_config_flows(hass):
+async def test_get_config_flows(hass: HomeAssistant) -> None:
     """Verify that custom components with config_flow are available."""
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)
@@ -493,7 +494,7 @@ async def test_get_config_flows(hass):
         assert "test_1" not in flows
 
 
-async def test_get_zeroconf(hass):
+async def test_get_zeroconf(hass: HomeAssistant) -> None:
     """Verify that custom components with zeroconf are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration_with_zeroconf_matcher(
@@ -512,7 +513,7 @@ async def test_get_zeroconf(hass):
         ]
 
 
-async def test_get_application_credentials(hass):
+async def test_get_application_credentials(hass: HomeAssistant) -> None:
     """Verify that custom components with application_credentials are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration_with_application_credentials(
@@ -529,7 +530,7 @@ async def test_get_application_credentials(hass):
         assert "test_1" not in application_credentials
 
 
-async def test_get_zeroconf_back_compat(hass):
+async def test_get_zeroconf_back_compat(hass: HomeAssistant) -> None:
     """Verify that custom components with zeroconf are found and legacy matchers are converted."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration_with_legacy_zeroconf_matcher(
@@ -556,7 +557,7 @@ async def test_get_zeroconf_back_compat(hass):
         ]
 
 
-async def test_get_bluetooth(hass):
+async def test_get_bluetooth(hass: HomeAssistant) -> None:
     """Verify that custom components with bluetooth are found."""
     test_1_integration = _get_test_integration_with_bluetooth_matcher(
         hass, "test_1", True
@@ -576,7 +577,7 @@ async def test_get_bluetooth(hass):
         ]
 
 
-async def test_get_dhcp(hass):
+async def test_get_dhcp(hass: HomeAssistant) -> None:
     """Verify that custom components with dhcp are found."""
     test_1_integration = _get_test_integration_with_dhcp_matcher(hass, "test_1", True)
 
@@ -593,7 +594,7 @@ async def test_get_dhcp(hass):
         ]
 
 
-async def test_get_usb(hass):
+async def test_get_usb(hass: HomeAssistant) -> None:
     """Verify that custom components with usb matchers are found."""
     test_1_integration = _get_test_integration_with_usb_matcher(hass, "test_1", True)
 
@@ -611,7 +612,7 @@ async def test_get_usb(hass):
         ]
 
 
-async def test_get_homekit(hass):
+async def test_get_homekit(hass: HomeAssistant) -> None:
     """Verify that custom components with homekit are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration(hass, "test_2", True)
@@ -622,11 +623,11 @@ async def test_get_homekit(hass):
             "test_2": test_2_integration,
         }
         homekit = await loader.async_get_homekit(hass)
-        assert homekit["test_1"] == "test_1"
-        assert homekit["test_2"] == "test_2"
+        assert homekit["test_1"] == loader.HomeKitDiscoveredIntegration("test_1", True)
+        assert homekit["test_2"] == loader.HomeKitDiscoveredIntegration("test_2", True)
 
 
-async def test_get_ssdp(hass):
+async def test_get_ssdp(hass: HomeAssistant) -> None:
     """Verify that custom components with ssdp are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration(hass, "test_2", True)
@@ -641,7 +642,7 @@ async def test_get_ssdp(hass):
         assert ssdp["test_2"] == [{"manufacturer": "test_2", "modelName": "test_2"}]
 
 
-async def test_get_mqtt(hass):
+async def test_get_mqtt(hass: HomeAssistant) -> None:
     """Verify that custom components with MQTT are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration(hass, "test_2", True)
@@ -656,7 +657,7 @@ async def test_get_mqtt(hass):
         assert mqtt["test_2"] == ["test_2/discovery"]
 
 
-async def test_get_custom_components_safe_mode(hass):
+async def test_get_custom_components_safe_mode(hass: HomeAssistant) -> None:
     """Test that we get empty custom components in safe mode."""
     hass.config.safe_mode = True
     assert await loader.async_get_custom_components(hass) == {}
@@ -683,13 +684,13 @@ async def test_custom_integration_missing(hass, caplog):
             await loader.async_get_integration(hass, "test1")
 
 
-async def test_validation(hass):
+async def test_validation(hass: HomeAssistant) -> None:
     """Test we raise if invalid domain passed in."""
     with pytest.raises(ValueError):
         await loader.async_get_integration(hass, "some.thing")
 
 
-async def test_loggers(hass):
+async def test_loggers(hass: HomeAssistant) -> None:
     """Test we can fetch the loggers from the integration."""
     name = "dummy"
     integration = loader.Integration(

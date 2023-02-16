@@ -30,7 +30,7 @@ from .const import CONF_FAKE_AIN, CONF_FAKE_NAME, MOCK_CONFIG
 from tests.common import MockConfigEntry
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock):
+async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     """Test setup of integration."""
     assert await setup_config_entry(hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0])
     entries = hass.config_entries.async_entries()
@@ -46,7 +46,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -75,7 +75,7 @@ async def test_update_unique_id(
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
-):
+) -> None:
     """Test unique_id update of integration."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -99,7 +99,7 @@ async def test_update_unique_id(
 
 
 @pytest.mark.parametrize(
-    "entitydata,unique_id",
+    ("entitydata", "unique_id"),
     [
         (
             {
@@ -133,7 +133,7 @@ async def test_update_unique_id_no_change(
     fritz: Mock,
     entitydata: dict,
     unique_id: str,
-):
+) -> None:
     """Test unique_id is not updated of integration."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -156,7 +156,9 @@ async def test_update_unique_id_no_change(
     assert entity_migrated.unique_id == unique_id
 
 
-async def test_coordinator_update_after_reboot(hass: HomeAssistant, fritz: Mock):
+async def test_coordinator_update_after_reboot(
+    hass: HomeAssistant, fritz: Mock
+) -> None:
     """Test coordinator after reboot."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -176,7 +178,7 @@ async def test_coordinator_update_after_reboot(hass: HomeAssistant, fritz: Mock)
 
 async def test_coordinator_update_after_password_change(
     hass: HomeAssistant, fritz: Mock
-):
+) -> None:
     """Test coordinator after password change."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -194,7 +196,9 @@ async def test_coordinator_update_after_password_change(
     assert fritz().login.call_count == 2
 
 
-async def test_coordinator_update_when_unreachable(hass: HomeAssistant, fritz: Mock):
+async def test_coordinator_update_when_unreachable(
+    hass: HomeAssistant, fritz: Mock
+) -> None:
     """Test coordinator after reboot."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -208,7 +212,7 @@ async def test_coordinator_update_when_unreachable(hass: HomeAssistant, fritz: M
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
+async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
     """Test unload and remove of integration."""
     fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entity_id = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
@@ -247,7 +251,7 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     assert state is None
 
 
-async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant):
+async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when fritzbox is offline."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
@@ -268,7 +272,7 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_disable_smarthome_templates(hass: HomeAssistant, fritz: Mock):
+async def test_disable_smarthome_templates(hass: HomeAssistant, fritz: Mock) -> None:
     """Test smarthome templates are disabled."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,

@@ -13,6 +13,7 @@ from homeassistant.components.feedreader import (
     EVENT_FEEDREADER,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -76,7 +77,7 @@ def fixture_feed_storage():
         yield
 
 
-async def test_setup_one_feed(hass):
+async def test_setup_one_feed(hass: HomeAssistant) -> None:
     """Test the general setup of this component."""
     with patch(
         "homeassistant.components.feedreader.track_time_interval"
@@ -87,7 +88,7 @@ async def test_setup_one_feed(hass):
         track_method.assert_called_once_with(hass, mock.ANY, DEFAULT_SCAN_INTERVAL)
 
 
-async def test_setup_scan_interval(hass):
+async def test_setup_scan_interval(hass: HomeAssistant) -> None:
     """Test the setup of this component with scan interval."""
     with patch(
         "homeassistant.components.feedreader.track_time_interval"
@@ -98,13 +99,13 @@ async def test_setup_scan_interval(hass):
         track_method.assert_called_once_with(hass, mock.ANY, timedelta(seconds=60))
 
 
-async def test_setup_max_entries(hass):
+async def test_setup_max_entries(hass: HomeAssistant) -> None:
     """Test the setup of this component with max entries."""
     assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_3)
     await hass.async_block_till_done()
 
 
-async def test_feed(hass, events, feed_one_event):
+async def test_feed(hass: HomeAssistant, events, feed_one_event) -> None:
     """Test simple rss feed with valid data."""
     with patch(
         "feedparser.http.get",
@@ -127,7 +128,7 @@ async def test_feed(hass, events, feed_one_event):
     assert events[0].data.published_parsed.tm_min == 10
 
 
-async def test_atom_feed(hass, events, feed_atom_event):
+async def test_atom_feed(hass: HomeAssistant, events, feed_atom_event) -> None:
     """Test simple atom feed with valid data."""
     with patch(
         "feedparser.http.get",
@@ -150,7 +151,9 @@ async def test_atom_feed(hass, events, feed_atom_event):
     assert events[0].data.updated_parsed.tm_min == 30
 
 
-async def test_feed_updates(hass, events, feed_one_event, feed_two_event):
+async def test_feed_updates(
+    hass: HomeAssistant, events, feed_one_event, feed_two_event
+) -> None:
     """Test feed updates."""
     side_effect = [
         feed_one_event,
@@ -181,7 +184,9 @@ async def test_feed_updates(hass, events, feed_one_event, feed_two_event):
         assert len(events) == 2
 
 
-async def test_feed_default_max_length(hass, events, feed_21_events):
+async def test_feed_default_max_length(
+    hass: HomeAssistant, events, feed_21_events
+) -> None:
     """Test long feed beyond the default 20 entry limit."""
     with patch("feedparser.http.get", return_value=feed_21_events):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
@@ -192,7 +197,7 @@ async def test_feed_default_max_length(hass, events, feed_21_events):
     assert len(events) == 20
 
 
-async def test_feed_max_length(hass, events, feed_21_events):
+async def test_feed_max_length(hass: HomeAssistant, events, feed_21_events) -> None:
     """Test long feed beyond a configured 5 entry limit."""
     with patch("feedparser.http.get", return_value=feed_21_events):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_4)
@@ -203,7 +208,9 @@ async def test_feed_max_length(hass, events, feed_21_events):
     assert len(events) == 5
 
 
-async def test_feed_without_publication_date_and_title(hass, events, feed_three_events):
+async def test_feed_without_publication_date_and_title(
+    hass: HomeAssistant, events, feed_three_events
+) -> None:
     """Test simple feed with entry without publication date and title."""
     with patch("feedparser.http.get", return_value=feed_three_events):
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
@@ -214,7 +221,9 @@ async def test_feed_without_publication_date_and_title(hass, events, feed_three_
     assert len(events) == 3
 
 
-async def test_feed_with_unrecognized_publication_date(hass, events):
+async def test_feed_with_unrecognized_publication_date(
+    hass: HomeAssistant, events
+) -> None:
     """Test simple feed with entry with unrecognized publication date."""
     with patch(
         "feedparser.http.get", return_value=load_fixture_bytes("feedreader4.xml")
@@ -227,7 +236,7 @@ async def test_feed_with_unrecognized_publication_date(hass, events):
     assert len(events) == 1
 
 
-async def test_feed_invalid_data(hass, events):
+async def test_feed_invalid_data(hass: HomeAssistant, events) -> None:
     """Test feed with invalid data."""
     invalid_data = bytes("INVALID DATA", "utf-8")
     with patch("feedparser.http.get", return_value=invalid_data):
@@ -239,7 +248,9 @@ async def test_feed_invalid_data(hass, events):
     assert len(events) == 0
 
 
-async def test_feed_parsing_failed(hass, events, caplog):
+async def test_feed_parsing_failed(
+    hass: HomeAssistant, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test feed where parsing fails."""
     assert "Error fetching feed data" not in caplog.text
 

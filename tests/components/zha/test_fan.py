@@ -443,7 +443,7 @@ async def test_zha_group_fan_entity_failure_state(
 
 
 @pytest.mark.parametrize(
-    "plug_read, expected_state, expected_percentage",
+    ("plug_read", "expected_state", "expected_percentage"),
     (
         (None, STATE_OFF, None),
         ({"fan_mode": 0}, STATE_OFF, 0),
@@ -610,7 +610,12 @@ async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
 
 
 @pytest.mark.parametrize(
-    "ikea_plug_read, ikea_expected_state, ikea_expected_percentage, ikea_preset_mode",
+    (
+        "ikea_plug_read",
+        "ikea_expected_state",
+        "ikea_expected_percentage",
+        "ikea_preset_mode",
+    ),
     (
         (None, STATE_OFF, None, None),
         ({"fan_mode": 0}, STATE_OFF, 0, None),

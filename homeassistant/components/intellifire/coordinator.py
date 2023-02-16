@@ -33,7 +33,6 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         self._api = api
 
     async def _async_update_data(self) -> IntellifirePollData:
-
         if not self._api.is_polling_in_background:
             LOGGER.info("Starting Intellifire Background Polling Loop")
             await self._api.start_background_polling()

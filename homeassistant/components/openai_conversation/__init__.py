@@ -151,5 +151,6 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             {
                 "ha_name": self.hass.config.location_name,
                 "areas": list(area_registry.async_get(self.hass).areas.values()),
-            }
+            },
+            parse_result=False,
         )

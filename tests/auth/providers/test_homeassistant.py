@@ -11,6 +11,7 @@ from homeassistant.auth.providers import (
     auth_provider_from_config,
     homeassistant as hass_auth,
 )
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -36,7 +37,7 @@ async def test_validating_password_invalid_user(data, hass):
         data.validate_login("non-existing", "pw")
 
 
-async def test_not_allow_set_id():
+async def test_not_allow_set_id() -> None:
     """Test we are not allowed to set an ID in config."""
     hass = Mock()
     with pytest.raises(vol.Invalid):
@@ -273,7 +274,7 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
     assert credentials1 is not credentials3
 
 
-async def test_race_condition_in_data_loading(hass):
+async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
     """Test race condition in the hass_auth.Data loading.
 
     Ref issue: https://github.com/home-assistant/core/issues/21569

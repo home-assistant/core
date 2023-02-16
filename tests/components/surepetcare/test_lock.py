@@ -3,6 +3,7 @@ import pytest
 from surepy.exceptions import SurePetcareError
 
 from homeassistant.components.surepetcare.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -18,7 +19,7 @@ EXPECTED_ENTITY_IDS = {
 }
 
 
-async def test_locks(hass, surepetcare) -> None:
+async def test_locks(hass: HomeAssistant, surepetcare) -> None:
     """Test the generation of unique ids."""
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
@@ -77,7 +78,7 @@ async def test_locks(hass, surepetcare) -> None:
         assert surepetcare.unlock.call_count == 1
 
 
-async def test_lock_failing(hass, surepetcare) -> None:
+async def test_lock_failing(hass: HomeAssistant, surepetcare) -> None:
     """Test handling of lock failing."""
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
@@ -95,7 +96,7 @@ async def test_lock_failing(hass, surepetcare) -> None:
         assert state.state == "unlocked"
 
 
-async def test_unlock_failing(hass, surepetcare) -> None:
+async def test_unlock_failing(hass: HomeAssistant, surepetcare) -> None:
     """Test handling of unlock failing."""
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()

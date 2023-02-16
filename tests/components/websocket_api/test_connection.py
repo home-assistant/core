@@ -15,7 +15,7 @@ from tests.common import MockUser
 
 
 @pytest.mark.parametrize(
-    "exc,code,err,log",
+    ("exc", "code", "err", "log"),
     [
         (
             exceptions.Unauthorized(),
