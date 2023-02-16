@@ -99,4 +99,4 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off the siren."""
-        await self.entity_description.method(self._host.api, self._channel, False)
+        await self.entity_description.method(self._host.api, self._channel, False, None)
