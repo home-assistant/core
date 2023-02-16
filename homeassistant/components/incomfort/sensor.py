@@ -28,6 +28,7 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
     """Describes Incomfort sensor entity."""
 
     extra_key: str | None = None
+    name: str | None = None
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (

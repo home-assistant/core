@@ -28,6 +28,7 @@ from .wemo_device import DeviceCoordinator
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
+    name: str | None = None
     state_conversion: Callable[[StateType], StateType] | None = None
     unique_id_suffix: str | None = None
 

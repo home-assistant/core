@@ -122,6 +122,7 @@ class HuaweiSensorEntityDescription(SensorEntityDescription):
     device_class_fn: Callable[[StateType], SensorDeviceClass | None] | None = None
     last_reset_item: str | None = None
     last_reset_format_fn: Callable[[str | None], datetime | None] | None = None
+    name: str | None = None
 
 
 SENSOR_META: dict[str, HuaweiSensorGroup] = {

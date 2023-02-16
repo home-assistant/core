@@ -1,6 +1,8 @@
 """Support for SwitchBot binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -17,51 +19,59 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
-BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
-    "calibration": BinarySensorEntityDescription(
+
+@dataclass
+class SwitchbotBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing SwitchBot binary sensor entities."""
+
+    name: str | None = None
+
+
+BINARY_SENSOR_TYPES = {
+    "calibration": SwitchbotBinarySensorEntityDescription(
         key="calibration",
         name="Calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "motion_detected": BinarySensorEntityDescription(
+    "motion_detected": SwitchbotBinarySensorEntityDescription(
         key="pir_state",
         name="Motion detected",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "contact_open": BinarySensorEntityDescription(
+    "contact_open": SwitchbotBinarySensorEntityDescription(
         key="contact_open",
         name="Door open",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
-    "contact_timeout": BinarySensorEntityDescription(
+    "contact_timeout": SwitchbotBinarySensorEntityDescription(
         key="contact_timeout",
         name="Door timeout",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "is_light": BinarySensorEntityDescription(
+    "is_light": SwitchbotBinarySensorEntityDescription(
         key="is_light",
         name="Light",
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
-    "door_open": BinarySensorEntityDescription(
+    "door_open": SwitchbotBinarySensorEntityDescription(
         key="door_status",
         name="Door status",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
-    "unclosed_alarm": BinarySensorEntityDescription(
+    "unclosed_alarm": SwitchbotBinarySensorEntityDescription(
         key="unclosed_alarm",
         name="Door unclosed alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    "unlocked_alarm": BinarySensorEntityDescription(
+    "unlocked_alarm": SwitchbotBinarySensorEntityDescription(
         key="unlocked_alarm",
         name="Door unlocked alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    "auto_lock_paused": BinarySensorEntityDescription(
+    "auto_lock_paused": SwitchbotBinarySensorEntityDescription(
         key="auto_lock_paused",
         name="Door auto-lock paused",
         entity_category=EntityCategory.DIAGNOSTIC,

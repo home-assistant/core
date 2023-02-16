@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
@@ -134,7 +135,8 @@ class ZWaveBaseEntity(Entity):
         if (
             hasattr(self, "entity_description")
             and self.entity_description
-            and self.entity_description.name
+            and self.entity_description.name is not None
+            and self.entity_description.name is not UNDEFINED
         ):
             name = self.entity_description.name
 

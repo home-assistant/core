@@ -35,6 +35,8 @@ class BondButtonEntityDescription(
 ):
     """Class to describe a Bond Button entity."""
 
+    name: str | None = None
+
 
 STOP_BUTTON = BondButtonEntityDescription(
     key=Action.STOP,

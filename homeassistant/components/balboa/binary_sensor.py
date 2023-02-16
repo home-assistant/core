@@ -47,6 +47,8 @@ class BalboaBinarySensorEntityDescription(
 ):
     """A class that describes Balboa binary sensor entities."""
 
+    name: str | None = None
+
 
 FILTER_CYCLE_ICONS = ("mdi:sync", "mdi:sync-off")
 BINARY_SENSOR_DESCRIPTIONS = (
