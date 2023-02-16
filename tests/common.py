@@ -63,6 +63,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.setup import setup_component
+from homeassistant.util.async_ import run_callback_threadsafe
+import homeassistant.util.dt as date_util
 from homeassistant.util.json import (
     JsonArrayType,
     JsonObjectType,
@@ -71,10 +75,6 @@ from homeassistant.util.json import (
     json_loads_array,
     json_loads_object,
 )
-from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.setup import setup_component
-from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
@@ -436,7 +436,6 @@ def load_fixture(filename: str, integration: str | None = None) -> str:
     return get_fixture_path(filename, integration).read_text()
 
 
-@lru_cache
 def load_json_value_fixture(
     filename: str, integration: str | None = None
 ) -> JsonValueType:
@@ -444,7 +443,6 @@ def load_json_value_fixture(
     return json_loads(load_fixture(filename, integration))
 
 
-@lru_cache
 def load_json_array_fixture(
     filename: str, integration: str | None = None
 ) -> JsonArrayType:
@@ -452,7 +450,6 @@ def load_json_array_fixture(
     return json_loads_array(load_fixture(filename, integration))
 
 
-@lru_cache
 def load_json_object_fixture(
     filename: str, integration: str | None = None
 ) -> JsonObjectType:
