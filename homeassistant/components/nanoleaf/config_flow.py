@@ -14,7 +14,8 @@ from homeassistant.components import ssdp, zeroconf
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.json import load_json, save_json
+from homeassistant.helpers.json import save_json
+from homeassistant.util.json import load_json
 
 from .const import DOMAIN
 
