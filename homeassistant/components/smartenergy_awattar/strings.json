@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "country": "Which country to take the prices from",
+          "scan_interval": "Scan interval for data updates"
+        },
+        "description": "Configure the Awattar API."
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "country": "Which country to take the prices from",
+          "scan_interval": "Scan interval for data updates"
+        },
+        "description": "Configure the Awattar API."
+      }
+    }
+  }
+}

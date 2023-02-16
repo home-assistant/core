@@ -1,10 +1,9 @@
 {
   "domain": "smartenergy_awattar",
   "name": "Awattar",
+  "codeowners": ["@openkfw"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smartenergy_awattar",
   "iot_class": "cloud_polling",
-  "config_flow": true,
-  "dependencies": ["sensor"],
-  "codeowners": ["@openkfw"],
   "requirements": ["smart-energy.awattar-api==0.2.0"]
 }

@@ -71,6 +71,7 @@ def _setup_coordinator(
     scan_interval: timedelta,
     coordinator_name: str,
 ) -> DataUpdateCoordinator:
+    """Initialize the coordinator with empty state."""
     _LOGGER.debug("Configuring coordinator=%s", coordinator_name)
 
     state_fetcher: StateFetcher = StateFetcher(hass)
@@ -88,6 +89,7 @@ def _setup_coordinator(
 
 
 def _setup_api(config: ConfigType) -> dict:
+    """Initialize the API and save the reference in the state."""
     awattar_api = {}
 
     country: str = config[DOMAIN].get(CONF_COUNTRY)
