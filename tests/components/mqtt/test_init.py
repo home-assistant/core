@@ -1446,6 +1446,44 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
+async def test_reload_entry_with_restored_subscriptions(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
+    record_calls: MessageCallbackType,
+    calls: list[ReceiveMessage],
+) -> None:
+    """Test reloading the config entry with with subscriptions restored."""
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+    mqtt_client_mock.connect.return_value = 0
+    assert await mqtt.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
+
+    # Reload the entry
+    config_yaml_new = {}
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
+
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload2")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].topic == "test-topic"
+    assert calls[1].payload == "test-payload2"
+
+
 async def test_initial_setup_logs_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
