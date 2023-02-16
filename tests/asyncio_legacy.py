@@ -4,6 +4,10 @@
 # stubbing out for integrations that have
 # not yet been updated for python 3.11
 # but can still run on python 3.10
+#
+# Remove this once rflink, fido, and blackbird
+# have had their libraries updated to remove
+# asyncio.coroutine
 from asyncio import base_futures, constants, format_helpers
 from asyncio.coroutines import _is_coroutine
 import collections.abc
