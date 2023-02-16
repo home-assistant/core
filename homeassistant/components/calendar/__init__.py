@@ -386,6 +386,8 @@ class CalendarEventView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
+        if start_date > end_date:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         try:
             calendar_event_list = await entity.async_get_events(
