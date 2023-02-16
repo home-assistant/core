@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.sql.const import DOMAIN
@@ -114,7 +115,7 @@ async def test_query_mssql_no_result(
     }
     with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.text",
-        return_value="SELECT TOP 1 5 as value where 1=2",
+        return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
     ):
         await init_integration(hass, config)
 
@@ -126,7 +127,7 @@ async def test_query_mssql_no_result(
 
 
 @pytest.mark.parametrize(
-    "url,expected_patterns,not_expected_patterns",
+    ("url", "expected_patterns", "not_expected_patterns"),
     [
         (
             "sqlite://homeassistant:hunter2@homeassistant.local",
@@ -202,7 +203,9 @@ async def test_invalid_url_on_update(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.recorder",), patch(
+    with patch(
+        "homeassistant.components.recorder",
+    ), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
         side_effect=SQLAlchemyError(
             "sqlite://homeassistant:hunter2@homeassistant.local"
@@ -253,7 +256,7 @@ async def test_config_from_old_yaml(
 
 
 @pytest.mark.parametrize(
-    "url,expected_patterns,not_expected_patterns",
+    ("url", "expected_patterns", "not_expected_patterns"),
     [
         (
             "sqlite://homeassistant:hunter2@homeassistant.local",

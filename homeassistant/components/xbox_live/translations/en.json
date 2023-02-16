@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "The Xbox Live integration is pending removal from Home Assistant and will no longer be available as of Home Assistant 2023.2.\n\nThe integration is being removed, because it is only useful for the legacy device Xbox 360 and the upstream API now requires a paid subscription. Newer consoles are supported by the Xbox integration for free.\n\nRemove the Xbox Live YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
-            "title": "The Xbox Live integration is being removed"
-        }
-    }
-}

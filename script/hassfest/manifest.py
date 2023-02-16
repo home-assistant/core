@@ -1,7 +1,10 @@
 """Manifest validation."""
 from __future__ import annotations
 
+from enum import IntEnum
+import json
 from pathlib import Path
+import subprocess
 from typing import Any
 from urllib.parse import urlparse
 
@@ -23,7 +26,17 @@ DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
-SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
+
+class QualityScale(IntEnum):
+    """Supported manifest quality scales."""
+
+    INTERNAL = -1
+    SILVER = 1
+    GOLD = 2
+    PLATINUM = 3
+
+
+SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -287,8 +300,7 @@ CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
 
 
 def validate_version(integration: Integration) -> None:
-    """
-    Validate the version of the integration.
+    """Validate the version of the integration.
 
     Will be removed when the version key is no longer optional for custom integrations.
     """
@@ -337,10 +349,11 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if (quality_scale := integration.manifest.get("quality_scale")) in {
-        "gold",
-        "platinum",
-    } and not integration.manifest.get("codeowners"):
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and QualityScale[quality_scale.upper()] > QualityScale.SILVER
+        and not integration.manifest.get("codeowners")
+    ):
         integration.add_error(
             "manifest",
             f"{quality_scale} integration does not have a code owner",
@@ -350,8 +363,39 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         validate_version(integration)
 
 
+_SORT_KEYS = {"domain": ".domain", "name": ".name"}
+
+
+def _sort_manifest_keys(key: str) -> str:
+    return _SORT_KEYS.get(key, key)
+
+
+def sort_manifest(integration: Integration) -> bool:
+    """Sort manifest."""
+    keys = list(integration.manifest.keys())
+    if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
+        manifest = {key: integration.manifest[key] for key in keys_sorted}
+        integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+        integration.add_error(
+            "manifest",
+            "Manifest keys have been sorted: domain, name, then alphabetical order",
+        )
+        return True
+    return False
+
+
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
     core_components_dir = config.root / "homeassistant/components"
+    manifests_resorted = []
     for integration in integrations.values():
         validate_manifest(integration, core_components_dir)
+        if not integration.errors:
+            if sort_manifest(integration):
+                manifests_resorted.append(integration.manifest_path)
+    if manifests_resorted:
+        subprocess.run(
+            ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
+            + manifests_resorted,
+            stdout=subprocess.DEVNULL,
+        )

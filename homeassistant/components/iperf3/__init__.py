@@ -49,13 +49,11 @@ ATTR_UPLOAD = "upload"
 ATTR_VERSION = "Version"
 ATTR_HOST = "host"
 
-ICON = "mdi:speedometer"
-
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_DOWNLOAD,
         name=ATTR_DOWNLOAD.capitalize(),
-        icon=ICON,
+        icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
@@ -63,7 +61,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_UPLOAD,
         name=ATTR_UPLOAD.capitalize(),
-        icon=ICON,
+        icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,

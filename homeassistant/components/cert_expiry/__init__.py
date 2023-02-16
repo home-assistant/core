@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -60,7 +59,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[Optional[datetime]]):
+class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
     def __init__(self, hass, host, port):

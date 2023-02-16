@@ -18,8 +18,8 @@ TEST_CONFIG = {
         tcp.CONF_TIMEOUT: tcp.DEFAULT_TIMEOUT + 1,
         tcp.CONF_PAYLOAD: "test_payload",
         tcp.CONF_UNIT_OF_MEASUREMENT: "test_unit",
-        tcp.CONF_VALUE_TEMPLATE: "{{ 'test_' + value }}",
-        tcp.CONF_VALUE_ON: "test_on",
+        tcp.CONF_VALUE_TEMPLATE: "{{ '7.' + value }}",
+        tcp.CONF_VALUE_ON: "7.on",
         tcp.CONF_BUFFER_SIZE: tcp.DEFAULT_BUFFER_SIZE + 1,
     }
 }
@@ -35,7 +35,7 @@ KEYS_AND_DEFAULTS = {
     tcp.CONF_BUFFER_SIZE: tcp.DEFAULT_BUFFER_SIZE,
 }
 
-socket_test_value = "value"
+socket_test_value = "123"
 
 
 @pytest.fixture(name="mock_socket")
@@ -64,7 +64,7 @@ def mock_ssl_context_fixture():
         "homeassistant.components.tcp.common.ssl.create_default_context",
     ) as mock_ssl_context:
         mock_ssl_context.return_value.wrap_socket.return_value.recv.return_value = (
-            socket_test_value + "_ssl"
+            socket_test_value + "567"
         ).encode()
         yield mock_ssl_context
 
@@ -93,7 +93,7 @@ async def test_state(hass, mock_socket, mock_select):
     state = hass.states.get(TEST_ENTITY)
 
     assert state
-    assert state.state == "test_value"
+    assert state.state == "7.123"
     assert (
         state.attributes["unit_of_measurement"]
         == SENSOR_TEST_CONFIG[tcp.CONF_UNIT_OF_MEASUREMENT]
@@ -125,7 +125,7 @@ async def test_config_uses_defaults(hass, mock_socket):
     state = hass.states.get("sensor.tcp_sensor")
 
     assert state
-    assert state.state == "value"
+    assert state.state == "123"
 
     for key, default in KEYS_AND_DEFAULTS.items():
         assert result_config["sensor"][0].get(key) == default
@@ -184,7 +184,7 @@ async def test_ssl_state(hass, mock_socket, mock_select, mock_ssl_context):
     state = hass.states.get(TEST_ENTITY)
 
     assert state
-    assert state.state == "test_value_ssl"
+    assert state.state == "7.123567"
     assert mock_socket.connect.called
     assert mock_socket.connect.call_args == call(
         (SENSOR_TEST_CONFIG["host"], SENSOR_TEST_CONFIG["port"])
@@ -216,7 +216,7 @@ async def test_ssl_state_verify_off(hass, mock_socket, mock_select, mock_ssl_con
     state = hass.states.get(TEST_ENTITY)
 
     assert state
-    assert state.state == "test_value_ssl"
+    assert state.state == "7.123567"
     assert mock_socket.connect.called
     assert mock_socket.connect.call_args == call(
         (SENSOR_TEST_CONFIG["host"], SENSOR_TEST_CONFIG["port"])

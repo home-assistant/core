@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 from typing import Any, TypeVar
 
-import async_timeout
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
@@ -64,20 +63,14 @@ class SynologyDSMSwitchUpdateCoordinator(
 
     async def async_setup(self) -> None:
         """Set up the coordinator initial data."""
-        info = await self.hass.async_add_executor_job(
-            self.api.dsm.surveillance_station.get_info
-        )
+        info = await self.api.dsm.surveillance_station.get_info()
         self.version = info["data"]["CMSMinVersion"]
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
         surveillance_station = self.api.surveillance_station
         return {
-            "switches": {
-                "home_mode": await self.hass.async_add_executor_job(
-                    surveillance_station.get_home_mode_status
-                )
-            }
+            "switches": {"home_mode": await surveillance_station.get_home_mode_status()}
         }
 
 
@@ -131,8 +124,7 @@ class SynologyDSMCameraUpdateCoordinator(
         }
 
         try:
-            async with async_timeout.timeout(30):
-                await self.hass.async_add_executor_job(surveillance_station.update)
+            await surveillance_station.update()
         except SynologyDSMAPIErrorException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 

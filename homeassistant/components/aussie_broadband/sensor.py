@@ -78,6 +78,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone-plus",
+        value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="sms",
@@ -101,6 +102,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
+        value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="other",
@@ -108,6 +110,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
+        value=lambda x: x.get("calls"),
     ),
     # Generic sensors
     SensorValueEntityDescription(

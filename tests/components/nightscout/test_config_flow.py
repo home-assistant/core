@@ -8,6 +8,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.components.nightscout.utils import hash_from_url
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 
 from . import GLUCOSE_READINGS, SERVER_STATUS, SERVER_STATUS_STATUS_ONLY
 
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 CONFIG = {CONF_URL: "https://some.url:1234"}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -38,7 +39,7 @@ async def test_form(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_cannot_connect(hass):
+async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -57,7 +58,7 @@ async def test_user_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_form_api_key_required(hass):
+async def test_user_form_api_key_required(hass: HomeAssistant) -> None:
     """Test we handle an unauthorized error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,7 +80,7 @@ async def test_user_form_api_key_required(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_user_form_unexpected_exception(hass):
+async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle unexpected exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,7 +99,7 @@ async def test_user_form_unexpected_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_user_form_duplicate(hass):
+async def test_user_form_duplicate(hass: HomeAssistant) -> None:
     """Test duplicate entries."""
     with _patch_glucose_readings(), _patch_server_status():
         unique_id = hash_from_url(CONFIG[CONF_URL])

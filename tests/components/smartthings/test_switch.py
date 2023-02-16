@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings switch platform.
+"""Test for the SmartThings switch platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -10,13 +9,16 @@ from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHING
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
 
 
-async def test_entity_and_device_attributes(hass, device_factory):
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory("Switch_1", [Capability.switch], {Attribute.switch: "on"})
@@ -38,7 +40,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry.manufacturer == "Unavailable"
 
 
-async def test_turn_off(hass, device_factory):
+async def test_turn_off(hass: HomeAssistant, device_factory) -> None:
     """Test the switch turns of successfully."""
     # Arrange
     device = device_factory("Switch_1", [Capability.switch], {Attribute.switch: "on"})
@@ -53,7 +55,7 @@ async def test_turn_off(hass, device_factory):
     assert state.state == "off"
 
 
-async def test_turn_on(hass, device_factory):
+async def test_turn_on(hass: HomeAssistant, device_factory) -> None:
     """Test the switch turns of successfully."""
     # Arrange
     device = device_factory(
@@ -72,7 +74,7 @@ async def test_turn_on(hass, device_factory):
     assert state.state == "on"
 
 
-async def test_update_from_signal(hass, device_factory):
+async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
     """Test the switch updates when receiving a signal."""
     # Arrange
     device = device_factory("Switch_1", [Capability.switch], {Attribute.switch: "off"})
@@ -87,7 +89,7 @@ async def test_update_from_signal(hass, device_factory):
     assert state.state == "on"
 
 
-async def test_unload_config_entry(hass, device_factory):
+async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     """Test the switch is removed when the config entry is unloaded."""
     # Arrange
     device = device_factory("Switch 1", [Capability.switch], {Attribute.switch: "on"})

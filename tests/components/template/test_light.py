@@ -110,7 +110,7 @@ async def setup_light(hass, count, light_config):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "supported_features,supported_color_modes",
+    ("supported_features", "supported_color_modes"),
     [(0, [ColorMode.BRIGHTNESS])],
 )
 @pytest.mark.parametrize(
@@ -170,7 +170,7 @@ async def test_template_state_text(hass, setup_light):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "value_template,expected_state,expected_color_mode",
+    ("value_template", "expected_state", "expected_color_mode"),
     [
         (
             "{{ 1 == 1 }}",
@@ -231,7 +231,7 @@ async def test_template_syntax_error(hass, setup_light):
 
 
 @pytest.mark.parametrize(
-    "light_config, count",
+    ("light_config", "count"),
     [
         (
             {
@@ -591,7 +591,7 @@ async def test_level_action_no_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_level,level_template,expected_color_mode",
+    ("expected_level", "level_template", "expected_color_mode"),
     [
         (255, "{{255}}", ColorMode.BRIGHTNESS),
         (None, "{{256}}", ColorMode.BRIGHTNESS),
@@ -631,7 +631,7 @@ async def test_level_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_temp,temperature_template,expected_color_mode",
+    ("expected_temp", "temperature_template", "expected_color_mode"),
     [
         (500, "{{500}}", ColorMode.COLOR_TEMP),
         (None, "{{501}}", ColorMode.COLOR_TEMP),
@@ -738,9 +738,9 @@ async def test_friendly_name(hass, setup_light):
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "friendly_name": "Template light",
                 "value_template": "{{ 1 == 1 }}",
-                "icon_template": "{% if states.light.test_state.state %}"
-                "mdi:check"
-                "{% endif %}",
+                "icon_template": (
+                    "{% if states.light.test_state.state %}mdi:check{% endif %}"
+                ),
             }
         },
     ],
@@ -767,9 +767,9 @@ async def test_icon_template(hass, setup_light):
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "friendly_name": "Template light",
                 "value_template": "{{ 1 == 1 }}",
-                "entity_picture_template": "{% if states.light.test_state.state %}"
-                "/local/light.png"
-                "{% endif %}",
+                "entity_picture_template": (
+                    "{% if states.light.test_state.state %}/local/light.png{% endif %}"
+                ),
             }
         },
     ],
@@ -831,7 +831,7 @@ async def test_color_action_no_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_hs,color_template,expected_color_mode",
+    ("expected_hs", "color_template", "expected_color_mode"),
     [
         ((360, 100), "{{(360, 100)}}", ColorMode.HS),
         ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
@@ -1076,7 +1076,7 @@ async def test_effect_action_invalid_effect(hass, setup_light, calls):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_effect_list,effect_list_template",
+    ("expected_effect_list", "effect_list_template"),
     [
         (
             ["Strobe color", "Police", "Christmas", "RGB", "Random Loop"],
@@ -1121,7 +1121,7 @@ async def test_effect_list_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_effect,effect_template",
+    ("expected_effect", "effect_template"),
     [
         (None, "Disco"),
         (None, "None"),
@@ -1143,7 +1143,9 @@ async def test_effect_template(hass, expected_effect, count, effect_template):
                     "effect": "{{effect}}",
                 },
             },
-            "effect_list_template": "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}",
+            "effect_list_template": (
+                "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}"
+            ),
             "effect_template": effect_template,
         }
     }
@@ -1155,7 +1157,7 @@ async def test_effect_template(hass, expected_effect, count, effect_template):
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_min_mireds,min_mireds_template",
+    ("expected_min_mireds", "min_mireds_template"),
     [
         (118, "{{118}}"),
         (153, "{{x - 12}}"),
@@ -1192,7 +1194,7 @@ async def test_min_mireds_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_max_mireds,max_mireds_template",
+    ("expected_max_mireds", "max_mireds_template"),
     [
         (488, "{{488}}"),
         (500, "{{x - 12}}"),
@@ -1229,7 +1231,7 @@ async def test_max_mireds_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_supports_transition,supports_transition_template",
+    ("expected_supports_transition", "supports_transition_template"),
     [
         (True, "{{true}}"),
         (True, "{{1 == 1}}"),
@@ -1279,7 +1281,9 @@ async def test_supports_transition_template(
         {
             "test_template_light": {
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                "availability_template": (
+                    "{{ is_state('availability_boolean.state', 'on') }}"
+                ),
             }
         },
     ],
@@ -1318,7 +1322,7 @@ async def test_invalid_availability_template_keeps_component_available(
 ):
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
-    assert ("UndefinedError: 'x' is undefined") in caplog_setup_text
+    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
 @pytest.mark.parametrize("count", [1])

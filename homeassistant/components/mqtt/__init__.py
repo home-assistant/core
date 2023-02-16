@@ -486,7 +486,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entity.async_remove()
                 for mqtt_platform in mqtt_platforms
                 for entity in mqtt_platform.entities.values()
-                # pylint: disable=protected-access
+                # pylint: disable-next=protected-access
                 if not entity._discovery_data  # type: ignore[attr-defined]
                 if mqtt_platform.config_entry
                 and mqtt_platform.domain in RELOADABLE_PLATFORMS
@@ -596,7 +596,8 @@ async def websocket_subscribe(
     if not connection.user.is_admin:
         raise Unauthorized
 
-    async def forward_messages(mqttmsg: ReceiveMessage) -> None:
+    @callback
+    def forward_messages(mqttmsg: ReceiveMessage) -> None:
         """Forward events to websocket."""
         try:
             payload = cast(bytes, mqttmsg.payload).decode(

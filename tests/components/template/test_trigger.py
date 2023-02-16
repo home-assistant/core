@@ -22,7 +22,7 @@ def setup_comp(hass, calls):
     hass.states.async_set("test.entity", "hello")
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -30,7 +30,9 @@ def setup_comp(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": '{{ states.test.entity.state == "world" and true }}',
+                    "value_template": (
+                        '{{ states.test.entity.state == "world" and true }}'
+                    ),
                 },
                 "action": {
                     "service": "test.automation",
@@ -60,16 +62,18 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
     assert calls[0].data["id"] == 0
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
-    "config, call_setup",
+    ("config", "call_setup"),
     [
         (
             {
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ states.test.entity.state == "world" and "true" }}',
+                        "value_template": (
+                            '{{ states.test.entity.state == "world" and "true" }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -81,7 +85,9 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ states.test.entity.state == "world" and "TrUE" }}',
+                        "value_template": (
+                            '{{ states.test.entity.state == "world" and "TrUE" }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -93,7 +99,9 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ states.test.entity.state == "world" and false }}',
+                        "value_template": (
+                            '{{ states.test.entity.state == "world" and false }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -175,7 +183,9 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
                     "trigger_variables": {"entity": "test.entity"},
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ is_state(entity|default("test.entity2"), "hello") }}',
+                        "value_template": (
+                            '{{ is_state(entity|default("test.entity2"), "hello") }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 },
@@ -263,16 +273,18 @@ async def test_general(hass, call_setup, start_ha, calls):
         assert len(calls) == call_len
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
-    "config, call_setup",
+    ("config", "call_setup"),
     [
         (
             {
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": "{{ 84 / states.test.number.state|int == 42 }}",
+                        "value_template": (
+                            "{{ 84 / states.test.number.state|int == 42 }}"
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -296,7 +308,7 @@ async def test_if_not_fires_because_fail(hass, call_setup, start_ha, calls):
         assert len(calls) == call_len
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -337,7 +349,7 @@ async def test_if_fires_on_change_with_template_advanced(hass, start_ha, calls):
     assert calls[0].data["some"] == "template - test.entity - hello - world - None"
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -373,7 +385,7 @@ async def test_if_action(hass, start_ha, calls):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(0, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -389,7 +401,7 @@ async def test_if_fires_on_change_with_bad_template(hass, start_ha, calls):
     """Test for firing on change with bad template."""
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -463,7 +475,7 @@ async def test_if_fires_on_change_with_for(hass, calls):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -508,7 +520,7 @@ async def test_if_fires_on_change_with_for_advanced(hass, start_ha, calls):
     assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:05"
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -550,7 +562,7 @@ async def test_if_fires_on_change_with_for_0_advanced(hass, start_ha, calls):
     assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:00"
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -593,7 +605,7 @@ async def test_if_fires_on_change_with_for_2(hass, start_ha, calls):
     assert calls[0].data["some"] == "template - test.entity - hello - world - 0:00:05"
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -625,7 +637,7 @@ async def test_if_not_fires_on_change_with_for(hass, start_ha, calls):
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -661,7 +673,7 @@ async def test_if_not_fires_when_turned_off_with_for(hass, start_ha, calls):
     assert len(calls) == 0
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -687,7 +699,7 @@ async def test_if_fires_on_change_with_for_template_1(hass, start_ha, calls):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -713,7 +725,7 @@ async def test_if_fires_on_change_with_for_template_2(hass, start_ha, calls):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -739,7 +751,7 @@ async def test_if_fires_on_change_with_for_template_3(hass, start_ha, calls):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [

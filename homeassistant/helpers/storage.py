@@ -9,12 +9,13 @@ import inspect
 from json import JSONEncoder
 import logging
 import os
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
+from homeassistant.util.file import WriteError
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
-_T = TypeVar("_T", bound=Union[Mapping[str, Any], Sequence[Any]])
+_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 
 
 @bind_hass
@@ -278,7 +279,7 @@ class Store(Generic[_T]):
 
             try:
                 await self._async_write_data(self.path, data)
-            except (json_util.SerializationError, json_util.WriteError) as err:
+            except (json_util.SerializationError, WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, path: str, data: dict) -> None:

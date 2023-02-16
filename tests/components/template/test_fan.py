@@ -33,7 +33,7 @@ _OSC_INPUT = "input_select.osc"
 _DIRECTION_INPUT_SELECT = "input_select.direction"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -56,7 +56,7 @@ async def test_missing_optional_config(hass, start_ha):
     _verify(hass, STATE_ON, None, None, None, None)
 
 
-@pytest.mark.parametrize("count,domain", [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -123,7 +123,7 @@ async def test_wrong_template_config(hass, start_ha):
     assert hass.states.async_all("fan") == []
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -139,8 +139,12 @@ async def test_wrong_template_config(hass, start_ha):
             {{ 'off' }}
         {% endif %}
     """,
-                        "percentage_template": "{{ states('input_number.percentage') }}",
-                        "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+                        "percentage_template": (
+                            "{{ states('input_number.percentage') }}"
+                        ),
+                        "preset_mode_template": (
+                            "{{ states('input_select.preset_mode') }}"
+                        ),
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
                         "speed_count": "3",
@@ -180,9 +184,9 @@ async def test_templates_with_entities(hass, start_ha):
     _verify(hass, STATE_OFF, 0, True, DIRECTION_FORWARD, None)
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config,entity,tests",
+    ("config", "entity", "tests"),
     [
         (
             {
@@ -216,7 +220,9 @@ async def test_templates_with_entities(hass, start_ha):
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
                             "preset_modes": ["auto", "smart"],
-                            "preset_mode_template": "{{ states('sensor.preset_mode') }}",
+                            "preset_mode_template": (
+                                "{{ states('sensor.preset_mode') }}"
+                            ),
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         },
@@ -242,7 +248,7 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
         _verify(hass, STATE_ON, test_percentage, None, None, test_type)
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -251,7 +257,9 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
                 "platform": "template",
                 "fans": {
                     "test_fan": {
-                        "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                        "availability_template": (
+                            "{{ is_state('availability_boolean.state', 'on') }}"
+                        ),
                         "value_template": "{{ 'on' }}",
                         "oscillating_template": "{{ 1 == 1 }}",
                         "direction_template": "{{ 'forward' }}",
@@ -271,9 +279,9 @@ async def test_availability_template_with_entities(hass, start_ha):
         assert (hass.states.get(_TEST_FAN).state != STATE_UNAVAILABLE) == test_assert
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config, states",
+    ("config", "states"),
     [
         (
             {
@@ -351,7 +359,7 @@ async def test_template_with_unavailable_entities(hass, states, start_ha):
     _verify(hass, states[0], states[1], states[2], states[3], None)
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -362,7 +370,9 @@ async def test_template_with_unavailable_entities(hass, states, start_ha):
                     "test_fan": {
                         "value_template": "{{ 'on' }}",
                         "availability_template": "{{ x - 12 }}",
-                        "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+                        "preset_mode_template": (
+                            "{{ states('input_select.preset_mode') }}"
+                        ),
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
                         "turn_on": {"service": "script.fan_on"},
@@ -879,7 +889,7 @@ async def _register_components(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -922,7 +932,7 @@ async def test_unique_id(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "speed_count, percentage_step", [(0, 1), (100, 1), (3, 100 / 3)]
+    ("speed_count", "percentage_step"), [(0, 1), (100, 1), (3, 100 / 3)]
 )
 async def test_implemented_percentage(hass, speed_count, percentage_step):
     """Test a fan that implements percentage."""
@@ -937,7 +947,10 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
                         "friendly_name": "Mechanische ventilatie",
                         "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
                         "value_template": "{{ states('light.mv_snelheid') }}",
-                        "percentage_template": "{{ (state_attr('light.mv_snelheid','brightness') | int / 255 * 100) | int }}",
+                        "percentage_template": (
+                            "{{ (state_attr('light.mv_snelheid','brightness') | int /"
+                            " 255 * 100) | int }}"
+                        ),
                         "turn_on": [
                             {
                                 "service": "switch.turn_off",
@@ -995,7 +1008,7 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
     assert attributes.get("supported_features") & FanEntityFeature.SET_SPEED
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [

@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
@@ -33,7 +33,7 @@ from tests.common import (
 TEST_NAME = "sensor.test_template_sensor"
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -58,7 +58,7 @@ async def test_template_legacy(hass, start_ha):
     assert hass.states.get(TEST_NAME).state == "It Works."
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -87,7 +87,7 @@ async def test_icon_template(hass, start_ha):
     assert hass.states.get(TEST_NAME).attributes["icon"] == "mdi:check"
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -118,9 +118,9 @@ async def test_entity_picture_template(hass, start_ha):
     )
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
-    "attribute,config,expected",
+    ("attribute", "config", "expected"),
     [
         (
             "friendly_name",
@@ -195,7 +195,7 @@ async def test_friendly_name_template(hass, attribute, expected, start_ha):
     assert hass.states.get(TEST_NAME).attributes[attribute] == expected[1]
 
 
-@pytest.mark.parametrize("count,domain", [(0, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -260,7 +260,7 @@ async def test_template_syntax_error(hass, start_ha):
     assert hass.states.async_all("sensor") == []
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -282,7 +282,7 @@ async def test_template_attribute_missing(hass, start_ha):
     assert hass.states.get(TEST_NAME).state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -305,12 +305,14 @@ async def test_template_attribute_missing(hass, start_ha):
 )
 async def test_setup_valid_device_class(hass, start_ha):
     """Test setup with valid device_class."""
+    hass.states.async_set("sensor.test_sensor", "75")
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.test1").attributes["device_class"] == "temperature"
     assert "device_class" not in hass.states.get("sensor.test2").attributes
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_creating_sensor_loads_group(hass):
+async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
     """Test setting up template sensor loads group component first."""
     order = []
     after_dep_event = Event()
@@ -350,7 +352,7 @@ async def test_creating_sensor_loads_group(hass):
     assert order == ["group", "sensor.template"]
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -386,7 +388,7 @@ async def test_available_template_with_entities(hass, start_ha):
     assert hass.states.get(TEST_NAME).state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -418,7 +420,7 @@ async def test_invalid_attribute_template(hass, caplog, start_ha, caplog_setup_t
     assert "test_attribute" in caplog.text
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -443,7 +445,9 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-async def test_no_template_match_all(hass, caplog):
+async def test_no_template_match_all(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we allow static templates."""
     hass.states.async_set("sensor.test_sensor", "startup")
 
@@ -525,7 +529,7 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -566,7 +570,7 @@ async def test_unique_id(hass, start_ha):
     )
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -607,7 +611,7 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
     def _record_async_render(self, *args, **kwargs):
         """Catch async_render."""
         async_render_calls.append(self.template)
-        return "mocked"
+        return "75"
 
     later = dt_util.utcnow()
 
@@ -615,8 +619,8 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
         hass.states.async_set("sun.sun", {"elevation": 50, "next_rising": later})
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.solar_angle").state == "mocked"
-    assert hass.states.get("sensor.sunrise").state == "mocked"
+    assert hass.states.get("sensor.solar_angle").state == "75"
+    assert hass.states.get("sensor.sunrise").state == "75"
 
     assert len(async_render_calls) == 2
     assert set(async_render_calls) == {
@@ -625,7 +629,7 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
     }
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -666,7 +670,7 @@ async def test_this_variable(hass, start_ha):
     assert hass.states.get(TEST_NAME).state == "It Works: " + TEST_NAME
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -728,7 +732,7 @@ async def test_this_variable_early_hass_not_running(hass, config, count, domain)
     }
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -780,7 +784,7 @@ async def test_this_variable_early_hass_running(hass, config, count, domain):
     }
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -807,7 +811,7 @@ async def test_self_referencing_sensor_loop(hass, start_ha, caplog_setup_text):
     assert int(hass.states.get("sensor.test").state) == 2
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -841,7 +845,7 @@ async def test_self_referencing_sensor_with_icon_loop(
     assert int(state.state) == 3
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -877,7 +881,7 @@ async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(
     assert int(state.state) == 4
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -915,7 +919,9 @@ async def test_self_referencing_entity_picture_loop(hass, start_ha, caplog_setup
     assert int(state.state) == 1
 
 
-async def test_self_referencing_icon_with_no_loop(hass, caplog):
+async def test_self_referencing_icon_with_no_loop(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a self referencing icon that does not loop."""
 
     hass.states.async_set("sensor.heartworm_high_80", 10)
@@ -990,7 +996,7 @@ async def test_self_referencing_icon_with_no_loop(hass, caplog):
     assert "Template loop detected" not in caplog.text
 
 
-@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1022,7 +1028,7 @@ async def test_duplicate_templates(hass, start_ha):
     assert state.state == "Def"
 
 
-@pytest.mark.parametrize("count,domain", [(2, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1121,7 +1127,7 @@ async def test_trigger_entity(hass, start_ha):
     assert state.context is context
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1157,7 +1163,7 @@ async def test_trigger_entity_render_error(hass, start_ha):
     assert ent_reg.entities["sensor.hello"].unique_id == "no-base-id"
 
 
-@pytest.mark.parametrize("count,domain", [(0, sensor.DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1185,7 +1191,7 @@ async def test_trigger_not_allowed_platform_config(hass, start_ha, caplog_setup_
     )
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1212,7 +1218,7 @@ async def test_config_top_level(hass, start_ha):
     assert state.attributes["state_class"] == "measurement"
 
 
-async def test_trigger_entity_available(hass):
+async def test_trigger_entity_available(hass: HomeAssistant) -> None:
     """Test trigger entity availability works."""
     assert await async_setup_component(
         hass,
@@ -1253,7 +1259,7 @@ async def test_trigger_entity_available(hass):
     assert state.state == "unavailable"
 
 
-async def test_trigger_entity_device_class_parsing_works(hass):
+async def test_trigger_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
     """Test trigger entity device class parsing works."""
     assert await async_setup_component(
         hass,
@@ -1297,7 +1303,7 @@ async def test_trigger_entity_device_class_parsing_works(hass):
     assert ts_state.state == now.isoformat(timespec="seconds")
 
 
-async def test_trigger_entity_device_class_errors_works(hass):
+async def test_trigger_entity_device_class_errors_works(hass: HomeAssistant) -> None:
     """Test trigger entity device class errors works."""
     assert await async_setup_component(
         hass,
@@ -1340,7 +1346,7 @@ async def test_trigger_entity_device_class_errors_works(hass):
     assert ts_state.state == STATE_UNKNOWN
 
 
-async def test_entity_device_class_parsing_works(hass):
+async def test_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
     """Test entity device class parsing works."""
     # State of timestamp sensors are always in UTC
     now = dt_util.utcnow()
@@ -1379,7 +1385,7 @@ async def test_entity_device_class_parsing_works(hass):
     assert ts_state.state == now.isoformat(timespec="seconds")
 
 
-async def test_entity_device_class_errors_works(hass):
+async def test_entity_device_class_errors_works(hass: HomeAssistant) -> None:
     """Test entity device class errors works."""
     assert await async_setup_component(
         hass,
@@ -1421,7 +1427,7 @@ async def test_entity_device_class_errors_works(hass):
     assert ts_state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -1443,7 +1449,7 @@ async def test_entity_device_class_errors_works(hass):
     ],
 )
 @pytest.mark.parametrize(
-    "restored_state, restored_native_value, initial_state, initial_attributes",
+    ("restored_state", "restored_native_value", "initial_state", "initial_attributes"),
     [
         # the native value should be used, not the state
         ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),

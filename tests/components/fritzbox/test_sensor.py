@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -24,7 +24,7 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock):
+async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     """Test setup of platform."""
     device = FritzDeviceSensorMock()
     assert await setup_config_entry(
@@ -36,7 +36,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state
     assert state.state == "1.23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Temperature"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(f"{ENTITY_ID}_humidity")
@@ -54,7 +54,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert ATTR_STATE_CLASS not in state.attributes
 
 
-async def test_update(hass: HomeAssistant, fritz: Mock):
+async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update without error."""
     device = FritzDeviceSensorMock()
     assert await setup_config_entry(
@@ -71,7 +71,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
     assert fritz().login.call_count == 1
 
 
-async def test_update_error(hass: HomeAssistant, fritz: Mock):
+async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update with error."""
     device = FritzDeviceSensorMock()
     fritz().update_devices.side_effect = HTTPError("Boom")

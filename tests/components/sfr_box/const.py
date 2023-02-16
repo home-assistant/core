@@ -1,5 +1,6 @@
 """Constants for SFR Box tests."""
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -18,6 +19,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SIGNAL_STRENGTH_DECIBELS,
     STATE_ON,
+    STATE_UNKNOWN,
     Platform,
     UnitOfDataRate,
     UnitOfElectricPotential,
@@ -46,6 +48,14 @@ EXPECTED_ENTITIES = {
             ATTR_ENTITY_ID: "binary_sensor.sfr_box_status",
             ATTR_STATE: STATE_ON,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_status",
+        },
+    ],
+    Platform.BUTTON: [
+        {
+            ATTR_DEVICE_CLASS: ButtonDeviceClass.RESTART,
+            ATTR_ENTITY_ID: "button.sfr_box_reboot",
+            ATTR_STATE: STATE_UNKNOWN,
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_reboot",
         },
     ],
     Platform.SENSOR: [

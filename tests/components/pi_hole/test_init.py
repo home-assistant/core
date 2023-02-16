@@ -3,6 +3,7 @@ import logging
 from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleError
+import pytest
 
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
@@ -10,8 +11,7 @@ from homeassistant.components.pi_hole.const import (
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -25,7 +25,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_setup_with_defaults(hass: HomeAssistant):
+async def test_setup_with_defaults(hass: HomeAssistant) -> None:
     """Tests component setup with default config."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
@@ -76,7 +76,7 @@ async def test_setup_with_defaults(hass: HomeAssistant):
     assert state.state == "off"
 
 
-async def test_setup_name_config(hass: HomeAssistant):
+async def test_setup_name_config(hass: HomeAssistant) -> None:
     """Tests component setup with a custom name."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
@@ -94,7 +94,7 @@ async def test_setup_name_config(hass: HomeAssistant):
     )
 
 
-async def test_switch(hass: HomeAssistant, caplog):
+async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
@@ -141,7 +141,7 @@ async def test_switch(hass: HomeAssistant, caplog):
         assert errors[-1].message == "Unable to disable Pi-hole: Error2"
 
 
-async def test_disable_service_call(hass: HomeAssistant):
+async def test_disable_service_call(hass: HomeAssistant) -> None:
     """Test disable service call with no Pi-hole named."""
 
     mocked_hole = _create_mocked_hole()
@@ -170,7 +170,7 @@ async def test_disable_service_call(hass: HomeAssistant):
         mocked_hole.disable.assert_called_with(1)
 
 
-async def test_unload(hass: HomeAssistant):
+async def test_unload(hass: HomeAssistant) -> None:
     """Test unload entities."""
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
@@ -189,7 +189,7 @@ async def test_unload(hass: HomeAssistant):
     assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
 
 
-async def test_remove_obsolete(hass: HomeAssistant):
+async def test_remove_obsolete(hass: HomeAssistant) -> None:
     """Test removing obsolete config entry parameters."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
@@ -199,15 +199,3 @@ async def test_remove_obsolete(hass: HomeAssistant):
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert CONF_STATISTICS_ONLY not in entry.data
-
-
-async def test_missing_api_key(hass: HomeAssistant):
-    """Tests start reauth flow if api key is missing."""
-    mocked_hole = _create_mocked_hole()
-    data = CONFIG_DATA_DEFAULTS.copy()
-    data.pop(CONF_API_KEY)
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=data)
-    entry.add_to_hass(hass)
-    with _patch_init_hole(mocked_hole):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == ConfigEntryState.SETUP_ERROR

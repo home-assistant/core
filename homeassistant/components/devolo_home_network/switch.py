@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import WifiGuestAccessGet
@@ -11,21 +11,15 @@ from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnav
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
 from .entity import DevoloEntity
 
-_DataT = TypeVar(
-    "_DataT",
-    bound=Union[
-        WifiGuestAccessGet,
-        bool,
-    ],
-)
+_DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
 
 
 @dataclass

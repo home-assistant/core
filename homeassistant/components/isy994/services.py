@@ -23,7 +23,7 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import entity_service_call
 
-from .const import _LOGGER, CONF_NETWORK, DOMAIN, ISY_CONF_NAME, ISY_CONF_NETWORKING
+from .const import _LOGGER, CONF_NETWORK, DOMAIN, ISY_CONF_NAME
 from .util import _async_cleanup_registry_entries
 
 # Common Services for All Platforms:
@@ -233,7 +233,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             isy = isy_data.root
             if isy_name and isy_name != isy.conf[ISY_CONF_NAME]:
                 continue
-            if isy.networking is None or not isy.conf[ISY_CONF_NETWORKING]:
+            if isy.networking is None:
                 continue
             command = None
             if address:
@@ -320,11 +320,25 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     @callback
     def async_cleanup_registry_entries(service: ServiceCall) -> None:
         """Remove extra entities that are no longer part of the integration."""
+        async_log_deprecated_service_call(
+            hass,
+            call=service,
+            alternate_service="homeassistant.reload_core_config",
+            alternate_target=None,
+            breaks_in_ha_version="2023.5.0",
+        )
         for config_entry_id in hass.data[DOMAIN]:
             _async_cleanup_registry_entries(hass, config_entry_id)
 
     async def async_reload_config_entries(service: ServiceCall) -> None:
         """Trigger a reload of all ISY config entries."""
+        async_log_deprecated_service_call(
+            hass,
+            call=service,
+            alternate_service="homeassistant.reload_core_config",
+            alternate_target=None,
+            breaks_in_ha_version="2023.5.0",
+        )
         for config_entry_id in hass.data[DOMAIN]:
             hass.async_create_task(hass.config_entries.async_reload(config_entry_id))
 
@@ -492,13 +506,17 @@ def async_log_deprecated_service_call(
         },
     )
 
+    alternate_text = ""
+    if alternate_target:
+        alternate_text = f' and pass it a target entity ID of "{alternate_target}"'
+
     _LOGGER.warning(
         (
             'The "%s" service is deprecated and will be removed in %s; use the "%s" '
-            'service and pass it a target entity ID of "%s"'
+            "service %s"
         ),
         deprecated_service,
         breaks_in_ha_version,
         alternate_service,
-        alternate_target,
+        alternate_text,
     )

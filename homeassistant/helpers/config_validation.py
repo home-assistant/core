@@ -303,7 +303,7 @@ def entity_id_or_uuid(value: Any) -> str:
 def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
     """Help validate entity IDs or UUIDs."""
     if value is None:
-        raise vol.Invalid("Entity IDs can not be None")
+        raise vol.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
@@ -537,7 +537,7 @@ def schema_with_slug_keys(
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
 
-        for key in value.keys():
+        for key in value:
             slug_validator(key)
 
         return cast(dict, schema(value))
@@ -1074,7 +1074,7 @@ def make_entity_service_schema(
 
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
-    # pylint: disable=unnecessary-lambda
+    # pylint: disable-next=unnecessary-lambda
     lambda val: script_variables_helper.ScriptVariables(val),
 )
 
@@ -1267,7 +1267,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1278,7 +1278,7 @@ AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("and"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1290,7 +1290,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1301,7 +1301,7 @@ OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("or"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1313,7 +1313,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1324,7 +1324,7 @@ NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("not"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1356,7 +1356,7 @@ CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
