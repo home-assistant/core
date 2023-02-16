@@ -1,9 +1,9 @@
 {
   "domain": "neurio_energy",
   "name": "Neurio energy",
-  "documentation": "https://www.home-assistant.io/integrations/neurio_energy",
-  "requirements": ["neurio==0.3.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/neurio_energy",
   "iot_class": "cloud_polling",
-  "loggers": ["neurio"]
+  "loggers": ["neurio"],
+  "requirements": ["neurio==0.3.1"]
 }

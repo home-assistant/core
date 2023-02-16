@@ -1,5 +1,4 @@
 """deCONZ number platform tests."""
-
 from unittest.mock import patch
 
 import pytest
@@ -10,9 +9,9 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -20,8 +19,12 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_number_entities(hass, aioclient_mock):
+
+async def test_no_number_entities(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no number entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
@@ -104,10 +107,14 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_number_entities(
-    hass, aioclient_mock, mock_deconz_websocket, sensor_data, expected
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
+    sensor_data,
+    expected,
+) -> None:
     """Test successful creation of number entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)

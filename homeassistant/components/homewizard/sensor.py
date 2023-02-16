@@ -20,6 +20,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_VIA_DEVICE,
     PERCENTAGE,
+    EntityCategory,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -417,7 +417,6 @@ async def async_setup_entry(
             Platform.SENSOR, DOMAIN, f"{entry.unique_id}_total_gas_m3"
         )
     ) and coordinator.data.data.gas_unique_id is not None:
-
         ent_reg.async_update_entity(
             entity_id,
             new_unique_id=f"{DOMAIN}_{coordinator.data.data.gas_unique_id}",
@@ -432,8 +431,7 @@ async def async_setup_entry(
 
     # Initialize external devices
     if coordinator.data.data.external_devices is not None:
-        for (unique_id, device) in coordinator.data.data.external_devices.items():
-
+        for unique_id, device in coordinator.data.data.external_devices.items():
             if description := EXTERNAL_SENSORS.get(device.meter_type):
                 entities.append(
                     HomeWizardExternalSensorEntity(coordinator, description, unique_id)

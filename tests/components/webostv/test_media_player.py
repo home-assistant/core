@@ -72,7 +72,7 @@ from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @pytest.mark.parametrize(
-    "service, attr_data, client_call",
+    ("service", "attr_data", "client_call"),
     [
         (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}, ("set_mute", True)),
         (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}, ("set_mute", False)),
@@ -92,7 +92,7 @@ async def test_services_with_parameters(hass, client, service, attr_data, client
 
 
 @pytest.mark.parametrize(
-    "service, client_call",
+    ("service", "client_call"),
     [
         (SERVICE_TURN_OFF, "power_off"),
         (SERVICE_VOLUME_UP, "volume_up"),
@@ -136,7 +136,7 @@ async def test_media_play_pause(hass, client):
 
 
 @pytest.mark.parametrize(
-    "service, client_call",
+    ("service", "client_call"),
     [
         (SERVICE_MEDIA_NEXT_TRACK, ("fast_forward", "channel_up")),
         (SERVICE_MEDIA_PREVIOUS_TRACK, ("rewind", "channel_down")),
@@ -359,7 +359,7 @@ async def test_service_entity_id_none(hass, client):
 
 
 @pytest.mark.parametrize(
-    "media_id, ch_id",
+    ("media_id", "ch_id"),
     [
         ("Channel 1", "ch1id"),  # Perfect Match by channel name
         ("Name 2", "ch2id"),  # Partial Match by channel name
@@ -582,7 +582,7 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     await client.mock_state_update()
 
     # TV off, restored state supports mute, step
-    # validate SUPPORT_TURN_ON is not cached
+    # validate MediaPlayerEntityFeature.TURN_ON is not cached
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert (

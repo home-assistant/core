@@ -8,6 +8,7 @@ from unittest.mock import patch, sentinel
 import pytest
 
 from homeassistant.components import history
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.const import (
@@ -18,14 +19,20 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
 )
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    assert_states_equal_without_context,
     async_wait_recording_done,
     wait_recording_done,
 )
+from tests.typing import ClientSessionGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
@@ -38,12 +45,12 @@ def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
 
 
 @pytest.mark.usefixtures("hass_history")
-def test_setup():
+def test_setup() -> None:
     """Test setup method of history."""
     # Verification occurs in the fixture
 
 
-def test_get_significant_states(hass_history):
+def test_get_significant_states(hass_history) -> None:
     """Test that only significant states are returned.
 
     We should get back every thermostat change that
@@ -53,10 +60,10 @@ def test_get_significant_states(hass_history):
     hass = hass_history
     zero, four, states = record_states(hass)
     hist = get_significant_states(hass, zero, four, filters=history.Filters())
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
-def test_get_significant_states_minimal_response(hass_history):
+def test_get_significant_states_minimal_response(hass_history) -> None:
     """Test that only significant states are returned.
 
     When minimal responses is set only the first and
@@ -95,10 +102,33 @@ def test_get_significant_states_minimal_response(hass_history):
                 "last_changed": orig_last_changed,
                 "state": orig_state,
             }
-    assert states == hist
+    assert len(hist) == len(states)
+    assert_states_equal_without_context(
+        states["media_player.test"][0], hist["media_player.test"][0]
+    )
+    assert states["media_player.test"][1] == hist["media_player.test"][1]
+    assert states["media_player.test"][2] == hist["media_player.test"][2]
+
+    assert_multiple_states_equal_without_context(
+        states["media_player.test2"], hist["media_player.test2"]
+    )
+    assert_states_equal_without_context(
+        states["media_player.test3"][0], hist["media_player.test3"][0]
+    )
+    assert states["media_player.test3"][1] == hist["media_player.test3"][1]
+
+    assert_multiple_states_equal_without_context(
+        states["script.can_cancel_this_one"], hist["script.can_cancel_this_one"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test"], hist["thermostat.test"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test2"], hist["thermostat.test2"]
+    )
 
 
-def test_get_significant_states_with_initial(hass_history):
+def test_get_significant_states_with_initial(hass_history) -> None:
     """Test that only significant states are returned.
 
     We should get back every thermostat change that
@@ -123,10 +153,10 @@ def test_get_significant_states_with_initial(hass_history):
         filters=history.Filters(),
         include_start_time_state=True,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
-def test_get_significant_states_without_initial(hass_history):
+def test_get_significant_states_without_initial(hass_history) -> None:
     """Test that only significant states are returned.
 
     We should get back every thermostat change that
@@ -136,10 +166,15 @@ def test_get_significant_states_without_initial(hass_history):
     hass = hass_history
     zero, four, states = record_states(hass)
     one = zero + timedelta(seconds=1)
+    one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
     one_and_half = zero + timedelta(seconds=1.5)
     for entity_id in states:
         states[entity_id] = list(
-            filter(lambda s: s.last_changed != one, states[entity_id])
+            filter(
+                lambda s: s.last_changed != one
+                and s.last_changed != one_with_microsecond,
+                states[entity_id],
+            )
         )
     del states["media_player.test2"]
 
@@ -150,10 +185,10 @@ def test_get_significant_states_without_initial(hass_history):
         filters=history.Filters(),
         include_start_time_state=False,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
-def test_get_significant_states_entity_id(hass_history):
+def test_get_significant_states_entity_id(hass_history) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_history
     zero, four, states = record_states(hass)
@@ -166,10 +201,10 @@ def test_get_significant_states_entity_id(hass_history):
     hist = get_significant_states(
         hass, zero, four, ["media_player.test"], filters=history.Filters()
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
-def test_get_significant_states_multiple_entity_ids(hass_history):
+def test_get_significant_states_multiple_entity_ids(hass_history) -> None:
     """Test that only significant states are returned for one entity."""
     hass = hass_history
     zero, four, states = record_states(hass)
@@ -185,10 +220,10 @@ def test_get_significant_states_multiple_entity_ids(hass_history):
         ["media_player.test", "thermostat.test"],
         filters=history.Filters(),
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
-def test_get_significant_states_exclude_domain(hass_history):
+def test_get_significant_states_exclude_domain(hass_history) -> None:
     """Test if significant states are returned when excluding domains.
 
     We should get back every thermostat change that includes an attribute
@@ -209,7 +244,7 @@ def test_get_significant_states_exclude_domain(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_exclude_entity(hass_history):
+def test_get_significant_states_exclude_entity(hass_history) -> None:
     """Test if significant states are returned when excluding entities.
 
     We should get back every thermostat and script changes, but no media
@@ -228,7 +263,7 @@ def test_get_significant_states_exclude_entity(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_exclude(hass_history):
+def test_get_significant_states_exclude(hass_history) -> None:
     """Test significant states when excluding entities and domains.
 
     We should not get back every thermostat and media player test changes.
@@ -253,7 +288,7 @@ def test_get_significant_states_exclude(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_exclude_include_entity(hass_history):
+def test_get_significant_states_exclude_include_entity(hass_history) -> None:
     """Test significant states when excluding domains and include entities.
 
     We should not get back every thermostat change unless its specifically included
@@ -274,7 +309,7 @@ def test_get_significant_states_exclude_include_entity(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_include_domain(hass_history):
+def test_get_significant_states_include_domain(hass_history) -> None:
     """Test if significant states are returned when including domains.
 
     We should get back every thermostat and script changes, but no media
@@ -295,7 +330,7 @@ def test_get_significant_states_include_domain(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_include_entity(hass_history):
+def test_get_significant_states_include_entity(hass_history) -> None:
     """Test if significant states are returned when including entities.
 
     We should only get back changes of the media_player.test entity.
@@ -317,7 +352,7 @@ def test_get_significant_states_include_entity(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_include(hass_history):
+def test_get_significant_states_include(hass_history) -> None:
     """Test significant states when including domains and entities.
 
     We should only get back changes of the media_player.test entity and the
@@ -343,7 +378,7 @@ def test_get_significant_states_include(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_include_exclude_domain(hass_history):
+def test_get_significant_states_include_exclude_domain(hass_history) -> None:
     """Test if significant states when excluding and including domains.
 
     We should get back all the media_player domain changes
@@ -368,7 +403,7 @@ def test_get_significant_states_include_exclude_domain(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_include_exclude_entity(hass_history):
+def test_get_significant_states_include_exclude_entity(hass_history) -> None:
     """Test if significant states when excluding and including domains.
 
     We should not get back any changes since we include only
@@ -394,7 +429,7 @@ def test_get_significant_states_include_exclude_entity(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_include_exclude(hass_history):
+def test_get_significant_states_include_exclude(hass_history) -> None:
     """Test if significant states when in/excluding domains and entities.
 
     We should get back changes of the media_player.test2, media_player.test3,
@@ -424,7 +459,7 @@ def test_get_significant_states_include_exclude(hass_history):
     check_significant_states(hass, zero, four, states, config)
 
 
-def test_get_significant_states_are_ordered(hass_history):
+def test_get_significant_states_are_ordered(hass_history) -> None:
     """Test order of results from get_significant_states.
 
     When entity ids are given, the results should be returned with the data
@@ -444,7 +479,7 @@ def test_get_significant_states_are_ordered(hass_history):
     assert list(hist.keys()) == entity_ids
 
 
-def test_get_significant_states_only(hass_history):
+def test_get_significant_states_only(hass_history) -> None:
     """Test significant states when significant_states_only is set."""
     hass = hass_history
     entity_id = "sensor.test"
@@ -490,14 +525,22 @@ def test_get_significant_states_only(hass_history):
     hist = get_significant_states(hass, start, significant_changes_only=True)
 
     assert len(hist[entity_id]) == 2
-    assert states[0] not in hist[entity_id]
-    assert states[1] in hist[entity_id]
-    assert states[2] in hist[entity_id]
+    assert not any(
+        state.last_updated == states[0].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[1].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[2].last_updated for state in hist[entity_id]
+    )
 
     hist = get_significant_states(hass, start, significant_changes_only=False)
 
     assert len(hist[entity_id]) == 3
-    assert states == hist[entity_id]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states, hist[entity_id]
+    )
 
 
 def check_significant_states(hass, zero, four, states, config):
@@ -513,7 +556,7 @@ def check_significant_states(hass, zero, four, states, config):
         filters.included_domains = include.get(CONF_DOMAINS, [])
 
     hist = get_significant_states(hass, zero, four, filters=filters)
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def record_states(hass):
@@ -549,9 +592,6 @@ def record_states(hass):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
-        states[mp].append(
-            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
-        )
         states[mp2].append(
             set_state(mp2, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
@@ -560,6 +600,14 @@ def record_states(hass):
         )
         states[therm].append(
             set_state(therm, 20, attributes={"current_temperature": 19.5})
+        )
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=one + timedelta(microseconds=1),
+    ):
+        states[mp].append(
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
     with patch(
@@ -596,7 +644,9 @@ def record_states(hass):
     return zero, four, states
 
 
-async def test_fetch_period_api(recorder_mock, hass, hass_client):
+async def test_fetch_period_api(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -605,8 +655,8 @@ async def test_fetch_period_api(recorder_mock, hass, hass_client):
 
 
 async def test_fetch_period_api_with_use_include_order(
-    recorder_mock, hass, hass_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history with include order."""
     await async_setup_component(
         hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
@@ -616,7 +666,9 @@ async def test_fetch_period_api_with_use_include_order(
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_minimal_response(recorder_mock, hass, hass_client):
+async def test_fetch_period_api_with_minimal_response(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
     await async_setup_component(hass, "history", {})
@@ -656,7 +708,9 @@ async def test_fetch_period_api_with_minimal_response(recorder_mock, hass, hass_
     ).replace('"', "")
 
 
-async def test_fetch_period_api_with_no_timestamp(recorder_mock, hass, hass_client):
+async def test_fetch_period_api_with_no_timestamp(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -664,7 +718,9 @@ async def test_fetch_period_api_with_no_timestamp(recorder_mock, hass, hass_clie
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_include_order(recorder_mock, hass, hass_client):
+async def test_fetch_period_api_with_include_order(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
@@ -685,8 +741,8 @@ async def test_fetch_period_api_with_include_order(recorder_mock, hass, hass_cli
 
 
 async def test_fetch_period_api_with_entity_glob_include(
-    recorder_mock, hass, hass_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
@@ -713,8 +769,8 @@ async def test_fetch_period_api_with_entity_glob_include(
 
 
 async def test_fetch_period_api_with_entity_glob_exclude(
-    recorder_mock, hass, hass_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
@@ -747,14 +803,13 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 3
-    assert response_json[0][0]["entity_id"] == "binary_sensor.sensor"
-    assert response_json[1][0]["entity_id"] == "light.cow"
-    assert response_json[2][0]["entity_id"] == "light.match"
+    entities = {state[0]["entity_id"] for state in response_json}
+    assert entities == {"binary_sensor.sensor", "light.cow", "light.match"}
 
 
 async def test_fetch_period_api_with_entity_glob_include_and_exclude(
-    recorder_mock, hass, hass_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
@@ -789,13 +844,18 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 4
-    assert response_json[0][0]["entity_id"] == "light.many_state_changes"
-    assert response_json[1][0]["entity_id"] == "light.match"
-    assert response_json[2][0]["entity_id"] == "media_player.test"
-    assert response_json[3][0]["entity_id"] == "switch.match"
+    entities = {state[0]["entity_id"] for state in response_json}
+    assert entities == {
+        "light.many_state_changes",
+        "light.match",
+        "media_player.test",
+        "switch.match",
+    }
 
 
-async def test_entity_ids_limit_via_api(recorder_mock, hass, hass_client):
+async def test_entity_ids_limit_via_api(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test limiting history to entity_ids."""
     await async_setup_component(
         hass,
@@ -820,8 +880,8 @@ async def test_entity_ids_limit_via_api(recorder_mock, hass, hass_client):
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    recorder_mock, hass, hass_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
         hass,

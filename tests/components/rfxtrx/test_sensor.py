@@ -50,7 +50,7 @@ async def test_one_sensor(hass, rfxtrx):
 
 
 @pytest.mark.parametrize(
-    "state,event",
+    ("state", "event"),
     [["18.4", "0a520801070100b81b0279"], ["17.9", "0a52085e070100b31b0279"]],
 )
 async def test_state_restore(hass, rfxtrx, state, event):

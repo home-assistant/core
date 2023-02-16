@@ -1,6 +1,7 @@
 """The tests for the litejet component."""
 from homeassistant.components import switch
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
 
@@ -10,7 +11,7 @@ ENTITY_OTHER_SWITCH = "switch.mock_switch_2"
 ENTITY_OTHER_SWITCH_NUMBER = 2
 
 
-async def test_on_off(hass, mock_litejet):
+async def test_on_off(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the switch on and off."""
 
     await async_init_integration(hass, use_switch=True)
@@ -31,7 +32,7 @@ async def test_on_off(hass, mock_litejet):
     mock_litejet.release_switch.assert_called_with(ENTITY_SWITCH_NUMBER)
 
 
-async def test_pressed_event(hass, mock_litejet):
+async def test_pressed_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
 
     await async_init_integration(hass, use_switch=True)
@@ -55,7 +56,7 @@ async def test_pressed_event(hass, mock_litejet):
     assert hass.states.get(ENTITY_OTHER_SWITCH).state == "on"
 
 
-async def test_released_event(hass, mock_litejet):
+async def test_released_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
 
     await async_init_integration(hass, use_switch=True)

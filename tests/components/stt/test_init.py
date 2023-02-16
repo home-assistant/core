@@ -17,13 +17,15 @@ from homeassistant.components.stt import (
     SpeechResultState,
     async_get_provider,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
+from tests.typing import ClientSessionGenerator
 
 
-class TestProvider(Provider):
-    """Test provider."""
+class MockProvider(Provider):
+    """Mock provider."""
 
     fail_process_audio = False
 
@@ -32,7 +34,7 @@ class TestProvider(Provider):
         self.calls = []
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return ["en"]
 
@@ -73,21 +75,23 @@ class TestProvider(Provider):
 
 
 @pytest.fixture
-def test_provider():
+def mock_provider() -> MockProvider:
     """Test provider fixture."""
-    return TestProvider()
+    return MockProvider()
 
 
 @pytest.fixture(autouse=True)
-async def mock_setup(hass, test_provider):
+async def mock_setup(hass: HomeAssistant, mock_provider: MockProvider) -> None:
     """Set up a test provider."""
     mock_platform(
-        hass, "test.stt", Mock(async_get_engine=AsyncMock(return_value=test_provider))
+        hass, "test.stt", Mock(async_get_engine=AsyncMock(return_value=mock_provider))
     )
     assert await async_setup_component(hass, "stt", {"stt": {"platform": "test"}})
 
 
-async def test_get_provider_info(hass, hass_client):
+async def test_get_provider_info(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test engine that doesn't exist."""
     client = await hass_client()
     response = await client.get("/api/stt/test")
@@ -102,14 +106,18 @@ async def test_get_provider_info(hass, hass_client):
     }
 
 
-async def test_get_non_existing_provider_info(hass, hass_client):
+async def test_get_non_existing_provider_info(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test streaming to engine that doesn't exist."""
     client = await hass_client()
     response = await client.get("/api/stt/not_exist")
     assert response.status == HTTPStatus.NOT_FOUND
 
 
-async def test_stream_audio(hass, hass_client):
+async def test_stream_audio(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
     response = await client.post(
@@ -126,7 +134,7 @@ async def test_stream_audio(hass, hass_client):
 
 
 @pytest.mark.parametrize(
-    "header,status,error",
+    ("header", "status", "error"),
     (
         (None, 400, "Missing X-Speech-Content header"),
         (
@@ -144,10 +152,16 @@ async def test_stream_audio(hass, hass_client):
         ),
     ),
 )
-async def test_metadata_errors(hass, hass_client, header, status, error):
+async def test_metadata_errors(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    header: str | None,
+    status: int,
+    error: str,
+) -> None:
     """Test metadata errors."""
     client = await hass_client()
-    headers = {}
+    headers: dict[str, str] = {}
     if header:
         headers["X-Speech-Content"] = header
 
@@ -156,6 +170,6 @@ async def test_metadata_errors(hass, hass_client, header, status, error):
     assert await response.text() == error
 
 
-async def test_get_provider(hass, test_provider):
+async def test_get_provider(hass: HomeAssistant, mock_provider: MockProvider) -> None:
     """Test we can get STT providers."""
-    assert test_provider == async_get_provider(hass, "test")
+    assert mock_provider == async_get_provider(hass, "test")

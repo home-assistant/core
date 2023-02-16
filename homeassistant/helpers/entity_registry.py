@@ -30,6 +30,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import (
@@ -42,21 +43,16 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .frame import report
-from .json import JSON_DUMP
+from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
-
-    from .entity import EntityCategory
 
 T = TypeVar("T")
 
@@ -167,6 +163,7 @@ class RegistryEntry:
             "icon": self.icon,
             "id": self.id,
             "name": self.name,
+            "options": self.options,
             "original_name": self.original_name,
             "platform": self.platform,
             "translation_key": self.translation_key,
@@ -525,8 +522,6 @@ class EntityRegistry:
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
 
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
-
         if (
             entity_category
             and entity_category is not UNDEFINED
@@ -689,8 +684,6 @@ class EntityRegistry:
             and not isinstance(hidden_by, RegistryEntryHider)
         ):
             raise ValueError("hidden_by must be a RegistryEntryHider value")
-
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if (
             entity_category
@@ -859,11 +852,18 @@ class EntityRegistry:
 
     @callback
     def async_update_entity_options(
-        self, entity_id: str, domain: str, options: dict[str, Any]
+        self, entity_id: str, domain: str, options: Mapping[str, Any] | None
     ) -> RegistryEntry:
-        """Update entity options."""
+        """Update entity options for a domain.
+
+        If the domain options are set to None, they will be removed.
+        """
         old = self.entities[entity_id]
-        new_options: EntityOptionsType = {**old.options, domain: options}
+        new_options = {
+            key: value for key, value in old.options.items() if key != domain
+        }
+        if options is not None:
+            new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
     async def async_load(self) -> None:
@@ -872,8 +872,6 @@ class EntityRegistry:
 
         data = await self._store.async_load()
         entities = EntityRegistryItems()
-
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if data is not None:
             for entity in data["entities"]:

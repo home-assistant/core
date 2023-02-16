@@ -23,7 +23,7 @@ BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
 
 
 @pytest.fixture(autouse=True)
-async def apply_stop_hass(stop_hass):
+async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
@@ -107,7 +107,6 @@ def test_secrets(mock_is_file, event_loop):
     }
 
     with patch_yaml_files(files):
-
         res = check_config.check(get_test_config_dir(), True)
 
         assert res["except"] == {}

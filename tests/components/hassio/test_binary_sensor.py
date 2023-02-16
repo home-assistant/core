@@ -1,15 +1,16 @@
 """The tests for the hassio binary sensors."""
-
 import os
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -149,13 +150,15 @@ def mock_all(aioclient_mock, request):
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected",
+    ("entity_id", "expected"),
     [
         ("binary_sensor.test_running", "on"),
         ("binary_sensor.test2_running", "off"),
     ],
 )
-async def test_binary_sensor(hass, entity_id, expected, aioclient_mock):
+async def test_binary_sensor(
+    hass: HomeAssistant, entity_id, expected, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test hassio OS and addons binary sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)

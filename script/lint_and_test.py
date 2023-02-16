@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""
-Quickly check if branch is up to PR standards.
+"""Quickly check if branch is up to PR standards.
 
 This is NOT a full CI/linting replacement, only a quick check during development.
 """
 import asyncio
 from collections import namedtuple
+from contextlib import suppress
 import itertools
 import os
 import re
@@ -249,7 +249,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
+    with suppress(FileNotFoundError, KeyboardInterrupt):
         asyncio.run(main())
-    except (FileNotFoundError, KeyboardInterrupt):
-        pass

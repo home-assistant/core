@@ -9,14 +9,7 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_aio.exceptions import (
-    ApiError,
-    InvalidContentTypeError,
-    LoginError,
-    NoDataError,
-    ReolinkError,
-    UnexpectedDataError,
-)
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -30,7 +23,7 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.NUMBER]
 DEVICE_UPDATE_INTERVAL = 60
 
 
@@ -48,22 +41,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await host.async_init()
-    except UserNotAdmin as err:
+    except (UserNotAdmin, CredentialsInvalidError) as err:
+        await host.stop()
         raise ConfigEntryAuthFailed(err) from err
     except (
         ClientConnectorError,
         asyncio.TimeoutError,
-        ApiError,
-        InvalidContentTypeError,
-        LoginError,
-        NoDataError,
         ReolinkException,
-        UnexpectedDataError,
+        ReolinkError,
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
             f"Error while trying to setup {host.api.host}:{host.api.port}: {str(err)}"
         ) from err
+    except Exception:  # pylint: disable=broad-except
+        await host.stop()
+        raise
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
@@ -90,7 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         update_interval=timedelta(seconds=DEVICE_UPDATE_INTERVAL),
     )
     # Fetch initial data so we have data when entities subscribe
-    await coordinator_device_config_update.async_config_entry_first_refresh()
+    try:
+        await coordinator_device_config_update.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        await host.stop()
+        raise
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,

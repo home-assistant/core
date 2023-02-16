@@ -32,8 +32,7 @@ class EcoalSwitch(SwitchEntity):
     """Representation of Ecoal switch."""
 
     def __init__(self, ecoal_contr, name, state_attr):
-        """
-        Initialize switch.
+        """Initialize switch.
 
         Sets HA switch to state as read from controller.
         """

@@ -1,12 +1,13 @@
 """The tests for the MQTT scene platform."""
 import copy
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import mqtt, scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN, Platform
-import homeassistant.core as ha
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -25,6 +26,7 @@ from .test_common import (
 )
 
 from tests.common import mock_restore_cache
+from tests.typing import MqttMockHAClientGenerator
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -44,9 +46,11 @@ def scene_platform_only():
         yield
 
 
-async def test_sending_mqtt_commands(hass, mqtt_mock_entry_with_yaml_config):
+async def test_sending_mqtt_commands(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the sending MQTT commands."""
-    fake_state = ha.State("scene.test", STATE_UNKNOWN)
+    fake_state = State("scene.test", STATE_UNKNOWN)
     mock_restore_cache(hass, (fake_state,))
 
     assert await async_setup_component(
@@ -77,22 +81,26 @@ async def test_sending_mqtt_commands(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_availability_when_connection_lost(
-    hass, mqtt_mock_entry_with_yaml_config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
         hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
+async def test_availability_without_topic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
         hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
+async def test_default_availability_payload(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability by default payload with defined topic."""
     config = {
         mqtt.DOMAIN: {
@@ -115,7 +123,9 @@ async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_conf
     )
 
 
-async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
+async def test_custom_availability_payload(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
         mqtt.DOMAIN: {
@@ -138,7 +148,9 @@ async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_confi
     )
 
 
-async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one scene per unique_id."""
     config = {
         mqtt.DOMAIN: {
@@ -161,7 +173,11 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     )
 
 
-async def test_discovery_removal_scene(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_discovery_removal_scene(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test removal of discovered scene."""
     data = '{ "name": "test",' '  "command_topic": "test_topic" }'
     await help_test_discovery_removal(
@@ -169,7 +185,11 @@ async def test_discovery_removal_scene(hass, mqtt_mock_entry_no_yaml_config, cap
     )
 
 
-async def test_discovery_update_payload(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_discovery_update_payload(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test update of discovered scene."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
     config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
@@ -189,8 +209,10 @@ async def test_discovery_update_payload(hass, mqtt_mock_entry_no_yaml_config, ca
 
 
 async def test_discovery_update_unchanged_scene(
-    hass, mqtt_mock_entry_no_yaml_config, caplog
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test update of discovered scene."""
     data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
     with patch(
@@ -207,7 +229,11 @@ async def test_discovery_update_unchanged_scene(
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_discovery_broken(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
@@ -216,7 +242,12 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     )
 
 
-async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
+async def test_reloadable(
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+) -> None:
     """Test reloading the MQTT platform."""
     domain = scene.DOMAIN
     config = DEFAULT_CONFIG
@@ -225,14 +256,18 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass):
+async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
     """Test setup manual configured MQTT entity."""
     platform = scene.DOMAIN
     await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
     assert hass.states.get(f"{platform}.test")
 
 
-async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    tmp_path: Path,
+) -> None:
     """Test unloading the config entry."""
     domain = scene.DOMAIN
     config = DEFAULT_CONFIG

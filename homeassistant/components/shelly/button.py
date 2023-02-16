@@ -11,16 +11,17 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
-from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
+from .utils import get_device_entry_gen
 
 _ShellyCoordinatorT = TypeVar(
     "_ShellyCoordinatorT", bound=ShellyBlockCoordinator | ShellyRpcCoordinator
@@ -121,12 +122,7 @@ class ShellyButton(
         super().__init__(coordinator)
         self.entity_description = description
 
-        if isinstance(coordinator, ShellyRpcCoordinator):
-            device_name = get_rpc_device_name(coordinator.device)
-        else:
-            device_name = get_block_device_name(coordinator.device)
-
-        self._attr_name = f"{device_name} {description.name}"
+        self._attr_name = f"{coordinator.device.name} {description.name}"
         self._attr_unique_id = slugify(self._attr_name)
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}

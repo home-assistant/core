@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.tradfri import config_flow
+from homeassistant.core import HomeAssistant
 
 from . import TRADFRI_PATH
 
@@ -128,7 +129,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     }
 
 
-async def test_discovery_duplicate_aborted(hass):
+async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
     """Test a duplicate discovery host aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain="tradfri", data={"host": "some-host"}, unique_id="homekit-id"
@@ -155,7 +156,7 @@ async def test_discovery_duplicate_aborted(hass):
     assert entry.data["host"] == "new-host"
 
 
-async def test_import_duplicate_aborted(hass):
+async def test_import_duplicate_aborted(hass: HomeAssistant) -> None:
     """Test a duplicate import host is ignored."""
     MockConfigEntry(domain="tradfri", data={"host": "some-host"}).add_to_hass(hass)
 
@@ -204,7 +205,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_discovery_updates_unique_id(hass):
+async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     """Test a duplicate discovery host aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain="tradfri",

@@ -822,7 +822,6 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -851,7 +850,6 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -874,7 +872,6 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -897,7 +894,6 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # entry was added
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
@@ -972,7 +968,7 @@ async def test_import_legacy_without_name(
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
-async def test_import_websocket(hass: HomeAssistant):
+async def test_import_websocket(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -991,7 +987,7 @@ async def test_import_websocket(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("remoteencws")
-async def test_import_websocket_encrypted(hass: HomeAssistant):
+async def test_import_websocket_encrypted(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1011,7 +1007,7 @@ async def test_import_websocket_encrypted(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
-async def test_import_websocket_without_port(hass: HomeAssistant):
+async def test_import_websocket_without_port(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname by no port."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1033,7 +1029,7 @@ async def test_import_websocket_without_port(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("remotews")
-async def test_import_unknown_host(hass: HomeAssistant):
+async def test_import_unknown_host(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname that does not resolve."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",

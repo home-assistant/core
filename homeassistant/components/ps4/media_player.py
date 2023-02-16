@@ -411,7 +411,6 @@ class PS4Device(MediaPlayerEntity):
                 == game.lower().encode(encoding="utf-8")
                 or source == title_id
             ):
-
                 _LOGGER.debug(
                     "Starting PS4 game %s (%s) using source %s", game, title_id, source
                 )

@@ -137,7 +137,7 @@ async def async_setup_entry(
 
 def calc_min(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate min value."""
     val: float | None = None
     entity_id: str | None = None
@@ -153,7 +153,7 @@ def calc_min(
 
 def calc_max(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate max value."""
     val: float | None = None
     entity_id: str | None = None
@@ -169,7 +169,7 @@ def calc_max(
 
 def calc_mean(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate mean value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
 
@@ -179,7 +179,7 @@ def calc_mean(
 
 def calc_median(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate median value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
 
@@ -189,10 +189,11 @@ def calc_median(
 
 def calc_last(
     sensor_values: list[tuple[str, float, State]]
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate last value."""
     last_updated: datetime | None = None
     last_entity_id: str | None = None
+    last: float | None = None
     for entity_id, state_f, state in sensor_values:
         if last_updated is None or state.last_updated > last_updated:
             last_updated = state.last_updated
@@ -227,7 +228,9 @@ def calc_sum(
 
 CALC_TYPES: dict[
     str,
-    Callable[[list[tuple[str, float, State]]], tuple[dict[str, str | None], float]],
+    Callable[
+        [list[tuple[str, float, State]]], tuple[dict[str, str | None], float | None]
+    ],
 ] = {
     "min": calc_min,
     "max": calc_max,
@@ -244,7 +247,6 @@ class SensorGroup(GroupEntity, SensorEntity):
 
     _attr_available = False
     _attr_should_poll = False
-    _attr_icon = "mdi:calculator"
 
     def __init__(
         self,
@@ -351,6 +353,16 @@ class SensorGroup(GroupEntity, SensorEntity):
         if self._attr_device_class is not None:
             return self._attr_device_class
         return self.calc_device_class
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon.
+
+        Only override the icon if the device class is not set.
+        """
+        if not self.device_class:
+            return "mdi:calculator"
+        return None
 
     @property
     def state_class(self) -> SensorStateClass | str | None:

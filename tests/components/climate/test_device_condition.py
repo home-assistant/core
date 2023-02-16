@@ -5,8 +5,13 @@ import voluptuous_serialize
 import homeassistant.components.automation as automation
 from homeassistant.components.climate import DOMAIN, HVACMode, const, device_condition
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -15,22 +20,8 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -40,7 +31,7 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_condition_types",
+    ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
         (False, 0, 0, ["is_hvac_mode"]),
         (
@@ -59,22 +50,22 @@ def calls(hass):
     ],
 )
 async def test_get_conditions(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     features_reg,
     features_state,
     expected_condition_types,
-):
+) -> None:
     """Test we get the expected conditions from a climate."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -104,7 +95,7 @@ async def test_get_conditions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -113,20 +104,20 @@ async def test_get_conditions(
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -151,7 +142,7 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off conditions."""
     assert await async_setup_component(
         hass,
@@ -258,7 +249,13 @@ async def test_if_state(hass, calls):
 
 
 @pytest.mark.parametrize(
-    "set_state,capabilities_reg,capabilities_state,condition,expected_capabilities",
+    (
+        "set_state",
+        "capabilities_reg",
+        "capabilities_state",
+        "condition",
+        "expected_capabilities",
+    ),
     [
         (
             False,
@@ -319,23 +316,23 @@ async def test_if_state(hass, calls):
     ],
 )
 async def test_capabilities(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     capabilities_reg,
     capabilities_state,
     condition,
     expected_capabilities,
-):
+) -> None:
     """Test getting capabilities."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -371,12 +368,12 @@ async def test_capabilities(
 
 
 @pytest.mark.parametrize(
-    "condition,capability_name",
+    ("condition", "capability_name"),
     [("is_hvac_mode", "hvac_mode"), ("is_preset_mode", "preset_mode")],
 )
 async def test_capabilities_missing_entity(
-    hass, device_reg, entity_reg, condition, capability_name
-):
+    hass: HomeAssistant, condition, capability_name
+) -> None:
     """Test getting capabilities."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

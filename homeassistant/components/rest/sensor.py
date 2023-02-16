@@ -25,12 +25,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template_entity import TemplateSensor
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.json import json_loads
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
+from .data import RestData
 from .entity import RestEntity
 from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
 
@@ -67,7 +70,7 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    unique_id = conf.get(CONF_UNIQUE_ID)
+    unique_id: str | None = conf.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
@@ -87,19 +90,19 @@ class RestSensor(RestEntity, TemplateSensor):
 
     def __init__(
         self,
-        hass,
-        coordinator,
-        rest,
-        config,
-        unique_id,
-    ):
+        hass: HomeAssistant,
+        coordinator: DataUpdateCoordinator[None] | None,
+        rest: RestData,
+        config: ConfigType,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the REST sensor."""
         RestEntity.__init__(
             self,
             coordinator,
             rest,
             config.get(CONF_RESOURCE_TEMPLATE),
-            config.get(CONF_FORCE_UPDATE),
+            config[CONF_FORCE_UPDATE],
         )
         TemplateSensor.__init__(
             self,
@@ -108,25 +111,13 @@ class RestSensor(RestEntity, TemplateSensor):
             fallback_name=DEFAULT_SENSOR_NAME,
             unique_id=unique_id,
         )
-        self._state = None
         self._value_template = config.get(CONF_VALUE_TEMPLATE)
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
         self._json_attrs = config.get(CONF_JSON_ATTRS)
-        self._attributes = None
         self._json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
 
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    def _update_from_rest_data(self):
+    def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
@@ -150,7 +141,7 @@ class RestSensor(RestEntity, TemplateSensor):
                     _LOGGER.debug("Erroneous XML: %s", value)
 
         if self._json_attrs:
-            self._attributes = {}
+            self._attr_extra_state_attributes = {}
             if value:
                 try:
                     json_dict = json_loads(value)
@@ -165,7 +156,7 @@ class RestSensor(RestEntity, TemplateSensor):
                         attrs = {
                             k: json_dict[k] for k in self._json_attrs if k in json_dict
                         }
-                        self._attributes = attrs
+                        self._attr_extra_state_attributes = attrs
                     else:
                         _LOGGER.warning(
                             "JSON result was not a dictionary"
@@ -187,9 +178,9 @@ class RestSensor(RestEntity, TemplateSensor):
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
         ):
-            self._state = value
+            self._attr_native_value = value
             return
 
-        self._state = async_parse_date_datetime(
+        self._attr_native_value = async_parse_date_datetime(
             value, self.entity_id, self.device_class
         )

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.sensor import DOMAIN
@@ -97,11 +97,12 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
             'echo "template_value" "3 4"',
             shell=True,  # nosec # shell by design
             timeout=15,
+            close_fds=False,
         )
 
 
 async def test_bad_template_render(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test rendering a broken template."""
 
@@ -128,7 +129,9 @@ async def test_bad_command(hass: HomeAssistant) -> None:
     assert entity_state.state == "unknown"
 
 
-async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_return_code(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test that an error return code is logged."""
     await setup_test_entities(
         hass,
@@ -159,7 +162,7 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
 
 
 async def test_update_with_json_attrs_no_data(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test attributes when no JSON result fetched."""
 
@@ -177,7 +180,7 @@ async def test_update_with_json_attrs_no_data(
 
 
 async def test_update_with_json_attrs_not_dict(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test attributes when the return value not a dict."""
 
@@ -195,7 +198,7 @@ async def test_update_with_json_attrs_not_dict(
 
 
 async def test_update_with_json_attrs_bad_json(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test attributes when the return value is invalid JSON."""
 
@@ -213,7 +216,7 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_update_with_missing_json_attrs(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test attributes when an expected key is missing."""
 
@@ -236,7 +239,7 @@ async def test_update_with_missing_json_attrs(
 
 
 async def test_update_with_unnecessary_json_attrs(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test attributes when an expected key is missing."""
 
