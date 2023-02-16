@@ -329,7 +329,7 @@ class MqttClientSetup:
                 certificate,
                 certfile=client_cert,
                 keyfile=client_key,
-                tls_version=ssl.PROTOCOL_TLS,
+                tls_version=ssl.PROTOCOL_TLS_CLIENT,
             )
 
             if tls_insecure is not None:
