@@ -2077,28 +2077,45 @@ def _sorted_statistics_to_dict(
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = None
-        args = (
-            ent_results,
-            stats_list,
-            table_duration_seconds,
-            _want_last_reset,
-            _want_mean,
-            _want_min,
-            _want_max,
-            _want_state,
-            _want_sum,
-            start_ts_idx,
-            last_reset_ts_idx,
-            mean_idx,
-            min_idx,
-            max_idx,
-            state_idx,
-            sum_idx,
-        )
         if convert:
-            _build_converted_statistic_entries(convert, *args)
+            _build_converted_statistic_entries(
+                ent_results,
+                stats_list,
+                convert,
+                table_duration_seconds,
+                _want_last_reset,
+                _want_mean,
+                _want_min,
+                _want_max,
+                _want_state,
+                _want_sum,
+                start_ts_idx,
+                last_reset_ts_idx,
+                mean_idx,
+                min_idx,
+                max_idx,
+                state_idx,
+                sum_idx,
+            )
         else:
-            _build_raw_statistic_entries(*args)
+            _build_raw_statistic_entries(
+                ent_results,
+                stats_list,
+                table_duration_seconds,
+                _want_last_reset,
+                _want_mean,
+                _want_min,
+                _want_max,
+                _want_state,
+                _want_sum,
+                start_ts_idx,
+                last_reset_ts_idx,
+                mean_idx,
+                min_idx,
+                max_idx,
+                state_idx,
+                sum_idx,
+            )
 
     return result
 
@@ -2143,9 +2160,9 @@ def _build_raw_statistic_entries(
 
 
 def _build_converted_statistic_entries(
-    convert: Callable[[Any], Any],
     ent_results: list[dict[str, Any]],
     stats_list: list[Row],
+    convert: Callable[[Any], Any],
     table_duration_seconds: float,
     _want_last_reset: bool,
     _want_mean: bool,
