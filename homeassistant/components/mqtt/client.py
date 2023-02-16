@@ -505,7 +505,7 @@ class MQTT:
     def async_restore_tracked_subscriptions(
         self, subscriptions: list[Subscription]
     ) -> None:
-        """Restore tracked subscriptions after reconnect."""
+        """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
             self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
