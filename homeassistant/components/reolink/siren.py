@@ -92,7 +92,7 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the siren."""
-        duration = kwargs.get(ATTR_DURATION, 2)
+        duration = kwargs.get(ATTR_DURATION)
         await self.entity_description.method(
             self._host.api, self._channel, True, duration
         )
