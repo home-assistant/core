@@ -16,8 +16,8 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-from homeassistant.helpers.json import json_loads_object
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads_object
 
 from .const import SupportedDialect
 

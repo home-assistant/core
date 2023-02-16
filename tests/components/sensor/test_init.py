@@ -1641,7 +1641,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     ],
 )
 @pytest.mark.parametrize(
-    "native_value,expected",
+    ("native_value", "expected"),
     [
         ("abc", "abc"),
         ("13.7.1", "13.7.1"),
@@ -1687,7 +1687,7 @@ async def test_non_numeric_validation_warn(
     ("device_class", "state_class", "unit", "precision"), ((None, None, None, 1),)
 )
 @pytest.mark.parametrize(
-    "native_value,expected",
+    ("native_value", "expected"),
     [
         ("abc", "abc"),
         ("13.7.1", "13.7.1"),
@@ -1737,7 +1737,7 @@ async def test_non_numeric_validation_raise(
     ],
 )
 @pytest.mark.parametrize(
-    "native_value,expected",
+    ("native_value", "expected"),
     [
         (13, "13"),
         (17.50, "17.5"),

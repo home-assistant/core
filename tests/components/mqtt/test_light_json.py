@@ -97,8 +97,8 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.json import JsonValueType, json_loads
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonValueType, json_loads
 
 from .test_common import (
     help_test_availability_when_connection_lost,
