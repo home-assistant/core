@@ -2001,7 +2001,7 @@ def _statistics_at_time(
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
-def _sorted_statistics_to_dict(  # noqa: C901
+def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Sequence[Row[Any]],
