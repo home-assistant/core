@@ -3,7 +3,7 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "Set up Owntone device",
+        "title": "Set up OwnTone device",
         "data": {
           "name": "Friendly name",
           "host": "[%key:common::config_flow::data::host%]",
@@ -13,23 +13,23 @@
       }
     },
     "error": {
-      "forbidden": "Unable to connect. Please check your Owntone network permissions.",
-      "websocket_not_enabled": "Owntone server websocket not enabled.",
+      "forbidden": "Unable to connect. Please check your OwnTone network permissions.",
+      "websocket_not_enabled": "OwnTone server websocket not enabled.",
       "wrong_host_or_port": "Unable to connect. Please check host and port.",
       "wrong_password": "Incorrect password.",
-      "wrong_server_type": "The Owntone integration requires an Owntone server with version >= 27.0.",
+      "wrong_server_type": "The OwnTone integration requires an OwnTone server with version >= 27.0.",
       "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_forked_daapd": "Device is not an Owntone server."
+      "not_forked_daapd": "Device is not an OwnTone server."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Configure Owntone options",
-        "description": "Set various options for the Owntone integration.",
+        "title": "Configure OwnTone options",
+        "description": "Set various options for the OwnTone integration.",
         "data": {
           "librespot_java_port": "Port for librespot-java pipe control (if used)",
           "max_playlists": "Max number of playlists used as sources",

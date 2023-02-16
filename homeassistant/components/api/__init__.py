@@ -28,9 +28,10 @@ import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
 
