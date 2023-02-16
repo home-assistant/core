@@ -1743,7 +1743,7 @@ def _statistics_during_period_with_session(
     stmt = _statistics_during_period_stmt(
         start_time, end_time, metadata_ids, table, types
     )
-    stats = execute_stmt_lambda_element(session, stmt)
+    stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
     if not stats:
         return {}
@@ -1860,7 +1860,7 @@ def _get_last_statistics(
             stmt = _get_last_statistics_stmt(metadata_id, number_of_stats)
         else:
             stmt = _get_last_statistics_short_term_stmt(metadata_id, number_of_stats)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
         if not stats:
             return {}
@@ -1956,7 +1956,7 @@ def get_latest_short_term_statistics(
             if statistic_id in metadata
         ]
         stmt = _latest_short_term_statistics_stmt(metadata_ids)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
         if not stats:
             return {}
 
@@ -2020,7 +2020,7 @@ def _statistics_at_time(
 def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
-    stats: Iterable[Row],
+    stats: Sequence[Row[Any]],
     statistic_ids: list[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
@@ -2031,10 +2031,15 @@ def _sorted_statistics_to_dict(
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
+    if not stats:
+        return result
     metadata = dict(_metadata.values())
     need_stat_at_start_time: set[int] = set()
     start_time_ts = start_time.timestamp() if start_time else None
     # Identify metadata IDs for which no data was available at the requested start time
+    field_map: dict[str, int] = {key: idx for idx, key in enumerate(stats[0]._fields)}
+    metadata_id_ = field_map["metadata_id"]
+    start_ts_ = field_map["start_ts"]
     stats_by_meta_id: dict[int, list[Row]] = {}
     seen_statistic_ids: set[str] = set()
     key_func = attrgetter("metadata_id")
@@ -2061,14 +2066,20 @@ def _sorted_statistics_to_dict(
             session, need_stat_at_start_time, table, start_time, types
         ):
             for stat in tmp:
-                stats_by_meta_id[stat.metadata_id].insert(0, stat)
+                stats_by_meta_id[stat[metadata_id_]].insert(0, stat)
 
-    _want_mean = "mean" in types
-    _want_min = "min" in types
-    _want_max = "max" in types
-    _want_last_reset = "last_reset" in types
-    _want_state = "state" in types
-    _want_sum = "sum" in types
+    if _want_mean := "mean" in types:
+        mean_ = field_map["mean"]
+    if _want_min := "min" in types:
+        min_ = field_map["min"]
+    if _want_max := "max" in types:
+        max_ = field_map["max"]
+    if _want_last_reset := "last_reset" in types:
+        last_reset_ts_ = field_map["last_reset_ts"]
+    if _want_state := "state" in types:
+        state_ = field_map["state"]
+    if _want_sum := "sum" in types:
+        sum_ = field_map["sum"]
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -2084,21 +2095,23 @@ def _sorted_statistics_to_dict(
         ent_results = result[statistic_id]
         for db_state in stats_list:
             row: dict[str, Any] = {
-                "start": (start_ts := db_state.start_ts),
+                "start": (start_ts := db_state[start_ts_]),
                 "end": start_ts + table_duration_seconds,
             }
             if _want_mean:
-                row["mean"] = convert(db_state.mean) if convert else db_state.mean
+                row["mean"] = convert(db_state[mean_]) if convert else db_state[mean_]
             if _want_min:
-                row["min"] = convert(db_state.min) if convert else db_state.min
+                row["min"] = convert(db_state[min_]) if convert else db_state[min_]
             if _want_max:
-                row["max"] = convert(db_state.max) if convert else db_state.max
+                row["max"] = convert(db_state[max_]) if convert else db_state[max_]
             if _want_last_reset:
-                row["last_reset"] = db_state.last_reset_ts
+                row["last_reset"] = db_state[last_reset_ts_]
             if _want_state:
-                row["state"] = convert(db_state.state) if convert else db_state.state
+                row["state"] = (
+                    convert(db_state[state_]) if convert else db_state[state_]
+                )
             if _want_sum:
-                row["sum"] = convert(db_state.sum) if convert else db_state.sum
+                row["sum"] = convert(db_state[sum_]) if convert else db_state[sum_]
             ent_results.append(row)
 
     return result
