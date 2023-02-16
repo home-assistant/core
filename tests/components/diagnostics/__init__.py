@@ -5,8 +5,8 @@ from typing import cast
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.json import JsonObjectType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonObjectType
 
 from tests.typing import ClientSessionGenerator
 
