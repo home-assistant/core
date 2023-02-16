@@ -1,4 +1,5 @@
 """Test UniFi Network integration setup process."""
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components import unifi
@@ -61,7 +62,11 @@ async def test_unload_entry(
     assert not hass.data[UNIFI_DOMAIN]
 
 
-async def test_wireless_clients(hass, hass_storage, aioclient_mock):
+async def test_wireless_clients(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Verify wireless clients class."""
     hass_storage[unifi.STORAGE_KEY] = {
         "version": unifi.STORAGE_VERSION,

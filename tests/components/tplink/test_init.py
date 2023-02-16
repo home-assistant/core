@@ -76,7 +76,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
 
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_reg: EntityRegistry
-):
+) -> None:
     """Test no migration happens if the original entity id still exists."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
     config_entry.add_to_hass(hass)
