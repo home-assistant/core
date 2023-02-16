@@ -4,7 +4,7 @@ from functools import partial
 import json
 import math
 import os
-from tempfile import mkdtemp
+from pathlib import Path
 import time
 from typing import NamedTuple
 from unittest.mock import Mock, patch
@@ -28,25 +28,6 @@ from homeassistant.util.json import SerializationError, load_json
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
 TEST_JSON_B = {"a": "one", "B": 2}
-
-TMP_DIR = None
-
-
-@pytest.fixture(autouse=True)
-def setup_and_teardown():
-    """Clean up after tests."""
-    global TMP_DIR
-    TMP_DIR = mkdtemp()
-
-    yield
-
-    for fname in os.listdir(TMP_DIR):
-        os.remove(os.path.join(TMP_DIR, fname))
-    os.rmdir(TMP_DIR)
-
-
-def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, f"{leaf_name}.json")
 
 
 @pytest.mark.parametrize("encoder", (DefaultHASSJSONEncoder, ExtendedJSONEncoder))
@@ -168,25 +149,25 @@ def test_json_bytes_strip_null() -> None:
     )
 
 
-def test_save_and_load() -> None:
+def test_save_and_load(tmp_path: Path) -> None:
     """Test saving and loading back."""
-    fname = _path_for("test1")
+    fname = tmp_path / "test1.json"
     save_json(fname, TEST_JSON_A)
     data = load_json(fname)
     assert data == TEST_JSON_A
 
 
-def test_save_and_load_int_keys() -> None:
+def test_save_and_load_int_keys(tmp_path: Path) -> None:
     """Test saving and loading back stringifies the keys."""
-    fname = _path_for("test1")
+    fname = tmp_path / "test1.json"
     save_json(fname, {1: "a", 2: "b"})
     data = load_json(fname)
     assert data == {"1": "a", "2": "b"}
 
 
-def test_save_and_load_private() -> None:
+def test_save_and_load_private(tmp_path: Path) -> None:
     """Test we can load private files and that they are protected."""
-    fname = _path_for("test2")
+    fname = tmp_path / "test2.json"
     save_json(fname, TEST_JSON_A, private=True)
     data = load_json(fname)
     assert data == TEST_JSON_A
@@ -195,9 +176,9 @@ def test_save_and_load_private() -> None:
 
 
 @pytest.mark.parametrize("atomic_writes", [True, False])
-def test_overwrite_and_reload(atomic_writes: bool) -> None:
+def test_overwrite_and_reload(atomic_writes: bool, tmp_path: Path) -> None:
     """Test that we can overwrite an existing file and read back."""
-    fname = _path_for("test3")
+    fname = tmp_path / "test3.json"
     save_json(fname, TEST_JSON_A, atomic_writes=atomic_writes)
     save_json(fname, TEST_JSON_B, atomic_writes=atomic_writes)
     data = load_json(fname)
@@ -218,7 +199,7 @@ def test_save_bad_data() -> None:
     )
 
 
-def test_custom_encoder() -> None:
+def test_custom_encoder(tmp_path: Path) -> None:
     """Test serializing with a custom encoder."""
 
     class MockJSONEncoder(json.JSONEncoder):
@@ -228,15 +209,15 @@ def test_custom_encoder() -> None:
             """Mock JSON encode method."""
             return "9"
 
-    fname = _path_for("test6")
+    fname = tmp_path / "test6.json"
     save_json(fname, Mock(), encoder=MockJSONEncoder)
     data = load_json(fname)
     assert data == "9"
 
 
-def test_default_encoder_is_passed() -> None:
+def test_default_encoder_is_passed(tmp_path: Path) -> None:
     """Test we use orjson if they pass in the default encoder."""
-    fname = _path_for("test6")
+    fname = tmp_path / "test6.json"
     with patch(
         "homeassistant.helpers.json.orjson.dumps", return_value=b"{}"
     ) as mock_orjson_dumps:

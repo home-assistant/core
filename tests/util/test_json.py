@@ -1,6 +1,5 @@
 """Test Home Assistant json utility functions."""
-import os
-from tempfile import mkdtemp
+from pathlib import Path
 
 import pytest
 
@@ -12,29 +11,10 @@ TEST_JSON_A = {"a": 1, "B": "two"}
 # Test data that cannot be loaded as JSON
 TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 
-TMP_DIR = None
 
-
-@pytest.fixture(autouse=True)
-def setup_and_teardown():
-    """Clean up after tests."""
-    global TMP_DIR
-    TMP_DIR = mkdtemp()
-
-    yield
-
-    for fname in os.listdir(TMP_DIR):
-        os.remove(os.path.join(TMP_DIR, fname))
-    os.rmdir(TMP_DIR)
-
-
-def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, f"{leaf_name}.json")
-
-
-def test_load_bad_data() -> None:
+def test_load_bad_data(tmp_path: Path) -> None:
     """Test error from trying to load unserialisable data."""
-    fname = _path_for("test5")
+    fname = tmp_path / "test5.json"
     with open(fname, "w") as fh:
         fh.write(TEST_BAD_SERIALIED)
     with pytest.raises(HomeAssistantError):
@@ -90,12 +70,14 @@ async def test_deprecated_test_find_unserializable_data(
     assert "should be updated to use homeassistant.helpers.json module" in caplog.text
 
 
-async def test_deprecated_save_json(caplog: pytest.LogCaptureFixture) -> None:
+async def test_deprecated_save_json(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
     """Test deprecated save_json logs a warning."""
     # pylint: disable-next=hass-deprecated-import,import-outside-toplevel
     from homeassistant.util.json import save_json
 
-    fname = _path_for("test1")
+    fname = tmp_path / "test1.json"
     save_json(fname, TEST_JSON_A)
     assert "uses save_json from homeassistant.util.json" in caplog.text
     assert "should be updated to use homeassistant.helpers.json module" in caplog.text
