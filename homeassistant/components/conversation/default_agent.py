@@ -17,7 +17,6 @@ from home_assistant_intents import get_intents
 import yaml
 
 from homeassistant import core, setup
-from homeassistant.components import cloud
 from homeassistant.helpers import (
     area_registry,
     entity_registry,
@@ -28,7 +27,7 @@ from homeassistant.helpers import (
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
-from .const import DOMAIN
+from .const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -38,7 +37,7 @@ REGEX_TYPE = type(re.compile(""))
 
 def is_entity_exposed(state: core.State) -> bool:
     """Return true if entity belongs to exposed domain list."""
-    return state.domain in cloud.const.DEFAULT_EXPOSED_DOMAINS
+    return state.domain in DEFAULT_EXPOSED_DOMAINS
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
