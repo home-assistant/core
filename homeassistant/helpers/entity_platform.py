@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger, getLogger
@@ -31,6 +32,7 @@ from homeassistant.exceptions import (
     PlatformNotReady,
     RequiredParameterMissing,
 )
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -278,9 +280,10 @@ class EntityPlatform:
         hass = self.hass
         full_name = f"{self.domain}.{self.platform_name}"
 
-        self.entity_translations = await translation.async_get_translations(
-            hass, hass.config.language, "entity", {self.platform_name}
-        )
+        with suppress(IntegrationNotFound):
+            self.entity_translations = await translation.async_get_translations(
+                hass, hass.config.language, "entity", {self.platform_name}
+            )
 
         logger.info("Setting up %s", full_name)
         warn_task = hass.loop.call_later(
