@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
+from operator import attrgetter
 import time
 from typing import Any, cast
 
@@ -895,7 +896,8 @@ def _sorted_states_to_dict(
             (entity_ids[0], iter(states)),
         )
     else:
-        states_iter = groupby(states, lambda state: state.entity_id)  # type: ignore[no-any-return]
+        key_func = attrgetter("entity_id")
+        states_iter = groupby(states, key_func)
 
     # Append all changes to it
     for ent_id, group in states_iter:
