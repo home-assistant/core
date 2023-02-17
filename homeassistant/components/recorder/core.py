@@ -855,7 +855,7 @@ class Recorder(threading.Thread):
             return
 
         shared_data = shared_data_bytes.decode("utf-8")
-        if not self._event_data_ids():
+        if not self._event_data_ids:
             self._load_recent_event_attributes()
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
