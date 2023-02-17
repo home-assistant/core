@@ -134,6 +134,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
+    "snapshot": "SnapshotAssertion",
     "tmp_path": "Path",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
