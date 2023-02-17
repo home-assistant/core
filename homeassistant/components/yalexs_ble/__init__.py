@@ -1,7 +1,15 @@
 """The Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-from yalexs_ble import AuthError, PushLock, YaleXSBLEError, local_name_is_unique
+from yalexs_ble import (
+    AuthError,
+    ConnectionInfo,
+    LockInfo,
+    LockState,
+    PushLock,
+    YaleXSBLEError,
+    local_name_is_unique,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -76,6 +84,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    @callback
+    def _async_state_changed(
+        new_state: LockState, lock_info: LockInfo, connection_info: ConnectionInfo
+    ) -> None:
+        """Handle state changed."""
+        if new_state.auth and not new_state.auth.successful:
+            entry.async_start_reauth(hass)
+
+    entry.async_on_unload(push_lock.register_callback(_async_state_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
