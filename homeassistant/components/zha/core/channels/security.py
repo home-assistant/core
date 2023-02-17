@@ -5,7 +5,6 @@ https://home-assistant.io/integrations/zha/
 """
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
@@ -351,7 +350,7 @@ class IASZoneChannel(ZigbeeChannel):
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
-            asyncio.create_task(res)
+            self._cluster.create_catching_task(res)
 
     async def async_configure(self):
         """Configure IAS device."""
