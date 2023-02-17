@@ -19,7 +19,7 @@ async def test_setup(
     mock_backend_selector_api: MagicMock,
     region,
     mock_aircon_api_instances: MagicMock,
-):
+) -> None:
     """Test setup."""
     entry = await init_integration(hass, region[0])
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -31,7 +31,7 @@ async def test_setup_region_fallback(
     hass: HomeAssistant,
     mock_backend_selector_api: MagicMock,
     mock_aircon_api_instances: MagicMock,
-):
+) -> None:
     """Test setup when no region is available on the ConfigEntry.
 
     This can happen after a version update, since there was no region in the first versions.
@@ -54,7 +54,7 @@ async def test_setup_http_exception(
     hass: HomeAssistant,
     mock_auth_api: MagicMock,
     mock_aircon_api_instances: MagicMock,
-):
+) -> None:
     """Test setup with an http exception."""
     mock_auth_api.return_value.do_auth = AsyncMock(
         side_effect=aiohttp.ClientConnectionError()
@@ -68,7 +68,7 @@ async def test_setup_auth_failed(
     hass: HomeAssistant,
     mock_auth_api: MagicMock,
     mock_aircon_api_instances: MagicMock,
-):
+) -> None:
     """Test setup with failed auth."""
     mock_auth_api.return_value.do_auth = AsyncMock()
     mock_auth_api.return_value.is_access_token_valid.return_value = False
@@ -81,7 +81,7 @@ async def test_setup_fetch_appliances_failed(
     hass: HomeAssistant,
     mock_appliances_manager_api: MagicMock,
     mock_aircon_api_instances: MagicMock,
-):
+) -> None:
     """Test setup with failed fetch_appliances."""
     mock_appliances_manager_api.return_value.fetch_appliances.return_value = False
     entry = await init_integration(hass)
@@ -93,7 +93,7 @@ async def test_unload_entry(
     hass: HomeAssistant,
     mock_aircon_api_instances: MagicMock,
     mock_sensor_api_instances: MagicMock,
-):
+) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
