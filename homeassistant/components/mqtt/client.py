@@ -74,12 +74,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import (
-    get_file_path,
-    get_mqtt_data,
-    mqtt_config_entry_enabled,
-    wildcard_topic,
-)
+from .util import get_file_path, get_mqtt_data, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -762,7 +757,7 @@ class MQTT:
 
             # Skip messages for non-wildcard topics where RETAIN=1, and we have
             # already received a RETAIN=1 message.
-            if wildcard_topic(subscription.topic) or not (
+            if not _is_simple_match(subscription.topic) or not (
                 msg.retain and subscription.initialized
             ):
                 if msg.retain:
