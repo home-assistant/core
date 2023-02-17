@@ -315,6 +315,7 @@ class BluetoothManager:
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
                     tracker.async_remove_address(address)
+                    self._integration_matcher.async_clear_address(address)
                     self._async_dismiss_discoveries(address)
 
                 service_info = history.pop(address)
