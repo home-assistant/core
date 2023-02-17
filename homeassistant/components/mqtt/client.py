@@ -615,11 +615,15 @@ class MQTT:
             _raise_on_error(result)
             return mid
 
-        async with self._paho_lock:
-            if self._is_active_subscription(topic):
-                # Other subscriptions on topic remaining - don't unsubscribe.
-                return
+        if self._is_active_subscription(topic):
+            # Other subscriptions on topic remaining - don't unsubscribe.
+            return
 
+        async with self._subscriptions_lock:
+            if topic in self._pending_subscriptions:
+                del self._pending_subscriptions[topic]
+
+        async with self._paho_lock:
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
