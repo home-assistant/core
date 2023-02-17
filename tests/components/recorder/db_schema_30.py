@@ -46,13 +46,9 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import (
-    JSON_DECODE_EXCEPTIONS,
-    JSON_DUMP,
-    json_bytes,
-    json_loads,
-)
+from homeassistant.helpers.json import JSON_DUMP, json_bytes
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
 

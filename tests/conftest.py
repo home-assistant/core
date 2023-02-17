@@ -55,10 +55,10 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
 )
-from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
+from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 from .typing import (

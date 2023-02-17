@@ -19,9 +19,9 @@ from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.json import json_loads
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
+from homeassistant.util.json import json_loads
 
 from tests.common import MockEntity, MockEntityPlatform, MockUser, async_mock_service
 from tests.typing import ClientSessionGenerator, WebSocketGenerator

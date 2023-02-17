@@ -28,9 +28,9 @@ from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from . import (
     FakeScanner,
