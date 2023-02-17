@@ -3573,3 +3573,26 @@ async def test_initializing_flows_canceled_on_shutdown(hass: HomeAssistant, mana
 
         with pytest.raises(asyncio.exceptions.CancelledError):
             await task
+
+
+async def test_task_tracking(hass):
+    """Test task tracking for a config entry."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    event = asyncio.Event()
+    results = []
+
+    async def test_task():
+        try:
+            await event.wait()
+            results.append("normal")
+        except asyncio.CancelledError:
+            results.append("background")
+            raise
+
+    entry.async_create_task(hass, test_task())
+    entry.async_create_background_task(hass, test_task(), "background-task-name")
+    await asyncio.sleep(0)
+    hass.loop.call_soon(event.set)
+    await entry._async_process_on_unload()
+    assert results == ["background", "normal"]

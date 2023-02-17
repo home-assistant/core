@@ -20,6 +20,15 @@ from .db_schema import (
 )
 
 
+def get_recent_shared_attributes(count: int) -> StatementLambdaElement:
+    """Find an attributes_id by hash and shared_attrs."""
+    return lambda_stmt(
+        lambda: select(StateAttributes.attributes_id, StateAttributes.shared_attrs)
+        .order_by(StateAttributes.attributes_id.desc())
+        .limit(count)
+    )
+
+
 def find_shared_attributes_id(
     data_hash: int, shared_attrs: str
 ) -> StatementLambdaElement:
