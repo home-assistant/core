@@ -1,6 +1,5 @@
 """Tests for Airversa AP2 Air Purifier."""
 
-from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, PERCENTAGE
 from homeassistant.helpers.entity import EntityCategory
@@ -32,16 +31,6 @@ async def test_airversa_ap2_setup(hass):
             serial_number="1234",
             devices=[],
             entities=[
-                EntityTestInfo(
-                    entity_id="fan.airversa_ap2_1808_airpurifier",
-                    friendly_name="Airversa AP2 1808 AirPurifier",
-                    unique_id="00:00:00:00:00:00_1_32832",
-                    supported_features=FanEntityFeature.SET_SPEED,
-                    capabilities={
-                        "preset_modes": None,
-                    },
-                    state="off",
-                ),
                 EntityTestInfo(
                     entity_id="switch.airversa_ap2_1808_automatic_fan_speed",
                     friendly_name="Airversa AP2 1808 Automatic Fan Speed",
