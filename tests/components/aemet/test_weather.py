@@ -1,5 +1,4 @@
 """The sensor tests for the AEMET OpenData platform."""
-
 from unittest.mock import patch
 
 from homeassistant.components.aemet.const import ATTRIBUTION
@@ -22,12 +21,13 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .util import async_init_integration
 
 
-async def test_aemet_weather(hass):
+async def test_aemet_weather(hass: HomeAssistant) -> None:
     """Test states of the weather."""
 
     hass.config.set_time_zone("UTC")

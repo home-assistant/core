@@ -157,7 +157,8 @@ def round_temperature(temperature: float | None, precision: float) -> float | No
 class Forecast(TypedDict, total=False):
     """Typed weather forecast dict.
 
-    All attributes are in native units and old attributes kept for backwards compatibility.
+    All attributes are in native units and old attributes kept
+    for backwards compatibility.
     """
 
     condition: str | None
@@ -622,7 +623,10 @@ class WeatherEntity(Entity):
     @final
     @property
     def state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes, converted from native units to user-configured units."""
+        """Return the state attributes, converted.
+
+        Attributes are configured from native units to user-configured units.
+        """
         data: dict[str, Any] = {}
 
         precision = self.precision

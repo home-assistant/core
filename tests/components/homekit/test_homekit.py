@@ -47,7 +47,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistantError, State
+from homeassistant.core import HomeAssistant, HomeAssistantError, State
 from homeassistant.helpers import device_registry, entity_registry as er, instance_id
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -137,7 +137,7 @@ def _mock_pyhap_bridge():
     )
 
 
-async def test_setup_min(hass, mock_async_zeroconf):
+async def test_setup_min(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
     """Test async_setup with min config options."""
 
     entry = MockConfigEntry(
@@ -177,7 +177,9 @@ async def test_setup_min(hass, mock_async_zeroconf):
 
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
-async def test_removing_entry(port_mock, hass, mock_async_zeroconf):
+async def test_removing_entry(
+    port_mock, hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test removing a config entry."""
 
     entry = MockConfigEntry(
@@ -219,7 +221,9 @@ async def test_removing_entry(port_mock, hass, mock_async_zeroconf):
     await hass.async_block_till_done()
 
 
-async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
+async def test_homekit_setup(
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
+) -> None:
     """Test setup of bridge and driver."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -267,7 +271,9 @@ async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
     assert homekit.driver.safe_mode is False
 
 
-async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
+async def test_homekit_setup_ip_address(
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
+) -> None:
     """Test setup with given IP address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -310,7 +316,9 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
     )
 
 
-async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_async_zeroconf):
+async def test_homekit_setup_advertise_ip(
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
+) -> None:
     """Test setup with given IP address to advertise."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -354,7 +362,9 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_async_zeroconf):
     )
 
 
-async def test_homekit_add_accessory(hass, mock_async_zeroconf, mock_hap):
+async def test_homekit_add_accessory(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
     """Add accessory if config exists and get_acc returns an accessory."""
 
     entry = MockConfigEntry(
@@ -393,8 +403,12 @@ async def test_homekit_add_accessory(hass, mock_async_zeroconf, mock_hap):
 
 @pytest.mark.parametrize("acc_category", [CATEGORY_TELEVISION, CATEGORY_CAMERA])
 async def test_homekit_warn_add_accessory_bridge(
-    hass, acc_category, mock_async_zeroconf, mock_hap, caplog
-):
+    hass: HomeAssistant,
+    acc_category,
+    mock_async_zeroconf: None,
+    mock_hap,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we warn when adding cameras or tvs to a bridge."""
 
     entry = MockConfigEntry(
@@ -422,7 +436,9 @@ async def test_homekit_warn_add_accessory_bridge(
     assert "accessory mode" in caplog.text
 
 
-async def test_homekit_remove_accessory(hass, mock_async_zeroconf):
+async def test_homekit_remove_accessory(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Remove accessory from bridge."""
     entry = await async_init_integration(hass)
 
@@ -439,7 +455,9 @@ async def test_homekit_remove_accessory(hass, mock_async_zeroconf):
     assert len(homekit.bridge.accessories) == 0
 
 
-async def test_homekit_entity_filter(hass, mock_async_zeroconf):
+async def test_homekit_entity_filter(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test the entity filter."""
     entry = await async_init_integration(hass)
 
@@ -458,7 +476,9 @@ async def test_homekit_entity_filter(hass, mock_async_zeroconf):
     assert hass.states.get("light.demo") not in filtered_states
 
 
-async def test_homekit_entity_glob_filter(hass, mock_async_zeroconf):
+async def test_homekit_entity_glob_filter(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test the entity filter."""
     entry = await async_init_integration(hass)
 
@@ -483,12 +503,12 @@ async def test_homekit_entity_glob_filter(hass, mock_async_zeroconf):
 
 
 async def test_homekit_entity_glob_filter_with_config_entities(
-    hass, mock_async_zeroconf, entity_reg
-):
+    hass: HomeAssistant, mock_async_zeroconf: None, entity_reg
+) -> None:
     """Test the entity filter with configuration entities."""
     entry = await async_init_integration(hass)
 
-    from homeassistant.helpers.entity import EntityCategory
+    from homeassistant.const import EntityCategory
     from homeassistant.helpers.entity_registry import RegistryEntry
 
     select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
@@ -539,8 +559,8 @@ async def test_homekit_entity_glob_filter_with_config_entities(
 
 
 async def test_homekit_entity_glob_filter_with_hidden_entities(
-    hass, mock_async_zeroconf, entity_reg
-):
+    hass: HomeAssistant, mock_async_zeroconf: None, entity_reg
+) -> None:
     """Test the entity filter with hidden entities."""
     entry = await async_init_integration(hass)
 
@@ -593,7 +613,9 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
     assert hass.states.get("select.keep") in filtered_states
 
 
-async def test_homekit_start(hass, hk_driver, mock_async_zeroconf, device_reg):
+async def test_homekit_start(
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None, device_reg
+) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
 
@@ -669,8 +691,8 @@ async def test_homekit_start(hass, hk_driver, mock_async_zeroconf, device_reg):
 
 
 async def test_homekit_start_with_a_broken_accessory(
-    hass, hk_driver, mock_async_zeroconf
-):
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
+) -> None:
     """Test HomeKit start method."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
@@ -710,8 +732,13 @@ async def test_homekit_start_with_a_broken_accessory(
 
 
 async def test_homekit_start_with_a_device(
-    hass, hk_driver, mock_async_zeroconf, demo_cleanup, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    demo_cleanup,
+    device_reg,
+    entity_reg,
+) -> None:
     """Test HomeKit start method with a device."""
 
     entry = MockConfigEntry(
@@ -744,7 +771,7 @@ async def test_homekit_start_with_a_device(
     await homekit.async_stop()
 
 
-async def test_homekit_stop(hass):
+async def test_homekit_stop(hass: HomeAssistant) -> None:
     """Test HomeKit stop method."""
     entry = await async_init_integration(hass)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
@@ -772,7 +799,9 @@ async def test_homekit_stop(hass):
     assert homekit.driver.async_stop.called is True
 
 
-async def test_homekit_reset_accessories(hass, mock_async_zeroconf, mock_hap):
+async def test_homekit_reset_accessories(
+    hass: HomeAssistant, mock_async_zeroconf: None, mock_hap
+) -> None:
     """Test resetting HomeKit accessories."""
 
     entry = MockConfigEntry(
@@ -811,7 +840,9 @@ async def test_homekit_reset_accessories(hass, mock_async_zeroconf, mock_hap):
         await homekit.async_stop()
 
 
-async def test_homekit_unpair(hass, device_reg, mock_async_zeroconf):
+async def test_homekit_unpair(
+    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+) -> None:
     """Test unpairing HomeKit accessories."""
 
     entry = MockConfigEntry(
@@ -858,7 +889,9 @@ async def test_homekit_unpair(hass, device_reg, mock_async_zeroconf):
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_unpair_missing_device_id(hass, device_reg, mock_async_zeroconf):
+async def test_homekit_unpair_missing_device_id(
+    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+) -> None:
     """Test unpairing HomeKit accessories with invalid device id."""
 
     entry = MockConfigEntry(
@@ -896,7 +929,9 @@ async def test_homekit_unpair_missing_device_id(hass, device_reg, mock_async_zer
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_unpair_not_homekit_device(hass, device_reg, mock_async_zeroconf):
+async def test_homekit_unpair_not_homekit_device(
+    hass: HomeAssistant, device_reg, mock_async_zeroconf: None
+) -> None:
     """Test unpairing HomeKit accessories with a non-homekit device id."""
 
     entry = MockConfigEntry(
@@ -944,7 +979,9 @@ async def test_homekit_unpair_not_homekit_device(hass, device_reg, mock_async_ze
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_reset_accessories_not_supported(hass, mock_async_zeroconf):
+async def test_homekit_reset_accessories_not_supported(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test resetting HomeKit accessories with an unsupported entity."""
 
     entry = MockConfigEntry(
@@ -988,7 +1025,9 @@ async def test_homekit_reset_accessories_not_supported(hass, mock_async_zeroconf
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_reset_accessories_state_missing(hass, mock_async_zeroconf):
+async def test_homekit_reset_accessories_state_missing(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test resetting HomeKit accessories when the state goes missing."""
 
     entry = MockConfigEntry(
@@ -1030,7 +1069,9 @@ async def test_homekit_reset_accessories_state_missing(hass, mock_async_zeroconf
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_reset_accessories_not_bridged(hass, mock_async_zeroconf):
+async def test_homekit_reset_accessories_not_bridged(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test resetting HomeKit accessories when the state is not bridged."""
 
     entry = MockConfigEntry(
@@ -1072,7 +1113,9 @@ async def test_homekit_reset_accessories_not_bridged(hass, mock_async_zeroconf):
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_reset_single_accessory(hass, mock_hap, mock_async_zeroconf):
+async def test_homekit_reset_single_accessory(
+    hass: HomeAssistant, mock_hap, mock_async_zeroconf: None
+) -> None:
     """Test resetting HomeKit single accessory."""
 
     entry = MockConfigEntry(
@@ -1106,7 +1149,9 @@ async def test_homekit_reset_single_accessory(hass, mock_hap, mock_async_zerocon
         await homekit.async_stop()
 
 
-async def test_homekit_reset_single_accessory_unsupported(hass, mock_async_zeroconf):
+async def test_homekit_reset_single_accessory_unsupported(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test resetting HomeKit single accessory with an unsupported entity."""
 
     entry = MockConfigEntry(
@@ -1143,7 +1188,9 @@ async def test_homekit_reset_single_accessory_unsupported(hass, mock_async_zeroc
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_reset_single_accessory_state_missing(hass, mock_async_zeroconf):
+async def test_homekit_reset_single_accessory_state_missing(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test resetting HomeKit single accessory when the state goes missing."""
 
     entry = MockConfigEntry(
@@ -1179,7 +1226,9 @@ async def test_homekit_reset_single_accessory_state_missing(hass, mock_async_zer
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_reset_single_accessory_no_match(hass, mock_async_zeroconf):
+async def test_homekit_reset_single_accessory_no_match(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test resetting HomeKit single accessory when the entity id does not match."""
 
     entry = MockConfigEntry(
@@ -1216,8 +1265,11 @@ async def test_homekit_reset_single_accessory_no_match(hass, mock_async_zeroconf
 
 
 async def test_homekit_too_many_accessories(
-    hass, hk_driver, caplog, mock_async_zeroconf
-):
+    hass: HomeAssistant,
+    hk_driver,
+    caplog: pytest.LogCaptureFixture,
+    mock_async_zeroconf: None,
+) -> None:
     """Test adding too many accessories to HomeKit."""
     entry = await async_init_integration(hass)
 
@@ -1247,8 +1299,8 @@ async def test_homekit_too_many_accessories(
 
 
 async def test_homekit_finds_linked_batteries(
-    hass, hk_driver, device_reg, entity_reg, mock_async_zeroconf
-):
+    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
 
@@ -1320,8 +1372,8 @@ async def test_homekit_finds_linked_batteries(
 
 
 async def test_homekit_async_get_integration_fails(
-    hass, hk_driver, device_reg, entity_reg, mock_async_zeroconf
-):
+    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+) -> None:
     """Test that we continue if async_get_integration fails."""
     entry = await async_init_integration(hass)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
@@ -1389,7 +1441,9 @@ async def test_homekit_async_get_integration_fails(
     )
 
 
-async def test_yaml_updates_update_config_entry_for_name(hass, mock_async_zeroconf):
+async def test_yaml_updates_update_config_entry_for_name(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test async_setup with imported config."""
 
     entry = MockConfigEntry(
@@ -1433,7 +1487,9 @@ async def test_yaml_updates_update_config_entry_for_name(hass, mock_async_zeroco
     mock_homekit().async_start.assert_called()
 
 
-async def test_yaml_can_link_with_default_name(hass, mock_async_zeroconf):
+async def test_yaml_can_link_with_default_name(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test async_setup with imported config linked by default name."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1461,7 +1517,9 @@ async def test_yaml_can_link_with_default_name(hass, mock_async_zeroconf):
     assert entry.options["entity_config"]["camera.back_camera"]["stream_count"] == 3
 
 
-async def test_yaml_can_link_with_port(hass, mock_async_zeroconf):
+async def test_yaml_can_link_with_port(
+    hass: HomeAssistant, mock_async_zeroconf: None
+) -> None:
     """Test async_setup with imported config linked by port."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1509,7 +1567,9 @@ async def test_yaml_can_link_with_port(hass, mock_async_zeroconf):
     assert entry3.options == {}
 
 
-async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_async_zeroconf):
+async def test_homekit_uses_system_zeroconf(
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
+) -> None:
     """Test HomeKit uses system zeroconf."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1534,8 +1594,8 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_async_zeroconf
 
 
 async def test_homekit_ignored_missing_devices(
-    hass, hk_driver, device_reg, entity_reg, mock_async_zeroconf
-):
+    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+) -> None:
     """Test HomeKit handles a device in the entity registry but missing from the device registry."""
 
     entry = await async_init_integration(hass)
@@ -1604,8 +1664,8 @@ async def test_homekit_ignored_missing_devices(
 
 
 async def test_homekit_finds_linked_motion_sensors(
-    hass, hk_driver, device_reg, entity_reg, mock_async_zeroconf
-):
+    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
 
@@ -1666,8 +1726,8 @@ async def test_homekit_finds_linked_motion_sensors(
 
 
 async def test_homekit_finds_linked_humidity_sensors(
-    hass, hk_driver, device_reg, entity_reg, mock_async_zeroconf
-):
+    hass: HomeAssistant, hk_driver, device_reg, entity_reg, mock_async_zeroconf: None
+) -> None:
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
 
@@ -1730,7 +1790,7 @@ async def test_homekit_finds_linked_humidity_sensors(
     )
 
 
-async def test_reload(hass, mock_async_zeroconf):
+async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
     """Test we can reload from yaml."""
 
     entry = MockConfigEntry(
@@ -1802,8 +1862,8 @@ async def test_reload(hass, mock_async_zeroconf):
 
 
 async def test_homekit_start_in_accessory_mode(
-    hass, hk_driver, mock_async_zeroconf, device_reg
-):
+    hass: HomeAssistant, hk_driver, mock_async_zeroconf: None, device_reg
+) -> None:
     """Test HomeKit start method in accessory mode."""
     entry = await async_init_integration(hass)
 
@@ -1833,8 +1893,12 @@ async def test_homekit_start_in_accessory_mode(
 
 
 async def test_homekit_start_in_accessory_mode_unsupported_entity(
-    hass, hk_driver, mock_async_zeroconf, device_reg, caplog
-):
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    device_reg,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test HomeKit start method in accessory mode with an unsupported entity."""
     entry = await async_init_integration(hass)
 
@@ -1863,8 +1927,12 @@ async def test_homekit_start_in_accessory_mode_unsupported_entity(
 
 
 async def test_homekit_start_in_accessory_mode_missing_entity(
-    hass, hk_driver, mock_async_zeroconf, device_reg, caplog
-):
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    device_reg,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test HomeKit start method in accessory mode when entity is not available."""
     entry = await async_init_integration(hass)
 
@@ -1887,7 +1955,12 @@ async def test_homekit_start_in_accessory_mode_missing_entity(
     assert "entity not available" in caplog.text
 
 
-async def test_wait_for_port_to_free(hass, hk_driver, mock_async_zeroconf, caplog):
+async def test_wait_for_port_to_free(
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we wait for the port to free before declaring unload success."""
 
     entry = MockConfigEntry(

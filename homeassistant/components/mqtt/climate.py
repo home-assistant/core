@@ -82,7 +82,8 @@ CONF_ACTION_TOPIC = "action_topic"
 CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
 CONF_AUX_STATE_TEMPLATE = "aux_state_template"
 CONF_AUX_STATE_TOPIC = "aux_state_topic"
-# AWAY and HOLD mode topics and templates are no longer supported, support was removed with release 2022.9
+# AWAY and HOLD mode topics and templates are no longer supported,
+# support was removed with release 2022.9
 CONF_AWAY_MODE_COMMAND_TOPIC = "away_mode_command_topic"
 CONF_AWAY_MODE_STATE_TEMPLATE = "away_mode_state_template"
 CONF_AWAY_MODE_STATE_TOPIC = "away_mode_state_topic"
@@ -96,7 +97,8 @@ CONF_FAN_MODE_COMMAND_TOPIC = "fan_mode_command_topic"
 CONF_FAN_MODE_LIST = "fan_modes"
 CONF_FAN_MODE_STATE_TEMPLATE = "fan_mode_state_template"
 CONF_FAN_MODE_STATE_TOPIC = "fan_mode_state_topic"
-# AWAY and HOLD mode topics and templates are no longer supported, support was removed with release 2022.9
+# AWAY and HOLD mode topics and templates are no longer supported,
+# support was removed with release 2022.9
 CONF_HOLD_COMMAND_TEMPLATE = "hold_command_template"
 CONF_HOLD_COMMAND_TOPIC = "hold_command_topic"
 CONF_HOLD_STATE_TEMPLATE = "hold_state_template"
@@ -114,6 +116,11 @@ CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
+
+# CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+# are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+# was already removed or never added support was deprecated with release 2023.2
+# and will be removed with release 2023.8
 CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_STATE_TEMPLATE = "power_state_template"
 CONF_POWER_STATE_TOPIC = "power_state_topic"
@@ -235,7 +242,7 @@ def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
 
 
 def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
-    """Validate that the target_humidity range configuration is valid, throws if it isn't."""
+    """Validate a target_humidity range configuration, throws otherwise."""
     if config[CONF_HUMIDITY_MIN] >= config[CONF_HUMIDITY_MAX]:
         raise ValueError("target_humidity_max must be > target_humidity_min")
     if config[CONF_HUMIDITY_MAX] > 100:
@@ -245,13 +252,18 @@ def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
 
 
 def valid_humidity_state_configuration(config: ConfigType) -> ConfigType:
-    """Validate that if CONF_HUMIDITY_STATE_TOPIC is set then CONF_HUMIDITY_COMMAND_TOPIC is also set."""
+    """Validate humidity state.
+
+    Ensure that if CONF_HUMIDITY_STATE_TOPIC is set then
+    CONF_HUMIDITY_COMMAND_TOPIC is also set.
+    """
     if (
         CONF_HUMIDITY_STATE_TOPIC in config
         and CONF_HUMIDITY_COMMAND_TOPIC not in config
     ):
         raise ValueError(
-            f"{CONF_HUMIDITY_STATE_TOPIC} cannot be used without {CONF_HUMIDITY_COMMAND_TOPIC}"
+            f"{CONF_HUMIDITY_STATE_TOPIC} cannot be used without"
+            f" {CONF_HUMIDITY_COMMAND_TOPIC}"
         )
 
     return config
@@ -312,7 +324,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
         vol.Optional(CONF_ACTION_TOPIC): valid_subscribe_topic,
-        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
+        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST
+        # must be used together
         vol.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
         ): valid_publish_topic,
@@ -353,7 +366,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 PLATFORM_SCHEMA_MODERN = vol.All(
     # Support CONF_SEND_IF_OFF is removed with release 2022.9
     cv.removed(CONF_SEND_IF_OFF),
-    # AWAY and HOLD mode topics and templates are no longer supported, support was removed with release 2022.9
+    # AWAY and HOLD mode topics and templates are no longer supported,
+    # support was removed with release 2022.9
     cv.removed(CONF_AWAY_MODE_COMMAND_TOPIC),
     cv.removed(CONF_AWAY_MODE_STATE_TEMPLATE),
     cv.removed(CONF_AWAY_MODE_STATE_TOPIC),
@@ -362,13 +376,21 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     cv.removed(CONF_HOLD_STATE_TEMPLATE),
     cv.removed(CONF_HOLD_STATE_TOPIC),
     cv.removed(CONF_HOLD_LIST),
+    # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+    # are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+    # was already removed or never added support was deprecated with release 2023.2
+    # and will be removed with release 2023.8
+    cv.deprecated(CONF_POWER_COMMAND_TOPIC),
+    cv.deprecated(CONF_POWER_STATE_TEMPLATE),
+    cv.deprecated(CONF_POWER_STATE_TOPIC),
     _PLATFORM_SCHEMA_BASE,
     valid_preset_mode_configuration,
     valid_humidity_range_configuration,
     valid_humidity_state_configuration,
 )
 
-# Configuring MQTT Climate under the climate platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Climate under the climate platform key was deprecated in
+# HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(climate.DOMAIN),
@@ -380,7 +402,8 @@ DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
     # Support CONF_SEND_IF_OFF is removed with release 2022.9
     cv.removed(CONF_SEND_IF_OFF),
-    # AWAY and HOLD mode topics and templates are no longer supported, support was removed with release 2022.9
+    # AWAY and HOLD mode topics and templates are no longer supported,
+    # support was removed with release 2022.9
     cv.removed(CONF_AWAY_MODE_COMMAND_TOPIC),
     cv.removed(CONF_AWAY_MODE_STATE_TEMPLATE),
     cv.removed(CONF_AWAY_MODE_STATE_TOPIC),
@@ -389,6 +412,12 @@ DISCOVERY_SCHEMA = vol.All(
     cv.removed(CONF_HOLD_STATE_TEMPLATE),
     cv.removed(CONF_HOLD_STATE_TOPIC),
     cv.removed(CONF_HOLD_LIST),
+    # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE are deprecated,
+    # support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE was already removed or never added
+    # support was deprecated with release 2023.2 and will be removed with release 2023.8
+    cv.deprecated(CONF_POWER_COMMAND_TOPIC),
+    cv.deprecated(CONF_POWER_STATE_TEMPLATE),
+    cv.deprecated(CONF_POWER_STATE_TOPIC),
     valid_preset_mode_configuration,
     valid_humidity_range_configuration,
     valid_humidity_state_configuration,
@@ -400,7 +429,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT climate device through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT climate device through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -617,7 +646,16 @@ class MqttClimate(MqttEntity, ClimateEntity):
         ) -> None:
             """Handle climate attributes coming via MQTT."""
             payload = render_template(msg, template_name)
-
+            if not payload:
+                _LOGGER.debug(
+                    "Invalid empty payload for attribute %s, ignoring update",
+                    attr,
+                )
+                return
+            if payload == PAYLOAD_NONE:
+                setattr(self, attr, None)
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
             try:
                 setattr(self, attr, float(payload))
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)

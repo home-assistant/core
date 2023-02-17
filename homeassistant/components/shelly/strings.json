@@ -56,6 +56,7 @@
       "btn_up": "{subtype} button up",
       "single_push": "{subtype} single push",
       "double_push": "{subtype} double push",
+      "triple_push": "{subtype} triple push",
       "long_push": "{subtype} long push"
     }
   },
@@ -70,6 +71,15 @@
     },
     "abort": {
       "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
+    }
+  },
+  "selector": {
+    "ble_scanner_mode": {
+      "options": {
+        "disabled": "Disabled",
+        "active": "Active",
+        "passive": "Passive"
+      }
     }
   }
 }

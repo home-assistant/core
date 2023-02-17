@@ -11,17 +11,17 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
+from homeassistant.util.json import json_loads_object
 
 from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
@@ -98,7 +98,8 @@ async def async_start(  # noqa: C901
     mqtt_data = get_mqtt_data(hass)
     mqtt_integrations = {}
 
-    async def async_discovery_message_received(msg: ReceiveMessage) -> None:
+    @callback
+    def async_discovery_message_received(msg: ReceiveMessage) -> None:
         """Process the received message."""
         mqtt_data.last_discovery = time.time()
         payload = msg.payload
@@ -126,7 +127,7 @@ async def async_start(  # noqa: C901
 
         if payload:
             try:
-                discovery_payload = MQTTDiscoveryPayload(json_loads(payload))
+                discovery_payload = MQTTDiscoveryPayload(json_loads_object(payload))
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
@@ -198,18 +199,17 @@ async def async_start(  # noqa: C901
         if discovery_hash in mqtt_data.discovery_pending_discovered:
             pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
             pending.appendleft(discovery_payload)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Component has already been discovered: %s %s, queuing update",
                 component,
                 discovery_id,
             )
             return
 
-        await async_process_discovery_payload(
-            component, discovery_id, discovery_payload
-        )
+        async_process_discovery_payload(component, discovery_id, discovery_payload)
 
-    async def async_process_discovery_payload(
+    @callback
+    def async_process_discovery_payload(
         component: str, discovery_id: str, payload: MQTTDiscoveryPayload
     ) -> None:
         """Process the payload of a new discovery."""
@@ -228,9 +228,7 @@ async def async_start(  # noqa: C901
                     mqtt_data.discovery_pending_discovered.pop(discovery_hash)
                 else:
                     payload = pending.pop()
-                    await async_process_discovery_payload(
-                        component, discovery_id, payload
-                    )
+                    async_process_discovery_payload(component, discovery_id, payload)
 
             if discovery_hash not in mqtt_data.discovery_pending_discovered:
                 mqtt_data.discovery_pending_discovered[discovery_hash] = {
@@ -279,7 +277,7 @@ async def async_start(  # noqa: C901
     mqtt_data.last_discovery = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
 
-    for (integration, topics) in mqtt_integrations.items():
+    for integration, topics in mqtt_integrations.items():
 
         async def async_integration_message_received(
             integration: str, msg: ReceiveMessage

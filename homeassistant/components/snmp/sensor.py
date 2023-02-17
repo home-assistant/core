@@ -120,7 +120,6 @@ async def async_setup_platform(
             return
 
     if version == "3":
-
         if not authkey:
             authproto = "none"
         if not privkey:

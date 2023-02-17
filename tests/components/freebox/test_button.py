@@ -12,7 +12,7 @@ from .const import MOCK_HOST, MOCK_PORT
 from tests.common import MockConfigEntry
 
 
-async def test_reboot_button(hass: HomeAssistant, router: Mock):
+async def test_reboot_button(hass: HomeAssistant, router: Mock) -> None:
     """Test reboot button."""
     entry = MockConfigEntry(
         domain=DOMAIN,

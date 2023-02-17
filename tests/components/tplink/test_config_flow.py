@@ -246,7 +246,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     }
 
 
-async def test_discovered_by_discovery_and_dhcp(hass):
+async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
     with _patch_discovery(), _patch_single_discovery():
@@ -297,7 +297,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -338,7 +338,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (
             config_entries.SOURCE_DHCP,

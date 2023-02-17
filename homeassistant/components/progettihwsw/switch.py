@@ -60,7 +60,7 @@ async def async_setup_entry(
 class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
     """Represent a switch entity."""
 
-    def __init__(self, coordinator, name, switch: Relay):
+    def __init__(self, coordinator, name, switch: Relay) -> None:
         """Initialize the values."""
         super().__init__(coordinator)
         self._switch = switch

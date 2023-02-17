@@ -271,7 +271,7 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     new=AsyncMock(return_value=zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinator):
@@ -383,7 +383,7 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
     new=AsyncMock(side_effect=ZigbeeException),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_fan_entity_failure_state(
@@ -443,7 +443,7 @@ async def test_zha_group_fan_entity_failure_state(
 
 
 @pytest.mark.parametrize(
-    "plug_read, expected_state, expected_percentage",
+    ("plug_read", "expected_state", "expected_percentage"),
     (
         (None, STATE_OFF, None),
         ({"fan_mode": 0}, STATE_OFF, 0),
@@ -610,7 +610,12 @@ async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
 
 
 @pytest.mark.parametrize(
-    "ikea_plug_read, ikea_expected_state, ikea_expected_percentage, ikea_preset_mode",
+    (
+        "ikea_plug_read",
+        "ikea_expected_state",
+        "ikea_expected_percentage",
+        "ikea_preset_mode",
+    ),
     (
         (None, STATE_OFF, None, None),
         ({"fan_mode": 0}, STATE_OFF, 0, None),

@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "protocol,connection,title",
+    ("protocol", "connection", "title"),
     [
         (
             PROTOCOL_SOCKET,
@@ -55,7 +55,7 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
-async def test_setups(hass: HomeAssistant, protocol, connection, title):
+async def test_setups(hass: HomeAssistant, protocol, connection, title) -> None:
     """Test flow for setting up the available AlarmDecoder protocols."""
 
     result = await hass.config_entries.flow.async_init(
@@ -93,7 +93,7 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_setup_connection_error(hass: HomeAssistant):
+async def test_setup_connection_error(hass: HomeAssistant) -> None:
     """Test flow for setup with a connection error."""
 
     port = 1001
@@ -137,7 +137,7 @@ async def test_setup_connection_error(hass: HomeAssistant):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_options_arm_flow(hass: HomeAssistant):
+async def test_options_arm_flow(hass: HomeAssistant) -> None:
     """Test arm options flow."""
     user_input = {
         CONF_ALT_NIGHT_MODE: True,
@@ -178,7 +178,7 @@ async def test_options_arm_flow(hass: HomeAssistant):
     }
 
 
-async def test_options_zone_flow(hass: HomeAssistant):
+async def test_options_zone_flow(hass: HomeAssistant) -> None:
     """Test options flow for adding/deleting zones."""
     zone_number = "2"
     zone_settings = {
@@ -257,7 +257,7 @@ async def test_options_zone_flow(hass: HomeAssistant):
     }
 
 
-async def test_options_zone_flow_validation(hass: HomeAssistant):
+async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
     """Test input validation for zone options flow."""
     zone_number = "2"
     zone_settings = {
@@ -394,7 +394,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "protocol,connection",
+    ("protocol", "connection"),
     [
         (
             PROTOCOL_SOCKET,
@@ -412,7 +412,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant):
         ),
     ],
 )
-async def test_one_device_allowed(hass, protocol, connection):
+async def test_one_device_allowed(hass: HomeAssistant, protocol, connection) -> None:
     """Test that only one AlarmDecoder device is allowed."""
     flow = config_flow.AlarmDecoderFlowHandler()
     flow.hass = hass

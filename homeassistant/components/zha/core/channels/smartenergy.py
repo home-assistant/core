@@ -68,6 +68,24 @@ class Metering(ZigbeeChannel):
     REPORT_CONFIG = (
         AttrReportConfig(attr="instantaneous_demand", config=REPORT_CONFIG_OP),
         AttrReportConfig(attr="current_summ_delivered", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(
+            attr="current_tier1_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier2_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier3_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier4_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier5_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
+        AttrReportConfig(
+            attr="current_tier6_summ_delivered", config=REPORT_CONFIG_DEFAULT
+        ),
         AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
     )
     ZCL_INIT_ATTRS = {

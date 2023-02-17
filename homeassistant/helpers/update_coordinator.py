@@ -403,7 +403,9 @@ class CoordinatorEntity(BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
     def __init__(
         self, coordinator: _DataUpdateCoordinatorT, context: Any = None
     ) -> None:
-        """Create the entity with a DataUpdateCoordinator. Passthrough to BaseCoordinatorEntity.
+        """Create the entity with a DataUpdateCoordinator.
+
+        Passthrough to BaseCoordinatorEntity.
 
         Necessary to bind TypeVar to correct scope.
         """

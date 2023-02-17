@@ -21,10 +21,12 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF as LIGHT_SERVICE_TURN_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
 from tests.common import load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 LIGHT_ENTITY = "light.kitchen_lights"
 CLOSE_THRESHOLD = 10
@@ -84,7 +86,7 @@ async def setup_light(hass):
     assert state.state == STATE_OFF
 
 
-async def test_missing_url_and_path(hass):
+async def test_missing_url_and_path(hass: HomeAssistant) -> None:
     """Test that nothing happens when url and path are missing."""
     # Load our color_extractor component
     await async_setup_component(
@@ -138,7 +140,9 @@ async def _async_load_color_extractor_url(hass, service_data):
     await hass.async_block_till_done()
 
 
-async def test_url_success(hass, aioclient_mock):
+async def test_url_success(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that a successful image GET translate to light RGB."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
@@ -171,7 +175,9 @@ async def test_url_success(hass, aioclient_mock):
     assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
 
 
-async def test_url_not_allowed(hass, aioclient_mock):
+async def test_url_not_allowed(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that a not allowed external URL fails to turn light on."""
     service_data = {
         ATTR_URL: "http://denied.com/images/logo.png",
@@ -186,7 +192,9 @@ async def test_url_not_allowed(hass, aioclient_mock):
     assert state.state == STATE_OFF
 
 
-async def test_url_exception(hass, aioclient_mock):
+async def test_url_exception(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that a HTTPError fails to turn light on."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
@@ -207,7 +215,9 @@ async def test_url_exception(hass, aioclient_mock):
     assert state.state == STATE_OFF
 
 
-async def test_url_error(hass, aioclient_mock):
+async def test_url_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that a HTTP Error (non 200) doesn't turn light on."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
@@ -248,7 +258,7 @@ def _get_file_mock(file_path):
 
 @patch("os.path.isfile", Mock(return_value=True))
 @patch("os.access", Mock(return_value=True))
-async def test_file(hass):
+async def test_file(hass: HomeAssistant) -> None:
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
         ATTR_PATH: "/opt/image.png",
@@ -289,7 +299,7 @@ async def test_file(hass):
 
 @patch("os.path.isfile", Mock(return_value=True))
 @patch("os.access", Mock(return_value=True))
-async def test_file_denied_dir(hass):
+async def test_file_denied_dir(hass: HomeAssistant) -> None:
     """Test that the file only service fails to read an image in a dir not explicitly allowed."""
     service_data = {
         ATTR_PATH: "/path/to/a/dir/not/allowed/image.png",

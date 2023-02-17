@@ -39,7 +39,6 @@ async def test_valid_hostname(
     assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
-
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
@@ -87,7 +86,6 @@ async def test_broadcast_config_ip_and_port(
     assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
-
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
@@ -125,7 +123,6 @@ async def test_broadcast_config_ip(
     assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
-
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
@@ -155,7 +152,6 @@ async def test_broadcast_config_port(
     assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
-
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
@@ -190,7 +186,6 @@ async def test_off_script(
     assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
-
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
@@ -203,7 +198,6 @@ async def test_off_script(
         assert len(calls) == 0
 
     with patch.object(subprocess, "call", return_value=2):
-
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
@@ -237,7 +231,6 @@ async def test_no_hostname_state(
     assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
-
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,

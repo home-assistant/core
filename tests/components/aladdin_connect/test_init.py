@@ -49,7 +49,6 @@ async def test_setup_login_error(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
 
 
@@ -68,7 +67,6 @@ async def test_setup_connection_error(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
 
 
@@ -84,7 +82,6 @@ async def test_setup_component_no_error(hass: HomeAssistant) -> None:
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
         return_value=True,
     ):
-
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -94,7 +91,7 @@ async def test_setup_component_no_error(hass: HomeAssistant) -> None:
 
 async def test_entry_password_fail(
     hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-):
+) -> None:
     """Test password fail during entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -107,7 +104,6 @@ async def test_entry_password_fail(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -128,7 +124,6 @@ async def test_load_and_unload(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
