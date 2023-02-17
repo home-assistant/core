@@ -66,7 +66,9 @@ class RoonServer:
         )
 
         # Initialize Roon background polling
-        asyncio.create_task(self.async_do_loop())
+        self.config_entry.async_on_unload(
+            asyncio.create_task(self.async_do_loop()).cancel
+        )
 
         return True
 
