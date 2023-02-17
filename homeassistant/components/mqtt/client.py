@@ -587,7 +587,9 @@ class MQTT:
                     qos > self._pending_subscriptions[topic]
                 ):
                     self._pending_subscriptions[topic] = qos
-            self.hass.async_create_task(self._subscription_debouncer.async_call())
+                    self.hass.async_create_task(
+                        self._subscription_debouncer.async_call()
+                    )
 
         @callback
         def async_remove() -> None:
