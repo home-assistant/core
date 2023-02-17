@@ -713,6 +713,8 @@ class HomeAssistant:
             task.add_done_callback(self._tasks.remove)
             task.cancel()
 
+        self.exit_code = exit_code
+
         # stage 1
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -756,8 +758,6 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
-
-        self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
