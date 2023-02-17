@@ -52,6 +52,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                 str, southern_company_api.account.MonthlyUsage
             ] = {}
             for account in await self._southern_company_connection.accounts:
+                _LOGGER.debug("Updating monthly data for %s", account.number)
                 account_month_data[account.number] = await account.get_month_data(
                     await self._southern_company_connection.jwt
                 )
@@ -65,6 +66,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
         if await self._southern_company_connection.jwt is None:
             raise UpdateFailed("Jwt is None")
         for account in await self._southern_company_connection.accounts:
+            _LOGGER.debug("Updating Statistics for %s", account.number)
             cost_statistic_id = f"{DOMAIN}:energy_" f"cost_" f"{account.number}"
             usage_statistic_id = f"{DOMAIN}:energy_" f"usage_" f"{account.number}"
 
@@ -73,6 +75,9 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
             )
             if not last_stats:
                 # First time we insert 1 year of data (if available)
+                _LOGGER.info(
+                    "Updating statistic for the first time, this may take a while"
+                )
                 hourly_data = await account.get_hourly_data(
                     datetime.datetime.now() - timedelta(days=365),
                     datetime.datetime.now(),
@@ -133,7 +138,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                     continue
                 from_time = from_time.replace(minute=0, second=0, microsecond=0)
                 _cost_sum += data.cost
-                _usage_sum += data.cost
+                _usage_sum += data.usage
 
                 cost_statistics.append(
                     StatisticData(
