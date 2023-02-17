@@ -172,10 +172,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.async_load_api(hass)
     await api.async_register_insteon_frontend(hass)
 
-    entry.async_on_unload(
-        hass.async_create_background_task(
-            async_get_device_config(hass, entry), "insteon-get-device-config"
-        ).cancel
+    entry.async_create_background_task(
+        hass, async_get_device_config(hass, entry), "insteon-get-device-config"
     )
 
     return True
