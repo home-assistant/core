@@ -315,7 +315,7 @@ class ConfigEntry:
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
 
-        self._pending_tasks: list[asyncio.Future[Any]] = []
+        self._pending_tasks: set[asyncio.Future[Any]] = set()
 
     async def async_setup(
         self,
@@ -681,11 +681,8 @@ class ConfigEntry:
             while self._on_unload:
                 self._on_unload.pop()()
 
-        while self._pending_tasks:
-            pending = [task for task in self._pending_tasks if not task.done()]
-            self._pending_tasks.clear()
-            if pending:
-                await asyncio.gather(*pending)
+        if self._pending_tasks:
+            await asyncio.gather(*self._pending_tasks)
 
     @callback
     def async_start_reauth(
@@ -736,8 +733,8 @@ class ConfigEntry:
         target: target to call.
         """
         task = hass.async_create_task(target)
-
-        self._pending_tasks.append(task)
+        self._pending_tasks.add(task)
+        task.add_done_callback(self._pending_tasks.remove)
 
         return task
 
