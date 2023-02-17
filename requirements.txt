@@ -23,7 +23,7 @@ pip>=21.0,<23.1
 python-slugify==4.0.1
 pyyaml==6.0
 requests==2.28.1
-typing-extensions>=4.4.0,<5.0
+typing-extensions>=4.5.0,<5.0
 voluptuous==0.13.1
-voluptuous-serialize==2.5.0
+voluptuous-serialize==2.6.0
 yarl==1.8.1

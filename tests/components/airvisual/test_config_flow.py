@@ -53,7 +53,7 @@ from .conftest import (
     ],
 )
 @pytest.mark.parametrize(
-    "response,errors",
+    ("response", "errors"),
     [
         (AsyncMock(side_effect=AirVisualError), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidKeyError), {CONF_API_KEY: "invalid_api_key"}),

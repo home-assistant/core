@@ -1,4 +1,6 @@
 """Test the thread dataset store."""
+from typing import Any
+
 import pytest
 from python_otbr_api.tlv_parser import TLVError
 
@@ -186,7 +188,9 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
     assert dataset_3_store_1 == dataset_3_store_2
 
 
-async def test_loading_datasets_from_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_loading_datasets_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored datasets on start."""
     hass_storage[dataset_store.STORAGE_KEY] = {
         "version": dataset_store.STORAGE_VERSION_MAJOR,

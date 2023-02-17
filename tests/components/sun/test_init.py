@@ -212,7 +212,7 @@ async def test_state_change_count(hass: HomeAssistant) -> None:
     assert len(events) < 721
 
 
-async def test_setup_and_remove_config_entry(hass: ha.HomeAssistant) -> None:
+async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     """Test setting up and removing a config entry."""
     # Setup the config entry
     config_entry = MockConfigEntry(domain=sun.DOMAIN)

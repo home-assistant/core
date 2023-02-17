@@ -20,7 +20,9 @@ from . import (
 from tests.typing import WebSocketGenerator
 
 
-async def test_add_dataset(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_add_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can add a dataset."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -41,7 +43,9 @@ async def test_add_dataset(hass: HomeAssistant, hass_ws_client) -> None:
     assert dataset.tlv == DATASET_1
 
 
-async def test_add_invalid_dataset(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_add_invalid_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test adding an invalid dataset."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -112,7 +116,9 @@ async def test_delete_dataset(
     }
 
 
-async def test_list_get_dataset(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_list_get_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test list and get datasets."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -192,7 +198,7 @@ async def test_list_get_dataset(hass: HomeAssistant, hass_ws_client) -> None:
 
 
 async def test_discover_routers(
-    hass: HomeAssistant, hass_ws_client, mock_async_zeroconf
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_async_zeroconf: None
 ) -> None:
     """Test discovering thread routers."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()

@@ -603,7 +603,7 @@ async def mock_modbus_read_pymodbus_fixture(
     ],
 )
 @pytest.mark.parametrize(
-    "do_return,do_exception,do_expect_state,do_expect_value",
+    ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
         [ReadResult([1]), None, STATE_ON, "1"],
         [IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],

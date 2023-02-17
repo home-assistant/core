@@ -27,7 +27,7 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "vacuum")])
 @pytest.mark.parametrize(
-    "parm1,parm2,config",
+    ("parm1", "parm2", "config"),
     [
         (
             STATE_UNKNOWN,
@@ -92,7 +92,9 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
         ),
     ],
 )
-async def test_valid_configs(hass, count, parm1, parm2, start_ha):
+async def test_valid_configs(
+    hass: HomeAssistant, count, parm1, parm2, start_ha
+) -> None:
     """Test: configs."""
     assert len(hass.states.async_all("vacuum")) == count
     _verify(hass, parm1, parm2)
@@ -114,7 +116,7 @@ async def test_valid_configs(hass, count, parm1, parm2, start_ha):
         },
     ],
 )
-async def test_invalid_configs(hass, count, start_ha):
+async def test_invalid_configs(hass: HomeAssistant, count, start_ha) -> None:
     """Test: configs."""
     assert len(hass.states.async_all("vacuum")) == count
 
@@ -140,7 +142,7 @@ async def test_invalid_configs(hass, count, start_ha):
         )
     ],
 )
-async def test_templates_with_entities(hass, start_ha):
+async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
     """Test templates with values from other entities."""
     _verify(hass, STATE_UNKNOWN, None)
 
@@ -170,7 +172,7 @@ async def test_templates_with_entities(hass, start_ha):
         )
     ],
 )
-async def test_available_template_with_entities(hass, start_ha):
+async def test_available_template_with_entities(hass: HomeAssistant, start_ha) -> None:
     """Test availability templates with values from other entities."""
 
     # When template returns true..
@@ -209,8 +211,8 @@ async def test_available_template_with_entities(hass, start_ha):
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass, start_ha, caplog_setup_text
-):
+    hass: HomeAssistant, start_ha, caplog_setup_text
+) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
@@ -239,7 +241,7 @@ async def test_invalid_availability_template_keeps_component_available(
         )
     ],
 )
-async def test_attribute_templates(hass, start_ha):
+async def test_attribute_templates(hass: HomeAssistant, start_ha) -> None:
     """Test attribute_templates template."""
     state = hass.states.get("vacuum.test_template_vacuum")
     assert state.attributes["test_attribute"] == "It ."
@@ -274,7 +276,9 @@ async def test_attribute_templates(hass, start_ha):
         )
     ],
 )
-async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
+async def test_invalid_attribute_template(
+    hass: HomeAssistant, start_ha, caplog_setup_text
+) -> None:
     """Test that errors are logged if rendering template fails."""
     assert len(hass.states.async_all("vacuum")) == 1
     assert "test_attribute" in caplog_setup_text
@@ -307,7 +311,7 @@ async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
         ),
     ],
 )
-async def test_unique_id(hass, start_ha):
+async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
     """Test unique_id option only creates one vacuum per id."""
     assert len(hass.states.async_all("vacuum")) == 1
 
@@ -343,7 +347,7 @@ async def test_unused_services(hass: HomeAssistant) -> None:
     _verify(hass, STATE_UNKNOWN, None)
 
 
-async def test_state_services(hass, calls):
+async def test_state_services(hass: HomeAssistant, calls) -> None:
     """Test state services."""
     await _register_components(hass)
 
@@ -392,7 +396,7 @@ async def test_state_services(hass, calls):
     assert calls[-1].data["caller"] == _TEST_VACUUM
 
 
-async def test_clean_spot_service(hass, calls):
+async def test_clean_spot_service(hass: HomeAssistant, calls) -> None:
     """Test clean spot service."""
     await _register_components(hass)
 
@@ -407,7 +411,7 @@ async def test_clean_spot_service(hass, calls):
     assert calls[-1].data["caller"] == _TEST_VACUUM
 
 
-async def test_locate_service(hass, calls):
+async def test_locate_service(hass: HomeAssistant, calls) -> None:
     """Test locate service."""
     await _register_components(hass)
 
@@ -422,7 +426,7 @@ async def test_locate_service(hass, calls):
     assert calls[-1].data["caller"] == _TEST_VACUUM
 
 
-async def test_set_fan_speed(hass, calls):
+async def test_set_fan_speed(hass: HomeAssistant, calls) -> None:
     """Test set valid fan speed."""
     await _register_components(hass)
 
@@ -449,7 +453,7 @@ async def test_set_fan_speed(hass, calls):
     assert calls[-1].data["option"] == "medium"
 
 
-async def test_set_invalid_fan_speed(hass, calls):
+async def test_set_invalid_fan_speed(hass: HomeAssistant, calls) -> None:
     """Test set invalid fan speed when fan has valid speed."""
     await _register_components(hass)
 

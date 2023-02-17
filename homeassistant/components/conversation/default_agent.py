@@ -24,7 +24,7 @@ from homeassistant.helpers import (
     template,
     translation,
 )
-from homeassistant.helpers.json import JsonObjectType, json_loads_object
+from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DOMAIN
