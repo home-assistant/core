@@ -724,7 +724,7 @@ def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_
     )
     assert next_time == datetime(2021, 3, 15, 2, 30, 10, tzinfo=tz)
     prev_target = next_time
-    for i in range(1000):
+    for _ in range(1000):
         next_target = dt_util.find_next_time_expression_time(
             prev_target.replace(microsecond=999999) + timedelta(seconds=1),
             matching_seconds,

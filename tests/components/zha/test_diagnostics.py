@@ -89,7 +89,7 @@ async def test_diagnostics_for_device(
     )
     assert diagnostics_data
     device_info: dict = zha_device.zha_device_info
-    for key, value in device_info.items():
+    for key in device_info:
         assert key in diagnostics_data
         if key not in KEYS_TO_REDACT:
             assert key in diagnostics_data

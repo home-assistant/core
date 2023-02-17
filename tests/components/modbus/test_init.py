@@ -888,7 +888,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
-        for i in range(4):
+        for _ in range(4):
             freezer.tick(timedelta(seconds=1))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
