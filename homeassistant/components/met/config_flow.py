@@ -6,14 +6,20 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    UnitOfLength,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
 )
 
 from .const import (
@@ -52,9 +58,12 @@ def _get_data_schema(
                 vol.Required(
                     CONF_LONGITUDE, default=hass.config.longitude
                 ): cv.longitude,
-                vol.Required(CONF_ELEVATION, default=hass.config.elevation): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.NUMBER, suffix="meters"
+                vol.Required(
+                    CONF_ELEVATION, default=hass.config.elevation
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement=UnitOfLength.METERS,
                     )
                 ),
             }
@@ -69,9 +78,12 @@ def _get_data_schema(
             vol.Required(
                 CONF_LONGITUDE, default=config_entry.data.get(CONF_LONGITUDE)
             ): cv.longitude,
-            vol.Required(CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)): TextSelector(
-                TextSelectorConfig(
-                    type=TextSelectorType.NUMBER, suffix="meters"
+            vol.Required(
+                CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    mode=NumberSelectorMode.BOX,
+                    unit_of_measurement=UnitOfLength.METERS,
                 )
             ),
         }
