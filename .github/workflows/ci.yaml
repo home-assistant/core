@@ -943,6 +943,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
       - base
@@ -1046,6 +1047,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
       - base
