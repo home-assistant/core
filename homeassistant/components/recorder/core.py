@@ -661,7 +661,6 @@ class Recorder(threading.Thread):
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
-        self._load_recent_state_attributes()
         self._run_event_loop()
 
     def _run_event_loop(self) -> None:
@@ -882,10 +881,11 @@ class Recorder(threading.Thread):
         the attributes in the database for every state change.
         """
         assert self.event_session is not None
-        for id_, shared_attrs in self.event_session.execute(
-            get_recent_shared_attributes(STATE_ATTRIBUTES_ID_CACHE_SIZE)
-        ).fetchall():
-            self._state_attributes_ids[shared_attrs] = id_
+        with self.event_session.no_autoflush:
+            for id_, shared_attrs in self.event_session.execute(
+                get_recent_shared_attributes(STATE_ATTRIBUTES_ID_CACHE_SIZE)
+            ).fetchall():
+                self._state_attributes_ids[shared_attrs] = id_
 
     def _process_state_changed_event_into_session(self, event: Event) -> None:
         """Process a state_changed event into the session."""
@@ -905,6 +905,8 @@ class Recorder(threading.Thread):
 
         shared_attrs = shared_attrs_bytes.decode("utf-8")
         dbstate.attributes = None
+        if not self._state_attributes_ids:
+            self._load_recent_state_attributes()
         # Matching attributes found in the pending commit
         if pending_attributes := self._pending_state_attributes.get(shared_attrs):
             dbstate.state_attributes = pending_attributes
