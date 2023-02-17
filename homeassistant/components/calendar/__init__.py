@@ -325,6 +325,13 @@ class CalendarEntity(Entity):
 
         return STATE_OFF
 
+    @final
+    @property
+    def color(self) -> str:
+        """Return the color of the calendar."""
+        # Load this from database
+        return "#000"
+
     async def async_get_events(
         self,
         hass: HomeAssistant,
@@ -421,7 +428,13 @@ class CalendarListView(http.HomeAssistantView):
 
         for entity in self.component.entities:
             state = hass.states.get(entity.entity_id)
-            calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
+            calendar_list.append(
+                {
+                    "name": state.name,
+                    "entity_id": entity.entity_id,
+                    "color": entity.color,
+                }
+            )
 
         return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))
 
