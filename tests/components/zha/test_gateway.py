@@ -10,6 +10,7 @@ import zigpy.zcl.clusters.lighting as lighting
 
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .common import async_find_group_entity_id, get_zha_gateway
@@ -130,7 +131,7 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
-async def test_device_left(hass, zigpy_dev_basic, zha_dev_basic):
+async def test_device_left(hass: HomeAssistant, zigpy_dev_basic, zha_dev_basic) -> None:
     """Device leaving the network should become unavailable."""
 
     assert zha_dev_basic.available is True
@@ -140,7 +141,9 @@ async def test_device_left(hass, zigpy_dev_basic, zha_dev_basic):
     assert zha_dev_basic.available is False
 
 
-async def test_gateway_group_methods(hass, device_light_1, device_light_2, coordinator):
+async def test_gateway_group_methods(
+    hass: HomeAssistant, device_light_1, device_light_2, coordinator
+) -> None:
     """Test creating a group with 2 members."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -197,7 +200,9 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
             assert member.device.ieee in [device_light_1.ieee]
 
 
-async def test_gateway_create_group_with_id(hass, device_light_1, coordinator):
+async def test_gateway_create_group_with_id(
+    hass: HomeAssistant, device_light_1, coordinator
+) -> None:
     """Test creating a group with a specific ID."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -232,7 +237,9 @@ async def test_gateway_create_group_with_id(hass, device_light_1, coordinator):
         [MagicMock()],
     ],
 )
-async def test_gateway_initialize_success(startup, hass, device_light_1, coordinator):
+async def test_gateway_initialize_success(
+    startup, hass: HomeAssistant, device_light_1, coordinator
+) -> None:
     """Test ZHA initializing the gateway successfully."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -248,7 +255,9 @@ async def test_gateway_initialize_success(startup, hass, device_light_1, coordin
 
 
 @patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
-async def test_gateway_initialize_failure(hass, device_light_1, coordinator):
+async def test_gateway_initialize_failure(
+    hass: HomeAssistant, device_light_1, coordinator
+) -> None:
     """Test ZHA failing to initialize the gateway."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -263,7 +272,9 @@ async def test_gateway_initialize_failure(hass, device_light_1, coordinator):
 
 
 @patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
-async def test_gateway_initialize_failure_transient(hass, device_light_1, coordinator):
+async def test_gateway_initialize_failure_transient(
+    hass: HomeAssistant, device_light_1, coordinator
+) -> None:
     """Test ZHA failing to initialize the gateway but with a transient error."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
