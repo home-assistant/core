@@ -175,24 +175,3 @@ async def test_cant_turn_on_sensor(hass: HomeAssistant) -> None:
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
-
-
-async def test_exposed_domains(hass: HomeAssistant) -> None:
-    """Test that we can't interact with entities that aren't exposed."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(hass, "media_player", {})
-
-    hass.states.async_set(
-        "media_player.test", "off", attributes={ATTR_FRIENDLY_NAME: "Test Media Player"}
-    )
-
-    result = await conversation.async_converse(
-        hass, "turn on test media player", None, Context(), None
-    )
-
-    # This is an intent match failure instead of a handle failure because the
-    # media player domain is not exposed.
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH

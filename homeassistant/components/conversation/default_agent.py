@@ -19,6 +19,7 @@ import yaml
 from homeassistant import core, setup
 from homeassistant.helpers import (
     area_registry,
+    device_registry,
     entity_registry,
     intent,
     template,
@@ -446,9 +447,10 @@ class DefaultAgent(AbstractConversationAgent):
             state for state in self.hass.states.async_all() if is_entity_exposed(state)
         ]
         entities = entity_registry.async_get(self.hass)
+        devices = device_registry.async_get(self.hass)
 
         # Gather exposed entity names
-        names = []
+        entity_names = []
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
@@ -461,33 +463,39 @@ class DefaultAgent(AbstractConversationAgent):
 
                 if entity.aliases:
                     for alias in entity.aliases:
-                        names.append((alias, alias, context))
+                        entity_names.append((alias, alias, context))
 
                 # Default name
-                names.append((state.name, state.name, context))
+                entity_names.append((state.name, state.name, context))
 
                 if entity.area_id:
                     # Expose area too
                     area_ids_with_entities.add(entity.area_id)
+                elif entity.device_id:
+                    # Check device for area as well
+                    device = devices.async_get(entity.device_id)
+                    if (device is not None) and device.area_id:
+                        area_ids_with_entities.add(device.area_id)
             else:
                 # Default name
-                names.append((state.name, state.name, context))
+                entity_names.append((state.name, state.name, context))
 
         # Gather areas from exposed entities
-        registry = area_registry.async_get(self.hass)
-        areas = []
-        for entry in registry.async_list_areas():
-            if entry.id not in area_ids_with_entities:
+        areas = area_registry.async_get(self.hass)
+        area_names = []
+        for area_id in area_ids_with_entities:
+            area = areas.async_get_area(area_id)
+            if area is None:
                 continue
 
-            areas.append((entry.name, entry.id))
-            if entry.aliases:
-                for alias in entry.aliases:
-                    areas.append((alias, entry.id))
+            area_names.append((area.name, area.id))
+            if area.aliases:
+                for alias in area.aliases:
+                    area_names.append((alias, area.id))
 
         self._slot_lists = {
-            "area": TextSlotList.from_tuples(areas, allow_template=False),
-            "name": TextSlotList.from_tuples(names, allow_template=False),
+            "area": TextSlotList.from_tuples(area_names, allow_template=False),
+            "name": TextSlotList.from_tuples(entity_names, allow_template=False),
         }
 
         return self._slot_lists

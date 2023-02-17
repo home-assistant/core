@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import entity, entity_registry, intent
 from homeassistant.setup import async_setup_component
@@ -42,5 +43,23 @@ async def test_hidden_entities_skipped(
     )
 
     assert len(calls) == 0
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+
+
+async def test_exposed_domains(hass: HomeAssistant, init_components) -> None:
+    """Test that we can't interact with entities that aren't exposed."""
+    assert await async_setup_component(hass, "media_player", {})
+
+    hass.states.async_set(
+        "media_player.test", "off", attributes={ATTR_FRIENDLY_NAME: "Test Media Player"}
+    )
+
+    result = await conversation.async_converse(
+        hass, "turn on test media player", None, Context(), None
+    )
+
+    # This is an intent match failure instead of a handle failure because the
+    # media player domain is not exposed.
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH

@@ -2,7 +2,7 @@
 
 DOMAIN = "conversation"
 
-DEFAULT_EXPOSED_DOMAINS = [
+DEFAULT_EXPOSED_DOMAINS = {
     "climate",
     "cover",
     "fan",
@@ -15,4 +15,4 @@ DEFAULT_EXPOSED_DOMAINS = [
     "switch",
     "vacuum",
     "water_heater",
-]
+}
