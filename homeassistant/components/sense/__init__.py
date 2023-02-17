@@ -1,5 +1,4 @@
 """Support for monitoring a Sense energy sensor."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -124,7 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was
     # successful so we do it later.
-    asyncio.create_task(trends_coordinator.async_request_refresh())
+    entry.async_create_background_task(
+        hass,
+        trends_coordinator.async_request_refresh(),
+        "sense.trends-coordinator-refresh",
+    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         SENSE_DATA: gateway,
