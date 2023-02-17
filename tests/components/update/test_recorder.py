@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.update.const import (
@@ -21,8 +22,8 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    recorder_mock, hass: HomeAssistant, enable_custom_integrations: None
-):
+    recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test update attributes to be excluded."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
