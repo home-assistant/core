@@ -147,9 +147,10 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             | {
                 "config_entries": ANY,
                 "id": ANY,
-                "via_device_id": ANY,
             }
         )
+        if serialized["via_device_id"] is not None:
+            serialized["via_device_id"] = ANY
         serialized.pop("_json_repr")
         return serialized
 

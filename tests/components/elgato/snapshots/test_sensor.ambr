@@ -77,7 +77,7 @@
     'name_by_user': None,
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
 # name: test_sensors[sensor.frenck_battery_voltage-key-light-mini]
@@ -161,7 +161,7 @@
     'name_by_user': None,
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_current-key-light-mini]
@@ -245,7 +245,7 @@
     'name_by_user': None,
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_power-key-light-mini]
@@ -326,7 +326,7 @@
     'name_by_user': None,
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_voltage-key-light-mini]
@@ -410,6 +410,6 @@
     'name_by_user': None,
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
