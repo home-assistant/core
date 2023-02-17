@@ -169,10 +169,8 @@ async def async_setup_entry(
         ] = async_call_later(hass, DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding player discovery job for LMS server: %s", host)
-    config_entry.async_on_unload(
-        hass.async_create_background_task(
-            _discovery(), "squeezebox.media_player.discovery"
-        ).cancel
+    config_entry.async_create_background_task(
+        hass, _discovery(), "squeezebox.media_player.discovery"
     )
 
     # Register entity services
