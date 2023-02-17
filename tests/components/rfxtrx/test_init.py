@@ -19,7 +19,7 @@ from tests.typing import WebSocketGenerator
 SOME_PROTOCOLS = ["ac", "arc"]
 
 
-async def test_fire_event(hass, rfxtrx):
+async def test_fire_event(hass: HomeAssistant, rfxtrx) -> None:
     """Test fire event."""
     await setup_rfx_test_cfg(
         hass,
@@ -78,7 +78,7 @@ async def test_fire_event(hass, rfxtrx):
     ]
 
 
-async def test_send(hass, rfxtrx):
+async def test_send(hass: HomeAssistant, rfxtrx) -> None:
     """Test configuration."""
     await setup_rfx_test_cfg(hass, device="/dev/null", devices={})
 

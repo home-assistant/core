@@ -19,6 +19,7 @@ from homeassistant.components.zodiac.const import (
     SIGN_TAURUS,
 )
 from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -36,7 +37,7 @@ DAY3 = datetime(2020, 4, 21, tzinfo=dt_util.UTC)
         (DAY3, SIGN_TAURUS, ELEMENT_EARTH, MODALITY_FIXED),
     ],
 )
-async def test_zodiac_day(hass, now, sign, element, modality):
+async def test_zodiac_day(hass: HomeAssistant, now, sign, element, modality) -> None:
     """Test the zodiac sensor."""
     hass.config.set_time_zone("UTC")
     config = {DOMAIN: {}}

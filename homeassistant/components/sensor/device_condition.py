@@ -32,7 +32,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_APPARENT_POWER = "is_apparent_power"
-CONF_IS_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
+CONF_IS_ATMOSPHERIC_PRESSURE = "is_atmospheric_pressure"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"

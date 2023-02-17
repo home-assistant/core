@@ -13,8 +13,8 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_events_http_api(recorder_mock: Recorder, hass: HomeAssistant) -> None:
-    """Test the calendar demo view."""
+async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test sensor attributes to be excluded."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
 
@@ -31,7 +31,11 @@ async def test_events_http_api(recorder_mock: Recorder, hass: HomeAssistant) -> 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
-            for db_state, db_state_attributes in session.query(States, StateAttributes):
+            for db_state, db_state_attributes in session.query(
+                States, StateAttributes
+            ).outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            ):
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)
