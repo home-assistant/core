@@ -9,6 +9,7 @@ from reolink_aio.api import Host
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
+    ATTR_VOLUME_LEVEL,
     SirenEntity,
     SirenEntityDescription,
     SirenEntityFeature,
@@ -27,6 +28,7 @@ class ReolinkSirenEntityDescriptionMixin:
     """Mixin values for Reolink siren entities."""
 
     method: Callable[[Host, int | None, bool, int], Any]
+    volume: Callable[[Host, int | None, int], Any]
 
 
 @dataclass
@@ -45,6 +47,7 @@ SIREN_ENTITIES = (
         icon="mdi:alarm-light",
         supported=lambda api, ch: api.supported(ch, "siren"),
         method=lambda api, ch, on_off, duration: api.set_siren(ch, on_off, duration),
+        volume=lambda api, ch, volume: api.set_volume(ch, volume),
     ),
 )
 
@@ -73,6 +76,7 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
         SirenEntityFeature.TURN_ON
         | SirenEntityFeature.TURN_OFF
         | SirenEntityFeature.DURATION
+        | SirenEntityFeature.VOLUME_SET
     )
     entity_description: ReolinkSirenEntityDescription
 
@@ -92,6 +96,8 @@ class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the siren."""
+        if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
+            await self.entity_description.volume(self._host.api, self._channel, volume) 
         duration = kwargs.get(ATTR_DURATION)
         await self.entity_description.method(
             self._host.api, self._channel, True, duration
