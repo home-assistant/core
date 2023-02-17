@@ -28,6 +28,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
+    TARGET_MAX_ENTITIES,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import (
@@ -125,7 +126,8 @@ EXPIRE_AFTER_COMMITS = 120
 # - The number of overlapping attributes
 # - How frequently states with overlapping attributes will change
 # - How much memory our low end hardware has
-STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
+# - The expected maximum number of entities
+STATE_ATTRIBUTES_ID_CACHE_SIZE = TARGET_MAX_ENTITIES
 EVENT_DATA_ID_CACHE_SIZE = 2048
 
 SHUTDOWN_TASK = object()
