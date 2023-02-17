@@ -77,6 +77,17 @@ NUMBER_ENTITIES = (
         value=lambda api, ch: api.whiteled_brightness(ch),
         method=lambda api, ch, value: api.set_whiteled(ch, brightness=int(value)),
     ),
+    ReolinkNumberEntityDescription(
+        key="volume",
+        name="Volume",
+        icon="mdi:volume-high",
+        native_step=1,
+        get_min_value=lambda api, ch: 0,
+        get_max_value=lambda api, ch: 100,
+        supported=lambda api, ch: api.supported(ch, "volume"),
+        value=lambda api, ch: api.volume(ch),
+        method=lambda api, ch, value: api.set_volume(ch, volume=int(value)),
+    ),
 )
 
 
