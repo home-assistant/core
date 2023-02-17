@@ -40,10 +40,8 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_config_entry_first_refresh()
-    entry.async_on_unload(
-        hass.async_create_background_task(
-            coordinator.ws_connect(), "livisi-ws_connect"
-        ).cancel
+    entry.async_create_background_task(
+        hass, coordinator.ws_connect(), "livisi-ws_connect"
     )
     return True
 
