@@ -883,7 +883,8 @@ class Recorder(threading.Thread):
 
         Since the _state_attributes_ids cache is empty at startup
         we restore it from the database to avoid having to look up
-        the attributes in the database for every state change.
+        the attributes in the database for every state change
+        until its primed.
         """
         assert self.event_session is not None
         with self.event_session.no_autoflush:
@@ -897,7 +898,7 @@ class Recorder(threading.Thread):
 
         Since the _event_data_ids cache is empty at startup
         we restore it from the database to avoid having to look up
-        the attributes in the database for every state change.
+        the data in the database for every event until its primed.
         """
         assert self.event_session is not None
         with self.event_session.no_autoflush:
