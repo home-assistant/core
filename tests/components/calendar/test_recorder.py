@@ -13,8 +13,8 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_events_http_api(recorder_mock: Recorder, hass: HomeAssistant) -> None:
-    """Test the calendar demo view."""
+async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test sensor attributes to be excluded."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
 
