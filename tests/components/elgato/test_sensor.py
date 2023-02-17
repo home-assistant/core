@@ -32,14 +32,14 @@ async def test_sensors(
     """Test the Elgato sensors."""
 
     state = hass.states.get(entity_id)
-    assert state == snapshot(name="state")
+    assert state == snapshot
 
     entry = entity_registry.async_get(entity_id)
-    assert entry == snapshot(name="entity_registry")
+    assert entry == snapshot
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry == snapshot(name="device_registry")
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
