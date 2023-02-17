@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
@@ -435,7 +434,7 @@ class GoogleCalendarEntity(
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        asyncio.create_task(refresh())
+        self.hass.async_create_background_task(refresh(), "google.calendar-refresh")
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
