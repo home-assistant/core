@@ -56,7 +56,6 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
 
     # Ensure it has correct value
     constant_value = {
-        SensorDeviceClass.ATMOSPHERIC_PRESSURE: "atmospheric_pressure",
         SensorDeviceClass.BATTERY: "is_battery_level",
     }.get(device_class, f"is_{device_class.value}")
     assert getattr(device_condition, constant_name) == constant_value
