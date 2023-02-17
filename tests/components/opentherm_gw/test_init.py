@@ -9,7 +9,7 @@ from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 VERSION_OLD = "4.2.5"
 VERSION_NEW = "4.2.8.1"
@@ -46,12 +46,13 @@ async def test_device_registry_insert(hass: HomeAssistant) -> None:
     assert gw_dev.sw_version == VERSION_OLD
 
 
-async def test_device_registry_update(hass: HomeAssistant) -> None:
+async def test_device_registry_update(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that the device registry is updated correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=MOCK_CONFIG_ENTRY.entry_id,
         identifiers={(DOMAIN, MOCK_GATEWAY_ID)},
         name="Mock Gateway",
@@ -67,5 +68,5 @@ async def test_device_registry_update(hass: HomeAssistant) -> None:
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
-    gw_dev = dev_reg.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
+    gw_dev = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
     assert gw_dev.sw_version == VERSION_NEW

@@ -6,9 +6,9 @@ import pytest
 from homeassistant.components import automation
 from homeassistant.components.button import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -57,7 +57,7 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
@@ -104,7 +104,7 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set("button.entity", "unknown")
 

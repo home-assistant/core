@@ -543,6 +543,9 @@ def setup_connection_for_dialect(
                 or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
                 or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
             )
+
+        # Ensure all times are using UTC to avoid issues with daylight savings
+        execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
         # Historically we have marked PostgreSQL as having slow range in select
         # but this may not be true for all versions. We should investigate

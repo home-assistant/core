@@ -77,7 +77,7 @@ def mock_controller_connect(mock_unique_id):
     "unique_id",
     [{}, {"label_mac": MAC_ADDR}],
 )
-async def test_user(hass, mock_unique_id, unique_id):
+async def test_user(hass: HomeAssistant, mock_unique_id, unique_id) -> None:
     """Test user config."""
     mock_unique_id.update(unique_id)
     flow_result = await hass.config_entries.flow.async_init(
@@ -102,13 +102,13 @@ async def test_user(hass, mock_unique_id, unique_id):
 
 
 @pytest.mark.parametrize(
-    ["config", "error"],
+    ("config", "error"),
     [
         ({CONF_PASSWORD: None}, "pwd_or_ssh"),
         ({CONF_SSH_KEY: SSH_KEY}, "pwd_and_ssh"),
     ],
 )
-async def test_error_wrong_password_ssh(hass, config, error):
+async def test_error_wrong_password_ssh(hass: HomeAssistant, config, error) -> None:
     """Test we abort for wrong password and ssh file combination."""
     config_data = CONFIG_DATA.copy()
     config_data.update(config)
@@ -175,7 +175,7 @@ async def test_abort_if_not_unique_id_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("connect")
-async def test_update_uniqueid_exist(hass, mock_unique_id):
+async def test_update_uniqueid_exist(hass: HomeAssistant, mock_unique_id) -> None:
     """Test we update entry if uniqueid is already configured."""
     mock_unique_id.update({"label_mac": MAC_ADDR})
     existing_entry = MockConfigEntry(
@@ -221,14 +221,14 @@ async def test_abort_invalid_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["side_effect", "error"],
+    ("side_effect", "error"),
     [
         (OSError, "cannot_connect"),
         (TypeError, "unknown"),
         (None, "cannot_connect"),
     ],
 )
-async def test_on_connect_failed(hass, side_effect, error):
+async def test_on_connect_failed(hass: HomeAssistant, side_effect, error) -> None:
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,

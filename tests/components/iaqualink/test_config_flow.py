@@ -10,7 +10,9 @@ from homeassistant.components.iaqualink import config_flow
 from homeassistant.core import HomeAssistant
 
 
-async def test_already_configured(hass, config_entry, config_data):
+async def test_already_configured(
+    hass: HomeAssistant, config_entry, config_data
+) -> None:
     """Test config flow when iaqualink component is already setup."""
     config_entry.add_to_hass(hass)
 
@@ -36,7 +38,7 @@ async def test_without_config(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_with_invalid_credentials(hass, config_data):
+async def test_with_invalid_credentials(hass: HomeAssistant, config_data) -> None:
     """Test config flow with invalid username and/or password."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
@@ -52,7 +54,7 @@ async def test_with_invalid_credentials(hass, config_data):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_service_exception(hass, config_data):
+async def test_service_exception(hass: HomeAssistant, config_data) -> None:
     """Test config flow encountering service exception."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
@@ -68,7 +70,7 @@ async def test_service_exception(hass, config_data):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_with_existing_config(hass, config_data):
+async def test_with_existing_config(hass: HomeAssistant, config_data) -> None:
     """Test config flow with existing configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass

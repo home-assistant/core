@@ -10,7 +10,7 @@ from aiohttp import payload, web
 from aiohttp.typedefs import JSONDecoder
 from multidict import CIMultiDict, MultiDict
 
-from homeassistant.helpers.json import json_loads
+from .json import json_loads
 
 
 class MockStreamReader:

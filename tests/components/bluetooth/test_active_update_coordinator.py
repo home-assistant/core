@@ -96,7 +96,11 @@ class MyCoordinator(ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]):
         super()._async_handle_bluetooth_event(service_info, change)
 
 
-async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapters):
+async def test_basic_usage(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -133,8 +137,10 @@ async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapte
 
 
 async def test_bleak_error_during_polling(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test bleak error during polling ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -184,8 +190,10 @@ async def test_bleak_error_during_polling(
 
 
 async def test_generic_exception_during_polling(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test generic exception during polling ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -235,8 +243,10 @@ async def test_generic_exception_during_polling(
 
 
 async def test_polling_debounce(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -279,8 +289,10 @@ async def test_polling_debounce(
 
 
 async def test_polling_debounce_with_custom_debouncer(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test basic usage of the ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     poll_count = 0
@@ -324,8 +336,10 @@ async def test_polling_debounce_with_custom_debouncer(
 
 
 async def test_polling_rejecting_the_first_time(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test need_poll rejects the first time ActiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     attempt = 0

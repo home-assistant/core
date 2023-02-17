@@ -36,9 +36,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"
 MOCK_NAME = "ha_ps4_name"
@@ -261,7 +262,9 @@ async def test_media_attributes_are_fetched(hass: HomeAssistant) -> None:
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
 
 
-async def test_media_attributes_are_loaded(hass, patch_load_json):
+async def test_media_attributes_are_loaded(
+    hass: HomeAssistant, patch_load_json
+) -> None:
     """Test that media attributes are loaded."""
     mock_entity_id = await setup_mock_component(hass)
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA_LOCKED}
@@ -288,9 +291,10 @@ async def test_media_attributes_are_loaded(hass, patch_load_json):
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MOCK_TITLE_TYPE
 
 
-async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
+async def test_device_info_is_set_from_status_correctly(
+    hass: HomeAssistant, patch_get_status, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that device info is set correctly from status update."""
-    mock_d_registry = mock_device_registry(hass)
     patch_get_status.return_value = MOCK_STATUS_STANDBY
     mock_entity_id = await setup_mock_component(hass)
 
@@ -303,8 +307,8 @@ async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
 
     mock_state = hass.states.get(mock_entity_id).state
 
-    mock_d_entries = mock_d_registry.devices
-    mock_entry = mock_d_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
+    mock_d_entries = device_registry.devices
+    mock_entry = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
     assert mock_state == STATE_STANDBY
 
     assert len(mock_d_entries) == 1
@@ -314,27 +318,29 @@ async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     assert mock_entry.identifiers == {(DOMAIN, MOCK_HOST_ID)}
 
 
-async def test_device_info_is_assummed(hass: HomeAssistant) -> None:
+async def test_device_info_is_assummed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that device info is assumed if device is unavailable."""
     # Create a device registry entry with device info.
-    mock_d_registry = mock_device_registry(hass)
-    mock_d_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=MOCK_ENTRY_ID,
         name=MOCK_HOST_NAME,
         model=MOCK_DEVICE_MODEL,
         identifiers={(DOMAIN, MOCK_HOST_ID)},
         sw_version=MOCK_HOST_VERSION,
     )
-    mock_d_entries = mock_d_registry.devices
+    mock_d_entries = device_registry.devices
     assert len(mock_d_entries) == 1
 
     # Create a entity_registry entry which is using identifiers from device.
     mock_unique_id = ps4.format_unique_id(MOCK_CREDS, MOCK_HOST_ID)
-    mock_e_registry = mock_registry(hass)
-    mock_e_registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "media_player", DOMAIN, mock_unique_id, config_entry=MOCK_CONFIG
     )
-    mock_entity_id = mock_e_registry.async_get_entity_id(
+    mock_entity_id = entity_registry.async_get_entity_id(
         "media_player", DOMAIN, mock_unique_id
     )
 
@@ -350,12 +356,13 @@ async def test_device_info_is_assummed(hass: HomeAssistant) -> None:
     assert mock_entities[0] == mock_entity_id
 
 
-async def test_device_info_assummed_works(hass: HomeAssistant) -> None:
+async def test_device_info_assummed_works(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Reverse test that device info assumption works."""
-    mock_d_registry = mock_device_registry(hass)
     mock_entity_id = await setup_mock_component(hass)
     mock_state = hass.states.get(mock_entity_id).state
-    mock_d_entries = mock_d_registry.devices
+    mock_d_entries = device_registry.devices
 
     # Ensure that state is not set.
     assert mock_state == STATE_UNKNOWN
@@ -444,7 +451,7 @@ async def test_media_stop(hass: HomeAssistant) -> None:
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source(hass, patch_load_json):
+async def test_select_source(hass: HomeAssistant, patch_load_json) -> None:
     """Test that select source service calls function with title."""
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
     with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):
@@ -464,7 +471,7 @@ async def test_select_source(hass, patch_load_json):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source_caps(hass, patch_load_json):
+async def test_select_source_caps(hass: HomeAssistant, patch_load_json) -> None:
     """Test that select source service calls function with upper case title."""
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
     with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):
@@ -487,7 +494,7 @@ async def test_select_source_caps(hass, patch_load_json):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source_id(hass, patch_load_json):
+async def test_select_source_id(hass: HomeAssistant, patch_load_json) -> None:
     """Test that select source service calls function with Title ID."""
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
     with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):

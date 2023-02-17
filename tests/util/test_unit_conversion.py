@@ -444,7 +444,7 @@ def test_all_converters(converter: type[BaseUnitConverter]) -> None:
 
 
 @pytest.mark.parametrize(
-    "converter,valid_unit",
+    ("converter", "valid_unit"),
     [
         # Ensure all units are tested
         (converter, valid_unit)
@@ -458,7 +458,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 
 
 @pytest.mark.parametrize(
-    "converter,valid_unit",
+    ("converter", "valid_unit"),
     [
         # Ensure all units are tested
         (converter, valid_unit)
@@ -478,7 +478,7 @@ def test_convert_invalid_unit(
 
 
 @pytest.mark.parametrize(
-    "converter,from_unit,to_unit",
+    ("converter", "from_unit", "to_unit"),
     [
         # Pick any two units
         (converter, valid_units[0], valid_units[1])
@@ -494,7 +494,7 @@ def test_convert_nonnumeric_value(
 
 
 @pytest.mark.parametrize(
-    "converter,from_unit,to_unit,expected",
+    ("converter", "from_unit", "to_unit", "expected"),
     [
         # Process all items in _GET_UNIT_RATIO
         (converter, item[0], item[1], item[2])
@@ -511,7 +511,7 @@ def test_get_unit_ratio(
 
 
 @pytest.mark.parametrize(
-    "converter,value,from_unit,expected,to_unit",
+    ("converter", "value", "from_unit", "expected", "to_unit"),
     [
         # Process all items in _CONVERTED_VALUE
         (converter, list_item[0], list_item[1], list_item[2], list_item[3])
@@ -531,7 +531,7 @@ def test_unit_conversion(
 
 
 @pytest.mark.parametrize(
-    "value,from_unit,expected,to_unit",
+    ("value", "from_unit", "expected", "to_unit"),
     [
         (100, UnitOfTemperature.CELSIUS, 180, UnitOfTemperature.FAHRENHEIT),
         (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),

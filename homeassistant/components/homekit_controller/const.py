@@ -94,6 +94,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.DENSITY_VOC: "sensor",
     CharacteristicsTypes.IDENTIFY: "button",
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
+    CharacteristicsTypes.THREAD_CONTROL_POINT: "button",
 }
 
 STARTUP_EXCEPTIONS = (

@@ -73,7 +73,10 @@ async def test_poll_when_cover_has_command_state(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         check_output.assert_called_once_with(
-            "echo state", shell=True, timeout=15  # nosec # shell by design
+            "echo state",
+            shell=True,  # nosec # shell by design
+            timeout=15,
+            close_fds=False,
         )
 
 

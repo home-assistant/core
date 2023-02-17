@@ -29,9 +29,8 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -205,7 +204,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     model = config_entry.data[CONF_MODEL]

@@ -4,9 +4,9 @@ import pytest
 from homeassistant.components import automation
 from homeassistant.components.button import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -48,7 +48,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),

@@ -11,7 +11,7 @@ from homeassistant.components.media_player import MediaPlayerEntityFeature
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -32,13 +32,13 @@ from tests.common import async_capture_events, async_mock_service
 
 
 @pytest.fixture
-def events(hass):
+def events(hass: HomeAssistant) -> list[Event]:
     """Fixture that catches alexa events."""
     return async_capture_events(hass, smart_home.EVENT_ALEXA_SMART_HOME)
 
 
 @pytest.fixture
-async def mock_camera(hass):
+async def mock_camera(hass: HomeAssistant) -> None:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
@@ -47,7 +47,7 @@ async def mock_camera(hass):
 
 
 @pytest.fixture
-async def mock_stream(hass):
+async def mock_stream(hass: HomeAssistant) -> None:
     """Initialize a demo camera platform with streaming."""
     assert await async_setup_component(hass, "stream", {"stream": {}})
     await hass.async_block_till_done()
@@ -159,7 +159,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
 
 
 @freeze_time("2022-04-19 07:53:05")
-async def test_switch(hass, events):
+async def test_switch(hass: HomeAssistant, events: list[Event]) -> None:
     """Test switch discovery."""
     device = ("switch.test", "on", {"friendly_name": "Test switch"})
     appliance = await discovery_test(device, hass)
@@ -191,7 +191,7 @@ async def test_switch(hass, events):
     assert {"name": "detectionState"} in properties["supported"]
 
 
-async def test_outlet(hass, events):
+async def test_outlet(hass: HomeAssistant, events: list[Event]) -> None:
     """Test switch with device class outlet discovery."""
     device = (
         "switch.test",
@@ -274,7 +274,9 @@ async def test_dimmable_light(hass: HomeAssistant) -> None:
     "supported_color_modes",
     [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
 )
-async def test_color_light(hass, supported_color_modes):
+async def test_color_light(
+    hass: HomeAssistant, supported_color_modes: list[str]
+) -> None:
     """Test color light discovery."""
     device = (
         "light.test_3",
@@ -2614,7 +2616,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert scene["description"] == "Config description via Home Assistant (Scene)"
 
 
-async def test_logging_request(hass, events):
+async def test_logging_request(hass: HomeAssistant, events: list[Event]) -> None:
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.Discovery", "Discover")
@@ -2636,7 +2638,9 @@ async def test_logging_request(hass, events):
     assert event.context == context
 
 
-async def test_logging_request_with_entity(hass, events):
+async def test_logging_request_with_entity(
+    hass: HomeAssistant, events: list[Event]
+) -> None:
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
@@ -3348,7 +3352,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("domain", ["input_number", "number"])
-async def test_input_number(hass, domain: str):
+async def test_input_number(hass: HomeAssistant, domain: str) -> None:
     """Test input_number and number discovery."""
     device = (
         f"{domain}.test_slider",
@@ -3434,7 +3438,7 @@ async def test_input_number(hass, domain: str):
 
 
 @pytest.mark.parametrize("domain", ["input_number", "number"])
-async def test_input_number_float(hass, domain: str):
+async def test_input_number_float(hass: HomeAssistant, domain: str) -> None:
     """Test input_number and number discovery."""
     device = (
         f"{domain}.test_slider_float",
@@ -4065,7 +4069,7 @@ async def test_vacuum_discovery_no_turn_on_or_off(hass: HomeAssistant) -> None:
     )
 
 
-async def test_camera_discovery(hass, mock_stream):
+async def test_camera_discovery(hass: HomeAssistant, mock_stream: None) -> None:
     """Test camera discovery."""
     device = (
         "camera.test",
@@ -4116,7 +4120,7 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "url,result",
+    ("url", "result"),
     [
         ("http://nohttpswrongport.org:8123", 2),
         ("http://nohttpsport443.org:443", 2),
@@ -4125,7 +4129,9 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
         ("https://correctschemaandport.org", 3),
     ],
 )
-async def test_camera_hass_urls(hass, mock_stream, url, result):
+async def test_camera_hass_urls(
+    hass: HomeAssistant, mock_stream: None, url: str, result: int
+) -> None:
     """Test camera discovery with unsupported urls."""
     device = (
         "camera.test",
@@ -4138,7 +4144,9 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
     assert len(appliance["capabilities"]) == result
 
 
-async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
+async def test_initialize_camera_stream(
+    hass: HomeAssistant, mock_camera: None, mock_stream: None
+) -> None:
     """Test InitializeCameraStreams handler."""
     request = get_new_request(
         "Alexa.CameraStreamController", "InitializeCameraStreams", "camera#demo_camera"
@@ -4180,7 +4188,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     "domain",
     ["button", "input_button"],
 )
-async def test_button(hass, domain):
+async def test_button(hass: HomeAssistant, domain: str) -> None:
     """Test button discovery."""
     device = (
         f"{domain}.ring_doorbell",

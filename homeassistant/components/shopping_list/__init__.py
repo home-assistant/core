@@ -13,8 +13,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
 from .const import (
     DOMAIN,

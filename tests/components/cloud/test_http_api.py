@@ -20,6 +20,7 @@ from homeassistant.util.location import LocationInfo
 from . import mock_cloud, mock_cloud_prefs
 
 from tests.components.google_assistant import MockConfig
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/payments/subscription_info"
@@ -75,7 +76,9 @@ def mock_cognito_fixture():
         yield mock_cog()
 
 
-async def test_google_actions_sync(mock_cognito, mock_cloud_login, cloud_client):
+async def test_google_actions_sync(
+    mock_cognito, mock_cloud_login, cloud_client
+) -> None:
     """Test syncing Google Actions."""
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
@@ -86,7 +89,9 @@ async def test_google_actions_sync(mock_cognito, mock_cloud_login, cloud_client)
         assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_actions_sync_fails(mock_cognito, mock_cloud_login, cloud_client):
+async def test_google_actions_sync_fails(
+    mock_cognito, mock_cloud_login, cloud_client
+) -> None:
     """Test syncing Google Actions gone bad."""
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
@@ -97,7 +102,7 @@ async def test_google_actions_sync_fails(mock_cognito, mock_cloud_login, cloud_c
         assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_login_view(hass, cloud_client):
+async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
     """Test logging in."""
     hass.data["cloud"] = MagicMock(login=AsyncMock())
 
@@ -110,7 +115,7 @@ async def test_login_view(hass, cloud_client):
     assert result == {"success": True}
 
 
-async def test_login_view_random_exception(cloud_client):
+async def test_login_view_random_exception(cloud_client) -> None:
     """Try logging in with invalid JSON."""
     with patch("hass_nabucasa.Cloud.login", side_effect=ValueError("Boom")):
         req = await cloud_client.post(
@@ -121,7 +126,7 @@ async def test_login_view_random_exception(cloud_client):
     assert resp == {"code": "valueerror", "message": "Unexpected error: Boom"}
 
 
-async def test_login_view_invalid_json(cloud_client):
+async def test_login_view_invalid_json(cloud_client) -> None:
     """Try logging in with invalid JSON."""
     with patch("hass_nabucasa.auth.CognitoAuth.async_login") as mock_login:
         req = await cloud_client.post("/api/cloud/login", data="Not JSON")
@@ -129,7 +134,7 @@ async def test_login_view_invalid_json(cloud_client):
     assert len(mock_login.mock_calls) == 0
 
 
-async def test_login_view_invalid_schema(cloud_client):
+async def test_login_view_invalid_schema(cloud_client) -> None:
     """Try logging in with invalid schema."""
     with patch("hass_nabucasa.auth.CognitoAuth.async_login") as mock_login:
         req = await cloud_client.post("/api/cloud/login", json={"invalid": "schema"})
@@ -137,7 +142,7 @@ async def test_login_view_invalid_schema(cloud_client):
     assert len(mock_login.mock_calls) == 0
 
 
-async def test_login_view_request_timeout(cloud_client):
+async def test_login_view_request_timeout(cloud_client) -> None:
     """Test request timeout while trying to log in."""
     with patch(
         "hass_nabucasa.auth.CognitoAuth.async_login", side_effect=asyncio.TimeoutError
@@ -149,7 +154,7 @@ async def test_login_view_request_timeout(cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_login_view_invalid_credentials(cloud_client):
+async def test_login_view_invalid_credentials(cloud_client) -> None:
     """Test logging in with invalid credentials."""
     with patch(
         "hass_nabucasa.auth.CognitoAuth.async_login", side_effect=Unauthenticated
@@ -161,7 +166,7 @@ async def test_login_view_invalid_credentials(cloud_client):
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_login_view_unknown_error(cloud_client):
+async def test_login_view_unknown_error(cloud_client) -> None:
     """Test unknown error while logging in."""
     with patch("hass_nabucasa.auth.CognitoAuth.async_login", side_effect=UnknownError):
         req = await cloud_client.post(
@@ -171,7 +176,7 @@ async def test_login_view_unknown_error(cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_logout_view(hass, cloud_client):
+async def test_logout_view(hass: HomeAssistant, cloud_client) -> None:
     """Test logging out."""
     cloud = hass.data["cloud"] = MagicMock()
     cloud.logout = AsyncMock(return_value=None)
@@ -182,7 +187,7 @@ async def test_logout_view(hass, cloud_client):
     assert len(cloud.logout.mock_calls) == 1
 
 
-async def test_logout_view_request_timeout(hass, cloud_client):
+async def test_logout_view_request_timeout(hass: HomeAssistant, cloud_client) -> None:
     """Test timeout while logging out."""
     cloud = hass.data["cloud"] = MagicMock()
     cloud.logout.side_effect = asyncio.TimeoutError
@@ -190,7 +195,7 @@ async def test_logout_view_request_timeout(hass, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_logout_view_unknown_error(hass, cloud_client):
+async def test_logout_view_unknown_error(hass: HomeAssistant, cloud_client) -> None:
     """Test unknown error while logging out."""
     cloud = hass.data["cloud"] = MagicMock()
     cloud.logout.side_effect = UnknownError
@@ -198,7 +203,7 @@ async def test_logout_view_unknown_error(hass, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_register_view_no_location(mock_cognito, cloud_client):
+async def test_register_view_no_location(mock_cognito, cloud_client) -> None:
     """Test register without location."""
     with patch(
         "homeassistant.components.cloud.http_api.async_detect_location_info",
@@ -217,7 +222,7 @@ async def test_register_view_no_location(mock_cognito, cloud_client):
     assert call.kwargs["client_metadata"] is None
 
 
-async def test_register_view_with_location(mock_cognito, cloud_client):
+async def test_register_view_with_location(mock_cognito, cloud_client) -> None:
     """Test register with location."""
     with patch(
         "homeassistant.components.cloud.http_api.async_detect_location_info",
@@ -254,7 +259,7 @@ async def test_register_view_with_location(mock_cognito, cloud_client):
     }
 
 
-async def test_register_view_bad_data(mock_cognito, cloud_client):
+async def test_register_view_bad_data(mock_cognito, cloud_client) -> None:
     """Test logging out."""
     req = await cloud_client.post(
         "/api/cloud/register", json={"email": "hello@bla.com", "not_password": "falcon"}
@@ -263,7 +268,7 @@ async def test_register_view_bad_data(mock_cognito, cloud_client):
     assert len(mock_cognito.logout.mock_calls) == 0
 
 
-async def test_register_view_request_timeout(mock_cognito, cloud_client):
+async def test_register_view_request_timeout(mock_cognito, cloud_client) -> None:
     """Test timeout while logging out."""
     mock_cognito.register.side_effect = asyncio.TimeoutError
     req = await cloud_client.post(
@@ -272,7 +277,7 @@ async def test_register_view_request_timeout(mock_cognito, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_register_view_unknown_error(mock_cognito, cloud_client):
+async def test_register_view_unknown_error(mock_cognito, cloud_client) -> None:
     """Test unknown error while logging out."""
     mock_cognito.register.side_effect = UnknownError
     req = await cloud_client.post(
@@ -281,7 +286,7 @@ async def test_register_view_unknown_error(mock_cognito, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_forgot_password_view(mock_cognito, cloud_client):
+async def test_forgot_password_view(mock_cognito, cloud_client) -> None:
     """Test logging out."""
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
@@ -290,7 +295,7 @@ async def test_forgot_password_view(mock_cognito, cloud_client):
     assert len(mock_cognito.initiate_forgot_password.mock_calls) == 1
 
 
-async def test_forgot_password_view_bad_data(mock_cognito, cloud_client):
+async def test_forgot_password_view_bad_data(mock_cognito, cloud_client) -> None:
     """Test logging out."""
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"not_email": "hello@bla.com"}
@@ -299,7 +304,7 @@ async def test_forgot_password_view_bad_data(mock_cognito, cloud_client):
     assert len(mock_cognito.initiate_forgot_password.mock_calls) == 0
 
 
-async def test_forgot_password_view_request_timeout(mock_cognito, cloud_client):
+async def test_forgot_password_view_request_timeout(mock_cognito, cloud_client) -> None:
     """Test timeout while logging out."""
     mock_cognito.initiate_forgot_password.side_effect = asyncio.TimeoutError
     req = await cloud_client.post(
@@ -308,7 +313,7 @@ async def test_forgot_password_view_request_timeout(mock_cognito, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
+async def test_forgot_password_view_unknown_error(mock_cognito, cloud_client) -> None:
     """Test unknown error while logging out."""
     mock_cognito.initiate_forgot_password.side_effect = UnknownError
     req = await cloud_client.post(
@@ -317,7 +322,7 @@ async def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_forgot_password_view_aiohttp_error(mock_cognito, cloud_client):
+async def test_forgot_password_view_aiohttp_error(mock_cognito, cloud_client) -> None:
     """Test unknown error while logging out."""
     mock_cognito.initiate_forgot_password.side_effect = aiohttp.ClientResponseError(
         Mock(), Mock()
@@ -328,7 +333,7 @@ async def test_forgot_password_view_aiohttp_error(mock_cognito, cloud_client):
     assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-async def test_resend_confirm_view(mock_cognito, cloud_client):
+async def test_resend_confirm_view(mock_cognito, cloud_client) -> None:
     """Test logging out."""
     req = await cloud_client.post(
         "/api/cloud/resend_confirm", json={"email": "hello@bla.com"}
@@ -337,7 +342,7 @@ async def test_resend_confirm_view(mock_cognito, cloud_client):
     assert len(mock_cognito.client.resend_confirmation_code.mock_calls) == 1
 
 
-async def test_resend_confirm_view_bad_data(mock_cognito, cloud_client):
+async def test_resend_confirm_view_bad_data(mock_cognito, cloud_client) -> None:
     """Test logging out."""
     req = await cloud_client.post(
         "/api/cloud/resend_confirm", json={"not_email": "hello@bla.com"}
@@ -346,7 +351,7 @@ async def test_resend_confirm_view_bad_data(mock_cognito, cloud_client):
     assert len(mock_cognito.client.resend_confirmation_code.mock_calls) == 0
 
 
-async def test_resend_confirm_view_request_timeout(mock_cognito, cloud_client):
+async def test_resend_confirm_view_request_timeout(mock_cognito, cloud_client) -> None:
     """Test timeout while logging out."""
     mock_cognito.client.resend_confirmation_code.side_effect = asyncio.TimeoutError
     req = await cloud_client.post(
@@ -355,7 +360,7 @@ async def test_resend_confirm_view_request_timeout(mock_cognito, cloud_client):
     assert req.status == HTTPStatus.BAD_GATEWAY
 
 
-async def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
+async def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client) -> None:
     """Test unknown error while logging out."""
     mock_cognito.client.resend_confirmation_code.side_effect = UnknownError
     req = await cloud_client.post(
@@ -365,8 +370,11 @@ async def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
 
 
 async def test_websocket_status(
-    hass, hass_ws_client, mock_cloud_fixture, mock_cloud_login
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_cloud_fixture,
+    mock_cloud_login,
+) -> None:
     """Test querying the status."""
     hass.data[DOMAIN].iot.state = STATE_CONNECTED
     client = await hass_ws_client(hass)
@@ -443,8 +451,12 @@ async def test_websocket_status_not_logged_in(
 
 
 async def test_websocket_subscription_info(
-    hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_auth,
+    mock_cloud_login,
+) -> None:
     """Test querying the status and connecting because valid account."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
     client = await hass_ws_client(hass)
@@ -457,8 +469,12 @@ async def test_websocket_subscription_info(
 
 
 async def test_websocket_subscription_fail(
-    hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_auth,
+    mock_cloud_login,
+) -> None:
     """Test querying the status."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     client = await hass_ws_client(hass)
@@ -486,8 +502,12 @@ async def test_websocket_subscription_not_logged_in(
 
 
 async def test_websocket_update_preferences(
-    hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_api,
+    mock_cloud_login,
+) -> None:
     """Test updating preference."""
     assert setup_api.google_enabled
     assert setup_api.alexa_enabled
@@ -517,8 +537,12 @@ async def test_websocket_update_preferences(
 
 
 async def test_websocket_update_preferences_alexa_report_state(
-    hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_api,
+    mock_cloud_login,
+) -> None:
     """Test updating alexa_report_state sets alexa authorized."""
     client = await hass_ws_client(hass)
 
@@ -541,8 +565,12 @@ async def test_websocket_update_preferences_alexa_report_state(
 
 
 async def test_websocket_update_preferences_require_relink(
-    hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_api,
+    mock_cloud_login,
+) -> None:
     """Test updating preference requires relink."""
     client = await hass_ws_client(hass)
 
@@ -567,8 +595,12 @@ async def test_websocket_update_preferences_require_relink(
 
 
 async def test_websocket_update_preferences_no_token(
-    hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_api,
+    mock_cloud_login,
+) -> None:
     """Test updating preference no token available."""
     client = await hass_ws_client(hass)
 
@@ -592,7 +624,9 @@ async def test_websocket_update_preferences_no_token(
     assert response["error"]["code"] == "alexa_relink"
 
 
-async def test_enabling_webhook(hass, hass_ws_client, setup_api, mock_cloud_login):
+async def test_enabling_webhook(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test we call right code to enable webhooks."""
     client = await hass_ws_client(hass)
     with patch(
@@ -608,7 +642,9 @@ async def test_enabling_webhook(hass, hass_ws_client, setup_api, mock_cloud_logi
     assert mock_enable.mock_calls[0][1][0] == "mock-webhook-id"
 
 
-async def test_disabling_webhook(hass, hass_ws_client, setup_api, mock_cloud_login):
+async def test_disabling_webhook(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test we call right code to disable webhooks."""
     client = await hass_ws_client(hass)
     with patch("hass_nabucasa.cloudhooks.Cloudhooks.async_delete") as mock_disable:
@@ -622,7 +658,9 @@ async def test_disabling_webhook(hass, hass_ws_client, setup_api, mock_cloud_log
     assert mock_disable.mock_calls[0][1][0] == "mock-webhook-id"
 
 
-async def test_enabling_remote(hass, hass_ws_client, setup_api, mock_cloud_login):
+async def test_enabling_remote(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test we call right code to enable remote UI."""
     client = await hass_ws_client(hass)
     cloud = hass.data[DOMAIN]
@@ -644,7 +682,9 @@ async def test_enabling_remote(hass, hass_ws_client, setup_api, mock_cloud_login
     assert len(mock_disconnect.mock_calls) == 1
 
 
-async def test_list_google_entities(hass, hass_ws_client, setup_api, mock_cloud_login):
+async def test_list_google_entities(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test that we can list Google entities."""
     client = await hass_ws_client(hass)
     entity = GoogleEntity(
@@ -676,7 +716,9 @@ async def test_list_google_entities(hass, hass_ws_client, setup_api, mock_cloud_
     }
 
 
-async def test_update_google_entity(hass, hass_ws_client, setup_api, mock_cloud_login):
+async def test_update_google_entity(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test that we can update config of a Google entity."""
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -721,7 +763,9 @@ async def test_update_google_entity(hass, hass_ws_client, setup_api, mock_cloud_
     }
 
 
-async def test_list_alexa_entities(hass, hass_ws_client, setup_api, mock_cloud_login):
+async def test_list_alexa_entities(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test that we can list Alexa entities."""
     client = await hass_ws_client(hass)
     entity = LightCapabilities(
@@ -743,7 +787,9 @@ async def test_list_alexa_entities(hass, hass_ws_client, setup_api, mock_cloud_l
     }
 
 
-async def test_update_alexa_entity(hass, hass_ws_client, setup_api, mock_cloud_login):
+async def test_update_alexa_entity(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test that we can update config of an Alexa entity."""
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -776,8 +822,8 @@ async def test_update_alexa_entity(hass, hass_ws_client, setup_api, mock_cloud_l
 
 
 async def test_sync_alexa_entities_timeout(
-    hass, hass_ws_client, setup_api, mock_cloud_login
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test that timeout syncing Alexa entities."""
     client = await hass_ws_client(hass)
     with patch(
@@ -795,8 +841,8 @@ async def test_sync_alexa_entities_timeout(
 
 
 async def test_sync_alexa_entities_no_token(
-    hass, hass_ws_client, setup_api, mock_cloud_login
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test sync Alexa entities when we have no token."""
     client = await hass_ws_client(hass)
     with patch(
@@ -814,8 +860,8 @@ async def test_sync_alexa_entities_no_token(
 
 
 async def test_enable_alexa_state_report_fail(
-    hass, hass_ws_client, setup_api, mock_cloud_login
-):
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api, mock_cloud_login
+) -> None:
     """Test enable Alexa entities state reporting when no token available."""
     client = await hass_ws_client(hass)
     with patch(
@@ -832,7 +878,9 @@ async def test_enable_alexa_state_report_fail(
     assert response["error"]["code"] == "alexa_relink"
 
 
-async def test_thingtalk_convert(hass, hass_ws_client, setup_api):
+async def test_thingtalk_convert(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api
+) -> None:
     """Test that we can convert a query."""
     client = await hass_ws_client(hass)
 
@@ -849,7 +897,9 @@ async def test_thingtalk_convert(hass, hass_ws_client, setup_api):
     assert response["result"] == {"hello": "world"}
 
 
-async def test_thingtalk_convert_timeout(hass, hass_ws_client, setup_api):
+async def test_thingtalk_convert_timeout(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api
+) -> None:
     """Test that we can convert a query."""
     client = await hass_ws_client(hass)
 
@@ -866,7 +916,9 @@ async def test_thingtalk_convert_timeout(hass, hass_ws_client, setup_api):
     assert response["error"]["code"] == "timeout"
 
 
-async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
+async def test_thingtalk_convert_internal(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api
+) -> None:
     """Test that we can convert a query."""
     client = await hass_ws_client(hass)
 
@@ -884,7 +936,9 @@ async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
     assert response["error"]["message"] == "Did not understand"
 
 
-async def test_tts_info(hass, hass_ws_client, setup_api):
+async def test_tts_info(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_api
+) -> None:
     """Test that we can get TTS info."""
     # Verify the format is as expected
     assert voice.MAP_VOICE[("en-US", voice.Gender.FEMALE)] == "JennyNeural"
