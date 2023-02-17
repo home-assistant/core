@@ -109,7 +109,7 @@ async def test_manual_create_entry(
 
 
 @pytest.mark.parametrize(
-    "error, side_effect",
+    ("error", "side_effect"),
     [
         ("cannot_connect", CannotConnect(Exception("Boom"))),
         ("invalid_server_version", InvalidServerVersion("Invalid version")),
@@ -212,7 +212,7 @@ async def test_supervisor_discovery(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, error",
+    ("discovery_info", "error"),
     [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
 )
 async def test_supervisor_discovery_addon_info_failed(
@@ -566,8 +566,13 @@ async def test_addon_running(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, discovery_info_error, client_connect_error, addon_info_error, "
-        "abort_reason, discovery_info_called, client_connect_called"
+        "discovery_info",
+        "discovery_info_error",
+        "client_connect_error",
+        "addon_info_error",
+        "abort_reason",
+        "discovery_info_called",
+        "client_connect_called",
     ),
     [
         (
@@ -724,8 +729,11 @@ async def test_addon_installed(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, start_addon_error, client_connect_error, "
-        "discovery_info_called, client_connect_called"
+        "discovery_info",
+        "start_addon_error",
+        "client_connect_error",
+        "discovery_info_called",
+        "client_connect_called",
     ),
     [
         (

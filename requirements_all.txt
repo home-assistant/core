@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.36.4
+PySwitchbot==0.37.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.5.0
+aiohomekit==2.6.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -276,7 +276,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.6
+aiosomecomfort==0.0.8
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -354,7 +354,7 @@ aqualogic==2.6
 aranet4==2.1.3
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.0.1
+arcam-fmj==1.2.1
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==1.2.1
@@ -849,7 +849,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.2
+guppy3==3.1.2;python_version<'3.11'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -1573,7 +1573,7 @@ pydaikin==2.9.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==106
+pydeconz==107
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1621,7 +1621,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
-pyfibaro==0.6.6
+pyfibaro==0.6.8
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -2078,7 +2078,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==2.0.2
+python-matter-server==2.1.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2153,7 +2153,7 @@ pytrafikverket==0.2.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.6.2
+pyunifiprotect==4.7.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2234,7 +2234,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.4.1
+reolink-aio==0.4.2
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2595,7 +2595,7 @@ vsure==1.8.1
 vtjp==0.1.14
 
 # homeassistant.components.vulcan
-vulcan-api==2.1.1
+vulcan-api==2.3.0
 
 # homeassistant.components.vultr
 vultr==0.1.2
@@ -2650,7 +2650,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.16.3
 
 # homeassistant.components.knx
-xknx==2.4.0
+xknx==2.5.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

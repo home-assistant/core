@@ -174,7 +174,7 @@ async def test_service_off(
 
 
 @pytest.mark.parametrize(
-    "type_id,expected_features",
+    ("type_id", "expected_features"),
     [
         (TYPE_TV, (MPEF.TURN_ON, MPEF.TURN_OFF)),
         (
@@ -268,7 +268,7 @@ async def test_supported_features(
 
 
 @pytest.mark.parametrize(
-    "service,extra_data,key",
+    ("service", "extra_data", "key"),
     [
         (SERVICE_VOLUME_DOWN, None, KEY_VOLUME_DOWN),
         (SERVICE_VOLUME_UP, None, KEY_VOLUME_UP),
@@ -306,7 +306,7 @@ async def test_volume_services(
 
 
 @pytest.mark.parametrize(
-    "service,key",
+    ("service", "key"),
     [
         (SERVICE_MEDIA_NEXT_TRACK, KEY_FORWARD),
         (SERVICE_MEDIA_PREVIOUS_TRACK, KEY_BACKWARD),
@@ -333,7 +333,7 @@ async def test_track_change_services(
 
 
 @pytest.mark.parametrize(
-    "service,key,expected_state",
+    ("service", "key", "expected_state"),
     [
         pytest.param(
             SERVICE_MEDIA_PLAY,
@@ -417,7 +417,7 @@ async def test_play_pause_service(
 
 
 @pytest.mark.parametrize(
-    "type_id,update_data,expected_state",
+    ("type_id", "update_data", "expected_state"),
     [
         (TYPE_TV, {"power_status": POWER_OFF}, STATE_OFF),
         (TYPE_TV, {"power_status": 3}, STATE_OFF),
@@ -461,7 +461,7 @@ async def test_update_state(
 
 
 @pytest.mark.parametrize(
-    "data,expected_state",
+    ("data", "expected_state"),
     [
         ({"power_status": POWER_OFF}, STATE_OFF),
         ({"power_status": 3}, STATE_OFF),

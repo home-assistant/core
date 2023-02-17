@@ -286,7 +286,7 @@ async def test_events_during_migration_queue_exhausted(
 
 
 @pytest.mark.parametrize(
-    "start_version,live",
+    ("start_version", "live"),
     [(0, True), (16, True), (18, True), (22, True), (25, True)],
 )
 async def test_schema_migrate(
@@ -401,7 +401,7 @@ def test_invalid_update(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["engine_type", "substr"],
+    ("engine_type", "substr"),
     [
         ("postgresql", "ALTER event_type TYPE VARCHAR(64)"),
         ("mssql", "ALTER COLUMN event_type VARCHAR(64)"),

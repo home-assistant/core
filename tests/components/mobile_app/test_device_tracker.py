@@ -1,9 +1,12 @@
 """Test mobile app device tracker."""
-
 from http import HTTPStatus
 
+from homeassistant.core import HomeAssistant
 
-async def test_sending_location(hass, create_registrations, webhook_client):
+
+async def test_sending_location(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test sending a location via a webhook."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -71,7 +74,9 @@ async def test_sending_location(hass, create_registrations, webhook_client):
     assert state.attributes["vertical_accuracy"] == 8
 
 
-async def test_restoring_location(hass, create_registrations, webhook_client):
+async def test_restoring_location(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test sending a location via a webhook."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),

@@ -17,7 +17,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         ConnectionError,
     ],
 )
-async def test_setup_entry_fail_retrieve(hass, error):
+async def test_setup_entry_fail_retrieve(hass: HomeAssistant, error) -> None:
     """Test loading the Prosegur entry."""
 
     config_entry = MockConfigEntry(

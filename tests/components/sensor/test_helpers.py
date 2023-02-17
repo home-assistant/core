@@ -1,9 +1,11 @@
 """The test for sensor helpers."""
+import pytest
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 
 
-def test_async_parse_datetime(caplog):
+def test_async_parse_datetime(caplog: pytest.LogCaptureFixture) -> None:
     """Test async_parse_date_datetime."""
     entity_id = "sensor.timestamp"
     device_class = SensorDeviceClass.TIMESTAMP

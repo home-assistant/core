@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "entity_id, metric_key, value, expected_state",
+    ("entity_id", "metric_key", "value", "expected_state"),
     [
         ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 1, "on"),
         ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 0, "off"),
@@ -41,7 +41,7 @@ async def test_switch_entities(
 
 
 @pytest.mark.parametrize(
-    "service, metric_key, value",
+    ("service", "metric_key", "value"),
     [
         (SERVICE_TURN_ON, "A_CYC_BYPASS_LOCKED", 1),
         (SERVICE_TURN_OFF, "A_CYC_BYPASS_LOCKED", 0),

@@ -1109,7 +1109,7 @@ async def test_wait_timeout(hass, caplog, timeout_param, action_type):
 
 
 @pytest.mark.parametrize(
-    "continue_on_timeout,n_events", [(False, 0), (True, 1), (None, 1)]
+    ("continue_on_timeout", "n_events"), [(False, 0), (True, 1), (None, 1)]
 )
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_wait_continue_on_timeout(
@@ -2433,7 +2433,7 @@ async def test_repeat_var_in_condition(hass, condition):
 
 
 @pytest.mark.parametrize(
-    "variables,first_last,inside_x",
+    ("variables", "first_last", "inside_x"),
     [
         (None, {"repeat": None, "x": None}, None),
         (MappingProxyType({"x": 1}), {"repeat": None, "x": 1}, 1),
@@ -2625,7 +2625,9 @@ async def test_choose_warning(hass, caplog):
     assert events[0].data["choice"] == "default"
 
 
-@pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
+@pytest.mark.parametrize(
+    ("var", "result"), [(1, "first"), (2, "second"), (3, "default")]
+)
 async def test_choose(hass, caplog, var, result):
     """Test choose action."""
     event = "test_event"
@@ -2859,7 +2861,7 @@ async def test_if_warning(
 
 
 @pytest.mark.parametrize(
-    "var,if_result,choice", [(1, True, "then"), (2, False, "else")]
+    ("var", "if_result", "choice"), [(1, True, "then"), (2, False, "else")]
 )
 async def test_if(
     hass: HomeAssistant,
@@ -3827,7 +3829,7 @@ async def test_script_mode_single(hass, caplog):
 
 @pytest.mark.parametrize("max_exceeded", [None, "WARNING", "INFO", "ERROR", "SILENT"])
 @pytest.mark.parametrize(
-    "script_mode,max_runs", [("single", 1), ("parallel", 2), ("queued", 2)]
+    ("script_mode", "max_runs"), [("single", 1), ("parallel", 2), ("queued", 2)]
 )
 async def test_max_exceeded(hass, caplog, max_exceeded, script_mode, max_runs):
     """Test max_exceeded option."""
@@ -3880,7 +3882,7 @@ async def test_max_exceeded(hass, caplog, max_exceeded, script_mode, max_runs):
 
 
 @pytest.mark.parametrize(
-    "script_mode,messages,last_events",
+    ("script_mode", "messages", "last_events"),
     [("restart", ["Restarting"], [2]), ("parallel", [], [2, 2])],
 )
 async def test_script_mode_2(hass, caplog, script_mode, messages, last_events):
@@ -4717,7 +4719,7 @@ async def test_stop_action(hass, caplog):
 
 
 @pytest.mark.parametrize(
-    "error,error_type,logmsg,script_execution",
+    ("error", "error_type", "logmsg", "script_execution"),
     (
         (True, script._AbortScript, "Error", "aborted"),
         (False, None, "Stop", "finished"),

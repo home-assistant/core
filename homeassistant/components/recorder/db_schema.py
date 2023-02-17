@@ -41,19 +41,18 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import (
+from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
+import homeassistant.util.dt as dt_util
+from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS,
-    JSON_DUMP,
-    json_bytes,
-    json_bytes_strip_null,
     json_loads,
     json_loads_object,
 )
-import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
+    StatisticDataTimestamp,
     StatisticMetaData,
     datetime_to_timestamp_or_none,
     process_timestamp,
@@ -534,7 +533,7 @@ class StatisticsBase:
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
-        """Create object from a statistics."""
+        """Create object from a statistics with datatime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
@@ -546,6 +545,24 @@ class StatisticsBase:
             max=stats.get("max"),
             last_reset=None,
             last_reset_ts=datetime_to_timestamp_or_none(stats.get("last_reset")),
+            state=stats.get("state"),
+            sum=stats.get("sum"),
+        )
+
+    @classmethod
+    def from_stats_ts(cls, metadata_id: int, stats: StatisticDataTimestamp) -> Self:
+        """Create object from a statistics with timestamps."""
+        return cls(  # type: ignore[call-arg]
+            metadata_id=metadata_id,
+            created=None,
+            created_ts=time.time(),
+            start=None,
+            start_ts=stats["start_ts"],
+            mean=stats.get("mean"),
+            min=stats.get("min"),
+            max=stats.get("max"),
+            last_reset=None,
+            last_reset_ts=stats.get("last_reset_ts"),
             state=stats.get("state"),
             sum=stats.get("sum"),
         )

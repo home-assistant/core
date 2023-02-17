@@ -542,7 +542,7 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"LIFX": "lifx"},
+        {"LIFX": {"domain": "lifx", "always_discover": True}},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -578,7 +578,7 @@ async def test_device_with_invalid_name(hass, mock_async_zeroconf, caplog):
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"LIFX": "lifx"},
+        {"LIFX": {"domain": "lifx", "always_discover": True}},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -609,7 +609,7 @@ async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"Smart Bridge": "lutron_caseta"},
+        {"Smart Bridge": {"domain": "lutron_caseta", "always_discover": False}},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -638,7 +638,11 @@ async def test_homekit_match_partial_fnmatch(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"YLDP*": "yeelight"}, clear=True), patch.object(
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"YLDP*": {"domain": "yeelight", "always_discover": False}},
+        clear=True,
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -667,7 +671,7 @@ async def test_homekit_match_full(hass, mock_async_zeroconf):
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"BSB002": "hue"},
+        {"BSB002": {"domain": "hue", "always_discover": False}},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -698,7 +702,10 @@ async def test_homekit_already_paired(hass, mock_async_zeroconf):
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"AC02": "tado", "tado": "tado"},
+        {
+            "AC02": {"domain": "tado", "always_discover": True},
+            "tado": {"domain": "tado", "always_discover": True},
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -730,7 +737,7 @@ async def test_homekit_invalid_paring_status(hass, mock_async_zeroconf):
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"Smart Bridge": "lutron_caseta"},
+        {"Smart Bridge": {"domain": "lutron_caseta", "always_discover": False}},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -794,7 +801,7 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"Rachio": "rachio"},
+        {"Rachio": {"domain": "rachio", "always_discover": True}},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -834,7 +841,7 @@ async def test_homekit_controller_still_discovered_unpaired_for_polling(
         clear=True,
     ), patch.dict(
         zc_gen.HOMEKIT,
-        {"iSmartGate": "gogogate2"},
+        {"iSmartGate": {"domain": "gogogate2", "always_discover": True}},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"

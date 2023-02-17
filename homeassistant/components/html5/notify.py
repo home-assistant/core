@@ -32,9 +32,10 @@ from homeassistant.const import ATTR_NAME, URL_ROOT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
 from .const import DOMAIN, SERVICE_DISMISS
 

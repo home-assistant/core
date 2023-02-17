@@ -24,9 +24,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (

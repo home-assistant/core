@@ -1,5 +1,6 @@
 """The tests for the Conversation component."""
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -7,8 +8,9 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -59,13 +61,15 @@ async def test_http_processing_intent(
     entities.async_update_entity("light.kitchen", aliases={"my cool light"})
     hass.states.async_set("light.kitchen", "off")
 
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
-    data = {"text": "turn on my cool light"}
+    data: dict[str, Any] = {"text": "turn on my cool light"}
     if agent_id:
         data["agent_id"] = agent_id
     resp = await client.post("/api/conversation/process", json=data)
 
     assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
     data = await resp.json()
 
     assert data == {
@@ -105,6 +109,7 @@ async def test_http_processing_intent_target_ha_agent(
     entities.async_update_entity("light.kitchen", aliases={"my cool light"})
     hass.states.async_set("light.kitchen", "off")
 
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
     resp = await client.post(
         "/api/conversation/process",
@@ -112,6 +117,7 @@ async def test_http_processing_intent_target_ha_agent(
     )
 
     assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
     data = await resp.json()
 
     assert data == {
@@ -153,12 +159,14 @@ async def test_http_processing_intent_entity_added(
     er.async_update_entity("light.kitchen", aliases={"my cool light"})
     hass.states.async_set("light.kitchen", "off")
 
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on my cool light"}
     )
 
     assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
     data = await resp.json()
 
     assert data == {
@@ -284,7 +292,7 @@ async def test_turn_on_intent(
 ) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     data = {conversation.ATTR_TEXT: sentence}
     if agent_id is not None:
@@ -294,16 +302,16 @@ async def test_turn_on_intent(
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.kitchen"}
+    assert call.data == {"entity_id": ["light.kitchen"]}
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
 async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "on")
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_off")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
     await hass.services.async_call(
         "conversation", "process", {conversation.ATTR_TEXT: sentence}
@@ -312,9 +320,9 @@ async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_off"
-    assert call.data == {"entity_id": "light.kitchen"}
+    assert call.data == {"entity_id": ["light.kitchen"]}
 
 
 async def test_http_api_no_match(
@@ -706,7 +714,7 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
 async def test_language_region(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     # Add fake region
     language = f"{hass.config.language}-YZ"
@@ -722,9 +730,9 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.kitchen"}
+    assert call.data == {"entity_id": ["light.kitchen"]}
 
 
 async def test_reload_on_new_component(hass: HomeAssistant) -> None:
@@ -755,7 +763,7 @@ async def test_reload_on_new_component(hass: HomeAssistant) -> None:
 async def test_non_default_response(hass: HomeAssistant, init_components) -> None:
     """Test intent response that is not the default."""
     hass.states.async_set("cover.front_door", "closed")
-    async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+    calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
     agent = await conversation._get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
@@ -768,6 +776,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
             language=hass.config.language,
         )
     )
+    assert len(calls) == 1
     assert result.response.speech["plain"]["speech"] == "Opened front door"
 
 
@@ -792,7 +801,7 @@ async def test_turn_on_area(hass: HomeAssistant, init_components) -> None:
     )
     hass.states.async_set("light.stove", "off")
 
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     await hass.services.async_call(
         "conversation",
@@ -803,9 +812,9 @@ async def test_turn_on_area(hass: HomeAssistant, init_components) -> None:
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.stove"}
+    assert call.data == {"entity_id": ["light.stove"]}
 
     basement_area = ar.async_create("basement")
     dr.async_update_device(device.id, area_id=basement_area.id)
@@ -832,9 +841,9 @@ async def test_turn_on_area(hass: HomeAssistant, init_components) -> None:
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.stove"}
+    assert call.data == {"entity_id": ["light.stove"]}
 
 
 async def test_light_area_same_name(hass: HomeAssistant, init_components) -> None:
@@ -868,7 +877,7 @@ async def test_light_area_same_name(hass: HomeAssistant, init_components) -> Non
         ceiling_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "ceiling light"}
     )
 
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     await hass.services.async_call(
         "conversation",
@@ -880,9 +889,9 @@ async def test_light_area_same_name(hass: HomeAssistant, init_components) -> Non
     # Should only turn on one light instead of all lights in the kitchen
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": kitchen_light.entity_id}
+    assert call.data == {"entity_id": [kitchen_light.entity_id]}
 
 
 async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:

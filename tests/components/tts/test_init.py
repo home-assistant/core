@@ -766,7 +766,7 @@ def test_invalid_base_url(value):
 
 
 @pytest.mark.parametrize(
-    "engine,language,options,cache,result_engine,result_query",
+    ("engine", "language", "options", "cache", "result_engine", "result_query"),
     (
         (None, None, None, None, "demo", ""),
         (None, "de", None, None, "demo", "language=de"),
@@ -791,7 +791,7 @@ async def test_generate_media_source_id(
 
 
 @pytest.mark.parametrize(
-    "engine,language,options",
+    ("engine", "language", "options"),
     (
         ("not-loaded-engine", None, None),
         (None, "unsupported-language", None),

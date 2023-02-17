@@ -489,7 +489,7 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.parametrize(
-    "side_effect,raised_exception",
+    ("side_effect", "raised_exception"),
     [
         (asyncio.TimeoutError, CannotConnect),
         (aiounifi.BadGateway, CannotConnect),

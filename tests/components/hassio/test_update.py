@@ -157,7 +157,7 @@ def mock_all(aioclient_mock, request):
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected_state, auto_update",
+    ("entity_id", "expected_state", "auto_update"),
     [
         ("update.home_assistant_operating_system_update", "on", False),
         ("update.home_assistant_supervisor_update", "on", True),
