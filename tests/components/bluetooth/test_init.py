@@ -8,6 +8,7 @@ from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -2873,6 +2874,7 @@ async def test_issue_outdated_haos(
     mock_bleak_scanner_start: MagicMock,
     one_adapter: None,
     operating_system_85: None,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test we create an issue on outdated haos."""
     entry = MockConfigEntry(
@@ -2886,6 +2888,7 @@ async def test_issue_outdated_haos(
     registry = async_get_issue_registry(hass)
     issue = registry.async_get_issue(DOMAIN, "haos_outdated")
     assert issue is not None
+    assert issue == snapshot
 
 
 async def test_issue_outdated_haos_no_adapters(
