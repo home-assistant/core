@@ -518,7 +518,11 @@ class Scanner:
                 CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
 
-        if not callbacks and not matching_domains:
+        if (
+            not callbacks
+            and not matching_domains
+            and source != SsdpSource.ADVERTISEMENT_BYEBYE
+        ):
             return
 
         discovery_info = discovery_info_from_headers_and_description(
@@ -535,6 +539,7 @@ class Scanner:
         # Config flows should only be created for alive/update messages from alive devices
         if source == SsdpSource.ADVERTISEMENT_BYEBYE:
             self._async_dismiss_discoveries(discovery_info)
+            return
 
         _LOGGER.debug("Discovery info: %s", discovery_info)
 
