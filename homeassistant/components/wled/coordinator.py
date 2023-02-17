@@ -1,8 +1,6 @@
 """DataUpdateCoordinator for WLED."""
 from __future__ import annotations
 
-import asyncio
-
 from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
 
 from homeassistant.config_entries import ConfigEntry
@@ -95,7 +93,9 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
 
         # Start listening
-        asyncio.create_task(listen())
+        self.config_entry.async_create_background_task(
+            self.hass, listen(), "wled-listen"
+        )
 
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
