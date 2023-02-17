@@ -1,7 +1,6 @@
 """Support for Plum Lightpad lights."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from plumlightpad import Plum
@@ -51,13 +50,16 @@ async def async_setup_entry(
         setup_entities(device)
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
-    asyncio.create_task(
-        plum.discover(
-            hass.loop,
-            loadListener=new_load,
-            lightpadListener=new_lightpad,
-            websession=device_web_session,
-        )
+    entry.async_on_unload(
+        hass.async_create_background_task(
+            plum.discover(
+                hass.loop,
+                loadListener=new_load,
+                lightpadListener=new_lightpad,
+                websession=device_web_session,
+            ),
+            "plum.light-discover",
+        ).cancel
     )
 
 
