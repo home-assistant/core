@@ -12,6 +12,11 @@ def exclude_attributes(hass: HomeAssistant) -> set[str]:
         "Available",
         "Available (Important)",
         "Available (Opportunistic)",
+        # Mac app
+        "Current Capacity",
+        "Current",
+        "Time to Empty",
+        "Time to Full Charge",
         # Android mobile app
         "Free internal storage",
         "current",
