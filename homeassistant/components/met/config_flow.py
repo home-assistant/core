@@ -10,6 +10,11 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, C
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_TRACK_HOME,
@@ -47,7 +52,11 @@ def _get_data_schema(
                 vol.Required(
                     CONF_LONGITUDE, default=hass.config.longitude
                 ): cv.longitude,
-                vol.Required(CONF_ELEVATION, default=hass.config.elevation): int,
+                vol.Required(CONF_ELEVATION, default=hass.config.elevation): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.NUMBER, suffix="meters"
+                    )
+                ),
             }
         )
     # Not tracking home, default values come from config entry
@@ -60,9 +69,11 @@ def _get_data_schema(
             vol.Required(
                 CONF_LONGITUDE, default=config_entry.data.get(CONF_LONGITUDE)
             ): cv.longitude,
-            vol.Required(
-                CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
-            ): int,
+            vol.Required(CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)): TextSelector(
+                TextSelectorConfig(
+                    type=TextSelectorType.NUMBER, suffix="meters"
+                )
+            ),
         }
     )
 

@@ -18,14 +18,12 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     EVENT_CORE_CONFIG_UPDATE,
     Platform,
-    UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -165,14 +163,6 @@ class MetWeatherData:
             latitude = self._config[CONF_LATITUDE]
             longitude = self._config[CONF_LONGITUDE]
             elevation = self._config[CONF_ELEVATION]
-            if not self._is_metric:
-                elevation = int(
-                    round(
-                        DistanceConverter.convert(
-                            elevation, UnitOfLength.FEET, UnitOfLength.METERS
-                        )
-                    )
-                )
 
         coordinates = {
             "lat": str(latitude),
