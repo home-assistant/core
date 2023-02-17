@@ -327,7 +327,7 @@ class NumberDeviceClass(StrEnum):
     VOLUME_STORAGE = "volume_storage"
     """Generic stored volume.
 
-    Use this device class for sensors measuring stored volume, for example the amount 
+    Use this device class for sensors measuring stored volume, for example the amount
     of fuel in a fuel tank.
 
     Unit of measurement: `VOLUME_*` units
