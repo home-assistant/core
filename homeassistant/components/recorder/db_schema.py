@@ -470,11 +470,13 @@ class StateAttributes(Base):
         if state is None:
             return b"{}"
         domain = split_entity_id(state.entity_id)[0]
-        exclude_attrs = (
-            exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
-        )
-        if reg_ent := entity_registry.async_get(state.entity_id):
-            exclude_attrs |= exclude_attrs_by_domain.get(reg_ent.domain, set())
+        exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
+        if base_platform_attrs := exclude_attrs_by_domain.get(domain):
+            exclude_attrs |= base_platform_attrs
+        if (reg_ent := entity_registry.async_get(state.entity_id)) and (
+            integration_attrs := exclude_attrs_by_domain.get(reg_ent.domain)
+        ):
+            exclude_attrs |= integration_attrs
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}

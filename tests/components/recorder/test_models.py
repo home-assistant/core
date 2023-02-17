@@ -26,6 +26,7 @@ from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import InvalidEntityFormatError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt, dt as dt_util
 
 
@@ -49,7 +50,7 @@ def test_from_event_to_db_state() -> None:
     assert state.as_dict() == States.from_event(event).to_native().as_dict()
 
 
-def test_from_event_to_db_state_attributes() -> None:
+def test_from_event_to_db_state_attributes(entity_registry: er.EntityRegistry) -> None:
     """Test converting event to db state attributes."""
     attrs = {"this_attr": True}
     state = ha.State("sensor.temperature", "18", attrs)
@@ -60,8 +61,9 @@ def test_from_event_to_db_state_attributes() -> None:
     )
     db_attrs = StateAttributes()
     dialect = SupportedDialect.MYSQL
+
     db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
-        event, {}, dialect
+        event, entity_registry, {}, dialect
     )
     assert db_attrs.to_native() == attrs
 
