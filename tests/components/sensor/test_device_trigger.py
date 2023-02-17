@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     device_trigger,
 )
+from homeassistant.components.sensor.const import NON_NUMERIC_DEVICE_CLASSES
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -39,22 +40,38 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "automation")
 
 
-@pytest.mark.parametrize("device_class", list(SensorDeviceClass))
+@pytest.mark.parametrize(
+    "device_class",
+    [
+        device_class
+        for device_class in SensorDeviceClass
+        if device_class not in NON_NUMERIC_DEVICE_CLASSES
+    ],
+)
 def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
     """Ensure device class constants are declared in device_trigger module."""
     # Ensure it has corresponding CONF_*** constant
-    assert (
-        getattr(device_trigger, f"CONF_{device_class.value.upper()}")
-        == device_class.value
-    )
+    constant_name = {
+        SensorDeviceClass.BATTERY: "CONF_BATTERY_LEVEL",
+        SensorDeviceClass.CO: "CONF_CO",
+        SensorDeviceClass.CO2: "CONF_CO2",
+    }.get(device_class, f"CONF_{device_class.value.upper()}")
+    assert hasattr(device_trigger, constant_name), f"Missing constant {constant_name}"
+
+    # Ensure it has correct value
+    constant_value = {
+        SensorDeviceClass.BATTERY: "battery_level",
+    }.get(device_class, device_class.value)
+    assert getattr(device_trigger, constant_name) == constant_value
+
     # Ensure it is present in ENTITY_TRIGGERS
     assert device_class in ENTITY_TRIGGERS
     # Ensure it is present in TRIGGER_SCHEMA
     schema_types = device_trigger.TRIGGER_SCHEMA.validators[0].schema["type"].container
-    assert device_class.value in schema_types
+    assert constant_value in schema_types
     # Ensure it is present in string.json
     strings = load_json("homeassistant/components/sensor/strings.json")
-    assert device_class.value in strings["device_automation"]["trigger_type"]
+    assert constant_value in strings["device_automation"]["trigger_type"]
 
 
 async def test_get_triggers(
