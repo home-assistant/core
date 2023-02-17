@@ -654,7 +654,7 @@ h2==4.1.0
 ha-av==10.0.0
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==3.0.2
+ha-ffmpeg==3.1.0
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.0.0
