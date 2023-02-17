@@ -862,7 +862,7 @@ ha-av==10.0.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.0.0
+ha-philipsjs==3.0.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
