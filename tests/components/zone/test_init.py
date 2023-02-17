@@ -18,7 +18,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -246,7 +247,9 @@ async def test_core_config_update(hass: HomeAssistant) -> None:
     assert home_updated.attributes["longitude"] == 20
 
 
-async def test_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -317,7 +320,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_3.attributes["longitude"] == 6
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -326,7 +329,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={DOMAIN: [{"name": "yaml option", "latitude": 3, "longitude": 4}]}
@@ -342,7 +345,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(
         config={DOMAIN: [{"name": "yaml option", "latitude": 3, "longitude": 4}]}
@@ -364,7 +369,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -389,7 +396,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update(hass, hass_ws_client, storage_setup):
+async def test_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating min/max updates the state."""
 
     items = [
@@ -434,7 +443,9 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert state.attributes["passive"] is True
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
