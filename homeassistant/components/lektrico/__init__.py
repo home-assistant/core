@@ -37,10 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        settings = await charger.charger_config()
         coordinator = LektricoDeviceDataUpdateCoordinator(
-            charger, hass, entry.data[CONF_FRIENDLY_NAME], settings
+            charger, hass, entry.data[CONF_FRIENDLY_NAME]
         )
+        await coordinator.get_config()
+
     except ChargerConnectionError as lek_ex:
         raise ConfigEntryNotReady(lek_ex) from lek_ex
 
@@ -66,26 +67,31 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """The device class for Lektrico charger."""
 
     _last_client_refresh = datetime.min
+    serial_number: int
+    board_revision: str
 
     def __init__(
         self,
         device: lektricowifi.Charger,
         hass: HomeAssistant,
         friendly_name: str,
-        settings: lektricowifi.Settings,
     ) -> None:
         """Initialize a Lektrico Device."""
         self.device = device
         self._hass = hass
         self.friendly_name = friendly_name.replace(" ", "_")
-        self.serial_number = settings.serial_number
-        self.board_revision = settings.board_revision
         self._name = friendly_name
         self._update_fail_count = 0
         self._info = None
         super().__init__(
             hass, LOGGER, name=f"{DOMAIN}-{self._name}", update_interval=SCAN_INTERVAL
         )
+
+    async def get_config(self) -> None:
+        """Get device's config."""
+        settings = await self.device.charger_config()
+        self.serial_number = settings.serial_number
+        self.board_revision = settings.board_revision
 
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
