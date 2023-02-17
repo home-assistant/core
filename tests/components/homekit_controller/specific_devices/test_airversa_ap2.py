@@ -32,13 +32,6 @@ async def test_airversa_ap2_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="switch.airversa_ap2_1808_automatic_fan_speed",
-                    friendly_name="Airversa AP2 1808 Automatic Fan Speed",
-                    unique_id="00:00:00:00:00:00_1_32832_32837",
-                    entity_category=EntityCategory.CONFIG,
-                    state="on",
-                ),
-                EntityTestInfo(
                     entity_id="switch.airversa_ap2_1808_lock_physical_controls",
                     friendly_name="Airversa AP2 1808 Lock Physical Controls",
                     unique_id="00:00:00:00:00:00_1_32832_32839",

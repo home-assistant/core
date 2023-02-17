@@ -57,12 +57,6 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
         icon="mdi:lock-open",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: DeclarativeSwitchEntityDescription(
-        key=CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET,
-        name="Automatic Fan Speed",
-        icon="mdi:fan-auto",
-        entity_category=EntityCategory.CONFIG,
-    ),
     CharacteristicsTypes.MUTE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.MUTE,
         name="Mute",
