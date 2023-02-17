@@ -298,6 +298,8 @@ class SonosDiscoveryManager:
         def _add_speakers():
             """Add all speakers in a single executor job."""
             for soco in socos:
+                if soco.uid in self.data.discovered:
+                    continue
                 sub = None
                 if soco.uid == zgs_subscription_uid and zgs_subscription:
                     sub = zgs_subscription
