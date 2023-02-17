@@ -534,7 +534,7 @@ class Scanner:
 
         # Config flows should only be created for alive/update messages from alive devices
         if source == SsdpSource.ADVERTISEMENT_BYEBYE:
-            return
+            self._async_dismiss_discoveries(discovery_info)
 
         _LOGGER.debug("Discovery info: %s", discovery_info)
 
@@ -547,6 +547,19 @@ class Scanner:
                 {"source": config_entries.SOURCE_SSDP},
                 discovery_info,
             )
+
+    def _async_dismiss_discoveries(
+        self, byebye_discovery_info: SsdpServiceInfo
+    ) -> None:
+        """Dismiss all discoveries for the given address."""
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            SsdpServiceInfo,
+            lambda service_info: bool(
+                service_info.ssdp_st == byebye_discovery_info.ssdp_st
+                and service_info.ssdp_location == byebye_discovery_info.ssdp_location
+            ),
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     async def _async_get_description_dict(
         self, location: str | None
