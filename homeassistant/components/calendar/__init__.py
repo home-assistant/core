@@ -299,17 +299,19 @@ class CalendarEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
-        if (event := self.event) is None:
-            return None
+        attributes: dict[str, Any] = {"color": "#ff00ff"}
+        if (event := self.event) is not None:
+            event_data = {
+                "message": event.summary,
+                "all_day": event.all_day,
+                "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
+                "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
+                "location": event.location if event.location else "",
+                "description": event.description if event.description else "",
+            }
+            attributes = attributes | event_data
 
-        return {
-            "message": event.summary,
-            "all_day": event.all_day,
-            "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
-            "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location if event.location else "",
-            "description": event.description if event.description else "",
-        }
+        return attributes
 
     @final
     @property
