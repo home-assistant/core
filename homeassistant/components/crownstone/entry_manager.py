@@ -86,10 +86,8 @@ class CrownstoneEntryManager:
             project_name=PROJECT_NAME,
         )
         # Listen for events in the background, without task tracking
-        self.config_entry.async_on_unload(
-            self.hass.async_create_background_task(
-                self.async_process_events(self.sse), "crownstone-sse"
-            ).cancel
+        self.config_entry.async_create_background_task(
+            self.hass, self.async_process_events(self.sse), "crownstone-sse"
         )
         setup_sse_listeners(self)
 
