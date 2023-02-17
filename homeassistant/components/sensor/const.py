@@ -160,6 +160,17 @@ class SensorDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
+    Use this device class for sensors measuring energy consumption, for example
+    electric energy consumption.
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    """
+
+    ENERGY_STORAGE = "energy_storage"
+    """Stored energy.
+
+    Use this device class for sensors measuring stored energy, for example the amount 
+    of electric energy currently stored in a battery or the capacity of a battery.
+
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
 
@@ -429,6 +440,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
+    SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
@@ -462,6 +474,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.SECONDS,
     },
     SensorDeviceClass.ENERGY: set(UnitOfEnergy),
+    SensorDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     SensorDeviceClass.FREQUENCY: set(UnitOfFrequency),
     SensorDeviceClass.GAS: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -526,6 +539,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
+    SensorDeviceClass.ENERGY_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ENUM: set(),
     SensorDeviceClass.FREQUENCY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.GAS: {SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING},
