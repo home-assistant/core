@@ -10,6 +10,7 @@ from homeassistant.setup import async_setup_component
 from . import BASE_URL
 
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -23,7 +24,7 @@ async def test_get_info(
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
     websocket_client,
-):
+) -> None:
     """Test async_get_info."""
 
     mock_response = (
@@ -53,10 +54,11 @@ async def test_get_info(
 async def test_get_info_no_entry(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    websocket_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test async_get_info."""
     await async_setup_component(hass, "otbr", {})
+    websocket_client = await hass_ws_client(hass)
     await websocket_client.send_json(
         {
             "id": 5,
@@ -75,7 +77,7 @@ async def test_get_info_fetch_fails(
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry,
     websocket_client,
-):
+) -> None:
     """Test async_get_info."""
     await async_setup_component(hass, "otbr", {})
 

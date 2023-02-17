@@ -308,7 +308,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @pytest.mark.parametrize(
-    "device, reporting",
+    ("device", "reporting"),
     [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 6))],
 )
 async def test_light(
@@ -373,7 +373,7 @@ async def test_light(
 
 
 @pytest.mark.parametrize(
-    "plugged_attr_reads, config_override, expected_state",
+    ("plugged_attr_reads", "config_override", "expected_state"),
     [
         # HS light without cached hue or saturation
         (

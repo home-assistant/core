@@ -836,7 +836,7 @@ async def test_mode(
     assert state.attributes.get(ATTR_MODE) == mode
 
 
-@pytest.mark.parametrize("mode,valid", [("bleh", False), ("auto", True)])
+@pytest.mark.parametrize(("mode", "valid"), [("bleh", False), ("auto", True)])
 async def test_invalid_mode(hass: HomeAssistant, mode, valid) -> None:
     """Test invalid mode."""
     topic = "test/number"
@@ -924,7 +924,7 @@ async def test_mqtt_payload_out_of_range_error(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             SERVICE_SET_VALUE,
@@ -978,7 +978,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "10", None, "10"),
         ("state_topic", "60", None, "60"),

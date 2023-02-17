@@ -55,7 +55,7 @@ async def test_no_lights_or_groups(
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (  # RGB light in color temp color mode
             {
@@ -373,7 +373,7 @@ async def test_light_state_change(
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (  # Turn on light with hue and sat
             {
@@ -706,7 +706,7 @@ async def test_configuration_tool(
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (
             {
@@ -859,7 +859,7 @@ async def test_groups(
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (  # Turn on group with short color loop
             {

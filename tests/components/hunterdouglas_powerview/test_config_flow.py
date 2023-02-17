@@ -176,8 +176,10 @@ async def test_user_form_legacy(hass: HomeAssistant) -> None:
     assert result4["type"] == "abort"
 
 
-@pytest.mark.parametrize("source, discovery_info", DISCOVERY_DATA)
-async def test_form_homekit_and_dhcp_cannot_connect(hass, source, discovery_info):
+@pytest.mark.parametrize(("source", "discovery_info"), DISCOVERY_DATA)
+async def test_form_homekit_and_dhcp_cannot_connect(
+    hass: HomeAssistant, source, discovery_info
+) -> None:
     """Test we get the form with homekit and dhcp source."""
 
     ignored_config_entry = MockConfigEntry(
@@ -202,8 +204,10 @@ async def test_form_homekit_and_dhcp_cannot_connect(hass, source, discovery_info
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.parametrize("source, discovery_info", DISCOVERY_DATA)
-async def test_form_homekit_and_dhcp(hass, source, discovery_info):
+@pytest.mark.parametrize(("source", "discovery_info"), DISCOVERY_DATA)
+async def test_form_homekit_and_dhcp(
+    hass: HomeAssistant, source, discovery_info
+) -> None:
     """Test we get the form with homekit and dhcp source."""
 
     ignored_config_entry = MockConfigEntry(

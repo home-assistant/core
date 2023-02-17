@@ -314,7 +314,7 @@ def test_properties() -> None:
 
 
 @pytest.mark.parametrize(
-    "key, expected_system",
+    ("key", "expected_system"),
     [
         (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
         (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
@@ -335,7 +335,7 @@ def test_get_unit_system_invalid(key: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "device_class, original_unit, state_unit",
+    ("device_class", "original_unit", "state_unit"),
     (
         # Test atmospheric pressure
         (
@@ -543,7 +543,7 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
 
 
 @pytest.mark.parametrize(
-    "device_class, original_unit, state_unit",
+    ("device_class", "original_unit", "state_unit"),
     (
         # Test atmospheric pressure
         (

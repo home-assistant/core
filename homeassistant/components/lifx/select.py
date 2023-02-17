@@ -74,7 +74,6 @@ class LIFXInfraredBrightnessSelectEntity(LIFXSensorEntity, SelectEntity):
         """Initialise the IR brightness config entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._attr_current_option = coordinator.current_infrared_brightness
 
@@ -108,7 +107,6 @@ class LIFXThemeSelectEntity(LIFXSensorEntity, SelectEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._attr_current_option = None
 

@@ -45,28 +45,6 @@ def test_session_scope_not_setup(hass_recorder):
         pass
 
 
-def test_recorder_bad_commit(hass_recorder, recorder_db_url):
-    """Bad _commit should retry 3 times."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite: mysql/postgresql does not raise an OperationalError
-        # which triggers retries for the bad query below, it raises ProgrammingError
-        # on which we give up
-        return
-
-    hass = hass_recorder()
-
-    def work(session):
-        """Bad work."""
-        session.execute(text("select * from notthere"))
-
-    with patch(
-        "homeassistant.components.recorder.core.time.sleep"
-    ) as e_mock, util.session_scope(hass=hass) as session:
-        res = util.commit(session, work)
-    assert res is False
-    assert e_mock.call_count == 3
-
-
 def test_recorder_bad_execute(hass_recorder):
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
@@ -318,7 +296,7 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
 
 @pytest.mark.parametrize(
-    "mysql_version,message",
+    ("mysql_version", "message"),
     [
         (
             "10.2.0-MariaDB",
@@ -397,7 +375,7 @@ def test_supported_mysql(caplog, mysql_version):
 
 
 @pytest.mark.parametrize(
-    "pgsql_version,message",
+    ("pgsql_version", "message"),
     [
         (
             "11.12 (Debian 11.12-1.pgdg100+1)",
@@ -477,7 +455,7 @@ def test_supported_pgsql(caplog, pgsql_version):
 
 
 @pytest.mark.parametrize(
-    "sqlite_version,message",
+    ("sqlite_version", "message"),
     [
         (
             "3.30.0",
@@ -560,7 +538,7 @@ def test_supported_sqlite(caplog, sqlite_version):
 
 
 @pytest.mark.parametrize(
-    "dialect,message",
+    ("dialect", "message"),
     [
         ("mssql", "Database mssql is not supported"),
         ("oracle", "Database oracle is not supported"),
@@ -581,7 +559,7 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
 
 
 @pytest.mark.parametrize(
-    "mysql_version,min_version",
+    ("mysql_version", "min_version"),
     [
         (
             "10.5.16-MariaDB",

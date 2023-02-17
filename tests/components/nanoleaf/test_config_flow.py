@@ -81,7 +81,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
 
 
 @pytest.mark.parametrize(
-    "error, reason",
+    ("error", "reason"),
     [
         (Unavailable, "cannot_connect"),
         (InvalidToken, "invalid_token"),
@@ -216,7 +216,7 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, type_in_discovery_info",
+    ("source", "type_in_discovery_info"),
     [
         (config_entries.SOURCE_HOMEKIT, "_hap._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafms._tcp.local"),
@@ -303,7 +303,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, type_in_discovery",
+    ("source", "type_in_discovery"),
     [
         (config_entries.SOURCE_HOMEKIT, "_hap._tcp.local"),
         (config_entries.SOURCE_ZEROCONF, "_nanoleafms._tcp.local"),
@@ -311,7 +311,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "nanoleaf_conf_file, remove_config",
+    ("nanoleaf_conf_file", "remove_config"),
     [
         ({TEST_DEVICE_ID: {"token": TEST_TOKEN}}, True),
         ({TEST_HOST: {"token": TEST_TOKEN}}, True),

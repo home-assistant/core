@@ -17,7 +17,7 @@ async def update_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
     mock_sensor_api_instance: MagicMock,
-):
+) -> None:
     """Simulate an update trigger from the API."""
 
     for call in mock_sensor_api_instance.register_attr_callback.call_args_list:
@@ -44,7 +44,7 @@ async def test_dryer_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor2_api: MagicMock,
-):
+) -> None:
     """Test the sensor value callbacks."""
     hass.state = CoreState.not_running
     thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
@@ -108,7 +108,7 @@ async def test_washer_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
-):
+) -> None:
     """Test the sensor value callbacks."""
     hass.state = CoreState.not_running
     thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
@@ -147,6 +147,21 @@ async def test_washer_sensor_values(
     assert state.state == thetimestamp.isoformat()
 
     state_id = f"{entity_id.split('_')[0]}_detergent_level"
+    registry = entity_registry.async_get(hass)
+    entry = registry.async_get(state_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+
+    update_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    assert update_entry != entry
+    assert update_entry.disabled is False
+    state = hass.states.get(state_id)
+    assert state is None
+
+    await hass.config_entries.async_reload(entry.config_entry_id)
     state = hass.states.get(state_id)
     assert state is not None
     assert state.state == "50"
@@ -253,7 +268,7 @@ async def test_washer_sensor_values(
 async def test_restore_state(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
-):
+) -> None:
     """Test sensor restore state."""
     # Home assistant is not running yet
     hass.state = CoreState.not_running
@@ -288,7 +303,7 @@ async def test_callback(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
-):
+) -> None:
     """Test callback timestamp callback function."""
     hass.state = CoreState.not_running
     thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
@@ -314,9 +329,9 @@ async def test_callback(
     # restore from cache
     state = hass.states.get("sensor.washer_end_time")
     assert state.state == thetimestamp.isoformat()
-    callback = mock_sensor1_api.register_attr_callback.call_args_list[2][0][0]
+    callback = mock_sensor1_api.register_attr_callback.call_args_list[1][0][0]
     callback()
-    # await hass.async_block_till_done()
+
     state = hass.states.get("sensor.washer_end_time")
     assert state.state == thetimestamp.isoformat()
     mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle

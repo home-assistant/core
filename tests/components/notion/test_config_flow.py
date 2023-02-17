@@ -8,12 +8,13 @@ from homeassistant import data_entry_flow
 from homeassistant.components.notion import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
 
 
 @pytest.mark.parametrize(
-    "get_client_with_exception,errors",
+    ("get_client_with_exception", "errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidCredentialsError), {"base": "invalid_auth"}),
@@ -21,8 +22,13 @@ from .conftest import TEST_PASSWORD, TEST_USERNAME
     ],
 )
 async def test_create_entry(
-    hass, client, config, errors, get_client_with_exception, mock_aionotion
-):
+    hass: HomeAssistant,
+    client,
+    config,
+    errors,
+    get_client_with_exception,
+    mock_aionotion,
+) -> None:
     """Test creating an etry (including recovery from errors)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -52,7 +58,7 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass, config, setup_config_entry):
+async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -62,7 +68,7 @@ async def test_duplicate_error(hass, config, setup_config_entry):
 
 
 @pytest.mark.parametrize(
-    "get_client_with_exception,errors",
+    ("get_client_with_exception", "errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidCredentialsError), {"base": "invalid_auth"}),
@@ -70,8 +76,13 @@ async def test_duplicate_error(hass, config, setup_config_entry):
     ],
 )
 async def test_reauth(
-    hass, config, config_entry, errors, get_client_with_exception, setup_config_entry
-):
+    hass: HomeAssistant,
+    config,
+    config_entry,
+    errors,
+    get_client_with_exception,
+    setup_config_entry,
+) -> None:
     """Test that re-auth works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

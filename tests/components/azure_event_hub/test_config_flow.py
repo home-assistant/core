@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "step1_config, step_id, step2_config, data_config",
+    ("step1_config", "step_id", "step2_config", "data_config"),
     [
         (BASE_CONFIG_CS, STEP_CONN_STRING, CS_CONFIG, CS_CONFIG_FULL),
         (BASE_CONFIG_SAS, STEP_SAS, SAS_CONFIG, SAS_CONFIG_FULL),
@@ -115,7 +115,7 @@ async def test_single_instance(hass: HomeAssistant, source) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [(EventHubError("test"), "cannot_connect"), (Exception, "unknown")],
     ids=["cannot_connect", "unknown"],
 )
@@ -144,7 +144,7 @@ async def test_connection_error_sas(
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [(EventHubError("test"), "cannot_connect"), (Exception, "unknown")],
     ids=["cannot_connect", "unknown"],
 )

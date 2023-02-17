@@ -15,6 +15,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
+from homeassistant.util.file import WriteError
+
+from . import json as json_helper
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -278,7 +281,7 @@ class Store(Generic[_T]):
 
             try:
                 await self._async_write_data(self.path, data)
-            except (json_util.SerializationError, json_util.WriteError) as err:
+            except (json_util.SerializationError, WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, path: str, data: dict) -> None:
@@ -289,7 +292,7 @@ class Store(Generic[_T]):
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
-        json_util.save_json(
+        json_helper.save_json(
             path,
             data,
             self._private,

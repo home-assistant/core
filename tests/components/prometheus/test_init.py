@@ -57,7 +57,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -107,7 +107,7 @@ async def generate_latest_metrics(client):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_view_empty_namespace(client, sensor_entities):
+async def test_view_empty_namespace(client, sensor_entities) -> None:
     """Test prometheus metrics view."""
     body = await generate_latest_metrics(client)
 
@@ -131,7 +131,7 @@ async def test_view_empty_namespace(client, sensor_entities):
 
 
 @pytest.mark.parametrize("namespace", [None])
-async def test_view_default_namespace(client, sensor_entities):
+async def test_view_default_namespace(client, sensor_entities) -> None:
     """Test prometheus metrics view."""
     body = await generate_latest_metrics(client)
 
@@ -149,7 +149,7 @@ async def test_view_default_namespace(client, sensor_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_sensor_unit(client, sensor_entities):
+async def test_sensor_unit(client, sensor_entities) -> None:
     """Test prometheus metrics for sensors with a unit."""
     body = await generate_latest_metrics(client)
 
@@ -179,7 +179,7 @@ async def test_sensor_unit(client, sensor_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_sensor_without_unit(client, sensor_entities):
+async def test_sensor_without_unit(client, sensor_entities) -> None:
     """Test prometheus metrics for sensors without a unit."""
     body = await generate_latest_metrics(client)
 
@@ -203,7 +203,7 @@ async def test_sensor_without_unit(client, sensor_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_sensor_device_class(client, sensor_entities):
+async def test_sensor_device_class(client, sensor_entities) -> None:
     """Test prometheus metrics for sensor with a device_class."""
     body = await generate_latest_metrics(client)
 
@@ -233,7 +233,7 @@ async def test_sensor_device_class(client, sensor_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_input_number(client, input_number_entities):
+async def test_input_number(client, input_number_entities) -> None:
     """Test prometheus metrics for input_number."""
     body = await generate_latest_metrics(client)
 
@@ -257,7 +257,7 @@ async def test_input_number(client, input_number_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_battery(client, sensor_entities):
+async def test_battery(client, sensor_entities) -> None:
     """Test prometheus metrics for battery."""
     body = await generate_latest_metrics(client)
 
@@ -269,7 +269,7 @@ async def test_battery(client, sensor_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_climate(client, climate_entities):
+async def test_climate(client, climate_entities) -> None:
     """Test prometheus metrics for climate entities."""
     body = await generate_latest_metrics(client)
 
@@ -305,7 +305,7 @@ async def test_climate(client, climate_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_humidifier(client, humidifier_entities):
+async def test_humidifier(client, humidifier_entities) -> None:
     """Test prometheus metrics for humidifier entities."""
     body = await generate_latest_metrics(client)
 
@@ -336,7 +336,7 @@ async def test_humidifier(client, humidifier_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_attributes(client, switch_entities):
+async def test_attributes(client, switch_entities) -> None:
     """Test prometheus metrics for entity attributes."""
     body = await generate_latest_metrics(client)
 
@@ -366,7 +366,7 @@ async def test_attributes(client, switch_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_binary_sensor(client, binary_sensor_entities):
+async def test_binary_sensor(client, binary_sensor_entities) -> None:
     """Test prometheus metrics for binary_sensor."""
     body = await generate_latest_metrics(client)
 
@@ -384,7 +384,7 @@ async def test_binary_sensor(client, binary_sensor_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_input_boolean(client, input_boolean_entities):
+async def test_input_boolean(client, input_boolean_entities) -> None:
     """Test prometheus metrics for input_boolean."""
     body = await generate_latest_metrics(client)
 
@@ -402,7 +402,7 @@ async def test_input_boolean(client, input_boolean_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_light(client, light_entities):
+async def test_light(client, light_entities) -> None:
     """Test prometheus metrics for lights."""
     body = await generate_latest_metrics(client)
 
@@ -432,7 +432,7 @@ async def test_light(client, light_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_lock(client, lock_entities):
+async def test_lock(client, lock_entities) -> None:
     """Test prometheus metrics for lock."""
     body = await generate_latest_metrics(client)
 
@@ -450,7 +450,7 @@ async def test_lock(client, lock_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_cover(client, cover_entities):
+async def test_cover(client, cover_entities) -> None:
     """Test prometheus metrics for cover."""
     data = {**cover_entities}
     body = await generate_latest_metrics(client)
@@ -509,7 +509,7 @@ async def test_cover(client, cover_entities):
 
 
 @pytest.mark.parametrize("namespace", [""])
-async def test_counter(client, counter_entities):
+async def test_counter(client, counter_entities) -> None:
     """Test prometheus metrics for counter."""
     body = await generate_latest_metrics(client)
 
@@ -522,8 +522,8 @@ async def test_counter(client, counter_entities):
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_renaming_entity_name(
-    hass, registry, client, sensor_entities, climate_entities
-):
+    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+) -> None:
     """Test renaming entity name."""
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
@@ -644,8 +644,8 @@ async def test_renaming_entity_name(
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_renaming_entity_id(
-    hass, registry, client, sensor_entities, climate_entities
-):
+    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+) -> None:
     """Test renaming entity id."""
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
@@ -720,8 +720,8 @@ async def test_renaming_entity_id(
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_deleting_entity(
-    hass, registry, client, sensor_entities, climate_entities
-):
+    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+) -> None:
     """Test deleting a entity."""
     data = {**sensor_entities, **climate_entities}
     body = await generate_latest_metrics(client)
@@ -795,8 +795,8 @@ async def test_deleting_entity(
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_disabling_entity(
-    hass, registry, client, sensor_entities, climate_entities
-):
+    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+) -> None:
     """Test disabling a entity."""
     data = {**sensor_entities, **climate_entities}
 
@@ -1540,7 +1540,7 @@ def mock_bus(hass):
 
 
 @pytest.mark.usefixtures("mock_bus")
-async def test_minimal_config(hass, mock_client):
+async def test_minimal_config(hass: HomeAssistant, mock_client) -> None:
     """Test the minimal config and defaults of component."""
     config = {prometheus.DOMAIN: {}}
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
@@ -1550,7 +1550,7 @@ async def test_minimal_config(hass, mock_client):
 
 
 @pytest.mark.usefixtures("mock_bus")
-async def test_full_config(hass, mock_client):
+async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     """Test the full config of component."""
     config = {
         prometheus.DOMAIN: {
@@ -1598,7 +1598,7 @@ async def _setup(hass, filter_config):
 
 
 @pytest.mark.usefixtures("mock_bus")
-async def test_allowlist(hass, mock_client):
+async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist only config."""
     handler_method = await _setup(
         hass,
@@ -1628,7 +1628,7 @@ async def test_allowlist(hass, mock_client):
 
 
 @pytest.mark.usefixtures("mock_bus")
-async def test_denylist(hass, mock_client):
+async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist only config."""
     handler_method = await _setup(
         hass,
@@ -1658,7 +1658,7 @@ async def test_denylist(hass, mock_client):
 
 
 @pytest.mark.usefixtures("mock_bus")
-async def test_filtered_denylist(hass, mock_client):
+async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist config with a filtering allowlist."""
     handler_method = await _setup(
         hass,
