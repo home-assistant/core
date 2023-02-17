@@ -49,6 +49,7 @@
     },
     "trigger_type": {
       "apparent_power": "{entity_name} apparent power changes",
+      "aqi": "{entity_name} air quality index changes",
       "atmospheric_pressure": "{entity_name} atmospheric pressure changes",
       "battery_level": "{entity_name} battery level changes",
       "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
@@ -57,6 +58,7 @@
       "data_rate": "{entity_name} data rate changes",
       "data_size": "{entity_name} data size changes",
       "distance": "{entity_name} distance changes",
+      "duration": "{entity_name} duration changes",
       "energy": "{entity_name} energy changes",
       "frequency": "{entity_name} frequency changes",
       "gas": "{entity_name} gas changes",
@@ -64,6 +66,7 @@
       "illuminance": "{entity_name} illuminance changes",
       "irradiance": "{entity_name} irradiance changes",
       "moisture": "{entity_name} moisture changes",
+      "monetary": "{entity_name} money changes",
       "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
