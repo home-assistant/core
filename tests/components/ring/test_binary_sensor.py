@@ -2,10 +2,16 @@
 from time import time
 from unittest.mock import patch
 
+import requests_mock
+
+from homeassistant.core import HomeAssistant
+
 from .common import setup_platform
 
 
-async def test_binary_sensor(hass, requests_mock):
+async def test_binary_sensor(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test the Ring binary sensors."""
     with patch(
         "ring_doorbell.Ring.active_alerts",

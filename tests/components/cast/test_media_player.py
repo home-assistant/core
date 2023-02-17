@@ -579,15 +579,16 @@ async def test_discover_dynamic_group(
     tasks = []
     real_create_task = asyncio.create_task
 
-    def create_task(*args, **kwargs):
-        tasks.append(real_create_task(*args, **kwargs))
+    def create_task(coroutine, name):
+        tasks.append(real_create_task(coroutine))
 
     # Discover cast service
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_1,
-    ), patch(
-        "homeassistant.components.cast.media_player.asyncio.create_task",
+    ), patch.object(
+        hass,
+        "async_create_background_task",
         wraps=create_task,
     ):
         discover_cast(
@@ -611,8 +612,9 @@ async def test_discover_dynamic_group(
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_2,
-    ), patch(
-        "homeassistant.components.cast.media_player.asyncio.create_task",
+    ), patch.object(
+        hass,
+        "async_create_background_task",
         wraps=create_task,
     ):
         discover_cast(
@@ -636,8 +638,9 @@ async def test_discover_dynamic_group(
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_1,
-    ), patch(
-        "homeassistant.components.cast.media_player.asyncio.create_task",
+    ), patch.object(
+        hass,
+        "async_create_background_task",
         wraps=create_task,
     ):
         discover_cast(
