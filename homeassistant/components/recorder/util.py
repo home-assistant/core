@@ -132,23 +132,6 @@ def session_scope(
         session.close()
 
 
-def commit(session: Session, work: Any) -> bool:
-    """Commit & retry work: Either a model or in a function."""
-    for _ in range(0, RETRIES):
-        try:
-            if callable(work):
-                work(session)
-            else:
-                session.add(work)
-            session.commit()
-            return True
-        except OperationalError as err:
-            _LOGGER.error("Error executing query: %s", err)
-            session.rollback()
-            time.sleep(QUERY_RETRY_WAIT)
-    return False
-
-
 def execute(
     qry: Query, to_native: bool = False, validate_entity_ids: bool = True
 ) -> list[Row]:
@@ -156,9 +139,12 @@ def execute(
 
     This method also retries a few times in the case of stale connections.
     """
+    debug = _LOGGER.isEnabledFor(logging.DEBUG)
     for tryno in range(0, RETRIES):
         try:
-            timer_start = time.perf_counter()
+            if debug:
+                timer_start = time.perf_counter()
+
             if to_native:
                 result = [
                     row
@@ -171,7 +157,7 @@ def execute(
             else:
                 result = qry.all()
 
-            if _LOGGER.isEnabledFor(logging.DEBUG):
+            if debug:
                 elapsed = time.perf_counter() - timer_start
                 if to_native:
                     _LOGGER.debug(

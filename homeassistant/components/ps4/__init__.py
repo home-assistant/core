@@ -25,9 +25,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
 from .const import (

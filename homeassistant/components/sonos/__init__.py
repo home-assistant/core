@@ -483,13 +483,14 @@ class SonosDiscoveryManager:
         if uid not in self.data.discovery_known:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
-        asyncio.create_task(
+        self.hass.async_create_background_task(
             self._async_handle_discovery_message(
                 uid,
                 discovered_ip,
                 "discovery",
                 boot_seqnum=cast(int | None, boot_seqnum),
-            )
+            ),
+            "sonos-handle_discovery_message",
         )
 
     async def setup_platforms_and_discovery(self) -> None:

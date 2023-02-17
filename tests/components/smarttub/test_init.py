@@ -1,5 +1,4 @@
 """Test smarttub setup process."""
-
 import asyncio
 from unittest.mock import patch
 
@@ -8,10 +7,13 @@ from smarttub import LoginFailed
 from homeassistant.components import smarttub
 from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_setup_with_no_config(setup_component, hass, smarttub_api):
+async def test_setup_with_no_config(
+    setup_component, hass: HomeAssistant, smarttub_api
+) -> None:
     """Test that we do not discover anything."""
 
     # No flows started
@@ -20,7 +22,9 @@ async def test_setup_with_no_config(setup_component, hass, smarttub_api):
     smarttub_api.login.assert_not_called()
 
 
-async def test_setup_entry_not_ready(setup_component, hass, config_entry, smarttub_api):
+async def test_setup_entry_not_ready(
+    setup_component, hass: HomeAssistant, config_entry, smarttub_api
+) -> None:
     """Test setup when the entry is not ready."""
     smarttub_api.login.side_effect = asyncio.TimeoutError
 
@@ -29,7 +33,9 @@ async def test_setup_entry_not_ready(setup_component, hass, config_entry, smartt
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_api):
+async def test_setup_auth_failed(
+    setup_component, hass: HomeAssistant, config_entry, smarttub_api
+) -> None:
     """Test setup when the credentials are invalid."""
     smarttub_api.login.side_effect = LoginFailed
 
@@ -49,13 +55,15 @@ async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_a
         )
 
 
-async def test_config_passed_to_config_entry(hass, config_entry, config_data):
+async def test_config_passed_to_config_entry(
+    hass: HomeAssistant, config_entry, config_data
+) -> None:
     """Test that configured options are loaded via config entry."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, smarttub.DOMAIN, config_data)
 
 
-async def test_unload_entry(hass, config_entry):
+async def test_unload_entry(hass: HomeAssistant, config_entry) -> None:
     """Test being able to unload an entry."""
     config_entry.add_to_hass(hass)
 

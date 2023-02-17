@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import plexapi
 import requests
+import requests_mock
 
 import homeassistant.components.plex.const as const
 from homeassistant.components.plex.models import (
@@ -22,6 +23,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
@@ -30,7 +32,9 @@ from .helpers import trigger_plex_update, wait_for_debouncer
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_set_config_entry_unique_id(hass, entry, mock_plex_server):
+async def test_set_config_entry_unique_id(
+    hass: HomeAssistant, entry, mock_plex_server
+) -> None:
     """Test updating missing unique_id from config entry."""
     assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
@@ -41,7 +45,7 @@ async def test_set_config_entry_unique_id(hass, entry, mock_plex_server):
     )
 
 
-async def test_setup_config_entry_with_error(hass, entry):
+async def test_setup_config_entry_with_error(hass: HomeAssistant, entry) -> None:
     """Test setup component from config entry with errors."""
     with patch(
         "homeassistant.components.plex.PlexServer.connect",
@@ -66,7 +70,9 @@ async def test_setup_config_entry_with_error(hass, entry):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_with_insecure_config_entry(hass, entry, setup_plex_server):
+async def test_setup_with_insecure_config_entry(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
     """Test setup component with config."""
     INSECURE_DATA = copy.deepcopy(DEFAULT_DATA)
     INSECURE_DATA[const.PLEX_SERVER_CONFIG][CONF_VERIFY_SSL] = False
@@ -78,7 +84,9 @@ async def test_setup_with_insecure_config_entry(hass, entry, setup_plex_server):
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_unload_config_entry(hass, entry, mock_plex_server):
+async def test_unload_config_entry(
+    hass: HomeAssistant, entry, mock_plex_server
+) -> None:
     """Test unloading a config entry."""
     config_entries = hass.config_entries.async_entries(const.DOMAIN)
     assert len(config_entries) == 1
@@ -95,7 +103,9 @@ async def test_unload_config_entry(hass, entry, mock_plex_server):
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_with_photo_session(hass, entry, setup_plex_server):
+async def test_setup_with_photo_session(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
     """Test setup component with config."""
     await setup_plex_server(session_type="photo")
 
@@ -114,7 +124,9 @@ async def test_setup_with_photo_session(hass, entry, setup_plex_server):
     assert sensor.state == "0"
 
 
-async def test_setup_with_live_tv_session(hass, entry, setup_plex_server):
+async def test_setup_with_live_tv_session(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
     """Test setup component with a Live TV session."""
     await setup_plex_server(session_type="live_tv")
 
@@ -134,7 +146,9 @@ async def test_setup_with_live_tv_session(hass, entry, setup_plex_server):
     assert sensor.state == "1"
 
 
-async def test_setup_with_transient_session(hass, entry, setup_plex_server):
+async def test_setup_with_transient_session(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
     """Test setup component with a transient session."""
     await setup_plex_server(session_type="transient")
 
@@ -154,7 +168,9 @@ async def test_setup_with_transient_session(hass, entry, setup_plex_server):
     assert sensor.state == "1"
 
 
-async def test_setup_with_unknown_session(hass, entry, setup_plex_server):
+async def test_setup_with_unknown_session(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
     """Test setup component with an unknown session."""
     await setup_plex_server(session_type="unknown")
 
@@ -175,8 +191,8 @@ async def test_setup_with_unknown_session(hass, entry, setup_plex_server):
 
 
 async def test_setup_when_certificate_changed(
-    hass,
-    requests_mock,
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
     empty_library,
     empty_payload,
     plex_server_accounts,
@@ -185,7 +201,7 @@ async def test_setup_when_certificate_changed(
     plextv_resources,
     plextv_shared_users,
     mock_websocket,
-):
+) -> None:
     """Test setup component when the Plex certificate has changed."""
 
     class WrongCertHostnameException(requests.exceptions.SSLError):
@@ -252,7 +268,7 @@ async def test_setup_when_certificate_changed(
     assert old_entry.data[const.PLEX_SERVER_CONFIG][CONF_URL] == new_url
 
 
-async def test_tokenless_server(entry, setup_plex_server):
+async def test_tokenless_server(entry, setup_plex_server) -> None:
     """Test setup with a server with token auth disabled."""
     TOKENLESS_DATA = copy.deepcopy(DEFAULT_DATA)
     TOKENLESS_DATA[const.PLEX_SERVER_CONFIG].pop(CONF_TOKEN, None)
@@ -263,8 +279,12 @@ async def test_tokenless_server(entry, setup_plex_server):
 
 
 async def test_bad_token_with_tokenless_server(
-    hass, entry, mock_websocket, setup_plex_server, requests_mock
-):
+    hass: HomeAssistant,
+    entry,
+    mock_websocket,
+    setup_plex_server,
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test setup with a bad token and a server with token auth disabled."""
     requests_mock.get(
         "https://plex.tv/users/account", status_code=HTTPStatus.UNAUTHORIZED
@@ -279,7 +299,7 @@ async def test_bad_token_with_tokenless_server(
     await hass.async_block_till_done()
 
 
-async def test_scan_clients_schedule(hass, setup_plex_server):
+async def test_scan_clients_schedule(hass: HomeAssistant, setup_plex_server) -> None:
     """Test scan_clients scheduled update."""
     with patch(
         "homeassistant.components.plex.server.PlexServer._async_update_platforms"

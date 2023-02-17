@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -120,7 +120,9 @@ def decrypt_payload_legacy(secret_key, encrypted_data):
     return json.loads(decrypted_data)
 
 
-async def test_webhook_handle_render_template(create_registrations, webhook_client):
+async def test_webhook_handle_render_template(
+    create_registrations, webhook_client
+) -> None:
     """Test that we render templates properly."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -146,7 +148,9 @@ async def test_webhook_handle_render_template(create_registrations, webhook_clie
     }
 
 
-async def test_webhook_handle_call_services(hass, create_registrations, webhook_client):
+async def test_webhook_handle_call_services(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that we call services properly."""
     calls = async_mock_service(hass, "test", "mobile_app")
 
@@ -160,7 +164,9 @@ async def test_webhook_handle_call_services(hass, create_registrations, webhook_
     assert len(calls) == 1
 
 
-async def test_webhook_handle_fire_event(hass, create_registrations, webhook_client):
+async def test_webhook_handle_fire_event(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that we can fire events."""
     events = []
 
@@ -183,7 +189,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_update_registration(webhook_client, authed_api_client):
+async def test_webhook_update_registration(webhook_client, authed_api_client) -> None:
     """Test that a we can update an existing registration via webhook."""
     register_resp = await authed_api_client.post(
         "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
@@ -207,7 +213,9 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
     assert CONF_SECRET not in update_json
 
 
-async def test_webhook_handle_get_zones(hass, create_registrations, webhook_client):
+async def test_webhook_handle_get_zones(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that we can get zones properly."""
     # Zone is already loaded as part of the fixture,
     # so we just trigger a reload.
@@ -257,7 +265,9 @@ async def test_webhook_handle_get_zones(hass, create_registrations, webhook_clie
     assert zones[2]["attributes"]["longitude"] == -118.2494053
 
 
-async def test_webhook_handle_get_config(hass, create_registrations, webhook_client):
+async def test_webhook_handle_get_config(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that we can get config properly."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -315,8 +325,8 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
 
 
 async def test_webhook_returns_error_incorrect_json(
-    webhook_client, create_registrations, caplog
-):
+    webhook_client, create_registrations, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an error is returned when JSON is invalid."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]), data="not json"
@@ -329,7 +339,7 @@ async def test_webhook_returns_error_incorrect_json(
 
 
 @pytest.mark.parametrize(
-    "msg,generate_response",
+    ("msg", "generate_response"),
     (
         (RENDER_TEMPLATE, lambda hass: {"one": "Hello world"}),
         (
@@ -339,8 +349,8 @@ async def test_webhook_returns_error_incorrect_json(
     ),
 )
 async def test_webhook_handle_decryption(
-    hass, webhook_client, create_registrations, msg, generate_response
-):
+    hass: HomeAssistant, webhook_client, create_registrations, msg, generate_response
+) -> None:
     """Test that we can encrypt/decrypt properly."""
     key = create_registrations[0]["secret"]
     data = encrypt_payload(key, msg["data"])
@@ -361,7 +371,9 @@ async def test_webhook_handle_decryption(
     assert decrypted_data == generate_response(hass)
 
 
-async def test_webhook_handle_decryption_legacy(webhook_client, create_registrations):
+async def test_webhook_handle_decryption_legacy(
+    webhook_client, create_registrations
+) -> None:
     """Test that we can encrypt/decrypt properly."""
     key = create_registrations[0]["secret"]
     data = encrypt_payload_legacy(key, RENDER_TEMPLATE["data"])
@@ -383,8 +395,8 @@ async def test_webhook_handle_decryption_legacy(webhook_client, create_registrat
 
 
 async def test_webhook_handle_decryption_fail(
-    webhook_client, create_registrations, caplog
-):
+    webhook_client, create_registrations, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we can encrypt/decrypt properly."""
     key = create_registrations[0]["secret"]
 
@@ -409,9 +421,8 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -422,14 +433,13 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
 async def test_webhook_handle_decryption_legacy_fail(
-    webhook_client, create_registrations, caplog
-):
+    webhook_client, create_registrations, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we can encrypt/decrypt properly."""
     key = create_registrations[0]["secret"]
 
@@ -454,9 +464,8 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -467,14 +476,13 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
 async def test_webhook_handle_decryption_legacy_upgrade(
     webhook_client, create_registrations
-):
+) -> None:
     """Test that we can encrypt/decrypt properly."""
     key = create_registrations[0]["secret"]
 
@@ -524,19 +532,12 @@ async def test_webhook_handle_decryption_legacy_upgrade(
     )
 
     assert resp.status == HTTPStatus.OK
-
-    webhook_json = await resp.json()
-    assert "encrypted_data" in webhook_json
-
-    # The response should be empty, encrypted with the new method
-    with pytest.raises(Exception):
-        decrypt_payload_legacy(key, webhook_json["encrypted_data"])
-    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
-
-    assert decrypted_data == {}
+    assert await resp.json() == {}
 
 
-async def test_webhook_requires_encryption(webhook_client, create_registrations):
+async def test_webhook_requires_encryption(
+    webhook_client, create_registrations
+) -> None:
     """Test that encrypted registrations only accept encrypted data."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[0]["webhook_id"]),
@@ -552,8 +553,8 @@ async def test_webhook_requires_encryption(webhook_client, create_registrations)
 
 
 async def test_webhook_update_location_without_locations(
-    hass, webhook_client, create_registrations
-):
+    hass: HomeAssistant, webhook_client, create_registrations
+) -> None:
     """Test that location can be updated."""
 
     # start off with a location set by name
@@ -589,8 +590,8 @@ async def test_webhook_update_location_without_locations(
 
 
 async def test_webhook_update_location_with_gps(
-    hass, webhook_client, create_registrations
-):
+    hass: HomeAssistant, webhook_client, create_registrations
+) -> None:
     """Test that location can be updated."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -611,8 +612,8 @@ async def test_webhook_update_location_with_gps(
 
 
 async def test_webhook_update_location_with_gps_without_accuracy(
-    hass, webhook_client, create_registrations
-):
+    hass: HomeAssistant, webhook_client, create_registrations
+) -> None:
     """Test that location can be updated."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -629,8 +630,8 @@ async def test_webhook_update_location_with_gps_without_accuracy(
 
 
 async def test_webhook_update_location_with_location_name(
-    hass, webhook_client, create_registrations
-):
+    hass: HomeAssistant, webhook_client, create_registrations
+) -> None:
     """Test that location can be updated."""
 
     with patch(
@@ -690,7 +691,9 @@ async def test_webhook_update_location_with_location_name(
     assert state.state == STATE_NOT_HOME
 
 
-async def test_webhook_enable_encryption(hass, webhook_client, create_registrations):
+async def test_webhook_enable_encryption(
+    hass: HomeAssistant, webhook_client, create_registrations
+) -> None:
     """Test that encryption can be added to a reg initially created without."""
     webhook_id = create_registrations[1]["webhook_id"]
 
@@ -740,8 +743,8 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
 
 
 async def test_webhook_camera_stream_non_existent(
-    hass, create_registrations, webhook_client
-):
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test fetching camera stream URLs for a non-existent camera."""
     webhook_id = create_registrations[1]["webhook_id"]
 
@@ -759,8 +762,8 @@ async def test_webhook_camera_stream_non_existent(
 
 
 async def test_webhook_camera_stream_non_hls(
-    hass, create_registrations, webhook_client
-):
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test fetching camera stream URLs for a non-HLS/stream-supporting camera."""
     hass.states.async_set("camera.non_stream_camera", "idle", {"supported_features": 0})
 
@@ -784,8 +787,8 @@ async def test_webhook_camera_stream_non_hls(
 
 
 async def test_webhook_camera_stream_stream_available(
-    hass, create_registrations, webhook_client
-):
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test fetching camera stream URLs for an HLS/stream-supporting camera."""
     hass.states.async_set(
         "camera.stream_camera",
@@ -814,8 +817,8 @@ async def test_webhook_camera_stream_stream_available(
 
 
 async def test_webhook_camera_stream_stream_available_but_errors(
-    hass, create_registrations, webhook_client
-):
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test fetching camera stream URLs for an HLS/stream-supporting camera but that streaming errors."""
     hass.states.async_set(
         "camera.stream_camera",
@@ -843,7 +846,9 @@ async def test_webhook_camera_stream_stream_available_but_errors(
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
 
 
-async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_client):
+async def test_webhook_handle_scan_tag(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that we can scan tags."""
     device = dr.async_get(hass).async_get_device({(DOMAIN, "mock-device-id")})
     assert device is not None
@@ -865,8 +870,8 @@ async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_clien
 
 
 async def test_register_sensor_limits_state_class(
-    hass, create_registrations, webhook_client
-):
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that we limit state classes to sensors only."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -905,7 +910,9 @@ async def test_register_sensor_limits_state_class(
     assert reg_resp.status == HTTPStatus.OK
 
 
-async def test_reregister_sensor(hass, create_registrations, webhook_client):
+async def test_reregister_sensor(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that we can add more info in re-registration."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -1007,8 +1014,8 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
 
 
 async def test_webhook_handle_conversation_process(
-    hass, create_registrations, webhook_client, mock_agent
-):
+    hass: HomeAssistant, create_registrations, webhook_client, mock_agent
+) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
@@ -1045,7 +1052,12 @@ async def test_webhook_handle_conversation_process(
     }
 
 
-async def test_sending_sensor_state(hass, create_registrations, webhook_client, caplog):
+async def test_sending_sensor_state(
+    hass: HomeAssistant,
+    create_registrations,
+    webhook_client,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that we can register and send sensor state as number and None."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -1059,6 +1071,21 @@ async def test_sending_sensor_state(hass, create_registrations, webhook_client, 
                 "state": 100,
                 "type": "sensor",
                 "unique_id": "abcd",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery Health",
+                "state": "good",
+                "type": "sensor",
+                "unique_id": "health-id",
             },
         },
     )
@@ -1080,15 +1107,27 @@ async def test_sending_sensor_state(hass, create_registrations, webhook_client, 
     assert state is not None
     assert state.state == "100"
 
+    state = hass.states.get("sensor.test_1_battery_health")
+    assert state is not None
+    assert state.state == "good"
+
+    # Now with a list.
     reg_resp = await webhook_client.post(
         webhook_url,
         json={
             "type": "update_sensor_states",
-            "data": {
-                "state": 50.0000,
-                "type": "sensor",
-                "unique_id": "abcd",
-            },
+            "data": [
+                {
+                    "state": 50.0000,
+                    "type": "sensor",
+                    "unique_id": "abcd",
+                },
+                {
+                    "state": "okay-ish",
+                    "type": "sensor",
+                    "unique_id": "health-id",
+                },
+            ],
         },
     )
 
@@ -1097,3 +1136,7 @@ async def test_sending_sensor_state(hass, create_registrations, webhook_client, 
     state = hass.states.get("sensor.test_1_battery_state")
     assert state is not None
     assert state.state == "50.0"
+
+    state = hass.states.get("sensor.test_1_battery_health")
+    assert state is not None
+    assert state.state == "okay-ish"

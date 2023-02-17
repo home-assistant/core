@@ -525,7 +525,7 @@ async def test_reauth_flow(
 
 
 @pytest.mark.parametrize(
-    "primary_calendar_error,primary_calendar_status,reason",
+    ("primary_calendar_error", "primary_calendar_status", "reason"),
     [
         (ClientError(), None, "cannot_connect"),
         (None, HTTPStatus.FORBIDDEN, "api_disabled"),

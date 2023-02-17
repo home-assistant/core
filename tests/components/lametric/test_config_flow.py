@@ -356,7 +356,7 @@ async def test_full_ssdp_manual_entry(
 
 
 @pytest.mark.parametrize(
-    "data,reason",
+    ("data", "reason"),
     [
         (
             SsdpServiceInfo(ssdp_usn="mock_usn", ssdp_st="mock_st", upnp={}),
@@ -543,7 +543,7 @@ async def test_cloud_abort_no_devices(
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (LaMetricConnectionTimeoutError, "cannot_connect"),
         (LaMetricConnectionError, "cannot_connect"),
@@ -602,7 +602,7 @@ async def test_manual_errors(
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (LaMetricConnectionTimeoutError, "cannot_connect"),
         (LaMetricConnectionError, "cannot_connect"),

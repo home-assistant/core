@@ -619,7 +619,7 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -829,7 +829,7 @@ BAD_SENSOR_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_type, sensor_property", BAD_SENSOR_DATA)
+@pytest.mark.parametrize(("sensor_type", "sensor_property"), BAD_SENSOR_DATA)
 async def test_dont_add_sensor_if_state_is_none(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

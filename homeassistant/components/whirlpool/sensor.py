@@ -119,11 +119,12 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         key="DispenseLevel",
         name="Detergent Level",
         translation_key="whirlpool_tank",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=list(TANK_FILL.values()),
-        value_fn=lambda WasherDryer: TANK_FILL[
+        value_fn=lambda WasherDryer: TANK_FILL.get(
             WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
-        ],
+        ),
     ),
 )
 
@@ -265,6 +266,7 @@ class WasherDryerTimeClass(RestoreSensor):
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
+        self._wd.unregister_attr_callback(self.update_from_latest_data)
         await self._wd.disconnect()
 
     @property

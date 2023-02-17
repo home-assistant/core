@@ -279,6 +279,7 @@ class HomeAssistant:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
+        self._background_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -520,7 +521,26 @@ class HomeAssistant:
         task = self.loop.create_task(target)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
+        return task
 
+    @callback
+    def async_create_background_task(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the eventloop.
+
+        This is a background task which will not block startup and will be
+        automatically cancelled on shutdown. If you are using this in your
+        integration, make sure you also cancel the task when the config entry
+        your task belongs to is unloaded.
+
+        This method must be run in the event loop.
+        """
+        task = self.loop.create_task(target, name=name)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
     @callback
@@ -686,6 +706,12 @@ class HomeAssistant:
                 _LOGGER.warning(
                     "Stopping Home Assistant before startup has completed may fail"
                 )
+
+        # Cancel all background tasks
+        for task in self._background_tasks:
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.remove)
+            task.cancel()
 
         # stage 1
         self.state = CoreState.stopping
