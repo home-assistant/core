@@ -53,6 +53,7 @@ from homeassistant.components.recorder.services import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -61,7 +62,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers import recorder as recorder_helper
+from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -77,6 +78,7 @@ from tests.common import (
     async_fire_time_changed,
     fire_time_changed,
     get_test_home_assistant,
+    mock_platform,
 )
 from tests.typing import RecorderInstanceGenerator
 
@@ -2027,3 +2029,44 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
             },
         )
     assert connect_params[0]["charset"] == "utf8mb4"
+
+
+async def test_excluding_attributes_by_integration(
+    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that an integration's recorder platform can exclude attributes."""
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "excluded": 10}
+    entry = entity_registry.async_get_or_create(
+        "test",
+        "fake_integration",
+        "recorder",
+    )
+    entity_id = entry.entity_id
+    mock_platform(
+        hass,
+        "fake_integration.recorder",
+        Mock(exclude_attributes=lambda hass: {"excluded"}),
+    )
+    hass.config.components.add("fake_integration")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "fake_integration"})
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, state, attributes)
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = []
+        for db_state, db_state_attributes in session.query(
+            States, StateAttributes
+        ).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
+        assert len(db_states) == 1
+        assert db_states[0].event_id is None
+
+    expected = _state_with_context(hass, entity_id)
+    expected.attributes = {"test_attr": 5}
+    assert state.as_dict() == expected.as_dict()
