@@ -15,9 +15,6 @@ DEVICE_POLLING_DELAY: Final = 60
 LIVISI_STATE_CHANGE: Final = "livisi_state_change"
 LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 
-SWITCH_PLATFORM: Final = "switch"
-CLIMATE_PLATFORM: Final = "climate"
-
 PSS_DEVICE_TYPE: Final = "PSS"
 VRCC_DEVICE_TYPE: Final = "VRCC"
 
