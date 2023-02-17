@@ -88,6 +88,10 @@ class OmadaNetworkSwitchPortPoEControl(OmadaSwitchDeviceEntity, SwitchEntity):
         self._attr_unique_id = f"{device.mac}_{port_id}_poe"
 
         self._attr_name = f"{get_port_base_name(self.port_details)} PoE"
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
         self._refresh_state()
 
     async def _async_turn_on_off_poe(self, enable: bool) -> None:
@@ -108,8 +112,7 @@ class OmadaNetworkSwitchPortPoEControl(OmadaSwitchDeviceEntity, SwitchEntity):
 
     def _refresh_state(self) -> None:
         self._attr_is_on = self.port_details.poe_mode != PoEMode.DISABLED
-        if self.hass:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
