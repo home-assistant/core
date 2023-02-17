@@ -1001,6 +1001,10 @@ jobs:
         run: |
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
         shell: bash
@@ -1105,6 +1109,10 @@ jobs:
         run: |
           . venv/bin/activate
           pip install psycopg2 sqlalchemy_utils
+      - name: Compile English translations
+        run: |
+          . venv/bin/activate
+          python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
         shell: bash
