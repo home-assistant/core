@@ -5,7 +5,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.remote import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -24,7 +25,11 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_actions(hass, device_registry, entity_registry):
+async def test_get_actions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected actions from a remote."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -61,12 +66,12 @@ async def test_get_actions(hass, device_registry, entity_registry):
     ),
 )
 async def test_get_actions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -99,7 +104,9 @@ async def test_get_actions_hidden_auxiliary(
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass, calls, enable_custom_integrations):
+async def test_action(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for turn_on and turn_off actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

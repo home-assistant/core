@@ -1,10 +1,14 @@
 """The tests for the Ring sensor platform."""
+import requests_mock
+
+from homeassistant.core import HomeAssistant
+
 from .common import setup_platform
 
 WIFI_ENABLED = False
 
 
-async def test_sensor(hass, requests_mock):
+async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test the Ring sensors."""
     await setup_platform(hass, "sensor")
 
