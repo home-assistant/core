@@ -148,7 +148,7 @@ class HomeAssistantSnapshotExtension(AmberSnapshotExtension):
 
     VERSION = "1"
     """Current version of serialization format.
-    
+
     Need to be bumped when we change the HomeAssistantSnapshotSerializer.
     """
 
