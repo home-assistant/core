@@ -7,6 +7,7 @@ import json
 import logging
 
 from sunweg.api import APIHelper
+from sunweg.plant import Plant
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -40,8 +41,8 @@ def get_device_list(api: APIHelper, config):
         _LOGGER.error("Username, Password or URL may be incorrect!")
         return
     if plant_id == DEFAULT_PLANT_ID:
-        plant_info = api.listPlants()
-        plant_id = plant_info[0]
+        plant_info: list[Plant] = api.listPlants()
+        plant_id = plant_info[0].id
 
     # Get a list of devices for specified plant to add sensors for.
     devices = api.plant(plant_id).inverters
@@ -59,7 +60,7 @@ async def async_setup_entry(
     password = config[CONF_PASSWORD]
     name = config[CONF_NAME]
 
-    # Initialise the library with the username & a random id each time it is started
+    # Initialise the library with the username & password
     api = APIHelper(username, password)
 
     devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
