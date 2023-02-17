@@ -28,9 +28,9 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 6
-  PIP_CACHE_VERSION: 5
-  MYPY_CACHE_VERSION: 5
+  CACHE_VERSION: 5
+  PIP_CACHE_VERSION: 4
+  MYPY_CACHE_VERSION: 4
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
@@ -336,7 +336,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - info
       - pre-commit
