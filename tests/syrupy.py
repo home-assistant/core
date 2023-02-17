@@ -30,9 +30,45 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from tests.common import ANY
+
+class _ANY:
+    """Represent any value."""
+
+    def __repr__(self) -> str:
+        return "<ANY>"
+
+
+ANY = _ANY()
 
 __all__ = ["HomeAssistantSnapshotExtension"]
+
+
+class AreaRegistryEntrySnapshot(dict):
+    """Tiny wrapper to represent an area registry entry in snapshots."""
+
+
+class ConfigEntrySnapshot(dict):
+    """Tiny wrapper to represent a config entry in snapshots."""
+
+
+class DeviceRegistryEntrySnapshot(dict):
+    """Tiny wrapper to represent a device registry entry in snapshots."""
+
+
+class EntityRegistryEntrySnapshot(dict):
+    """Tiny wrapper to represent an entity registry entry in snapshots."""
+
+
+class FlowResultSnapshot(dict):
+    """Tiny wrapper to represent a flow result in snapshots."""
+
+
+class IssueRegistryItemSnapshot(dict):
+    """Tiny wrapper to represent an entity registry entry in snapshots."""
+
+
+class StateSnapshot(dict):
+    """Tiny wrapper to represent an entity state in snapshots."""
 
 
 class HomeAssistantSnapshotSerializer(AmberDataSerializer):
@@ -92,55 +128,70 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     @classmethod
     def _serializable_area_registry_entry(cls, data: ar.AreaEntry) -> SerializableData:
         """Prepare a Home Assistant area registry entry for serialization."""
-        return attrs.asdict(data) | {"id": ANY}
+        serialized = AreaRegistryEntrySnapshot(attrs.asdict(data) | {"id": ANY})
+        serialized.pop("_json_repr")
+        return serialized
 
     @classmethod
     def _serializable_config_entry(cls, data: ConfigEntry) -> SerializableData:
         """Prepare a Home Assistant config entry for serialization."""
-        return data.as_dict() | {"entry_id": ANY}
+        return ConfigEntrySnapshot(data.as_dict() | {"entry_id": ANY})
 
     @classmethod
     def _serializable_device_registry_entry(
         cls, data: dr.DeviceEntry
     ) -> SerializableData:
         """Prepare a Home Assistant device registry entry for serialization."""
-        return attrs.asdict(data) | {
-            "config_entries": ANY,
-            "id": ANY,
-            "via_device_id": ANY,
-        }
+        serialized = DeviceRegistryEntrySnapshot(
+            attrs.asdict(data)
+            | {
+                "config_entries": ANY,
+                "id": ANY,
+                "via_device_id": ANY,
+            }
+        )
+        serialized.pop("_json_repr")
+        return serialized
 
     @classmethod
     def _serializable_entity_registry_entry(
         cls, data: er.RegistryEntry
     ) -> SerializableData:
         """Prepare a Home Assistant entity registry entry for serialization."""
-        return attrs.asdict(data) | {
-            "config_entry_id": ANY,
-            "device_id": ANY,
-            "id": ANY,
-        }
+        serialized = EntityRegistryEntrySnapshot(
+            attrs.asdict(data)
+            | {
+                "config_entry_id": ANY,
+                "device_id": ANY,
+                "id": ANY,
+            }
+        )
+        serialized.pop("_json_repr")
+        return serialized
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
         """Prepare a Home Assistant flow result for serialization."""
-        return data | {"flow_id": ANY}
+        return FlowResultSnapshot(data | {"flow_id": ANY})
 
     @classmethod
     def _serializable_issue_registry_entry(
         cls, data: ir.IssueEntry
     ) -> SerializableData:
         """Prepare a Home Assistant issue registry entry for serialization."""
-        return data.to_json()
+        return IssueRegistryItemSnapshot(data.to_json())
 
     @classmethod
     def _serializable_state(cls, data: State) -> SerializableData:
         """Prepare a Home Assistant State for serialization."""
-        return dict(data.as_dict()) | {
-            "context": ANY,
-            "last_changed": ANY,
-            "last_updated": ANY,
-        }
+        return StateSnapshot(
+            data.as_dict()
+            | {
+                "context": ANY,
+                "last_changed": ANY,
+                "last_updated": ANY,
+            }
+        )
 
 
 class HomeAssistantSnapshotExtension(AmberSnapshotExtension):

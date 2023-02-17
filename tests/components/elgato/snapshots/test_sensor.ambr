@@ -1,7 +1,6 @@
 # serializer version: 1
 # name: test_sensors[sensor.frenck_battery-key-light-mini][device_registry]
-  dict({
-    '_json_repr': None,
+  DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
     'configuration_url': None,
@@ -32,8 +31,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_battery-key-light-mini][entity_registry]
-  dict({
-    '_json_repr': None,
+  EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
@@ -68,7 +66,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_battery-key-light-mini][state]
-  dict({
+  StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Frenck Battery',
@@ -83,8 +81,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_battery_voltage-key-light-mini][device_registry]
-  dict({
-    '_json_repr': None,
+  DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
     'configuration_url': None,
@@ -115,8 +112,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_battery_voltage-key-light-mini][entity_registry]
-  dict({
-    '_json_repr': None,
+  EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
@@ -154,7 +150,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_battery_voltage-key-light-mini][state]
-  dict({
+  StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'friendly_name': 'Frenck Battery voltage',
@@ -169,8 +165,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_current-key-light-mini][device_registry]
-  dict({
-    '_json_repr': None,
+  DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
     'configuration_url': None,
@@ -201,8 +196,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_current-key-light-mini][entity_registry]
-  dict({
-    '_json_repr': None,
+  EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
@@ -240,7 +234,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_current-key-light-mini][state]
-  dict({
+  StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'Frenck Charging current',
@@ -255,8 +249,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_power-key-light-mini][device_registry]
-  dict({
-    '_json_repr': None,
+  DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
     'configuration_url': None,
@@ -287,8 +280,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_power-key-light-mini][entity_registry]
-  dict({
-    '_json_repr': None,
+  EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
@@ -323,7 +315,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_power-key-light-mini][state]
-  dict({
+  StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Frenck Charging power',
@@ -338,8 +330,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_voltage-key-light-mini][device_registry]
-  dict({
-    '_json_repr': None,
+  DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
     'configuration_url': None,
@@ -370,8 +361,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_voltage-key-light-mini][entity_registry]
-  dict({
-    '_json_repr': None,
+  EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
@@ -409,7 +399,7 @@
   })
 # ---
 # name: test_sensors[sensor.frenck_charging_voltage-key-light-mini][state]
-  dict({
+  StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'friendly_name': 'Frenck Charging voltage',
