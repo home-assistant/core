@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
-from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger, getLogger
@@ -32,7 +31,6 @@ from homeassistant.exceptions import (
     PlatformNotReady,
     RequiredParameterMissing,
 )
-from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -280,9 +278,13 @@ class EntityPlatform:
         hass = self.hass
         full_name = f"{self.domain}.{self.platform_name}"
 
-        with suppress(IntegrationNotFound):
+        try:
             self.entity_translations = await translation.async_get_translations(
                 hass, hass.config.language, "entity", {self.platform_name}
+            )
+        except Exception as err:  #  pylint: disable=broad-exception-caught
+            _LOGGER.debug(
+                "Could not load translations for %s", self.platform_name, exc_info=err
             )
 
         logger.info("Setting up %s", full_name)
