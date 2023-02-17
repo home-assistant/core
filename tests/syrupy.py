@@ -180,7 +180,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         cls, data: ir.IssueEntry
     ) -> SerializableData:
         """Prepare a Home Assistant issue registry entry for serialization."""
-        return IssueRegistryItemSnapshot(data.to_json())
+        return IssueRegistryItemSnapshot(data.to_json() | {"created": ANY})
 
     @classmethod
     def _serializable_state(cls, data: State) -> SerializableData:
