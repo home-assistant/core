@@ -9,7 +9,6 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -29,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
+from .coordinator import OralbActiveBluetoothProcessorCoordinator
 from .device import device_key_to_bluetooth_entity_key
 
 
@@ -118,7 +118,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the OralB BLE sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
+    coordinator: OralbActiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
@@ -140,3 +140,11 @@ class OralBBluetoothSensorEntity(
     def native_value(self) -> str | int | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    async def async_added_to_hass(self) -> None:
+        """Add subscription when added to hass."""
+        self.entity_description: OralBSensorDescription
+        if self.entity_description.requires_active_connection:
+            self.async_on_remove(
+                self.processor.coordinator.register_active(self.entity_key)
+            )
