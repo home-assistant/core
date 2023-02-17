@@ -14,7 +14,10 @@ from .conftest import SLEEPIQ_CONFIG, setup_platform
 
 async def test_import(hass: HomeAssistant) -> None:
     """Test that we can import a config entry."""
-    with patch("asyncsleepiq.AsyncSleepIQ.login"):
+    with patch("asyncsleepiq.AsyncSleepIQ.login"), patch(
+        "homeassistant.components.sleepiq.async_setup_entry",
+        return_value=True,
+    ):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: SLEEPIQ_CONFIG})
         await hass.async_block_till_done()
 
