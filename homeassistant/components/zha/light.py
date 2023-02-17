@@ -612,7 +612,9 @@ class BaseLight(LogMixin, light.LightEntity):
             )
             if self._debounced_member_refresh is not None:
                 self.debug("transition complete - refreshing group member states")
-                self.hass.async_create_background_task(
+                assert self.platform and self.platform.config_entry
+                self.platform.config_entry.async_create_background_task(
+                    self.hass,
                     self._debounced_member_refresh.async_call(),
                     "zha.light-refresh-debounced-member",
                 )

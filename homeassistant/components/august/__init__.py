@@ -192,7 +192,7 @@ class AugustData(AugustSubscriberMixin):
             # but it is not a fatal error as the lock
             # will recover automatically when it comes back online.
             self._config_entry.async_create_background_task(
-                self._async_initial_sync(), "august-initial-sync"
+                self._hass, self._async_initial_sync(), "august-initial-sync"
             )
 
     async def _async_initial_sync(self):
