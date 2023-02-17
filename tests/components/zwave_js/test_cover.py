@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import replace_value_of_zwave_value
 
@@ -35,7 +36,9 @@ AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
 FIBARO_SHUTTER_COVER_ENTITY = "cover.fgr_222_test_cover"
 
 
-async def test_window_cover(hass, client, chain_actuator_zws12, integration):
+async def test_window_cover(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
     """Test the cover entity."""
     node = chain_actuator_zws12
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -216,8 +219,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
 
 
 async def test_fibaro_FGR222_shutter_cover(
-    hass, client, fibaro_fgr222_shutter, integration
-):
+    hass: HomeAssistant, client, fibaro_fgr222_shutter, integration
+) -> None:
     """Test tilt function of the Fibaro Shutter devices."""
     state = hass.states.get(FIBARO_SHUTTER_COVER_ENTITY)
     assert state
@@ -294,8 +297,8 @@ async def test_fibaro_FGR222_shutter_cover(
 
 
 async def test_aeotec_nano_shutter_cover(
-    hass, client, aeotec_nano_shutter, integration
-):
+    hass: HomeAssistant, client, aeotec_nano_shutter, integration
+) -> None:
     """Test movement of an Aeotec Nano Shutter cover entity. Useful to make sure the stop command logic is handled properly."""
     node = aeotec_nano_shutter
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
@@ -410,7 +413,9 @@ async def test_aeotec_nano_shutter_cover(
     assert not open_args["value"]
 
 
-async def test_blind_cover(hass, client, iblinds_v2, integration):
+async def test_blind_cover(
+    hass: HomeAssistant, client, iblinds_v2, integration
+) -> None:
     """Test a blind cover entity."""
     state = hass.states.get(BLIND_COVER_ENTITY)
 
@@ -418,7 +423,9 @@ async def test_blind_cover(hass, client, iblinds_v2, integration):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
 
 
-async def test_shutter_cover(hass, client, qubino_shutter, integration):
+async def test_shutter_cover(
+    hass: HomeAssistant, client, qubino_shutter, integration
+) -> None:
     """Test a shutter cover entity."""
     state = hass.states.get(SHUTTER_COVER_ENTITY)
 
@@ -426,7 +433,9 @@ async def test_shutter_cover(hass, client, qubino_shutter, integration):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
 
-async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
+async def test_motor_barrier_cover(
+    hass: HomeAssistant, client, gdc_zw062, integration
+) -> None:
     """Test the cover entity."""
     node = gdc_zw062
 
@@ -597,8 +606,8 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
 
 
 async def test_motor_barrier_cover_no_primary_value(
-    hass, client, gdc_zw062_state, integration
-):
+    hass: HomeAssistant, client, gdc_zw062_state, integration
+) -> None:
     """Test the cover entity where primary value value is None."""
     node_state = replace_value_of_zwave_value(
         gdc_zw062_state,
@@ -623,8 +632,8 @@ async def test_motor_barrier_cover_no_primary_value(
 
 
 async def test_fibaro_FGR222_shutter_cover_no_tilt(
-    hass, client, fibaro_fgr222_shutter_state, integration
-):
+    hass: HomeAssistant, client, fibaro_fgr222_shutter_state, integration
+) -> None:
     """Test tilt function of the Fibaro Shutter devices with tilt value is None."""
     node_state = replace_value_of_zwave_value(
         fibaro_fgr222_shutter_state,

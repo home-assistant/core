@@ -415,7 +415,7 @@ async def test_get_action_capabilities(
     client: Client,
     climate_radio_thermostat_ct100_plus: Node,
     integration: ConfigEntry,
-):
+) -> None:
     """Test we get the expected action capabilities."""
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device(
@@ -582,7 +582,7 @@ async def test_get_action_capabilities_lock_triggers(
     client: Client,
     lock_schlage_be469: Node,
     integration: ConfigEntry,
-):
+) -> None:
     """Test we get the expected action capabilities for lock triggers."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
@@ -662,7 +662,7 @@ async def test_failure_scenarios(
     client: Client,
     hank_binary_switch: Node,
     integration: ConfigEntry,
-):
+) -> None:
     """Test failure scenarios."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(

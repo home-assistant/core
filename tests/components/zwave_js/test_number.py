@@ -5,6 +5,7 @@ import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -16,7 +17,9 @@ NUMBER_ENTITY = "number.thermostat_hvac_valve_control"
 VOLUME_NUMBER_ENTITY = "number.indoor_siren_6_default_volume_2"
 
 
-async def test_number(hass, client, aeotec_radiator_thermostat, integration):
+async def test_number(
+    hass: HomeAssistant, client, aeotec_radiator_thermostat, integration
+) -> None:
     """Test the number entity."""
     node = aeotec_radiator_thermostat
     state = hass.states.get(NUMBER_ENTITY)
@@ -81,8 +84,12 @@ def mock_client_fixture():
 
 
 async def test_number_no_target_value(
-    hass, client, no_target_value, aeotec_radiator_thermostat, integration
-):
+    hass: HomeAssistant,
+    client,
+    no_target_value,
+    aeotec_radiator_thermostat,
+    integration,
+) -> None:
     """Test the number entity with no target value."""
     # Test turn on setting value fails
     with pytest.raises(HomeAssistantError):
@@ -94,7 +101,9 @@ async def test_number_no_target_value(
         )
 
 
-async def test_number_writeable(hass, client, aeotec_radiator_thermostat):
+async def test_number_writeable(
+    hass: HomeAssistant, client, aeotec_radiator_thermostat
+) -> None:
     """Test the number entity where current value is writeable."""
     aeotec_radiator_thermostat.values["4-38-0-currentValue"].metadata.data[
         "writeable"
@@ -129,7 +138,9 @@ async def test_number_writeable(hass, client, aeotec_radiator_thermostat):
     client.async_send_command.reset_mock()
 
 
-async def test_volume_number(hass, client, aeotec_zw164_siren, integration):
+async def test_volume_number(
+    hass: HomeAssistant, client, aeotec_zw164_siren, integration
+) -> None:
     """Test the volume number entity."""
     node = aeotec_zw164_siren
     state = hass.states.get(VOLUME_NUMBER_ENTITY)
@@ -208,7 +219,9 @@ async def test_volume_number(hass, client, aeotec_zw164_siren, integration):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_disabled_basic_number(hass, ge_in_wall_dimmer_switch, integration):
+async def test_disabled_basic_number(
+    hass: HomeAssistant, ge_in_wall_dimmer_switch, integration
+) -> None:
     """Test number is created from Basic CC and is disabled."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(BASIC_NUMBER_ENTITY)

@@ -1,18 +1,21 @@
 """Test the Z-Wave JS button entities."""
+import pytest
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 
 
 async def test_ping_entity(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-    caplog,
-):
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test ping entity."""
     client.async_send_command.return_value = {"responded": True}
 

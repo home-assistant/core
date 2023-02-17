@@ -21,11 +21,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import DEHUMIDIFIER_ADC_T3000_ENTITY, HUMIDIFIER_ADC_T3000_ENTITY
 
 
-async def test_humidifier(hass, client, climate_adc_t3000, integration):
+async def test_humidifier(
+    hass: HomeAssistant, client, climate_adc_t3000, integration
+) -> None:
     """Test a humidity control command class entity."""
 
     node = climate_adc_t3000
@@ -424,8 +427,8 @@ async def test_humidifier(hass, client, climate_adc_t3000, integration):
 
 
 async def test_dehumidifier_missing_setpoint(
-    hass, client, climate_adc_t3000_missing_setpoint, integration
-):
+    hass: HomeAssistant, client, climate_adc_t3000_missing_setpoint, integration
+) -> None:
     """Test a humidity control command class entity."""
 
     entity_id = "humidifier.adc_t3000_missing_setpoint_dehumidifier"
@@ -455,8 +458,8 @@ async def test_dehumidifier_missing_setpoint(
 
 
 async def test_humidifier_missing_mode(
-    hass, client, climate_adc_t3000_missing_mode, integration
-):
+    hass: HomeAssistant, client, climate_adc_t3000_missing_mode, integration
+) -> None:
     """Test a humidity control command class entity."""
 
     node = climate_adc_t3000_missing_mode
@@ -513,7 +516,9 @@ async def test_humidifier_missing_mode(
     client.async_send_command.reset_mock()
 
 
-async def test_dehumidifier(hass, client, climate_adc_t3000, integration):
+async def test_dehumidifier(
+    hass: HomeAssistant, client, climate_adc_t3000, integration
+) -> None:
     """Test a humidity control command class entity."""
 
     node = climate_adc_t3000

@@ -32,6 +32,7 @@ from homeassistant.components.zwave_js.const import (
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.area_registry import async_get as async_get_area_reg
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
@@ -51,7 +52,9 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_set_config_parameter(hass, client, multisensor_6, integration):
+async def test_set_config_parameter(
+    hass: HomeAssistant, client, multisensor_6, integration
+) -> None:
     """Test the set_config_parameter service."""
     dev_reg = async_get_dev_reg(hass)
     ent_reg = async_get_ent_reg(hass)
@@ -363,12 +366,12 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
 
 
 async def test_set_config_parameter_gather(
-    hass,
+    hass: HomeAssistant,
     client,
     multisensor_6,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test the set_config_parameter service gather functionality."""
     # Test setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
@@ -402,7 +405,9 @@ async def test_set_config_parameter_gather(
     client.async_send_command.reset_mock()
 
 
-async def test_bulk_set_config_parameters(hass, client, multisensor_6, integration):
+async def test_bulk_set_config_parameters(
+    hass: HomeAssistant, client, multisensor_6, integration
+) -> None:
     """Test the bulk_set_partial_config_parameters service."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
@@ -612,12 +617,12 @@ async def test_bulk_set_config_parameters(hass, client, multisensor_6, integrati
 
 
 async def test_bulk_set_config_parameters_gather(
-    hass,
+    hass: HomeAssistant,
     client,
     multisensor_6,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test the bulk_set_partial_config_parameters service gather functionality."""
     # Test bulk setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
@@ -651,8 +656,11 @@ async def test_bulk_set_config_parameters_gather(
 
 
 async def test_refresh_value(
-    hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
-):
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+) -> None:
     """Test the refresh_value service."""
     # Test polling the primary value
     client.async_send_command.return_value = {"result": 2}
@@ -731,7 +739,9 @@ async def test_refresh_value(
         )
 
 
-async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
+async def test_set_value(
+    hass: HomeAssistant, client, climate_danfoss_lc_13, integration
+) -> None:
     """Test set_value service."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device(
@@ -897,8 +907,8 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
 
 
 async def test_set_value_string(
-    hass, client, climate_danfoss_lc_13, lock_schlage_be469, integration
-):
+    hass: HomeAssistant, client, climate_danfoss_lc_13, lock_schlage_be469, integration
+) -> None:
     """Test set_value service converts number to string when needed."""
     client.async_send_command.return_value = {"success": True}
 
@@ -929,7 +939,9 @@ async def test_set_value_string(
     assert args["value"] == "12345"
 
 
-async def test_set_value_options(hass, client, aeon_smart_switch_6, integration):
+async def test_set_value_options(
+    hass: HomeAssistant, client, aeon_smart_switch_6, integration
+) -> None:
     """Test set_value service with options."""
     await hass.services.async_call(
         DOMAIN,
@@ -960,12 +972,12 @@ async def test_set_value_options(hass, client, aeon_smart_switch_6, integration)
 
 
 async def test_set_value_gather(
-    hass,
+    hass: HomeAssistant,
     client,
     multisensor_6,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test the set_value service gather functionality."""
     # Test setting value by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
@@ -1003,12 +1015,12 @@ async def test_set_value_gather(
 
 
 async def test_multicast_set_value(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_danfoss_lc_13,
     climate_eurotronic_spirit_z,
     integration,
-):
+) -> None:
     """Test multicast_set_value service."""
     # Test successful multicast call
     await hass.services.async_call(
@@ -1279,12 +1291,12 @@ async def test_multicast_set_value(
 
 
 async def test_multicast_set_value_options(
-    hass,
+    hass: HomeAssistant,
     client,
     bulb_6_multi_color,
     light_color_null_values,
     integration,
-):
+) -> None:
     """Test multicast_set_value service with options."""
     await hass.services.async_call(
         DOMAIN,
@@ -1325,12 +1337,12 @@ async def test_multicast_set_value_options(
 
 
 async def test_multicast_set_value_string(
-    hass,
+    hass: HomeAssistant,
     client,
     lock_id_lock_as_id150,
     lock_schlage_be469,
     integration,
-):
+) -> None:
     """Test multicast_set_value service converts number to string when needed."""
     client.async_send_command.return_value = {"success": True}
 
@@ -1360,12 +1372,12 @@ async def test_multicast_set_value_string(
 
 
 async def test_ping(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_danfoss_lc_13,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test ping service."""
     dev_reg = async_get_dev_reg(hass)
     device_radio_thermostat = dev_reg.async_get_device(
@@ -1498,12 +1510,12 @@ async def test_ping(
 
 
 async def test_invoke_cc_api(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_danfoss_lc_13,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
-):
+) -> None:
     """Test invoke_cc_api service."""
     dev_reg = async_get_dev_reg(hass)
     device_radio_thermostat = dev_reg.async_get_device(
