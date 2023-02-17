@@ -211,8 +211,11 @@ class HaBleakClientWrapper(BleakClient):
 
     async def clear_cache(self) -> bool:
         """Clear the GATT cache."""
+        _LOGGER.warning("clear_cache called for %s", self.__address)
         if self._backend is not None and hasattr(self._backend, "clear_cache"):
+            _LOGGER.warning("clear_cache using backend for %s", self.__address)
             return await self._backend.clear_cache()  # type: ignore[no-any-return]
+        _LOGGER.warning("clear_cache using clear_cache for %s", self.__address)
         return await clear_cache(self.__address)
 
     def set_disconnected_callback(
