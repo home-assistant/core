@@ -1933,3 +1933,21 @@ async def test_state_changed_events_to_not_leak_contexts(hass: HomeAssistant) ->
     gc.collect()
 
     assert len(_get_by_type("homeassistant.core.Context")) == init_count
+
+
+async def test_background_task(hass):
+    """Test background tasks being quit."""
+    result = asyncio.Future()
+
+    async def test_task():
+        try:
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+            raise
+
+    task = hass.async_create_background_task(test_task(), "happy task")
+    assert "happy task" in str(task)
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    assert result.result() == ha.CoreState.stopping
