@@ -24,13 +24,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import (
-    ATTR_EVENT_ID,
-    ATTR_EVENT_SCORE,
-    DEFAULT_ATTRIBUTION,
-    DEFAULT_BRAND,
-    DOMAIN,
-)
+from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
 from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
 
@@ -318,7 +312,6 @@ class EventEntityMixin(ProtectDeviceEntity):
         if self._event is None:
             return attrs
 
-        attrs[ATTR_EVENT_ID] = self._event.id
         attrs[ATTR_EVENT_SCORE] = self._event.score
         return attrs
 
