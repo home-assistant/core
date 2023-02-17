@@ -9,6 +9,7 @@ from homeassistant.components.risco import (
     CannotConnectError,
     UnauthorizedError,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
@@ -120,7 +121,9 @@ def _no_zones_and_partitions():
 
 
 @pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
-async def test_error_on_login(hass, login_with_error, cloud_config_entry):
+async def test_error_on_login(
+    hass: HomeAssistant, login_with_error, cloud_config_entry
+) -> None:
     """Test error on login."""
     await hass.config_entries.async_setup(cloud_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -168,8 +171,12 @@ def _save_mock():
 
 @pytest.mark.parametrize("events", [TEST_EVENTS])
 async def test_cloud_setup(
-    hass, two_zone_cloud, _set_utc_time_zone, _save_mock, setup_risco_cloud
-):
+    hass: HomeAssistant,
+    two_zone_cloud,
+    _set_utc_time_zone,
+    _save_mock,
+    setup_risco_cloud,
+) -> None:
     """Test entity setup."""
     registry = er.async_get(hass)
     for id in ENTITY_IDS.values():
@@ -193,7 +200,9 @@ async def test_cloud_setup(
         _check_state(hass, category, entity_id)
 
 
-async def test_local_setup(hass, setup_risco_local, _no_zones_and_partitions):
+async def test_local_setup(
+    hass: HomeAssistant, setup_risco_local, _no_zones_and_partitions
+) -> None:
     """Test entity setup."""
     registry = er.async_get(hass)
     for id in ENTITY_IDS.values():

@@ -13,8 +13,8 @@ from yalexs.activity import (
     Activity,
     ActivityType,
 )
-from yalexs.doorbell import DoorbellDetail
-from yalexs.lock import LockDoorStatus
+from yalexs.doorbell import Doorbell, DoorbellDetail
+from yalexs.lock import Lock, LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
 from homeassistant.components.binary_sensor import (
@@ -196,7 +196,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     def __init__(
-        self, data, device, description: BinarySensorEntityDescription
+        self, data: AugustData, device: Lock, description: BinarySensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
@@ -207,7 +207,6 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._attr_unique_id = (
             f"{self._device_id}_{cast(str, description.name).lower()}"
         )
-        self._update_from_data()
 
     @callback
     def _update_from_data(self):
@@ -231,6 +230,11 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._attr_available = self._detail.bridge_is_online
         self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN
 
+    async def async_added_to_hass(self) -> None:
+        """Set the initial state when adding to hass."""
+        self._update_from_data()
+        await super().async_added_to_hass()
+
 
 class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     """Representation of an August binary sensor."""
@@ -238,7 +242,10 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     entity_description: AugustBinarySensorEntityDescription
 
     def __init__(
-        self, data, device, description: AugustBinarySensorEntityDescription
+        self,
+        data: AugustData,
+        device: Doorbell,
+        description: AugustBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
@@ -249,7 +256,6 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._attr_unique_id = (
             f"{self._device_id}_{cast(str, description.name).lower()}"
         )
-        self._update_from_data()
 
     @callback
     def _update_from_data(self):
@@ -265,14 +271,8 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     def _schedule_update_to_recheck_turn_off_sensor(self):
         """Schedule an update to recheck the sensor to see if it is ready to turn off."""
-
         # If the sensor is already off there is nothing to do
         if not self.is_on:
-            return
-
-        # self.hass is only available after setup is completed
-        # and we will recheck in async_added_to_hass
-        if not self.hass:
             return
 
         @callback
@@ -297,5 +297,10 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call the mixin to subscribe and setup an async_track_point_in_utc_time to turn off the sensor if needed."""
-        self._schedule_update_to_recheck_turn_off_sensor()
+        self._update_from_data()
         await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When removing cancel any scheduled updates."""
+        self._cancel_any_pending_updates()
+        await super().async_will_remove_from_hass()
