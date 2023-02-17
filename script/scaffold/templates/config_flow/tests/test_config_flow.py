@@ -1,5 +1,8 @@
 """Test the NEW_NAME config flow."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
@@ -8,7 +11,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant) -> None:
+@pytest.fixture(autouse=True, name="mock_setup_entry")
+def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.NEW_DOMAIN.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -19,10 +31,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         return_value=True,
-    ), patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
