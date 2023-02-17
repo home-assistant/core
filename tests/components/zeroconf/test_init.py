@@ -1339,3 +1339,47 @@ async def test_start_with_frontend(
         await hass.async_block_till_done()
 
     mock_async_zeroconf.async_register_service.assert_called_once()
+
+
+async def test_zeroconf_removed(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
+    """Test we dismiss flows when a PTR record is removed."""
+
+    def _device_removed_mock(ipv6, zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf,
+            "_http._tcp.local.",
+            "Shelly108._http._tcp.local.",
+            ServiceStateChange.Removed,
+        )
+
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {
+            "_http._tcp.local.": [
+                {
+                    "domain": "shelly",
+                    "name": "shelly*",
+                }
+            ]
+        },
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow,
+        "async_progress_by_init_data_type",
+        return_value=[{"flow_id": "mock_flow_id"}],
+    ) as mock_async_progress_by_init_data_type, patch.object(
+        hass.config_entries.flow, "async_abort"
+    ) as mock_async_abort, patch.object(
+        zeroconf, "HaAsyncServiceBrowser", side_effect=_device_removed_mock
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_zeroconf_info_mock("FFAADDCC11DD"),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
+    assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"
