@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable
+from dataclasses import dataclass
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import chain, groupby
@@ -36,7 +37,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -270,24 +271,16 @@ def subscribe(
     return remove
 
 
+@dataclass
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    def __init__(
-        self,
-        topic: str,
-        matcher: Any,
-        job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None],
-        qos: int = 0,
-        encoding: str | None = "utf-8",
-    ) -> None:
-        """Initialize the record of an active subscription."""
-        self.topic = topic
-        self.matcher = matcher
-        self.job = job
-        self.qos = qos
-        self.encoding = encoding
-        self.initialized = False
+    topic: str
+    matcher: Any
+    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None]
+    qos: int = 0
+    encoding: str | None = "utf-8"
+    initialized: bool = False
 
 
 class MqttClientSetup:
@@ -375,7 +368,6 @@ class MQTT:
         self.conf = conf
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
-        self._pending_subscriptions: dict[str, int] = {}
         self._subscription_debouncer = Debouncer(
             self.hass,
             _LOGGER,
@@ -388,10 +380,12 @@ class MQTT:
         self._last_subscribe = time.time()
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
-        self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
         self._subscriptions_lock = (
             asyncio.Lock()
-        )  # Prevents parallel calls to the MQTT client
+        )  # Prevents subscriptions being consumed while being added
+        self._pending_subscriptions: dict[str, int] = {}
+
+        self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
         self._pending_operations: dict[int, asyncio.Event] = {}
         self._pending_operations_condition = asyncio.Condition()
 
@@ -671,8 +665,6 @@ class MQTT:
             )
             return
 
-        self.connected = True
-        dispatcher_send(self.hass, MQTT_CONNECTED)
         _LOGGER.info(
             "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
@@ -680,7 +672,25 @@ class MQTT:
             result_code,
         )
 
-        self.hass.create_task(self._async_resubscribe())
+        self.hass.create_task(self._async_connect())
+
+    async def _async_connect(self) -> None:
+        """Resubscribe on reconnect."""
+
+        async_dispatcher_send(self.hass, MQTT_CONNECTED)
+
+        # Group subscriptions to only re-subscribe once for each topic.
+        keyfunc = attrgetter("topic")
+        async with self._subscriptions_lock:
+            self.connected = True
+            self._pending_subscriptions = {
+                topic: max(subscription.qos for subscription in subs)
+                for topic, subs in groupby(
+                    sorted(self.subscriptions, key=keyfunc), keyfunc
+                )
+            }
+
+        self.hass.async_create_task(self._subscription_debouncer.async_call())
 
         if (
             CONF_BIRTH_MESSAGE in self.conf
@@ -698,18 +708,7 @@ class MQTT:
                 )
 
             birth_message = PublishMessage(**self.conf[CONF_BIRTH_MESSAGE])
-            asyncio.run_coroutine_threadsafe(
-                publish_birth_message(birth_message), self.hass.loop
-            )
-
-    async def _async_resubscribe(self) -> None:
-        """Resubscribe on reconnect."""
-        # Group subscriptions to only re-subscribe once for each topic.
-        keyfunc = attrgetter("topic")
-        self._pending_subscriptions = {
-            topic: max(subscription.qos for subscription in subs)
-            for topic, subs in groupby(sorted(self.subscriptions, key=keyfunc), keyfunc)
-        }
+            await publish_birth_message(birth_message)
 
     def _mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
