@@ -1,5 +1,6 @@
 """Tests for Airversa AP2 Air Purifier."""
 
+from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, PERCENTAGE
 from homeassistant.helpers.entity import EntityCategory
@@ -15,7 +16,7 @@ from ..common import (
 
 
 async def test_airversa_ap2_setup(hass):
-    """Test that an Ecbobee occupancy sensor be correctly setup in HA."""
+    """Test that an Airversa air purifier is correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "airversa_ap2.json")
     await setup_test_accessories(hass, accessories)
 
@@ -31,6 +32,23 @@ async def test_airversa_ap2_setup(hass):
             serial_number="1234",
             devices=[],
             entities=[
+                EntityTestInfo(
+                    entity_id="fan.airversa_ap2_1808_airpurifier",
+                    friendly_name="Airversa AP2 1808 AirPurifier",
+                    unique_id="00:00:00:00:00:00_1_32832",
+                    supported_features=FanEntityFeature.SET_SPEED,
+                    capabilities={
+                        "preset_modes": None,
+                    },
+                    state="off",
+                ),
+                EntityTestInfo(
+                    entity_id="switch.airversa_ap2_1808_automatic_fan_speed",
+                    friendly_name="Airversa AP2 1808 Automatic Fan Speed",
+                    unique_id="00:00:00:00:00:00_1_32832_32837",
+                    entity_category=EntityCategory.CONFIG,
+                    state="on",
+                ),
                 EntityTestInfo(
                     entity_id="switch.airversa_ap2_1808_lock_physical_controls",
                     friendly_name="Airversa AP2 1808 Lock Physical Controls",
