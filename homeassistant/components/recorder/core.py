@@ -28,6 +28,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
+    TARGET_MAX_ENTITIES,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import (
@@ -77,6 +78,7 @@ from .queries import (
     find_shared_attributes_id,
     find_shared_data_id,
     get_recent_shared_attributes,
+    get_recent_shared_event_data,
 )
 from .run_history import RunHistory
 from .tasks import (
@@ -125,7 +127,8 @@ EXPIRE_AFTER_COMMITS = 120
 # - The number of overlapping attributes
 # - How frequently states with overlapping attributes will change
 # - How much memory our low end hardware has
-STATE_ATTRIBUTES_ID_CACHE_SIZE = 2048
+# - The expected maximum number of entities
+STATE_ATTRIBUTES_ID_CACHE_SIZE = TARGET_MAX_ENTITIES
 EVENT_DATA_ID_CACHE_SIZE = 2048
 
 SHUTDOWN_TASK = object()
@@ -852,6 +855,8 @@ class Recorder(threading.Thread):
             return
 
         shared_data = shared_data_bytes.decode("utf-8")
+        if not self._event_data_ids():
+            self._load_recent_event_attributes()
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
             dbevent.event_data_rel = pending_event_data
@@ -878,7 +883,8 @@ class Recorder(threading.Thread):
 
         Since the _state_attributes_ids cache is empty at startup
         we restore it from the database to avoid having to look up
-        the attributes in the database for every state change.
+        the attributes in the database for every state change
+        until its primed.
         """
         assert self.event_session is not None
         with self.event_session.no_autoflush:
@@ -886,6 +892,20 @@ class Recorder(threading.Thread):
                 get_recent_shared_attributes(STATE_ATTRIBUTES_ID_CACHE_SIZE)
             ).fetchall():
                 self._state_attributes_ids[shared_attrs] = id_
+
+    def _load_recent_event_attributes(self) -> None:
+        """Load recent event attributes from the database.
+
+        Since the _event_data_ids cache is empty at startup
+        we restore it from the database to avoid having to look up
+        the data in the database for every event until its primed.
+        """
+        assert self.event_session is not None
+        with self.event_session.no_autoflush:
+            for id_, shared_data in self.event_session.execute(
+                get_recent_shared_event_data(EVENT_DATA_ID_CACHE_SIZE)
+            ).fetchall():
+                self._event_data_ids[shared_data] = id_
 
     def _process_state_changed_event_into_session(self, event: Event) -> None:
         """Process a state_changed event into the session."""

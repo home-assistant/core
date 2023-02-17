@@ -19,6 +19,12 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
+# The maximum number of entities we expect for large installations.
+# This value is used to limit the size of the state attributes we
+# will cache in memory and the maximum number of websocket messages
+# that are expected to be pending per connection at any given time.
+TARGET_MAX_ENTITIES: Final = 6144
+
 
 class Platform(StrEnum):
     """Available entity platforms."""

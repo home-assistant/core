@@ -21,10 +21,19 @@ from .db_schema import (
 
 
 def get_recent_shared_attributes(count: int) -> StatementLambdaElement:
-    """Find an attributes_id by hash and shared_attrs."""
+    """Load recent shared attributes from the database."""
     return lambda_stmt(
         lambda: select(StateAttributes.attributes_id, StateAttributes.shared_attrs)
         .order_by(StateAttributes.attributes_id.desc())
+        .limit(count)
+    )
+
+
+def get_recent_shared_event_data(count: int) -> StatementLambdaElement:
+    """Load recent shared event data from the database."""
+    return lambda_stmt(
+        lambda: select(EventData.data_id, EventData.shared_data)
+        .order_by(EventData.data_id.desc())
         .limit(count)
     )
 
