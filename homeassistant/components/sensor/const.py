@@ -168,7 +168,7 @@ class SensorDeviceClass(StrEnum):
     ENERGY_STORAGE = "energy_storage"
     """Stored energy.
 
-    Use this device class for sensors measuring stored energy, for example the amount 
+    Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
