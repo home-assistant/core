@@ -30,6 +30,7 @@ import multidict
 import pytest
 import pytest_socket
 import requests_mock
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -61,6 +62,7 @@ from homeassistant.util import dt as dt_util, location
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -1382,3 +1384,9 @@ def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
     """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
+
+
+@pytest.fixture
+def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+    """Return snapshot assertion fixture with the Home Assistant extension."""
+    return snapshot.use_extension(HomeAssistantSnapshotExtension)
