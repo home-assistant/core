@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.weather import ATTR_FORECAST, DOMAIN
@@ -15,7 +16,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(recorder_mock, hass: HomeAssistant) -> None:
+async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test weather attributes to be excluded."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
     hass.config.units = METRIC_SYSTEM
