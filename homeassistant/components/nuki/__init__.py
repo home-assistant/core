@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from typing import Generic, TypeVar
 
@@ -13,10 +14,13 @@ from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.network import get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -24,6 +28,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CONF_CUSTOM_URL,
+    CONF_WEBHOOK_ENABLED,
     DATA_BRIDGE,
     DATA_COORDINATOR,
     DATA_LOCKS,
@@ -40,10 +46,41 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(seconds=30)
+CALLBACK_URL = f"/api/{DOMAIN}/callback"
 
 
 def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
     return bridge.locks, bridge.openers
+
+
+def _register_webhook(bridge: NukiBridge, entry_id: str, url: str) -> bool:
+    # Register HA URL as webhook if not already
+    callbacks = bridge.callback_list()
+    for callback in callbacks["callbacks"]:
+        if entry_id in callback["url"]:
+            if callback["url"] == url:
+                return True
+            bridge.callback_remove(callback["id"])
+
+    if bridge.callback_add(url)["success"]:
+        return True
+
+    return False
+
+
+def _remove_webhook(bridge: NukiBridge, entry_id: str) -> bool:
+    # Remove webhook if set
+    callbacks = bridge.callback_list()
+    for callback in callbacks["callbacks"]:
+        if entry_id in callback["url"]:
+            bridge.callback_remove(callback["id"])
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nuki component."""
+    hass.http.register_view(NukiCallbackView)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -88,6 +125,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=info["versions"]["firmwareVersion"],
     )
 
+    if entry.data.get(CONF_WEBHOOK_ENABLED):
+        hass_url = get_url(hass)
+
+        custom_url = entry.data.get(CONF_CUSTOM_URL)
+        if custom_url is not None:
+            hass_url = custom_url
+
+        url = f"{hass_url}{CALLBACK_URL}/{entry.entry_id}"
+        try:
+            async with async_timeout.timeout(10):
+                await hass.async_add_executor_job(
+                    _register_webhook, bridge, entry.entry_id, url
+                )
+        except InvalidCredentialsException as err:
+            raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
+        except RequestException as err:
+            raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
+
     coordinator = NukiCoordinator(hass, bridge, locks, openers)
 
     hass.data[DOMAIN][entry.entry_id] = {
@@ -108,6 +163,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Nuki entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    try:
+        async with async_timeout.timeout(10):
+            await hass.async_add_executor_job(
+                _remove_webhook,
+                hass.data[DOMAIN][entry.entry_id][DATA_BRIDGE],
+                entry.entry_id,
+            )
+    except InvalidCredentialsException as err:
+        raise UpdateFailed(
+            f"Unable to remove callback. Invalid credentials for Bridge: {err}"
+        ) from err
+    except RequestException as err:
+        raise UpdateFailed(
+            f"Unable to remove callback. Error communicating with Bridge: {err}"
+        ) from err
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -219,3 +290,36 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
             "sw_version": self._nuki_device.firmware_version,
             "via_device": (DOMAIN, self.coordinator.bridge_id),
         }
+
+
+class NukiCallbackView(HomeAssistantView):
+    """View to handle callback requests."""
+
+    requires_auth = False
+    url = CALLBACK_URL + "/{entry_id}"
+    name = url[1:].replace("/", ":")
+
+    async def post(self, request, entry_id):
+        """Respond to callback requests."""
+        hass = request.app["hass"]
+
+        if entry_id not in hass.data[DOMAIN]:
+            _LOGGER.error("Entry not found for provided Id")
+            return
+
+        try:
+            data = await request.json()
+        except ValueError:
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
+
+        locks = hass.data[DOMAIN][entry_id][DATA_LOCKS]
+        openers = hass.data[DOMAIN][entry_id][DATA_OPENERS]
+
+        devices = [x for x in locks + openers if x.nuki_id == data["nukiId"]]
+        if len(devices) == 1:
+            devices[0].update_from_callback(data)
+
+        coordinator = hass.data[DOMAIN][entry_id][DATA_COORDINATOR]
+        coordinator.async_set_updated_data(None)
+
+        return

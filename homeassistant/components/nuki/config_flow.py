@@ -13,7 +13,14 @@ from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import (
+    CONF_CUSTOM_URL,
+    CONF_WEBHOOK_ENABLED,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_WEBHOOK_ENABLED,
+    DOMAIN,
+)
 from .helpers import CannotConnect, InvalidAuth, parse_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +30,8 @@ USER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Required(CONF_TOKEN): str,
+        vol.Optional(CONF_WEBHOOK_ENABLED, default=DEFAULT_WEBHOOK_ENABLED): bool,
+        vol.Optional(CONF_CUSTOM_URL): str,
     }
 )
 
@@ -77,6 +86,10 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST, default=discovery_info.ip): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_TOKEN): str,
+                vol.Optional(
+                    CONF_WEBHOOK_ENABLED, default=DEFAULT_WEBHOOK_ENABLED
+                ): bool,
+                vol.Optional(CONF_CUSTOM_URL): str,
             }
         )
 

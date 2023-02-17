@@ -16,5 +16,9 @@ DATA_COORDINATOR = "nuki_coordinator"
 # Defaults
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 20
+DEFAULT_WEBHOOK_ENABLED = False
+
+CONF_WEBHOOK_ENABLED = "webhook_enabled"
+CONF_CUSTOM_URL = "hass_url_override"
 
 ERROR_STATES = (0, 254, 255)
