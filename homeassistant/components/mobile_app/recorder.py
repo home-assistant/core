@@ -18,6 +18,7 @@ def exclude_attributes(hass: HomeAssistant) -> set[str]:
         "Time to Empty",
         "Time to Full Charge",
         # Android mobile app
+        "location",
         "in_vehicle",
         "on_bicycle",
         "on_foot",
