@@ -474,7 +474,7 @@ class StateAttributes(Base):
         if base_platform_attrs := exclude_attrs_by_domain.get(domain):
             exclude_attrs |= base_platform_attrs
         if (reg_ent := entity_registry.async_get(state.entity_id)) and (
-            integration_attrs := exclude_attrs_by_domain.get(reg_ent.domain)
+            integration_attrs := exclude_attrs_by_domain.get(reg_ent.platform)
         ):
             exclude_attrs |= integration_attrs
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
