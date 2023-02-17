@@ -102,7 +102,7 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
 _LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.DEBUG)
 
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
