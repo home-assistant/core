@@ -315,12 +315,6 @@
         }
       }
     },
-    "apprise": {
-      "name": "Apprise",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "aprs": {
       "name": "APRS",
       "integration_type": "hub",
