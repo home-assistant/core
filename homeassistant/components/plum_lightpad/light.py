@@ -50,16 +50,15 @@ async def async_setup_entry(
         setup_entities(device)
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
-    entry.async_on_unload(
-        hass.async_create_background_task(
-            plum.discover(
-                hass.loop,
-                loadListener=new_load,
-                lightpadListener=new_lightpad,
-                websession=device_web_session,
-            ),
-            "plum.light-discover",
-        ).cancel
+    entry.async_create_background_task(
+        hass,
+        plum.discover(
+            hass.loop,
+            loadListener=new_load,
+            lightpadListener=new_lightpad,
+            websession=device_web_session,
+        ),
+        "plum.light-discover",
     )
 
 
