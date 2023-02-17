@@ -483,7 +483,8 @@ class SonosDiscoveryManager:
         if uid not in self.data.discovery_known:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
-        self.hass.async_create_background_task(
+        self.entry.async_create_background_task(
+            self.hass,
             self._async_handle_discovery_message(
                 uid,
                 discovered_ip,
