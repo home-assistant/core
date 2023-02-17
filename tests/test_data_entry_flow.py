@@ -598,10 +598,32 @@ async def test_find_flows_by_init_data_type(
     )
     await manager.async_init("test", context={"init_step": "first"}, data=wifi_data)
 
-    bluetooth_flows = manager.async_progress_by_init_data_type(BluetoothDiscoveryData)
-    assert len(bluetooth_flows) == 1
+    assert (
+        len(
+            manager.async_progress_by_init_data_type(
+                BluetoothDiscoveryData, lambda data: True
+            )
+        )
+    ) == 1
+    assert (
+        len(
+            manager.async_progress_by_init_data_type(
+                BluetoothDiscoveryData,
+                lambda data: bool(data.address == "aa:bb:cc:dd:ee:ff"),
+            )
+        )
+    ) == 1
+    assert (
+        len(
+            manager.async_progress_by_init_data_type(
+                BluetoothDiscoveryData, lambda data: bool(data.address == "not it")
+            )
+        )
+    ) == 0
 
-    wifi_flows = manager.async_progress_by_init_data_type(WiFiDiscoveryData)
+    wifi_flows = manager.async_progress_by_init_data_type(
+        WiFiDiscoveryData, lambda data: True
+    )
     assert len(wifi_flows) == 1
 
     bluetooth_result = await manager.async_configure(
@@ -614,14 +636,20 @@ async def test_find_flows_by_init_data_type(
     assert result["handler"] == "test"
     assert result["data"] == {"init": bluetooth_data, "user": ["SECOND-DATA"]}
 
-    bluetooth_flows = manager.async_progress_by_init_data_type(BluetoothDiscoveryData)
+    bluetooth_flows = manager.async_progress_by_init_data_type(
+        BluetoothDiscoveryData, lambda data: True
+    )
     assert len(bluetooth_flows) == 0
 
-    wifi_flows = manager.async_progress_by_init_data_type(WiFiDiscoveryData)
+    wifi_flows = manager.async_progress_by_init_data_type(
+        WiFiDiscoveryData, lambda data: True
+    )
     assert len(wifi_flows) == 1
 
     manager.async_abort(wifi_flows[0]["flow_id"])
 
-    wifi_flows = manager.async_progress_by_init_data_type(WiFiDiscoveryData)
+    wifi_flows = manager.async_progress_by_init_data_type(
+        WiFiDiscoveryData, lambda data: True
+    )
     assert len(wifi_flows) == 0
     assert len(manager.async_progress()) == 0
