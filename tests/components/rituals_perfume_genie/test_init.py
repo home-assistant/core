@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from .common import init_integration, mock_config_entry
 
 
-async def test_config_entry_not_ready(hass: HomeAssistant):
+async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     """Test the Rituals configuration entry setup if connection to Rituals is missing."""
     config_entry = mock_config_entry(unique_id="id_123_not_ready")
     config_entry.add_to_hass(hass)

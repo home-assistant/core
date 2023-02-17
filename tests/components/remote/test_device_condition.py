@@ -8,7 +8,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.remote import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -29,7 +30,11 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_registry, entity_registry):
+async def test_get_conditions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a remote."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -67,12 +72,12 @@ async def test_get_conditions(hass, device_registry, entity_registry):
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -105,7 +110,11 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_get_condition_capabilities(hass, device_registry, entity_registry):
+async def test_get_condition_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected capabilities from a remote condition."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -131,7 +140,9 @@ async def test_get_condition_capabilities(hass, device_registry, entity_registry
         assert capabilities == expected_capabilities
 
 
-async def test_if_state(hass, calls, enable_custom_integrations):
+async def test_if_state(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for turn_on and turn_off conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -205,7 +216,9 @@ async def test_if_state(hass, calls, enable_custom_integrations):
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
-async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_for_condition(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for firing if condition is on with delay."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=10)
