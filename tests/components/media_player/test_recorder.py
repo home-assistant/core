@@ -38,7 +38,9 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
             native_states = []
             for db_state, db_state_attributes in session.query(
                 States, StateAttributes
-            ).filter(States.attributes_id == StateAttributes.attributes_id):
+            ).outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            ):
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)
