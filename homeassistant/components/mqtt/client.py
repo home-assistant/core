@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any, cast
 import uuid
 
 import async_timeout
-import attr
 import certifi
 
 from homeassistant.config_entries import ConfigEntry
@@ -276,15 +275,24 @@ def subscribe(
     return remove
 
 
-@attr.s(slots=True, frozen=True)
 class Subscription:
     """Class to hold data about an active subscription."""
 
-    topic: str = attr.ib()
-    matcher: Any = attr.ib()
-    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None] = attr.ib()
-    qos: int = attr.ib(default=0)
-    encoding: str | None = attr.ib(default="utf-8")
+    def __init__(
+        self,
+        topic: str,
+        matcher: Any,
+        job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None],
+        qos: int = 0,
+        encoding: str | None = "utf-8",
+    ) -> None:
+        """Initialize the record of an active subscription."""
+        self.topic = topic
+        self.matcher = matcher
+        self.job = job
+        self.qos = qos
+        self.encoding = encoding
+        self.initialized = False
 
 
 class MqttClientSetup:
@@ -752,17 +760,24 @@ class MQTT:
                     )
                     continue
 
-            self.hass.async_run_hass_job(
-                subscription.job,
-                ReceiveMessage(
-                    msg.topic,
-                    payload,
-                    msg.qos,
-                    msg.retain,
-                    subscription.topic,
-                    timestamp,
-                ),
-            )
+            # Skip messages for non-wildcard topics where RETAIN=1, and we have
+            # already received a RETAIN=1 message.
+            if wildcard_topic(subscription.topic) or not (
+                msg.retain and subscription.initialized
+            ):
+                if msg.retain:
+                    subscription.initialized = True
+                self.hass.async_run_hass_job(
+                    subscription.job,
+                    ReceiveMessage(
+                        msg.topic,
+                        payload,
+                        msg.qos,
+                        msg.retain,
+                        subscription.topic,
+                        timestamp,
+                    ),
+                )
         self._mqtt_data.state_write_requests.process_write_state_requests()
 
     def _mqtt_on_callback(
