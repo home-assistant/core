@@ -45,7 +45,9 @@ async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Lig
     return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
 
-async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_global_service_bad_device(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
     """Test global service, invalid device ID."""
 
     nvr = ufp.api.bootstrap.nvr
@@ -64,7 +66,7 @@ async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixtur
 
 async def test_global_service_exception(
     hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test global service, unexpected error."""
 
     nvr = ufp.api.bootstrap.nvr
@@ -83,7 +85,7 @@ async def test_global_service_exception(
 
 async def test_add_doorbell_text(
     hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test add_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
@@ -101,7 +103,7 @@ async def test_add_doorbell_text(
 
 async def test_remove_doorbell_text(
     hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test remove_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
@@ -119,7 +121,7 @@ async def test_remove_doorbell_text(
 
 async def test_set_default_doorbell_text(
     hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
-):
+) -> None:
     """Test set_default_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
@@ -140,7 +142,7 @@ async def test_set_chime_paired_doorbells(
     ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
-):
+) -> None:
     """Test set_chime_paired_doorbells."""
 
     ufp.api.update_device = AsyncMock()
