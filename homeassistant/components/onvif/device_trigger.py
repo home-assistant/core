@@ -1,5 +1,5 @@
 """Provides device automations for ONVIF."""
-from typing import List
+from typing import List, Optional
 
 import voluptuous as vol
 
@@ -11,6 +11,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
+from ...helpers.trigger import TriggerInfo
 from .const import CONF_SUBTYPE, CONF_UNIQUE_ID, DOMAIN
 from .device import ONVIFDevice
 
@@ -32,7 +33,10 @@ async def async_get_triggers(
 
     triggers: list[dict[str, str]] = []
     for entry_id in device_conf.config_entries:
-        config_entry: ConfigEntry = hass.config_entries.async_get_entry(entry_id)
+        config_entry: Optional[ConfigEntry] = hass.config_entries.async_get_entry(
+            entry_id
+        )
+        assert config_entry is not None
 
         if config_entry.domain != DOMAIN:
             continue
@@ -57,7 +61,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     config = TRIGGER_SCHEMA(config)
@@ -70,5 +74,5 @@ async def async_attach_trigger(
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )

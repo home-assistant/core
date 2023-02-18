@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
 from logging import DEBUG, WARNING
+from typing import Optional
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
@@ -241,7 +242,7 @@ class EventManager:
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
-            event: Event = await parser(self.unique_id, msg)
+            event: Optional[Event] = await parser(self.unique_id, msg)
 
             if not event:
                 LOGGER.info("Unable to parse event from %s: %s", self.unique_id, msg)
