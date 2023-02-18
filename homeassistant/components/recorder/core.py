@@ -185,6 +185,7 @@ class Recorder(threading.Thread):
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
         self.run_history = RunHistory()
+        self._entity_sources = entity_sources(hass)
 
         # The entity_filter is exposed on the recorder instance so that
         # it can be used to see if an entity is being recorded and is called
@@ -877,7 +878,7 @@ class Recorder(threading.Thread):
             dbstate = States.from_event(event)
             shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
                 event,
-                entity_sources(self.hass),
+                self._entity_sources,
                 self._exclude_attributes_by_domain,
                 self.dialect_name,
             )
