@@ -22,7 +22,7 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data: dict = {}
 
     @callback
-    def _async_show_user_form(self, errors=None):
+    def _async_show_user_form(self, errors=None) -> FlowResult:
         """Show the form to the user."""
         data_schema = vol.Schema(
             {
