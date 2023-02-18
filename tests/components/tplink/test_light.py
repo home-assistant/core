@@ -431,7 +431,9 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect2"},
         blocking=True,
     )
-    strip.set_effect.assert_called_once_with("Effect2")
+    strip.set_effect.assert_called_once_with(
+        "Effect2", brightness=None, transition=None
+    )
     strip.set_effect.reset_mock()
 
     strip.effect = {"name": "Effect1", "enable": 0, "custom": 0}
