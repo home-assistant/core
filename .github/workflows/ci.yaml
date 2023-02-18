@@ -1053,8 +1053,9 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
       - lint-isort
+      - lint-other
+      - lint-ruff
       - mypy
     strategy:
       fail-fast: false
