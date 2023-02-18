@@ -39,7 +39,7 @@ class LiteJetScene(Scene):
     """Representation of a single LiteJet scene."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name: str | None = None
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
