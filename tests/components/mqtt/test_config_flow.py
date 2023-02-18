@@ -1283,10 +1283,10 @@ async def test_try_connection_with_advanced_parameters(
         # check if the ca certificate settings were not set during connection test
         assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
             "certfile"
-        ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_CERT)
+        ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_CERT, test_config=True)
         assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
             "keyfile"
-        ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_KEY)
+        ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_KEY, test_config=True)
 
         # check if websockets options are set
         assert mock_try_connection_success.ws_set_options.mock_calls[0][1] == (

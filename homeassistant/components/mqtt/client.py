@@ -283,7 +283,7 @@ class Subscription:
 class MqttClientSetup:
     """Helper class to setup the paho mqtt client from config."""
 
-    def __init__(self, config: ConfigType) -> None:
+    def __init__(self, config: ConfigType, test_config: bool = False) -> None:
         """Initialize the MQTT client setup helper."""
 
         # We don't import on the top because some integrations
@@ -313,12 +313,18 @@ class MqttClientSetup:
             self._client.username_pw_set(username, password)
 
         if (
-            certificate := get_file_path(CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
+            certificate := get_file_path(
+                CONF_CERTIFICATE, config.get(CONF_CERTIFICATE), test_config
+            )
         ) == "auto":
             certificate = certifi.where()
 
-        client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
-        client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
+        client_key = get_file_path(
+            CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY), test_config
+        )
+        client_cert = get_file_path(
+            CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT), test_config
+        )
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config[CONF_WS_PATH]

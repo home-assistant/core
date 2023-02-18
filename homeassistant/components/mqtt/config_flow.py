@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Callable
+import copy
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
@@ -541,11 +542,15 @@ async def async_get_broker_settings(
             certificate_data[CONF_CLIENT_KEY] = client_key
 
         validated_user_input.update(certificate_data)
-        await async_create_certificate_temp_files(hass, certificate_data)
+        await async_create_certificate_temp_files(
+            hass, certificate_data, test_config=True
+        )
         if error := await hass.async_add_executor_job(
             check_certicate_chain,
         ):
             errors["base"] = error
+            # cleanup
+            await async_create_certificate_temp_files(hass, {}, test_config=True)
             return False
 
         if SET_CA_CERT in validated_user_input:
@@ -745,7 +750,14 @@ def try_connection(
     # should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-    client = MqttClientSetup(user_input).client
+    test_data = copy.deepcopy(user_input)
+
+    # We dont want to use the sam client ID as a possible running instance
+    # So make sure ww remove it.
+    if CONF_CLIENT_ID in test_data:
+        del test_data[CONF_CLIENT_ID]
+
+    client = MqttClientSetup(test_data, test_config=True).client
 
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
@@ -761,7 +773,7 @@ def try_connection(
 
     client.on_connect = on_connect
 
-    client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
+    client.connect_async(test_data[CONF_BROKER], test_data[CONF_PORT])
     client.loop_start()
 
     try:
@@ -775,14 +787,14 @@ def try_connection(
 
 def check_certicate_chain() -> str | None:
     """Check the MQTT certificates."""
-    if client_certificate := get_file_path(CONF_CLIENT_CERT):
+    if client_certificate := get_file_path(CONF_CLIENT_CERT, test_config=True):
         try:
             with open(client_certificate, "rb") as client_certificate_file:
                 load_pem_x509_certificate(client_certificate_file.read())
         except ValueError:
             return "bad_client_cert"
     # Check we can serialize the private key file
-    if private_key := get_file_path(CONF_CLIENT_KEY):
+    if private_key := get_file_path(CONF_CLIENT_KEY, test_config=True):
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
@@ -796,7 +808,7 @@ def check_certicate_chain() -> str | None:
         except SSLError:
             return "bad_client_cert_key"
     # try to load the custom CA file
-    if (ca_cert := get_file_path(CONF_CERTIFICATE)) is None:
+    if (ca_cert := get_file_path(CONF_CERTIFICATE, test_config=True)) is None:
         return None
 
     try:

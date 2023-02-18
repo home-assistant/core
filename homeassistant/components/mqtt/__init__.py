@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import copy
 from datetime import datetime
 import logging
 from typing import Any, cast
@@ -51,6 +52,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
+from .config_flow import check_certicate_chain, try_connection
 from .config_integration import (
     CONFIG_SCHEMA_BASE,
     CONFIG_SCHEMA_ENTRY,
@@ -375,6 +377,72 @@ async def async_fetch_config(
     return conf
 
 
+async def _async_process_certificate_update(
+    hass: HomeAssistant, entry: ConfigEntry, call: ServiceCall
+) -> None:
+    """Process certificate enrollment updates."""
+    new_config: bool = False
+    certificate: str | None = entry.data.get(CONF_CERTIFICATE)
+    ca_cert_custom: str | None = certificate if certificate != "auto" else None
+    client_cert: str | None = entry.data.get(CONF_CLIENT_CERT)
+    if not call.data and (ca_cert_custom or client_cert):
+        _LOGGER.warning("No certificates updated")
+        return
+
+    new_ca_cert: str | None = call.data.get(CONF_CERTIFICATE)
+    if new_ca_cert is not None and ca_cert_custom is None:
+        raise vol.Invalid(
+            "Custom broker verification is not enabled. Cannot update certificate"
+        )
+    new_client_cert: str | None = call.data.get(CONF_CLIENT_CERT)
+    new_client_key: str | None = call.data.get(CONF_CLIENT_KEY)
+    if new_client_cert is not None and client_cert is None:
+        raise vol.Invalid(
+            "Client certificate authentication is not enabled. Cannot update broker certificate"
+        )
+
+    # Test the certificates updates
+    test_config: dict[str, Any] = copy.deepcopy(dict(entry.data))
+    if new_ca_cert:
+        test_config[CONF_CERTIFICATE] = new_ca_cert
+    if new_client_cert:
+        test_config[CONF_CLIENT_CERT] = new_client_cert
+        test_config[CONF_CLIENT_KEY] = new_client_key
+
+    # Prepare temporary test files
+    await async_create_certificate_temp_files(hass, test_config, test_config=True)
+    # Check the certificates updates
+    if error := await hass.async_add_executor_job(
+        check_certicate_chain,
+    ):
+        # cleanup certificate test files
+        await async_create_certificate_temp_files(hass, {}, test_config=True)
+        if error == "bad_client_cert":
+            raise vol.Invalid(
+                "Invalid client certificate, ensure a PEM coded certificate is supplied"
+            )
+        if error == "bad_client_key":
+            raise vol.Invalid(
+                "Invalid private key, ensure a PEM coded key is supplied without password"
+            )
+        if error == "bad_client_cert_key":
+            raise vol.Invalid("Client certificate and private key are not a valid pair")
+        raise vol.Invalid("The CA certificate is invalid")
+
+    if await hass.async_add_executor_job(try_connection, test_config):
+        # Update the config entry (and restart MQTT)
+        new_config = True
+    # cleanup temporary certificate test files
+    await async_create_certificate_temp_files(hass, {}, test_config=True)
+    if new_config:
+        # update entry, it will reload if tehre were changes
+        hass.config_entries.async_update_entry(entry, data=test_config)
+        if new_ca_cert:
+            _LOGGER.info("The CA certificate update was applied")
+        if new_client_cert:
+            _LOGGER.info("The Client certificate update was applied")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data = get_mqtt_data(hass, True)
@@ -491,6 +559,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_certificate_service(call: ServiceCall) -> None:
         """Handle MQTT certificate service calls."""
+        await _async_process_certificate_update(hass, entry, call)
 
     hass.services.async_register(
         DOMAIN,

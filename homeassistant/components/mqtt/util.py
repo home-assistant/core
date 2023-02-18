@@ -147,7 +147,7 @@ def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
 
 
 async def async_create_certificate_temp_files(
-    hass: HomeAssistant, config: ConfigType
+    hass: HomeAssistant, config: ConfigType, test_config: bool = False
 ) -> None:
     """Create certificate temporary files for the MQTT client."""
 
@@ -161,6 +161,7 @@ async def async_create_certificate_temp_files(
     def _create_temp_dir_and_files() -> None:
         """Create temporary directory."""
         temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
+        prefix = "test_" if test_config else ""
 
         if (
             config.get(CONF_CERTIFICATE)
@@ -169,24 +170,33 @@ async def async_create_certificate_temp_files(
         ) and not temp_dir.exists():
             temp_dir.mkdir(0o700)
 
-        _create_temp_file(temp_dir / CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
-        _create_temp_file(temp_dir / CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
-        _create_temp_file(temp_dir / CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
+        _create_temp_file(
+            temp_dir / f"{prefix}{CONF_CERTIFICATE}", config.get(CONF_CERTIFICATE)
+        )
+        _create_temp_file(
+            temp_dir / f"{prefix}{CONF_CLIENT_CERT}", config.get(CONF_CLIENT_CERT)
+        )
+        _create_temp_file(
+            temp_dir / f"{prefix}{CONF_CLIENT_KEY}", config.get(CONF_CLIENT_KEY)
+        )
 
     await hass.async_add_executor_job(_create_temp_dir_and_files)
 
 
-def get_file_path(option: str, default: str | None = None) -> str | None:
+def get_file_path(
+    option: str, default: str | None = None, test_config: bool = False
+) -> str | None:
     """Get file path of a certificate file."""
     temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
     if not temp_dir.exists():
         return default
 
-    file_path: Path = temp_dir / option
+    prefix = "test_" if test_config else ""
+    file_path: Path = temp_dir / f"{prefix}{option}"
     if not file_path.exists():
         return default
 
-    return str(temp_dir / option)
+    return str(file_path)
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
