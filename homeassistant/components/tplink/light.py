@@ -232,7 +232,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if brightness is not None:
             await self.device.set_brightness(brightness, transition=transition)
             return
-        await self.device.turn_on(transition=transition)  # type: ignore[arg-type]
+        await self.device.turn_on(transition=transition)
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
