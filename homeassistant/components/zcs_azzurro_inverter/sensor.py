@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 import dateutil.parser
-from zcs_azzurro_api import Inverter
+from zcs_azzurro_api import DeviceOfflineError, HttpRequestError, Inverter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -338,5 +338,5 @@ class ZcsAzzurroSensor(SensorEntity):
                 self.available_realtime_keys,
             )
             _LOGGER.debug("fetched data %s", self.fetched_data)
-        except ConnectionError as excp:
+        except (DeviceOfflineError, HttpRequestError) as excp:
             _LOGGER.debug("had connection error %s", excp)

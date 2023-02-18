@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["zcs_azzurro_inveter"],
-  "requirements": ["zcs-azzurro-api==2023.2.1"]
+  "requirements": ["zcs-azzurro-api==2023.2.5"]
 }

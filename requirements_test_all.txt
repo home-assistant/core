@@ -1910,7 +1910,7 @@ youless-api==0.16
 zamg==0.2.2
 
 # homeassistant.components.zcs_azzurro_inverter
-zcs-azzurro-api==2023.2.1
+zcs-azzurro-api==2023.2.5
 
 # homeassistant.components.zeroconf
 zeroconf==0.47.3

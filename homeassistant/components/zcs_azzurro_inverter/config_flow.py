@@ -5,13 +5,13 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from zcs_azzurro_api import Inverter
+from zcs_azzurro_api import DeviceOfflineError, HttpRequestError, Inverter
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from . import CannotConnect, InvalidAuth
+from . import CannotConnect, ConfigEntryAuthFailed, ConfigEntryNotReady, InvalidAuth
 from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,11 +54,22 @@ class ZcsAzzurroHub:
     async def authenticate(self) -> Inverter | None:
         """Test if we can authenticate with the host."""
         _LOGGER.debug("authentication tentative for user %s", self.zcs_api.client)
-        conn = await self.hass.async_add_executor_job(self.zcs_api.check_connection)
-        _LOGGER.debug("test call had invalid auth")
-        if not conn:
-            raise CannotConnect
-        return self.zcs_api
+        try:
+            conn = await self.hass.async_add_executor_job(self.zcs_api.check_connection)
+            if conn:
+                return self.zcs_api
+        except HttpRequestError as excp:
+            _LOGGER.debug("test call failed with code %s", excp.status_code)
+            if excp.status_code == 401:
+                raise ConfigEntryAuthFailed from excp
+            if excp.status_code == 404:
+                raise CannotConnect from excp
+            if excp.status_code == 403:
+                raise InvalidAuth from excp
+            raise CannotConnect from excp
+        except DeviceOfflineError as excp:
+            raise ConfigEntryNotReady from excp
+        return None
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
