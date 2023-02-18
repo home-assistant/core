@@ -223,12 +223,13 @@ async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    platforms_to_unload = [Platform.SENSOR]
+    if entry.options.get(CONF_TARIFFS):
+        platforms_to_unload.append(Platform.SELECT)
+
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry,
-        (
-            Platform.SELECT,
-            Platform.SENSOR,
-        ),
+        platforms_to_unload,
     ):
         hass.data[DATA_UTILITY].pop(entry.entry_id)
 
