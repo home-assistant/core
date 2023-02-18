@@ -131,6 +131,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
 
     _attr_icon = ICON
     _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
