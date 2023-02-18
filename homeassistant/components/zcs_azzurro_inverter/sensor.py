@@ -63,7 +63,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_BATTERY_CYCLES_KEY,
         name="Battery cycles",
-        icon="mdi:solar-power-variant",
+        icon="mdi:battery-sync-outline",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ZcsAzzurroSensorEntityDescription(
@@ -85,7 +85,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_CHARGING_KEY,
         name="Charged energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:battery-arrow-up-outline",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -93,7 +93,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_CHARGING_TOTAL_KEY,
         name="Total charged energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:battery-arrow-up-outline",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -117,7 +117,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_DISCHARGING_KEY,
         name="Discharged energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:battery-arrow-down-outline",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -125,7 +125,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_DISCHARGING_TOTAL_KEY,
         name="Total discharged energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:battery-arrow-down-outline",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -133,7 +133,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_EXPORTING_KEY,
         name="Exported energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:transmission-tower-export",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -141,7 +141,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_EXPORTING_TOTAL_KEY,
         name="Total exported energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:transmission-tower-export",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -165,7 +165,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_IMPORTING_KEY,
         name="Imported energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:transmission-tower-import",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -173,14 +173,14 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_ENERGY_IMPORTING_TOTAL_KEY,
         name="Total imported energy",
-        icon="mdi:solar-power-variant",
+        icon="mdi:transmission-tower-import",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_LAST_COMM_KEY,
-        name="Rename me",
+        name="Last communication",
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=None,
         state_class=None,
@@ -188,7 +188,7 @@ SENSOR_TYPES = (
     ),
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_LAST_UPDATE_KEY,
-        name="Rename me",
+        name="Last update",
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=None,
         state_class=None,
@@ -205,7 +205,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_POWER_CHARGING_KEY,
         name="Charging power",
-        icon="mdi:solar-power-variant",
+        icon="mdi:battery-arrow-up-outline",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -221,7 +221,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_POWER_DISCHARGING_KEY,
         name="Discharging power",
-        icon="mdi:solar-power-variant",
+        icon="mdi:battery-arrow-down-outline",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -229,7 +229,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_POWER_EXPORTING_KEY,
         name="Exporting power",
-        icon="mdi:solar-power-variant",
+        icon="mdi:transmission-tower-export",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -245,7 +245,7 @@ SENSOR_TYPES = (
     ZcsAzzurroSensorEntityDescription(
         key=REALTIME_POWER_IMPORTING_KEY,
         name="Importing power",
-        icon="mdi:solar-power-variant",
+        icon="mdi:transmission-tower-import",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -332,8 +332,11 @@ class ZcsAzzurroSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update sensor values."""
-        self.fetched_data = await self.hass.async_add_executor_job(
-            self.api.realtime_data_request,
-            self.available_realtime_keys,
-        )
-        _LOGGER.debug("fetched data %s", self.fetched_data)
+        try:
+            self.fetched_data = await self.hass.async_add_executor_job(
+                self.api.realtime_data_request,
+                self.available_realtime_keys,
+            )
+            _LOGGER.debug("fetched data %s", self.fetched_data)
+        except ConnectionError as excp:
+            _LOGGER.debug("had connection error %s", excp)
