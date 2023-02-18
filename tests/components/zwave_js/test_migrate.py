@@ -226,7 +226,7 @@ async def test_old_entity_migration(
     assert entity_entry.unique_id == old_unique_id
 
     # Do this twice to make sure re-interview doesn't do anything weird
-    for i in range(0, 2):
+    for _ in range(2):
         # Add a ready node, unique ID should be migrated
         event = {"node": node}
         driver.controller.emit("node added", event)
@@ -274,7 +274,7 @@ async def test_different_endpoint_migration_status_sensor(
     assert entity_entry.unique_id == old_unique_id
 
     # Do this twice to make sure re-interview doesn't do anything weird
-    for i in range(0, 2):
+    for _ in range(0, 2):
         # Add a ready node, unique ID should be migrated
         event = {"node": node}
         driver.controller.emit("node added", event)
