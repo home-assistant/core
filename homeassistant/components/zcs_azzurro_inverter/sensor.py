@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 import dateutil.parser
+from zcs_azzurro_api import Inverter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -49,7 +50,6 @@ from .const import (
     SCHEMA_FRIENDLY_NAME,
     SCHEMA_THINGS_KEY,
 )
-from .zcs_azzurro_api import ZcsAzzurroApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,7 +260,7 @@ async def async_setup_entry(
     _LOGGER.debug("Received data during setup is %s", entry.data)
     data = entry.data
 
-    zcs_api = ZcsAzzurroApi(
+    zcs_api = Inverter(
         data[SCHEMA_CLIENT_KEY],
         data[SCHEMA_THINGS_KEY],
         name=data[SCHEMA_FRIENDLY_NAME],
@@ -272,7 +272,7 @@ async def async_setup_entry(
     available_realtime_keys = list(realtime_sensors_available.keys())
     _LOGGER.debug("available realtime keys are %s", ", ".join(available_realtime_keys))
 
-    hass.data[DOMAIN][entry.entry_id] = ZcsAzzurroApi(
+    hass.data[DOMAIN][entry.entry_id] = Inverter(
         client=entry.data[SCHEMA_CLIENT_KEY],
         thing_serial=entry.data[SCHEMA_THINGS_KEY],
         name=entry.data[SCHEMA_FRIENDLY_NAME],
@@ -297,7 +297,7 @@ class ZcsAzzurroSensor(SensorEntity):
         self,
         *,
         description: ZcsAzzurroSensorEntityDescription,
-        api: ZcsAzzurroApi,
+        api: Inverter,
         available_realtime_keys: list,
     ) -> None:
         """Initialize the sensor."""

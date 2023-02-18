@@ -1581,9 +1581,6 @@ renault-api==0.1.12
 # homeassistant.components.reolink
 reolink-aio==0.4.2
 
-# homeassistant.components.zcs_azzurro_inverter
-requests==2.28.1
-
 # homeassistant.components.python_script
 restrictedpython==6.0
 
@@ -1911,6 +1908,9 @@ youless-api==0.16
 
 # homeassistant.components.zamg
 zamg==0.2.2
+
+# homeassistant.components.zcs_azzurro_inverter
+zcs-azzurro-api==2023.2.1
 
 # homeassistant.components.zeroconf
 zeroconf==0.47.3

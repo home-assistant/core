@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from zcs_azzurro_api import Inverter
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,6 @@ from homeassistant.data_entry_flow import FlowResult
 
 from . import CannotConnect, InvalidAuth
 from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
-from .zcs_azzurro_api import HTTPError, ZcsAzzurroApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,23 +47,17 @@ class ZcsAzzurroHub:
         self.client = client
         self.things_serials = things_serials
         self.friendly_name = friendly_name
-        self.zcs_api = ZcsAzzurroApi(
+        self.zcs_api = Inverter(
             self.client, self.things_serials, name=self.friendly_name
         )
 
-    async def authenticate(self) -> ZcsAzzurroApi | None:
+    async def authenticate(self) -> Inverter | None:
         """Test if we can authenticate with the host."""
         _LOGGER.debug("authentication tentative for user %s", self.zcs_api.client)
-        try:
-            await self.hass.async_add_executor_job(
-                self.zcs_api.realtime_data_request, []
-            )
-        except HTTPError:
-            _LOGGER.debug("test call had invalid auth")
-            return None
-        except ConnectionError as exc:
-            _LOGGER.debug("test call had connection error")
-            raise CannotConnect from exc
+        conn = await self.hass.async_add_executor_job(self.zcs_api.check_connection)
+        _LOGGER.debug("test call had invalid auth")
+        if not conn:
+            raise CannotConnect
         return self.zcs_api
 
 
