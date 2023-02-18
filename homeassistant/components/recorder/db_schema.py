@@ -128,12 +128,12 @@ JSONB_VARIANT_CAST = Text().with_variant(
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
-    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")  # type: ignore[no-untyped-call]
     .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")  # type: ignore[no-untyped-call]
 )
 DOUBLE_TYPE = (
     Float()
-    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql", "mariadb")  # type: ignore[no-untyped-call]
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
@@ -171,7 +171,7 @@ class Events(Base):
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
     origin: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_ORIGIN)
@@ -264,7 +264,7 @@ class EventData(Base):
     hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
     def __repr__(self) -> str:
@@ -315,7 +315,7 @@ class States(Base):
     entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )  # no longer used for new rows
     event_id: Mapped[int | None] = mapped_column(  # no longer used for new rows
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
@@ -447,7 +447,7 @@ class StateAttributes(Base):
     hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_attrs: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
     def __repr__(self) -> str:
