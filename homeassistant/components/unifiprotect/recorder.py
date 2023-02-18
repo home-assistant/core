@@ -8,5 +8,5 @@ from .const import ATTR_EVENT_ID, ATTR_EVENT_SCORE
 
 @callback
 def exclude_attributes(hass: HomeAssistant) -> set[str]:
-    """Exclude event_id from being recorded in the database."""
+    """Exclude event_id and event_score from being recorded in the database."""
     return {ATTR_EVENT_ID, ATTR_EVENT_SCORE}
