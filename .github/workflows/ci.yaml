@@ -76,7 +76,7 @@ jobs:
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.3.0
@@ -195,7 +195,7 @@ jobs:
 
   pre-commit:
     name: Prepare pre-commit base
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -241,7 +241,7 @@ jobs:
 
   lint-black:
     name: Check black
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -287,7 +287,7 @@ jobs:
 
   lint-flake8:
     name: Check flake8
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -336,7 +336,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -385,7 +385,7 @@ jobs:
 
   lint-isort:
     name: Check isort
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -423,7 +423,7 @@ jobs:
 
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -540,7 +540,7 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: info
     timeout-minutes: 60
     strategy:
@@ -606,7 +606,7 @@ jobs:
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -638,7 +638,7 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -670,7 +670,7 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
@@ -715,7 +715,7 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       || github.event.inputs.mypy-only == 'true'
@@ -776,7 +776,7 @@ jobs:
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   pip-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -812,7 +812,7 @@ jobs:
           ./script/pip_check $PIP_CACHE
 
   pytest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -929,7 +929,7 @@ jobs:
           ./script/check_dirty
 
   pytest-mariadb:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -1033,7 +1033,7 @@ jobs:
           ./script/check_dirty
 
   pytest-postgres:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1143,7 +1143,7 @@ jobs:
 
   coverage:
     name: Upload test coverage to Codecov
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pytest
