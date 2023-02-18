@@ -1,6 +1,11 @@
 """The tests for the litejet component."""
 from homeassistant.components import scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,3 +45,24 @@ async def test_activate(hass: HomeAssistant, mock_litejet) -> None:
     )
 
     mock_litejet.activate_scene.assert_called_once_with(ENTITY_SCENE_NUMBER)
+
+
+async def test_connected_event(hass, mock_litejet):
+    """Test handling an event from LiteJet."""
+
+    await async_init_integration(hass, use_scene=True)
+
+    # Initial state is available.
+    assert hass.states.get(ENTITY_SCENE).state == STATE_UNKNOWN
+
+    # Event indicates it is disconnected now.
+    mock_litejet.connected_changed(False, "test")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_SCENE).state == STATE_UNAVAILABLE
+
+    # Event indicates it is connected now.
+    mock_litejet.connected_changed(True, None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_SCENE).state == STATE_UNKNOWN

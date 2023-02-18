@@ -1,6 +1,13 @@
 """The tests for the litejet component."""
 from homeassistant.components import switch
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
@@ -16,8 +23,8 @@ async def test_on_off(hass: HomeAssistant, mock_litejet) -> None:
 
     await async_init_integration(hass, use_switch=True)
 
-    assert hass.states.get(ENTITY_SWITCH).state == "off"
-    assert hass.states.get(ENTITY_OTHER_SWITCH).state == "off"
+    assert hass.states.get(ENTITY_SWITCH).state == STATE_OFF
+    assert hass.states.get(ENTITY_OTHER_SWITCH).state == STATE_OFF
 
     assert not switch.is_on(hass, ENTITY_SWITCH)
 
@@ -43,8 +50,8 @@ async def test_pressed_event(hass: HomeAssistant, mock_litejet) -> None:
 
     assert switch.is_on(hass, ENTITY_SWITCH)
     assert not switch.is_on(hass, ENTITY_OTHER_SWITCH)
-    assert hass.states.get(ENTITY_SWITCH).state == "on"
-    assert hass.states.get(ENTITY_OTHER_SWITCH).state == "off"
+    assert hass.states.get(ENTITY_SWITCH).state == STATE_ON
+    assert hass.states.get(ENTITY_OTHER_SWITCH).state == STATE_OFF
 
     # Switch 2
     mock_litejet.switch_pressed_callbacks[ENTITY_OTHER_SWITCH_NUMBER]()
@@ -52,8 +59,8 @@ async def test_pressed_event(hass: HomeAssistant, mock_litejet) -> None:
 
     assert switch.is_on(hass, ENTITY_OTHER_SWITCH)
     assert switch.is_on(hass, ENTITY_SWITCH)
-    assert hass.states.get(ENTITY_SWITCH).state == "on"
-    assert hass.states.get(ENTITY_OTHER_SWITCH).state == "on"
+    assert hass.states.get(ENTITY_SWITCH).state == STATE_ON
+    assert hass.states.get(ENTITY_OTHER_SWITCH).state == STATE_ON
 
 
 async def test_released_event(hass: HomeAssistant, mock_litejet) -> None:
@@ -73,5 +80,29 @@ async def test_released_event(hass: HomeAssistant, mock_litejet) -> None:
 
     assert not switch.is_on(hass, ENTITY_OTHER_SWITCH)
     assert not switch.is_on(hass, ENTITY_SWITCH)
-    assert hass.states.get(ENTITY_SWITCH).state == "off"
-    assert hass.states.get(ENTITY_OTHER_SWITCH).state == "off"
+    assert hass.states.get(ENTITY_SWITCH).state == STATE_OFF
+    assert hass.states.get(ENTITY_OTHER_SWITCH).state == STATE_OFF
+
+
+async def test_connected_event(hass, mock_litejet):
+    """Test handling an event from LiteJet."""
+
+    await async_init_integration(hass, use_switch=True)
+
+    # Initial state is available.
+    assert hass.states.get(ENTITY_SWITCH).state == STATE_OFF
+    assert hass.states.get(ENTITY_OTHER_SWITCH).state == STATE_OFF
+
+    # Event indicates it is disconnected now.
+    mock_litejet.connected_changed(False, "test")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_SWITCH).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_OTHER_SWITCH).state == STATE_UNAVAILABLE
+
+    # Event indicates it is connected now.
+    mock_litejet.connected_changed(True, None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_SWITCH).state == STATE_OFF
+    assert hass.states.get(ENTITY_OTHER_SWITCH).state == STATE_OFF
