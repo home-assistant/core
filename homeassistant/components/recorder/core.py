@@ -409,6 +409,7 @@ class Recorder(threading.Thread):
     @callback
     def _async_hass_started(self, hass: HomeAssistant) -> None:
         """Notify that hass has started."""
+        self.async_adjust_lru()
         self._hass_started.set_result(None)
 
     @callback
@@ -473,7 +474,25 @@ class Recorder(threading.Thread):
             self.queue_task(PerodicCleanupTask())
 
     @callback
-    def async_periodic_statistics(self, now: datetime) -> None:
+    def _async_five_minute_tasks(self, now: datetime) -> None:
+        """Run tasks every five minutes."""
+        self.async_adjust_lru()
+        self.async_periodic_statistics()
+
+    @callback
+    def async_adjust_lru(self) -> None:
+        """Trigger the LRU adjustment.
+
+        If the number of entities has increased, increase the size of the LRU
+        cache to avoid thrashing.
+        """
+        current_size = self._state_attributes_ids.get_size()
+        new_size = self.hass.states.async_entity_ids_count() * 2
+        if new_size > current_size:
+            self._state_attributes_ids.set_size(new_size)
+
+    @callback
+    def async_periodic_statistics(self) -> None:
         """Trigger the statistics run.
 
         Short term statistics run every 5 minutes
@@ -568,7 +587,7 @@ class Recorder(threading.Thread):
 
         # Compile short term statistics every 5 minutes
         self._periodic_listener = async_track_utc_time_change(
-            self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
+            self.hass, self._async_five_minute_tasks, minute=range(0, 60, 5), second=10
         )
 
     async def _async_wait_for_started(self) -> object | None:
