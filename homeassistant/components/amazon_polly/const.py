@@ -103,6 +103,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Ricardo",
     "Ruben",
     "Russell",
+    "Ruth",  # English, Neural
     "Salli",  # English
     "Seoyeon",  # Korean
     "Suvi",  # Finnish
