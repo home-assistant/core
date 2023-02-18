@@ -75,6 +75,8 @@ from .common import (
 )
 
 from tests.common import (
+    MockEntity,
+    MockEntityPlatform,
     async_fire_time_changed,
     fire_time_changed,
     get_test_home_assistant,
@@ -2037,12 +2039,6 @@ async def test_excluding_attributes_by_integration(
     """Test that an integration's recorder platform can exclude attributes."""
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "excluded": 10}
-    entry = entity_registry.async_get_or_create(
-        "test",
-        "fake_integration",
-        "recorder",
-    )
-    entity_id = entry.entity_id
     mock_platform(
         hass,
         "fake_integration.recorder",
@@ -2051,7 +2047,12 @@ async def test_excluding_attributes_by_integration(
     hass.config.components.add("fake_integration")
     hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "fake_integration"})
     await hass.async_block_till_done()
-    hass.states.async_set(entity_id, state, attributes)
+
+    entity_id = "test.fake_integration_recorder"
+    platform = MockEntityPlatform(hass, platform_name="fake_integration")
+    entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
+    await platform.async_add_entities([entity_platform])
+
     await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
