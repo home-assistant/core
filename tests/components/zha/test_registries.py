@@ -315,7 +315,12 @@ def entity_registry():
     ),
 )
 def test_weighted_match(
-    channel, entity_registry: er.EntityRegistry, manufacturer, model, quirk_class, match_name
+    channel,
+    entity_registry: er.EntityRegistry,
+    manufacturer,
+    model,
+    quirk_class,
+    match_name,
 ):
     """Test weightedd match."""
 
