@@ -284,7 +284,7 @@ async def async_parse_motion_region_detector(uid: str, msg) -> Event | None:
 
 @PARSERS.register("tns1:RuleEngine/LineDetector/Crossed")
 # pylint: disable=protected-access
-async def async_parse_line_crossed(uid: str, msg) -> Event:
+async def async_parse_line_crossed(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/LineDetector/Crossed.

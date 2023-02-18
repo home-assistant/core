@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import datetime as dt
+from typing import Optional
 
 from aiohttp.web import Request
 from httpx import RemoteProtocolError, RequestError, TransportError
@@ -173,7 +174,7 @@ class EventManager:
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
-            event: Event = await parser(unique_id, msg)
+            event: Optional[Event] = await parser(unique_id, msg)
 
             if not event:
                 LOGGER.info(

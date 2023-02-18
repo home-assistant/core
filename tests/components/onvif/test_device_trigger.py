@@ -2,17 +2,16 @@
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.onvif import DOMAIN
-from homeassistant.components.onvif.const import CONF_SUBTYPE, CONF_UNIQUE_ID
-from homeassistant.components.onvif.device import ONVIFDevice
-from homeassistant.components.onvif.event import (
+from homeassistant.components.onvif.const import (
     CONF_ONVIF_EVENT,
+    CONF_SUBTYPE,
     CONF_UNIQUE_ID,
-    Event,
-    EventManager,
 )
+from homeassistant.components.onvif.device import ONVIFDevice
+from homeassistant.components.onvif.event import Event, EventManager
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -85,7 +84,9 @@ async def test_get_triggers(hass, device_reg):
             "metadata": {},
         },
     ]
-    triggers = await async_get_device_automations(hass, DeviceAutomationType.TRIGGER, device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
