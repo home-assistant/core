@@ -77,4 +77,4 @@ class Event:
     unit_of_measurement: str | None = None
     value: Any = None
     entity_category: EntityCategory | None = None
-    entity_enabled: bool = True
+    enabled: bool = True

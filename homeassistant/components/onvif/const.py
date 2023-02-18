@@ -9,7 +9,10 @@ DEFAULT_PORT = 80
 DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_DEVICE_ID = "deviceid"
+CONF_ONVIF_EVENT = "onvif_event"
 CONF_SNAPSHOT_AUTH = "snapshot_auth"
+CONF_SUBTYPE = "subtype"
+CONF_UNIQUE_ID = "unique_id"
 
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"

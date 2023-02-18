@@ -54,5 +54,10 @@
         "title": "ONVIF Device Options"
       }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "event": "{subtype} was fired"
+    }
   }
 }

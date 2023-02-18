@@ -269,6 +269,35 @@ async def async_parse_motion_region_detector(uid: str, msg) -> Event | None:
         return None
 
 
+@PARSERS.register("tns1:RuleEngine/LineDetector/Crossed")
+# pylint: disable=protected-access
+async def async_parse_line_crossed(uid: str, msg) -> Event:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/LineDetector/Crossed.
+    """
+    try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = source.Value
+            if source.Name == "VideoAnalyticsConfigurationToken":
+                video_analytics = source.Value
+            if source.Name == "Rule":
+                rule = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            f"{rule} Line Crossed",
+            "event",
+            enabled=msg.Message._value_1.PropertyOperation != "Initialized",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
 @PARSERS.register("tns1:RuleEngine/TamperDetector/Tamper")
 # pylint: disable=protected-access
 async def async_parse_tamper_detector(uid: str, msg) -> Event | None:
@@ -433,7 +462,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event | None:
             None,
             date_time,
             EntityCategory.DIAGNOSTIC,
-            entity_enabled=False,
+            enabled=False,
         )
     except (AttributeError, KeyError):
         return None
@@ -459,7 +488,7 @@ async def async_parse_backup_last(uid: str, msg) -> Event | None:
             None,
             date_time,
             EntityCategory.DIAGNOSTIC,
-            entity_enabled=False,
+            enabled=False,
         )
     except (AttributeError, KeyError):
         return None
@@ -484,7 +513,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event | None:
             None,
             date_time,
             EntityCategory.DIAGNOSTIC,
-            entity_enabled=False,
+            enabled=False,
         )
     except (AttributeError, KeyError):
         return None
