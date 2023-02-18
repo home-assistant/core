@@ -32,7 +32,7 @@ from .addon import get_addon_manager
 from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .device_platform import DEVICE_PLATFORM
-from .helpers import MatterEntryData, get_matter
+from .helpers import MatterEntryData, get_matter, get_node_from_device_entry
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
@@ -192,23 +192,13 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    unique_id = None
+    node = await get_node_from_device_entry(hass, device_entry)
 
-    for ident in device_entry.identifiers:
-        if ident[0] == DOMAIN:
-            unique_id = ident[1]
-            break
-
-    if not unique_id:
+    if node is None:
         return True
 
-    matter_entry_data: MatterEntryData = hass.data[DOMAIN][config_entry.entry_id]
-    matter_client = matter_entry_data.adapter.matter_client
-
-    for node in await matter_client.get_nodes():
-        if node.unique_id == unique_id:
-            await matter_client.remove_node(node.node_id)
-            break
+    matter = get_matter(hass)
+    await matter.matter_client.remove_node(node.node_id)
 
     return True
 

@@ -1,9 +1,7 @@
 """Tests for the LaMetric config flow."""
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
-from aiohttp.test_utils import TestClient
 from demetriek import (
     LaMetricConnectionError,
     LaMetricConnectionTimeoutError,
@@ -31,6 +29,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 SSDP_DISCOVERY_INFO = SsdpServiceInfo(
     ssdp_usn="mock_usn",
@@ -45,7 +44,7 @@ SSDP_DISCOVERY_INFO = SsdpServiceInfo(
 
 async def test_full_cloud_import_flow_multiple_devices(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_setup_entry: MagicMock,
@@ -125,7 +124,7 @@ async def test_full_cloud_import_flow_multiple_devices(
 
 async def test_full_cloud_import_flow_single_device(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_setup_entry: MagicMock,
@@ -244,7 +243,7 @@ async def test_full_manual(
 
 async def test_full_ssdp_with_cloud_import(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_setup_entry: MagicMock,
@@ -357,7 +356,7 @@ async def test_full_ssdp_manual_entry(
 
 
 @pytest.mark.parametrize(
-    "data,reason",
+    ("data", "reason"),
     [
         (
             SsdpServiceInfo(ssdp_usn="mock_usn", ssdp_st="mock_st", upnp={}),
@@ -389,7 +388,7 @@ async def test_ssdp_abort_invalid_discovery(
 
 async def test_cloud_import_updates_existing_entry(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_lametric_cloud_config_flow: MagicMock,
@@ -499,7 +498,7 @@ async def test_discovery_updates_existing_entry(
 
 async def test_cloud_abort_no_devices(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_lametric_cloud_config_flow: MagicMock,
@@ -544,7 +543,7 @@ async def test_cloud_abort_no_devices(
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (LaMetricConnectionTimeoutError, "cannot_connect"),
         (LaMetricConnectionError, "cannot_connect"),
@@ -603,7 +602,7 @@ async def test_manual_errors(
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (LaMetricConnectionTimeoutError, "cannot_connect"),
         (LaMetricConnectionError, "cannot_connect"),
@@ -613,7 +612,7 @@ async def test_manual_errors(
 )
 async def test_cloud_errors(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_setup_entry: MagicMock,
@@ -736,7 +735,7 @@ async def test_dhcp_unknown_device(
 
 async def test_reauth_cloud_import(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_setup_entry: MagicMock,
@@ -800,7 +799,7 @@ async def test_reauth_cloud_import(
 
 async def test_reauth_cloud_abort_device_not_found(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_setup_entry: MagicMock,

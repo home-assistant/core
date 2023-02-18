@@ -112,7 +112,6 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
             self._attr_name = self.device.api.vapix.ports[event.id].name
 
         elif event.group == EventGroup.MOTION:
-
             for event_topic, event_data in (
                 (EventTopic.FENCE_GUARD, self.device.api.vapix.fence_guard),
                 (EventTopic.LOITERING_GUARD, self.device.api.vapix.loitering_guard),
@@ -120,7 +119,6 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
                 (EventTopic.OBJECT_ANALYTICS, self.device.api.vapix.object_analytics),
                 (EventTopic.MOTION_DETECTION_4, self.device.api.vapix.vmd4),
             ):
-
                 if (
                     event.topic_base == event_topic
                     and event_data

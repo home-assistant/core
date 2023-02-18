@@ -20,7 +20,7 @@ from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 
-from . import area_registry, config_validation as cv, entity_registry
+from . import area_registry, config_validation as cv, device_registry, entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = dict[str, Any]
@@ -29,6 +29,7 @@ _T = TypeVar("_T")
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
 INTENT_TOGGLE = "HassToggle"
+INTENT_GET_STATE = "HassGetState"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -138,13 +139,60 @@ def _has_name(
     if name in (state.entity_id, state.name.casefold()):
         return True
 
-    # Check aliases
-    if (entity is not None) and entity.aliases:
-        for alias in entity.aliases:
-            if name == alias.casefold():
-                return True
+    # Check name/aliases
+    if (entity is None) or (not entity.aliases):
+        return False
+
+    for alias in entity.aliases:
+        if name == alias.casefold():
+            return True
 
     return False
+
+
+def _find_area(
+    id_or_name: str, areas: area_registry.AreaRegistry
+) -> area_registry.AreaEntry | None:
+    """Find an area by id or name, checking aliases too."""
+    area = areas.async_get_area(id_or_name) or areas.async_get_area_by_name(id_or_name)
+    if area is not None:
+        return area
+
+    # Check area aliases
+    for maybe_area in areas.areas.values():
+        if not maybe_area.aliases:
+            continue
+
+        for area_alias in maybe_area.aliases:
+            if id_or_name == area_alias.casefold():
+                return maybe_area
+
+    return None
+
+
+def _filter_by_area(
+    states_and_entities: list[tuple[State, entity_registry.RegistryEntry | None]],
+    area: area_registry.AreaEntry,
+    devices: device_registry.DeviceRegistry,
+) -> Iterable[tuple[State, entity_registry.RegistryEntry | None]]:
+    """Filter state/entity pairs by an area."""
+    entity_area_ids: dict[str, str | None] = {}
+    for _state, entity in states_and_entities:
+        if entity is None:
+            continue
+
+        if entity.area_id:
+            # Use entity's area id first
+            entity_area_ids[entity.id] = entity.area_id
+        elif entity.device_id:
+            # Fall back to device area if not set on entity
+            device = devices.async_get(entity.device_id)
+            if device is not None:
+                entity_area_ids[entity.id] = device.area_id
+
+    for state, entity in states_and_entities:
+        if (entity is not None) and (entity_area_ids.get(entity.id) == area.id):
+            yield (state, entity)
 
 
 @callback
@@ -159,6 +207,7 @@ def async_match_states(
     states: Iterable[State] | None = None,
     entities: entity_registry.EntityRegistry | None = None,
     areas: area_registry.AreaRegistry | None = None,
+    devices: device_registry.DeviceRegistry | None = None,
 ) -> Iterable[State]:
     """Find states that match the constraints."""
     if states is None:
@@ -199,28 +248,29 @@ def async_match_states(
         if areas is None:
             areas = area_registry.async_get(hass)
 
-        # id or name
-        area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
-            area_name
-        )
+        area = _find_area(area_name, areas)
         assert area is not None, f"No area named {area_name}"
 
     if area is not None:
-        # Filter by area
-        states_and_entities = [
-            (state, entity)
-            for state, entity in states_and_entities
-            if (entity is not None) and (entity.area_id == area.id)
-        ]
+        # Filter by states/entities by area
+        if devices is None:
+            devices = device_registry.async_get(hass)
+
+        states_and_entities = list(_filter_by_area(states_and_entities, area, devices))
 
     if name is not None:
+        if devices is None:
+            devices = device_registry.async_get(hass)
+
         # Filter by name
         name = name.casefold()
 
+        # Check states
         for state, entity in states_and_entities:
             if _has_name(state, entity, name):
                 yield state
                 break
+
     else:
         # Not filtered by name
         for state, _entity in states_and_entities:
@@ -285,6 +335,10 @@ class ServiceIntentHandler(IntentHandler):
         vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
     }
 
+    # We use a small timeout in service calls to (hopefully) pass validation
+    # checks, but not try to wait for the call to fully complete.
+    service_timeout: float = 0.2
+
     def __init__(
         self, intent_type: str, domain: str, service: str, speech: str | None = None
     ) -> None:
@@ -337,7 +391,9 @@ class ServiceIntentHandler(IntentHandler):
         )
 
         if not states:
-            raise IntentHandleError("No entities matched")
+            raise IntentHandleError(
+                f"No entities matched for: name={name}, area={area}, domains={domains}, device_classes={device_classes}",
+            )
 
         response = await self.async_handle_states(intent_obj, states, area)
 
@@ -350,7 +406,8 @@ class ServiceIntentHandler(IntentHandler):
         area: area_registry.AreaEntry | None = None,
     ) -> IntentResponse:
         """Complete action on matched entity states."""
-        assert states
+        assert states, "No states"
+        hass = intent_obj.hass
         success_results: list[IntentResponseTarget] = []
         response = intent_obj.create_response()
 
@@ -367,21 +424,37 @@ class ServiceIntentHandler(IntentHandler):
         service_coros = []
         for state in states:
             service_coros.append(self.async_call_service(intent_obj, state))
-            success_results.append(
-                IntentResponseTarget(
-                    type=IntentResponseTargetType.ENTITY,
-                    name=state.name,
-                    id=state.entity_id,
-                ),
+
+        # Handle service calls in parallel, noting failures as they occur.
+        failed_results: list[IntentResponseTarget] = []
+        for state, service_coro in zip(states, asyncio.as_completed(service_coros)):
+            target = IntentResponseTarget(
+                type=IntentResponseTargetType.ENTITY,
+                name=state.name,
+                id=state.entity_id,
             )
 
-        # Handle service calls in parallel.
-        # We will need to handle partial failures here.
-        await asyncio.gather(*service_coros)
+            try:
+                await service_coro
+                success_results.append(target)
+            except Exception:  # pylint: disable=broad-except
+                failed_results.append(target)
+                _LOGGER.exception("Service call failed for %s", state.entity_id)
+
+        if not success_results:
+            # If no entities succeeded, raise an error.
+            failed_entity_ids = [target.id for target in failed_results]
+            raise IntentHandleError(
+                f"Failed to call {self.service} for: {failed_entity_ids}"
+            )
 
         response.async_set_results(
-            success_results=success_results,
+            success_results=success_results, failed_results=failed_results
         )
+
+        # Update all states
+        states = [hass.states.get(state.entity_id) or state for state in states]
+        response.async_set_states(states)
 
         if self.speech is not None:
             response.async_set_speech(self.speech.format(speech_name))
@@ -396,6 +469,8 @@ class ServiceIntentHandler(IntentHandler):
             self.service,
             {ATTR_ENTITY_ID: state.entity_id},
             context=intent_obj.context,
+            blocking=True,
+            limit=self.service_timeout,
         )
 
 
@@ -520,6 +595,8 @@ class IntentResponse:
         self.intent_targets: list[IntentResponseTarget] = []
         self.success_results: list[IntentResponseTarget] = []
         self.failed_results: list[IntentResponseTarget] = []
+        self.matched_states: list[State] = []
+        self.unmatched_states: list[State] = []
 
         if (self.intent is not None) and (self.intent.category == IntentCategory.QUERY):
             # speech will be the answer to the query
@@ -586,6 +663,14 @@ class IntentResponse:
         """Set response results."""
         self.success_results = success_results
         self.failed_results = failed_results if failed_results is not None else []
+
+    @callback
+    def async_set_states(
+        self, matched_states: list[State], unmatched_states: list[State] | None = None
+    ) -> None:
+        """Set entity states that were matched or not matched during intent handling (query)."""
+        self.matched_states = matched_states
+        self.unmatched_states = unmatched_states or []
 
     @callback
     def as_dict(self) -> dict[str, Any]:

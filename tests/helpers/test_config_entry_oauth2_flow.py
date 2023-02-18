@@ -88,7 +88,7 @@ class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementa
         raise NotImplementedError()
 
 
-def test_inherit_enforces_domain_set():
+def test_inherit_enforces_domain_set() -> None:
     """Test we enforce setting DOMAIN."""
 
     class TestFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):

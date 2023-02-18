@@ -614,7 +614,7 @@ def mock_client_fixture(
             driver_ready.set()
             listen_block = asyncio.Event()
             await listen_block.wait()
-            assert False, "Listen wasn't canceled!"
+            pytest.fail("Listen wasn't canceled!")
 
         async def disconnect():
             client.connected = False

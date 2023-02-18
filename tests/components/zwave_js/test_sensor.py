@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -33,7 +34,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,

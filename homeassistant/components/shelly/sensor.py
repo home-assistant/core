@@ -15,11 +15,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -28,7 +30,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
@@ -464,6 +465,84 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    "total_act": RpcSensorDescription(
+        key="emdata",
+        sub_key="total_act",
+        name="Total active energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "a_total_act_energy": RpcSensorDescription(
+        key="emdata",
+        sub_key="a_total_act_energy",
+        name="Phase A total active energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    "b_total_act_energy": RpcSensorDescription(
+        key="emdata",
+        sub_key="b_total_act_energy",
+        name="Phase B total active energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    "c_total_act_energy": RpcSensorDescription(
+        key="emdata",
+        sub_key="c_total_act_energy",
+        name="Phase C total active energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    "total_act_ret": RpcSensorDescription(
+        key="emdata",
+        sub_key="total_act_ret",
+        name="Total active returned energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "a_total_act_ret_energy": RpcSensorDescription(
+        key="emdata",
+        sub_key="a_total_act_ret_energy",
+        name="Phase A total active returned energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    "b_total_act_ret_energy": RpcSensorDescription(
+        key="emdata",
+        sub_key="b_total_act_ret_energy",
+        name="Phase B total active returned energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    "c_total_act_ret_energy": RpcSensorDescription(
+        key="emdata",
+        sub_key="c_total_act_ret_energy",
+        name="Phase C total active returned energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: round(float(status) / 1000, 2),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
     "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
@@ -669,7 +748,10 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         if self.block is not None:
             return self.attribute_value
 
-        return self.last_state
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -677,7 +759,10 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         if self.block is not None:
             return self.entity_description.native_unit_of_measurement
 
-        return self.last_unit
+        if self.last_state is None:
+            return None
+
+        return self.last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
 
 class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
@@ -691,12 +776,12 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
         if self.coordinator.device.initialized:
             return self.attribute_value
 
-        return self.last_state
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
-        if self.coordinator.device.initialized:
-            return self.entity_description.native_unit_of_measurement
-
-        return self.last_unit
+        return self.entity_description.native_unit_of_measurement

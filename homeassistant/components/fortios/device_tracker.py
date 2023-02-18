@@ -1,5 +1,4 @@
-"""
-Support to use FortiOS device like FortiGate as device tracker.
+"""Support to use FortiOS device like FortiGate as device tracker.
 
 This component is part of the device_tracker platform.
 """

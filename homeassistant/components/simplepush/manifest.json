@@ -1,10 +1,10 @@
 {
   "domain": "simplepush",
   "name": "Simplepush",
-  "documentation": "https://www.home-assistant.io/integrations/simplepush",
-  "requirements": ["simplepush==2.1.1"],
   "codeowners": ["@engrbm87"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/simplepush",
   "iot_class": "cloud_polling",
-  "loggers": ["simplepush"]
+  "loggers": ["simplepush"],
+  "requirements": ["simplepush==2.1.1"]
 }

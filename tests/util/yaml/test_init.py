@@ -20,7 +20,7 @@ from tests.common import get_test_config_dir, patch_yaml_files
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
 def try_both_loaders(request):
     """Disable the yaml c loader."""
-    if not request.param == "disable_c_loader":
+    if request.param != "disable_c_loader":
         yield
         return
     try:
@@ -37,7 +37,7 @@ def try_both_loaders(request):
 @pytest.fixture(params=["enable_c_dumper", "disable_c_dumper"])
 def try_both_dumpers(request):
     """Disable the yaml c dumper."""
-    if not request.param == "disable_c_dumper":
+    if request.param != "disable_c_dumper":
         yield
         return
     try:
@@ -67,7 +67,7 @@ def test_simple_dict(try_both_loaders):
     assert doc["key"] == "value"
 
 
-def test_unhashable_key():
+def test_unhashable_key() -> None:
     """Test an unhashable key."""
     files = {YAML_CONFIG_FILE: "message:\n  {{ states.state }}"}
     with pytest.raises(HomeAssistantError), patch_yaml_files(files):
@@ -477,7 +477,7 @@ def test_no_recursive_secrets(caplog, try_both_loaders):
     assert e.value.args == ("Secrets not supported in this YAML file",)
 
 
-def test_input_class():
+def test_input_class() -> None:
     """Test input class."""
     input = yaml_loader.Input("hello")
     input2 = yaml_loader.Input("hello")
@@ -498,7 +498,7 @@ def test_input(try_both_loaders, try_both_dumpers):
     not os.environ.get("HASS_CI"),
     reason="This test validates that the CI has the C loader available",
 )
-def test_c_loader_is_available_in_ci():
+def test_c_loader_is_available_in_ci() -> None:
     """Verify we are testing the C loader in the CI."""
     assert yaml.loader.HAS_C_LOADER is True
 

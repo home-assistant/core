@@ -303,7 +303,7 @@ def entity_id_or_uuid(value: Any) -> str:
 def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
     """Help validate entity IDs or UUIDs."""
     if value is None:
-        raise vol.Invalid("Entity IDs can not be None")
+        raise vol.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
@@ -537,7 +537,7 @@ def schema_with_slug_keys(
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
 
-        for key in value.keys():
+        for key in value:
             slug_validator(key)
 
         return cast(dict, schema(value))

@@ -272,7 +272,6 @@ class UniFiClientTracker(UniFiClientBase, ScannerEntity):
             self.client.last_updated == SOURCE_EVENT
             and not self._only_listen_to_data_source
         ):
-
             if (self.is_wired and self.client.event.key in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.key in WIRELESS_CONNECTION
             ):

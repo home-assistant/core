@@ -1,8 +1,7 @@
 """Make sure that an Arlo Baby can be setup."""
 
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

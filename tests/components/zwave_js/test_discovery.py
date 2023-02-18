@@ -9,6 +9,7 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
+from homeassistant.core import HomeAssistant
 
 
 async def test_iblinds_v2(hass, client, iblinds_v2, integration):
@@ -76,7 +77,7 @@ async def test_fortrez_ssa3_siren(hass, client, fortrezz_ssa3_siren, integration
     assert hass.states.get("select.siren_and_strobe_alarm") is not None
 
 
-async def test_firmware_version_range_exception(hass):
+async def test_firmware_version_range_exception(hass: HomeAssistant) -> None:
     """Test FirmwareVersionRange exception."""
     with pytest.raises(ValueError):
         ZWaveDiscoverySchema(

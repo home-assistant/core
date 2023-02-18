@@ -60,7 +60,7 @@ def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request
         print(fil.relative_to(tmp_path))  # noqa: T201
 
     # To show the log.
-    assert False
+    pytest.fail("Test failed, see log for details")
 
 
 @pytest.fixture(autouse=True)

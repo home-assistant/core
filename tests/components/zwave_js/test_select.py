@@ -7,9 +7,8 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 import homeassistant.helpers.entity_registry as er
 
 from .common import replace_value_of_zwave_value

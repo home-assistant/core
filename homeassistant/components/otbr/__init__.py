@@ -8,9 +8,10 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import python_otbr_api
 
+from homeassistant.components.thread import async_add_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -58,7 +59,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
-    hass.data[DOMAIN] = OTBRData(entry.data["url"], api)
+
+    otbrdata = OTBRData(entry.data["url"], api)
+    try:
+        dataset = await otbrdata.get_active_dataset_tlvs()
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
+    if dataset:
+        await async_add_dataset(hass, entry.title, dataset.hex())
+
+    hass.data[DOMAIN] = otbrdata
+
     return True
 
 

@@ -1,7 +1,6 @@
 """Tests for the diagnostics data provided by the KNX integration."""
 from unittest.mock import patch
 
-from aiohttp import ClientSession
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 from homeassistant.components.knx.const import (
@@ -27,14 +26,15 @@ from .conftest import KNXTestKit
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
-):
+) -> None:
     """Test diagnostics."""
     await knx.setup_integration({})
 
@@ -60,10 +60,10 @@ async def test_diagnostics(
 
 async def test_diagnostic_config_error(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
-):
+) -> None:
     """Test diagnostics."""
     await knx.setup_integration({})
 
@@ -92,8 +92,8 @@ async def test_diagnostic_config_error(
 
 async def test_diagnostic_redact(
     hass: HomeAssistant,
-    hass_client: ClientSession,
-):
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test diagnostics redacting data."""
     mock_config_entry: MockConfigEntry = MockConfigEntry(
         title="KNX",

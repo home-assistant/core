@@ -1,11 +1,12 @@
 """Nuki.io lock platform."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Any
+from abc import abstractmethod
+from typing import Any, TypeVar
 
 from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
+from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -14,9 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import NukiEntity
+from . import NukiCoordinator, NukiEntity
 from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
@@ -30,13 +30,15 @@ from .const import (
 )
 from .helpers import CannotConnect
 
+_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nuki lock platform."""
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator: DataUpdateCoordinator[None] = data[DATA_COORDINATOR]
+    coordinator: NukiCoordinator = data[DATA_COORDINATOR]
 
     entities: list[NukiDeviceEntity] = [
         NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]
@@ -64,15 +66,11 @@ async def async_setup_entry(
     )
 
 
-class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
+class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
     """Representation of a Nuki device."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = LockEntityFeature.OPEN
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the lock."""
-        return self._nuki_device.name
 
     @property
     def unique_id(self) -> str | None:
@@ -105,10 +103,8 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
         """Open the door latch."""
 
 
-class NukiLockEntity(NukiDeviceEntity):
+class NukiLockEntity(NukiDeviceEntity[NukiLock]):
     """Representation of a Nuki lock."""
-
-    _nuki_device: NukiLock
 
     @property
     def is_locked(self) -> bool:
@@ -148,10 +144,8 @@ class NukiLockEntity(NukiDeviceEntity):
             raise CannotConnect from err
 
 
-class NukiOpenerEntity(NukiDeviceEntity):
+class NukiOpenerEntity(NukiDeviceEntity[NukiOpener]):
     """Representation of a Nuki opener."""
-
-    _nuki_device: NukiOpener
 
     @property
     def is_locked(self) -> bool:

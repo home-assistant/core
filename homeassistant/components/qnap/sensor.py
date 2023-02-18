@@ -319,7 +319,9 @@ class QNAPStatsAPI:
 class QNAPSensor(SensorEntity):
     """Base class for a QNAP sensor."""
 
-    def __init__(self, api, description: SensorEntityDescription, monitor_device=None):
+    def __init__(
+        self, api, description: SensorEntityDescription, monitor_device=None
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.monitor_device = monitor_device

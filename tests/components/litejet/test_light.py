@@ -9,6 +9,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
 
@@ -18,7 +19,7 @@ ENTITY_OTHER_LIGHT = "light.mock_load_2"
 ENTITY_OTHER_LIGHT_NUMBER = 2
 
 
-async def test_on_brightness(hass, mock_litejet):
+async def test_on_brightness(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on with brightness."""
     await async_init_integration(hass)
 
@@ -36,7 +37,7 @@ async def test_on_brightness(hass, mock_litejet):
     mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 39, 0)
 
 
-async def test_default_transition(hass, mock_litejet):
+async def test_default_transition(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on with the default transition option."""
     entry = await async_init_integration(hass)
 
@@ -57,7 +58,7 @@ async def test_default_transition(hass, mock_litejet):
     mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 39, 12)
 
 
-async def test_transition(hass, mock_litejet):
+async def test_transition(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on with transition."""
     await async_init_integration(hass)
 
@@ -85,7 +86,7 @@ async def test_transition(hass, mock_litejet):
     mock_litejet.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 0, 5)
 
 
-async def test_on_off(hass, mock_litejet):
+async def test_on_off(hass: HomeAssistant, mock_litejet) -> None:
     """Test turning the light on and off."""
     await async_init_integration(hass)
 
@@ -111,7 +112,7 @@ async def test_on_off(hass, mock_litejet):
     mock_litejet.deactivate_load.assert_called_with(ENTITY_LIGHT_NUMBER)
 
 
-async def test_activated_event(hass, mock_litejet):
+async def test_activated_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
 
     await async_init_integration(hass)
@@ -146,7 +147,7 @@ async def test_activated_event(hass, mock_litejet):
     assert hass.states.get(ENTITY_OTHER_LIGHT).attributes.get(ATTR_BRIGHTNESS) == 103
 
 
-async def test_deactivated_event(hass, mock_litejet):
+async def test_deactivated_event(hass: HomeAssistant, mock_litejet) -> None:
     """Test handling an event from LiteJet."""
     await async_init_integration(hass)
 

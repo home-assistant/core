@@ -104,10 +104,14 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
     MeasureType.SP02: Measurement.SPO2_PCT,
     MeasureType.HYDRATION: Measurement.HYDRATION,
     MeasureType.PULSE_WAVE_VELOCITY: Measurement.PWV,
-    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY: Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
+    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY: (
+        Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY
+    ),
     GetSleepSummaryField.DEEP_SLEEP_DURATION: Measurement.SLEEP_DEEP_DURATION_SECONDS,
     GetSleepSummaryField.DURATION_TO_SLEEP: Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
-    GetSleepSummaryField.DURATION_TO_WAKEUP: Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS,
+    GetSleepSummaryField.DURATION_TO_WAKEUP: (
+        Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS
+    ),
     GetSleepSummaryField.HR_AVERAGE: Measurement.SLEEP_HEART_RATE_AVERAGE,
     GetSleepSummaryField.HR_MAX: Measurement.SLEEP_HEART_RATE_MAX,
     GetSleepSummaryField.HR_MIN: Measurement.SLEEP_HEART_RATE_MIN,
@@ -292,7 +296,8 @@ class DataManager:
     async def _do_retry(self, func, attempts=3) -> Any:
         """Retry a function call.
 
-        Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
+        Withings' API occasionally and incorrectly throws errors.
+        Retrying the call tends to work.
         """
         exception = None
         for attempt in range(1, attempts + 1):
@@ -375,8 +380,8 @@ class DataManager:
                 profile.appli,
                 self._notify_unsubscribe_delay.total_seconds(),
             )
-            # Quick calls to Withings can result in the service returning errors. Give them
-            # some time to cool down.
+            # Quick calls to Withings can result in the service returning errors.
+            # Give them some time to cool down.
             await asyncio.sleep(self._notify_subscribe_delay.total_seconds())
             await self._hass.async_add_executor_job(
                 self._api.notify_revoke, profile.callbackurl, profile.appli

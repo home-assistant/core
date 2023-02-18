@@ -1,5 +1,4 @@
-"""
-Make sure that existing Koogeek SW2 is enumerated correctly.
+"""Make sure that existing Koogeek SW2 is enumerated correctly.
 
 This Koogeek device has a custom power sensor that extra handling.
 

@@ -1,7 +1,7 @@
 """Test UptimeRobot switch."""
-
 from unittest.mock import patch
 
+import pytest
 from pyuptimerobot import UptimeRobotAuthenticationException
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -53,7 +53,6 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         return_value=mock_uptimerobot_api_response(),
     ):
-
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -81,7 +80,6 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         return_value=mock_uptimerobot_api_response(),
     ):
-
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -96,7 +94,9 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         assert entity.state == STATE_ON
 
 
-async def test_authentication_error(hass: HomeAssistant, caplog) -> None:
+async def test_authentication_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test authentication error turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
@@ -119,7 +119,9 @@ async def test_authentication_error(hass: HomeAssistant, caplog) -> None:
         assert config_entry_reauth.assert_called
 
 
-async def test_refresh_data(hass: HomeAssistant, caplog) -> None:
+async def test_refresh_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test authentication error turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
@@ -139,7 +141,9 @@ async def test_refresh_data(hass: HomeAssistant, caplog) -> None:
         assert coordinator_refresh.assert_called
 
 
-async def test_switch_api_failure(hass: HomeAssistant, caplog) -> None:
+async def test_switch_api_failure(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test general exception turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 

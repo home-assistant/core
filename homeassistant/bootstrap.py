@@ -406,7 +406,6 @@ def async_enable_logging(
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-
         err_handler: (
             logging.handlers.RotatingFileHandler
             | logging.handlers.TimedRotatingFileHandler

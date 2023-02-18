@@ -7,7 +7,7 @@ from homeassistant.util.variance import ignore_variance
 
 
 @pytest.mark.parametrize(
-    "value_1, value_2, variance, expected",
+    ("value_1", "value_2", "variance", "expected"),
     [
         (1, 1, 1, 1),
         (1, 2, 2, 1),
