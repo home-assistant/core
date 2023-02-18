@@ -24,7 +24,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, CONF_ONVIF_EVENT, CONF_UNIQUE_ID, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
 from .parsers import PARSERS
 
@@ -173,7 +173,7 @@ class EventManager:
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
-            event = await parser(unique_id, msg)
+            event: Event = await parser(unique_id, msg)
 
             if not event:
                 LOGGER.info(
@@ -181,8 +181,19 @@ class EventManager:
                 )
                 return
 
+            if self._events.get(event.uid) is None:
+                LOGGER.info(
+                    "Registered %s as a(n) %s with unique id: %s",
+                    event.name,
+                    event.platform,
+                    event.uid,
+                )
+
             self.get_uids_by_platform(event.platform).add(event.uid)
             self._events[event.uid] = event
+
+            if event.platform == "event" and event.entity_enabled:
+                self.hass.bus.async_fire(CONF_ONVIF_EVENT, {CONF_UNIQUE_ID: event.uid})
 
     def get_uid(self, uid: str) -> Event | None:
         """Retrieve event for given id."""
