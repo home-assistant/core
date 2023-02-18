@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import dataclasses
+from enum import IntFlag
 from pathlib import Path
 from typing import Any
 
@@ -110,6 +111,10 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(data):
             serializable_data = dataclasses.asdict(data)
+        elif isinstance(data, IntFlag) and data == 0:
+            # The repr of an enum.IntFlag has changed between Python 3.10 and 3.11
+            # This only concerns the 0 case, which we normalize here
+            serializable_data = 0
         else:
             serializable_data = data
             with suppress(TypeError):
