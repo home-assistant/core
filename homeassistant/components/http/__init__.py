@@ -1,6 +1,9 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
+import asyncio
+import contextlib
+from dataclasses import dataclass
 import datetime
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
@@ -9,7 +12,7 @@ import ssl
 from tempfile import NamedTemporaryFile
 from typing import Any, Final, TypedDict, cast
 
-from aiohttp import web
+from aiohttp import ClientConnectorCertificateError, ClientError, web
 from aiohttp.typedefs import StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from cryptography import x509
@@ -24,6 +27,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
@@ -137,21 +141,15 @@ async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     return await store.async_load()
 
 
+@dataclass
 class ApiConfig:
     """Configuration settings for API server."""
 
-    def __init__(
-        self,
-        local_ip: str,
-        host: str,
-        port: int,
-        use_ssl: bool,
-    ) -> None:
-        """Initialize a new API config object."""
-        self.local_ip = local_ip
-        self.host = host
-        self.port = port
-        self.use_ssl = use_ssl
+    local_ip: str
+    host: str
+    port: int
+    use_ssl: bool
+    internal_url_has_valid_ssl: bool
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -213,8 +211,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Assume the first server host name provided as API host
         host = server_host[0]
 
+    internal_url_has_valid_ssl = False
+    try:
+        internal_ssl_url = get_url(
+            hass,
+            allow_internal=True,
+            allow_external=False,
+            allow_cloud=False,
+            require_ssl=True,
+        )
+    except NoURLAvailableError:
+        pass
+    else:
+        session = async_get_clientsession(hass, verify_ssl=True)
+        with contextlib.suppress(
+            ClientConnectorCertificateError, ClientError, asyncio.TimeoutError
+        ):
+            async with session.get(internal_ssl_url, timeout=5, allow_redirects=False):
+                internal_url_has_valid_ssl = True
+
     hass.config.api = ApiConfig(
-        local_ip, host, server_port, ssl_certificate is not None
+        local_ip,
+        host,
+        server_port,
+        ssl_certificate is not None,
+        internal_url_has_valid_ssl,
     )
 
     return True

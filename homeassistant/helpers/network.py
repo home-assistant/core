@@ -129,7 +129,11 @@ def get_url(
         raise NoURLAvailableError
 
     if prefer_external is None:
-        prefer_external = hass.config.api is not None and hass.config.api.use_ssl
+        prefer_external = (
+            hass.config.api is not None
+            and hass.config.api.use_ssl
+            and not hass.config.api.internal_url_has_valid_ssl
+        )
 
     if allow_ip is None:
         allow_ip = hass.config.api is None or not hass.config.api.use_ssl
