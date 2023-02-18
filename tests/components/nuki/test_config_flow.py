@@ -35,7 +35,6 @@ async def test_form(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "port": 8080,
                 "token": "test-token",
-                "webhook_enabled": False,
             },
         )
         await hass.async_block_till_done()
@@ -46,7 +45,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "host": "1.1.1.1",
         "port": 8080,
         "token": "test-token",
-        "webhook_enabled": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -67,7 +65,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "port": 8080,
                 "token": "test-token",
-                "webhook_enabled": False,
             },
         )
 
@@ -91,7 +88,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "port": 8080,
                 "token": "test-token",
-                "webhook_enabled": False,
             },
         )
 
@@ -115,7 +111,6 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "port": 8080,
                 "token": "test-token",
-                "webhook_enabled": False,
             },
         )
 
@@ -140,7 +135,6 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "port": 8080,
                 "token": "test-token",
-                "webhook_enabled": False,
             },
         )
 
@@ -172,7 +166,6 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "port": 8080,
                 "token": "test-token",
-                "webhook_enabled": False,
             },
         )
 
@@ -182,7 +175,6 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             "host": "1.1.1.1",
             "port": 8080,
             "token": "test-token",
-            "webhook_enabled": False,
         }
 
         await hass.async_block_till_done()

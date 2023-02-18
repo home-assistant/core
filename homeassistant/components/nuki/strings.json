@@ -1,13 +1,17 @@
 {
+  "issues": {
+    "local_https_url": {
+      "title": "Local Network address configured with an HTTPS URL",
+      "description": "You Local Network address for Home Assistant is configured with an HTTPS URL. This needs to be an HTTP URL for the Nuki bridge to be able to push events to Home Assistant."
+    }
+  },
   "config": {
     "step": {
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "token": "[%key:common::config_flow::data::access_token%]",
-          "webhook_enabled": "Enable Nuki callback",
-          "hass_url_override": "Override Home Assistant URL (HTTP only)"
+          "token": "[%key:common::config_flow::data::access_token%]"
         }
       },
       "reauth_confirm": {

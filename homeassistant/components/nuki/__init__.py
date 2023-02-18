@@ -18,7 +18,7 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -28,8 +28,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_CUSTOM_URL,
-    CONF_WEBHOOK_ENABLED,
     DATA_BRIDGE,
     DATA_COORDINATOR,
     DATA_LOCKS,
@@ -125,13 +123,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=info["versions"]["firmwareVersion"],
     )
 
-    if entry.data.get(CONF_WEBHOOK_ENABLED):
-        hass_url = get_url(hass)
-
-        custom_url = entry.data.get(CONF_CUSTOM_URL)
-        if custom_url is not None:
-            hass_url = custom_url
-
+    hass_url = get_url(hass)
+    # Check if hass_url is http
+    if hass_url.lower().startswith("http://"):
         url = f"{hass_url}{CALLBACK_URL}/{entry.entry_id}"
         try:
             async with async_timeout.timeout(10):
@@ -142,6 +136,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
             raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
+    else:
+        # Raise an issue in the repair center
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "internal_https_url",
+            is_fixable=False,
+            learn_more_url="https://www.home-assistant.io/integrations/nuki/",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="internal_https_url",
+        )
 
     coordinator = NukiCoordinator(hass, bridge, locks, openers)
 
