@@ -3278,7 +3278,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
 
     # Generate 5-minute statistics for two hours
     start = zero
-    for i in range(24):
+    for _ in range(24):
         do_adhoc_statistics(hass, start=start)
         wait_recording_done(hass)
         start += timedelta(minutes=5)

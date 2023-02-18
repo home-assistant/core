@@ -240,6 +240,8 @@ filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
 target-version = "py310"
 
 select = [
+    "B007", # Loop control variable {name} not used within loop body
+    "B014", # Exception handler with duplicate exception
     "C",  # complexity
     "D",  # docstrings
     "E",  # pycodestyle

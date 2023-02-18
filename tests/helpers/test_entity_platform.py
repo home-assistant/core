@@ -437,7 +437,7 @@ async def test_async_remove_with_platform_update_finishes(hass: HomeAssistant) -
 
     # Add, remove, add, remove and make sure no updates
     # cause the entity to reappear after removal
-    for i in range(2):
+    for _ in range(2):
         await component.async_add_entities([entity1])
         assert len(hass.states.async_entity_ids()) == 1
         entity1.async_write_ha_state()

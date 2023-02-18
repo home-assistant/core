@@ -405,7 +405,7 @@ bthome-ble==2.5.2
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.0.1
+caldav==1.1.1
 
 # homeassistant.components.co2signal
 co2signal==0.4.2
@@ -469,7 +469,7 @@ denonavr==0.11.1
 devolo-home-control-api==0.18.2
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.1.0
+devolo-plc-api==1.2.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1889,13 +1889,13 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.0.0
+yalexs-ble==2.0.1
 
 # homeassistant.components.august
 yalexs==1.2.7
 
 # homeassistant.components.august
-yalexs_ble==2.0.0
+yalexs_ble==2.0.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
