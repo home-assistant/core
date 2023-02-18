@@ -56,7 +56,7 @@ class LiteJetScene(Scene):
 
     def _on_connected_changed(self, connected: bool, reason: str) -> None:
         self._attr_available = connected
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def extra_state_attributes(self):
