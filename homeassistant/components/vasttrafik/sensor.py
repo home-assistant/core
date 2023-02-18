@@ -8,7 +8,7 @@ import vasttrafik
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_DELAY, CONF_NAME
+from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,7 +22,6 @@ ATTR_ACCESSIBILITY = "accessibility"
 ATTR_DIRECTION = "direction"
 ATTR_LINE = "line"
 ATTR_TRACK = "track"
-ATTRIBUTION = "Data provided by Västtrafik"
 
 CONF_DEPARTURES = "departures"
 CONF_FROM = "from"
@@ -82,6 +81,8 @@ def setup_platform(
 
 class VasttrafikDepartureSensor(SensorEntity):
     """Implementation of a Vasttrafik Departure Sensor."""
+
+    _attr_attribution = "Data provided by Västtrafik"
 
     def __init__(self, planner, name, departure, heading, lines, delay):
         """Initialize the sensor."""
@@ -158,7 +159,6 @@ class VasttrafikDepartureSensor(SensorEntity):
 
                     params = {
                         ATTR_ACCESSIBILITY: departure.get("accessibility"),
-                        ATTR_ATTRIBUTION: ATTRIBUTION,
                         ATTR_DIRECTION: departure.get("direction"),
                         ATTR_LINE: departure.get("sname"),
                         ATTR_TRACK: departure.get("track"),

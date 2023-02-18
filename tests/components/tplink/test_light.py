@@ -58,7 +58,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "bulb, transition", [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
+    ("bulb", "transition"), [(_mocked_bulb(), 2.0), (_mocked_smart_light_strip(), None)]
 )
 async def test_color_light(
     hass: HomeAssistant, bulb: MagicMock, transition: float | None
@@ -198,7 +198,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "bulb, is_color", [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
+    ("bulb", "is_color"), [(_mocked_bulb(), True), (_mocked_smart_light_strip(), False)]
 )
 async def test_color_temp_light(
     hass: HomeAssistant, bulb: MagicMock, is_color: bool
@@ -433,6 +433,19 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
     )
     strip.set_effect.assert_called_once_with("Effect2")
     strip.set_effect.reset_mock()
+
+    # Setting an effect with brightness calls set_brightness implicitly
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect2", ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    strip.set_effect.assert_called_once_with("Effect2")
+    strip.set_effect.reset_mock()
+
+    strip.set_brightness.assert_called_with(100, transition=None)
+    strip.set_brightness.reset_mock()
 
     strip.effect = {"name": "Effect1", "enable": 0, "custom": 0}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))

@@ -19,7 +19,7 @@
         }
       },
       "link": {
-        "description": "Do you want to setup {name} ({host})?",
+        "description": "Do you want to set up {name} ({host})?",
         "data": {
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
@@ -44,6 +44,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "no_mac_address": "The MAC address is missing from the zeroconf record",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "Re-configuration was successful"

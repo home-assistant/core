@@ -9,7 +9,7 @@ from typing import Any
 from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.exceptions import FritzConnectionException
 import voluptuous as vol
 
 from homeassistant.components import ssdp
@@ -32,6 +32,7 @@ from .const import (
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
     ERROR_UPNP_NOT_CONFIGURED,
+    FRITZ_AUTH_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 timeout=60.0,
                 pool_maxsize=30,
             )
-        except FritzSecurityError:
+        except FRITZ_AUTH_EXCEPTIONS:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CANNOT_CONNECT

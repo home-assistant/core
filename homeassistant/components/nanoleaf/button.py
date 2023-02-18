@@ -4,8 +4,8 @@ from aionanoleaf import Nanoleaf
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -27,7 +27,9 @@ async def async_setup_entry(
 class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
     """Representation of a Nanoleaf identify button."""
 
-    def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]
+    ) -> None:
         """Initialize the Nanoleaf button."""
         super().__init__(nanoleaf, coordinator)
         self._attr_unique_id = f"{nanoleaf.serial_no}_identify"

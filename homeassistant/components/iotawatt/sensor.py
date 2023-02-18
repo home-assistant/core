@@ -15,29 +15,23 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_WATT_HOUR,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity, entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
-from .const import (
-    ATTR_LAST_UPDATE,
-    DOMAIN,
-    VOLT_AMPERE_REACTIVE,
-    VOLT_AMPERE_REACTIVE_HOURS,
-)
+from .const import DOMAIN, VOLT_AMPERE_REACTIVE, VOLT_AMPERE_REACTIVE_HOURS
 from .coordinator import IotawattUpdater
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,15 +47,16 @@ class IotaWattSensorEntityDescription(SensorEntityDescription):
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     "Amps": IotaWattSensorEntityDescription(
         "Amps",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
     ),
     "Hz": IotaWattSensorEntityDescription(
         "Hz",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
@@ -75,21 +70,21 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "Watts": IotaWattSensorEntityDescription(
         "Watts",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
     "WattHours": IotaWattSensorEntityDescription(
         "WattHours",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
     ),
     "VA": IotaWattSensorEntityDescription(
         "VA",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash",
+        device_class=SensorDeviceClass.APPARENT_POWER,
         entity_registry_enabled_default=False,
     ),
     "VAR": IotaWattSensorEntityDescription(
@@ -108,7 +103,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "Volts": IotaWattSensorEntityDescription(
         "Volts",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
@@ -133,10 +128,6 @@ async def async_setup_entry(
         description = ENTITY_DESCRIPTION_KEY_MAP.get(
             data.getUnit(), IotaWattSensorEntityDescription("base_sensor")
         )
-        if data.getUnit() == "WattHours" and not data.getFromStart():
-            return IotaWattAccumulatingSensor(
-                coordinator=coordinator, key=key, entity_description=description
-            )
 
         return IotaWattSensor(
             coordinator=coordinator,
@@ -154,8 +145,7 @@ async def async_setup_entry(
             for key in coordinator.data["sensors"]
             if key not in created
         ]
-        if entities:
-            async_add_entities(entities)
+        async_add_entities(entities)
 
     coordinator.async_add_listener(new_data_received)
 
@@ -235,77 +225,3 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
             return func(self._sensor_data.getValue())
 
         return self._sensor_data.getValue()
-
-
-class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
-    """Defines a IoTaWatt Accumulative Energy (High Accuracy) Sensor."""
-
-    def __init__(
-        self,
-        coordinator: IotawattUpdater,
-        key: str,
-        entity_description: IotaWattSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-
-        super().__init__(coordinator, key, entity_description)
-
-        if self._attr_unique_id is not None:
-            self._attr_unique_id += ".accumulated"
-
-        self._accumulated_value: float | None = None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        assert (
-            self._accumulated_value is not None
-        ), "async_added_to_hass must have been called first"
-        self._accumulated_value += float(self._sensor_data.getValue())
-
-        super()._handle_coordinator_update()
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        if self._accumulated_value is None:
-            return None
-        return round(self._accumulated_value, 1)
-
-    async def async_added_to_hass(self) -> None:
-        """Load the last known state value of the entity if the accumulated type."""
-        await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        self._accumulated_value = 0.0
-        if state:
-            try:
-                # Previous value could be `unknown` if the connection didn't originally
-                # complete.
-                self._accumulated_value = float(state.state)
-            except (ValueError) as err:
-                _LOGGER.warning("Could not restore last state: %s", err)
-            else:
-                if ATTR_LAST_UPDATE in state.attributes:
-                    last_run = dt.parse_datetime(state.attributes[ATTR_LAST_UPDATE])
-                    if last_run is not None:
-                        self.coordinator.update_last_run(last_run)
-        # Force a second update from the iotawatt to ensure that sensors are up to date.
-        await self.coordinator.async_request_refresh()
-
-    @property
-    def name(self) -> str | None:
-        """Return name of the entity."""
-        return f"{self._sensor_data.getSourceName()} Accumulated"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the extra state attributes of the entity."""
-        attrs = super().extra_state_attributes
-
-        assert (
-            self.coordinator.api is not None
-            and self.coordinator.api.getLastUpdateTime() is not None
-        )
-        attrs[ATTR_LAST_UPDATE] = self.coordinator.api.getLastUpdateTime().isoformat()
-
-        return attrs

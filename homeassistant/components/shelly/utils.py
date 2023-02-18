@@ -4,14 +4,22 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, cast
 
-from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
+from aiohttp.web import Request, WebSocketResponse
+from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, WsServer
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry, entity_registry, singleton
+from homeassistant.helpers import singleton
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as dr_async_get,
+    format_mac,
+)
+from homeassistant.helpers.entity_registry import async_get as er_async_get
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -21,7 +29,6 @@ from .const import (
     DEFAULT_COAP_PORT,
     DOMAIN,
     LOGGER,
-    MAX_RPC_KEY_INSTANCES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
@@ -35,34 +42,15 @@ def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""
-    entity_reg = entity_registry.async_get(hass)
+    entity_reg = er_async_get(hass)
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
         entity_reg.async_remove(entity_id)
 
 
-def temperature_unit(block_info: dict[str, Any]) -> str:
-    """Detect temperature unit."""
-    if block_info[BLOCK_VALUE_UNIT] == "F":
-        return TEMP_FAHRENHEIT
-    return TEMP_CELSIUS
-
-
-def get_block_device_name(device: BlockDevice) -> str:
-    """Naming for device."""
-    return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
-
-
-def get_rpc_device_name(device: RpcDevice) -> str:
-    """Naming for device."""
-    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
-
-
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     """Get number of channels for block type."""
-    assert isinstance(device.shelly, dict)
-
     channels = None
 
     if block.type == "input":
@@ -90,14 +78,14 @@ def get_block_entity_name(
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        return f"{channel_name} {description}"
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
 
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
-    entity_name = get_block_device_name(device)
+    entity_name = device.name
 
     if (
         not block
@@ -213,7 +201,7 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
 
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
-    """Get CoAP context to be used in all Shelly devices."""
+    """Get CoAP context to be used in all Shelly Gen1 devices."""
     context = COAP()
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
@@ -227,8 +215,31 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
-
     return context
+
+
+class ShellyReceiver(HomeAssistantView):
+    """Handle pushes from Shelly Gen2 devices."""
+
+    requires_auth = False
+    url = "/api/shelly/ws"
+    name = "api:shelly:ws"
+
+    def __init__(self, ws_server: WsServer) -> None:
+        """Initialize the Shelly receiver view."""
+        self._ws_server = ws_server
+
+    async def get(self, request: Request) -> WebSocketResponse:
+        """Start a get request."""
+        return await self._ws_server.websocket_handler(request)
+
+
+@singleton.singleton("shelly_ws_server")
+async def get_ws_context(hass: HomeAssistant) -> WsServer:
+    """Get websocket server context to be used in all Shelly Gen2 devices."""
+    ws_server = WsServer()
+    hass.http.register_view(ShellyReceiver(ws_server))
+    return ws_server
 
 
 def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
@@ -241,6 +252,16 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
             sleep_period *= 60  # hours to minutes
 
     return sleep_period * 60  # minutes to seconds
+
+
+def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
+    """Return the device sleep period in seconds or 0 for non sleeping devices."""
+    return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
+
+
+def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
+    """Return the device wakeup period in seconds or 0 for non sleeping devices."""
+    return cast(int, status["sys"].get("wakeup_period", 0))
 
 
 def get_info_auth(info: dict[str, Any]) -> bool:
@@ -263,15 +284,16 @@ def get_model_name(info: dict[str, Any]) -> str:
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
+    key = key.replace("emdata", "em")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
-    device_name = get_rpc_device_name(device)
+    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
         entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
-        if [k for k in key if k.startswith(("input", "switch"))]:
+        if key.startswith(("input:", "light:", "switch:")):
             return f"{device_name} {key.replace(':', '_')}"
         return device_name
 
@@ -285,7 +307,7 @@ def get_rpc_entity_name(
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        return f"{channel_name} {description}"
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
@@ -303,28 +325,12 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
 
-    keys_list: list[str] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return keys_list
-
-        keys_list.append(key_inst)
-
-    return keys_list
+    return [k for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
-    key_ids: list[int] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return key_ids
-
-        key_ids.append(i)
-
-    return key_ids
+    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def is_rpc_momentary_input(
@@ -344,13 +350,6 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"]["ui_data"].get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
-
-
-def is_rpc_device_externally_powered(
-    config: dict[str, Any], status: dict[str, Any], key: str
-) -> bool:
-    """Return true if device has external power instead of battery."""
-    return cast(bool, status[key]["external"]["present"])
 
 
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
@@ -381,16 +380,25 @@ def device_update_info(
 
     assert entry.unique_id
 
-    dev_registry = device_registry.async_get(hass)
-    if device := dev_registry.async_get_device(
+    dev_reg = dr_async_get(hass)
+    if device := dev_reg.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)},
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(entry.unique_id),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
-        dev_registry.async_update_device(
-            device.id, sw_version=shellydevice.firmware_version
-        )
+        dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
+
+
+def brightness_to_percentage(brightness: int) -> int:
+    """Convert brightness level to percentage."""
+    return int(100 * (brightness + 1) / 255)
+
+
+def percentage_to_brightness(percentage: int) -> int:
+    """Convert percentage to brightness level."""
+    return round(255 * percentage / 100)
+
+
+def mac_address_from_name(name: str) -> str | None:
+    """Convert a name to a mac address."""
+    mac = name.partition(".")[0].partition("-")[-1]
+    return mac.upper() if len(mac) == 12 else None

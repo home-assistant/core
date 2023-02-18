@@ -6,8 +6,8 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    EntityCategory,
 )
-from homeassistant.helpers.entity import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -70,7 +70,7 @@ async def test_eve_energy_setup(hass):
                     entity_id="sensor.eve_energy_50ff_energy_kwh",
                     unique_id="00:00:00:00:00:00_1_28_35",
                     friendly_name="Eve Energy 50FF Energy kWh",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
                     unit_of_measurement=ENERGY_KILO_WATT_HOUR,
                     state="0.28999999165535",
                 ),

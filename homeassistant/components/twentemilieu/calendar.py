@@ -1,7 +1,9 @@
 """Support for Twente Milieu Calendar."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
+
+from twentemilieu import WasteType
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +35,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]],
         entry: ConfigEntry,
     ) -> None:
         """Initialize the Twente Milieu entity."""

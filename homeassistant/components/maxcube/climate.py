@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -60,8 +60,7 @@ def setup_platform(
             if device.is_thermostat() or device.is_wallthermostat():
                 devices.append(MaxCubeClimate(handler, device))
 
-    if devices:
-        add_entities(devices)
+    add_entities(devices)
 
 
 class MaxCubeClimate(ClimateEntity):
@@ -80,7 +79,7 @@ class MaxCubeClimate(ClimateEntity):
         self._device = device
         self._attr_should_poll = True
         self._attr_unique_id = self._device.serial
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [
             PRESET_NONE,
             PRESET_BOOST,
@@ -135,8 +134,7 @@ class MaxCubeClimate(ClimateEntity):
             raise ValueError(f"unsupported HVAC mode {hvac_mode}")
 
     def _set_target(self, mode: int | None, temp: float | None) -> None:
-        """
-        Set the mode and/or temperature of the thermostat.
+        """Set the mode and/or temperature of the thermostat.
 
         @param mode: this is the mode to change to.
         @param temp: the temperature to target.

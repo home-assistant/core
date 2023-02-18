@@ -15,7 +15,7 @@ async def test_button_unique_id(hass: HomeAssistant) -> None:
     ra3_button_entity_id = (
         "button.hallway_main_stairs_position_1_keypad_kitchen_pendants"
     )
-    caseta_button_entity_id = "button.dining_room_pico_on"
+    caseta_button_entity_id = "button.dining_room_pico_stop"
 
     entity_registry = er.async_get(hass)
 

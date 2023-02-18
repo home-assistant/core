@@ -14,11 +14,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_UNLOCKED,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
 
@@ -57,7 +57,7 @@ async def test_config_entry_unregistered_uuid(
 
 
 @pytest.mark.parametrize(
-    "target_domain,state_on,state_off",
+    ("target_domain", "state_on", "state_off"),
     (
         (Platform.COVER, STATE_OPEN, STATE_CLOSED),
         (Platform.FAN, STATE_ON, STATE_OFF),
@@ -364,7 +364,7 @@ async def test_setup_and_remove_config_entry(
 
 
 @pytest.mark.parametrize(
-    "hidden_by_before,hidden_by_after",
+    ("hidden_by_before", "hidden_by_after"),
     (
         (er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (er.RegistryEntryHider.INTEGRATION, None),

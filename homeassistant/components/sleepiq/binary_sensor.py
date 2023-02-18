@@ -8,10 +8,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, ICON_EMPTY, ICON_OCCUPIED, IS_IN_BED
-from .coordinator import SleepIQData
+from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQSleeperEntity
 
 
@@ -29,14 +28,16 @@ async def async_setup_entry(
     )
 
 
-class IsInBedBinarySensor(SleepIQSleeperEntity, BinarySensorEntity):
+class IsInBedBinarySensor(
+    SleepIQSleeperEntity[SleepIQDataUpdateCoordinator], BinarySensorEntity
+):
     """Implementation of a SleepIQ presence sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: SleepIQDataUpdateCoordinator,
         bed: SleepIQBed,
         sleeper: SleepIQSleeper,
     ) -> None:

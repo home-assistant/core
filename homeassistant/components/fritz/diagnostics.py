@@ -1,6 +1,8 @@
 """Diagnostics support for AVM FRITZ!Box."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -14,7 +16,7 @@ TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 

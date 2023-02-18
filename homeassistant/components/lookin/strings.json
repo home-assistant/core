@@ -13,7 +13,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name} ({host})?"
+        "description": "Do you want to set up {name} ({host})?"
       }
     },
     "error": {

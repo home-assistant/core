@@ -66,6 +66,9 @@ SEQUENCE_EFFECT_DICT: Final = {
         vol.Length(min=1, max=16),
         [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
     ),
+    vol.Optional("repeat_times", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=10)
+    ),
     vol.Optional("spread", default=1): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=16)
     ),
@@ -269,7 +272,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return round((self.device.brightness * 255.0) / 100.0)
+        return round((cast(int, self.device.brightness) * 255.0) / 100.0)
 
     @property
     def hs_color(self) -> tuple[int, int] | None:
@@ -312,7 +315,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     device: SmartLightStrip
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return super().supported_features | LightEntityFeature.EFFECT
 
@@ -334,7 +337,12 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if ATTR_COLOR_TEMP in kwargs:
+        if ATTR_EFFECT in kwargs:
+            await self.device.set_effect(kwargs[ATTR_EFFECT])
+            # We need to set the brightness separately until upstream allows defining it for set_effect.
+            if brightness is not None:
+                await self._async_turn_on_with_brightness(brightness, transition)
+        elif ATTR_COLOR_TEMP in kwargs:
             if self.effect:
                 # If there is an effect in progress
                 # we have to set an HSV value to clear the effect
@@ -345,8 +353,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             )
         elif ATTR_HS_COLOR in kwargs:
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
-        elif ATTR_EFFECT in kwargs:
-            await self.device.set_effect(kwargs[ATTR_EFFECT])
         else:
             await self._async_turn_on_with_brightness(brightness, transition)
 
@@ -397,6 +403,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         transition: int,
         segments: list[int],
         sequence: Sequence[tuple[int, int, int]],
+        repeat_times: int,
         spread: int,
         direction: int,
     ) -> None:
@@ -405,7 +412,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             **_async_build_base_effect(brightness, duration, transition, segments),
             "type": "sequence",
             "sequence": sequence,
-            "repeat_times": 0,
+            "repeat_times": repeat_times,
             "spread": spread,
             "direction": direction,
         }

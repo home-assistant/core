@@ -81,8 +81,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the RESTful switch."""
-    resource = config.get(CONF_RESOURCE)
-    unique_id = config.get(CONF_UNIQUE_ID)
+    resource: str = config[CONF_RESOURCE]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     try:
         switch = RestSwitch(hass, config, unique_id)
@@ -106,10 +106,10 @@ class RestSwitch(TemplateEntity, SwitchEntity):
 
     def __init__(
         self,
-        hass,
-        config,
-        unique_id,
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the REST switch."""
         TemplateEntity.__init__(
             self,
@@ -119,40 +119,33 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             unique_id=unique_id,
         )
 
-        self._state = None
-
-        auth = None
+        auth: aiohttp.BasicAuth | None = None
+        username: str | None = None
         if username := config.get(CONF_USERNAME):
-            auth = aiohttp.BasicAuth(username, password=config[CONF_PASSWORD])
+            password: str = config[CONF_PASSWORD]
+            auth = aiohttp.BasicAuth(username, password=password)
 
-        self._resource = config.get(CONF_RESOURCE)
-        self._state_resource = config.get(CONF_STATE_RESOURCE) or self._resource
-        self._method = config.get(CONF_METHOD)
-        self._headers = config.get(CONF_HEADERS)
-        self._params = config.get(CONF_PARAMS)
+        self._resource: str = config[CONF_RESOURCE]
+        self._state_resource: str = config.get(CONF_STATE_RESOURCE) or self._resource
+        self._method: str = config[CONF_METHOD]
+        self._headers: dict[str, template.Template] | None = config.get(CONF_HEADERS)
+        self._params: dict[str, template.Template] | None = config.get(CONF_PARAMS)
         self._auth = auth
-        self._body_on = config.get(CONF_BODY_ON)
-        self._body_off = config.get(CONF_BODY_OFF)
-        self._is_on_template = config.get(CONF_IS_ON_TEMPLATE)
-        self._timeout = config.get(CONF_TIMEOUT)
-        self._verify_ssl = config.get(CONF_VERIFY_SSL)
+        self._body_on: template.Template = config[CONF_BODY_ON]
+        self._body_off: template.Template = config[CONF_BODY_OFF]
+        self._is_on_template: template.Template | None = config.get(CONF_IS_ON_TEMPLATE)
+        self._timeout: int = config[CONF_TIMEOUT]
+        self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
+        self._body_on.hass = hass
+        self._body_off.hass = hass
         if (is_on_template := self._is_on_template) is not None:
             is_on_template.hass = hass
-        if (body_on := self._body_on) is not None:
-            body_on.hass = hass
-        if (body_off := self._body_off) is not None:
-            body_off.hass = hass
 
         template.attach(hass, self._headers)
         template.attach(hass, self._params)
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -162,7 +155,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             req = await self.set_device_state(body_on_t)
 
             if req.status == HTTPStatus.OK:
-                self._state = True
+                self._attr_is_on = True
             else:
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
@@ -177,7 +170,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         try:
             req = await self.set_device_state(body_off_t)
             if req.status == HTTPStatus.OK:
-                self._state = False
+                self._attr_is_on = False
             else:
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
@@ -185,7 +178,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while switching off %s", self._resource)
 
-    async def set_device_state(self, body):
+    async def set_device_state(self, body: Any) -> aiohttp.ClientResponse:
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
@@ -193,7 +186,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         rendered_params = template.render_complex(self._params)
 
         async with async_timeout.timeout(self._timeout):
-            req = await getattr(websession, self._method)(
+            req: aiohttp.ClientResponse = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
                 data=bytes(body, "utf-8"),
@@ -211,7 +204,7 @@ class RestSwitch(TemplateEntity, SwitchEntity):
         except aiohttp.ClientError as err:
             _LOGGER.exception("Error while fetching data: %s", err)
 
-    async def get_device_state(self, hass):
+    async def get_device_state(self, hass: HomeAssistant) -> aiohttp.ClientResponse:
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
@@ -233,17 +226,17 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             )
             text = text.lower()
             if text == "true":
-                self._state = True
+                self._attr_is_on = True
             elif text == "false":
-                self._state = False
+                self._attr_is_on = False
             else:
-                self._state = None
+                self._attr_is_on = None
         else:
             if text == self._body_on.template:
-                self._state = True
+                self._attr_is_on = True
             elif text == self._body_off.template:
-                self._state = False
+                self._attr_is_on = False
             else:
-                self._state = None
+                self._attr_is_on = None
 
         return req

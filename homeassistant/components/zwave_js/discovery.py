@@ -179,13 +179,17 @@ class ZWaveDiscoverySchema:
     device_class_generic: set[str | int] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str | int] | None = None
-    # [optional] additional values that ALL need to be present on the node for this scheme to pass
+    # [optional] additional values that ALL need to be present
+    # on the node for this scheme to pass
     required_values: list[ZWaveValueDiscoverySchema] | None = None
-    # [optional] additional values that MAY NOT be present on the node for this scheme to pass
+    # [optional] additional values that MAY NOT be present
+    # on the node for this scheme to pass
     absent_values: list[ZWaveValueDiscoverySchema] | None = None
-    # [optional] bool to specify if this primary value may be discovered by multiple platforms
+    # [optional] bool to specify if this primary value may be discovered
+    # by multiple platforms
     allow_multi: bool = False
-    # [optional] bool to specify whether state is assumed and events should be fired on value update
+    # [optional] bool to specify whether state is assumed
+    # and events should be fired on value update
     assumed_state: bool = False
     # [optional] bool to specify whether entity should be enabled by default
     entity_registry_enabled_default: bool = True
@@ -198,8 +202,7 @@ def get_config_parameter_discovery_schema(
     property_key_name: set[str | None] | None = None,
     **kwargs: Any,
 ) -> ZWaveDiscoverySchema:
-    """
-    Return a discovery schema for a config parameter.
+    """Return a discovery schema for a config parameter.
 
     Supports all keyword arguments to ZWaveValueDiscoverySchema except platform, hint,
     and primary_value.
@@ -978,7 +981,8 @@ def async_discover_single_value(
         )
 
         if not schema.allow_multi:
-            # return early since this value may not be discovered by other schemas/platforms
+            # return early since this value may not be discovered
+            # by other schemas/platforms
             return
 
 

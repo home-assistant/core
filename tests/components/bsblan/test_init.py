@@ -1,48 +1,46 @@
 """Tests for the BSBLan integration."""
-import aiohttp
+from unittest.mock import MagicMock
+
+from bsblan import BSBLANConnectionError
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import init_integration, init_integration_without_auth
+from tests.common import MockConfigEntry
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+
+async def test_load_unload_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test the BSBLAN configuration entry loading/unloading."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_bsblan.device.mock_calls) == 1
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.data.get(DOMAIN)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_not_ready(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
 ) -> None:
-    """Test the BSBLan configuration entry not ready."""
-    aioclient_mock.post(
-        "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
-        exc=aiohttp.ClientError,
-    )
+    """Test the bsblan configuration entry not ready."""
+    mock_bsblan.state.side_effect = BSBLANConnectionError
 
-    entry = await init_integration(hass, aioclient_mock)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_unload_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the BSBLan configuration entry unloading."""
-    entry = await init_integration(hass, aioclient_mock)
-    assert hass.data[DOMAIN]
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data.get(DOMAIN)
 
-
-async def test_config_entry_no_authentication(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the BSBLan configuration entry not ready."""
-    aioclient_mock.post(
-        "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
-        exc=aiohttp.ClientError,
-    )
-
-    entry = await init_integration_without_auth(hass, aioclient_mock)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert len(mock_bsblan.state.mock_calls) == 1
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

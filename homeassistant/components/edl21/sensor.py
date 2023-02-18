@@ -18,12 +18,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_NAME,
     DEGREE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    POWER_WATT,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -223,9 +222,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     # C=81: Angles
     # D=7: Instantaneous value
+    # E=1:  U(L2) x U(L1)
+    # E=2:  U(L3) x U(L1)
     # E=4:  U(L1) x I(L1)
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
+    SensorEntityDescription(
+        key="1-0:81.7.1*255", name="U(L2)/U(L1) phase angle", icon="mdi:sine-wave"
+    ),
+    SensorEntityDescription(
+        key="1-0:81.7.2*255", name="U(L3)/U(L1) phase angle", icon="mdi:sine-wave"
+    ),
     SensorEntityDescription(
         key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
     ),
@@ -247,13 +254,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 SENSORS = {desc.key: desc for desc in SENSOR_TYPES}
 
 SENSOR_UNIT_MAPPING = {
-    "Wh": ENERGY_WATT_HOUR,
-    "kWh": ENERGY_KILO_WATT_HOUR,
-    "W": POWER_WATT,
-    "A": ELECTRIC_CURRENT_AMPERE,
-    "V": ELECTRIC_POTENTIAL_VOLT,
+    "Wh": UnitOfEnergy.WATT_HOUR,
+    "kWh": UnitOfEnergy.KILO_WATT_HOUR,
+    "W": UnitOfPower.WATT,
+    "A": UnitOfElectricCurrent.AMPERE,
+    "V": UnitOfElectricPotential.VOLT,
     "°": DEGREE,
-    "Hz": FREQUENCY_HERTZ,
+    "Hz": UnitOfFrequency.HERTZ,
 }
 
 
@@ -273,15 +280,24 @@ class EDL21:
 
     _OBIS_BLACKLIST = {
         # C=96: Electricity-related service entries
-        "1-0:96.50.1*1",  # Manufacturer specific
-        "1-0:96.90.2*1",  # Manufacturer specific
-        "1-0:96.90.2*2",  # Manufacturer specific
+        "1-0:96.50.1*1",  # Manufacturer specific EFR SGM-C4 Hardware version
+        "1-0:96.50.1*4",  # Manufacturer specific EFR SGM-C4 Hardware version
+        "1-0:96.50.4*4",  # Manufacturer specific EFR SGM-C4 Parameters version
+        "1-0:96.90.2*1",  # Manufacturer specific EFR SGM-C4 Firmware Checksum
+        "1-0:96.90.2*2",  # Manufacturer specific EFR SGM-C4 Firmware Checksum
+        # C=97: Electricity-related service entries
+        "1-0:97.97.0*0",  # Manufacturer specific EFR SGM-C4 Error register
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
     }
 
-    def __init__(self, hass, config, async_add_entities) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
@@ -290,7 +306,7 @@ class EDL21:
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to an EDL21 reader."""
         await self._proto.connect(self._hass.loop)
 
@@ -308,7 +324,7 @@ class EDL21:
             return
         electricity_id = electricity_id.replace(" ", "")
 
-        new_entities = []
+        new_entities: list[EDL21Entity] = []
         for telegram in message_body.get("valList", []):
             if not (obis := telegram.get("objName")):
                 continue
@@ -341,7 +357,7 @@ class EDL21:
         if new_entities:
             self._hass.loop.create_task(self.add_entities(new_entities))
 
-    async def add_entities(self, new_entities) -> None:
+    async def add_entities(self, new_entities: list[EDL21Entity]) -> None:
         """Migrate old unique IDs, then add entities to hass."""
         registry = er.async_get(self._hass)
 

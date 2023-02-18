@@ -143,7 +143,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         ]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         features = (
             CoverEntityFeature.OPEN

@@ -81,7 +81,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
         return icon
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class of the sensor."""
         return SensorDeviceClass.BATTERY
 

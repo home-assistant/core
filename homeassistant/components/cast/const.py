@@ -25,4 +25,3 @@ SIGNAL_HASS_CAST_SHOW_VIEW = "cast_show_view"
 
 CONF_IGNORE_CEC = "ignore_cec"
 CONF_KNOWN_HOSTS = "known_hosts"
-CONF_UUID = "uuid"

@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import Optional, cast
+from typing import cast
 
 from .const import SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
 
-LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], Optional[ValueType]]
+LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], ValueType | None]
 SubCatLookupType = dict[str, LookupFunc]
 
 

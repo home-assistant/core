@@ -30,7 +30,6 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._char_name: str | None = None
-        self._features = 0
         self.setup()
 
         super().__init__()
@@ -73,8 +72,7 @@ class HomeKitEntity(Entity):
         self._accessory.remove_watchable_characteristics(self._aid)
 
     async def async_put_characteristics(self, characteristics: dict[str, Any]) -> None:
-        """
-        Write characteristics to the device.
+        """Write characteristics to the device.
 
         A characteristic type is unique within a service, but in order to write
         to a named characteristic on a bridge we need to turn its type into
@@ -175,6 +173,10 @@ class HomeKitEntity(Entity):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
 
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await self._accessory.async_request_update()
+
 
 class AccessoryEntity(HomeKitEntity):
     """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
@@ -192,8 +194,7 @@ class AccessoryEntity(HomeKitEntity):
 
 
 class CharacteristicEntity(HomeKitEntity):
-    """
-    A HomeKit entity that is related to an single characteristic rather than a whole service.
+    """A HomeKit entity that is related to an single characteristic rather than a whole service.
 
     This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
     the service entity.

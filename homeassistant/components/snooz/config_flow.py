@@ -82,7 +82,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             name = user_input[CONF_NAME]
 
-            discovered = self._discovered_devices.get(name)
+            discovered = self._discovered_devices[name]
 
             assert discovered is not None
 

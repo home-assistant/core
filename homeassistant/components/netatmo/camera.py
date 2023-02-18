@@ -179,9 +179,9 @@ class NetatmoCamera(NetatmoBase, Camera):
         return None
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
-        supported_features: int = CameraEntityFeature.ON_OFF
+        supported_features = CameraEntityFeature.ON_OFF
         if self._model != "NDB":
             supported_features |= CameraEntityFeature.STREAM
         return supported_features

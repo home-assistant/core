@@ -47,8 +47,7 @@ def add_entities(account, async_add_entities, tracked):
         new_tracked.append(IcloudDeviceBatterySensor(account, device))
         tracked.add(dev_id)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked, True)
 
 
 class IcloudDeviceBatterySensor(SensorEntity):

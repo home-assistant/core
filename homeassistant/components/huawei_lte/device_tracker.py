@@ -10,9 +10,9 @@ from stringcase import snakecase
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
     SourceType,
 )
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -60,7 +60,7 @@ async def async_setup_entry(
     # Grab hosts list once to examine whether the initial fetch has got some data for
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
-    router = hass.data[DOMAIN].routers[config_entry.unique_id]
+    router = hass.data[DOMAIN].routers[config_entry.entry_id]
     if (hosts := _get_hosts(router, True)) is None:
         return
 

@@ -2,9 +2,11 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components.fully_kiosk.const import (
+    ATTR_APPLICATION,
     ATTR_URL,
     DOMAIN,
     SERVICE_LOAD_URL,
+    SERVICE_START_APPLICATION,
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -34,3 +36,12 @@ async def test_services(
     )
 
     assert len(mock_fully_kiosk.loadUrl.mock_calls) == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_START_APPLICATION,
+        {ATTR_DEVICE_ID: [device_entry.id], ATTR_APPLICATION: "de.ozerov.fully"},
+        blocking=True,
+    )
+
+    assert len(mock_fully_kiosk.startApplication.mock_calls) == 1
