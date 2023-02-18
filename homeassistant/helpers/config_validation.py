@@ -1166,7 +1166,7 @@ STATE_CONDITION_BASE_SCHEMA = {
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
-    vol.Optional(CONF_FOR): positive_time_period,
+    vol.Optional(CONF_FOR): positive_time_period_template,
     # To support use_trigger_value in automation
     # Deprecated 2016/04/25
     vol.Optional("from"): str,
