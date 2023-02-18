@@ -51,8 +51,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         series = await hass.async_add_executor_job(
             heatpump.decode_heatpump_series, hp_type
         )
+        serial_no = await hass.async_add_executor_job(
+            heatpump.read_value, EcotouchTags.SERIAL_NUMBER
+        )
         # Return info that you want to store in the config entry.
-        return {"title": f"{series}"}
+        return {"title": series, "serial_no": serial_no}
 
     except ConnectionException as exc:
         raise CannotConnect(ConnectionException) from exc
@@ -77,11 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            if self.host_already_configured(user_input[CONF_HOST]):
-                return self.async_abort(reason="already_configured")
-
             info = await validate_input(self.hass, user_input)
-
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -90,18 +89,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(info["serial_no"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    def host_already_configured(self, host: str) -> bool:
-        """Test if there is already a heatpump with this host."""
-        existing_hosts = {
-            entry.data[CONF_HOST] for entry in self._async_current_entries()
-        }
-        return host in existing_hosts
 
 
 class CannotConnect(HomeAssistantError):

@@ -24,7 +24,6 @@ class EcotouchEntity(CoordinatorEntity[EcotouchCoordinator]):
         """Initialize entity."""
         super().__init__(coordinator)
         self.entity_description = entity_config
-
         self.config_entry = config_entry
         self._tag = tag
         self.entity_id = f"{DOMAIN}.{entity_config.key}"

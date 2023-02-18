@@ -236,6 +236,4 @@ class EcotouchSensor(EcotouchEntity, SensorEntity):
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
-        self._coordinator = coordinator
-        self.entity_description = sensor_config
         super().__init__(coordinator, tag, config_entry, sensor_config, device_info)
