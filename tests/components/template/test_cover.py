@@ -228,7 +228,7 @@ async def test_template_not_optimistic(hass, start_ha):
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
