@@ -141,6 +141,29 @@ async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     return await store.async_load()
 
 
+async def _async_check_internal_ssl(hass: HomeAssistant) -> bool:
+    """Check if internal URL has valid SSL."""
+    try:
+        internal_ssl_url = get_url(
+            hass,
+            allow_internal=True,
+            allow_external=False,
+            allow_cloud=False,
+            require_ssl=True,
+        )
+    except NoURLAvailableError:
+        return False
+
+    session = async_get_clientsession(hass, verify_ssl=True)
+    with contextlib.suppress(
+        ClientConnectorCertificateError, ClientError, asyncio.TimeoutError
+    ):
+        async with session.get(internal_ssl_url, timeout=5, allow_redirects=False):
+            return True
+
+    return False
+
+
 @dataclass
 class ApiConfig:
     """Configuration settings for API server."""
@@ -211,25 +234,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Assume the first server host name provided as API host
         host = server_host[0]
 
-    internal_url_has_valid_ssl = False
-    try:
-        internal_ssl_url = get_url(
-            hass,
-            allow_internal=True,
-            allow_external=False,
-            allow_cloud=False,
-            require_ssl=True,
-        )
-    except NoURLAvailableError:
-        pass
-    else:
-        session = async_get_clientsession(hass, verify_ssl=True)
-        with contextlib.suppress(
-            ClientConnectorCertificateError, ClientError, asyncio.TimeoutError
-        ):
-            async with session.get(internal_ssl_url, timeout=5, allow_redirects=False):
-                internal_url_has_valid_ssl = True
-
+    internal_url_has_valid_ssl = await _async_check_internal_ssl(hass)
     hass.config.api = ApiConfig(
         local_ip,
         host,
