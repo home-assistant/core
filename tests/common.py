@@ -1088,6 +1088,11 @@ class MockEntity(entity.Entity):
         return self._handle("entity_category")
 
     @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return self._handle("extra_state_attributes")
+
+    @property
     def has_entity_name(self) -> bool:
         """Return the has_entity_name name flag."""
         return self._handle("has_entity_name")
