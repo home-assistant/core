@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
-import uuid
 
 import voluptuous as vol
 
@@ -86,14 +85,21 @@ SENSOR_SETUP = {
 }
 
 
+def get_unique_id_and_name(user_input: dict[str, Any]) -> tuple:
+    """Return unique id and name."""
+    unique_id = f"{SENSOR_CONFIG[user_input[CONF_TYPE]].name}-{user_input.get(CONF_ARG, '')}".rstrip()
+    name = f"{SENSOR_CONFIG[user_input[CONF_TYPE]].name} {user_input.get(CONF_ARG, '')}".rstrip()
+
+    return unique_id, name
+
+
 async def validate_sensor_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate sensor input."""
-    user_input[CONF_UNIQUE_ID] = str(uuid.uuid1())
-    user_input[
-        CONF_NAME
-    ] = f"{SENSOR_CONFIG[user_input[CONF_TYPE]].name} {user_input.get(CONF_ARG, '')}".rstrip()
+    user_input[CONF_UNIQUE_ID], user_input[CONF_NAME] = get_unique_id_and_name(
+        user_input
+    )
 
     if (
         SENSOR_CONFIG[user_input[CONF_TYPE]].mandatory_arg is True
@@ -116,10 +122,7 @@ async def validate_sensor_setup_import(
 
     for sensor_config in user_input[CONF_RESOURCES]:
         sensor = {}
-        sensor[CONF_UNIQUE_ID] = str(uuid.uuid1())
-        sensor[
-            CONF_NAME
-        ] = f"{SENSOR_CONFIG[sensor_config[CONF_TYPE]].name} {sensor_config.get(CONF_ARG, '')}".rstrip()
+        sensor[CONF_UNIQUE_ID], sensor[CONF_NAME] = get_unique_id_and_name(user_input)
 
         if (
             SENSOR_CONFIG[sensor_config[CONF_TYPE]].mandatory_arg is True
@@ -165,9 +168,7 @@ async def validate_sensor_edit(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Update edited sensor."""
-    user_input[
-        CONF_NAME
-    ] = f"{SENSOR_CONFIG[user_input[CONF_TYPE]].name} {user_input.get(CONF_ARG, '')}".rstrip()
+    _, user_input[CONF_NAME] = get_unique_id_and_name(user_input)
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
