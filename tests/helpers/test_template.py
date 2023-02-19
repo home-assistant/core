@@ -2829,6 +2829,26 @@ async def test_device_attr(
     assert info.rate_limit is None
 
 
+async def test_areas(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
+    """Test areas function."""
+    # Test no areas
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test one area
+    area1 = area_registry.async_get_or_create("area1")
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [area1.id])
+    assert info.rate_limit is None
+
+    # Test multiple areas
+    area2 = area_registry.async_get_or_create("area2")
+    info = render_to_info(hass, "{{ areas() }}")
+    assert_result_info(info, [area1.id, area2.id])
+    assert info.rate_limit is None
+
+
 async def test_area_id(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
