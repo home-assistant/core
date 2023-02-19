@@ -1404,7 +1404,6 @@ async def test_unsubscribe_race(
     assert not calls_a.called
     assert calls_b.called
 
-    # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
     expected_calls = [
         call.subscribe([("test/state", 0)]),
     ]
