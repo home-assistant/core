@@ -68,9 +68,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="next_hour_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        value_fn=lambda data: data.energy_today.price_at_time(
-            data.energy_today.utcnow() + timedelta(hours=1)
-        ),
+        value_fn=lambda data: get_next_energy_price(data, 1),
     ),
     EnergyZeroSensorEntityDescription(
         key="average_price",
@@ -168,6 +166,22 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
     return data.gas_today.price_at_time(
         data.gas_today.utcnow() + timedelta(hours=hours)
     )
+
+
+def get_next_energy_price(data: EnergyZeroData, hours: int) -> float | None:
+    """Return the next energy price.
+
+    Args:
+        data: The data object.
+        hours: The number of hours to add to the current time.
+
+    Returns:
+        The next energy market price.
+    """
+    price = data.energy_today.price_at_time(data.energy_today.utcnow() + timedelta(hours=hours))
+    if price is None and data.energy_tomorrow is not None:
+        return data.energy_tomorrow.price_at_time(data.energy_today.utcnow() + timedelta(hours=hours))
+    return price
 
 
 async def async_setup_entry(
