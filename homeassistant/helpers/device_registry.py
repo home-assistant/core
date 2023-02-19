@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Coroutine
+from collections.abc import Coroutine, ValuesView
 import logging
 import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
@@ -14,11 +14,13 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissing
 from homeassistant.loader import bind_hass
+from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
 from . import storage
 from .debounce import Debouncer
 from .frame import report
+from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -89,10 +91,52 @@ class DeviceEntry:
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
 
+    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
+
     @property
     def disabled(self) -> bool:
         """Return if entry is disabled."""
         return self.disabled_by is not None
+
+    @property
+    def dict_repr(self) -> dict[str, Any]:
+        """Return a dict representation of the entry."""
+        return {
+            "area_id": self.area_id,
+            "configuration_url": self.configuration_url,
+            "config_entries": list(self.config_entries),
+            "connections": list(self.connections),
+            "disabled_by": self.disabled_by,
+            "entry_type": self.entry_type,
+            "hw_version": self.hw_version,
+            "id": self.id,
+            "identifiers": list(self.identifiers),
+            "manufacturer": self.manufacturer,
+            "model": self.model,
+            "name_by_user": self.name_by_user,
+            "name": self.name,
+            "sw_version": self.sw_version,
+            "via_device_id": self.via_device_id,
+        }
+
+    @property
+    def json_repr(self) -> str | None:
+        """Return a cached JSON representation of the entry."""
+        if self._json_repr is not None:
+            return self._json_repr
+
+        try:
+            dict_repr = self.dict_repr
+            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+        except (ValueError, TypeError):
+            _LOGGER.error(
+                "Unable to serialize entry %s to JSON. Bad data found at %s",
+                self.id,
+                format_unserializable_data(
+                    find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
+                ),
+            )
+        return self._json_repr
 
 
 @attr.s(slots=True, frozen=True)
@@ -198,6 +242,10 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
         super().__init__()
         self._connections: dict[tuple[str, str], _EntryTypeT] = {}
         self._identifiers: dict[tuple[str, str], _EntryTypeT] = {}
+
+    def values(self) -> ValuesView[_EntryTypeT]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
 
     def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
         """Add an item."""
@@ -399,7 +447,7 @@ class DeviceRegistry:
     ) -> DeviceEntry | None:
         """Update device attributes."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import area_registry as ar
 
         old = self.devices[device_id]

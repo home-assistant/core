@@ -1,11 +1,11 @@
 {
   "domain": "ondilo_ico",
   "name": "Ondilo ICO",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/ondilo_ico",
-  "requirements": ["ondilo==0.2.0"],
-  "dependencies": ["auth"],
   "codeowners": ["@JeromeHXP"],
+  "config_flow": true,
+  "dependencies": ["auth"],
+  "documentation": "https://www.home-assistant.io/integrations/ondilo_ico",
   "iot_class": "cloud_polling",
-  "loggers": ["ondilo"]
+  "loggers": ["ondilo"],
+  "requirements": ["ondilo==0.2.0"]
 }

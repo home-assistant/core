@@ -36,6 +36,3 @@ SRV_RECORD_PREFIX = "_minecraft._tcp"
 
 UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
-UNIT_PROTOCOL_VERSION = None
-UNIT_VERSION = None
-UNIT_MOTD = None

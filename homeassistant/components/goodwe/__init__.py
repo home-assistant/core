@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=entry.title,
         manufacturer="GoodWe",
         model=inverter.model_name,
-        sw_version=f"{inverter.software_version} ({inverter.arm_version})",
+        sw_version=f"{inverter.firmware} / {inverter.arm_firmware}",
     )
 
     async def async_update_data():

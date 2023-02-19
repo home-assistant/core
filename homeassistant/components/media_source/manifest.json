@@ -1,9 +1,9 @@
 {
   "domain": "media_source",
   "name": "Media Source",
-  "documentation": "https://www.home-assistant.io/integrations/media_source",
-  "dependencies": ["http"],
   "codeowners": ["@hunterjm"],
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/media_source",
+  "integration_type": "system",
+  "quality_scale": "internal"
 }

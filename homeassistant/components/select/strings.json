@@ -5,7 +5,11 @@
       "current_option_changed": "{entity_name} option changed"
     },
     "action_type": {
-      "select_option": "Change {entity_name} option"
+      "select_first": "Change {entity_name} to first option",
+      "select_last": "Change {entity_name} to last option",
+      "select_next": "Change {entity_name} to next option",
+      "select_option": "Change {entity_name} option",
+      "select_previous": "Change {entity_name} to previous option"
     },
     "condition_type": {
       "selected_option": "Current {entity_name} selected option"

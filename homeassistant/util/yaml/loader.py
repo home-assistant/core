@@ -8,7 +8,7 @@ from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import Any, TextIO, TypeVar, Union, overload
+from typing import Any, TextIO, TypeVar, overload
 
 import yaml
 
@@ -29,7 +29,7 @@ from .objects import Input, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
+JSON_TYPE = list | dict | str  # pylint: disable=invalid-name
 _DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,7 +154,7 @@ class SafeLineLoader(yaml.SafeLoader):
         return getattr(self.stream, "name", "")
 
 
-LoaderType = Union[SafeLineLoader, SafeLoader]
+LoaderType = SafeLineLoader | SafeLoader
 
 
 def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:

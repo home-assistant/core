@@ -1,5 +1,4 @@
-"""
-Provide a mock update platform.
+"""Provide a mock update platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

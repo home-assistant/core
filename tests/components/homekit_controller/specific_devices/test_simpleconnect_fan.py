@@ -1,5 +1,4 @@
-"""
-Test against characteristics captured from a SIMPLEconnect Fan.
+"""Test against characteristics captured from a SIMPLEconnect Fan.
 
 https://github.com/home-assistant/core/issues/26180
 """

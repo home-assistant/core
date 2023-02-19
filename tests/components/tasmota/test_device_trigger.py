@@ -10,6 +10,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.tasmota import _LOGGER
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
@@ -22,9 +23,16 @@ from tests.common import (
     async_get_device_automations,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 
-async def test_get_triggers_btn(hass, device_reg, entity_reg, mqtt_mock, setup_tasmota):
+async def test_get_triggers_btn(
+    hass: HomeAssistant,
+    device_reg,
+    entity_reg,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test we get the expected triggers from a discovered mqtt device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["btn"][0] = 1
@@ -65,7 +73,13 @@ async def test_get_triggers_btn(hass, device_reg, entity_reg, mqtt_mock, setup_t
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_swc(hass, device_reg, entity_reg, mqtt_mock, setup_tasmota):
+async def test_get_triggers_swc(
+    hass: HomeAssistant,
+    device_reg,
+    entity_reg,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test we get the expected triggers from a discovered mqtt device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["swc"][0] = 0
@@ -95,8 +109,12 @@ async def test_get_triggers_swc(hass, device_reg, entity_reg, mqtt_mock, setup_t
 
 
 async def test_get_unknown_triggers(
-    hass, device_reg, entity_reg, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    device_reg,
+    entity_reg,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test we don't get unknown triggers."""
     # Discover a device without device triggers
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -140,8 +158,12 @@ async def test_get_unknown_triggers(
 
 
 async def test_get_non_existing_triggers(
-    hass, device_reg, entity_reg, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    device_reg,
+    entity_reg,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test getting non existing triggers."""
     # Discover a device without device triggers
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -162,8 +184,12 @@ async def test_get_non_existing_triggers(
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_triggers(
-    hass, device_reg, entity_reg, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    device_reg,
+    entity_reg,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test exception handling when discovering trigger."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["swc"][0] = 0
@@ -245,8 +271,12 @@ async def test_discover_bad_triggers(
 
 
 async def test_update_remove_triggers(
-    hass, device_reg, entity_reg, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    device_reg,
+    entity_reg,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test triggers can be updated and removed."""
     # Discover a device with toggle + hold trigger
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -318,8 +348,8 @@ async def test_update_remove_triggers(
 
 
 async def test_if_fires_on_mqtt_message_btn(
-    hass, device_reg, calls, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test button triggers firing."""
     # Discover a device with 2 device triggers
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -389,8 +419,8 @@ async def test_if_fires_on_mqtt_message_btn(
 
 
 async def test_if_fires_on_mqtt_message_swc(
-    hass, device_reg, calls, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test switch triggers firing."""
     # Discover a device with 2 device triggers
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -483,8 +513,8 @@ async def test_if_fires_on_mqtt_message_swc(
 
 
 async def test_if_fires_on_mqtt_message_late_discover(
-    hass, device_reg, calls, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test triggers firing of MQTT device triggers discovered after setup."""
     # Discover a device without device triggers
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -562,8 +592,8 @@ async def test_if_fires_on_mqtt_message_late_discover(
 
 
 async def test_if_fires_on_mqtt_message_after_update(
-    hass, device_reg, calls, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test triggers firing after update."""
     # Discover a device with device trigger
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -643,7 +673,9 @@ async def test_if_fires_on_mqtt_message_after_update(
     assert len(calls) == 3
 
 
-async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock, setup_tasmota):
+async def test_no_resubscribe_same_topic(
+    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test subscription to topics without change."""
     # Discover a device with device trigger
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -690,8 +722,8 @@ async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock, setup_tasm
 
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
-    hass, device_reg, calls, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant, device_reg, calls, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test triggers not firing after removal."""
     # Discover a device with device trigger
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -761,8 +793,13 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
 
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
-    hass, hass_ws_client, device_reg, calls, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_reg,
+    calls,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test triggers not firing after removal."""
     assert await async_setup_component(hass, "config", {})
     # Discover a device with device trigger
@@ -820,7 +857,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(calls) == 1
 
 
-async def test_attach_remove(hass, device_reg, mqtt_mock, setup_tasmota):
+async def test_attach_remove(
+    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test attach and removal of trigger."""
     # Discover a device with device trigger
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -879,7 +918,9 @@ async def test_attach_remove(hass, device_reg, mqtt_mock, setup_tasmota):
     assert len(calls) == 1
 
 
-async def test_attach_remove_late(hass, device_reg, mqtt_mock, setup_tasmota):
+async def test_attach_remove_late(
+    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test attach and removal of trigger."""
     # Discover a device without device triggers
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -950,7 +991,9 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock, setup_tasmota):
     assert len(calls) == 1
 
 
-async def test_attach_remove_late2(hass, device_reg, mqtt_mock, setup_tasmota):
+async def test_attach_remove_late2(
+    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test attach and removal of trigger."""
     # Discover a device without device triggers
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -1006,7 +1049,9 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock, setup_tasmota):
     assert len(calls) == 0
 
 
-async def test_attach_remove_unknown1(hass, device_reg, mqtt_mock, setup_tasmota):
+async def test_attach_remove_unknown1(
+    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test attach and removal of unknown trigger."""
     # Discover a device without device triggers
     config1 = copy.deepcopy(DEFAULT_CONFIG)
@@ -1044,8 +1089,12 @@ async def test_attach_remove_unknown1(hass, device_reg, mqtt_mock, setup_tasmota
 
 
 async def test_attach_unknown_remove_device_from_registry(
-    hass, hass_ws_client, device_reg, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_reg,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test attach and removal of device with unknown trigger."""
     assert await async_setup_component(hass, "config", {})
     # Discover a device without device triggers
@@ -1092,7 +1141,9 @@ async def test_attach_unknown_remove_device_from_registry(
     await hass.async_block_till_done()
 
 
-async def test_attach_remove_config_entry(hass, device_reg, mqtt_mock, setup_tasmota):
+async def test_attach_remove_config_entry(
+    hass: HomeAssistant, device_reg, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test trigger cleanup when removing a Tasmota config entry."""
     # Discover a device with device trigger
     config = copy.deepcopy(DEFAULT_CONFIG)

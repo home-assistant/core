@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models.server_information import ServerInfo
 import pytest
 
@@ -27,7 +28,6 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
         async def connect() -> None:
             """Mock connect."""
             await asyncio.sleep(0)
-            client.connected = True
 
         async def listen(init_ready: asyncio.Event | None) -> None:
             """Mock listen."""
@@ -35,7 +35,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
                 init_ready.set()
             listen_block = asyncio.Event()
             await listen_block.wait()
-            assert False, "Listen was not cancelled!"
+            pytest.fail("Listen was not cancelled!")
 
         client.connect = AsyncMock(side_effect=connect)
         client.start_listening = AsyncMock(side_effect=listen)
@@ -46,6 +46,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
             sdk_version="2022.11.1",
             wifi_credentials_set=True,
             thread_credentials_set=True,
+            min_supported_schema_version=SCHEMA_VERSION,
         )
 
         yield client

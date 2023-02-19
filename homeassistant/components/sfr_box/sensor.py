@@ -1,6 +1,8 @@
 """SFR Box sensor platform."""
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from itertools import chain
+from typing import Generic, TypeVar
 
 from sfrbox_api.models import DslInfo, SystemInfo
 
@@ -11,9 +13,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS, UnitOfDataRate
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,42 +29,44 @@ from .const import DOMAIN
 from .coordinator import SFRDataUpdateCoordinator
 from .models import DomainData
 
+_T = TypeVar("_T")
+
 
 @dataclass
-class SFRBoxSensorMixin:
+class SFRBoxSensorMixin(Generic[_T]):
     """Mixin for SFR Box sensors."""
 
-    value_fn: Callable[[DslInfo], StateType]
+    value_fn: Callable[[_T], StateType]
 
 
 @dataclass
-class SFRBoxSensorEntityDescription(SensorEntityDescription, SFRBoxSensorMixin):
+class SFRBoxSensorEntityDescription(SensorEntityDescription, SFRBoxSensorMixin[_T]):
     """Description for SFR Box sensors."""
 
 
-SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
-    SFRBoxSensorEntityDescription(
+DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
+    SFRBoxSensorEntityDescription[DslInfo](
         key="linemode",
         name="Line mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.linemode,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="counter",
         name="Counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.counter,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="crc",
         name="CRC",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda x: x.crc,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="noise_down",
         name="Noise down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -67,7 +76,7 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.noise_down,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="noise_up",
         name="Noise up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -77,7 +86,7 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.noise_up,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="attenuation_down",
         name="Attenuation down",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -87,7 +96,7 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.attenuation_down,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="attenuation_up",
         name="Attenuation up",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -97,7 +106,7 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.attenuation_up,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="rate_down",
         name="Rate down",
         device_class=SensorDeviceClass.DATA_RATE,
@@ -105,7 +114,7 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.rate_down,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="rate_up",
         name="Rate up",
         device_class=SensorDeviceClass.DATA_RATE,
@@ -113,7 +122,7 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.rate_up,
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="line_status",
         name="Line status",
         device_class=SensorDeviceClass.ENUM,
@@ -130,7 +139,7 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         translation_key="line_status",
         value_fn=lambda x: x.line_status.lower().replace(" ", "_"),
     ),
-    SFRBoxSensorEntityDescription(
+    SFRBoxSensorEntityDescription[DslInfo](
         key="training",
         name="Training",
         device_class=SensorDeviceClass.ENUM,
@@ -152,6 +161,41 @@ SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription, ...] = (
         value_fn=lambda x: x.training.lower().replace(" ", "_").replace(".", "_"),
     ),
 )
+SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
+    SFRBoxSensorEntityDescription[SystemInfo](
+        key="net_infra",
+        name="Network infrastructure",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[
+            "adsl",
+            "ftth",
+            "gprs",
+            "unknown",
+        ],
+        translation_key="net_infra",
+        value_fn=lambda x: x.net_infra,
+    ),
+    SFRBoxSensorEntityDescription[SystemInfo](
+        key="alimvoltage",
+        name="Voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        value_fn=lambda x: x.alimvoltage,
+    ),
+    SFRBoxSensorEntityDescription[SystemInfo](
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda x: x.temperature / 1000,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -160,29 +204,38 @@ async def async_setup_entry(
     """Set up the sensors."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        SFRBoxSensor(data.dsl, description, data.system.data)
-        for description in SENSOR_TYPES
-    ]
+    entities: Iterable[SFRBoxSensor] = chain(
+        (
+            SFRBoxSensor(data.dsl, description, data.system.data)
+            for description in DSL_SENSOR_TYPES
+        ),
+        (
+            SFRBoxSensor(data.system, description, data.system.data)
+            for description in SYSTEM_SENSOR_TYPES
+        ),
+    )
+
     async_add_entities(entities)
 
 
-class SFRBoxSensor(CoordinatorEntity[SFRDataUpdateCoordinator[DslInfo]], SensorEntity):
+class SFRBoxSensor(CoordinatorEntity[SFRDataUpdateCoordinator[_T]], SensorEntity):
     """SFR Box sensor."""
 
-    entity_description: SFRBoxSensorEntityDescription
+    entity_description: SFRBoxSensorEntityDescription[_T]
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: SFRDataUpdateCoordinator[DslInfo],
+        coordinator: SFRDataUpdateCoordinator[_T],
         description: SFRBoxSensorEntityDescription,
         system_info: SystemInfo,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{system_info.mac_addr}_dsl_{description.key}"
+        self._attr_unique_id = (
+            f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
+        )
         self._attr_device_info = {"identifiers": {(DOMAIN, system_info.mac_addr)}}
 
     @property

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import aiohttp
+from aiohttp import ClientError
 import voluptuous as vol
 from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import Auth
@@ -15,6 +15,7 @@ from whirlpool.backendselector import BackendSelector
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REGIONS_MAP, DOMAIN
 from .util import get_brand_for_region
@@ -40,19 +41,20 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    session = async_get_clientsession(hass)
     region = CONF_REGIONS_MAP[data[CONF_REGION]]
     brand = get_brand_for_region(region)
     backend_selector = BackendSelector(brand, region)
-    auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD])
+    auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD], session)
     try:
         await auth.do_auth()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
+    except (asyncio.TimeoutError, ClientError) as exc:
         raise CannotConnect from exc
 
     if not auth.is_access_token_valid():
         raise InvalidAuth
 
-    appliances_manager = AppliancesManager(backend_selector, auth)
+    appliances_manager = AppliancesManager(backend_selector, auth, session)
     await appliances_manager.fetch_appliances()
     if appliances_manager.aircons is None and appliances_manager.washer_dryers is None:
         raise NoAppliances

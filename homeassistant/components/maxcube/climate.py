@@ -134,8 +134,7 @@ class MaxCubeClimate(ClimateEntity):
             raise ValueError(f"unsupported HVAC mode {hvac_mode}")
 
     def _set_target(self, mode: int | None, temp: float | None) -> None:
-        """
-        Set the mode and/or temperature of the thermostat.
+        """Set the mode and/or temperature of the thermostat.
 
         @param mode: this is the mode to change to.
         @param temp: the temperature to target.

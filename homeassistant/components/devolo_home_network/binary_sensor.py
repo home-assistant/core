@@ -14,8 +14,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -72,10 +72,10 @@ async def async_setup_entry(
     if device.plcnet:
         entities.append(
             DevoloBinarySensorEntity(
+                entry,
                 coordinators[CONNECTED_PLC_DEVICES],
                 SENSOR_TYPES[CONNECTED_TO_ROUTER],
                 device,
-                entry.title,
             )
         )
     async_add_entities(entities)
@@ -86,14 +86,14 @@ class DevoloBinarySensorEntity(DevoloEntity[LogicalNetwork], BinarySensorEntity)
 
     def __init__(
         self,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator[LogicalNetwork],
         description: DevoloBinarySensorEntityDescription,
         device: Device,
-        device_name: str,
     ) -> None:
         """Initialize entity."""
         self.entity_description: DevoloBinarySensorEntityDescription = description
-        super().__init__(coordinator, device, device_name)
+        super().__init__(entry, coordinator, device)
 
     @property
     def is_on(self) -> bool:

@@ -30,7 +30,7 @@ async def test_turn_on(
     switch_node: MatterNode,
 ) -> None:
     """Test turning on a switch."""
-    state = hass.states.get("switch.mock_onoff_plugin_unit")
+    state = hass.states.get("switch.mock_onoffpluginunit_powerplug_switch")
     assert state
     assert state.state == "off"
 
@@ -38,7 +38,7 @@ async def test_turn_on(
         "switch",
         "turn_on",
         {
-            "entity_id": "switch.mock_onoff_plugin_unit",
+            "entity_id": "switch.mock_onoffpluginunit_powerplug_switch",
         },
         blocking=True,
     )
@@ -53,7 +53,7 @@ async def test_turn_on(
     set_node_attribute(switch_node, 1, 6, 0, True)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("switch.mock_onoff_plugin_unit")
+    state = hass.states.get("switch.mock_onoffpluginunit_powerplug_switch")
     assert state
     assert state.state == "on"
 
@@ -64,7 +64,7 @@ async def test_turn_off(
     switch_node: MatterNode,
 ) -> None:
     """Test turning off a switch."""
-    state = hass.states.get("switch.mock_onoff_plugin_unit")
+    state = hass.states.get("switch.mock_onoffpluginunit_powerplug_switch")
     assert state
     assert state.state == "off"
 
@@ -72,7 +72,7 @@ async def test_turn_off(
         "switch",
         "turn_off",
         {
-            "entity_id": "switch.mock_onoff_plugin_unit",
+            "entity_id": "switch.mock_onoffpluginunit_powerplug_switch",
         },
         blocking=True,
     )

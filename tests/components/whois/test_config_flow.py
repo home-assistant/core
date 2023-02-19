@@ -44,7 +44,7 @@ async def test_full_user_flow(
 
 
 @pytest.mark.parametrize(
-    "throw,reason",
+    ("throw", "reason"),
     [
         (UnknownTld, "unknown_tld"),
         (FailedParsingWhoisOutput, "unexpected_response"),

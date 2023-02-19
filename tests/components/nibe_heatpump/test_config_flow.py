@@ -10,7 +10,6 @@ from nibe.exceptions import (
     CoilWriteException,
 )
 import pytest
-from pytest import fixture
 
 from homeassistant import config_entries
 from homeassistant.components.nibe_heatpump import DOMAIN
@@ -33,7 +32,7 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-@fixture(autouse=True, name="mock_setup_entry")
+@pytest.fixture(autouse=True, name="mock_setup_entry")
 async def fixture_mock_setup():
     """Make sure we never actually run setup."""
     with patch(
@@ -158,7 +157,7 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -179,7 +178,7 @@ async def test_read_timeout(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -200,7 +199,7 @@ async def test_write_timeout(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -221,7 +220,7 @@ async def test_unexpected_exception(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -245,7 +244,7 @@ async def test_nibegw_invalid_host(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),

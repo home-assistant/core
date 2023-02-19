@@ -30,13 +30,12 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import State
 
 
-def test_not_supported(caplog):
+def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
     """Test if none is returned if entity isn't supported."""
     # not supported entity
     assert get_accessory(None, None, State("demo.demo", "on"), 2, {}) is None
@@ -47,7 +46,7 @@ def test_not_supported(caplog):
     assert "invalid aid" in caplog.records[0].msg
 
 
-def test_not_supported_media_player():
+def test_not_supported_media_player() -> None:
     """Test if mode isn't supported and if no supported modes."""
     # selected mode for entity not supported
     config = {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}}
@@ -60,9 +59,9 @@ def test_not_supported_media_player():
 
 
 @pytest.mark.parametrize(
-    "config, name", [({CONF_NAME: "Customize Name"}, "Customize Name")]
+    ("config", "name"), [({CONF_NAME: "Customize Name"}, "Customize Name")]
 )
-def test_customize_options(config, name):
+def test_customize_options(config, name) -> None:
     """Test with customized options."""
     mock_type = Mock()
     conf = config.copy()
@@ -74,7 +73,7 @@ def test_customize_options(config, name):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs, config",
+    ("type_name", "entity_id", "state", "attrs", "config"),
     [
         ("Fan", "fan.test", "on", {}, {}),
         ("Light", "light.test", "on", {}, {}),
@@ -98,7 +97,7 @@ def test_customize_options(config, name):
         ("WaterHeater", "water_heater.test", "auto", {}, {}),
     ],
 )
-def test_types(type_name, entity_id, state, attrs, config):
+def test_types(type_name, entity_id, state, attrs, config) -> None:
     """Test if types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -111,7 +110,7 @@ def test_types(type_name, entity_id, state, attrs, config):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [
         (
             "GarageDoorOpener",
@@ -163,7 +162,7 @@ def test_types(type_name, entity_id, state, attrs, config):
         ),
     ],
 )
-def test_type_covers(type_name, entity_id, state, attrs):
+def test_type_covers(type_name, entity_id, state, attrs) -> None:
     """Test if cover types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -173,15 +172,15 @@ def test_type_covers(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs, config",
+    ("type_name", "entity_id", "state", "attrs", "config"),
     [
         (
             "MediaPlayer",
             "media_player.test",
             "on",
             {
-                ATTR_SUPPORTED_FEATURES: media_player_c.SUPPORT_TURN_ON
-                | media_player_c.SUPPORT_TURN_OFF
+                ATTR_SUPPORTED_FEATURES: media_player_c.MediaPlayerEntityFeature.TURN_ON
+                | media_player_c.MediaPlayerEntityFeature.TURN_OFF
             },
             {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}},
         ),
@@ -194,7 +193,7 @@ def test_type_covers(type_name, entity_id, state, attrs):
         ),
     ],
 )
-def test_type_media_player(type_name, entity_id, state, attrs, config):
+def test_type_media_player(type_name, entity_id, state, attrs, config) -> None:
     """Test if media_player types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -207,7 +206,7 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [
         ("BinarySensor", "binary_sensor.opening", "on", {ATTR_DEVICE_CLASS: "opening"}),
         ("BinarySensor", "device_tracker.someone", "not_home", {}),
@@ -269,17 +268,17 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "TemperatureSensor",
             "sensor.temperature",
             "23",
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         ),
         (
             "TemperatureSensor",
             "sensor.temperature",
             "74",
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
         ),
     ],
 )
-def test_type_sensors(type_name, entity_id, state, attrs):
+def test_type_sensors(type_name, entity_id, state, attrs) -> None:
     """Test if sensor types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -289,7 +288,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs, config",
+    ("type_name", "entity_id", "state", "attrs", "config"),
     [
         ("Outlet", "switch.test", "on", {}, {CONF_TYPE: TYPE_OUTLET}),
         ("Switch", "automation.test", "on", {}, {}),
@@ -309,7 +308,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
         ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_SPRINKLER}),
     ],
 )
-def test_type_switches(type_name, entity_id, state, attrs, config):
+def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
     """Test if switch types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -319,7 +318,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [
         (
             "Vacuum",
@@ -333,7 +332,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
         ("Vacuum", "vacuum.basic_vacuum", "off", {}),
     ],
 )
-def test_type_vacuum(type_name, entity_id, state, attrs):
+def test_type_vacuum(type_name, entity_id, state, attrs) -> None:
     """Test if vacuum types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
@@ -343,10 +342,10 @@ def test_type_vacuum(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [("Camera", "camera.basic", "on", {})],
 )
-def test_type_camera(type_name, entity_id, state, attrs):
+def test_type_camera(type_name, entity_id, state, attrs) -> None:
     """Test if camera types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):

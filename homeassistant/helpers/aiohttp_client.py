@@ -20,9 +20,10 @@ from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __v
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.json import json_loads
 
 from .frame import warn_use
-from .json import json_dumps, json_loads
+from .json import json_dumps
 
 if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
@@ -123,7 +124,7 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
-    # pylint: disable=protected-access
+    # pylint: disable-next=protected-access
     clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]
         {USER_AGENT: SERVER_SOFTWARE},
     )

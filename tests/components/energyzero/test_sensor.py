@@ -19,9 +19,9 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CURRENCY_EURO,
-    ENERGY_KILO_WATT_HOUR,
     STATE_UNKNOWN,
-    VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -53,10 +53,10 @@ async def test_energy_today(
     )
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     # Average price sensor
@@ -72,9 +72,9 @@ async def test_energy_today(
     )
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     # Highest price sensor
@@ -90,9 +90,9 @@ async def test_energy_today(
     )
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     # Highest price time sensor
@@ -141,10 +141,10 @@ async def test_gas_today(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Gas market price Current hour"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}"
+        == f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     assert entry.device_id

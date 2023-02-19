@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings cover platform.
+"""Test for the SmartThings cover platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -21,13 +20,16 @@ from homeassistant.components.cover import (
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
 
 
-async def test_entity_and_device_attributes(hass, device_factory):
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
@@ -51,7 +53,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry.manufacturer == "Unavailable"
 
 
-async def test_open(hass, device_factory):
+async def test_open(hass: HomeAssistant, device_factory) -> None:
     """Test the cover opens doors, garages, and shades successfully."""
     # Arrange
     devices = {
@@ -76,7 +78,7 @@ async def test_open(hass, device_factory):
         assert state.state == STATE_OPENING
 
 
-async def test_close(hass, device_factory):
+async def test_close(hass: HomeAssistant, device_factory) -> None:
     """Test the cover closes doors, garages, and shades successfully."""
     # Arrange
     devices = {
@@ -101,7 +103,7 @@ async def test_close(hass, device_factory):
         assert state.state == STATE_CLOSING
 
 
-async def test_set_cover_position(hass, device_factory):
+async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
     """Test the cover sets to the specific position."""
     # Arrange
     device = device_factory(
@@ -124,11 +126,13 @@ async def test_set_cover_position(hass, device_factory):
     assert state.attributes[ATTR_BATTERY_LEVEL] == 95
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
     # Ensure API called
-    # pylint: disable=protected-access
+
     assert device._api.post_device_command.call_count == 1  # type: ignore
 
 
-async def test_set_cover_position_unsupported(hass, device_factory):
+async def test_set_cover_position_unsupported(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test set position does nothing when not supported by device."""
     # Arrange
     device = device_factory(
@@ -147,11 +151,11 @@ async def test_set_cover_position_unsupported(hass, device_factory):
     assert ATTR_CURRENT_POSITION not in state.attributes
 
     # Ensure API was not called
-    # pylint: disable=protected-access
+
     assert device._api.post_device_command.call_count == 0  # type: ignore
 
 
-async def test_update_to_open_from_signal(hass, device_factory):
+async def test_update_to_open_from_signal(hass: HomeAssistant, device_factory) -> None:
     """Test the cover updates to open when receiving a signal."""
     # Arrange
     device = device_factory(
@@ -169,7 +173,9 @@ async def test_update_to_open_from_signal(hass, device_factory):
     assert state.state == STATE_OPEN
 
 
-async def test_update_to_closed_from_signal(hass, device_factory):
+async def test_update_to_closed_from_signal(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the cover updates to closed when receiving a signal."""
     # Arrange
     device = device_factory(
@@ -187,7 +193,7 @@ async def test_update_to_closed_from_signal(hass, device_factory):
     assert state.state == STATE_CLOSED
 
 
-async def test_unload_config_entry(hass, device_factory):
+async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     """Test the lock is removed when the config entry is unloaded."""
     # Arrange
     device = device_factory(
