@@ -20,7 +20,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.selector import (
     ObjectSelector,
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -72,40 +71,15 @@ SENSOR_CONFIG: dict[str, SensorConfig] = {
     "swap_use_percent": SensorConfig(name="Swap use (percent)", mandatory_arg=False),
 }
 
-TYPE_OPTIONS = [
-    SelectOptionDict(value="disk_free", label="Disk free"),
-    SelectOptionDict(value="disk_use", label="Disk use"),
-    SelectOptionDict(value="disk_use_percent", label="Disk use (percent)"),
-    SelectOptionDict(value="ipv4_address", label="IPv4 address"),
-    SelectOptionDict(value="ipv6_address", label="IPv6 address"),
-    SelectOptionDict(value="last_boot", label="Last boot"),
-    SelectOptionDict(value="load_15m", label="Load (15m)"),
-    SelectOptionDict(value="load_1m", label="Load (1m)"),
-    SelectOptionDict(value="load_5m", label="Load (5m)"),
-    SelectOptionDict(value="memory_free", label="Memory free"),
-    SelectOptionDict(value="memory_use", label="Memory use"),
-    SelectOptionDict(value="memory_use_percent", label="Memory use (percent)"),
-    SelectOptionDict(value="network_in", label="Network in"),
-    SelectOptionDict(value="network_out", label="Network out"),
-    SelectOptionDict(value="packets_in", label="Packets in"),
-    SelectOptionDict(value="packets_out", label="Packets out"),
-    SelectOptionDict(value="throughput_network_in", label="Network throughput in"),
-    SelectOptionDict(value="throughput_network_out", label="Network throughput out"),
-    SelectOptionDict(value="process", label="Process"),
-    SelectOptionDict(value="processor_use", label="Processor use"),
-    SelectOptionDict(value="processor_temperature", label="Processor temperature"),
-    SelectOptionDict(value="swap_free", label="Swap free"),
-    SelectOptionDict(value="swap_use", label="Swap use"),
-    SelectOptionDict(value="swap_use_percent", label="Swap use (percent)"),
-]
 
 SENSOR_SETUP = {
     vol.Required(CONF_TYPE): SelectSelector(
         SelectSelectorConfig(
-            options=TYPE_OPTIONS,
+            options=list(SENSOR_CONFIG),
             multiple=False,
             custom_value=False,
             mode=SelectSelectorMode.DROPDOWN,
+            translation_key="type",
         )
     ),
     vol.Optional(CONF_ARG): ObjectSelector(),

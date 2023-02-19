@@ -65,5 +65,35 @@
       "title": "The Systemmonitor YAML configuration is being removed",
       "description": "Configuring Systemmonitor using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Systemmonitor YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "disk_free": "Disk free",
+        "disk_use": "Disk use",
+        "disk_use_percent": "Disk use (percent)",
+        "ipv4_address": "IPv4 address",
+        "ipv6_address": "IPv6 address",
+        "last_boot": "Last boot",
+        "load_15m": "Load (15m)",
+        "load_1m": "Load (1m)",
+        "load_5m": "Load (5m)",
+        "memory_free": "Memory free",
+        "memory_use": "Memory use",
+        "memory_use_percent": "Memory use (percent)",
+        "network_in": "Network in",
+        "network_out": "Network out",
+        "packets_in": "Packets in",
+        "packets_out": "Packets out",
+        "throughput_network_in": "Network throughput in",
+        "throughput_network_out": "Network throughput out",
+        "process": "Process",
+        "processor_use": "Processor use",
+        "processor_temperature": "Processor temperature",
+        "swap_free": "Swap free",
+        "swap_use": "Swap use",
+        "swap_use_percent": "Swap use (percent)"
+      }
+    }
   }
 }
