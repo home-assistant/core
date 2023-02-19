@@ -1,5 +1,6 @@
 """The tests for the MQTT discovery."""
 import copy
+from datetime import timedelta
 import json
 from pathlib import Path
 import re
@@ -14,6 +15,7 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
+from homeassistant.components.mqtt.client import SUBSCRIBE_COOLDOWN
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
@@ -27,6 +29,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .test_common import help_test_unload_config_entry
 
@@ -34,6 +37,7 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_fire_mqtt_message,
+    async_fire_time_changed,
     mock_entity_platform,
 )
 from tests.typing import (
@@ -1393,8 +1397,12 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     ):
         await async_start(hass, "homeassistant", entry)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+        await hass.async_block_till_done()
 
-    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert mqtt_client_mock.subscribe.called_once
+    assert isinstance(mqtt_client_mock.subscribe.call_args.args[0], list)
+    assert ("comp/discovery/#", 0) in mqtt_client_mock.subscribe.call_args.args[0]
     assert not mqtt_client_mock.unsubscribe.called
 
     class TestFlow(config_entries.ConfigFlow):
@@ -1405,7 +1413,9 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
             return self.async_abort(reason="already_configured")
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
-        mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+        assert mqtt_client_mock.subscribe.called_once
+        assert isinstance(mqtt_client_mock.subscribe.call_args.args[0], list)
+        assert ("comp/discovery/#", 0) in mqtt_client_mock.subscribe.call_args.args[0]
         assert not mqtt_client_mock.unsubscribe.called
 
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
@@ -1437,8 +1447,12 @@ async def test_mqtt_discovery_unsubscribe_once(
     ):
         await async_start(hass, "homeassistant", entry)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+        await hass.async_block_till_done()
 
-    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert mqtt_client_mock.subscribe.called_once
+    assert isinstance(mqtt_client_mock.subscribe.call_args.args[0], list)
+    assert ("comp/discovery/#", 0) in mqtt_client_mock.subscribe.call_args.args[0]
     assert not mqtt_client_mock.unsubscribe.called
 
     class TestFlow(config_entries.ConfigFlow):

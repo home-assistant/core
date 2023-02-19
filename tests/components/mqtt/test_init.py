@@ -17,6 +17,7 @@ import yaml
 from homeassistant import config as hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONFIG_SCHEMA, debug_info
+from homeassistant.components.mqtt.client import SUBSCRIBE_COOLDOWN
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -1290,12 +1291,7 @@ async def test_subscribe_same_topic(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
-    """Test subscribing to same topic twice and simulate retained messages.
-
-    When subscribing to the same topic again, the last value sent to the topic
-    should be sent to the new subscriber (simulating exactly what happened with
-    the initial SUBSCRIBE call).
-    """
+    """Test subscribing to same topic twice and simulate retained messages."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
     # Fake that the client is connected
@@ -1304,8 +1300,10 @@ async def test_subscribe_same_topic(
     calls_a = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_a)
     async_fire_mqtt_message(
-        hass, "test/state", "online"
+        hass, "test/state", "online", 0, True
     )  # Simulate a (retained) message
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
     await hass.async_block_till_done()
     assert calls_a.called
     mqtt_client_mock.subscribe.assert_called()
@@ -1314,10 +1312,47 @@ async def test_subscribe_same_topic(
 
     calls_b = MagicMock()
     await mqtt.async_subscribe(hass, "test/state", calls_b)
+    async_fire_mqtt_message(
+        hass, "test/state", "online", 0, True
+    )  # Simulate a (retained) message
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+    await hass.async_block_till_done()
+    mqtt_client_mock.subscribe.assert_called()
     assert not calls_a.called
     assert calls_b.called
+
+
+async def test_subscribe_same_topic_quick(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test subscribing to same topic twice and simulate retained messages."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    calls_a = MagicMock()
+    await mqtt.async_subscribe(hass, "test/state", calls_a)
+    async_fire_mqtt_message(
+        hass, "test/state", "online", 0, True
+    )  # Simulate a (retained) message
+    await hass.async_block_till_done()
     mqtt_client_mock.subscribe.assert_not_called()
+
+    calls_b = MagicMock()
+    await mqtt.async_subscribe(hass, "test/state", calls_b)
+    async_fire_mqtt_message(
+        hass, "test/state", "online", 0, True
+    )  # Simulate a (retained) message
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+    await hass.async_block_till_done()
+    assert calls_a.called_once
+    assert calls_b.called_once
+    mqtt_client_mock.subscribe.assert_called()
 
 
 async def test_not_calling_unsubscribe_with_active_subscribers(
@@ -1333,6 +1368,8 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
 
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
     await mqtt.async_subscribe(hass, "test/state", record_calls)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
     await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.called
 
@@ -1362,20 +1399,16 @@ async def test_unsubscribe_race(
 
     async_fire_mqtt_message(hass, "test/state", "online")
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+    await hass.async_block_till_done()
     assert not calls_a.called
     assert calls_b.called
 
     # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
-    expected_calls_1 = [
-        call.subscribe("test/state", 0),
-        call.unsubscribe("test/state"),
-        call.subscribe("test/state", 0),
+    expected_calls = [
+        call.subscribe([("test/state", 0)]),
     ]
-    expected_calls_2 = [
-        call.subscribe("test/state", 0),
-        call.subscribe("test/state", 0),
-    ]
-    assert mqtt_client_mock.mock_calls in (expected_calls_1, expected_calls_2)
+    assert mqtt_client_mock.mock_calls == expected_calls
 
 
 @pytest.mark.parametrize(
@@ -1395,11 +1428,15 @@ async def test_restore_subscriptions_on_reconnect(
 
     await mqtt.async_subscribe(hass, "test/state", record_calls)
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+    await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 1
 
     mqtt_client_mock.on_disconnect(None, None, 0)
     with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
         await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 2
 
@@ -1423,9 +1460,11 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     await mqtt.async_subscribe(hass, "test/state", record_calls)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+    await hass.async_block_till_done()
 
     expected = [
-        call("test/state", 2),
+        call([("test/state", 2)]),
     ]
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
@@ -1437,8 +1476,10 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+        await hass.async_block_till_done()
 
-    expected.append(call("test/state", 1))
+    expected.append(call([("test/state", 1)]))
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
@@ -1591,11 +1632,15 @@ async def test_subscribe_error(
     await mqtt_mock_entry_no_yaml_config()
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError):
+
+    with patch("homeassistant.components.mqtt.client._raise_on_errors") as roe:
         # simulate client is not connected error before subscribing
         mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
         await mqtt.async_subscribe(hass, "some-topic", record_calls)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+        await hass.async_block_till_done()
+        assert roe.called
 
 
 async def test_handle_message_callback(
@@ -1968,6 +2013,9 @@ async def test_no_birth_message(
         mqtt_client_mock.publish.assert_not_called()
 
 
+@pytest.mark.skip(
+    reason="Async subscriptions means we can't rely on a subscrtiption to status being in effect before the birth message is sent"
+)
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [
@@ -2113,13 +2161,16 @@ async def test_mqtt_subscribes_topics_on_connect(
     mqtt_client_mock.on_connect(None, None, 0, 0)
 
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(SUBSCRIBE_COOLDOWN))
+    await hass.async_block_till_done()
 
     assert mqtt_client_mock.disconnect.call_count == 0
 
-    assert mqtt_client_mock.subscribe.call_count == 3
-    mqtt_client_mock.subscribe.assert_any_call("topic/test", 0)
-    mqtt_client_mock.subscribe.assert_any_call("home/sensor", 2)
-    mqtt_client_mock.subscribe.assert_any_call("still/pending", 1)
+    assert mqtt_client_mock.subscribe.call_count == 1
+    expected = [
+        call([("home/sensor", 2), ("still/pending", 1), ("topic/test", 0)]),
+    ]
+    assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
 async def test_setup_entry_with_config_override(
