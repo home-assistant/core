@@ -28,7 +28,12 @@ from homeassistant.components.envisalink.const import (
 from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
     EnvisalinkAlarmPanel,
 )
-from homeassistant.components.envisalink.pyenvisalink.const import PANEL_TYPE_HONEYWELL
+from homeassistant.components.envisalink.pyenvisalink.alarm_state import AlarmState
+from homeassistant.components.envisalink.pyenvisalink.const import (
+    EVL4_MAX_ZONES,
+    MAX_PARTITIONS,
+    PANEL_TYPE_HONEYWELL,
+)
 from homeassistant.const import CONF_HOST, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 
@@ -62,6 +67,11 @@ def mock_envisalink_alarm_panel(mock_unique_id):
         return_value=EnvisalinkAlarmPanel.ConnectionResult.SUCCESS,
     ), patch.object(
         EnvisalinkAlarmPanel,
+        "is_online",
+        autospec=True,
+        return_value=EnvisalinkAlarmPanel.ConnectionResult.SUCCESS,
+    ), patch.object(
+        EnvisalinkAlarmPanel,
         "mac_address",
         new_callable=PropertyMock,
         return_value=mock_unique_id,
@@ -75,6 +85,11 @@ def mock_envisalink_alarm_panel(mock_unique_id):
         "envisalink_version",
         new_callable=PropertyMock,
         return_value=4,
+    ), patch.object(
+        EnvisalinkAlarmPanel,
+        "alarm_state",
+        new_callable=PropertyMock,
+        return_value=AlarmState.get_initial_alarm_state(EVL4_MAX_ZONES, MAX_PARTITIONS),
     ), patch(
         "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.get_max_zones_by_version",
         return_value=128,
@@ -84,7 +99,7 @@ def mock_envisalink_alarm_panel(mock_unique_id):
 
 def _build_config_data(for_result: bool) -> dict[str, Any]:
     in_input = {
-        CONF_ALARM_NAME: "test-alarm-name",
+        CONF_ALARM_NAME: "TestAlarmName",
     }
     in_both = {
         CONF_HOST: "1.1.1.1",
@@ -118,12 +133,16 @@ def mock_config_data_result() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_config_entry(mock_config_data_result, mock_unique_id) -> MockConfigEntry:
+def mock_config_entry(
+    mock_config_data_result, mock_unique_id, mock_options_data_dsc
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data=mock_config_data_result,
         unique_id=mock_unique_id,
+        title="Test Alarm Name",
+        options=mock_options_data_dsc,
     )
 
 

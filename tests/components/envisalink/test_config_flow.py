@@ -51,7 +51,7 @@ async def test_form(
         user_input=mock_config_data,
     )
 
-    assert result.get("title") == "test-alarm-name"
+    assert result.get("title") == "TestAlarmName"
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"] == mock_config_data_result
@@ -174,6 +174,7 @@ async def test_options_basic_form(
     mock_config_data_result,
     mock_config_data,
     mock_unique_id,
+    mock_options_data_dsc,
 ) -> None:
     """Test the basic options flow."""
     mock_config_entry.add_to_hass(hass)
@@ -201,7 +202,7 @@ async def test_options_basic_form(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert "data" in result
-    assert result["data"] == {}
+    assert result["data"] == mock_options_data_dsc
     assert "result" in result
     assert entry.data == mock_config_data_result
 

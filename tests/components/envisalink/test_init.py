@@ -1,7 +1,14 @@
 """Test the Envisalink config flow."""
 
-# from homeassistant.components.envisalink import async_setup
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.envisalink.const import DOMAIN
+from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
+    EnvisalinkAlarmPanel,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -66,4 +73,33 @@ async def test_async_setup_import_update(
 
 
 #    assert options == {}
-# TODO
+#    TODO
+
+
+@pytest.mark.parametrize(
+    "alarm_error",
+    [
+        EnvisalinkAlarmPanel.ConnectionResult.INVALID_AUTHORIZATION,
+        EnvisalinkAlarmPanel.ConnectionResult.CONNECTION_FAILED,
+        EnvisalinkAlarmPanel.ConnectionResult.INVALID_PANEL_TYPE,
+        EnvisalinkAlarmPanel.ConnectionResult.INVALID_EVL_VERSION,
+        EnvisalinkAlarmPanel.ConnectionResult.DISCOVERY_NOT_COMPLETE,
+        "unknown",
+    ],
+)
+async def test_init_fail(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_envisalink_alarm_panel,
+    alarm_error,
+) -> None:
+    """Test startup failures."""
+    with patch(
+        "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.start",
+        return_value=alarm_error,
+    ):
+        mock_config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
