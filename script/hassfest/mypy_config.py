@@ -126,7 +126,7 @@ def _generate_and_validate_strict_typing(config: Config) -> str:
     return "\n".join(_sort_within_sections(lines)) + "\n"
 
 
-def _generate_and_validate_mypy_config(config: Config) -> str:  # noqa: C901
+def _generate_and_validate_mypy_config(config: Config) -> str:
     """Validate and generate mypy config."""
 
     # Filter empty and commented lines.
