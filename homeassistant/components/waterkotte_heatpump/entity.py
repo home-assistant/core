@@ -30,6 +30,7 @@ class EcotouchEntity(CoordinatorEntity[EcotouchCoordinator]):
         self._attr_unique_id = f"{config_entry.unique_id}.{entity_config.key}"
         coordinator.alltags.add(tag)
         self._attr_device_info = device_info
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> StateType:

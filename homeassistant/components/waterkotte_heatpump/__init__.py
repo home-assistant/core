@@ -1,6 +1,8 @@
 """The Waterkotte Heatpump integration."""
 from __future__ import annotations
 
+import logging
+
 from pywaterkotte import AuthenticationException, ConnectionException, Ecotouch
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +14,8 @@ from .const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 from .coordinator import EcotouchCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,9 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
         )
     except (ConnectionException, AuthenticationException) as ex:
-        raise ConfigEntryNotReady(
-            f"Timeout while connecting to {entry.data.get(CONF_HOST)}"
-        ) from ex
+        LOGGER.debug("Unable to connect", exc_info=ex)
+        raise ConfigEntryNotReady(ex.args[0]) from ex
 
     coordinator = EcotouchCoordinator(heatpump, hass)
 
