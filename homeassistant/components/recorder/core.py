@@ -482,17 +482,17 @@ class Recorder(threading.Thread):
         self.queue_task(ADJUST_LRU_SIZE_TASK)
         self.async_periodic_statistics()
 
-    @callback
     def _adjust_lru_size(self) -> None:
         """Trigger the LRU adjustment.
 
         If the number of entities has increased, increase the size of the LRU
         cache to avoid thrashing.
         """
-        current_size = self._state_attributes_ids.get_size()
+        state_attributes_lru = self._state_attributes_ids
+        current_size = state_attributes_lru.get_size()
         new_size = self.hass.states.async_entity_ids_count() * 2
         if new_size > current_size:
-            self._state_attributes_ids.set_size(new_size)
+            state_attributes_lru.set_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
