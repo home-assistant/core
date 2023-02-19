@@ -39,6 +39,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from . import migration, statistics
@@ -217,6 +218,7 @@ class Recorder(threading.Thread):
         self._commit_listener: CALLBACK_TYPE | None = None
         self._periodic_listener: CALLBACK_TYPE | None = None
         self._nightly_listener: CALLBACK_TYPE | None = None
+        self._dialect_name: SupportedDialect | None = None
         self.enabled = True
 
     @property
@@ -227,9 +229,7 @@ class Recorder(threading.Thread):
     @property
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
-        with contextlib.suppress(ValueError):
-            return SupportedDialect(self.engine.dialect.name) if self.engine else None
-        return None
+        return self._dialect_name
 
     @property
     def _using_file_sqlite(self) -> bool:
@@ -1176,7 +1176,7 @@ class Recorder(threading.Thread):
             validate_or_move_away_sqlite_database(self.db_url)
 
         self.engine = create_engine(self.db_url, **kwargs, future=True)
-
+        self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
