@@ -644,44 +644,24 @@ def _get_states_for_entities_stmt(
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
     if schema_version >= 31:
-        stmt += lambda q: q.where(
-            States.state_id
-            == (
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                # pylint: disable-next=not-callable
-                select(func.max(States.state_id).label("max_state_id"))
-                .join(
-                    most_recent_states_for_entities_by_date,
-                    and_(
-                        States.entity_id
-                        == most_recent_states_for_entities_by_date.c.max_entity_id,
-                        States.last_updated_ts
-                        == most_recent_states_for_entities_by_date.c.max_last_updated,
-                    ),
-                )
-                .group_by(States.entity_id)
-                .subquery()
-            ).c.max_state_id
+        stmt += lambda q: q.join(
+            most_recent_states_for_entities_by_date,
+            and_(
+                States.entity_id
+                == most_recent_states_for_entities_by_date.c.max_entity_id,
+                States.last_updated_ts
+                == most_recent_states_for_entities_by_date.c.max_last_updated,
+            ),
         )
     else:
-        stmt += lambda q: q.where(
-            States.state_id
-            == (
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                # pylint: disable-next=not-callable
-                select(func.max(States.state_id).label("max_state_id"))
-                .join(
-                    most_recent_states_for_entities_by_date,
-                    and_(
-                        States.entity_id
-                        == most_recent_states_for_entities_by_date.c.max_entity_id,
-                        States.last_updated
-                        == most_recent_states_for_entities_by_date.c.max_last_updated,
-                    ),
-                )
-                .group_by(States.entity_id)
-                .subquery()
-            ).c.max_state_id
+        stmt += lambda q: q.join(
+            most_recent_states_for_entities_by_date,
+            and_(
+                States.entity_id
+                == most_recent_states_for_entities_by_date.c.max_entity_id,
+                States.last_updated
+                == most_recent_states_for_entities_by_date.c.max_last_updated,
+            ),
         )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
@@ -748,42 +728,20 @@ def _get_states_for_all_stmt(
         schema_version, run_start, utc_point_in_time
     )
     if schema_version >= 31:
-        stmt += lambda q: q.where(
-            States.state_id
-            == (
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                # pylint: disable-next=not-callable
-                select(func.max(States.state_id).label("max_state_id"))
-                .join(
-                    most_recent_states_by_date,
-                    and_(
-                        States.entity_id == most_recent_states_by_date.c.max_entity_id,
-                        States.last_updated_ts
-                        == most_recent_states_by_date.c.max_last_updated,
-                    ),
-                )
-                .group_by(States.entity_id)
-                .subquery()
-            ).c.max_state_id,
+        stmt += lambda q: q.join(
+            most_recent_states_by_date,
+            and_(
+                States.entity_id == most_recent_states_by_date.c.max_entity_id,
+                States.last_updated_ts == most_recent_states_by_date.c.max_last_updated,
+            ),
         )
     else:
-        stmt += lambda q: q.where(
-            States.state_id
-            == (
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                # pylint: disable-next=not-callable
-                select(func.max(States.state_id).label("max_state_id"))
-                .join(
-                    most_recent_states_by_date,
-                    and_(
-                        States.entity_id == most_recent_states_by_date.c.max_entity_id,
-                        States.last_updated
-                        == most_recent_states_by_date.c.max_last_updated,
-                    ),
-                )
-                .group_by(States.entity_id)
-                .subquery()
-            ).c.max_state_id,
+        stmt += lambda q: q.join(
+            most_recent_states_by_date,
+            and_(
+                States.entity_id == most_recent_states_by_date.c.max_entity_id,
+                States.last_updated == most_recent_states_by_date.c.max_last_updated,
+            ),
         )
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
