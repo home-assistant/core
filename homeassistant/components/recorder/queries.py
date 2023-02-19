@@ -20,6 +20,24 @@ from .db_schema import (
 )
 
 
+def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
+    """Load shared attributes from the database."""
+    return lambda_stmt(
+        lambda: select(
+            StateAttributes.attributes_id, StateAttributes.shared_attrs
+        ).where(StateAttributes.hash.in_(hashes))
+    )
+
+
+def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
+    """Load shared event data from the database."""
+    return lambda_stmt(
+        lambda: select(EventData.data_id, EventData.shared_data).where(
+            EventData.hash.in_(hashes)
+        )
+    )
+
+
 def find_shared_attributes_id(
     data_hash: int, shared_attrs: str
 ) -> StatementLambdaElement:

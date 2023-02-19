@@ -75,7 +75,12 @@ from .models import (
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
-from .queries import find_shared_attributes_id, find_shared_data_id
+from .queries import (
+    find_shared_attributes_id,
+    find_shared_data_id,
+    get_shared_attributes,
+    get_shared_event_datas,
+)
 from .run_history import RunHistory
 from .tasks import (
     AdjustStatisticsTask,
@@ -685,16 +690,85 @@ class Recorder(threading.Thread):
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
+        queue_ = self._queue
+        startup_tasks: list[RecorderTask] = []
+        while not queue_.empty() and (task := queue_.get_nowait()):
+            startup_tasks.append(task)
+        self._pre_process_startup_tasks(startup_tasks)
+        for task in startup_tasks:
+            self._guarded_process_one_task_or_recover(task)
+
         self.stop_requested = False
         while not self.stop_requested:
-            task = self._queue.get()
-            _LOGGER.debug("Processing task: %s", task)
-            try:
-                self._process_one_task_or_recover(task)
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("Error while processing event %s: %s", task, err)
-
+            self._guarded_process_one_task_or_recover(queue_.get())
         self._shutdown()
+
+    def _pre_process_startup_tasks(self, startup_tasks: list[RecorderTask]) -> None:
+        """Pre process startup tasks."""
+        # Prime all the state_attributes and event_data caches
+        # before we start processing events
+        state_change_events: list[Event] = []
+        non_state_change_events: list[Event] = []
+
+        for task in startup_tasks:
+            if isinstance(task, EventTask):
+                event_ = task.event
+                if event_.event_type == EVENT_STATE_CHANGED:
+                    state_change_events.append(event_)
+                else:
+                    non_state_change_events.append(event_)
+
+        self._pre_process_state_change_events(state_change_events)
+        self._pre_process_non_state_change_events(non_state_change_events)
+
+    def _pre_process_state_change_events(self, events: list[Event]) -> None:
+        """Load startup state attributes from the database.
+
+        Since the _state_attributes_ids cache is empty at startup
+        we restore it from the database to avoid having to look up
+        the attributes in the database for every state change
+        until its primed.
+        """
+        assert self.event_session is not None
+        if hashes := [
+            StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes)
+            for event in events
+            if (
+                shared_attrs_bytes := self._serialize_state_attributes_from_event(event)
+            )
+        ]:
+            with self.event_session.no_autoflush:
+                for id_, shared_attrs in self.event_session.execute(
+                    get_shared_attributes(hashes)
+                ).fetchall():
+                    self._state_attributes_ids[shared_attrs] = id_
+
+    def _pre_process_non_state_change_events(self, events: list[Event]) -> None:
+        """Load startup event attributes from the database.
+
+        Since the _event_data_ids cache is empty at startup
+        we restore it from the database to avoid having to look up
+        the data in the database for every event until its primed.
+        """
+        assert self.event_session is not None
+        if hashes := [
+            EventData.hash_shared_data_bytes(shared_event_bytes)
+            for event in events
+            if (shared_event_bytes := self._serialize_event_data_from_event(event))
+        ]:
+            with self.event_session.no_autoflush:
+                for id_, shared_data in self.event_session.execute(
+                    get_shared_event_datas(hashes)
+                ).fetchall():
+                    self._event_data_ids[shared_data] = id_
+
+    def _guarded_process_one_task_or_recover(self, task: RecorderTask) -> None:
+        """Process a task, guarding against exceptions to ensure the loop does not collapse."""
+        _LOGGER.debug("Processing task: %s", task)
+        try:
+            self._process_one_task_or_recover(task)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Error while processing event %s: %s", task, err)
 
     def _process_one_task_or_recover(self, task: RecorderTask) -> None:
         """Process an event, reconnect, or recover a malformed database."""
@@ -852,6 +926,14 @@ class Recorder(threading.Thread):
                 return cast(int, data_id[0])
         return None
 
+    def _serialize_event_data_from_event(self, event: Event) -> bytes | None:
+        """Serialize event data."""
+        try:
+            return EventData.shared_data_bytes_from_event(event, self.dialect_name)
+        except JSON_ENCODE_EXCEPTIONS as ex:
+            _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
+            return None
+
     def _process_non_state_changed_event_into_session(self, event: Event) -> None:
         """Process any event into the session except state changed."""
         assert self.event_session is not None
@@ -859,15 +941,8 @@ class Recorder(threading.Thread):
         if not event.data:
             self.event_session.add(dbevent)
             return
-
-        try:
-            shared_data_bytes = EventData.shared_data_bytes_from_event(
-                event, self.dialect_name
-            )
-        except JSON_ENCODE_EXCEPTIONS as ex:
-            _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
+        if not (shared_data_bytes := self._serialize_event_data_from_event(event)):
             return
-
         shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
@@ -890,12 +965,10 @@ class Recorder(threading.Thread):
 
         self.event_session.add(dbevent)
 
-    def _process_state_changed_event_into_session(self, event: Event) -> None:
-        """Process a state_changed event into the session."""
-        assert self.event_session is not None
+    def _serialize_state_attributes_from_event(self, event: Event) -> bytes | None:
+        """Serialize state changed event data."""
         try:
-            dbstate = States.from_event(event)
-            shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
+            return StateAttributes.shared_attrs_bytes_from_event(
                 event,
                 self._entity_sources,
                 self._exclude_attributes_by_domain,
@@ -907,6 +980,15 @@ class Recorder(threading.Thread):
                 event.data.get("new_state"),
                 ex,
             )
+            return None
+
+    def _process_state_changed_event_into_session(self, event: Event) -> None:
+        """Process a state_changed event into the session."""
+        assert self.event_session is not None
+        dbstate = States.from_event(event)
+        if not (
+            shared_attrs_bytes := self._serialize_state_attributes_from_event(event)
+        ):
             return
 
         shared_attrs = shared_attrs_bytes.decode("utf-8")
