@@ -304,7 +304,7 @@ async def test_set_target_temp(hass: HomeAssistant, setup_comp_2) -> None:
 
 
 @pytest.mark.parametrize(
-    "preset,temp",
+    ("preset", "temp"),
     [
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
@@ -323,7 +323,7 @@ async def test_set_away_mode(hass: HomeAssistant, setup_comp_2, preset, temp) ->
 
 
 @pytest.mark.parametrize(
-    "preset,temp",
+    ("preset", "temp"),
     [
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
@@ -350,7 +350,7 @@ async def test_set_away_mode_and_restore_prev_temp(
 
 
 @pytest.mark.parametrize(
-    "preset,temp",
+    ("preset", "temp"),
     [
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),

@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.36.4
+PySwitchbot==0.37.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.5.0
+aiohomekit==2.6.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -276,7 +276,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.6
+aiosomecomfort==0.0.8
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -504,7 +504,7 @@ btsmarthub_devicelist==0.2.3
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.0.1
+caldav==1.1.1
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
@@ -592,7 +592,7 @@ denonavr==0.11.1
 devolo-home-control-api==0.18.2
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.1.0
+devolo-plc-api==1.2.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -849,7 +849,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.2
+guppy3==3.1.2;python_version<'3.11'
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -859,7 +859,7 @@ h2==4.1.0
 ha-av==10.0.0
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==3.0.2
+ha-ffmpeg==3.1.0
 
 # homeassistant.components.philips_js
 ha-philipsjs==3.0.0
@@ -979,7 +979,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.2.0
+insteon-frontend-home-assistant==0.3.1
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -1621,10 +1621,10 @@ pyevilgenius==2.0.0
 pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
-pyfibaro==0.6.6
+pyfibaro==0.6.8
 
 # homeassistant.components.fido
-pyfido==2.1.1
+pyfido==2.1.2
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
@@ -2078,7 +2078,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==2.0.2
+python-matter-server==2.1.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2237,7 +2237,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.4.1
+reolink-aio==0.4.2
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2370,7 +2370,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.0
 
 # homeassistant.components.sonos
-soco==0.29.0
+soco==0.29.1
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
@@ -2598,7 +2598,7 @@ vsure==1.8.1
 vtjp==0.1.14
 
 # homeassistant.components.vulcan
-vulcan-api==2.1.1
+vulcan-api==2.3.0
 
 # homeassistant.components.vultr
 vultr==0.1.2
@@ -2650,7 +2650,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.16.3
+xiaomi-ble==0.16.4
 
 # homeassistant.components.knx
 xknx==2.5.0
@@ -2670,13 +2670,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.0.0
+yalexs-ble==2.0.1
 
 # homeassistant.components.august
-yalexs==1.2.6
+yalexs==1.2.7
 
 # homeassistant.components.august
-yalexs_ble==2.0.0
+yalexs_ble==2.0.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.10

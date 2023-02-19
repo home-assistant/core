@@ -44,7 +44,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -85,7 +85,7 @@ async def test_no_pending(hass: HomeAssistant, service, expected_state) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -129,7 +129,7 @@ async def test_no_pending_when_code_not_req(
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -194,7 +194,7 @@ async def test_with_pending(hass: HomeAssistant, service, expected_state) -> Non
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -235,7 +235,7 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -277,7 +277,7 @@ async def test_with_template_code(hass: HomeAssistant, service, expected_state) 
 
 
 @pytest.mark.parametrize(
-    "service,expected_state,",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),

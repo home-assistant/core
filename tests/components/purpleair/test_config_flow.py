@@ -17,7 +17,7 @@ TEST_LONGITUDE = -0.2416796
 
 
 @pytest.mark.parametrize(
-    "check_api_key_mock,check_api_key_errors",
+    ("check_api_key_mock", "check_api_key_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
@@ -25,7 +25,7 @@ TEST_LONGITUDE = -0.2416796
     ],
 )
 @pytest.mark.parametrize(
-    "get_nearby_sensors_mock,get_nearby_sensors_errors",
+    ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
     [
         (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
@@ -114,7 +114,7 @@ async def test_duplicate_error(
 
 
 @pytest.mark.parametrize(
-    "check_api_key_mock,check_api_key_errors",
+    ("check_api_key_mock", "check_api_key_errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidApiKeyError), {"base": "invalid_api_key"}),
@@ -160,7 +160,7 @@ async def test_reauth(
 
 
 @pytest.mark.parametrize(
-    "get_nearby_sensors_mock,get_nearby_sensors_errors",
+    ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
     [
         (AsyncMock(return_value=[]), {"base": "no_sensors_near_coordinates"}),
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),

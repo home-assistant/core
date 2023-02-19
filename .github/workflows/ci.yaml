@@ -33,7 +33,7 @@ env:
   MYPY_CACHE_VERSION: 4
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
-  ALL_PYTHON_VERSIONS: "['3.10']"
+  ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -41,7 +41,11 @@ env:
   # 10.10 is the latest short-term-support
   # - 10.10.3 is the latest (as of 6 Feb 2023)
   MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3']"
-  POSTGRESQL_VERSIONS: "['postgres:15.0']"
+  # 12 is the oldest supported version
+  # - 12.14 is the latest (as of 9 Feb 2023)
+  # 15 is the latest version
+  # - 15.2 is the latest (as of 9 Feb 2023)
+  POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -332,7 +336,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - info
       - pre-commit
@@ -939,6 +943,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
       - base
@@ -954,7 +959,7 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     name: >-
-      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.mariadb-group }})
+      Run ${{ matrix.mariadb-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -997,7 +1002,7 @@ jobs:
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 15
+        timeout-minutes: 20
         shell: bash
         run: |
           . venv/bin/activate
@@ -1042,13 +1047,15 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
       - lint-isort
+      - lint-other
+      - lint-ruff
       - mypy
     strategy:
       fail-fast: false
@@ -1056,7 +1063,7 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     name: >-
-      Run recorder tests Python ${{ matrix.python-version }} (${{ matrix.postgresql-group }})
+      Run ${{ matrix.postgresql-group }} tests Python ${{ matrix.python-version }}
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -1103,7 +1110,7 @@ jobs:
           . venv/bin/activate
           pip install psycopg2 sqlalchemy_utils
       - name: Run pytest (partially)
-        timeout-minutes: 10
+        timeout-minutes: 20
         shell: bash
         run: |
           . venv/bin/activate

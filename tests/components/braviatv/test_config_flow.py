@@ -192,7 +192,7 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [
         (BraviaAuthError, "invalid_auth"),
         (BraviaNotSupported, "unsupported_model"),
@@ -219,7 +219,7 @@ async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [
         (BraviaAuthError, "invalid_auth"),
         (BraviaNotSupported, "unsupported_model"),
@@ -376,7 +376,7 @@ async def test_create_entry_psk(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "use_psk, new_pin",
+    ("use_psk", "new_pin"),
     [
         (True, "7777"),
         (False, "newpsk"),

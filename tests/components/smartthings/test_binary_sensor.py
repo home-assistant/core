@@ -13,6 +13,7 @@ from homeassistant.components.smartthings import binary_sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -33,7 +34,7 @@ async def test_mapping_integrity() -> None:
         assert device_class in DEVICE_CLASSES, device_class
 
 
-async def test_entity_state(hass, device_factory):
+async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
     """Tests the state attributes properly match the light types."""
     device = device_factory(
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
@@ -44,7 +45,9 @@ async def test_entity_state(hass, device_factory):
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} {Attribute.motion}"
 
 
-async def test_entity_and_device_attributes(hass, device_factory):
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
@@ -67,7 +70,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry.manufacturer == "Unavailable"
 
 
-async def test_update_from_signal(hass, device_factory):
+async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
     """Test the binary_sensor updates when receiving a signal."""
     # Arrange
     device = device_factory(
@@ -86,7 +89,7 @@ async def test_update_from_signal(hass, device_factory):
     assert state.state == "on"
 
 
-async def test_unload_config_entry(hass, device_factory):
+async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     """Test the binary_sensor is removed when the config entry is unloaded."""
     # Arrange
     device = device_factory(
@@ -103,7 +106,7 @@ async def test_unload_config_entry(hass, device_factory):
     )
 
 
-async def test_entity_category(hass, device_factory):
+async def test_entity_category(hass: HomeAssistant, device_factory) -> None:
     """Tests the state attributes properly match the light types."""
     device1 = device_factory(
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}

@@ -30,15 +30,16 @@ from homeassistant.const import (
     MATCH_ALL,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers.entity import entity_sources
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
     async_track_utc_time_change,
 )
-from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from . import migration, statistics
 from .const import (
@@ -184,6 +185,7 @@ class Recorder(threading.Thread):
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
         self.run_history = RunHistory()
+        self._entity_sources = entity_sources(hass)
 
         # The entity_filter is exposed on the recorder instance so that
         # it can be used to see if an entity is being recorded and is called
@@ -875,7 +877,10 @@ class Recorder(threading.Thread):
         try:
             dbstate = States.from_event(event)
             shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
-                event, self._exclude_attributes_by_domain, self.dialect_name
+                event,
+                self._entity_sources,
+                self._exclude_attributes_by_domain,
+                self.dialect_name,
             )
         except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(

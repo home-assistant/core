@@ -15,7 +15,7 @@ from .common import (
 
 
 @pytest.mark.parametrize(
-    "fixture, entity_id",
+    ("fixture", "entity_id"),
     [
         ("extended-color-light", "light.mock_extended_color_light"),
         ("color-temperature-light", "light.mock_color_temperature_light"),
@@ -91,7 +91,7 @@ async def test_on_off_light(
 
 
 @pytest.mark.parametrize(
-    "fixture, entity_id",
+    ("fixture", "entity_id"),
     [
         ("extended-color-light", "light.mock_extended_color_light"),
         ("color-temperature-light", "light.mock_color_temperature_light"),
@@ -145,7 +145,7 @@ async def test_dimmable_light(
 
 
 @pytest.mark.parametrize(
-    "fixture, entity_id",
+    ("fixture", "entity_id"),
     [
         ("extended-color-light", "light.mock_extended_color_light"),
         ("color-temperature-light", "light.mock_color_temperature_light"),
@@ -209,7 +209,7 @@ async def test_color_temperature_light(
 
 
 @pytest.mark.parametrize(
-    "fixture, entity_id",
+    ("fixture", "entity_id"),
     [
         ("extended-color-light", "light.mock_extended_color_light"),
     ],

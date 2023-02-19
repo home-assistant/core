@@ -41,19 +41,18 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import (
+from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
+import homeassistant.util.dt as dt_util
+from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS,
-    JSON_DUMP,
-    json_bytes,
-    json_bytes_strip_null,
     json_loads,
     json_loads_object,
 )
-import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
+    StatisticDataTimestamp,
     StatisticMetaData,
     datetime_to_timestamp_or_none,
     process_timestamp,
@@ -128,12 +127,12 @@ JSONB_VARIANT_CAST = Text().with_variant(
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
-    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")  # type: ignore[no-untyped-call]
     .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")  # type: ignore[no-untyped-call]
 )
 DOUBLE_TYPE = (
     Float()
-    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql", "mariadb")  # type: ignore[no-untyped-call]
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
@@ -171,7 +170,7 @@ class Events(Base):
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
     origin: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_ORIGIN)
@@ -264,7 +263,7 @@ class EventData(Base):
     hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
     def __repr__(self) -> str:
@@ -315,7 +314,7 @@ class States(Base):
     entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )  # no longer used for new rows
     event_id: Mapped[int | None] = mapped_column(  # no longer used for new rows
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
@@ -447,7 +446,7 @@ class StateAttributes(Base):
     hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_attrs: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
+        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
     def __repr__(self) -> str:
@@ -460,6 +459,7 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
+        entity_sources: dict[str, dict[str, str]],
         exclude_attrs_by_domain: dict[str, set[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:
@@ -469,9 +469,13 @@ class StateAttributes(Base):
         if state is None:
             return b"{}"
         domain = split_entity_id(state.entity_id)[0]
-        exclude_attrs = (
-            exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
-        )
+        exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
+        if base_platform_attrs := exclude_attrs_by_domain.get(domain):
+            exclude_attrs |= base_platform_attrs
+        if (entity_info := entity_sources.get(state.entity_id)) and (
+            integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"])
+        ):
+            exclude_attrs |= integration_attrs
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
@@ -534,7 +538,7 @@ class StatisticsBase:
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
-        """Create object from a statistics."""
+        """Create object from a statistics with datatime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
@@ -546,6 +550,24 @@ class StatisticsBase:
             max=stats.get("max"),
             last_reset=None,
             last_reset_ts=datetime_to_timestamp_or_none(stats.get("last_reset")),
+            state=stats.get("state"),
+            sum=stats.get("sum"),
+        )
+
+    @classmethod
+    def from_stats_ts(cls, metadata_id: int, stats: StatisticDataTimestamp) -> Self:
+        """Create object from a statistics with timestamps."""
+        return cls(  # type: ignore[call-arg]
+            metadata_id=metadata_id,
+            created=None,
+            created_ts=time.time(),
+            start=None,
+            start_ts=stats["start_ts"],
+            mean=stats.get("mean"),
+            min=stats.get("min"),
+            max=stats.get("max"),
+            last_reset=None,
+            last_reset_ts=stats.get("last_reset_ts"),
             state=stats.get("state"),
             sum=stats.get("sum"),
         )

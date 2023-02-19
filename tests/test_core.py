@@ -181,6 +181,46 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_all) == 2
 
 
+async def test_stage_shutdown_with_exit_code(hass):
+    """Simulate a shutdown, test calling stuff with exit code checks."""
+    test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
+    test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
+    test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
+    test_all = async_capture_events(hass, MATCH_ALL)
+
+    event_call_counters = [0, 0, 0]
+    expected_exit_code = 101
+
+    async def async_on_stop(event) -> None:
+        if hass.exit_code == expected_exit_code:
+            event_call_counters[0] += 1
+
+    async def async_on_final_write(event) -> None:
+        if hass.exit_code == expected_exit_code:
+            event_call_counters[1] += 1
+
+    async def async_on_close(event) -> None:
+        if hass.exit_code == expected_exit_code:
+            event_call_counters[2] += 1
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, async_on_final_write)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_on_close)
+
+    await hass.async_stop(expected_exit_code)
+
+    assert len(test_stop) == 1
+    assert len(test_close) == 1
+    assert len(test_final_write) == 1
+    assert len(test_all) == 2
+
+    assert (
+        event_call_counters[0] == 1
+        and event_call_counters[1] == 1
+        and event_call_counters[2] == 1
+    )
+
+
 async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
     hass,
 ):
@@ -1933,3 +1973,21 @@ async def test_state_changed_events_to_not_leak_contexts(hass: HomeAssistant) ->
     gc.collect()
 
     assert len(_get_by_type("homeassistant.core.Context")) == init_count
+
+
+async def test_background_task(hass):
+    """Test background tasks being quit."""
+    result = asyncio.Future()
+
+    async def test_task():
+        try:
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+            raise
+
+    task = hass.async_create_background_task(test_task(), "happy task")
+    assert "happy task" in str(task)
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    assert result.result() == ha.CoreState.stopping

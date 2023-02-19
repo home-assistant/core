@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
+from operator import attrgetter
 import time
 from typing import Any, cast
 
@@ -844,6 +845,7 @@ def _sorted_states_to_dict(
     """
     schema_version = _schema_version(hass)
     _process_timestamp: Callable[[datetime], float | str]
+    field_map: dict[str, int]
     state_class: Callable[
         [Row, dict[str, dict[str, Any]], datetime | None], State | dict[str, Any]
     ]
@@ -895,7 +897,8 @@ def _sorted_states_to_dict(
             (entity_ids[0], iter(states)),
         )
     else:
-        states_iter = groupby(states, lambda state: state.entity_id)  # type: ignore[no-any-return]
+        key_func = attrgetter("entity_id")
+        states_iter = groupby(states, key_func)
 
     # Append all changes to it
     for ent_id, group in states_iter:
@@ -905,6 +908,7 @@ def _sorted_states_to_dict(
         if row := initial_states.pop(ent_id, None):
             prev_state = row.state
             ent_results.append(state_class(row, attr_cache, start_time))
+            field_map = {key: idx for idx, key in enumerate(row._fields)}
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
             ent_results.extend(
@@ -921,6 +925,9 @@ def _sorted_states_to_dict(
                 continue
             prev_state = first_state.state
             ent_results.append(state_class(first_state, attr_cache, None))
+            field_map = {key: idx for idx, key in enumerate(first_state._fields)}
+
+        state_idx = field_map["state"]
 
         #
         # minimal_response only makes sense with last_updated == last_updated
@@ -930,35 +937,37 @@ def _sorted_states_to_dict(
         # With minimal response we do not care about attribute
         # changes so we can filter out duplicate states
         if schema_version < 31:
+            last_updated_idx = field_map["last_updated"]
             for row in group:
-                if (state := row.state) != prev_state:
+                if (state := row[state_idx]) != prev_state:
                     ent_results.append(
                         {
                             attr_state: state,
-                            attr_time: _process_timestamp(row.last_updated),
+                            attr_time: _process_timestamp(row[last_updated_idx]),
                         }
                     )
                     prev_state = state
             continue
 
+        last_updated_ts_idx = field_map["last_updated_ts"]
         if compressed_state_format:
             for row in group:
-                if (state := row.state) != prev_state:
+                if (state := row[state_idx]) != prev_state:
                     ent_results.append(
                         {
                             attr_state: state,
-                            attr_time: row.last_updated_ts,
+                            attr_time: row[last_updated_ts_idx],
                         }
                     )
                     prev_state = state
 
         for row in group:
-            if (state := row.state) != prev_state:
+            if (state := row[state_idx]) != prev_state:
                 ent_results.append(
                     {
                         attr_state: state,
                         attr_time: process_timestamp_to_utc_isoformat(
-                            dt_util.utc_from_timestamp(row.last_updated_ts)
+                            dt_util.utc_from_timestamp(row[last_updated_ts_idx])
                         ),
                     }
                 )

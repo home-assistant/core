@@ -14,7 +14,7 @@ from .conftest import TEST_PASSWORD, TEST_USERNAME
 
 
 @pytest.mark.parametrize(
-    "get_client_with_exception,errors",
+    ("get_client_with_exception", "errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidCredentialsError), {"base": "invalid_auth"}),
@@ -68,7 +68,7 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
 
 
 @pytest.mark.parametrize(
-    "get_client_with_exception,errors",
+    ("get_client_with_exception", "errors"),
     [
         (AsyncMock(side_effect=Exception), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidCredentialsError), {"base": "invalid_auth"}),

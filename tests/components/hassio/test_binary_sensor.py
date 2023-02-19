@@ -150,7 +150,7 @@ def mock_all(aioclient_mock, request):
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected",
+    ("entity_id", "expected"),
     [
         ("binary_sensor.test_running", "on"),
         ("binary_sensor.test2_running", "off"),

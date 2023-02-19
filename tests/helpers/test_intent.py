@@ -3,9 +3,10 @@
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import conversation
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry,
     config_validation as cv,
@@ -13,6 +14,7 @@ from homeassistant.helpers import (
     entity_registry,
     intent,
 )
+from homeassistant.setup import async_setup_component
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -154,3 +156,22 @@ def test_async_validate_slots() -> None:
     handler1.async_validate_slots(
         {"name": {"value": "kitchen"}, "probability": {"value": "0.5"}}
     )
+
+
+async def test_cant_turn_on_sensor(hass: HomeAssistant) -> None:
+    """Test that we can't turn on entities that don't support it."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "sensor", {})
+
+    hass.states.async_set(
+        "sensor.test", "123", attributes={ATTR_FRIENDLY_NAME: "Test Sensor"}
+    )
+
+    result = await conversation.async_converse(
+        hass, "turn on test sensor", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE

@@ -594,7 +594,7 @@ async def mock_modbus_read_pymodbus_fixture(
 
 
 @pytest.mark.parametrize(
-    "do_domain, do_group,do_type,do_scan_interval",
+    ("do_domain", "do_group", "do_type", "do_scan_interval"),
     [
         [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10],
         [SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10],
@@ -603,7 +603,7 @@ async def mock_modbus_read_pymodbus_fixture(
     ],
 )
 @pytest.mark.parametrize(
-    "do_return,do_exception,do_expect_state,do_expect_value",
+    ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
         [ReadResult([1]), None, STATE_ON, "1"],
         [IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
@@ -888,7 +888,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
-        for i in range(4):
+        for _ in range(4):
             freezer.tick(timedelta(seconds=1))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
