@@ -2004,7 +2004,9 @@ def _statistics_at_time(
     most_recent_statistic_ids = (
         # https://github.com/sqlalchemy/sqlalchemy/issues/9189
         # pylint: disable-next=not-callable
-        lambda_stmt(lambda: select(func.max(table.id).label("max_id")))
+        lambda_stmt(
+            lambda: select(func.max(table.id).label("max_start_ts"), table.metadata_id)
+        )
         .filter(table.start_ts < start_time_ts)
         .filter(table.metadata_id.in_(metadata_ids))
         .group_by(table.metadata_id)
@@ -2013,7 +2015,8 @@ def _statistics_at_time(
 
     stmt += lambda q: q.join(
         most_recent_statistic_ids,
-        table.id == most_recent_statistic_ids.c.max_id,
+        table.start_ts == most_recent_statistic_ids.c.max_start_ts
+        and table.metadata_id == most_recent_statistic_ids.c.metadata_id,
     )
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
