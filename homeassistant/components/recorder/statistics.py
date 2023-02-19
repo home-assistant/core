@@ -2007,7 +2007,7 @@ def _statistics_at_time(
                 # https://github.com/sqlalchemy/sqlalchemy/issues/9189
                 # pylint: disable-next=not-callable
                 func.max(table.start_ts).label("max_start_ts"),
-                table.metadata_id,
+                table.metadata_id.label("max_metadata_id"),
             )
         )
         .filter(table.start_ts < start_time_ts)
@@ -2019,7 +2019,7 @@ def _statistics_at_time(
     stmt += lambda q: q.join(
         most_recent_statistic_ids,
         table.start_ts == most_recent_statistic_ids.c.max_start_ts
-        and table.metadata_id == most_recent_statistic_ids.c.metadata_id,
+        and table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
     )
 
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
