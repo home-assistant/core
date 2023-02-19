@@ -41,7 +41,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.entity_component import (
+    DEFAULT_SCAN_INTERVAL as SCAN_INTERVAL,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -397,8 +399,7 @@ async def async_setup_entry(
             )
         )
 
-    scan_interval = DEFAULT_SCAN_INTERVAL
-    await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
+    await async_setup_sensor_registry_updates(hass, sensor_registry, SCAN_INTERVAL)
 
     async_add_entities(entities)
 
