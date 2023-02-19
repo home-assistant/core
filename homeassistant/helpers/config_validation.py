@@ -641,7 +641,7 @@ def template_complex(value: Any) -> Any:
     return value
 
 
-def positive_time_period_template_complex(value: Any) -> Any:
+def _positive_time_period_template_complex(value: Any) -> Any:
     """Do basic validation of a positive time period expressed as a templated dict."""
     if not isinstance(value, dict) or not value:
         raise vol.Invalid("template should be a dict")
@@ -658,7 +658,7 @@ def positive_time_period_template_complex(value: Any) -> Any:
 
 
 positive_time_period_template = vol.Any(
-    positive_time_period, template, positive_time_period_template_complex
+    positive_time_period, dynamic_template, _positive_time_period_template_complex
 )
 
 
