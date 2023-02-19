@@ -2077,8 +2077,7 @@ async def test_lru_increases_with_many_entities(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test that the recorder's internal LRU cache increases with many entities."""
-    # We do not actually want to record 4096 entities, so we mock the recorder
-    # to not actually record anything.
+    # We do not actually want to record 4096 entities so we mock the entity count
     mock_entity_count = 4096
     with patch.object(
         hass.states, "async_entity_ids_count", return_value=mock_entity_count
