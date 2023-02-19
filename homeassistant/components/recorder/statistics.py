@@ -16,7 +16,7 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from sqlalchemy import bindparam, func, lambda_stmt, select, text
+from sqlalchemy import and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
@@ -2020,10 +2020,21 @@ def _statistics_at_time(
     most_recent_statistic_ids = _get_most_recent_statistics_subquery(
         metadata_ids, table, start_time_ts
     )
-    stmt = lambda_stmt(lambda: columns).join(
-        most_recent_statistic_ids,
-        table.start_ts == most_recent_statistic_ids.c.max_start_ts
-        and table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+    stmt = lambda_stmt(lambda: columns).where(
+        table.id
+        == (
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+            # pylint: disable-next=not-callable
+            select(table.id.label("max_id"))
+            .join(
+                most_recent_statistic_ids,
+                and_(
+                    table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+                    table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+                ),
+            )
+            .subquery()
+        ).c.max_id,
     )
 
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
