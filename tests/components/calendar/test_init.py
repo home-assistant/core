@@ -28,9 +28,7 @@ async def test_events_http_api(
     start = dt_util.now()
     end = start + timedelta(days=1)
     response = await client.get(
-        "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-            start.isoformat(), end.isoformat()
-        )
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
     )
     assert response.status == HTTPStatus.OK
     events = await response.json()
@@ -63,9 +61,7 @@ async def test_events_http_api_error(
         side_effect=HomeAssistantError("Failure"),
     ):
         response = await client.get(
-            "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-                start.isoformat(), end.isoformat()
-            )
+            f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
         )
         assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
         assert await response.json() == {"message": "Error reading events: Failure"}
@@ -81,9 +77,7 @@ async def test_events_http_api_dates_wrong_order(
     start = dt_util.now()
     end = start + timedelta(days=-1)
     response = await client.get(
-        "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-            start.isoformat(), end.isoformat()
-        )
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
     )
     assert response.status == HTTPStatus.BAD_REQUEST
 
