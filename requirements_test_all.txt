@@ -19,7 +19,7 @@ HAP-python==4.6.0
 PyFlick==0.0.2
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.8
+PyMicroBot==0.0.9
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -738,7 +738,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.2.0
+insteon-frontend-home-assistant==0.3.1
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -1471,7 +1471,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa==0.5.0
+python-kasa==0.5.1
 
 # homeassistant.components.matter
 python-matter-server==2.1.1
@@ -1591,7 +1591,7 @@ rflink==0.0.63
 ring_doorbell==0.7.2
 
 # homeassistant.components.roku
-rokuecp==0.17.0
+rokuecp==0.17.1
 
 # homeassistant.components.roomba
 roombapy==1.6.5
@@ -1667,7 +1667,7 @@ smart-meter-texas==0.4.7
 smhi-pkg==1.0.16
 
 # homeassistant.components.sonos
-soco==0.29.0
+soco==0.29.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2

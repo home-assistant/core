@@ -39,6 +39,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from . import migration, statistics
@@ -217,6 +218,7 @@ class Recorder(threading.Thread):
         self._commit_listener: CALLBACK_TYPE | None = None
         self._periodic_listener: CALLBACK_TYPE | None = None
         self._nightly_listener: CALLBACK_TYPE | None = None
+        self._dialect_name: SupportedDialect | None = None
         self.enabled = True
 
     @property
@@ -227,9 +229,7 @@ class Recorder(threading.Thread):
     @property
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
-        with contextlib.suppress(ValueError):
-            return SupportedDialect(self.engine.dialect.name) if self.engine else None
-        return None
+        return self._dialect_name
 
     @property
     def _using_file_sqlite(self) -> bool:
@@ -411,6 +411,7 @@ class Recorder(threading.Thread):
     @callback
     def _async_hass_started(self, hass: HomeAssistant) -> None:
         """Notify that hass has started."""
+        self.async_adjust_lru()
         self._hass_started.set_result(None)
 
     @callback
@@ -475,7 +476,25 @@ class Recorder(threading.Thread):
             self.queue_task(PerodicCleanupTask())
 
     @callback
-    def async_periodic_statistics(self, now: datetime) -> None:
+    def _async_five_minute_tasks(self, now: datetime) -> None:
+        """Run tasks every five minutes."""
+        self.async_adjust_lru()
+        self.async_periodic_statistics()
+
+    @callback
+    def async_adjust_lru(self) -> None:
+        """Trigger the LRU adjustment.
+
+        If the number of entities has increased, increase the size of the LRU
+        cache to avoid thrashing.
+        """
+        current_size = self._state_attributes_ids.get_size()
+        new_size = self.hass.states.async_entity_ids_count() * 2
+        if new_size > current_size:
+            self._state_attributes_ids.set_size(new_size)
+
+    @callback
+    def async_periodic_statistics(self) -> None:
         """Trigger the statistics run.
 
         Short term statistics run every 5 minutes
@@ -570,7 +589,7 @@ class Recorder(threading.Thread):
 
         # Compile short term statistics every 5 minutes
         self._periodic_listener = async_track_utc_time_change(
-            self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
+            self.hass, self._async_five_minute_tasks, minute=range(0, 60, 5), second=10
         )
 
     async def _async_wait_for_started(self) -> object | None:
@@ -1176,7 +1195,7 @@ class Recorder(threading.Thread):
             validate_or_move_away_sqlite_database(self.db_url)
 
         self.engine = create_engine(self.db_url, **kwargs, future=True)
-
+        self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
