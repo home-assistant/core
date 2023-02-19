@@ -1175,6 +1175,30 @@ async def test_state_for_template(hass: HomeAssistant) -> None:
         assert test(hass)
 
 
+@pytest.mark.parametrize("for_template", [{"{{invalid}}": 5}, {"hours": "{{ 1/0 }}"}])
+async def test_state_for_invalid_template(hass: HomeAssistant, for_template) -> None:
+    """Test state with invalid templated duration."""
+    config = {
+        "condition": "and",
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": ["sensor.temperature"],
+                "state": "100",
+                "for": for_template,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 100)
+    hass.states.async_set("input_number.test", 5)
+    with pytest.raises(ConditionError):
+        assert not test(hass)
+
+
 async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that state returns False on unknown attribute."""
     # Unknown attribute
