@@ -2,7 +2,13 @@
 from homeassistant.components import light
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_TRANSITION
 from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
@@ -170,3 +176,24 @@ async def test_deactivated_event(hass: HomeAssistant, mock_litejet) -> None:
     assert not light.is_on(hass, ENTITY_LIGHT)
     assert hass.states.get(ENTITY_LIGHT).state == "off"
     assert hass.states.get(ENTITY_OTHER_LIGHT).state == "off"
+
+
+async def test_connected_event(hass, mock_litejet):
+    """Test handling an event from LiteJet."""
+
+    await async_init_integration(hass)
+
+    # Initial state is available.
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+
+    # Event indicates it is disconnected now.
+    mock_litejet.connected_changed(False, "test")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+    # Event indicates it is connected now.
+    mock_litejet.connected_changed(True, None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF

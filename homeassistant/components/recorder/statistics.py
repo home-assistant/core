@@ -737,36 +737,35 @@ def compile_statistics(instance: Recorder, start: datetime, fire_events: bool) -
     end = start + timedelta(minutes=5)
 
     # Return if we already have 5-minute statistics for the requested period
-    with session_scope(session=instance.get_session()) as session:
-        if session.query(StatisticsRuns).filter_by(start=start).first():
-            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
-            return True
-
-    _LOGGER.debug("Compiling statistics for %s-%s", start, end)
-    platform_stats: list[StatisticResult] = []
-    current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
-    # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
-        if not hasattr(platform, "compile_statistics"):
-            continue
-        compiled: PlatformCompiledStatistics = platform.compile_statistics(
-            instance.hass, start, end
-        )
-        _LOGGER.debug(
-            "Statistics for %s during %s-%s: %s",
-            domain,
-            start,
-            end,
-            compiled.platform_stats,
-        )
-        platform_stats.extend(compiled.platform_stats)
-        current_metadata.update(compiled.current_metadata)
-
-    # Insert collected statistics in the database
     with session_scope(
         session=instance.get_session(),
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
+        if session.query(StatisticsRuns).filter_by(start=start).first():
+            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
+            return True
+
+        _LOGGER.debug("Compiling statistics for %s-%s", start, end)
+        platform_stats: list[StatisticResult] = []
+        current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
+        # Collect statistics from all platforms implementing support
+        for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
+            if not hasattr(platform, "compile_statistics"):
+                continue
+            compiled: PlatformCompiledStatistics = platform.compile_statistics(
+                instance.hass, start, end
+            )
+            _LOGGER.debug(
+                "Statistics for %s during %s-%s: %s",
+                domain,
+                start,
+                end,
+                compiled.platform_stats,
+            )
+            platform_stats.extend(compiled.platform_stats)
+            current_metadata.update(compiled.current_metadata)
+
+        # Insert collected statistics in the database
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(
                 session, stats["meta"], current_metadata
