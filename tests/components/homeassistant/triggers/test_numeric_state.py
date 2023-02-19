@@ -1044,27 +1044,23 @@ async def test_if_fails_setup_bad_for(hass, calls, above, below):
     hass.states.async_set("test.entity", 5)
     await hass.async_block_till_done()
 
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "numeric_state",
-                    "entity_id": "test.entity",
-                    "above": above,
-                    "below": below,
-                    "for": {"invalid": 5},
-                },
-                "action": {"service": "homeassistant.turn_on"},
-            }
-        },
-    )
-
-    with patch.object(numeric_state_trigger, "_LOGGER") as mock_logger:
-        hass.states.async_set("test.entity", 9)
-        await hass.async_block_till_done()
-        assert mock_logger.error.called
+    with assert_setup_component(0, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "numeric_state",
+                        "entity_id": "test.entity",
+                        "above": above,
+                        "below": below,
+                        "for": {"invalid": 5},
+                    },
+                    "action": {"service": "homeassistant.turn_on"},
+                }
+            },
+        )
 
 
 async def test_if_fails_setup_for_without_above_below(hass, calls):
