@@ -1028,8 +1028,8 @@ class Recorder(threading.Thread):
     def _close_event_session(self) -> None:
         """Close the event session."""
         self._old_states = {}
-        self._state_attributes_ids = {}
-        self._event_data_ids = {}
+        self._state_attributes_ids = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
+        self._event_data_ids = LRU(EVENT_DATA_ID_CACHE_SIZE)
         self._pending_state_attributes = {}
         self._pending_event_data = {}
 
