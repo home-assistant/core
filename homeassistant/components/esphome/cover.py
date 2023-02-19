@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioesphomeapi import CoverInfo, CoverOperation, CoverState, APIVersion
+from aioesphomeapi import APIVersion, CoverInfo, CoverOperation, CoverState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
