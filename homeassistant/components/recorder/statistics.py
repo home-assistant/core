@@ -16,7 +16,7 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from sqlalchemy import bindparam, func, lambda_stmt, select, text
+from sqlalchemy import and_, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
@@ -2022,9 +2022,10 @@ def _statistics_at_time(
     )
     stmt = lambda_stmt(lambda: columns).join(
         most_recent_statistic_ids,
-        table.start_ts
-        == most_recent_statistic_ids.c.max_start_ts & table.metadata_id
-        == most_recent_statistic_ids.c.max_metadata_id,
+        and_(
+            table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+            table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+        ),
     )
 
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
