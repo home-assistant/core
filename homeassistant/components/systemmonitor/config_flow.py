@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -24,7 +25,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_ARG, CONF_INDEX, DOMAIN
+from .const import CONF_ARG, CONF_INDEX, DOMAIN, IF_ADDRS_FAMILY
 
 
 @dataclass
@@ -33,41 +34,164 @@ class SensorConfig:
 
     name: str
     mandatory_arg: bool
+    initial_setup: bool
+    argument: str | None = None
+
+
+def get_paths() -> set[str]:
+    """Return all paths to mount points."""
+    partitions = psutil.disk_partitions()
+    paths: set[str] = set()
+    for diskpart in partitions:
+        paths.add(diskpart.mountpoint)
+    return paths
+
+
+def get_networks() -> set[str]:
+    """Return all networks."""
+    nics_used = set()
+    addresses = psutil.net_if_addrs()
+    for nic, address_list in addresses.items():
+        for addr in address_list:
+            if addr.family == IF_ADDRS_FAMILY["ipv4_address"]:
+                nics_used.add(nic)
+            if addr.family == IF_ADDRS_FAMILY["ipv6_address"]:
+                nics_used.add(nic)
+    return nics_used
 
 
 SENSOR_CONFIG: dict[str, SensorConfig] = {
-    "disk_free": SensorConfig(name="Disk free", mandatory_arg=False),
-    "disk_use": SensorConfig(name="Disk use", mandatory_arg=False),
-    "disk_use_percent": SensorConfig(name="Disk use (percent)", mandatory_arg=False),
-    "ipv4_address": SensorConfig(name="IPv4 address", mandatory_arg=True),
-    "ipv6_address": SensorConfig(name="IPv6 address", mandatory_arg=True),
-    "last_boot": SensorConfig(name="Last boot", mandatory_arg=False),
-    "load_15m": SensorConfig(name="Load (15m)", mandatory_arg=False),
-    "load_1m": SensorConfig(name="Load (1m)", mandatory_arg=False),
-    "load_5m": SensorConfig(name="Load (5m)", mandatory_arg=False),
-    "memory_free": SensorConfig(name="Memory free", mandatory_arg=False),
-    "memory_use": SensorConfig(name="Memory use", mandatory_arg=False),
-    "memory_use_percent": SensorConfig(
-        name="Memory use (percent)", mandatory_arg=False
+    "disk_free": SensorConfig(
+        name="Disk free",
+        mandatory_arg=False,
+        initial_setup=True,
+        argument="disk",
     ),
-    "network_in": SensorConfig(name="Network in", mandatory_arg=True),
-    "network_out": SensorConfig(name="Network out", mandatory_arg=True),
-    "packets_in": SensorConfig(name="Packets in", mandatory_arg=True),
-    "packets_out": SensorConfig(name="Packets out", mandatory_arg=True),
+    "disk_use": SensorConfig(
+        name="Disk use",
+        mandatory_arg=False,
+        initial_setup=True,
+        argument="disk",
+    ),
+    "disk_use_percent": SensorConfig(
+        name="Disk use (percent)",
+        mandatory_arg=False,
+        initial_setup=True,
+        argument="disk",
+    ),
+    "ipv4_address": SensorConfig(
+        name="IPv4 address",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
+    ),
+    "ipv6_address": SensorConfig(
+        name="IPv6 address",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
+    ),
+    "last_boot": SensorConfig(
+        name="Last boot",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "load_15m": SensorConfig(
+        name="Load (15m)",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "load_1m": SensorConfig(
+        name="Load (1m)",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "load_5m": SensorConfig(
+        name="Load (5m)",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "memory_free": SensorConfig(
+        name="Memory free",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "memory_use": SensorConfig(
+        name="Memory use",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "memory_use_percent": SensorConfig(
+        name="Memory use (percent)",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "network_in": SensorConfig(
+        name="Network in",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
+    ),
+    "network_out": SensorConfig(
+        name="Network out",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
+    ),
+    "packets_in": SensorConfig(
+        name="Packets in",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
+    ),
+    "packets_out": SensorConfig(
+        name="Packets out",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
+    ),
     "throughput_network_in": SensorConfig(
-        name="Network throughput in", mandatory_arg=True
+        name="Network throughput in",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
     ),
     "throughput_network_out": SensorConfig(
-        name="Network throughput out", mandatory_arg=True
+        name="Network throughput out",
+        mandatory_arg=True,
+        initial_setup=True,
+        argument="network",
     ),
-    "process": SensorConfig(name="Process", mandatory_arg=True),
-    "processor_use": SensorConfig(name="Processor use", mandatory_arg=False),
+    "process": SensorConfig(
+        name="Process",
+        mandatory_arg=True,
+        initial_setup=False,
+    ),
+    "processor_use": SensorConfig(
+        name="Processor use",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
     "processor_temperature": SensorConfig(
-        name="Processor temperature", mandatory_arg=False
+        name="Processor temperature",
+        mandatory_arg=False,
+        initial_setup=True,
     ),
-    "swap_free": SensorConfig(name="Swap free", mandatory_arg=False),
-    "swap_use": SensorConfig(name="Swap use", mandatory_arg=False),
-    "swap_use_percent": SensorConfig(name="Swap use (percent)", mandatory_arg=False),
+    "swap_free": SensorConfig(
+        name="Swap free",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "swap_use": SensorConfig(
+        name="Swap use",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
+    "swap_use_percent": SensorConfig(
+        name="Swap use (percent)",
+        mandatory_arg=False,
+        initial_setup=True,
+    ),
 }
 
 
@@ -91,6 +215,44 @@ def get_unique_id_and_name(user_input: dict[str, Any]) -> tuple:
     name = f"{SENSOR_CONFIG[user_input[CONF_TYPE]].name} {user_input.get(CONF_ARG, '')}".rstrip()
 
     return unique_id, name
+
+
+async def validate_first_time_sensors_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate first time setup."""
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
+
+    paths = get_paths()
+    networks = get_networks()
+    for sensor_type, sensor_config in SENSOR_CONFIG.items():
+        sensor = {}
+        if not sensor_config.initial_setup:
+            continue
+
+        if sensor_config.argument == "disk":
+            for path in paths:
+                sensor[CONF_TYPE] = sensor_type
+                sensor[CONF_ARG] = path
+                sensor[CONF_UNIQUE_ID], sensor[CONF_NAME] = get_unique_id_and_name(
+                    {CONF_TYPE: sensor_type, CONF_ARG: path}
+                )
+
+                sensors.append(user_input)
+
+        if sensor_config.argument == "network":
+            for network in networks:
+                sensor[CONF_TYPE] = sensor_type
+                sensor[CONF_ARG] = network
+                sensor[CONF_UNIQUE_ID], sensor[CONF_NAME] = get_unique_id_and_name(
+                    {CONF_TYPE: sensor_type, CONF_ARG: network}
+                )
+
+                sensors.append(user_input)
+
+    return {}
 
 
 async def validate_sensor_setup(
@@ -217,7 +379,6 @@ DATA_SCHEMA_SENSOR = vol.Schema(SENSOR_SETUP)
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_SENSOR,
         validate_user_input=validate_sensor_setup,
     ),
     "import": SchemaFlowFormStep(
