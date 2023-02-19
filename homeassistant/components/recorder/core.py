@@ -684,6 +684,7 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
+        self._shutdown()
 
     def _run_event_loop(self) -> None:
         """Run the event loop for the recorder."""
@@ -701,7 +702,6 @@ class Recorder(threading.Thread):
         self.stop_requested = False
         while not self.stop_requested:
             self._guarded_process_one_task_or_recover(queue_.get())
-        self._shutdown()
 
     def _pre_process_startup_tasks(self, startup_tasks: list[RecorderTask]) -> None:
         """Pre process startup tasks."""
@@ -1336,6 +1336,7 @@ class Recorder(threading.Thread):
 
     def _shutdown(self) -> None:
         """Save end time for current run."""
+        _LOGGER.debug("Shutting down recorder")
         self.hass.add_job(self._async_stop_listeners)
         self._stop_executor()
         try:
