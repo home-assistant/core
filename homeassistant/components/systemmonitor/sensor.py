@@ -352,7 +352,7 @@ async def async_setup_platform(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data={SENSOR_DOMAIN: config[CONF_RESOURCES]},
+                data={SENSOR_DOMAIN: config},
             )
         )
 
