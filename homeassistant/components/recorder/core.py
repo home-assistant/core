@@ -83,6 +83,7 @@ from .queries import (
 )
 from .run_history import RunHistory
 from .tasks import (
+    AdjustLRUSizeTask,
     AdjustStatisticsTask,
     ChangeStatisticsUnitTask,
     ClearStatisticsTask,
@@ -136,6 +137,7 @@ SHUTDOWN_TASK = object()
 COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
 WAIT_TASK = WaitTask()
+ADJUST_LRU_SIZE_TASK = AdjustLRUSizeTask()
 
 DB_LOCK_TIMEOUT = 30
 DB_LOCK_QUEUE_CHECK_TIMEOUT = 1
@@ -416,7 +418,6 @@ class Recorder(threading.Thread):
     @callback
     def _async_hass_started(self, hass: HomeAssistant) -> None:
         """Notify that hass has started."""
-        self.async_adjust_lru()
         self._hass_started.set_result(None)
 
     @callback
@@ -483,20 +484,20 @@ class Recorder(threading.Thread):
     @callback
     def _async_five_minute_tasks(self, now: datetime) -> None:
         """Run tasks every five minutes."""
-        self.async_adjust_lru()
+        self.queue_task(ADJUST_LRU_SIZE_TASK)
         self.async_periodic_statistics()
 
-    @callback
-    def async_adjust_lru(self) -> None:
+    def _adjust_lru_size(self) -> None:
         """Trigger the LRU adjustment.
 
         If the number of entities has increased, increase the size of the LRU
         cache to avoid thrashing.
         """
-        current_size = self._state_attributes_ids.get_size()
+        state_attributes_lru = self._state_attributes_ids
+        current_size = state_attributes_lru.get_size()
         new_size = self.hass.states.async_entity_ids_count() * 2
         if new_size > current_size:
-            self._state_attributes_ids.set_size(new_size)
+            state_attributes_lru.set_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
@@ -682,6 +683,7 @@ class Recorder(threading.Thread):
             self._schedule_compile_missing_statistics(session)
 
         _LOGGER.debug("Recorder processing the queue")
+        self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
         self._shutdown()
