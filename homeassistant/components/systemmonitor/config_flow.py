@@ -34,7 +34,7 @@ class SensorConfig:
 
     name: str
     mandatory_arg: bool
-    initial_setup: bool
+    enable_sensor: bool
     argument: str | None = None
 
 
@@ -64,133 +64,133 @@ SENSOR_CONFIG: dict[str, SensorConfig] = {
     "disk_free": SensorConfig(
         name="Disk free",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=True,
         argument="disk",
     ),
     "disk_use": SensorConfig(
         name="Disk use",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=True,
         argument="disk",
     ),
     "disk_use_percent": SensorConfig(
         name="Disk use (percent)",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
         argument="disk",
     ),
     "ipv4_address": SensorConfig(
         name="IPv4 address",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "ipv6_address": SensorConfig(
         name="IPv6 address",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "last_boot": SensorConfig(
         name="Last boot",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "load_15m": SensorConfig(
         name="Load (15m)",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "load_1m": SensorConfig(
         name="Load (1m)",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "load_5m": SensorConfig(
         name="Load (5m)",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "memory_free": SensorConfig(
         name="Memory free",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=True,
     ),
     "memory_use": SensorConfig(
         name="Memory use",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=True,
     ),
     "memory_use_percent": SensorConfig(
         name="Memory use (percent)",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "network_in": SensorConfig(
         name="Network in",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "network_out": SensorConfig(
         name="Network out",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "packets_in": SensorConfig(
         name="Packets in",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "packets_out": SensorConfig(
         name="Packets out",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "throughput_network_in": SensorConfig(
         name="Network throughput in",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "throughput_network_out": SensorConfig(
         name="Network throughput out",
         mandatory_arg=True,
-        initial_setup=True,
+        enable_sensor=False,
         argument="network",
     ),
     "process": SensorConfig(
         name="Process",
         mandatory_arg=True,
-        initial_setup=False,
+        enable_sensor=False,
     ),
     "processor_use": SensorConfig(
         name="Processor use",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=True,
     ),
     "processor_temperature": SensorConfig(
         name="Processor temperature",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "swap_free": SensorConfig(
         name="Swap free",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "swap_use": SensorConfig(
         name="Swap use",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
     "swap_use_percent": SensorConfig(
         name="Swap use (percent)",
         mandatory_arg=False,
-        initial_setup=True,
+        enable_sensor=False,
     ),
 }
 
@@ -228,8 +228,8 @@ async def validate_first_time_sensors_setup(
     paths = get_paths()
     networks = get_networks()
     for sensor_type, sensor_config in SENSOR_CONFIG.items():
-        sensor = {}
-        if not sensor_config.initial_setup:
+        sensor: dict[str, str | None] = {}
+        if sensor_type == "process":  # Can't setup "process" automatically
             continue
 
         if sensor_config.argument == "disk":
@@ -240,7 +240,8 @@ async def validate_first_time_sensors_setup(
                     {CONF_TYPE: sensor_type, CONF_ARG: path}
                 )
 
-                sensors.append(user_input)
+                sensors.append(sensor)
+            continue
 
         if sensor_config.argument == "network":
             for network in networks:
@@ -250,7 +251,15 @@ async def validate_first_time_sensors_setup(
                     {CONF_TYPE: sensor_type, CONF_ARG: network}
                 )
 
-                sensors.append(user_input)
+                sensors.append(sensor)
+            continue
+
+        sensor[CONF_UNIQUE_ID], sensor[CONF_NAME] = get_unique_id_and_name(
+            {CONF_TYPE: sensor_type, CONF_ARG: None}
+        )
+        sensor[CONF_TYPE] = sensor_type
+        sensor[CONF_ARG] = None
+        sensors.append(sensor)
 
     return {}
 

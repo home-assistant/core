@@ -390,10 +390,10 @@ async def async_setup_entry(
             argument, None, None, None, None
         )
         unique_id = sensor[CONF_UNIQUE_ID]
+        description = SENSOR_TYPES[type_]
+        description.entity_registry_enabled_default = sensor["enable_sensor"]
         entities.append(
-            SystemMonitorSensor(
-                sensor_registry, SENSOR_TYPES[type_], unique_id, argument
-            )
+            SystemMonitorSensor(sensor_registry, description, unique_id, argument)
         )
 
     await async_setup_sensor_registry_updates(hass, sensor_registry, SCAN_INTERVAL)
