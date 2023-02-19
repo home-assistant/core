@@ -1,0 +1,13 @@
+{
+  "domain": "homecom",
+  "name": "homecom",
+  "codeowners": ["@neugartf"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/homecom",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["homecom==0.1.4"],
+  "ssdp": [],
+  "zeroconf": []
+}

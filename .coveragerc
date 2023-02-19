@@ -468,6 +468,12 @@ omit =
     homeassistant/components/home_connect/switch.py
     homeassistant/components/home_plus_control/api.py
     homeassistant/components/home_plus_control/switch.py
+    homeassistant/components/homecom/__init__.py
+    homeassistant/components/homecom/climate.py
+    homeassistant/components/homecom/config_store.py
+    homeassistant/components/homecom/const.py
+    homeassistant/components/homecom/exceptions.py
+    homeassistant/components/homecom/hub.py
     homeassistant/components/homematic/__init__.py
     homeassistant/components/homematic/binary_sensor.py
     homeassistant/components/homematic/climate.py

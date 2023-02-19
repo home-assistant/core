@@ -180,6 +180,7 @@ FLOWS = {
         "home_connect",
         "home_plus_control",
         "homeassistant_sky_connect",
+        "homecom",
         "homekit",
         "homekit_controller",
         "homematicip_cloud",

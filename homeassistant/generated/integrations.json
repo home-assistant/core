@@ -2288,6 +2288,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "homecom": {
+      "name": "homecom",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "homematic": {
       "name": "Homematic",
       "integrations": {
