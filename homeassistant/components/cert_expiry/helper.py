@@ -20,6 +20,8 @@ def get_cert(
 ):
     """Get the certificate for the host and port combination."""
     ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     address = (host, port)
     with socket.create_connection(address, timeout=TIMEOUT) as sock, ctx.wrap_socket(
         sock, server_hostname=address[0]
