@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from functools import cache
 import logging
 import os
-import socket
 import sys
 from typing import Any, cast
 
@@ -50,7 +49,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_ARG, DOMAIN
+from .const import CONF_ARG, DOMAIN, IF_ADDRS_FAMILY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -292,8 +291,6 @@ IO_COUNTER = {
     "throughput_network_out": 0,
     "throughput_network_in": 1,
 }
-
-IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
 
 # There might be additional keys to be added for different
 # platforms / hardware combinations.
