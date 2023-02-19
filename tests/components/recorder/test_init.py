@@ -2079,15 +2079,11 @@ async def test_lru_increases_with_many_entities(
     """Test that the recorder's internal LRU cache increases with many entities."""
     # We do not actually want to record 4096 entities, so we mock the recorder
     # to not actually record anything.
-    with patch(
-        "homeassistant.components.recorder.Recorder._process_state_changed_event_into_session"
+    mock_entity_count = 4096
+    with patch.object(
+        hass.states, "async_entity_ids_count", return_value=mock_entity_count
     ):
-        for entity_idx in range(4096):
-            hass.states.async_set(f"test.entity_{entity_idx}", "any")
-        await async_wait_recording_done(hass)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-    await hass.async_block_till_done()
-
-    current_entities_count = hass.states.async_entity_ids_count()
-    assert recorder_mock._state_attributes_ids.get_size() == current_entities_count * 2
+    assert recorder_mock._state_attributes_ids.get_size() == mock_entity_count * 2
