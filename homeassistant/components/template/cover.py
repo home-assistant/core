@@ -274,6 +274,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         """Return if the cover is closed."""
         if self._position is None:
             return None
+
         return self._position == 0
 
     @property
