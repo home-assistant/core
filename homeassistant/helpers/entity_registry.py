@@ -10,7 +10,7 @@ timer.
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, ValuesView
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
@@ -30,6 +30,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import (
@@ -42,16 +43,16 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
+from homeassistant.util.json import format_unserializable_data
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .frame import report
+from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
-
-    from .entity import EntityCategory
 
 T = TypeVar("T")
 
@@ -119,7 +120,8 @@ class RegistryEntry:
     has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
     options: EntityOptionsType = attr.ib(
-        default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
+        default=None,
+        converter=attr.converters.default_if_none(factory=dict),  # type: ignore[misc]
     )
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
@@ -128,6 +130,8 @@ class RegistryEntry:
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
+
+    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
 
     @domain.default
     def _domain_default(self) -> str:
@@ -143,6 +147,47 @@ class RegistryEntry:
     def hidden(self) -> bool:
         """Return if entry is hidden."""
         return self.hidden_by is not None
+
+    @property
+    def as_partial_dict(self) -> dict[str, Any]:
+        """Return a partial dict representation of the entry."""
+        return {
+            "area_id": self.area_id,
+            "config_entry_id": self.config_entry_id,
+            "device_id": self.device_id,
+            "disabled_by": self.disabled_by,
+            "entity_category": self.entity_category,
+            "entity_id": self.entity_id,
+            "has_entity_name": self.has_entity_name,
+            "hidden_by": self.hidden_by,
+            "icon": self.icon,
+            "id": self.id,
+            "name": self.name,
+            "options": self.options,
+            "original_name": self.original_name,
+            "platform": self.platform,
+            "translation_key": self.translation_key,
+            "unique_id": self.unique_id,
+        }
+
+    @property
+    def partial_json_repr(self) -> str | None:
+        """Return a cached partial JSON representation of the entry."""
+        if self._json_repr is not None:
+            return self._json_repr
+
+        try:
+            dict_repr = self.as_partial_dict
+            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+        except (ValueError, TypeError):
+            _LOGGER.error(
+                "Unable to serialize entry %s to JSON. Bad data found at %s",
+                self.entity_id,
+                format_unserializable_data(
+                    find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
+                ),
+            )
+        return self._json_repr
 
     @callback
     def write_unavailable_state(self, hass: HomeAssistant) -> None:
@@ -266,6 +311,10 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
+
+    def values(self) -> ValuesView[RegistryEntry]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
 
     def __setitem__(self, key: str, entry: RegistryEntry) -> None:
         """Add an item."""
@@ -473,8 +522,6 @@ class EntityRegistry:
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
 
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
-
         if (
             entity_category
             and entity_category is not UNDEFINED
@@ -638,8 +685,6 @@ class EntityRegistry:
         ):
             raise ValueError("hidden_by must be a RegistryEntryHider value")
 
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
-
         if (
             entity_category
             and entity_category is not UNDEFINED
@@ -780,8 +825,7 @@ class EntityRegistry:
         new_unique_id: str | UndefinedType = UNDEFINED,
         new_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
-        """
-        Update entity platform.
+        """Update entity platform.
 
         This should only be used when an entity needs to be migrated between
         integrations.
@@ -808,11 +852,18 @@ class EntityRegistry:
 
     @callback
     def async_update_entity_options(
-        self, entity_id: str, domain: str, options: dict[str, Any]
+        self, entity_id: str, domain: str, options: Mapping[str, Any] | None
     ) -> RegistryEntry:
-        """Update entity options."""
+        """Update entity options for a domain.
+
+        If the domain options are set to None, they will be removed.
+        """
         old = self.entities[entity_id]
-        new_options: EntityOptionsType = {**old.options, domain: options}
+        new_options = {
+            key: value for key, value in old.options.items() if key != domain
+        }
+        if options is not None:
+            new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
     async def async_load(self) -> None:
@@ -821,8 +872,6 @@ class EntityRegistry:
 
         data = await self._store.async_load()
         entities = EntityRegistryItems()
-
-        from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
         if data is not None:
             for entity in data["entities"]:

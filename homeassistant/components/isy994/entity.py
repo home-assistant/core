@@ -4,35 +4,49 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyisy.constants import (
+    ATTR_ACTION,
+    ATTR_CONTROL,
     COMMAND_FRIENDLY_NAME,
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
-    PROTO_GROUP,
+    NC_NODE_ENABLED,
     PROTO_INSTEON,
     PROTO_ZWAVE,
+    TAG_ADDRESS,
+    TAG_ENABLED,
 )
 from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Node
+from pyisy.nodes import Group, Node, NodeChangedEvent
 from pyisy.programs import Program
+from pyisy.variables import Variable
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from . import _async_isy_to_configuration_url
 from .const import DOMAIN
 
 
 class ISYEntity(Entity):
     """Representation of an ISY device."""
 
-    _name: str | None = None
+    _attr_has_entity_name = False
     _attr_should_poll = False
+    _node: Node | Program | Variable
 
-    def __init__(self, node: Node) -> None:
-        """Initialize the insteon device."""
+    def __init__(
+        self,
+        node: Node | Group | Variable | Program,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
+        """Initialize the ISY/IoX entity."""
         self._node = node
+        self._attr_name = node.name
+        if device_info is None:
+            device_info = DeviceInfo(identifiers={(DOMAIN, node.isy.uuid)})
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{node.isy.uuid}_{node.address}"
         self._attrs: dict[str, Any] = {}
         self._change_handler: EventListener | None = None
         self._control_handler: EventListener | None = None
@@ -69,82 +83,25 @@ class ISYEntity(Entity):
 
         self.hass.bus.async_fire("isy994_control", event_data)
 
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device_info of the device."""
-        isy = self._node.isy
-        uuid = isy.configuration["uuid"]
-        node = self._node
-        url = _async_isy_to_configuration_url(isy)
-
-        basename = self._name or str(self._node.name)
-
-        if node.protocol == PROTO_GROUP and len(node.controllers) == 1:
-            # If Group has only 1 Controller, link to that device instead of the hub
-            node = isy.nodes.get_by_id(node.controllers[0])
-            basename = node.name
-
-        if hasattr(node, "parent_node"):  # Verify this is a Node class
-            if node.parent_node is not None:
-                # This is not the parent node, get the parent node.
-                node = node.parent_node
-                basename = node.name
-        else:
-            # Default to the hub device if parent node is not a physical device
-            return DeviceInfo(identifiers={(DOMAIN, uuid)})
-
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{uuid}_{node.address}")},
-            manufacturer=node.protocol,
-            name=f"{basename} ({(str(node.address).rpartition(' ')[0] or node.address)})",
-            via_device=(DOMAIN, uuid),
-            configuration_url=url,
-            suggested_area=node.folder,
-        )
-
-        # ISYv5 Device Types can provide model and manufacturer
-        model: str = "Unknown"
-        if node.node_def_id is not None:
-            model = str(node.node_def_id)
-
-        # Numerical Device Type
-        if node.type is not None:
-            model += f" ({node.type})"
-
-        # Get extra information for Z-Wave Devices
-        if node.protocol == PROTO_ZWAVE:
-            device_info[ATTR_MANUFACTURER] = f"Z-Wave MfrID:{node.zwave_props.mfr_id}"
-            model += (
-                f" Type:{node.zwave_props.devtype_gen} "
-                f"ProductTypeID:{node.zwave_props.prod_type_id} "
-                f"ProductID:{node.zwave_props.product_id}"
-            )
-        device_info[ATTR_MODEL] = model
-
-        return device_info
-
-    @property
-    def unique_id(self) -> str | None:
-        """Get the unique identifier of the device."""
-        if hasattr(self._node, "address"):
-            return f"{self._node.isy.configuration['uuid']}_{self._node.address}"
-        return None
-
-    @property
-    def old_unique_id(self) -> str | None:
-        """Get the old unique identifier of the device."""
-        if hasattr(self._node, "address"):
-            return cast(str, self._node.address)
-        return None
-
-    @property
-    def name(self) -> str:
-        """Get the name of the device."""
-        return self._name or str(self._node.name)
-
 
 class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
+
+    def __init__(
+        self,
+        node: Node | Group | Variable | Program,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
+        """Initialize the ISY/IoX node entity."""
+        super().__init__(node, device_info=device_info)
+        if hasattr(node, "parent_node") and node.parent_node is None:
+            self._attr_has_entity_name = True
+            self._attr_name = None
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return getattr(self._node, TAG_ENABLED, True)
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -157,10 +114,7 @@ class ISYNodeEntity(ISYEntity):
         attr = {}
         node = self._node
         # Insteon aux_properties are now their own sensors
-        if (
-            hasattr(self._node, "aux_properties")
-            and getattr(node, "protocol", None) != PROTO_INSTEON
-        ):
+        if hasattr(self._node, "aux_properties") and node.protocol != PROTO_INSTEON:
             for name, value in self._node.aux_properties.items():
                 attr_name = COMMAND_FRIENDLY_NAME.get(name, name)
                 attr[attr_name] = str(value.formatted).lower()
@@ -196,7 +150,7 @@ class ISYNodeEntity(ISYEntity):
 
     async def async_get_zwave_parameter(self, parameter: Any) -> None:
         """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -207,7 +161,7 @@ class ISYNodeEntity(ISYEntity):
         self, parameter: Any, value: Any | None, size: int | None
     ) -> None:
         """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -223,10 +177,13 @@ class ISYNodeEntity(ISYEntity):
 class ISYProgramEntity(ISYEntity):
     """Representation of an ISY program base."""
 
-    def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
+    _actions: Program
+    _status: Program
+
+    def __init__(self, name: str, status: Program, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""
         super().__init__(status)
-        self._name = name
+        self._attr_name = name
         self._actions = actions
 
     @property
@@ -253,3 +210,57 @@ class ISYProgramEntity(ISYEntity):
         if self._node.last_update != EMPTY_TIME:
             attr["status_last_update"] = self._node.last_update
         return attr
+
+
+class ISYAuxControlEntity(Entity):
+    """Representation of a ISY/IoX Aux Control base entity."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        unique_id: str,
+        description: EntityDescription,
+        device_info: DeviceInfo | None,
+    ) -> None:
+        """Initialize the ISY Aux Control Number entity."""
+        self._node = node
+        self._control = control
+        name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
+        if node.address != node.primary_node:
+            name = f"{node.name} {name}"
+        self._attr_name = name
+        self.entity_description = description
+        self._attr_has_entity_name = node.address == node.primary_node
+        self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
+        self._change_handler: EventListener = None
+        self._availability_handler: EventListener = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node control change events."""
+        self._change_handler = self._node.control_events.subscribe(
+            self.async_on_update,
+            event_filter={ATTR_CONTROL: self._control},
+            key=self.unique_id,
+        )
+        self._availability_handler = self._node.isy.nodes.status_events.subscribe(
+            self.async_on_update,
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: NC_NODE_ENABLED,
+            },
+            key=self.unique_id,
+        )
+
+    @callback
+    def async_on_update(self, event: NodeProperty | NodeChangedEvent, key: str) -> None:
+        """Handle a control event from the ISY Node."""
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return cast(bool, self._node.enabled)

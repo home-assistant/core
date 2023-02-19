@@ -23,8 +23,7 @@ RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
 
 
 def raise_if_invalid_filename(filename: str) -> None:
-    """
-    Check if a filename is valid.
+    """Check if a filename is valid.
 
     Raises a ValueError if the filename is invalid.
     """
@@ -33,8 +32,7 @@ def raise_if_invalid_filename(filename: str) -> None:
 
 
 def raise_if_invalid_path(path: str) -> None:
-    """
-    Check if a path is valid.
+    """Check if a path is valid.
 
     Raises a ValueError if the path is invalid.
     """
@@ -172,7 +170,7 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
-            # pylint: disable=protected-access # to _throttle
+            # pylint: disable=protected-access
             if not hasattr(host, "_throttle"):
                 host._throttle = {}
 

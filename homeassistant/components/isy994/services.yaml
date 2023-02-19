@@ -136,8 +136,8 @@ rename_node:
       selector:
         text:
 set_on_level:
-  name: Set On Level
-  description: Send a ISY set_on_level command to a Node.
+  name: Set On Level (Deprecated)
+  description: "Send a ISY set_on_level command to a Node. Deprecated: Use On Level Number entity instead."
   target:
     entity:
       integration: isy994
@@ -152,8 +152,8 @@ set_on_level:
           min: 0
           max: 255
 set_ramp_rate:
-  name: Set ramp rate
-  description: Send a ISY set_ramp_rate command to a Node.
+  name: Set ramp rate (Deprecated)
+  description: "Send a ISY set_ramp_rate command to a Node. Deprecated: Use On Level Number entity instead."
   target:
     entity:
       integration: isy994
@@ -184,8 +184,8 @@ system_query:
       selector:
         text:
 set_variable:
-  name: Set variable
-  description: Set an ISY variable's current or initial value. Variables can be set by either type/address or by name.
+  name: Set variable (Deprecated)
+  description: "Set an ISY variable's current or initial value. Variables can be set by either type/address or by name. Deprecated: Use number entities instead."
   fields:
     address:
       name: Address
@@ -267,8 +267,8 @@ send_program_command:
       selector:
         text:
 run_network_resource:
-  name: Run network resource
-  description: Run a network resource on the ISY.
+  name: Run network resource (Deprecated)
+  description: "Run a network resource on the ISY.  Deprecated: Use Network Resource button entity."
   fields:
     address:
       name: Address

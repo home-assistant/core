@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aiohttp import ClientWebSocketResponse
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models.error import MatterError
@@ -16,9 +17,14 @@ from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.setup import async_setup_component
 
-from .common import load_and_parse_node_fixture
+from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 
@@ -83,7 +89,7 @@ async def test_home_assistant_stop(
     assert matter_client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize("error", [CannotConnect("Boom"), Exception("Boom")])
+@pytest.mark.parametrize("error", [CannotConnect(Exception("Boom")), Exception("Boom")])
 async def test_connect_failed(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -343,8 +349,14 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, backup_calls, "
-    "update_addon_side_effect, create_backup_side_effect",
+    (
+        "addon_version",
+        "update_available",
+        "update_calls",
+        "backup_calls",
+        "update_addon_side_effect",
+        "create_backup_side_effect",
+    ),
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
@@ -428,7 +440,7 @@ async def test_issue_registry_invalid_version(
 
 
 @pytest.mark.parametrize(
-    "stop_addon_side_effect, entry_state",
+    ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
         (HassioAPIError("Boom"), ConfigEntryState.LOADED),
@@ -587,3 +599,76 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Matter Server add-on" in caplog.text
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test that a device can be removed ok."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration_with_node_fixture(hass, "device_diagnostics", matter_client)
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device_registry = dr.async_get(hass)
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )[0]
+    entity_registry = er.async_get(hass)
+    entity_id = "light.m5stamp_lighting_app"
+
+    assert device_entry
+    assert entity_registry.async_get(entity_id)
+    assert hass.states.get(entity_id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(device_entry.id)
+    assert not entity_registry.async_get(entity_id)
+    assert not hass.states.get(entity_id)
+
+
+async def test_remove_config_entry_device_no_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test that a device can be removed ok without an existing node."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = integration
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000005-MatterNodeDevice")
+        },
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(device_entry.id)

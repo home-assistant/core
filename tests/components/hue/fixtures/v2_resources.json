@@ -168,6 +168,7 @@
       "dimming": []
     },
     "speed": 0.6269841194152832,
+    "auto_dynamic": false,
     "type": "scene"
   },
   {
@@ -220,7 +221,127 @@
       "dimming": []
     },
     "speed": 0.5,
+    "auto_dynamic": false,
     "type": "scene"
+  },
+  {
+    "id": "redacted-8abe5a3e-94c8-4058-908f-56241818509a",
+    "type": "smart_scene",
+    "metadata": {
+      "name": "Smart Test Scene",
+      "image": {
+        "rid": "eb014820-a902-4652-8ca7-6e29c03b87a1",
+        "rtype": "public_image"
+      }
+    },
+    "group": {
+      "rid": "6ddc9066-7e7d-4a03-a773-c73937968296",
+      "rtype": "room"
+    },
+    "week_timeslots": [
+      {
+        "timeslots": [
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 7,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 10,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 16,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 20,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 22,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          },
+          {
+            "start_time": {
+              "kind": "time",
+              "time": {
+                "hour": 0,
+                "minute": 0,
+                "second": 0
+              }
+            },
+            "target": {
+              "rid": "cdbf3740-7977-4a11-8275-8c78636ad4bd",
+              "rtype": "scene"
+            }
+          }
+        ],
+        "recurrence": [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday"
+        ]
+      }
+    ],
+    "active_timeslot": {
+      "timeslot_id": 1,
+      "weekday": "wednesday"
+    },
+    "state": "active"
   },
   {
     "id": "3ff06175-29e8-44a8-8fe7-af591b0025da",
@@ -624,14 +745,12 @@
     },
     "effects": {
       "status_values": ["no_effect", "candle", "fire"],
-      "status": "no_effect"
+      "status": "no_effect",
+      "effect_values": ["no_effect", "candle", "fire"],
+      "effect": "no_effect"
     },
     "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
     "id_v1": "/lights/29",
-    "metadata": {
-      "archetype": "floor_shade",
-      "name": "Hue light with color and color temperature 1"
-    },
     "mode": "normal",
     "on": {
       "on": true
@@ -666,18 +785,18 @@
     },
     "effects": {
       "status_values": ["no_effect", "candle"],
-      "status": "no_effect"
+      "status": "no_effect",
+      "effect_values": ["no_effect", "candle", "fire"],
+      "effect": "no_effect"
     },
     "timed_effects": {
       "status_values": ["no_effect", "sunrise"],
-      "status": "no_effect"
+      "status": "no_effect",
+      "effect_values": ["no_effect", "sunrise"],
+      "effect": "no_effect"
     },
     "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
     "id_v1": "/lights/4",
-    "metadata": {
-      "archetype": "ceiling_round",
-      "name": "Hue light with color temperature only"
-    },
     "mode": "normal",
     "on": {
       "on": false
@@ -733,10 +852,6 @@
     },
     "id": "b3fe71ef-d0ef-48de-9355-d9e604377df0",
     "id_v1": "/lights/16",
-    "metadata": {
-      "archetype": "hue_lightstrip",
-      "name": "Hue light with color and color temperature 2"
-    },
     "mode": "normal",
     "on": {
       "on": true
@@ -759,10 +874,6 @@
     },
     "id": "7697ac8a-25aa-4576-bb40-0036c0db15b9",
     "id_v1": "/lights/23",
-    "metadata": {
-      "archetype": "classic_bulb",
-      "name": "Hue on/off light"
-    },
     "mode": "normal",
     "on": {
       "on": false
@@ -810,10 +921,6 @@
     },
     "id": "74a45fee-1b3d-4553-b5ab-040da8a10cfd",
     "id_v1": "/lights/11",
-    "metadata": {
-      "archetype": "hue_bloom",
-      "name": "Hue light with color only"
-    },
     "mode": "normal",
     "on": {
       "on": true
@@ -914,10 +1021,6 @@
     },
     "id": "8015b17f-8336-415b-966a-b364bd082397",
     "id_v1": "/lights/24",
-    "metadata": {
-      "archetype": "hue_lightstrip_tv",
-      "name": "Hue light with color and color temperature gradient"
-    },
     "mode": "normal",
     "on": {
       "on": true

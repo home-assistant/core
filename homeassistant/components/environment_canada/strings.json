@@ -12,6 +12,9 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "bad_station_id": "Station ID is invalid, missing, or not found in the station ID database",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

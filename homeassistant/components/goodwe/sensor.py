@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 import logging
 from typing import Any, cast
 
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -26,9 +28,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -105,7 +108,7 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda prev, val: prev if not val else val,
+        value=lambda prev, val: val if val else prev,
         available=lambda entity: entity.coordinator.data is not None,
     ),
     "C": GoodweSensorEntityDescription(
@@ -129,6 +132,9 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
 DIAG_SENSOR = GoodweSensorEntityDescription(
     key="_",
     state_class=SensorStateClass.MEASUREMENT,
+)
+TEXT_SENSOR = GoodweSensorEntityDescription(
+    key="text",
 )
 
 
@@ -171,19 +177,24 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None
         )
-        self.entity_description = _DESCRIPTIONS.get(sensor.unit, DIAG_SENSOR)
-        if not self.entity_description.native_unit_of_measurement:
-            self._attr_native_unit_of_measurement = sensor.unit
+        try:
+            self.entity_description = _DESCRIPTIONS[sensor.unit]
+        except KeyError:
+            if "Enum" in type(sensor).__name__ or sensor.id_ == "timestamp":
+                self.entity_description = TEXT_SENSOR
+            else:
+                self.entity_description = DIAG_SENSOR
+                self._attr_native_unit_of_measurement = sensor.unit
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
         if sensor.id_ == BATTERY_SOC:
             self._attr_device_class = SensorDeviceClass.BATTERY
         self._sensor = sensor
         self._previous_value = None
-        self._stop_reset = None
+        self._stop_reset: Callable[[], None] | None = None
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         value = cast(GoodweSensorEntityDescription, self.entity_description).value(
             self._previous_value,
@@ -220,7 +231,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self.hass, self.async_reset, next_midnight
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Schedule reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET:
             next_midnight = dt_util.start_of_local_day(
@@ -231,7 +242,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             )
         await super().async_added_to_hass()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Remove reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET and self._stop_reset is not None:
             self._stop_reset()

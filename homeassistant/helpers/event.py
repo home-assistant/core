@@ -10,10 +10,9 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import Any, Union, cast
+from typing import Any, Concatenate, ParamSpec, cast
 
 import attr
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -710,8 +709,8 @@ def async_track_state_change_filtered(
 
     Returns
     -------
-    Object used to update the listeners (async_update_listeners) with a new TrackStates or
-    cancel the tracking (async_remove).
+    Object used to update the listeners (async_update_listeners) with a new
+    TrackStates or cancel the tracking (async_remove).
 
     """
     tracker = _TrackStateChangeFiltered(hass, track_states, action)
@@ -1129,7 +1128,7 @@ class TrackTemplateResultInfo:
 
 TrackTemplateResultListener = Callable[
     [
-        Union[Event, None],
+        Event | None,
         list[TrackTemplateResult],
     ],
     None,
@@ -1350,9 +1349,24 @@ def async_call_later(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
-    if not isinstance(delay, timedelta):
-        delay = timedelta(seconds=delay)
-    return async_track_point_in_utc_time(hass, action, dt_util.utcnow() + delay)
+    if isinstance(delay, timedelta):
+        delay = delay.total_seconds()
+
+    @callback
+    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job, time_tracker_utcnow())
+
+    job = action if isinstance(action, HassJob) else HassJob(action)
+    cancel_callback = hass.loop.call_later(delay, run_action, job)
+
+    @callback
+    def unsub_call_later_listener() -> None:
+        """Cancel the call_later."""
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_call_later_listener
 
 
 call_later = threaded_listener_factory(async_call_later)

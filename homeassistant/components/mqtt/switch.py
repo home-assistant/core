@@ -64,7 +64,8 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Switches under the switch platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Switches under the switch platform key was deprecated in
+# HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(switch.DOMAIN),
@@ -78,7 +79,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT switch through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT switch through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

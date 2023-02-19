@@ -6,6 +6,7 @@ import sys
 from typing import Any
 
 import httpx
+from typing_extensions import Self
 
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
@@ -41,7 +42,7 @@ def get_async_client(hass: HomeAssistant, verify_ssl: bool = True) -> httpx.Asyn
 class HassHttpXAsyncClient(httpx.AsyncClient):
     """httpx AsyncClient that suppresses context management."""
 
-    async def __aenter__(self: HassHttpXAsyncClient) -> HassHttpXAsyncClient:
+    async def __aenter__(self) -> Self:
         """Prevent an integration from reopen of the client via context manager."""
         return self
 

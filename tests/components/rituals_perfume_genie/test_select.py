@@ -13,10 +13,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     SERVICE_SELECT_OPTION,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from .common import init_integration, mock_config_entry, mock_diffuser

@@ -1,4 +1,4 @@
-"""Demo lock platform that has two fake locks."""
+"""Demo lock platform that implements locks."""
 from __future__ import annotations
 
 import asyncio

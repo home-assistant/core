@@ -31,7 +31,6 @@ def setup_platform(
     devices = []
 
     for device in data.lupusec.get_devices(generic_type=CONST.TYPE_SWITCH):
-
         devices.append(LupusecSwitch(data, device))
 
     add_entities(devices)

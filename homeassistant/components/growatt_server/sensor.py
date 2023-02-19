@@ -142,7 +142,7 @@ class GrowattInverter(SensorEntity):
 
     def __init__(
         self, probe, name, unique_id, description: GrowattSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize a PVOutput sensor."""
         self.probe = probe
         self.entity_description = description
@@ -228,7 +228,8 @@ class GrowattData:
                 )
 
                 mix_detail = self.api.mix_detail(self.device_id, self.plant_id)
-                # Get the chart data and work out the time of the last entry, use this as the last time data was published to the Growatt Server
+                # Get the chart data and work out the time of the last entry, use this
+                # as the last time data was published to the Growatt Server
                 mix_chart_entries = mix_detail["chartData"]
                 sorted_keys = sorted(mix_chart_entries)
 
@@ -239,12 +240,15 @@ class GrowattData:
                     date_now, last_updated_time, dt.DEFAULT_TIME_ZONE
                 )
 
-                # Dashboard data is largely inaccurate for mix system but it is the only call with the ability to return the combined
-                # imported from grid value that is the combination of charging AND load consumption
+                # Dashboard data is largely inaccurate for mix system but it is the only
+                # call with the ability to return the combined imported from grid value
+                # that is the combination of charging AND load consumption
                 dashboard_data = self.api.dashboard_data(self.plant_id)
-                # Dashboard values have units e.g. "kWh" as part of their returned string, so we remove it
+                # Dashboard values have units e.g. "kWh" as part of their returned
+                # string, so we remove it
                 dashboard_values_for_mix = {
-                    # etouser is already used by the results from 'mix_detail' so we rebrand it as 'etouser_combined'
+                    # etouser is already used by the results from 'mix_detail' so we
+                    # rebrand it as 'etouser_combined'
                     "etouser_combined": float(
                         dashboard_data["etouser"].replace("kWh", "")
                     )
@@ -297,10 +301,11 @@ class GrowattData:
             )
             diff = float(api_value) - float(previous_value)
 
-            # Check if the value has dropped (negative value i.e. < 0) and it has only dropped by a
-            # small amount, if so, use the previous value.
-            # Note - The energy dashboard takes care of drops within 10% of the current value,
-            # however if the value is low e.g. 0.2 and drops by 0.1 it classes as a reset.
+            # Check if the value has dropped (negative value i.e. < 0) and it has only
+            # dropped by a small amount, if so, use the previous value.
+            # Note - The energy dashboard takes care of drops within 10%
+            # of the current value, however if the value is low e.g. 0.2
+            # and drops by 0.1 it classes as a reset.
             if -(entity_description.previous_value_drop_threshold) <= diff < 0:
                 _LOGGER.debug(
                     (
@@ -317,18 +322,19 @@ class GrowattData:
                     "%s - No drop detected, using API value", entity_description.name
                 )
 
-        # Lifetime total values should always be increasing, they will never reset, however
-        # the API sometimes returns 0 values when the clock turns to 00:00 local time
-        # in that scenario we should just return the previous value
+        # Lifetime total values should always be increasing, they will never reset,
+        # however the API sometimes returns 0 values when the clock turns to 00:00
+        # local time in that scenario we should just return the previous value
         # Scenarios:
         # 1 - System has a genuine 0 value when it it first commissioned:
         #        - will return 0 until a non-zero value is registered
-        # 2 - System has been running fine but temporarily resets to 0 briefly at midnight:
+        # 2 - System has been running fine but temporarily resets to 0 briefly
+        #     at midnight:
         #        - will return the previous value
         # 3 - HA is restarted during the midnight 'outage' - Not handled:
         #        - Previous value will not exist meaning 0 will be returned
-        #        - This is an edge case that would be better handled by looking up the previous
-        #          value of the entity from the recorder
+        #        - This is an edge case that would be better handled by looking
+        #          up the previous value of the entity from the recorder
         if entity_description.never_resets and api_value == 0 and previous_value:
             _LOGGER.debug(
                 (

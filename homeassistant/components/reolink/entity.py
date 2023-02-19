@@ -1,7 +1,6 @@
 """Reolink parent entity class."""
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -11,12 +10,10 @@ from .const import DOMAIN
 
 
 class ReolinkCoordinatorEntity(CoordinatorEntity):
-    """Parent class for Reolink Entities."""
+    """Parent class for Reolink hardware camera entities."""
 
-    def __init__(
-        self, reolink_data: ReolinkData, config_entry: ConfigEntry, channel: int | None
-    ) -> None:
-        """Initialize ReolinkCoordinatorEntity."""
+    def __init__(self, reolink_data: ReolinkData, channel: int) -> None:
+        """Initialize ReolinkCoordinatorEntity for a hardware camera."""
         coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)
 
@@ -25,7 +22,7 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
 
         http_s = "https" if self._host.api.use_https else "http"
         conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
-        if self._host.api.is_nvr and self._channel is not None:
+        if self._host.api.is_nvr:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, f"{self._host.unique_id}_ch{self._channel}")},
                 via_device=(DOMAIN, self._host.unique_id),

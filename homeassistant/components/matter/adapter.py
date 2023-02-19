@@ -1,11 +1,15 @@
 """Matter to Home Assistant adapter."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as all_clusters
 from matter_server.common.models.events import EventType
-from matter_server.common.models.node_device import AbstractMatterNodeDevice
+from matter_server.common.models.node_device import (
+    AbstractMatterNodeDevice,
+    MatterBridgedNodeDevice,
+)
+from matter_server.common.models.server_information import ServerInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -13,8 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .device_platform import DEVICE_PLATFORM
+from .helpers import get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -66,31 +71,56 @@ class MatterAdapter:
         bridge_unique_id: str | None = None
 
         if node.aggregator_device_type_instance is not None and (
-            node_info := node.root_device_type_instance.get_cluster(all_clusters.Basic)
+            node.root_device_type_instance.get_cluster(all_clusters.BasicInformation)
         ):
-            self._create_device_registry(
-                node_info, node_info.nodeLabel or "Hub device", None
+            # create virtual (parent) device for bridge node device
+            bridge_device = MatterBridgedNodeDevice(
+                node.aggregator_device_type_instance
             )
-            bridge_unique_id = node_info.uniqueID
+            self._create_device_registry(bridge_device)
+            server_info = cast(ServerInfo, self.matter_client.server_info)
+            bridge_unique_id = get_device_id(server_info, bridge_device)
 
         for node_device in node.node_devices:
             self._setup_node_device(node_device, bridge_unique_id)
 
     def _create_device_registry(
         self,
-        info: all_clusters.Basic | all_clusters.BridgedDeviceBasic,
-        name: str,
-        bridge_unique_id: str | None,
+        node_device: AbstractMatterNodeDevice,
+        bridge_unique_id: str | None = None,
     ) -> None:
         """Create a device registry entry."""
+        server_info = cast(ServerInfo, self.matter_client.server_info)
+
+        basic_info = node_device.device_info()
+        device_type_instances = node_device.device_type_instances()
+
+        name = basic_info.nodeLabel
+        if not name and isinstance(node_device, MatterBridgedNodeDevice):
+            # fallback name for Bridge
+            name = "Hub device"
+        elif not name and device_type_instances:
+            # use the productName if no node label is present
+            name = basic_info.productName
+
+        node_device_id = get_device_id(
+            server_info,
+            node_device,
+        )
+        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        # if available, we also add the serialnumber as identifier
+        if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
+            # prefix identifier with 'serial_' to be able to filter it
+            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, info.uniqueID)},
-            hw_version=info.hardwareVersionString,
-            sw_version=info.softwareVersionString,
-            manufacturer=info.vendorName,
-            model=info.productName,
+            identifiers=identifiers,
+            hw_version=basic_info.hardwareVersionString,
+            sw_version=basic_info.softwareVersionString,
+            manufacturer=basic_info.vendorName,
+            model=basic_info.productName,
             via_device=(DOMAIN, bridge_unique_id) if bridge_unique_id else None,
         )
 
@@ -98,17 +128,9 @@ class MatterAdapter:
         self, node_device: AbstractMatterNodeDevice, bridge_unique_id: str | None
     ) -> None:
         """Set up a node device."""
-        node = node_device.node()
-        basic_info = node_device.device_info()
-        device_type_instances = node_device.device_type_instances()
-
-        name = basic_info.nodeLabel
-        if not name and device_type_instances:
-            name = f"{device_type_instances[0].device_type.__doc__[:-1]} {node.node_id}"
-
-        self._create_device_registry(basic_info, name, bridge_unique_id)
-
-        for instance in device_type_instances:
+        self._create_device_registry(node_device, bridge_unique_id)
+        # run platform discovery from device type instances
+        for instance in node_device.device_type_instances():
             created = False
 
             for platform, devices in DEVICE_PLATFORM.items():

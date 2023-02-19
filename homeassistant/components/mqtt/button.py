@@ -46,7 +46,8 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Buttons under the button platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Buttons under the button platform key was deprecated in
+# HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(button.DOMAIN),
@@ -61,7 +62,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT button through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT button through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

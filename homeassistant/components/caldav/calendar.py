@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
+from functools import partial
 import logging
 import re
 
@@ -172,7 +173,13 @@ class WebDavCalendarData:
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
         vevent_list = await hass.async_add_executor_job(
-            self.calendar.date_search, start_date, end_date
+            partial(
+                self.calendar.search,
+                start=start_date,
+                end=end_date,
+                event=True,
+                expand=True,
+            )
         )
         event_list = []
         for event in vevent_list:
@@ -202,7 +209,12 @@ class WebDavCalendarData:
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = self.calendar.date_search(start_of_today, start_of_tomorrow)
+        results = self.calendar.search(
+            start=start_of_today,
+            end=start_of_tomorrow,
+            event=True,
+            expand=True,
+        )
 
         # Create new events for each recurrence of an event that happens today.
         # For recurring events, some servers return the original event with recurrence rules

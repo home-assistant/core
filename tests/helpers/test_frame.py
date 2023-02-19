@@ -1,5 +1,5 @@
 """Test the frame helper."""
-# pylint: disable=protected-access
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -7,7 +7,9 @@ import pytest
 from homeassistant.helpers import frame
 
 
-async def test_extract_frame_integration(caplog, mock_integration_frame):
+async def test_extract_frame_integration(
+    caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
     """Test extracting the current frame from integration context."""
     found_frame, integration, path = frame.get_integration_frame()
 

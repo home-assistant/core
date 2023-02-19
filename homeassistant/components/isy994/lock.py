@@ -9,11 +9,11 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 VALUE_TO_STATE = {0: False, 100: True}
 
@@ -22,15 +22,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY lock platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     entities: list[ISYLockEntity | ISYLockProgramEntity] = []
-    for node in hass_isy_data[ISY994_NODES][Platform.LOCK]:
-        entities.append(ISYLockEntity(node))
+    for node in isy_data.nodes[Platform.LOCK]:
+        entities.append(ISYLockEntity(node, devices.get(node.primary_node)))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.LOCK]:
+    for name, status, actions in isy_data.programs[Platform.LOCK]:
         entities.append(ISYLockProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, Platform.LOCK, entities)
     async_add_entities(entities)
 
 

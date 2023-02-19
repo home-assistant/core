@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import setup
 import homeassistant.components.automation as automation
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from . import async_init_integration
@@ -93,7 +94,7 @@ async def setup_automation(hass, trigger):
     await hass.async_block_till_done()
 
 
-async def test_simple(hass, calls, mock_litejet):
+async def test_simple(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test the simplest form of a LiteJet trigger."""
     await setup_automation(
         hass, {"platform": "litejet", "number": ENTITY_OTHER_SWITCH_NUMBER}
@@ -106,7 +107,7 @@ async def test_simple(hass, calls, mock_litejet):
     assert calls[0].data["id"] == 0
 
 
-async def test_held_more_than_short(hass, calls, mock_litejet):
+async def test_held_more_than_short(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test a too short hold."""
     await setup_automation(
         hass,
@@ -123,7 +124,7 @@ async def test_held_more_than_short(hass, calls, mock_litejet):
     assert len(calls) == 0
 
 
-async def test_held_more_than_long(hass, calls, mock_litejet):
+async def test_held_more_than_long(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test a hold that is long enough."""
     await setup_automation(
         hass,
@@ -143,7 +144,7 @@ async def test_held_more_than_long(hass, calls, mock_litejet):
     assert len(calls) == 1
 
 
-async def test_held_less_than_short(hass, calls, mock_litejet):
+async def test_held_less_than_short(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test a hold that is short enough."""
     await setup_automation(
         hass,
@@ -162,7 +163,7 @@ async def test_held_less_than_short(hass, calls, mock_litejet):
     assert calls[0].data["id"] == 0
 
 
-async def test_held_less_than_long(hass, calls, mock_litejet):
+async def test_held_less_than_long(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test a hold that is too long."""
     await setup_automation(
         hass,
@@ -181,7 +182,7 @@ async def test_held_less_than_long(hass, calls, mock_litejet):
     assert len(calls) == 0
 
 
-async def test_held_in_range_short(hass, calls, mock_litejet):
+async def test_held_in_range_short(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test an in-range trigger with a too short hold."""
     await setup_automation(
         hass,
@@ -199,7 +200,9 @@ async def test_held_in_range_short(hass, calls, mock_litejet):
     assert len(calls) == 0
 
 
-async def test_held_in_range_just_right(hass, calls, mock_litejet):
+async def test_held_in_range_just_right(
+    hass: HomeAssistant, calls, mock_litejet
+) -> None:
     """Test an in-range trigger with a just right hold."""
     await setup_automation(
         hass,
@@ -220,7 +223,7 @@ async def test_held_in_range_just_right(hass, calls, mock_litejet):
     assert calls[0].data["id"] == 0
 
 
-async def test_held_in_range_long(hass, calls, mock_litejet):
+async def test_held_in_range_long(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test an in-range trigger with a too long hold."""
     await setup_automation(
         hass,
@@ -240,7 +243,7 @@ async def test_held_in_range_long(hass, calls, mock_litejet):
     assert len(calls) == 0
 
 
-async def test_reload(hass, calls, mock_litejet):
+async def test_reload(hass: HomeAssistant, calls, mock_litejet) -> None:
     """Test reloading automation."""
     await setup_automation(
         hass,
