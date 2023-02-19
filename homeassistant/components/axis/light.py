@@ -8,9 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+from .entity import AxisEventEntity
 
 
 async def async_setup_entry(
@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class AxisLight(AxisEventBase, LightEntity):
+class AxisLight(AxisEventEntity, LightEntity):
     """Representation of a light Axis event."""
 
     _attr_should_poll = True
@@ -48,13 +48,14 @@ class AxisLight(AxisEventBase, LightEntity):
         """Initialize the Axis light."""
         super().__init__(event, device)
 
-        self.light_id = f"led{self.event.id}"
+        self._light_id = f"led{event.id}"
 
         self.current_intensity = 0
         self.max_intensity = 0
 
-        light_type = device.api.vapix.light_control[self.light_id].light_type
-        self._attr_name = f"{light_type} {self.event_type} {event.id}"
+        light_type = device.api.vapix.light_control[self._light_id].light_type
+        self._attr_name = f"{light_type} {self._event_type} {event.id}"
+        self._attr_is_on = event.is_tripped
 
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -65,20 +66,21 @@ class AxisLight(AxisEventBase, LightEntity):
 
         current_intensity = (
             await self.device.api.vapix.light_control.get_current_intensity(
-                self.light_id
+                self._light_id
             )
         )
         self.current_intensity = current_intensity["data"]["intensity"]
 
         max_intensity = await self.device.api.vapix.light_control.get_valid_intensity(
-            self.light_id
+            self._light_id
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self.event.is_tripped
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update light state."""
+        self._attr_is_on = event.is_tripped
+        self.async_write_ha_state()
 
     @property
     def brightness(self) -> int:
@@ -88,24 +90,24 @@ class AxisLight(AxisEventBase, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         if not self.is_on:
-            await self.device.api.vapix.light_control.activate_light(self.light_id)
+            await self.device.api.vapix.light_control.activate_light(self._light_id)
 
         if ATTR_BRIGHTNESS in kwargs:
             intensity = int((kwargs[ATTR_BRIGHTNESS] / 255) * self.max_intensity)
             await self.device.api.vapix.light_control.set_manual_intensity(
-                self.light_id, intensity
+                self._light_id, intensity
             )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         if self.is_on:
-            await self.device.api.vapix.light_control.deactivate_light(self.light_id)
+            await self.device.api.vapix.light_control.deactivate_light(self._light_id)
 
     async def async_update(self) -> None:
         """Update brightness."""
         current_intensity = (
             await self.device.api.vapix.light_control.get_current_intensity(
-                self.light_id
+                self._light_id
             )
         )
         self.current_intensity = current_intensity["data"]["intensity"]

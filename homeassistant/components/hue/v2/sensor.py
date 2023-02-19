@@ -1,7 +1,7 @@
 """Support for Hue sensors."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -23,22 +23,21 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType = Union[DevicePower, LightLevel, Temperature, ZigbeeConnectivity]
-ControllerType = Union[
-    DevicePowerController,
-    LightLevelController,
-    TemperatureController,
-    ZigbeeConnectivityController,
-]
+SensorType: TypeAlias = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
+ControllerType: TypeAlias = (
+    DevicePowerController
+    | LightLevelController
+    | TemperatureController
+    | ZigbeeConnectivityController
+)
 
 
 async def async_setup_entry(

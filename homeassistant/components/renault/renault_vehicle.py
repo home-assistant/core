@@ -7,12 +7,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

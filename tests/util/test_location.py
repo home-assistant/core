@@ -37,7 +37,7 @@ async def raising_session(event_loop):
     return Mock(get=Mock(side_effect=aiohttp.ClientError))
 
 
-def test_get_distance_to_same_place():
+def test_get_distance_to_same_place() -> None:
     """Test getting the distance."""
     meters = location_util.distance(
         COORDINATES_PARIS[0],
@@ -49,7 +49,7 @@ def test_get_distance_to_same_place():
     assert meters == 0
 
 
-def test_get_distance():
+def test_get_distance() -> None:
     """Test getting the distance."""
     meters = location_util.distance(
         COORDINATES_PARIS[0],
@@ -61,13 +61,13 @@ def test_get_distance():
     assert meters / 1000 - DISTANCE_KM < 0.01
 
 
-def test_get_kilometers():
+def test_get_kilometers() -> None:
     """Test getting the distance between given coordinates in km."""
     kilometers = location_util.vincenty(COORDINATES_PARIS, COORDINATES_NEW_YORK)
     assert round(kilometers, 2) == DISTANCE_KM
 
 
-def test_get_miles():
+def test_get_miles() -> None:
     """Test getting the distance between given coordinates in miles."""
     miles = location_util.vincenty(COORDINATES_PARIS, COORDINATES_NEW_YORK, miles=True)
     assert round(miles, 2) == DISTANCE_MILES

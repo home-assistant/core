@@ -179,7 +179,11 @@ class AmbientStation:
             # attempt forward setup of the config entry (because it will have
             # already been done):
             if not self._entry_setup_complete:
-                self._hass.config_entries.async_setup_platforms(self._entry, PLATFORMS)
+                self._hass.async_create_task(
+                    self._hass.config_entries.async_forward_entry_setups(
+                        self._entry, PLATFORMS
+                    )
+                )
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 

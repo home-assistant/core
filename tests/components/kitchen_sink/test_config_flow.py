@@ -3,9 +3,10 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.kitchen_sink import DOMAIN
+from homeassistant.core import HomeAssistant
 
 
-async def test_import(hass):
+async def test_import(hass: HomeAssistant) -> None:
     """Test that we can import a config entry."""
     with patch("homeassistant.components.kitchen_sink.async_setup_entry"):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -16,10 +17,11 @@ async def test_import(hass):
     assert entry.data == {}
 
 
-async def test_import_once(hass):
+async def test_import_once(hass: HomeAssistant) -> None:
     """Test that we don't create multiple config entries."""
     with patch(
-        "homeassistant.components.kitchen_sink.async_setup_entry"
+        "homeassistant.components.kitchen_sink.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

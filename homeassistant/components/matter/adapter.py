@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .device_platform import DEVICE_PLATFORM
 from .helpers import get_device_id
 
@@ -71,7 +71,7 @@ class MatterAdapter:
         bridge_unique_id: str | None = None
 
         if node.aggregator_device_type_instance is not None and (
-            node.root_device_type_instance.get_cluster(all_clusters.Basic)
+            node.root_device_type_instance.get_cluster(all_clusters.BasicInformation)
         ):
             # create virtual (parent) device for bridge node device
             bridge_device = MatterBridgedNodeDevice(
@@ -91,10 +91,7 @@ class MatterAdapter:
     ) -> None:
         """Create a device registry entry."""
         server_info = cast(ServerInfo, self.matter_client.server_info)
-        node_unique_id = get_device_id(
-            server_info,
-            node_device,
-        )
+
         basic_info = node_device.device_info()
         device_type_instances = node_device.device_type_instances()
 
@@ -103,13 +100,23 @@ class MatterAdapter:
             # fallback name for Bridge
             name = "Hub device"
         elif not name and device_type_instances:
-            # fallback name based on device type
-            name = f"{device_type_instances[0].device_type.__doc__[:-1]} {node_device.node().node_id}"
+            # use the productName if no node label is present
+            name = basic_info.productName
+
+        node_device_id = get_device_id(
+            server_info,
+            node_device,
+        )
+        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        # if available, we also add the serialnumber as identifier
+        if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
+            # prefix identifier with 'serial_' to be able to filter it
+            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
 
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, node_unique_id)},
+            identifiers=identifiers,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName,

@@ -5,6 +5,8 @@ FROM ${BUILD_FROM}
 ENV \
     S6_SERVICES_GRACETIME=220000
 
+ARG QEMU_CPU
+
 WORKDIR /usr/src
 
 ## Setup Home Assistant Core dependencies

@@ -6,8 +6,8 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    EntityCategory,
 )
-from homeassistant.helpers.entity import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

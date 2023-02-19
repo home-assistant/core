@@ -1,6 +1,6 @@
 """Entity for the SleepIQ integration."""
 from abc import abstractmethod
-from typing import TypeVar, Union
+from typing import TypeVar
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
@@ -14,7 +14,7 @@ from .coordinator import SleepIQDataUpdateCoordinator, SleepIQPauseUpdateCoordin
 
 _SleepIQCoordinatorT = TypeVar(
     "_SleepIQCoordinatorT",
-    bound=Union[SleepIQDataUpdateCoordinator, SleepIQPauseUpdateCoordinator],
+    bound=SleepIQDataUpdateCoordinator | SleepIQPauseUpdateCoordinator,
 )
 
 

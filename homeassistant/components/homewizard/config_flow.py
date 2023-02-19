@@ -10,7 +10,7 @@ from homewizard_energy.errors import DisabledError, RequestError, UnsupportedErr
 from homewizard_energy.models import Device
 from voluptuous import Required, Schema
 
-from homeassistant.components import zeroconf
+from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
@@ -113,7 +113,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         errors: dict[str, str] | None = None
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             try:
                 await self._async_try_connect(self.discovery.ip)
             except RecoverableError as ex:
@@ -196,7 +196,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("unknown_error") from ex
 
         finally:
-            await energy_api.close()  # type: ignore[no-untyped-call]
+            await energy_api.close()
 
 
 class RecoverableError(HomeAssistantError):

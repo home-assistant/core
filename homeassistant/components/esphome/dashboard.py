@@ -6,11 +6,15 @@ from datetime import timedelta
 import logging
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
 
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 KEY_DASHBOARD = "esphome_dashboard"
 
@@ -21,22 +25,46 @@ def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboard | None:
     return hass.data.get(KEY_DASHBOARD)
 
 
-def async_set_dashboard_info(
+async def async_set_dashboard_info(
     hass: HomeAssistant, addon_slug: str, host: str, port: int
 ) -> None:
     """Set the dashboard info."""
-    hass.data[KEY_DASHBOARD] = ESPHomeDashboard(
-        hass,
-        addon_slug,
-        f"http://{host}:{port}",
-        async_get_clientsession(hass),
-    )
+    url = f"http://{host}:{port}"
+
+    # Do nothing if we already have this data.
+    if (
+        (cur_dashboard := hass.data.get(KEY_DASHBOARD))
+        and cur_dashboard.addon_slug == addon_slug
+        and cur_dashboard.url == url
+    ):
+        return
+
+    dashboard = ESPHomeDashboard(hass, addon_slug, url, async_get_clientsession(hass))
+    try:
+        await dashboard.async_request_refresh()
+    except UpdateFailed as err:
+        logging.getLogger(__name__).error("Ignoring dashboard info: %s", err)
+        return
+
+    hass.data[KEY_DASHBOARD] = dashboard
+
+    reloads = [
+        hass.config_entries.async_reload(entry.entry_id)
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    # Re-auth flows will check the dashboard for encryption key when the form is requested
+    reauths = [
+        hass.config_entries.flow.async_configure(flow["flow_id"])
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
+    ]
+    if reloads or reauths:
+        await asyncio.gather(*reloads, *reauths)
 
 
 class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
     """Class to interact with the ESPHome dashboard."""
-
-    _first_fetch_lock: asyncio.Lock | None = None
 
     def __init__(
         self,
@@ -53,24 +81,22 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
             update_interval=timedelta(minutes=5),
         )
         self.addon_slug = addon_slug
+        self.url = url
         self.api = ESPHomeDashboardAPI(url, session)
 
-    async def ensure_data(self) -> None:
-        """Ensure the update coordinator has data when this call finishes."""
-        if self.data:
-            return
+    @property
+    def supports_update(self) -> bool:
+        """Return whether the dashboard supports updates."""
+        if self.data is None:
+            raise RuntimeError("Data needs to be loaded first")
 
-        if self._first_fetch_lock is not None:
-            async with self._first_fetch_lock:
-                # We know the data is fetched when lock is done
-                return
+        if len(self.data) == 0:
+            return False
 
-        self._first_fetch_lock = asyncio.Lock()
+        esphome_version: str = next(iter(self.data.values()))["current_version"]
 
-        async with self._first_fetch_lock:
-            await self.async_request_refresh()
-
-        self._first_fetch_lock = None
+        # There is no January release
+        return AwesomeVersion(esphome_version) > AwesomeVersion("2023.1.0")
 
     async def _async_update_data(self) -> dict:
         """Fetch device data."""

@@ -27,6 +27,7 @@ from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
     device_registry,
+    entity,
     entity_registry,
     issue_registry,
     recorder,
@@ -236,6 +237,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         platform.uname().processor  # pylint: disable=expression-not-assigned
 
     # Load the registries and cache the result of platform.uname().processor
+    entity.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
@@ -346,7 +348,7 @@ def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from colorlog import ColoredFormatter
 
             # basicConfig must be called after importing colorlog in order to
@@ -406,7 +408,6 @@ def async_enable_logging(
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-
         err_handler: (
             logging.handlers.RotatingFileHandler
             | logging.handlers.TimedRotatingFileHandler

@@ -13,12 +13,12 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_UNKNOWN,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry

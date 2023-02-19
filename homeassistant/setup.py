@@ -286,7 +286,7 @@ async def _async_setup_component(
 
         # Flush out async_setup calling create_task. Fragile but covered by test.
         await asyncio.sleep(0)
-        await hass.config_entries.flow.async_wait_init_flow_finish(domain)
+        await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
         # Add to components before the entry.async_setup
         # call to avoid a deadlock when forwarding platforms

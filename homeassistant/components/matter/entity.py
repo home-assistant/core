@@ -15,7 +15,7 @@ from matter_server.common.models.server_information import ServerInfo
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import DOMAIN
+from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id, get_operational_instance_id
 
 if TYPE_CHECKING:
@@ -68,8 +68,9 @@ class MatterEntity(Entity):
             f"{device_type_instance.endpoint}-"
             f"{device_type_instance.device_type.device_type}"
         )
+        node_device_id = get_device_id(server_info, node_device)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, get_device_id(server_info, node_device))}
+            identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
 
     async def async_added_to_hass(self) -> None:
@@ -113,7 +114,7 @@ class MatterEntity(Entity):
 
     @callback
     def get_matter_attribute(self, attribute: type) -> MatterAttribute | None:
-        """Lookup MatterAttribute instance on device instance by providing the attribute class."""
+        """Lookup MatterAttribute on device by providing the attribute class."""
         return next(
             (
                 x

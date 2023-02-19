@@ -1,4 +1,6 @@
 """Support for TP-Link LTE notifications."""
+from __future__ import annotations
+
 import logging
 
 import attr
@@ -6,16 +8,22 @@ import tp_connected
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> TplinkNotifyService | None:
     """Get the notification service."""
     if discovery_info is None:
-        return
+        return None
     return TplinkNotifyService(hass, discovery_info)
 
 

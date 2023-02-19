@@ -35,7 +35,7 @@ def validate_python() -> None:
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import config as config_util
 
     lib_dir = os.path.join(config_dir, "deps")
@@ -77,7 +77,7 @@ def ensure_config_path(config_dir: str) -> None:
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import config as config_util
 
     parser = argparse.ArgumentParser(
@@ -184,7 +184,7 @@ def main() -> int:
         validate_os()
 
     if args.script is not None:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import scripts
 
         return scripts.run(args.script)
@@ -192,7 +192,7 @@ def main() -> int:
     config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
     ensure_config_path(config_dir)
 
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import runner
 
     runtime_conf = runner.RuntimeConfig(

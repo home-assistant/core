@@ -77,7 +77,7 @@ SUBSCRIPTION_SERVICES = {
     "renderingControl",
     "zoneGroupTopology",
 }
-SUPPORTED_VANISH_REASONS = ("sleeping", "switch to bluetooth", "upgrade")
+SUPPORTED_VANISH_REASONS = ("powered off", "sleeping", "switch to bluetooth", "upgrade")
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
@@ -180,7 +180,7 @@ class SonosSpeaker:
             (f"{SONOS_VANISHED}-{self.soco.uid}", self.async_vanished),
         )
 
-        for (signal, target) in dispatch_pairs:
+        for signal, target in dispatch_pairs:
             entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
@@ -359,7 +359,8 @@ class SonosSpeaker:
         if any(isinstance(result, Exception) for result in results):
             raise SonosSubscriptionsFailed
 
-        # Create a polling task in case subscriptions fail or callback events do not arrive
+        # Create a polling task in case subscriptions fail
+        # or callback events do not arrive
         if not self._poll_timer:
             self._poll_timer = async_track_time_interval(
                 self.hass,

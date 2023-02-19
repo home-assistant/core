@@ -3,10 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -17,7 +18,9 @@ async def setup_http(hass):
     await hass.async_block_till_done()
 
 
-async def test_webhook_json(hass, hass_client_no_auth):
+async def test_webhook_json(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test triggering with a JSON webhook."""
     events = []
 
@@ -56,7 +59,9 @@ async def test_webhook_json(hass, hass_client_no_auth):
     assert events[0].data["id"] == 0
 
 
-async def test_webhook_post(hass, hass_client_no_auth):
+async def test_webhook_post(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test triggering with a POST webhook."""
     events = []
 
@@ -91,7 +96,9 @@ async def test_webhook_post(hass, hass_client_no_auth):
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_query(hass, hass_client_no_auth):
+async def test_webhook_query(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test triggering with a query POST webhook."""
     events = []
 
@@ -126,7 +133,9 @@ async def test_webhook_query(hass, hass_client_no_auth):
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_multiple(hass, hass_client_no_auth):
+async def test_webhook_multiple(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test triggering multiple triggers with a POST webhook."""
     events1 = []
     events2 = []
@@ -181,7 +190,9 @@ async def test_webhook_multiple(hass, hass_client_no_auth):
     assert events2[0].data["hello"] == "yo2 world"
 
 
-async def test_webhook_reload(hass, hass_client_no_auth):
+async def test_webhook_reload(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test reloading a webhook."""
     events = []
 

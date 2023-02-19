@@ -12,7 +12,7 @@ from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 from tests.common import MockConfigEntry
 
 
-async def test_abort_if_existing_entry(hass: HomeAssistant):
+async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -29,7 +29,7 @@ async def test_form(
     mock_client: MagicMock,
     mock_client_device_id: MagicMock,
     mock_setup_entry: MagicMock,
-):
+) -> None:
     """Test the complete configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -68,7 +68,7 @@ async def test_form_cannot_connect(
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
     mock_client_device_id: MagicMock,
-):
+) -> None:
     """Test we handle an unreachable server."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -101,7 +101,7 @@ async def test_form_invalid_auth(
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
     mock_client_device_id: MagicMock,
-):
+) -> None:
     """Test that we can handle invalid credentials."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -132,7 +132,7 @@ async def test_form_invalid_auth(
 
 async def test_form_exception(
     hass: HomeAssistant, mock_jellyfin: MagicMock, mock_client: MagicMock
-):
+) -> None:
     """Test we handle an unexpected exception during server setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -163,7 +163,7 @@ async def test_form_persists_device_id_on_error(
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
     mock_client_device_id: MagicMock,
-):
+) -> None:
     """Test that we can handle invalid credentials."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

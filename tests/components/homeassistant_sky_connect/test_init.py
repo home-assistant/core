@@ -1,4 +1,4 @@
-"""Test the Home Assistant Sky Connect integration."""
+"""Test the Home Assistant SkyConnect integration."""
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -45,7 +45,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
 
 
 @pytest.mark.parametrize(
-    "onboarded, num_entries, num_flows", ((False, 1, 0), (True, 0, 1))
+    ("onboarded", "num_entries", "num_flows"), ((False, 1, 0), (True, 0, 1))
 )
 async def test_setup_entry(
     mock_zha_config_flow_setup,
@@ -64,7 +64,7 @@ async def test_setup_entry(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -112,7 +112,7 @@ async def test_setup_zha(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -163,7 +163,7 @@ async def test_setup_zha_multipan(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -200,7 +200,7 @@ async def test_setup_zha_multipan(
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "Sky Connect Multi-PAN"
+    assert config_entry.title == "SkyConnect Multi-PAN"
 
 
 async def test_setup_zha_multipan_other_device(
@@ -264,7 +264,7 @@ async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -295,7 +295,7 @@ async def test_setup_entry_addon_info_fails(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -324,7 +324,7 @@ async def test_setup_entry_addon_not_running(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(

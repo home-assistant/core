@@ -18,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -77,8 +78,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Attempt a connection, but fail gracefully if tv is off for example.
     client = WebOsClient(host, key)
-    with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
-        await client.connect()
+    with suppress(*WEBOSTV_EXCEPTIONS):
+        try:
+            await client.connect()
+        except WebOsTvPairError as err:
+            raise ConfigEntryAuthFailed(err) from err
+
+    # If pairing request accepted there will be no error
+    # Update the stored key without triggering reauth
+    update_client_key(hass, entry, client)
 
     async def async_service_handler(service: ServiceCall) -> None:
         method = SERVICE_TO_METHOD[service.service]
@@ -139,6 +147,19 @@ async def async_control_connect(host: str, key: str | None) -> WebOsClient:
         raise
 
     return client
+
+
+def update_client_key(
+    hass: HomeAssistant, entry: ConfigEntry, client: WebOsClient
+) -> None:
+    """Check and update stored client key if key has changed."""
+    host = entry.data[CONF_HOST]
+    key = entry.data[CONF_CLIENT_SECRET]
+
+    if client.client_key != key:
+        _LOGGER.debug("Updating client key for host %s", host)
+        data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
+        hass.config_entries.async_update_entry(entry, data=data)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -1,4 +1,6 @@
 """AWS platform for notify component."""
+from __future__ import annotations
+
 import asyncio
 import base64
 import json
@@ -20,7 +22,9 @@ from homeassistant.const import (
     CONF_PROFILE_NAME,
     CONF_SERVICE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSIONS
 
@@ -33,7 +37,11 @@ async def get_available_regions(hass, service):
     return await session.get_available_regions(service)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> AWSNotify | None:
     """Get the AWS notification service."""
     if discovery_info is None:
         _LOGGER.error("Please config aws notify platform in aws component")

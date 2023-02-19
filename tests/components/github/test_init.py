@@ -1,5 +1,5 @@
 """Test the GitHub init file."""
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant.components.github import CONF_REPOSITORIES
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,7 @@ async def test_device_registry_cleanup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    caplog: LogCaptureFixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we remove untracked repositories from the decvice registry."""
     mock_config_entry.options = {CONF_REPOSITORIES: ["home-assistant/core"]}

@@ -7,7 +7,10 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -17,7 +20,12 @@ async def setup_scene(hass, scene_config):
 
 
 @pytest.mark.parametrize("scene_config", ({},))
-async def test_create_scene(hass, hass_client, hass_config_store, setup_scene):
+async def test_create_scene(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store,
+    setup_scene,
+) -> None:
     """Test creating a scene."""
     with patch.object(config, "SECTIONS", ["scene"]):
         await async_setup_component(hass, "config", {})
@@ -59,7 +67,12 @@ async def test_create_scene(hass, hass_client, hass_config_store, setup_scene):
 
 
 @pytest.mark.parametrize("scene_config", ({},))
-async def test_update_scene(hass, hass_client, hass_config_store, setup_scene):
+async def test_update_scene(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store,
+    setup_scene,
+) -> None:
     """Test updating a scene."""
     with patch.object(config, "SECTIONS", ["scene"]):
         await async_setup_component(hass, "config", {})
@@ -102,7 +115,12 @@ async def test_update_scene(hass, hass_client, hass_config_store, setup_scene):
 
 
 @pytest.mark.parametrize("scene_config", ({},))
-async def test_bad_formatted_scene(hass, hass_client, hass_config_store, setup_scene):
+async def test_bad_formatted_scene(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store,
+    setup_scene,
+) -> None:
     """Test that we handle scene without ID."""
     with patch.object(config, "SECTIONS", ["scene"]):
         await async_setup_component(hass, "config", {})
@@ -163,7 +181,12 @@ async def test_bad_formatted_scene(hass, hass_client, hass_config_store, setup_s
         ],
     ),
 )
-async def test_delete_scene(hass, hass_client, hass_config_store, setup_scene):
+async def test_delete_scene(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store,
+    setup_scene,
+) -> None:
     """Test deleting a scene."""
     ent_reg = er.async_get(hass)
 

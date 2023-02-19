@@ -145,8 +145,8 @@ class DataUpdateCoordinatorMixin:
             await client.set_setting_values(module_id, value)
         except ApiException:
             return False
-        else:
-            return True
+
+        return True
 
 
 class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
