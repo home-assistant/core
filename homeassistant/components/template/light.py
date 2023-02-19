@@ -807,6 +807,8 @@ class LightTemplate(TemplateEntity, LightEntity):
         if (
             h_str is not None
             and s_str is not None
+            and isinstance(h_str, (int, float))
+            and isinstance(s_str, (int, float))
             and 0 <= h_str <= 360
             and 0 <= s_str <= 100
         ):
@@ -849,10 +851,14 @@ class LightTemplate(TemplateEntity, LightEntity):
             r_int, g_int, b_int = render
 
         if all(
-            value is not None and 0 <= value <= 255 for value in (r_int, g_int, b_int)
+            value is not None and isinstance(value, (int, float)) and 0 <= value <= 255
+            for value in (r_int, g_int, b_int)
         ):
             self._rgb_color = (r_int, g_int, b_int)
-        elif any(not 0 <= value <= 255 for value in (r_int, g_int, b_int)):
+        elif any(
+            isinstance(value, (int, float)) and not 0 <= value <= 255
+            for value in (r_int, g_int, b_int)
+        ):
             _LOGGER.error(
                 "Received invalid rgb_color : (%s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255)",
                 r_int,
@@ -890,11 +896,14 @@ class LightTemplate(TemplateEntity, LightEntity):
             r_int, g_int, b_int, w_int = render
 
         if all(
-            value is not None and 0 <= value <= 255
+            value is not None and isinstance(value, (int, float)) and 0 <= value <= 255
             for value in (r_int, g_int, b_int, w_int)
         ):
             self._rgbw_color = (r_int, g_int, b_int, w_int)
-        elif any(not 0 <= value <= 255 for value in (r_int, g_int, b_int, w_int)):
+        elif any(
+            isinstance(value, (int, float)) and not 0 <= value <= 255
+            for value in (r_int, g_int, b_int, w_int)
+        ):
             _LOGGER.error(
                 "Received invalid rgb_color : (%s, %s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255, 0-255)",
                 r_int,
@@ -933,12 +942,13 @@ class LightTemplate(TemplateEntity, LightEntity):
             r_int, g_int, b_int, cw_int, ww_int = render
 
         if all(
-            value is not None and 0 <= value <= 255
+            value is not None and isinstance(value, (int, float)) and 0 <= value <= 255
             for value in (r_int, g_int, b_int, cw_int, ww_int)
         ):
             self._rgbww_color = (r_int, g_int, b_int, cw_int, ww_int)
         elif any(
-            not 0 <= value <= 255 for value in (r_int, g_int, b_int, cw_int, ww_int)
+            isinstance(value, (int, float)) and not 0 <= value <= 255
+            for value in (r_int, g_int, b_int, cw_int, ww_int)
         ):
             _LOGGER.error(
                 "Received invalid rgb_color : (%s, %s, %s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255, 0-255)",

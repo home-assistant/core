@@ -672,6 +672,7 @@ async def test_level_action_no_template(
             "{{ state_attr('light.nolight', 'brightness') }}",
             ColorMode.BRIGHTNESS,
         ),
+        (None, "{{'one'}}", ColorMode.BRIGHTNESS),
     ],
 )
 async def test_level_template(
@@ -708,6 +709,7 @@ async def test_level_template(
         (None, "None", ColorMode.COLOR_TEMP),
         (None, "{{ none }}", ColorMode.COLOR_TEMP),
         (None, "", ColorMode.COLOR_TEMP),
+        (None, "{{ 'one' }}", ColorMode.COLOR_TEMP),
     ],
 )
 async def test_temperature_template(
@@ -1080,7 +1082,7 @@ async def test_rgbww_color_action_no_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_hs,color_template,expected_color_mode",
+    ("expected_hs", "color_template", "expected_color_mode"),
     [
         ((360, 100), "{{(360, 100)}}", ColorMode.HS),
         ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
@@ -1090,6 +1092,7 @@ async def test_rgbww_color_action_no_template(
         (None, "{{x - 12}}", ColorMode.HS),
         (None, "", ColorMode.HS),
         (None, "{{ none }}", ColorMode.HS),
+        (None, "{{('one','two')}}", ColorMode.HS),
     ],
 )
 async def test_legacy_color_template(
@@ -1118,9 +1121,10 @@ async def test_legacy_color_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_hs,hs_template,expected_color_mode",
+    ("expected_hs", "hs_template", "expected_color_mode"),
     [
         ((360, 100), "{{(360, 100)}}", ColorMode.HS),
+        ((360, 100), "(360, 100)", ColorMode.HS),
         ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
         (None, "{{(361, 100)}}", ColorMode.HS),
         (None, "{{(360, 101)}}", ColorMode.HS),
@@ -1128,6 +1132,7 @@ async def test_legacy_color_template(
         (None, "{{x - 12}}", ColorMode.HS),
         (None, "", ColorMode.HS),
         (None, "{{ none }}", ColorMode.HS),
+        (None, "{{('one','two')}}", ColorMode.HS),
     ],
 )
 async def test_hs_template(
@@ -1156,10 +1161,11 @@ async def test_hs_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_rgb,rgb_template,expected_color_mode",
+    ("expected_rgb", "rgb_template", "expected_color_mode"),
     [
         ((160, 78, 192), "{{(160, 78, 192)}}", ColorMode.RGB),
         ((160, 78, 192), "{{[160, 78, 192]}}", ColorMode.RGB),
+        ((160, 78, 192), "(160, 78, 192)", ColorMode.RGB),
         ((159, 77, 191), "{{(159.9, 77.9, 191.9)}}", ColorMode.RGB),
         (None, "{{(256, 100, 100)}}", ColorMode.RGB),
         (None, "{{(100, 256, 100)}}", ColorMode.RGB),
@@ -1167,6 +1173,7 @@ async def test_hs_template(
         (None, "{{x - 12}}", ColorMode.RGB),
         (None, "", ColorMode.RGB),
         (None, "{{ none }}", ColorMode.RGB),
+        (None, "{{('one','two','tree')}}", ColorMode.RGB),
     ],
 )
 async def test_rgb_template(
@@ -1195,10 +1202,11 @@ async def test_rgb_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_rgbw,rgbw_template,expected_color_mode",
+    ("expected_rgbw", "rgbw_template", "expected_color_mode"),
     [
         ((160, 78, 192, 25), "{{(160, 78, 192, 25)}}", ColorMode.RGBW),
         ((160, 78, 192, 25), "{{[160, 78, 192, 25]}}", ColorMode.RGBW),
+        ((160, 78, 192, 25), "(160, 78, 192, 25)", ColorMode.RGBW),
         ((159, 77, 191, 24), "{{(159.9, 77.9, 191.9, 24.9)}}", ColorMode.RGBW),
         (None, "{{(256, 100, 100, 100)}}", ColorMode.RGBW),
         (None, "{{(100, 256, 100, 100)}}", ColorMode.RGBW),
@@ -1207,6 +1215,7 @@ async def test_rgb_template(
         (None, "{{x - 12}}", ColorMode.RGBW),
         (None, "", ColorMode.RGBW),
         (None, "{{ none }}", ColorMode.RGBW),
+        (None, "{{('one','two','tree','four')}}", ColorMode.RGBW),
     ],
 )
 async def test_rgbw_template(
@@ -1235,9 +1244,10 @@ async def test_rgbw_template(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "expected_rgbww,rgbww_template,expected_color_mode",
+    ("expected_rgbww", "rgbww_template", "expected_color_mode"),
     [
         ((160, 78, 192, 25, 55), "{{(160, 78, 192, 25, 55)}}", ColorMode.RGBWW),
+        ((160, 78, 192, 25, 55), "(160, 78, 192, 25, 55)", ColorMode.RGBWW),
         ((160, 78, 192, 25, 55), "{{[160, 78, 192, 25, 55]}}", ColorMode.RGBWW),
         (
             (159, 77, 191, 24, 54),
@@ -1252,6 +1262,7 @@ async def test_rgbw_template(
         (None, "{{x - 12}}", ColorMode.RGBWW),
         (None, "", ColorMode.RGBWW),
         (None, "{{ none }}", ColorMode.RGBWW),
+        (None, "{{('one','two','tree','four','five')}}", ColorMode.RGBWW),
     ],
 )
 async def test_rgbww_template(
