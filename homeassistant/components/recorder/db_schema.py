@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from functools import lru_cache
 import logging
 import time
 from typing import Any, cast
@@ -284,6 +285,7 @@ class EventData(Base):
         return json_bytes(event.data)
 
     @staticmethod
+    @lru_cache
     def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
         """Return the hash of json encoded shared data."""
         return cast(int, fnv1a_32(shared_data_bytes))
@@ -492,6 +494,7 @@ class StateAttributes(Base):
         return bytes_result
 
     @staticmethod
+    @lru_cache(maxsize=2048)
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
         """Return the hash of json encoded shared attributes."""
         return cast(int, fnv1a_32(shared_attrs_bytes))
