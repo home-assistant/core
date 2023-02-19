@@ -285,14 +285,16 @@ async def validate_sensor_setup_import(
     for sensor_config in user_input[CONF_RESOURCES]:
         sensor = {}
         sensor[CONF_UNIQUE_ID], sensor[CONF_NAME] = get_unique_id_and_name(user_input)
+        sensor[CONF_TYPE] = sensor_config[CONF_TYPE]
+        sensor[CONF_ARG] = sensor_config[CONF_ARG]
 
         if (
-            SENSOR_CONFIG[sensor_config[CONF_TYPE]].mandatory_arg is True
-            and sensor_config.get(CONF_ARG) is None
+            SENSOR_CONFIG[sensor[CONF_TYPE]].mandatory_arg is True
+            and sensor.get(CONF_ARG) is None
         ):
             raise SchemaFlowError("missing_arg")
 
-        sensors.append(sensor_config)
+        sensors.append(sensor)
     return {}
 
 
