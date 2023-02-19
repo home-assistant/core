@@ -852,7 +852,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka_iot_ble==0.4.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.16
+motionblinds==0.6.17
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
