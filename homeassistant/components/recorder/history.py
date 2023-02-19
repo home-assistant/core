@@ -661,7 +661,7 @@ def _get_states_for_entities_stmt(
                 )
                 .group_by(States.entity_id)
                 .subquery()
-            ).c.max_state_id,
+            ).c.max_state_id
         )
     else:
         stmt += lambda q: q.where(
@@ -681,7 +681,7 @@ def _get_states_for_entities_stmt(
                 )
                 .group_by(States.entity_id)
                 .subquery()
-            ).c.max_state_id,
+            ).c.max_state_id
         )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
