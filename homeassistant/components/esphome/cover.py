@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioesphomeapi import CoverInfo, CoverOperation, CoverState
+from aioesphomeapi import CoverInfo, CoverOperation, CoverState, APIVersion
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -43,7 +43,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Flag supported features."""
         flags = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-        if self._static_info.supports_stop:
+        if self._api_version < APIVersion(1, 8) or self._static_info.supports_stop:
             flags |= CoverEntityFeature.STOP
         if self._static_info.supports_position:
             flags |= CoverEntityFeature.SET_POSITION
