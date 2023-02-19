@@ -1720,7 +1720,7 @@ async def test_database_lock_without_instance(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
     instance = get_instance(hass)
-    with patch.object(instance, "engine", None):
+    with patch.object(instance, "engine"):
         try:
             assert await instance.lock_database()
         finally:
@@ -1989,6 +1989,10 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
 
         def create_connect_args(self, url):
             return ([], {"charset": "invalid"})
+
+        @property
+        def name(self) -> str:
+            return "mysql"
 
         @classmethod
         def dbapi(cls):

@@ -122,17 +122,20 @@ def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
 async def test_unhandled_exception_traceback(hass, caplog):
     """Test an unhandled exception gets a traceback in debug mode."""
 
+    raised = asyncio.Event()
+
     async def _unhandled_exception():
+        raised.set()
         raise Exception("This is unhandled")
 
     try:
         hass.loop.set_debug(True)
-        asyncio.create_task(_unhandled_exception())
+        task = asyncio.create_task(_unhandled_exception())
+        await raised.wait()
+        # Delete it without checking result to trigger unhandled exception
+        del task
     finally:
         hass.loop.set_debug(False)
-
-    await asyncio.sleep(0)
-    await asyncio.sleep(0)
 
     assert "Task exception was never retrieved" in caplog.text
     assert "This is unhandled" in caplog.text
