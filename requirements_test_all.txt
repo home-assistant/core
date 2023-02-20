@@ -1910,7 +1910,7 @@ zamg==0.2.2
 zeroconf==0.47.3
 
 # homeassistant.components.zeversolar
-zeversolar==0.3.0
+zeversolar==0.3.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.92
