@@ -111,11 +111,17 @@ async def websocket_supervisor_api(
         raise Unauthorized()
     supervisor: HassIO = hass.data[DOMAIN]
     try:
+        command = msg[ATTR_ENDPOINT]
+        payload = msg.get(ATTR_DATA, {})
+
+        if command == "/ingress/session":
+            payload["username"] = connection.user.name
+
         result = await supervisor.send_command(
-            msg[ATTR_ENDPOINT],
+            command,
             method=msg[ATTR_METHOD],
             timeout=msg.get(ATTR_TIMEOUT, 10),
-            payload=msg.get(ATTR_DATA, {}),
+            payload=payload,
         )
 
         if result.get(ATTR_RESULT) == "error":
