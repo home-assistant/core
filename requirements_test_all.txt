@@ -1088,7 +1088,7 @@ py_nextbusnext==0.1.5
 pyaehw4a1==0.3.9
 
 # homeassistant.components.airnow
-pyairnow==1.2.0
+pyairnow==1.2.1
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
