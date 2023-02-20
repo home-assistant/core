@@ -542,7 +542,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
         if (
             ATTR_BRIGHTNESS in kwargs
-            and self.color_mode != ColorMode.HS
+            and ATTR_HS_COLOR not in kwargs
             and self._brightness
         ):
             brightness = kwargs[ATTR_BRIGHTNESS]
