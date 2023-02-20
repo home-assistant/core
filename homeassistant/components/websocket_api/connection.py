@@ -75,12 +75,13 @@ class ActiveConnection:
         """Handle a single incoming message."""
         if (
             # Not using isinstance as we don't care about children
+            # as these are always coming from JSON
             type(msg) is not dict  # pylint: disable=unidiomatic-typecheck
             or (
                 not (cur_id := msg.get("id"))
-                or not isinstance(cur_id, int)
+                or type(cur_id) is not int  # pylint: disable=unidiomatic-typecheck
                 or not (type_ := msg.get("type"))
-                or not isinstance(type_, str)
+                or type(type_) is not str  # pylint: disable=unidiomatic-typecheck
             )
         ):
             self.logger.error("Received invalid command", msg)
