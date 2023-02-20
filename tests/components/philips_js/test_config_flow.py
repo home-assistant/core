@@ -1,5 +1,6 @@
 """Test the Philips TV config flow."""
-from unittest.mock import ANY, patch
+from collections.abc import Generator
+from unittest.mock import ANY, AsyncMock, patch
 
 from haphilipsjs import PairingFailure
 import pytest
@@ -21,7 +22,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Disable component setup."""
     with patch(
         "homeassistant.components.philips_js.async_setup_entry", return_value=True
