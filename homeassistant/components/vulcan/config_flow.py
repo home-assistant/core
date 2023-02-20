@@ -5,7 +5,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 import voluptuous as vol
-from vulcan import (
+from vulcan import (  # pylint: disable=import-error
     Account,
     ExpiredTokenException,
     InvalidPINException,

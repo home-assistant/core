@@ -15,7 +15,7 @@ from homeassistant.util import async_ as hasync
 @patch("threading.get_ident")
 def test_fire_coroutine_threadsafe_from_inside_event_loop(
     mock_ident, _, mock_iscoroutine
-):
+) -> None:
     """Testing calling fire_coroutine_threadsafe from inside an event loop."""
     coro = MagicMock()
     loop = MagicMock()
@@ -49,7 +49,7 @@ def test_fire_coroutine_threadsafe_from_inside_event_loop(
 
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
-def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
+def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _) -> None:
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
 
@@ -82,7 +82,7 @@ async def test_check_loop_async() -> None:
         hasync.check_loop(banned_function)
 
 
-async def test_check_loop_async_integration(caplog):
+async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects and raises when called from event loop from integration context."""
     with pytest.raises(RuntimeError), patch(
         "homeassistant.util.async_.extract_stack",
@@ -113,7 +113,9 @@ async def test_check_loop_async_integration(caplog):
     )
 
 
-async def test_check_loop_async_integration_non_strict(caplog):
+async def test_check_loop_async_integration_non_strict(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test check_loop detects when called from event loop from integration context."""
     with patch(
         "homeassistant.util.async_.extract_stack",
@@ -144,7 +146,7 @@ async def test_check_loop_async_integration_non_strict(caplog):
     )
 
 
-async def test_check_loop_async_custom(caplog):
+async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects when called from event loop with custom component context."""
     with pytest.raises(RuntimeError), patch(
         "homeassistant.util.async_.extract_stack",
@@ -175,7 +177,7 @@ async def test_check_loop_async_custom(caplog):
     ) in caplog.text
 
 
-def test_check_loop_sync(caplog):
+def test_check_loop_sync(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop does nothing when called from thread."""
     hasync.check_loop(banned_function)
     assert "Detected blocking call inside the event loop" not in caplog.text
@@ -190,7 +192,7 @@ def test_protect_loop_sync() -> None:
     func.assert_called_once_with(1, test=2)
 
 
-async def test_protect_loop_debugger_sleep(caplog):
+async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> None:
     """Test time.sleep injected by the debugger is not reported."""
     block_async_io.enable()
 

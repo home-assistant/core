@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -83,7 +83,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
-        self._slot_lists: dict[str, TextSlotList] | None = None
+        self._slot_lists: dict[str, SlotList] | None = None
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""
@@ -133,7 +133,7 @@ class DefaultAgent(AbstractConversationAgent):
                 conversation_id,
             )
 
-        slot_lists: Mapping[str, SlotList] = self._make_slot_lists()
+        slot_lists = self._make_slot_lists()
 
         result = await self.hass.async_add_executor_job(
             self._recognize,
@@ -437,7 +437,7 @@ class DefaultAgent(AbstractConversationAgent):
             return
         self._slot_lists = None
 
-    def _make_slot_lists(self) -> Mapping[str, SlotList]:
+    def _make_slot_lists(self) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
         if self._slot_lists is not None:
             return self._slot_lists

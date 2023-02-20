@@ -29,6 +29,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -2140,7 +2141,9 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
     assert condition_trace == expected
 
 
-async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
+async def test_if_action_before_sunrise_no_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was before sunrise.
 
     Before sunrise is true from midnight until sunset, local time.
@@ -2209,7 +2212,9 @@ async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
+async def test_if_action_after_sunrise_no_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was after sunrise.
 
     After sunrise is true from sunrise until midnight, local time.
@@ -2278,7 +2283,9 @@ async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls):
+async def test_if_action_before_sunrise_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was before sunrise with offset.
 
     Before sunrise is true from midnight until sunset, local time.
@@ -2399,7 +2406,9 @@ async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls)
     )
 
 
-async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
+async def test_if_action_before_sunset_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was before sunset with offset.
 
     Before sunset is true from midnight until sunset, local time.
@@ -2520,7 +2529,9 @@ async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
+async def test_if_action_after_sunrise_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was after sunrise with offset.
 
     After sunrise is true from sunrise until midnight, local time.
@@ -2665,7 +2676,9 @@ async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
+async def test_if_action_after_sunset_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was after sunset with offset.
 
     After sunset is true from sunset until midnight, local time.
@@ -2738,7 +2751,9 @@ async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_after_and_before_during(hass, hass_ws_client, calls):
+async def test_if_action_after_and_before_during(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was after sunrise and before sunset.
 
     This is true from sunrise until sunset.
@@ -2839,7 +2854,9 @@ async def test_if_action_after_and_before_during(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
+async def test_if_action_before_or_after_during(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was before sunrise or after sunset.
 
     This is true from midnight until sunrise and from sunset until midnight
@@ -2960,7 +2977,9 @@ async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
+async def test_if_action_before_sunrise_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was before sunrise.
 
     Local timezone: Alaska time
@@ -3035,7 +3054,9 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
     )
 
 
-async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
+async def test_if_action_after_sunrise_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was after sunrise.
 
     Local timezone: Alaska time
@@ -3110,7 +3131,9 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
     )
 
 
-async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
+async def test_if_action_before_sunset_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was before sunrise.
 
     Local timezone: Alaska time
@@ -3185,7 +3208,9 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
     )
 
 
-async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
+async def test_if_action_after_sunset_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
     """Test if action was after sunrise.
 
     Local timezone: Alaska time

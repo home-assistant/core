@@ -2075,3 +2075,18 @@ async def test_excluding_attributes_by_integration(
     expected = _state_with_context(hass, entity_id)
     expected.attributes = {"test_attr": 5}
     assert state.as_dict() == expected.as_dict()
+
+
+async def test_lru_increases_with_many_entities(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test that the recorder's internal LRU cache increases with many entities."""
+    # We do not actually want to record 4096 entities so we mock the entity count
+    mock_entity_count = 4096
+    with patch.object(
+        hass.states, "async_entity_ids_count", return_value=mock_entity_count
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await async_wait_recording_done(hass)
+
+    assert recorder_mock._state_attributes_ids.get_size() == mock_entity_count * 2

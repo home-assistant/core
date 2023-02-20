@@ -8,7 +8,7 @@ from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, u
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from .const import MAX_ROWS_TO_PURGE
+from .const import SQLITE_MAX_BIND_VARS
 from .db_schema import (
     EventData,
     Events,
@@ -18,6 +18,24 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
+
+
+def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
+    """Load shared attributes from the database."""
+    return lambda_stmt(
+        lambda: select(
+            StateAttributes.attributes_id, StateAttributes.shared_attrs
+        ).where(StateAttributes.hash.in_(hashes))
+    )
+
+
+def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
+    """Load shared event data from the database."""
+    return lambda_stmt(
+        lambda: select(EventData.data_id, EventData.shared_data).where(
+            EventData.hash.in_(hashes)
+        )
+    )
 
 
 def find_shared_attributes_id(
@@ -587,7 +605,7 @@ def find_events_to_purge(purge_before: float) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(Events.event_id, Events.data_id)
         .filter(Events.time_fired_ts < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
@@ -596,7 +614,7 @@ def find_states_to_purge(purge_before: float) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(States.state_id, States.attributes_id)
         .filter(States.last_updated_ts < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
@@ -608,7 +626,7 @@ def find_short_term_statistics_to_purge(
     return lambda_stmt(
         lambda: select(StatisticsShortTerm.id)
         .filter(StatisticsShortTerm.start_ts < purge_before_ts)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
@@ -619,7 +637,7 @@ def find_statistics_runs_to_purge(
     return lambda_stmt(
         lambda: select(StatisticsRuns.run_id)
         .filter(StatisticsRuns.start < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
@@ -640,7 +658,7 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
         )
         .outerjoin(States, Events.event_id == States.event_id)
         .filter(Events.time_fired_ts < purge_before)
-        .limit(MAX_ROWS_TO_PURGE)
+        .limit(SQLITE_MAX_BIND_VARS)
     )
 
 
