@@ -1,7 +1,7 @@
 {
   "domain": "datetime",
   "name": "Date/Time",
-  "documentation": "https://www.home-assistant.io/integrations/datetime",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/datetime",
   "quality_scale": "internal"
 }
