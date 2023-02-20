@@ -56,8 +56,6 @@ from .utils import get_device_entry_gen, get_device_uptime
 class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
     """Class to describe a BLOCK sensor."""
 
-    suggested_display_precision: int | None = None
-
 
 @dataclass
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
@@ -728,10 +726,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         super().__init__(coordinator, block, attribute, description)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_suggested_unit_of_measurement = (
-            description.suggested_unit_of_measurement
-        )
-        self._attr_suggested_display_precision = description.suggested_display_precision
 
     @property
     def native_value(self) -> StateType:
@@ -760,11 +754,6 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         """Return value of sensor."""
         return self.attribute_value
 
-    @property
-    def suggested_display_precision(self) -> int | None:
-        """Return the precision of the sensor."""
-        return self.entity_description.suggested_display_precision
-
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a block sleeping sensor."""
@@ -782,8 +771,6 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     ) -> None:
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry, sensors)
-
-        self._attr_suggested_display_precision = description.suggested_display_precision
 
     @property
     def native_value(self) -> StateType:
@@ -828,8 +815,3 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         return self.entity_description.native_unit_of_measurement
-
-    @property
-    def suggested_display_precision(self) -> int | None:
-        """Return the precision of the sensor."""
-        return self.entity_description.suggested_display_precision
