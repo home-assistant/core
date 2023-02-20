@@ -30,7 +30,7 @@ class ForecastSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the Base sensor."""
         super().__init__(coordinator)
-        self._entity_id: str = entity_id
+        self.entity_id: str = entity_id
         self._name: str = "Awattar forecast"
         self._unit: str = UNIT
 
@@ -48,7 +48,7 @@ class ForecastSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> entity.DeviceInfo:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self._entity_id)},
+            "identifiers": {(DOMAIN, self.entity_id)},
             "name": self._name,
             "manufacturer": MANUFACTURER,
             "model": "",
