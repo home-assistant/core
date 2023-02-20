@@ -1,5 +1,4 @@
 """Test the entity helper."""
-
 import asyncio
 import dataclasses
 from datetime import timedelta
@@ -123,7 +122,9 @@ class TestHelpersEntity:
         assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
-async def test_warn_slow_update(hass, caplog):
+async def test_warn_slow_update(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Warn we log when entity update takes a long time."""
     update_call = False
 
@@ -147,7 +148,9 @@ async def test_warn_slow_update(hass, caplog):
         assert update_call
 
 
-async def test_warn_slow_update_with_exception(hass, caplog):
+async def test_warn_slow_update_with_exception(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
@@ -172,7 +175,9 @@ async def test_warn_slow_update_with_exception(hass, caplog):
         assert update_call
 
 
-async def test_warn_slow_device_update_disabled(hass, caplog):
+async def test_warn_slow_device_update_disabled(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Disable slow update warning with async_device_update."""
     update_call = False
 
@@ -595,7 +600,9 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
     assert ent._context_set is None
 
 
-async def test_warn_disabled(hass, caplog):
+async def test_warn_disabled(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we warn once if we write to a disabled entity."""
     entry = er.RegistryEntry(
         entity_id="hello.world",
@@ -678,7 +685,9 @@ async def test_capability_attrs(hass: HomeAssistant) -> None:
     assert state.attributes["always"] == "there"
 
 
-async def test_warn_slow_write_state(hass, caplog):
+async def test_warn_slow_write_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Check that we log a warning if reading properties takes too long."""
     mock_entity = entity.Entity()
     mock_entity.hass = hass
@@ -697,7 +706,9 @@ async def test_warn_slow_write_state(hass, caplog):
     ) in caplog.text
 
 
-async def test_warn_slow_write_state_custom_component(hass, caplog):
+async def test_warn_slow_write_state_custom_component(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Check that we log a warning if reading properties takes too long."""
 
     class CustomComponentEntity(entity.Entity):
@@ -861,7 +872,7 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
         ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
     ),
 )
-def test_entity_category_schema(value, expected):
+def test_entity_category_schema(value, expected) -> None:
     """Test entity category schema."""
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
@@ -870,7 +881,7 @@ def test_entity_category_schema(value, expected):
 
 
 @pytest.mark.parametrize("value", (None, "non_existing"))
-def test_entity_category_schema_error(value):
+def test_entity_category_schema_error(value) -> None:
     """Test entity category schema."""
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     with pytest.raises(
@@ -903,8 +914,8 @@ async def test_entity_description_fallback() -> None:
     ),
 )
 async def test_friendly_name(
-    hass, has_entity_name, entity_name, expected_friendly_name
-):
+    hass: HomeAssistant, has_entity_name, entity_name, expected_friendly_name
+) -> None:
     """Test entity_id is influenced by entity name."""
 
     async def async_setup_entry(hass, config_entry, async_add_entities):

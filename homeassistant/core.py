@@ -514,7 +514,8 @@ class HomeAssistant:
     def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
 
         target: target to call.
         """
@@ -533,8 +534,7 @@ class HomeAssistant:
 
         This is a background task which will not block startup and will be
         automatically cancelled on shutdown. If you are using this in your
-        integration, make sure you also cancel the task when the config entry
-        your task belongs to is unloaded.
+        integration, use the create task methods on the config entry instead.
 
         This method must be run in the event loop.
         """
@@ -713,6 +713,8 @@ class HomeAssistant:
             task.add_done_callback(self._tasks.remove)
             task.cancel()
 
+        self.exit_code = exit_code
+
         # stage 1
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -756,8 +758,6 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
-
-        self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:

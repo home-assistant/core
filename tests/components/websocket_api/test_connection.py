@@ -61,7 +61,7 @@ async def test_exception_handling(
     code: str,
     err: str,
     log: str,
-):
+) -> None:
     """Test handling of exceptions."""
     send_messages = []
     user = MockUser()

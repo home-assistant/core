@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable, Generator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
@@ -247,6 +247,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     )
 
     # Load the registries
+    entity.async_setup(hass)
     if load_registries:
         with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
             await asyncio.gather(
@@ -977,9 +978,6 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
-SetupRecorderInstanceT = Callable[..., Awaitable[Any]]
-
-
 def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     # Local import to avoid processing recorder and SQLite modules when running a
@@ -1089,6 +1087,11 @@ class MockEntity(entity.Entity):
     def entity_category(self) -> entity.EntityCategory | None:
         """Return the entity category."""
         return self._handle("entity_category")
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return self._handle("extra_state_attributes")
 
     @property
     def has_entity_name(self) -> bool:
