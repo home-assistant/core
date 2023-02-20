@@ -4404,7 +4404,7 @@
       "iot_class": "local_polling"
     },
     "rapt_ble": {
-      "name": "RAPT Pill BLE",
+      "name": "RAPT Bluetooth",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"

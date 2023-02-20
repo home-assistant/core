@@ -1,6 +1,6 @@
 {
   "domain": "rapt_ble",
-  "name": "RAPT Pill BLE",
+  "name": "RAPT Bluetooth",
   "bluetooth": [
     {
       "manufacturer_id": 16722,
