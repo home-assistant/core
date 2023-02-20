@@ -778,7 +778,7 @@ class HKDevice:
     @property
     def is_unprovisioned_thread_device(self) -> bool:
         """Is this a thread capable device not connected by CoAP."""
-        if self.pairing.controller.transport_type != TransportType.BLE:
+        if self.pairing.transport != Transport.BLE:
             return False
 
         if not self.entity_map.aid(1).services.first(

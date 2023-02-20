@@ -228,7 +228,7 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
         version=1,
         domain="homekit_controller",
         entry_id="TestData",
-        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        data={"AccessoryPairingID": "00:00:00:00:00:00", "Connection": "BLE"},
         title="test",
         unique_id="00:00:00:00:00:00",
     )
