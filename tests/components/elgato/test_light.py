@@ -37,8 +37,8 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 )
 async def test_light_state_temperature(
     hass: HomeAssistant,
-    device_registry: dr.DeviceEntry,
-    entity_registry: er.RegistryEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the creation and values of the Elgato Lights in temperature mode."""
