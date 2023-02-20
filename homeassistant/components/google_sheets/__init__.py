@@ -21,9 +21,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
 
-from .const import DATA_CONFIG_ENTRY, DEFAULT_ACCESS, DOMAIN
+from .const import DEFAULT_ACCESS, DOMAIN
 
 DATA = "data"
+DATA_CONFIG_ENTRY = "config_entry"
 WORKSHEET = "worksheet"
 
 SERVICE_APPEND_SHEET = "append_sheet"

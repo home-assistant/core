@@ -14,9 +14,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -40,23 +39,23 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
     AquaLogicSensorEntityDescription(
         key="air_temp",
         name="Air Temperature",
-        unit_metric=TEMP_CELSIUS,
-        unit_imperial=TEMP_FAHRENHEIT,
+        unit_metric=UnitOfTemperature.CELSIUS,
+        unit_imperial=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="pool_temp",
         name="Pool Temperature",
-        unit_metric=TEMP_CELSIUS,
-        unit_imperial=TEMP_FAHRENHEIT,
+        unit_metric=UnitOfTemperature.CELSIUS,
+        unit_imperial=UnitOfTemperature.FAHRENHEIT,
         icon="mdi:oil-temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="spa_temp",
         name="Spa Temperature",
-        unit_metric=TEMP_CELSIUS,
-        unit_imperial=TEMP_FAHRENHEIT,
+        unit_metric=UnitOfTemperature.CELSIUS,
+        unit_imperial=UnitOfTemperature.FAHRENHEIT,
         icon="mdi:oil-temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
@@ -91,9 +90,9 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
     AquaLogicSensorEntityDescription(
         key="pump_power",
         name="Pump Power",
-        unit_metric=POWER_WATT,
-        unit_imperial=POWER_WATT,
-        icon="mdi:gauge",
+        unit_metric=UnitOfPower.WATT,
+        unit_imperial=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
     ),
     AquaLogicSensorEntityDescription(
         key="status",

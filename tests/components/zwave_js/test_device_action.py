@@ -91,6 +91,16 @@ async def test_get_actions(
     for action in expected_actions:
         assert action in actions
 
+    # Test that we don't return actions for a controller node
+    device = dev_reg.async_get_device(
+        {get_device_id(driver, client.driver.controller.nodes[1])}
+    )
+    assert device
+    assert (
+        await async_get_device_automations(hass, DeviceAutomationType.ACTION, device.id)
+        == []
+    )
+
 
 async def test_get_actions_meter(
     hass: HomeAssistant,
@@ -405,12 +415,13 @@ async def test_get_action_capabilities(
     client: Client,
     climate_radio_thermostat_ct100_plus: Node,
     integration: ConfigEntry,
-):
+) -> None:
     """Test we get the expected action capabilities."""
     dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+    )
+    assert device
 
     # Test refresh_value
     capabilities = await device_action.async_get_action_capabilities(
@@ -571,7 +582,7 @@ async def test_get_action_capabilities_lock_triggers(
     client: Client,
     lock_schlage_be469: Node,
     integration: ConfigEntry,
-):
+) -> None:
     """Test we get the expected action capabilities for lock triggers."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
@@ -651,7 +662,7 @@ async def test_failure_scenarios(
     client: Client,
     hank_binary_switch: Node,
     integration: ConfigEntry,
-):
+) -> None:
     """Test failure scenarios."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(

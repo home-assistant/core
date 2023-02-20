@@ -34,7 +34,7 @@
         }
       },
       "confirm_usb": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       }
     },
     "error": {
@@ -52,6 +52,7 @@
       "init": {
         "data": {
           "change_hub_config": "Change the Hub configuration.",
+          "change_plm_config": "Change the PLM configuration.",
           "add_override": "Add a device override.",
           "add_x10": "Add an X10 device.",
           "remove_override": "Remove a device override.",
@@ -65,6 +66,12 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "change_plm_config": {
+        "description": "Change the Insteon PLM connection information. You must restart Home Assistant after making this change. This does not change the configuration of the PLM itself.",
+        "data": {
+          "device": "[%key:common::config_flow::data::usb_path%]"
         }
       },
       "add_override": {

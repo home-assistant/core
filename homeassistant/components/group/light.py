@@ -287,7 +287,7 @@ class LightGroup(GroupEntity, LightEntity):
                 set[str], set().union(*all_supported_color_modes)
             )
 
-        self._attr_supported_features = 0
+        self._attr_supported_features = LightEntityFeature(0)
         for support in find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
             # Merge supported features by emulating support for every feature
             # we find.

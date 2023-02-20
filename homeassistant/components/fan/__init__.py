@@ -190,7 +190,7 @@ class FanEntity(ToggleEntity):
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
     _attr_speed_count: int
-    _attr_supported_features: FanEntityFeature | int = 0
+    _attr_supported_features: FanEntityFeature = FanEntityFeature(0)
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -244,7 +244,8 @@ class FanEntity(ToggleEntity):
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
             raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
+                f"The preset_mode {preset_mode} is not a valid preset_mode:"
+                f" {preset_modes}"
             )
 
     def set_direction(self, direction: str) -> None:
@@ -363,7 +364,7 @@ class FanEntity(ToggleEntity):
         return data
 
     @property
-    def supported_features(self) -> FanEntityFeature | int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 

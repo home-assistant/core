@@ -93,7 +93,9 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: Platform.SWITCH,
         zigpy.profiles.zha.DeviceType.SHADE: Platform.COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: Platform.SWITCH,
-        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: Platform.ALARM_CONTROL_PANEL,
+        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: (
+            Platform.ALARM_CONTROL_PANEL
+        ),
         zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: Platform.SIREN,
     },
     zigpy.profiles.zll.PROFILE_ID: {
@@ -149,7 +151,7 @@ class MatchRule:
     def weight(self) -> int:
         """Return the weight of the matching rule.
 
-        Most specific matches should be preferred over less specific. Model matching
+        More specific matches should be preferred over less specific. Model matching
         rules have a priority over manufacturer matching rules and rules matching a
         single model/manufacturer get a better priority over rules matching multiple
         models/manufacturers. And any model or manufacturers matching rules get better
@@ -233,7 +235,7 @@ class EntityClassAndChannels:
 class ZHAEntityRegistry:
     """Channel to ZHA Entity mapping."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Registry instance."""
         self._strict_registry: dict[
             str, dict[MatchRule, type[ZhaEntity]]
@@ -343,7 +345,7 @@ class ZHAEntityRegistry:
         def decorator(zha_ent: _ZhaEntityT) -> _ZhaEntityT:
             """Register a strict match rule.
 
-            All non empty fields of a match rule must match.
+            All non-empty fields of a match rule must match.
             """
             self._strict_registry[component][rule] = zha_ent
             return zha_ent
@@ -406,7 +408,7 @@ class ZHAEntityRegistry:
         def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
             """Register a loose match rule.
 
-            All non empty fields of a match rule must match.
+            All non-empty fields of a match rule must match.
             """
             # group the rules by channels
             self._config_diagnostic_entity_registry[component][stop_on_match_group][

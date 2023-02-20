@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -88,6 +87,7 @@ CONF_EFFECT_COMMAND_TOPIC = "effect_command_topic"
 CONF_EFFECT_LIST = "effect_list"
 CONF_EFFECT_STATE_TOPIC = "effect_state_topic"
 CONF_EFFECT_VALUE_TEMPLATE = "effect_value_template"
+CONF_HS_COMMAND_TEMPLATE = "hs_command_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
 CONF_HS_VALUE_TEMPLATE = "hs_value_template"
@@ -105,6 +105,7 @@ CONF_RGBWW_COMMAND_TEMPLATE = "rgbww_command_template"
 CONF_RGBWW_COMMAND_TOPIC = "rgbww_command_topic"
 CONF_RGBWW_STATE_TOPIC = "rgbww_state_topic"
 CONF_RGBWW_VALUE_TEMPLATE = "rgbww_value_template"
+CONF_XY_COMMAND_TEMPLATE = "xy_command_template"
 CONF_XY_COMMAND_TOPIC = "xy_command_topic"
 CONF_XY_STATE_TOPIC = "xy_state_topic"
 CONF_XY_VALUE_TEMPLATE = "xy_value_template"
@@ -136,7 +137,6 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = "MQTT LightEntity"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_WHITE_SCALE = 255
@@ -148,9 +148,11 @@ COMMAND_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,
     CONF_COLOR_TEMP_COMMAND_TEMPLATE,
     CONF_EFFECT_COMMAND_TEMPLATE,
+    CONF_HS_COMMAND_TEMPLATE,
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGBW_COMMAND_TEMPLATE,
     CONF_RGBWW_COMMAND_TEMPLATE,
+    CONF_XY_COMMAND_TEMPLATE,
 ]
 VALUE_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_VALUE_TEMPLATE,
@@ -186,6 +188,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_HS_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_HS_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_HS_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
@@ -195,7 +198,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
             vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
@@ -215,6 +217,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
+            vol.Optional(CONF_XY_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_XY_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_XY_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
@@ -224,14 +227,7 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
-PLATFORM_SCHEMA_BASIC = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-)
-
 DISCOVERY_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
     # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
     cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
     cv.removed(CONF_WHITE_VALUE_SCALE),
@@ -241,8 +237,6 @@ DISCOVERY_SCHEMA_BASIC = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
     # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
     cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
     cv.removed(CONF_WHITE_VALUE_SCALE),
@@ -307,9 +301,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
         self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
-
-        if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
-            config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
 
         topic: dict[str, str | None] = {
             key: config.get(key)
@@ -415,11 +406,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             supported_color_modes
         )
 
-        supported_features: int = 0
-        supported_features |= (
-            topic[CONF_EFFECT_COMMAND_TOPIC] is not None and LightEntityFeature.EFFECT
-        )
-        self._attr_supported_features = supported_features
+        self._attr_supported_features = LightEntityFeature(0)
+        if topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     def _is_optimistic(self, attribute: str) -> bool:
         """Return True if the attribute is optimistically updated."""
@@ -625,7 +614,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_hs_color = cast(tuple[float, float], hs_color)
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
             except ValueError:
-                _LOGGER.debug("Failed to parse hs state update: '%s'", payload)
+                _LOGGER.warning("Failed to parse hs state update: '%s'", payload)
 
         add_topic(CONF_HS_STATE_TOPIC, hs_received)
 
@@ -682,7 +671,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
@@ -767,7 +756,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         hs_color: str | None = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
-            await publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
+            device_hs_payload = self._command_templates[CONF_HS_COMMAND_TEMPLATE](
+                f"{hs_color[0]},{hs_color[1]}",
+                {"hue": hs_color[0], "sat": hs_color[1]},
+            )
+            await publish(CONF_HS_COMMAND_TOPIC, device_hs_payload)
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ColorMode.HS)
 
         rgb: tuple[int, int, int] | None
@@ -801,7 +794,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if (xy_color := kwargs.get(ATTR_XY_COLOR)) and self._topic[
             CONF_XY_COMMAND_TOPIC
         ] is not None:
-            await publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
+            device_xy_payload = self._command_templates[CONF_XY_COMMAND_TEMPLATE](
+                f"{xy_color[0]},{xy_color[1]}",
+                {"x": xy_color[0], "y": xy_color[1]},
+            )
+            await publish(CONF_XY_COMMAND_TOPIC, device_xy_payload)
             should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, ColorMode.XY)
 
         if (

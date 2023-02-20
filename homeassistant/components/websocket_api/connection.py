@@ -6,6 +6,7 @@ from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
@@ -14,6 +15,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import const, messages
+from .util import describe_request
 
 if TYPE_CHECKING:
     from .http import WebSocketAdapter
@@ -45,6 +47,13 @@ class ActiveConnection:
         self.last_id = 0
         self.supported_features: dict[str, float] = {}
         current_connection.set(self)
+
+    def get_description(self, request: web.Request | None) -> str:
+        """Return a description of the connection."""
+        description = self.user.name or ""
+        if request:
+            description += " " + describe_request(request)
+        return description
 
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
@@ -142,9 +151,6 @@ class ActiveConnection:
 
         if code:
             err_message += f" ({code})"
-        if request := current_request.get():
-            err_message += f" from {request.remote}"
-            if user_agent := request.headers.get("user-agent"):
-                err_message += f" ({user_agent})"
+        err_message += " " + self.get_description(current_request.get())
 
         log_handler("Error handling message: %s", err_message)

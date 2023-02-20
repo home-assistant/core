@@ -4,9 +4,12 @@ import pytest
 from homeassistant import core
 from homeassistant.components import switch
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import common
+
+from tests.common import MockUser
 
 
 @pytest.fixture(autouse=True)
@@ -14,10 +17,12 @@ def entities(hass):
     """Initialize the test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()
-    yield platform.ENTITIES
+    return platform.ENTITIES
 
 
-async def test_methods(hass, entities, enable_custom_integrations):
+async def test_methods(
+    hass: HomeAssistant, entities, enable_custom_integrations: None
+) -> None:
     """Test is_on, turn_on, turn_off methods."""
     switch_1, switch_2, switch_3 = entities
     assert await async_setup_component(
@@ -50,8 +55,11 @@ async def test_methods(hass, entities, enable_custom_integrations):
 
 
 async def test_switch_context(
-    hass, entities, hass_admin_user, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    entities,
+    hass_admin_user: MockUser,
+    enable_custom_integrations: None,
+) -> None:
     """Test that switch context works."""
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
 

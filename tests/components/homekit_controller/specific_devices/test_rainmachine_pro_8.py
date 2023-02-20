@@ -1,5 +1,4 @@
-"""
-Make sure that existing RainMachine support isn't broken.
+"""Make sure that existing RainMachine support isn't broken.
 
 https://github.com/home-assistant/core/issues/31745
 """

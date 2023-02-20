@@ -79,18 +79,17 @@ class PjLinkDevice(MediaPlayerEntity):
         """Iinitialize the PJLink device."""
         self._host = host
         self._port = port
-        self._name = name
+        self._attr_name = name
         self._password = password
         self._encoding = encoding
-        self._muted = False
-        self._pwstate = MediaPlayerState.OFF
-        self._current_source = None
+        self._attr_is_volume_muted = False
+        self._attr_state = MediaPlayerState.OFF
         with self.projector() as projector:
-            if not self._name:
-                self._name = projector.get_name()
+            if not self._attr_name:
+                self._attr_name = projector.get_name()
             inputs = projector.get_inputs()
         self._source_name_mapping = {format_input_source(*x): x for x in inputs}
-        self._source_list = sorted(self._source_name_mapping.keys())
+        self._attr_source_list = sorted(self._source_name_mapping.keys())
 
     def projector(self):
         """Create PJLink Projector instance."""
@@ -108,52 +107,27 @@ class PjLinkDevice(MediaPlayerEntity):
             try:
                 pwstate = projector.get_power()
                 if pwstate in ("on", "warm-up"):
-                    self._pwstate = MediaPlayerState.ON
-                    self._muted = projector.get_mute()[1]
-                    self._current_source = format_input_source(*projector.get_input())
+                    self._attr_state = MediaPlayerState.ON
+                    self._attr_is_volume_muted = projector.get_mute()[1]
+                    self._attr_source = format_input_source(*projector.get_input())
                 else:
-                    self._pwstate = MediaPlayerState.OFF
-                    self._muted = False
-                    self._current_source = None
+                    self._attr_state = MediaPlayerState.OFF
+                    self._attr_is_volume_muted = False
+                    self._attr_source = None
             except KeyError as err:
                 if str(err) == "'OK'":
-                    self._pwstate = MediaPlayerState.OFF
-                    self._muted = False
-                    self._current_source = None
+                    self._attr_state = MediaPlayerState.OFF
+                    self._attr_is_volume_muted = False
+                    self._attr_source = None
                 else:
                     raise
             except ProjectorError as err:
                 if str(err) == "unavailable time":
-                    self._pwstate = MediaPlayerState.OFF
-                    self._muted = False
-                    self._current_source = None
+                    self._attr_state = MediaPlayerState.OFF
+                    self._attr_is_volume_muted = False
+                    self._attr_source = None
                 else:
                     raise
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._pwstate
-
-    @property
-    def is_volume_muted(self):
-        """Return boolean indicating mute status."""
-        return self._muted
-
-    @property
-    def source(self):
-        """Return current input source."""
-        return self._current_source
-
-    @property
-    def source_list(self):
-        """Return all available input sources."""
-        return self._source_list
 
     def turn_off(self) -> None:
         """Turn projector off."""

@@ -59,8 +59,7 @@ class SirenTurnOnServiceParameters(TypedDict, total=False):
 def process_turn_on_params(
     siren: SirenEntity, params: SirenTurnOnServiceParameters
 ) -> SirenTurnOnServiceParameters:
-    """
-    Process turn_on service params.
+    """Process turn_on service params.
 
     Filters out unsupported params and validates the rest.
     """
@@ -162,7 +161,7 @@ class SirenEntity(ToggleEntity):
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None
-    _attr_supported_features: SirenEntityFeature | int = 0
+    _attr_supported_features: SirenEntityFeature = SirenEntityFeature(0)
 
     @final
     @property
@@ -178,8 +177,7 @@ class SirenEntity(ToggleEntity):
 
     @property
     def available_tones(self) -> list[int | str] | dict[int, str] | None:
-        """
-        Return a list of available tones.
+        """Return a list of available tones.
 
         Requires SirenEntityFeature.TONES.
         """
@@ -190,6 +188,6 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def supported_features(self) -> SirenEntityFeature | int:
+    def supported_features(self) -> SirenEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

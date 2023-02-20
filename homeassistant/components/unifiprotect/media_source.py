@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import date, datetime, timedelta
 from enum import Enum
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 from pyunifiprotect.data import (
     Camera,
@@ -107,16 +107,11 @@ def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
 
 
 @callback
-def _bad_identifier(identifier: str, err: Exception | None = None) -> BrowseMediaSource:
+def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
     msg = f"Unexpected identifier: {identifier}"
     if err is None:
         raise BrowseError(msg)
     raise BrowseError(msg) from err
-
-
-@callback
-def _bad_identifier_media(identifier: str, err: Exception | None = None) -> PlayMedia:
-    return cast(PlayMedia, _bad_identifier(identifier, err))
 
 
 @callback
@@ -164,20 +159,20 @@ class ProtectMediaSource(MediaSource):
 
         parts = item.identifier.split(":")
         if len(parts) != 3 or parts[1] not in ("event", "eventthumb"):
-            return _bad_identifier_media(item.identifier)
+            _bad_identifier(item.identifier)
 
         thumbnail_only = parts[1] == "eventthumb"
         try:
             data = self.data_sources[parts[0]]
         except (KeyError, IndexError) as err:
-            return _bad_identifier_media(item.identifier, err)
+            _bad_identifier(item.identifier, err)
 
         event = data.api.bootstrap.events.get(parts[2])
         if event is None:
             try:
                 event = await data.api.get_event(parts[2])
             except NvrError as err:
-                return _bad_identifier_media(item.identifier, err)
+                _bad_identifier(item.identifier, err)
             else:
                 # cache the event for later
                 data.api.bootstrap.events[event.id] = event
@@ -241,15 +236,15 @@ class ProtectMediaSource(MediaSource):
         try:
             data = self.data_sources[parts[0]]
         except (KeyError, IndexError) as err:
-            return _bad_identifier(item.identifier, err)
+            _bad_identifier(item.identifier, err)
 
         if len(parts) < 2:
-            return _bad_identifier(item.identifier)
+            _bad_identifier(item.identifier)
 
         try:
             identifier_type = IdentifierType(parts[1])
         except ValueError as err:
-            return _bad_identifier(item.identifier, err)
+            _bad_identifier(item.identifier, err)
 
         if identifier_type in (IdentifierType.EVENT, IdentifierType.EVENT_THUMB):
             thumbnail_only = identifier_type == IdentifierType.EVENT_THUMB
@@ -271,7 +266,7 @@ class ProtectMediaSource(MediaSource):
         try:
             event_type = SimpleEventType(parts.pop(0).lower())
         except (IndexError, ValueError) as err:
-            return _bad_identifier(item.identifier, err)
+            _bad_identifier(item.identifier, err)
 
         if len(parts) == 0:
             return await self._build_events_type(
@@ -281,17 +276,17 @@ class ProtectMediaSource(MediaSource):
         try:
             time_type = IdentifierTimeType(parts.pop(0))
         except ValueError as err:
-            return _bad_identifier(item.identifier, err)
+            _bad_identifier(item.identifier, err)
 
         if len(parts) == 0:
-            return _bad_identifier(item.identifier)
+            _bad_identifier(item.identifier)
 
         # {nvr_id}:browse:all|{camera_id}:all|{event_type}:recent:{day_count}
         if time_type == IdentifierTimeType.RECENT:
             try:
                 days = int(parts.pop(0))
             except (IndexError, ValueError) as err:
-                return _bad_identifier(item.identifier, err)
+                _bad_identifier(item.identifier, err)
 
             return await self._build_recent(
                 data, camera_id, event_type, days, build_children=True
@@ -302,7 +297,7 @@ class ProtectMediaSource(MediaSource):
         try:
             start, is_month, is_all = self._parse_range(parts)
         except (IndexError, ValueError) as err:
-            return _bad_identifier(item.identifier, err)
+            _bad_identifier(item.identifier, err)
 
         if is_month:
             return await self._build_month(
@@ -336,9 +331,7 @@ class ProtectMediaSource(MediaSource):
         try:
             event = await data.api.get_event(event_id)
         except NvrError as err:
-            return _bad_identifier(
-                f"{data.api.bootstrap.nvr.id}:{subtype}:{event_id}", err
-            )
+            _bad_identifier(f"{data.api.bootstrap.nvr.id}:{subtype}:{event_id}", err)
 
         if event.start is None or event.end is None:
             raise BrowseError("Event is still ongoing")
@@ -406,10 +399,13 @@ class ProtectMediaSource(MediaSource):
             event_text = "Motion Event"
         elif event_type == EventType.SMART_DETECT.value:
             if isinstance(event, Event):
-                smart_type = event.smart_detect_types[0]
+                smart_types = event.smart_detect_types
             else:
-                smart_type = SmartDetectObjectType(event["smartDetectTypes"][0])
-            event_text = f"Smart Detection - {smart_type.name.title()}"
+                smart_types = [
+                    SmartDetectObjectType(e) for e in event["smartDetectTypes"]
+                ]
+            smart_type_names = [s.name.title().replace("_", " ") for s in smart_types]
+            event_text = f"Smart Detection - {','.join(smart_type_names)}"
         title += f" {event_text}"
 
         nvr = data.api.bootstrap.nvr
@@ -767,7 +763,7 @@ class ProtectMediaSource(MediaSource):
             if camera is None:
                 raise BrowseError(f"Unknown Camera ID: {camera_id}")
             name = camera.name or camera.market_name or camera.type
-            is_doorbell = camera.feature_flags.has_chime
+            is_doorbell = camera.feature_flags.is_doorbell
             has_smart = camera.feature_flags.has_smart_detect
 
         thumbnail_url: str | None = None

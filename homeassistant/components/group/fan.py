@@ -313,8 +313,10 @@ class FanGroup(GroupEntity, FanEntity):
             "_direction", FanEntityFeature.DIRECTION, ATTR_DIRECTION
         )
 
-        self._attr_supported_features = reduce(
-            ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+        self._attr_supported_features = FanEntityFeature(
+            reduce(
+                ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
+            )
         )
         self._attr_assumed_state |= any(
             state.attributes.get(ATTR_ASSUMED_STATE) for state in states

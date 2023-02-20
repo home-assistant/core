@@ -1,7 +1,7 @@
 """Config flow for Z-Wave JS integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 import logging
 from typing import Any
@@ -157,7 +157,7 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return await hass.async_add_executor_job(get_usb_ports)
 
 
-class BaseZwaveJSFlow(FlowHandler):
+class BaseZwaveJSFlow(FlowHandler, ABC):
     """Represent the base config flow for Z-Wave JS."""
 
     def __init__(self) -> None:

@@ -1,6 +1,7 @@
 """This platform allows several media players to be grouped into one media player."""
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
@@ -108,7 +109,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
-        self._state: str | None = None
         self._attr_unique_id = unique_id
 
         self._entities = entities
@@ -205,11 +205,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the media group."""
-        return self._state
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -395,17 +390,19 @@ class MediaPlayerGroup(MediaPlayerEntity):
         )
         if not valid_state:
             # Set as unknown if all members are unknown or unavailable
-            self._state = None
+            self._attr_state = None
         else:
             off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
-            if states.count(states[0]) == len(states):
-                self._state = states[0]
+            if states.count(single_state := states[0]) == len(states):
+                self._attr_state = None
+                with suppress(ValueError):
+                    self._attr_state = MediaPlayerState(single_state)
             elif any(state for state in states if state not in off_values):
-                self._state = MediaPlayerState.ON
+                self._attr_state = MediaPlayerState.ON
             else:
-                self._state = MediaPlayerState.OFF
+                self._attr_state = MediaPlayerState.OFF
 
-        supported_features = 0
+        supported_features = MediaPlayerEntityFeature(0)
         if self._features[KEY_CLEAR_PLAYLIST]:
             supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
         if self._features[KEY_TRACKS]:

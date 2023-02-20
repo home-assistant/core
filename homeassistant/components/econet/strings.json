@@ -11,7 +11,7 @@
     },
     "step": {
       "user": {
-        "title": "Setup Rheem EcoNet Account",
+        "title": "Set up Rheem EcoNet Account",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"

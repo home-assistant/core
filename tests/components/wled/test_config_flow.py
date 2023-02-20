@@ -24,7 +24,6 @@ async def test_full_user_flow_implementation(
 
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
@@ -65,7 +64,6 @@ async def test_full_zeroconf_flow_implementation(
     assert result.get("description_placeholders") == {CONF_NAME: "WLED RGB Light"}
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -271,7 +269,6 @@ async def test_options_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],

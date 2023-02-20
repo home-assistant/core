@@ -1,5 +1,4 @@
-"""
-Core components of Home Assistant.
+"""Core components of Home Assistant.
 
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
@@ -15,6 +14,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextlib import suppress
 from contextvars import ContextVar
 import datetime
 import enum
@@ -30,15 +30,14 @@ from typing import (
     Any,
     Generic,
     NamedTuple,
-    Optional,
+    ParamSpec,
     TypeVar,
-    Union,
     cast,
     overload,
 )
 from urllib.parse import urlparse
 
-from typing_extensions import ParamSpec
+from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
@@ -49,6 +48,11 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_CONTEXT,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -73,6 +77,7 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
+from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .util import dt as dt_util, location, ulid as ulid_util
 from .util.async_ import (
     fire_coroutine_threadsafe,
@@ -101,6 +106,7 @@ STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
+restore_original_aiohttp_cancel_behavior()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -113,7 +119,7 @@ CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
-CORE_STORAGE_MINOR_VERSION = 2
+CORE_STORAGE_MINOR_VERSION = 3
 
 DOMAIN = "homeassistant"
 
@@ -272,8 +278,8 @@ class HomeAssistant:
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
-        self._pending_tasks: list[asyncio.Future[Any]] = []
-        self._track_task = True
+        self._tasks: set[asyncio.Future[Any]] = set()
+        self._background_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -329,7 +335,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
@@ -349,16 +355,21 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-        try:
-            # Only block for EVENT_HOMEASSISTANT_START listener
-            self.async_stop_track_tasks()
-            async with self.timeout.async_timeout(TIMEOUT_EVENT_START):
-                await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        if not self._tasks:
+            pending: set[asyncio.Future[Any]] | None = None
+        else:
+            _done, pending = await asyncio.wait(
+                self._tasks, timeout=TIMEOUT_EVENT_START
+            )
+
+        if pending:
             _LOGGER.warning(
-                "Something is blocking Home Assistant from wrapping up the "
-                "start up phase. We're going to continue anyway. Please "
-                "report the following info at https://github.com/home-assistant/core/issues: %s",
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                ),
                 ", ".join(self.config.components),
             )
 
@@ -439,7 +450,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -487,9 +498,8 @@ class HomeAssistant:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
-        # If a task is scheduled
-        if self._track_task:
-            self._pending_tasks.append(task)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
 
@@ -504,15 +514,33 @@ class HomeAssistant:
     def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
 
         target: target to call.
         """
         task = self.loop.create_task(target)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+        return task
 
-        if self._track_task:
-            self._pending_tasks.append(task)
+    @callback
+    def async_create_background_task(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the eventloop.
 
+        This is a background task which will not block startup and will be
+        automatically cancelled on shutdown. If you are using this in your
+        integration, use the create task methods on the config entry instead.
+
+        This method must be run in the event loop.
+        """
+        task = self.loop.create_task(target, name=name)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
     @callback
@@ -521,22 +549,10 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-
-        # If a task is scheduled
-        if self._track_task:
-            self._pending_tasks.append(task)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
-
-    @callback
-    def async_track_tasks(self) -> None:
-        """Track tasks so you can wait for all tasks to be done."""
-        self._track_task = True
-
-    @callback
-    def async_stop_track_tasks(self) -> None:
-        """Stop track tasks so you can't wait for all tasks to be done."""
-        self._track_task = False
 
     @overload
     @callback
@@ -617,7 +633,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -631,29 +647,25 @@ class HomeAssistant:
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
         start_time: float | None = None
+        current_task = asyncio.current_task()
 
-        while self._pending_tasks:
-            pending = [task for task in self._pending_tasks if not task.done()]
-            self._pending_tasks.clear()
-            if pending:
-                await self._await_and_log_pending(pending)
+        while tasks := [task for task in self._tasks if task is not current_task]:
+            await self._await_and_log_pending(tasks)
 
-                if start_time is None:
-                    # Avoid calling monotonic() until we know
-                    # we may need to start logging blocked tasks.
-                    start_time = 0
-                elif start_time == 0:
-                    # If we have waited twice then we set the start
-                    # time
-                    start_time = monotonic()
-                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
-                    # We have waited at least three loops and new tasks
-                    # continue to block. At this point we start
-                    # logging all waiting tasks.
-                    for task in pending:
-                        _LOGGER.debug("Waiting for task: %s", task)
-            else:
-                await asyncio.sleep(0)
+            if start_time is None:
+                # Avoid calling monotonic() until we know
+                # we may need to start logging blocked tasks.
+                start_time = 0
+            elif start_time == 0:
+                # If we have waited twice then we set the start
+                # time
+                start_time = monotonic()
+            elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                # We have waited at least three loops and new tasks
+                # continue to block. At this point we start
+                # logging all waiting tasks.
+                for task in tasks:
+                    _LOGGER.debug("Waiting for task: %s", task)
 
     async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
@@ -695,16 +707,24 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Cancel all background tasks
+        for task in self._background_tasks:
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.remove)
+            task.cancel()
+
+        self.exit_code = exit_code
+
         # stage 1
         self.state = CoreState.stopping
-        self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 1 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 2
@@ -715,7 +735,8 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 2 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
+                " continue"
             )
 
         # stage 3
@@ -734,10 +755,9 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                " continue"
             )
-
-        self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
@@ -803,11 +823,6 @@ class Event:
             id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
         )
 
-    def __hash__(self) -> int:
-        """Make hashable."""
-        # The only event type that shares context are the TIME_CHANGED
-        return hash((self.event_type, self.context.id, self.time_fired))
-
     def as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
@@ -824,20 +839,12 @@ class Event:
     def __repr__(self) -> str:
         """Return the representation."""
         if self.data:
-            return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
+            return (
+                f"<Event {self.event_type}[{str(self.origin)[0]}]:"
+                f" {util.repr_helper(self.data)}>"
+            )
 
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.event_type == other.event_type
-            and self.data == other.data
-            and self.origin == other.origin
-            and self.time_fired == other.time_fired
-            and self.context == other.context
-        )
 
 
 class _FilterableJob(NamedTuple):
@@ -1079,9 +1086,6 @@ class EventBus:
             )
 
 
-_StateT = TypeVar("_StateT", bound="State")
-
-
 class State:
     """Object to represent a state within the state machine.
 
@@ -1105,6 +1109,7 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
+        "_as_compressed_state",
     ]
 
     def __init__(
@@ -1140,13 +1145,7 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-
-    def __hash__(self) -> int:
-        """Make the state hashable.
-
-        State objects are effectively immutable.
-        """
-        return hash((id(self), self.last_updated))
+        self._as_compressed_state: dict[str, Any] | None = None
 
     @property
     def name(self) -> str:
@@ -1181,8 +1180,35 @@ class State:
             )
         return self._as_dict
 
+    def as_compressed_state(self) -> dict[str, Any]:
+        """Build a compressed dict of a state for adds.
+
+        Omits the lu (last_updated) if it matches (lc) last_changed.
+
+        Sends c (context) as a string if it only contains an id.
+        """
+        if self._as_compressed_state:
+            return self._as_compressed_state
+        state_context = self.context
+        if state_context.parent_id is None and state_context.user_id is None:
+            context: dict[str, Any] | str = state_context.id
+        else:
+            context = state_context.as_dict()
+        compressed_state = {
+            COMPRESSED_STATE_STATE: self.state,
+            COMPRESSED_STATE_ATTRIBUTES: self.attributes,
+            COMPRESSED_STATE_CONTEXT: context,
+            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+        }
+        if self.last_changed != self.last_updated:
+            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+                self.last_updated
+            )
+        self._as_compressed_state = compressed_state
+        return compressed_state
+
     @classmethod
-    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
+    def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -1230,16 +1256,6 @@ class State:
         """
         self.context = Context(
             self.context.user_id, self.context.parent_id, self.context.id
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison of the state."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-            and self.context == other.context
         )
 
     def __repr__(self) -> str:
@@ -1418,7 +1434,8 @@ class StateMachine:
         entity_id = entity_id.lower()
         if entity_id in self._states or entity_id in self._reservations:
             raise HomeAssistantError(
-                "async_reserve must not be called once the state is in the state machine."
+                "async_reserve must not be called once the state is in the state"
+                " machine."
             )
 
         self._reservations.add(entity_id)
@@ -1567,8 +1584,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
@@ -1584,8 +1600,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
 
@@ -1642,8 +1657,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         See description of async_call for details.
         """
@@ -1664,8 +1678,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         Specify blocking=True to wait until service is executed.
         Waits a maximum of limit, which may be None for no timeout.
@@ -1807,11 +1820,16 @@ class Config:
         self.internal_url: str | None = None
         self.external_url: str | None = None
         self.currency: str = "EUR"
+        self.country: str | None = None
+        self.language: str = "en"
 
         self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
+
+        # List of packages to skip when installing requirements on startup
+        self.skip_pip_packages: list[str] = []
 
         # List of loaded components
         self.components: set[str] = set()
@@ -1913,6 +1931,8 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1938,6 +1958,8 @@ class Config:
         external_url: str | dict[Any, Any] | None = _UNDEF,
         internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
+        country: str | dict[Any, Any] | None = _UNDEF,
+        language: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1957,25 +1979,38 @@ class Config:
         if time_zone is not None:
             self.set_time_zone(time_zone)
         if external_url is not _UNDEF:
-            self.external_url = cast(Optional[str], external_url)
+            self.external_url = cast(str | None, external_url)
         if internal_url is not _UNDEF:
-            self.internal_url = cast(Optional[str], internal_url)
+            self.internal_url = cast(str | None, internal_url)
         if currency is not None:
             self.currency = currency
+        if country is not _UNDEF:
+            self.country = cast(str | None, country)
+        if language is not None:
+            self.language = language
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
+        # pylint: disable-next=import-outside-toplevel
+        from .config import (
+            _raise_issue_if_historic_currency,
+            _raise_issue_if_no_country,
+        )
+
         self._update(source=ConfigSource.STORAGE, **kwargs)
         await self._async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
+
+        _raise_issue_if_historic_currency(self.hass, self.currency)
+        _raise_issue_if_no_country(self.hass, self.country)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
         if not (data := await self._store.async_load()):
             return
 
-        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
-        # but this data still lives in storage, so we print a warning.
+        # In 2021.9 we fixed validation to disallow a path (because that's never
+        # correct) but this data still lives in storage, so we print a warning.
         if data.get("external_url") and urlparse(data["external_url"]).path not in (
             "",
             "/",
@@ -1999,6 +2034,8 @@ class Config:
             external_url=data.get("external_url", _UNDEF),
             internal_url=data.get("internal_url", _UNDEF),
             currency=data.get("currency"),
+            country=data.get("country"),
+            language=data.get("language"),
         )
 
     async def _async_store(self) -> None:
@@ -2015,6 +2052,8 @@ class Config:
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
+            "country": self.country,
+            "language": self.language,
         }
 
         await self._store.async_save(data)
@@ -2053,6 +2092,35 @@ class Config:
                 data["unit_system_v2"] = self._original_unit_system
                 if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
                     data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+            if old_major_version == 1 and old_minor_version < 3:
+                # In 1.3, we add the key "language", initialize it from the
+                # owner account.
+                data["language"] = "en"
+                try:
+                    owner = await self.hass.auth.async_get_owner()
+                    if owner is not None:
+                        # pylint: disable-next=import-outside-toplevel
+                        from .components.frontend import storage as frontend_store
+
+                        # pylint: disable-next=import-outside-toplevel
+                        from .helpers import config_validation as cv
+
+                        _, owner_data = await frontend_store.async_user_store(
+                            self.hass, owner.id
+                        )
+
+                        if (
+                            "language" in owner_data
+                            and "language" in owner_data["language"]
+                        ):
+                            with suppress(vol.InInvalid):
+                                data["language"] = cv.language(
+                                    owner_data["language"]["language"]
+                                )
+                # pylint: disable-next=broad-except
+                except Exception:
+                    _LOGGER.exception("Unexpected error during core config migration")
+
             if old_major_version > 1:
                 raise NotImplementedError
             return data

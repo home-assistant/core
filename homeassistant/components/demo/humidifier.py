@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-SUPPORT_FLAGS = 0
+SUPPORT_FLAGS = HumidifierEntityFeature(0)
 
 
 async def async_setup_platform(

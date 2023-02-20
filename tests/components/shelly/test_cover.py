@@ -24,7 +24,9 @@ from . import init_integration, mutate_rpc_device_status
 ROLLER_BLOCK_ID = 1
 
 
-async def test_block_device_services(hass, mock_block_device, monkeypatch):
+async def test_block_device_services(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device cover services."""
     monkeypatch.setitem(mock_block_device.settings, "mode", "roller")
     await init_integration(hass, 1)
@@ -63,7 +65,9 @@ async def test_block_device_services(hass, mock_block_device, monkeypatch):
     assert hass.states.get("cover.test_name").state == STATE_CLOSED
 
 
-async def test_block_device_update(hass, mock_block_device, monkeypatch):
+async def test_block_device_update(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device update."""
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "rollerPos", 0)
     await init_integration(hass, 1)
@@ -75,7 +79,9 @@ async def test_block_device_update(hass, mock_block_device, monkeypatch):
     assert hass.states.get("cover.test_name").state == STATE_OPEN
 
 
-async def test_block_device_no_roller_blocks(hass, mock_block_device, monkeypatch):
+async def test_block_device_no_roller_blocks(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test block device without roller blocks."""
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "type", None)
     await init_integration(hass, 1)

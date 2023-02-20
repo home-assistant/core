@@ -31,7 +31,6 @@ async def test_full_user_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -68,7 +67,6 @@ async def test_invalid_address(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     mock_twentemilieu_config_flow.unique_id.side_effect = TwenteMilieuAddressError
     result2 = await hass.config_entries.flow.async_configure(
@@ -82,7 +80,6 @@ async def test_invalid_address(
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"base": "invalid_address"}
-    assert "flow_id" in result2
 
     mock_twentemilieu_config_flow.unique_id.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(

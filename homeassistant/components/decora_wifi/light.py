@@ -112,11 +112,11 @@ class DecoraWifiLight(LightEntity):
         return {self.color_mode}
 
     @property
-    def supported_features(self) -> LightEntityFeature | int:
+    def supported_features(self) -> LightEntityFeature:
         """Return supported features."""
         if self._switch.canSetLevel:
             return LightEntityFeature.TRANSITION
-        return 0
+        return LightEntityFeature(0)
 
     @property
     def name(self):
