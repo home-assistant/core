@@ -66,10 +66,7 @@ def mock_envisalink_alarm_panel(mock_unique_id):
         autospec=True,
         return_value=EnvisalinkAlarmPanel.ConnectionResult.SUCCESS,
     ), patch.object(
-        EnvisalinkAlarmPanel,
-        "is_online",
-        autospec=True,
-        return_value=EnvisalinkAlarmPanel.ConnectionResult.SUCCESS,
+        EnvisalinkAlarmPanel, "is_online", autospec=True, return_value=True
     ), patch.object(
         EnvisalinkAlarmPanel,
         "mac_address",
@@ -178,10 +175,11 @@ def mock_config_entry_yaml_options(
 ) -> MockConfigEntry:
     """Return the default mocked config entry that contains the imported yaml options."""
     mock_config_data_result[CONF_YAML_OPTIONS] = {
-        CONF_PANIC: "Polic",
+        CONF_PANIC: "Police",
         CONF_EVL_KEEPALIVE: 60,
         CONF_ZONEDUMP_INTERVAL: 30,
         CONF_TIMEOUT: 10,
+        CONF_CREATE_ZONE_BYPASS_SWITCHES: True,
     }
     return MockConfigEntry(
         domain=DOMAIN,

@@ -8,7 +8,7 @@ from homeassistant.helpers import entity_registry as er
 async def test_sensor_state(
     hass: HomeAssistant, mock_config_entry, init_integration
 ) -> None:
-    """Test the createion and values of the Envisalink binary sensors."""
+    """Test the creating and values of the Envisalink keypad sensors."""
     controller = hass.data[DOMAIN][mock_config_entry.entry_id]
     controller.async_login_success_callback()
     await hass.async_block_till_done()
@@ -30,10 +30,24 @@ async def test_sensor_update(
 
     er.async_get(hass)
 
-    controller.controller.alarm_state["partition"][1]["status"]["alpha"] = "alpha_state"
+    # State update triggered by a partition update
+    controller.controller.alarm_state["partition"][1]["status"][
+        "alpha"
+    ] = "partition_update"
     controller.async_partition_updated_callback([1])
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_alarm_name_partition_1_keypad")
     assert state
-    assert state.state == "alpha_state"
+    assert state.state == "partition_update"
+
+    # State update triggered by a keypad update
+    controller.controller.alarm_state["partition"][1]["status"][
+        "alpha"
+    ] = "keypad_update"
+    controller.async_keypad_updated_callback([1])
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_alarm_name_partition_1_keypad")
+    assert state
+    assert state.state == "keypad_update"

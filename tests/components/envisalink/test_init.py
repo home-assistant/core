@@ -4,7 +4,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.envisalink.const import DOMAIN
+from homeassistant.components.envisalink.const import (
+    CONF_CREATE_ZONE_BYPASS_SWITCHES,
+    DOMAIN,
+)
 from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
     EnvisalinkAlarmPanel,
 )
@@ -68,12 +71,28 @@ async def test_async_setup_import_update(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    entries[0].data
-    entries[0].options
+
+    config_entry = entries[0]
+    #    assert options == {}
+    #    TODO
+
+    # Unload the integration
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.data.get(DOMAIN)
+
+    # Add the zone bypass switch option
+    config_entry.add_to_hass(hass)
+    options = dict(config_entry.options)
+    options[CONF_CREATE_ZONE_BYPASS_SWITCHES] = True
+    hass.config_entries.async_update_entry(config_entry, options=options)
+
+    # Reload it and make sure the zone bypass switches got created
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
-#    assert options == {}
-#    TODO
+#   TODO check zone bypass switches
 
 
 @pytest.mark.parametrize(
