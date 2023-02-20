@@ -262,7 +262,9 @@ async def test_media_attributes_are_fetched(hass: HomeAssistant) -> None:
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
 
 
-async def test_media_attributes_are_loaded(hass, patch_load_json):
+async def test_media_attributes_are_loaded(
+    hass: HomeAssistant, patch_load_json
+) -> None:
     """Test that media attributes are loaded."""
     mock_entity_id = await setup_mock_component(hass)
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA_LOCKED}
@@ -290,8 +292,8 @@ async def test_media_attributes_are_loaded(hass, patch_load_json):
 
 
 async def test_device_info_is_set_from_status_correctly(
-    hass, patch_get_status, device_registry
-):
+    hass: HomeAssistant, patch_get_status, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that device info is set correctly from status update."""
     patch_get_status.return_value = MOCK_STATUS_STANDBY
     mock_entity_id = await setup_mock_component(hass)
@@ -449,7 +451,7 @@ async def test_media_stop(hass: HomeAssistant) -> None:
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source(hass, patch_load_json):
+async def test_select_source(hass: HomeAssistant, patch_load_json) -> None:
     """Test that select source service calls function with title."""
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
     with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):
@@ -469,7 +471,7 @@ async def test_select_source(hass, patch_load_json):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source_caps(hass, patch_load_json):
+async def test_select_source_caps(hass: HomeAssistant, patch_load_json) -> None:
     """Test that select source service calls function with upper case title."""
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
     with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):
@@ -492,7 +494,7 @@ async def test_select_source_caps(hass, patch_load_json):
     assert len(mock_call.mock_calls) == 1
 
 
-async def test_select_source_id(hass, patch_load_json):
+async def test_select_source_id(hass: HomeAssistant, patch_load_json) -> None:
     """Test that select source service calls function with Title ID."""
     patch_load_json.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
     with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE):

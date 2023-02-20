@@ -579,7 +579,7 @@ async def test_light_restore(hass: HomeAssistant, hk_driver, events) -> None:
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes, state_props, turn_on_props_with_brightness",
+    ("supported_color_modes", "state_props", "turn_on_props_with_brightness"),
     [
         [
             [ColorMode.COLOR_TEMP, ColorMode.RGBW],
@@ -699,7 +699,7 @@ async def test_light_rgb_with_color_temp(
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes, state_props, turn_on_props_with_brightness",
+    ("supported_color_modes", "state_props", "turn_on_props_with_brightness"),
     [
         [
             [ColorMode.RGBW],
@@ -896,7 +896,7 @@ async def test_light_rgb_or_w_lights(
 
 
 @pytest.mark.parametrize(
-    "supported_color_modes, state_props",
+    ("supported_color_modes", "state_props"),
     [
         [
             [ColorMode.COLOR_TEMP, ColorMode.RGBW],

@@ -87,7 +87,7 @@ def _get_write_api_mock_v2(mock_influx_client):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api",
+    ("mock_client", "config_ext", "get_write_api"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -135,7 +135,7 @@ async def test_setup_config_full(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_base, config_ext, expected_client_args",
+    ("mock_client", "config_base", "config_ext", "expected_client_args"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -269,7 +269,7 @@ async def test_setup_config_ssl(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api",
+    ("mock_client", "config_ext", "get_write_api"),
     [
         (influxdb.DEFAULT_API_VERSION, BASE_V1_CONFIG, _get_write_api_mock_v1),
         (influxdb.API_VERSION_2, BASE_V2_CONFIG, _get_write_api_mock_v2),
@@ -291,7 +291,7 @@ async def test_setup_minimal_config(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api",
+    ("mock_client", "config_ext", "get_write_api"),
     [
         (influxdb.DEFAULT_API_VERSION, {"username": "user"}, _get_write_api_mock_v1),
         (
@@ -351,7 +351,7 @@ async def _setup(hass, mock_influx_client, config_ext, get_write_api):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -437,7 +437,7 @@ async def test_event_listener(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -491,7 +491,7 @@ async def test_event_listener_no_units(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -540,7 +540,7 @@ async def test_event_listener_inf(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -624,7 +624,7 @@ def execute_filter_test(hass, tests, handler_method, write_api, get_mock_call):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -658,7 +658,7 @@ async def test_event_listener_denylist(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -692,7 +692,7 @@ async def test_event_listener_denylist_domain(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -726,7 +726,7 @@ async def test_event_listener_denylist_glob(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -760,7 +760,7 @@ async def test_event_listener_allowlist(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -794,7 +794,7 @@ async def test_event_listener_allowlist_domain(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -828,7 +828,7 @@ async def test_event_listener_allowlist_glob(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -878,7 +878,7 @@ async def test_event_listener_filtered_allowlist(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -918,7 +918,7 @@ async def test_event_listener_filtered_denylist(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -992,7 +992,7 @@ async def test_event_listener_invalid_type(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1042,7 +1042,7 @@ async def test_event_listener_default_measurement(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1093,7 +1093,7 @@ async def test_event_listener_unit_of_measurement_field(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1148,7 +1148,7 @@ async def test_event_listener_tags_attributes(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1214,7 +1214,7 @@ async def test_event_listener_component_override_measurement(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1287,7 +1287,7 @@ async def test_event_listener_component_measurement_attr(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1375,7 +1375,7 @@ async def test_event_listener_ignore_attributes(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1429,7 +1429,7 @@ async def test_event_listener_ignore_attributes_overlapping_entities(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1482,7 +1482,7 @@ async def test_event_listener_scheduled_write(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1530,7 +1530,7 @@ async def test_event_listener_backlog_full(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1579,7 +1579,7 @@ async def test_event_listener_attribute_name_conflict(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call", "test_exception"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1646,7 +1646,7 @@ async def test_connection_failure_on_startup(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call, test_exception",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call", "test_exception"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
@@ -1712,7 +1712,7 @@ async def test_invalid_inputs_error(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, get_write_api, get_mock_call, precision",
+    ("mock_client", "config_ext", "get_write_api", "get_mock_call", "precision"),
     [
         (
             influxdb.DEFAULT_API_VERSION,

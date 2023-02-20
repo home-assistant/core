@@ -99,6 +99,7 @@ __all__ = [
     "ATTR_OPTIONS",
     "ATTR_STATE_CLASS",
     "CONF_STATE_CLASS",
+    "DEVICE_CLASS_STATE_CLASSES",
     "DOMAIN",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
@@ -547,7 +548,7 @@ class SensorEntity(Entity):
         numerical_value: int | float | Decimal
         if not isinstance(value, (int, float, Decimal)):
             try:
-                if isinstance(value, str) and "." not in value:
+                if isinstance(value, str) and "." not in value and "e" not in value:
                     numerical_value = int(value)
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]

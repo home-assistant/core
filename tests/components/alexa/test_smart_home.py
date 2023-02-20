@@ -4120,7 +4120,7 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "url,result",
+    ("url", "result"),
     [
         ("http://nohttpswrongport.org:8123", 2),
         ("http://nohttpsport443.org:443", 2),
