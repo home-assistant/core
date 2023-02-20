@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
-from itertools import groupby
+from itertools import chain, groupby
 import logging
 from operator import attrgetter
 import ssl
@@ -329,7 +329,7 @@ class MqttClientSetup:
                 certificate,
                 certfile=client_cert,
                 keyfile=client_key,
-                tls_version=ssl.PROTOCOL_TLS,
+                tls_version=ssl.PROTOCOL_TLS_CLIENT,
             )
 
             if tls_insecure is not None:
@@ -339,6 +339,11 @@ class MqttClientSetup:
     def client(self) -> mqtt.Client:
         """Return the paho MQTT client."""
         return self._client
+
+
+def _is_simple_match(topic: str) -> bool:
+    """Return if a topic is a simple match."""
+    return not ("+" in topic or "#" in topic)
 
 
 class MQTT:
@@ -358,7 +363,6 @@ class MQTT:
         self.hass = hass
         self.config_entry = config_entry
         self.conf = conf
-        self.subscriptions: list[Subscription] = []
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
         self.connected = False
@@ -390,6 +394,14 @@ class MQTT:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
         )
 
+    @property
+    def subscriptions(self) -> list[Subscription]:
+        """Return the tracked subscriptions."""
+        return [
+            *chain.from_iterable(self._simple_subscriptions.values()),
+            *self._wildcard_subscriptions,
+        ]
+
     def cleanup(self) -> None:
         """Clean up listeners."""
         while self._cleanup_on_unload:
@@ -420,6 +432,12 @@ class MQTT:
                 qos=will_message.qos,
                 retain=will_message.retain,
             )
+
+    def _is_active_subscription(self, topic: str) -> bool:
+        """Check if a topic has an active subscription."""
+        return topic in self._simple_subscriptions or any(
+            other.topic == topic for other in self._wildcard_subscriptions
+        )
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -483,6 +501,50 @@ class MQTT:
         async with self._paho_lock:
             await self.hass.async_add_executor_job(stop)
 
+    @callback
+    def async_restore_tracked_subscriptions(
+        self, subscriptions: list[Subscription]
+    ) -> None:
+        """Restore tracked subscriptions after reload."""
+        for subscription in subscriptions:
+            self._async_track_subscription(subscription)
+        self._matching_subscriptions.cache_clear()
+
+    @callback
+    def _async_track_subscription(self, subscription: Subscription) -> None:
+        """Track a subscription.
+
+        This method does not send a SUBSCRIBE message to the broker.
+
+        The caller is responsible clearing the cache of _matching_subscriptions.
+        """
+        if _is_simple_match(subscription.topic):
+            self._simple_subscriptions.setdefault(subscription.topic, []).append(
+                subscription
+            )
+        else:
+            self._wildcard_subscriptions.append(subscription)
+
+    @callback
+    def _async_untrack_subscription(self, subscription: Subscription) -> None:
+        """Untrack a subscription.
+
+        This method does not send an UNSUBSCRIBE message to the broker.
+
+        The caller is responsible clearing the cache of _matching_subscriptions.
+        """
+        topic = subscription.topic
+        try:
+            if _is_simple_match(topic):
+                simple_subscriptions = self._simple_subscriptions
+                simple_subscriptions[topic].remove(subscription)
+                if not simple_subscriptions[topic]:
+                    del simple_subscriptions[topic]
+            else:
+                self._wildcard_subscriptions.remove(subscription)
+        except (KeyError, ValueError) as ex:
+            raise HomeAssistantError("Can't remove subscription twice") from ex
+
     async def async_subscribe(
         self,
         topic: str,
@@ -500,11 +562,7 @@ class MQTT:
         subscription = Subscription(
             topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
-        self.subscriptions.append(subscription)
-        if _is_simple := "+" not in topic and "#" not in topic:
-            self._simple_subscriptions.setdefault(topic, []).append(subscription)
-        else:
-            self._wildcard_subscriptions.append(subscription)
+        self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
@@ -515,15 +573,7 @@ class MQTT:
         @callback
         def async_remove() -> None:
             """Remove subscription."""
-            if subscription not in self.subscriptions:
-                raise HomeAssistantError("Can't remove subscription twice")
-            self.subscriptions.remove(subscription)
-            if _is_simple:
-                self._simple_subscriptions[topic].remove(subscription)
-                if not self._simple_subscriptions[topic]:
-                    del self._simple_subscriptions[topic]
-            else:
-                self._wildcard_subscriptions.remove(subscription)
+            self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
 
             # Only unsubscribe if currently connected
@@ -544,11 +594,11 @@ class MQTT:
             _raise_on_error(result)
             return mid
 
-        if any(other.topic == topic for other in self.subscriptions):
-            # Other subscriptions on topic remaining - don't unsubscribe.
-            return
-
         async with self._paho_lock:
+            if self._is_active_subscription(topic):
+                # Other subscriptions on topic remaining - don't unsubscribe.
+                return
+
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
@@ -558,6 +608,18 @@ class MQTT:
         self, subscriptions: Iterable[tuple[str, int]]
     ) -> None:
         """Perform MQTT client subscriptions."""
+
+        # Section 3.3.1.3 in the specification:
+        # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+        # When sending a PUBLISH Packet to a Client the Server MUST
+        # set the RETAIN flag to 1 if a message is sent as a result of a
+        # new subscription being made by a Client [MQTT-3.3.1-8].
+        # It MUST set the RETAIN flag to 0 when a PUBLISH Packet is sent to
+        # a Client because it matches an established subscription regardless
+        # of how the flag was set in the message it received [MQTT-3.3.1-9].
+        #
+        # Since we do not know if a published value is retained we need to
+        # (re)subscribe, to ensure retained messages are replayed
 
         def _process_client_subscriptions() -> list[tuple[int, int]]:
             """Initiate all subscriptions on the MQTT client and return the results."""
@@ -618,18 +680,7 @@ class MQTT:
             result_code,
         )
 
-        # Group subscriptions to only re-subscribe once for each topic.
-        keyfunc = attrgetter("topic")
-        self.hass.add_job(
-            self._async_perform_subscriptions,
-            [
-                # Re-subscribe with the highest requested qos
-                (topic, max(subscription.qos for subscription in subs))
-                for topic, subs in groupby(
-                    sorted(self.subscriptions, key=keyfunc), keyfunc
-                )
-            ],
-        )
+        self.hass.create_task(self._async_resubscribe())
 
         if (
             CONF_BIRTH_MESSAGE in self.conf
@@ -650,6 +701,20 @@ class MQTT:
             asyncio.run_coroutine_threadsafe(
                 publish_birth_message(birth_message), self.hass.loop
             )
+
+    async def _async_resubscribe(self) -> None:
+        """Resubscribe on reconnect."""
+        # Group subscriptions to only re-subscribe once for each topic.
+        keyfunc = attrgetter("topic")
+        await self._async_perform_subscriptions(
+            [
+                # Re-subscribe with the highest requested qos
+                (topic, max(subscription.qos for subscription in subs))
+                for topic, subs in groupby(
+                    sorted(self.subscriptions, key=keyfunc), keyfunc
+                )
+            ]
+        )
 
     def _mqtt_on_message(
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage

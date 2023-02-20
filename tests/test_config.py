@@ -40,7 +40,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.yaml import SECRET_YAML
 
-from .common import MockUser, get_test_config_dir, patch_yaml_files
+from .common import MockUser, get_test_config_dir
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -568,7 +568,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "minor_version, users, user_data, default_language",
+    ("minor_version", "users", "user_data", "default_language"),
     (
         (2, (), {}, "en"),
         (2, ({"is_owner": True},), {}, "en"),
@@ -692,7 +692,7 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "unit_system_name, expected_unit_system",
+    ("unit_system_name", "expected_unit_system"),
     [
         (CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
         (CONF_UNIT_SYSTEM_IMPERIAL, US_CUSTOMARY_SYSTEM),
@@ -736,20 +736,25 @@ async def test_check_ha_config_file_wrong(mock_check, hass):
     assert await config_util.async_check_ha_config_file(hass) == "bad"
 
 
-@patch("homeassistant.config.os.path.isfile", mock.Mock(return_value=True))
-async def test_async_hass_config_yaml_merge(merge_log_err, hass):
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            config_util.CONF_CORE: {
+                config_util.CONF_PACKAGES: {
+                    "pack_dict": {"input_boolean": {"ib1": None}}
+                }
+            },
+            "input_boolean": {"ib2": None},
+            "light": {"platform": "test"},
+        }
+    ],
+)
+async def test_async_hass_config_yaml_merge(
+    merge_log_err, hass: HomeAssistant, mock_hass_config: None
+) -> None:
     """Test merge during async config reload."""
-    config = {
-        config_util.CONF_CORE: {
-            config_util.CONF_PACKAGES: {"pack_dict": {"input_boolean": {"ib1": None}}}
-        },
-        "input_boolean": {"ib2": None},
-        "light": {"platform": "test"},
-    }
-
-    files = {config_util.YAML_CONFIG_FILE: yaml.dump(config)}
-    with patch_yaml_files(files, True):
-        conf = await config_util.async_hass_config_yaml(hass)
+    conf = await config_util.async_hass_config_yaml(hass)
 
     assert merge_log_err.call_count == 0
     assert conf[config_util.CONF_CORE].get(config_util.CONF_PACKAGES) is not None
@@ -1262,7 +1267,7 @@ async def test_component_config_exceptions(hass, caplog):
 
 
 @pytest.mark.parametrize(
-    "domain, schema, expected",
+    ("domain", "schema", "expected"),
     [
         ("zone", vol.Schema({vol.Optional("zone", default=list): [int]}), "list"),
         ("zone", vol.Schema({vol.Optional("zone", default=[]): [int]}), "list"),

@@ -106,7 +106,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.show_all_sources = DEFAULT_SHOW_SOURCES
         self.zone2 = DEFAULT_ZONE2
         self.zone3 = DEFAULT_ZONE3
-        self.use_telnet = DEFAULT_USE_TELNET_NEW_INSTALL
         self.d_receivers: list[dict[str, Any]] = []
 
     @staticmethod

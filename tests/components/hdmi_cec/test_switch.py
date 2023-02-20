@@ -103,7 +103,7 @@ async def test_service_off(
 
 
 @pytest.mark.parametrize(
-    "power_status,expected_state",
+    ("power_status", "expected_state"),
     [(3, STATE_OFF), (POWER_OFF, STATE_OFF), (4, STATE_ON), (POWER_ON, STATE_ON)],
 )
 @pytest.mark.parametrize(
@@ -140,7 +140,7 @@ async def test_device_status_change(
 
 
 @pytest.mark.parametrize(
-    "device_values, expected",
+    ("device_values", "expected"),
     [
         ({"osd_name": "Switch", "vendor": "Nintendo"}, "Nintendo Switch"),
         ({"type_name": "TV"}, "TV 3"),
@@ -165,7 +165,7 @@ async def test_friendly_name(
 
 
 @pytest.mark.parametrize(
-    "device_values,expected_attributes",
+    ("device_values", "expected_attributes"),
     [
         (
             {"physical_address": PhysicalAddress("3.0.0.0")},
@@ -225,7 +225,7 @@ async def test_extra_state_attributes(
 
 
 @pytest.mark.parametrize(
-    "device_type,expected_icon",
+    ("device_type", "expected_icon"),
     [
         (None, "mdi:help"),
         (0, "mdi:television"),

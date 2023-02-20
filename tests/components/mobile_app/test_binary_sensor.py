@@ -1,11 +1,16 @@
 """Entity tests for mobile_app."""
 from http import HTTPStatus
 
+import pytest
+
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 
-async def test_sensor(hass, create_registrations, webhook_client):
+async def test_sensor(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that sensors can be registered and updated."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -89,7 +94,9 @@ async def test_sensor(hass, create_registrations, webhook_client):
     assert restored_entity.attributes == updated_entity.attributes
 
 
-async def test_sensor_must_register(hass, create_registrations, webhook_client):
+async def test_sensor_must_register(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that sensors must be registered before updating."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -110,7 +117,12 @@ async def test_sensor_must_register(hass, create_registrations, webhook_client):
     assert json["battery_state"]["error"]["code"] == "not_registered"
 
 
-async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, caplog):
+async def test_sensor_id_no_dupes(
+    hass: HomeAssistant,
+    create_registrations,
+    webhook_client,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that a duplicate unique ID in registration updates the sensor."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -169,7 +181,9 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert entity.state == "off"
 
 
-async def test_register_sensor_no_state(hass, create_registrations, webhook_client):
+async def test_register_sensor_no_state(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that sensors can be registered, when there is no (unknown) state."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
@@ -226,7 +240,9 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
     assert entity.state == STATE_UNKNOWN
 
 
-async def test_update_sensor_no_state(hass, create_registrations, webhook_client):
+async def test_update_sensor_no_state(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
     """Test that sensors can be updated, when there is no (unknown) state."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"

@@ -15,7 +15,7 @@ from tests.common import MockUser
 
 
 @pytest.mark.parametrize(
-    "exc,code,err,log",
+    ("exc", "code", "err", "log"),
     [
         (
             exceptions.Unauthorized(),
@@ -61,7 +61,7 @@ async def test_exception_handling(
     code: str,
     err: str,
     log: str,
-):
+) -> None:
     """Test handling of exceptions."""
     send_messages = []
     user = MockUser()

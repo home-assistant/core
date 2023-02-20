@@ -34,7 +34,9 @@ def test_recursive_flatten() -> None:
     }
 
 
-async def test_component_translation_path(hass, enable_custom_integrations):
+async def test_component_translation_path(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test the component translation file function."""
     assert await async_setup_component(
         hass,
@@ -96,7 +98,9 @@ def test_load_translations_files(hass: HomeAssistant) -> None:
     }
 
 
-async def test_get_translations(hass, mock_config_flows, enable_custom_integrations):
+async def test_get_translations(
+    hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
+) -> None:
     """Test the get translations helper."""
     translations = await translation.async_get_translations(hass, "en", "state")
     assert translations == {}
@@ -127,7 +131,9 @@ async def test_get_translations(hass, mock_config_flows, enable_custom_integrati
     assert translations["component.switch.state.string2"] == "Value 2"
 
 
-async def test_get_translations_loads_config_flows(hass, mock_config_flows):
+async def test_get_translations_loads_config_flows(
+    hass: HomeAssistant, mock_config_flows
+) -> None:
     """Test the get translations helper loads config flow translations."""
     mock_config_flows["integration"].append("component1")
     integration = Mock(file_path=pathlib.Path(__file__))
@@ -245,7 +251,9 @@ async def test_get_translation_categories(hass: HomeAssistant) -> None:
         assert "component.light.device_automation.action_type.turn_on" in translations
 
 
-async def test_translation_merging(hass, caplog):
+async def test_translation_merging(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we merge translations of two integrations."""
     hass.config.components.add("sensor.moon")
     hass.config.components.add("sensor")
@@ -291,7 +299,9 @@ async def test_translation_merging(hass, caplog):
     ) in caplog.text
 
 
-async def test_translation_merging_loaded_apart(hass, caplog):
+async def test_translation_merging_loaded_apart(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we merge translations of two integrations when they are not loaded at the same time."""
     orig_load_translations = translation.load_translations_files
 
@@ -334,7 +344,9 @@ async def test_translation_merging_loaded_apart(hass, caplog):
     assert "component.sensor.state.moon__phase.first_quarter" in translations
 
 
-async def test_translation_merging_loaded_together(hass, caplog):
+async def test_translation_merging_loaded_together(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we merge translations of two integrations when they are loaded at the same time."""
     hass.config.components.add("hue")
     hass.config.components.add("homekit")
@@ -417,7 +429,9 @@ async def test_caching(hass: HomeAssistant) -> None:
         assert len(mock_build.mock_calls) > 1
 
 
-async def test_custom_component_translations(hass, enable_custom_integrations):
+async def test_custom_component_translations(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test getting translation from custom components."""
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")

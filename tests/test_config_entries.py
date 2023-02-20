@@ -3135,7 +3135,7 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "matchers, reason",
+    ("matchers", "reason"),
     [
         ({}, "already_configured"),
         ({"host": "3.3.3.3"}, "no_match"),
@@ -3559,14 +3559,40 @@ async def test_initializing_flows_canceled_on_shutdown(hass: HomeAssistant, mana
             """Mock Reauth."""
             await asyncio.sleep(1)
 
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+
     with patch.dict(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
     ):
         task = asyncio.create_task(
             manager.flow.async_init("test", context={"source": "reauth"})
         )
-    await hass.async_block_till_done()
-    await manager.flow.async_shutdown()
+        await hass.async_block_till_done()
+        await manager.flow.async_shutdown()
 
-    with pytest.raises(asyncio.exceptions.CancelledError):
-        await task
+        with pytest.raises(asyncio.exceptions.CancelledError):
+            await task
+
+
+async def test_task_tracking(hass):
+    """Test task tracking for a config entry."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    event = asyncio.Event()
+    results = []
+
+    async def test_task():
+        try:
+            await event.wait()
+            results.append("normal")
+        except asyncio.CancelledError:
+            results.append("background")
+            raise
+
+    entry.async_create_task(hass, test_task())
+    entry.async_create_background_task(hass, test_task(), "background-task-name")
+    await asyncio.sleep(0)
+    hass.loop.call_soon(event.set)
+    await entry._async_process_on_unload()
+    assert results == ["background", "normal"]

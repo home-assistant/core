@@ -49,7 +49,7 @@ async def test_setup_device_not_found(hass: HomeAssistant) -> None:
     entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_network.Device.async_connect",
-        side_effect=DeviceNotFound,
+        side_effect=DeviceNotFound(IP),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
