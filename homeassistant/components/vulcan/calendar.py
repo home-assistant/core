@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 import logging
 
 from aiohttp import ClientConnectorError
-from vulcan import UnauthorizedCertificateException
+from vulcan import UnauthorizedCertificateException  # pylint: disable=import-error
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,

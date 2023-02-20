@@ -87,7 +87,7 @@ async def test_lock_failing(hass: HomeAssistant, surepetcare) -> None:
     surepetcare.lock_out.side_effect = SurePetcareError
     surepetcare.lock.side_effect = SurePetcareError
 
-    for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():
+    for entity_id in EXPECTED_ENTITY_IDS:
         with pytest.raises(SurePetcareError):
             await hass.services.async_call(
                 "lock", "lock", {"entity_id": entity_id}, blocking=True

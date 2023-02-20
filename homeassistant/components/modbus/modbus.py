@@ -310,6 +310,13 @@ class ModbusHub:
             _LOGGER.error(log_text)
             self._in_error = error_state
 
+    async def async_pymodbus_connect(self) -> None:
+        """Connect to device, async."""
+        async with self._lock:
+            if not await self.hass.async_add_executor_job(self._pymodbus_connect):
+                err = f"{self.name} connect failed, retry in pymodbus"
+                self._log_error(err, error_state=False)
+
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
         try:
@@ -322,11 +329,9 @@ class ModbusHub:
             func = getattr(self._client, entry.func_name)
             self._pb_call[entry.call_type] = RunEntry(entry.attr, func)
 
-        async with self._lock:
-            if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                err = f"{self.name} connect failed, retry in pymodbus"
-                self._log_error(err, error_state=False)
-                return False
+        self.hass.async_create_background_task(
+            self.async_pymodbus_connect(), "modbus-connect"
+        )
 
         # Start counting down to allow modbus requests.
         if self._config_delay:

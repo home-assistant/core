@@ -378,6 +378,14 @@ class ZeroconfDiscovery:
         if self.async_service_browser:
             await self.async_service_browser.async_cancel()
 
+    def _async_dismiss_discoveries(self, name: str) -> None:
+        """Dismiss all discoveries for the given name."""
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            ZeroconfServiceInfo,
+            lambda service_info: bool(service_info.name == name),
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
     @callback
     def async_service_update(
         self,
@@ -395,6 +403,7 @@ class ZeroconfDiscovery:
         )
 
         if state_change == ServiceStateChange.Removed:
+            self._async_dismiss_discoveries(name)
             return
 
         try:
