@@ -944,7 +944,7 @@ def mock_hass_config(
 
 @pytest.fixture
 def hass_config_yaml() -> str | None:
-    """Fixture to parameterize the content of configuration.yaml file.
+    """Fixture to parametrize the content of configuration.yaml file.
 
     To set yaml content, tests can be marked with:
     @pytest.mark.parametrize("hass_config_yaml", ["..."])
