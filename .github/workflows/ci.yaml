@@ -1067,15 +1067,11 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
-          # Add postgres apt repository
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
             ffmpeg \
-            postgresql-server-dev-12
+            postgresql-server-dev-14
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
