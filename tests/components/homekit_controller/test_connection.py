@@ -5,6 +5,10 @@ import dataclasses
 from aiohomekit.controller import TransportType
 import pytest
 
+from homeassistant.components.homekit_controller import (
+    async_commission_device,
+    async_get_uncommissioned_devices,
+)
 from homeassistant.components.homekit_controller.const import (
     DOMAIN,
     IDENTIFIER_ACCESSORY_ID,
@@ -203,14 +207,7 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "button",
-            "press",
-            {
-                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
-            },
-            blocking=True,
-        )
+        await async_commission_device(hass, config_entry)
 
 
 async def test_thread_provision(hass: HomeAssistant) -> None:
@@ -250,16 +247,16 @@ async def test_thread_provision(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        "button",
-        "press",
-        {
-            "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
-        },
-        blocking=True,
-    )
+    uncommissioned = async_get_uncommissioned_devices(hass)
+    assert uncommissioned == [config_entry]
+
+    await async_commission_device(hass, config_entry)
 
     assert config_entry.data["Connection"] == "CoAP"
+
+    # Test device is no longer shown in thread dashboard
+    uncommissioned = async_get_uncommissioned_devices(hass)
+    assert uncommissioned == []
 
 
 async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
@@ -297,14 +294,13 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
     # Make sure not disoverable via CoAP
     del fake_controller.discoveries["00:00:00:00:00:00"]
 
+    uncommissioned = async_get_uncommissioned_devices(hass)
+    assert uncommissioned == [config_entry]
+
     with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "button",
-            "press",
-            {
-                "entity_id": "button.nanoleaf_strip_3b32_provision_preferred_thread_credentials"
-            },
-            blocking=True,
-        )
+        await async_commission_device(hass, config_entry)
 
     assert config_entry.data["Connection"] == "BLE"
+
+    uncommissioned = async_get_uncommissioned_devices(hass)
+    assert uncommissioned == [config_entry]

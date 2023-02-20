@@ -94,7 +94,6 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.DENSITY_VOC: "sensor",
     CharacteristicsTypes.IDENTIFY: "button",
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
-    CharacteristicsTypes.THREAD_CONTROL_POINT: "button",
     CharacteristicsTypes.MUTE: "switch",
     CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
