@@ -325,7 +325,7 @@ def test_find_next_time_expression_time_dst() -> None:
         ),
     ],
 )
-def test_find_next_time_expression_entering_dst(now_dt, expected_dt):
+def test_find_next_time_expression_entering_dst(now_dt, expected_dt) -> None:
     """Test entering daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(tz)
@@ -409,7 +409,7 @@ def test_find_next_time_expression_entering_dst(now_dt, expected_dt):
         ),
     ],
 )
-def test_find_next_time_expression_exiting_dst(now_dt, expected_dt):
+def test_find_next_time_expression_exiting_dst(now_dt, expected_dt) -> None:
     """Test exiting daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(tz)
