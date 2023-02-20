@@ -363,8 +363,8 @@ class NestFlowHandler(
     ) -> FlowResult:
         """Verify any last pre-requisites before sending user through OAuth flow."""
         if user_input is None and self._upgrade:
-            # During app auth upgrade we need the user to update their device access project
-            # before we redirect to the authentication flow.
+            # During app auth upgrade we need the user to update their device
+            # access project before we redirect to the authentication flow.
             return await self.async_step_device_project_upgrade()
         return await super().async_step_auth(user_input)
 
@@ -428,7 +428,6 @@ class NestFlowHandler(
                 _LOGGER.error("Error creating subscription: %s", err)
                 errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
             if not errors:
-
                 try:
                     device_manager = await subscriber.async_get_device_manager()
                 except ApiException as err:

@@ -149,8 +149,7 @@ class ProtectData:
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
-        """
-        Add pending camera.
+        """Add pending camera.
 
         A "pending camera" is one that has been adopted by not had its camera channels
         initialized yet. Will cause Websocket code to check for channels to be

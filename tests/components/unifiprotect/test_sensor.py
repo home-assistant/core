@@ -53,7 +53,7 @@ SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
 
 async def test_sensor_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -67,7 +67,7 @@ async def test_sensor_camera_remove(
 
 async def test_sensor_sensor_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -81,7 +81,7 @@ async def test_sensor_sensor_remove(
 
 async def test_sensor_setup_sensor(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -132,7 +132,7 @@ async def test_sensor_setup_sensor(
 
 async def test_sensor_setup_sensor_none(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
-):
+) -> None:
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
     await init_entry(hass, ufp, [sensor])
@@ -166,7 +166,7 @@ async def test_sensor_setup_sensor_none(
 
 async def test_sensor_setup_nvr(
     hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime
-):
+) -> None:
     """Test sensor entity setup for NVR device."""
 
     reset_objects(ufp.api.bootstrap)
@@ -240,7 +240,9 @@ async def test_sensor_setup_nvr(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_sensor_nvr_missing_values(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
     """Test NVR sensor sensors if no data available."""
 
     reset_objects(ufp.api.bootstrap)
@@ -310,7 +312,7 @@ async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockUFPFixtur
 
 async def test_sensor_setup_camera(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test sensor entity setup for camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -400,7 +402,7 @@ async def test_sensor_setup_camera_with_last_trip_time(
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
-):
+) -> None:
     """Test sensor entity setup for camera devices with last trip time."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -428,7 +430,7 @@ async def test_sensor_setup_camera_with_last_trip_time(
 
 async def test_sensor_update_alarm(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
-):
+) -> None:
     """Test sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -476,7 +478,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
     ufp: MockUFPFixture,
     sensor_all: Sensor,
     fixed_now: datetime,
-):
+) -> None:
     """Test sensor motion entity with last trip time."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -503,7 +505,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
 
 async def test_camera_update_licenseplate(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
-):
+) -> None:
     """Test sensor motion entity."""
 
     camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)

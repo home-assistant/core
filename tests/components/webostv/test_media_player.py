@@ -59,7 +59,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -69,10 +69,12 @@ from . import setup_webostv
 from .const import CHANNEL_2, ENTITY_ID, TV_NAME
 
 from tests.common import async_fire_time_changed, mock_restore_cache
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
-    "service, attr_data, client_call",
+    ("service", "attr_data", "client_call"),
     [
         (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}, ("set_mute", True)),
         (SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}, ("set_mute", False)),
@@ -81,7 +83,9 @@ from tests.common import async_fire_time_changed, mock_restore_cache
         (SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0.0}, ("set_volume", 0)),
     ],
 )
-async def test_services_with_parameters(hass, client, service, attr_data, client_call):
+async def test_services_with_parameters(
+    hass: HomeAssistant, client, service, attr_data, client_call
+) -> None:
     """Test services that has parameters in calls."""
     await setup_webostv(hass)
 
@@ -92,7 +96,7 @@ async def test_services_with_parameters(hass, client, service, attr_data, client
 
 
 @pytest.mark.parametrize(
-    "service, client_call",
+    ("service", "client_call"),
     [
         (SERVICE_TURN_OFF, "power_off"),
         (SERVICE_VOLUME_UP, "volume_up"),
@@ -102,7 +106,7 @@ async def test_services_with_parameters(hass, client, service, attr_data, client
         (SERVICE_MEDIA_STOP, "stop"),
     ],
 )
-async def test_services(hass, client, service, client_call):
+async def test_services(hass: HomeAssistant, client, service, client_call) -> None:
     """Test simple services without parameters."""
     await setup_webostv(hass)
 
@@ -112,7 +116,7 @@ async def test_services(hass, client, service, client_call):
     getattr(client, client_call).assert_called_once()
 
 
-async def test_media_play_pause(hass, client):
+async def test_media_play_pause(hass: HomeAssistant, client) -> None:
     """Test media play pause service."""
     await setup_webostv(hass)
 
@@ -136,15 +140,15 @@ async def test_media_play_pause(hass, client):
 
 
 @pytest.mark.parametrize(
-    "service, client_call",
+    ("service", "client_call"),
     [
         (SERVICE_MEDIA_NEXT_TRACK, ("fast_forward", "channel_up")),
         (SERVICE_MEDIA_PREVIOUS_TRACK, ("rewind", "channel_down")),
     ],
 )
 async def test_media_next_previous_track(
-    hass, client, service, client_call, monkeypatch
-):
+    hass: HomeAssistant, client, service, client_call, monkeypatch
+) -> None:
     """Test media next/previous track services."""
     await setup_webostv(hass)
 
@@ -164,7 +168,9 @@ async def test_media_next_previous_track(
     getattr(client, client_call[1]).assert_called_once()
 
 
-async def test_select_source_with_empty_source_list(hass, client, caplog):
+async def test_select_source_with_empty_source_list(
+    hass: HomeAssistant, client, caplog: pytest.LogCaptureFixture
+) -> None:
     """Ensure we don't call client methods when we don't have sources."""
     await setup_webostv(hass)
     await client.mock_state_update()
@@ -180,7 +186,7 @@ async def test_select_source_with_empty_source_list(hass, client, caplog):
     assert f"Source nonexistent not found for {TV_NAME}" in caplog.text
 
 
-async def test_select_app_source(hass, client):
+async def test_select_app_source(hass: HomeAssistant, client) -> None:
     """Test select app source."""
     await setup_webostv(hass)
     await client.mock_state_update()
@@ -195,7 +201,7 @@ async def test_select_app_source(hass, client):
     client.set_input.assert_not_called()
 
 
-async def test_select_input_source(hass, client):
+async def test_select_input_source(hass: HomeAssistant, client) -> None:
     """Test select input source."""
     await setup_webostv(hass)
     await client.mock_state_update()
@@ -210,7 +216,7 @@ async def test_select_input_source(hass, client):
     client.set_input.assert_called_once_with("in1")
 
 
-async def test_button(hass, client):
+async def test_button(hass: HomeAssistant, client) -> None:
     """Test generic button functionality."""
     await setup_webostv(hass)
 
@@ -224,7 +230,7 @@ async def test_button(hass, client):
     client.button.assert_called_with("test")
 
 
-async def test_command(hass, client):
+async def test_command(hass: HomeAssistant, client) -> None:
     """Test generic command functionality."""
     await setup_webostv(hass)
 
@@ -237,7 +243,7 @@ async def test_command(hass, client):
     client.request.assert_called_with("test", payload=None)
 
 
-async def test_command_with_optional_arg(hass, client):
+async def test_command_with_optional_arg(hass: HomeAssistant, client) -> None:
     """Test generic command functionality."""
     await setup_webostv(hass)
 
@@ -253,7 +259,7 @@ async def test_command_with_optional_arg(hass, client):
     )
 
 
-async def test_select_sound_output(hass, client):
+async def test_select_sound_output(hass: HomeAssistant, client) -> None:
     """Test select sound output service."""
     await setup_webostv(hass)
 
@@ -268,7 +274,9 @@ async def test_select_sound_output(hass, client):
     client.change_sound_output.assert_called_once_with("external_speaker")
 
 
-async def test_device_info_startup_off(hass, client, monkeypatch):
+async def test_device_info_startup_off(
+    hass: HomeAssistant, client, monkeypatch
+) -> None:
     """Test device info when device is off at startup."""
     monkeypatch.setattr(client, "system_info", None)
     monkeypatch.setattr(client, "is_on", False)
@@ -288,7 +296,7 @@ async def test_device_info_startup_off(hass, client, monkeypatch):
     assert device.model is None
 
 
-async def test_entity_attributes(hass, client, monkeypatch):
+async def test_entity_attributes(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test entity attributes."""
     entry = await setup_webostv(hass)
     await client.mock_state_update()
@@ -343,7 +351,7 @@ async def test_entity_attributes(hass, client, monkeypatch):
     assert state.attributes.get(ATTR_SOUND_OUTPUT) is None
 
 
-async def test_service_entity_id_none(hass, client):
+async def test_service_entity_id_none(hass: HomeAssistant, client) -> None:
     """Test service call with none as entity id."""
     await setup_webostv(hass)
 
@@ -359,14 +367,14 @@ async def test_service_entity_id_none(hass, client):
 
 
 @pytest.mark.parametrize(
-    "media_id, ch_id",
+    ("media_id", "ch_id"),
     [
         ("Channel 1", "ch1id"),  # Perfect Match by channel name
         ("Name 2", "ch2id"),  # Partial Match by channel name
         ("20", "ch2id"),  # Perfect Match by channel number
     ],
 )
-async def test_play_media(hass, client, media_id, ch_id):
+async def test_play_media(hass: HomeAssistant, client, media_id, ch_id) -> None:
     """Test play media service."""
     await setup_webostv(hass)
     await client.mock_state_update()
@@ -381,7 +389,9 @@ async def test_play_media(hass, client, media_id, ch_id):
     client.set_channel.assert_called_once_with(ch_id)
 
 
-async def test_update_sources_live_tv_find(hass, client, monkeypatch):
+async def test_update_sources_live_tv_find(
+    hass: HomeAssistant, client, monkeypatch
+) -> None:
     """Test finding live TV app id in update sources."""
     await setup_webostv(hass)
     await client.mock_state_update()
@@ -463,7 +473,7 @@ async def test_update_sources_live_tv_find(hass, client, monkeypatch):
     assert len(sources) == 1
 
 
-async def test_client_disconnected(hass, client, monkeypatch):
+async def test_client_disconnected(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
@@ -473,7 +483,9 @@ async def test_client_disconnected(hass, client, monkeypatch):
     await hass.async_block_till_done()
 
 
-async def test_control_error_handling(hass, client, caplog, monkeypatch):
+async def test_control_error_handling(
+    hass: HomeAssistant, client, caplog: pytest.LogCaptureFixture, monkeypatch
+) -> None:
     """Test control errors handling."""
     await setup_webostv(hass)
     monkeypatch.setattr(client, "play", Mock(side_effect=WebOsTvCommandError))
@@ -502,7 +514,7 @@ async def test_control_error_handling(hass, client, caplog, monkeypatch):
     )
 
 
-async def test_supported_features(hass, client, monkeypatch):
+async def test_supported_features(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test test supported features."""
     monkeypatch.setattr(client, "sound_output", "lineout")
     await setup_webostv(hass)
@@ -559,7 +571,9 @@ async def test_supported_features(hass, client, monkeypatch):
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
 
-async def test_cached_supported_features(hass, client, monkeypatch):
+async def test_cached_supported_features(
+    hass: HomeAssistant, client, monkeypatch
+) -> None:
     """Test test supported features."""
     monkeypatch.setattr(client, "is_on", False)
     monkeypatch.setattr(client, "sound_output", None)
@@ -664,7 +678,9 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     )
 
 
-async def test_supported_features_no_cache(hass, client, monkeypatch):
+async def test_supported_features_no_cache(
+    hass: HomeAssistant, client, monkeypatch
+) -> None:
     """Test supported features if device is off and no cache."""
     monkeypatch.setattr(client, "is_on", False)
     monkeypatch.setattr(client, "sound_output", None)
@@ -678,7 +694,7 @@ async def test_supported_features_no_cache(hass, client, monkeypatch):
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
 
-async def test_supported_features_ignore_cache(hass, client):
+async def test_supported_features_ignore_cache(hass: HomeAssistant, client) -> None:
     """Test ignore cached supported features if device is on at startup."""
     mock_restore_cache(
         hass,
@@ -703,8 +719,12 @@ async def test_supported_features_ignore_cache(hass, client):
 
 
 async def test_get_image_http(
-    hass, client, hass_client_no_auth, aioclient_mock, monkeypatch
-):
+    hass: HomeAssistant,
+    client,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    monkeypatch,
+) -> None:
     """Test get image via http."""
     url = "http://something/valid_icon"
     monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
@@ -724,8 +744,13 @@ async def test_get_image_http(
 
 
 async def test_get_image_http_error(
-    hass, client, hass_client_no_auth, aioclient_mock, caplog, monkeypatch
-):
+    hass: HomeAssistant,
+    client,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch,
+) -> None:
     """Test get image via http error."""
     url = "http://something/icon_error"
     monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
@@ -747,8 +772,12 @@ async def test_get_image_http_error(
 
 
 async def test_get_image_https(
-    hass, client, hass_client_no_auth, aioclient_mock, monkeypatch
-):
+    hass: HomeAssistant,
+    client,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    monkeypatch,
+) -> None:
     """Test get image via http."""
     url = "https://something/valid_icon_https"
     monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
@@ -767,7 +796,7 @@ async def test_get_image_https(
     assert content == b"https_image"
 
 
-async def test_reauth_reconnect(hass, client, monkeypatch):
+async def test_reauth_reconnect(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test reauth flow triggered by reconnect."""
     entry = await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))

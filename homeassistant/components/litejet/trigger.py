@@ -92,7 +92,6 @@ async def async_attach_trigger(
         """Handle the release of the LiteJet switch's button."""
         nonlocal cancel_pressed_more_than, pressed_time
         nonlocal held_less_than, held_more_than
-        # pylint: disable=not-callable
         if cancel_pressed_more_than is not None:
             cancel_pressed_more_than()
             cancel_pressed_more_than = None

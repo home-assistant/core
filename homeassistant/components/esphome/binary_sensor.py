@@ -1,8 +1,6 @@
 """Support for ESPHome binary sensors."""
 from __future__ import annotations
 
-from contextlib import suppress
-
 from aioesphomeapi import BinarySensorInfo, BinarySensorState
 
 from homeassistant.components.binary_sensor import (
@@ -12,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import EsphomeEntity, platform_async_setup_entry
 
@@ -52,9 +51,7 @@ class EsphomeBinarySensor(
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        with suppress(ValueError):
-            return BinarySensorDeviceClass(self._static_info.device_class)
-        return None
+        return try_parse_enum(BinarySensorDeviceClass, self._static_info.device_class)
 
     @property
     def available(self) -> bool:

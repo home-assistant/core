@@ -173,7 +173,7 @@ async def test_disabled_by_default(
 
 
 @pytest.mark.parametrize(
-    "key,name,value",
+    ("key", "name", "value"),
     [
         (
             "power_production_next_12hours",

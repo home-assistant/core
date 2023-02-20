@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import async_enable_traffic, find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -57,7 +58,9 @@ def zigpy_device(zigpy_device_mock):
     "zigpy.zcl.clusters.security.IasAce.client_command",
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-async def test_alarm_control_panel(hass, zha_device_joined_restored, zigpy_device):
+async def test_alarm_control_panel(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
     """Test ZHA alarm control panel platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)

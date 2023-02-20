@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
-import AIOSomecomfort
+import aiosomecomfort
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -103,7 +103,7 @@ class HoneywellUSThermostat(ClimateEntity):
     def __init__(
         self,
         data: HoneywellData,
-        device: AIOSomecomfort.device.Device,
+        device: aiosomecomfort.device.Device,
         cool_away_temp: int | None,
         heat_away_temp: int | None,
     ) -> None:
@@ -126,7 +126,6 @@ class HoneywellUSThermostat(ClimateEntity):
         if device.temperature_unit == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
-        self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
 
@@ -263,6 +262,11 @@ class HoneywellUSThermostat(ClimateEntity):
         return None
 
     @property
+    def is_aux_heat(self) -> bool | None:
+        """Return true if aux heater."""
+        return self._device.system_mode == "emheat"
+
+    @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return HW_FAN_MODE_TO_HA.get(self._device.fan_mode)
@@ -304,7 +308,7 @@ class HoneywellUSThermostat(ClimateEntity):
             if mode == "heat":
                 await self._device.set_setpoint_heat(temperature)
 
-        except AIOSomecomfort.SomeComfortError as err:
+        except aiosomecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -317,7 +321,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     await self._device.set_setpoint_heat(temperature)
 
-            except AIOSomecomfort.SomeComfortError as err:
+            except aiosomecomfort.SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -339,11 +343,10 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             # Get current mode
             mode = self._device.system_mode
-        except AIOSomecomfort.SomeComfortError:
+        except aiosomecomfort.SomeComfortError:
             _LOGGER.error("Can not get system mode")
             return
         try:
-
             # Set permanent hold
             # and Set temperature
             if mode in COOLING_MODES:
@@ -353,7 +356,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.set_hold_heat(True)
                 await self._device.set_setpoint_heat(self._heat_away_temp)
 
-        except AIOSomecomfort.SomeComfortError:
+        except aiosomecomfort.SomeComfortError:
             _LOGGER.error(
                 "Temperature out of range. Mode: %s, Heat Temperature:  %.1f, Cool Temperature: %.1f",
                 mode,
@@ -366,7 +369,7 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             # Get current mode
             mode = self._device.system_mode
-        except AIOSomecomfort.SomeComfortError:
+        except aiosomecomfort.SomeComfortError:
             _LOGGER.error("Can not get system mode")
             return
         # Check that we got a valid mode back
@@ -378,7 +381,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
 
-            except AIOSomecomfort.SomeComfortError:
+            except aiosomecomfort.SomeComfortError:
                 _LOGGER.error("Couldn't set permanent hold")
         else:
             _LOGGER.error("Invalid system mode returned: %s", mode)
@@ -390,7 +393,7 @@ class HoneywellUSThermostat(ClimateEntity):
             # Disabling all hold modes
             await self._device.set_hold_cool(False)
             await self._device.set_hold_heat(False)
-        except AIOSomecomfort.SomeComfortError:
+        except aiosomecomfort.SomeComfortError:
             _LOGGER.error("Can not stop hold mode")
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -419,13 +422,13 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
         except (
-            AIOSomecomfort.SomeComfortError,
+            aiosomecomfort.SomeComfortError,
             OSError,
         ):
             try:
                 await self._data.client.login()
 
-            except AIOSomecomfort.SomeComfortError:
+            except aiosomecomfort.SomeComfortError:
                 self._attr_available = False
                 await self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._data.entry_id)

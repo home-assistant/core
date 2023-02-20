@@ -6,8 +6,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
     from matter_server.common.models.node import MatterNode
@@ -58,3 +59,42 @@ def get_device_id(
     # Append nodedevice(type) to differentiate between a root node
     # and bridge within Home Assistant devices.
     return f"{operational_instance_id}-{node_device.__class__.__name__}"
+
+
+async def get_node_from_device_entry(
+    hass: HomeAssistant, device: dr.DeviceEntry
+) -> MatterNode | None:
+    """Return MatterNode from device entry."""
+    matter = get_matter(hass)
+    device_id_type_prefix = f"{ID_TYPE_DEVICE_ID}_"
+    device_id_full = next(
+        (
+            identifier[1]
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+            and identifier[1].startswith(device_id_type_prefix)
+        ),
+        None,
+    )
+
+    if device_id_full is None:
+        raise ValueError(f"Device {device.id} is not a Matter device")
+
+    device_id = device_id_full.lstrip(device_id_type_prefix)
+    matter_client = matter.matter_client
+    server_info = matter_client.server_info
+
+    if server_info is None:
+        raise RuntimeError("Matter server information is not available")
+
+    node = next(
+        (
+            node
+            for node in await matter_client.get_nodes()
+            for node_device in node.node_devices
+            if get_device_id(server_info, node_device) == device_id
+        ),
+        None,
+    )
+
+    return node

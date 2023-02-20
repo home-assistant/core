@@ -653,8 +653,10 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             futures = []
             for output in self._outputs:
                 futures.append(
-                    self.api.change_output(
-                        output["id"], selected=True, volume=self._tts_volume * 100
+                    asyncio.create_task(
+                        self.api.change_output(
+                            output["id"], selected=True, volume=self._tts_volume * 100
+                        )
                     )
                 )
             await asyncio.wait(futures)

@@ -205,7 +205,6 @@ async def setup_config_entry_fixture(hass, config_entry, setup_default_vapix_req
 def mock_axis_rtspclient():
     """No real RTSP communication allowed."""
     with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
-
         rtsp_client_mock.return_value.session.state = State.STOPPED
 
         async def start_stream():
