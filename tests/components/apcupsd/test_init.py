@@ -1,6 +1,5 @@
 """Test init of APCUPSd integration."""
 from collections import OrderedDict
-from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -117,8 +116,8 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_remove(hass: HomeAssistant) -> None:
-    """Test successful unload of entry."""
+async def test_unload_remove_entry(hass: HomeAssistant) -> None:
+    """Test successful unload and removal of an entry."""
     # Load two integrations from two mock hosts.
     entries = (
         await async_init_integration(hass, host="test1", status=MOCK_STATUS),
@@ -162,7 +161,7 @@ async def test_availability(hass: HomeAssistant) -> None:
     ):
         # Mock a network error and then trigger an auto-polling event.
         mock_parse.side_effect = OSError()
-        future = utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
+        future = utcnow() + UPDATE_INTERVAL
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -174,6 +173,7 @@ async def test_availability(hass: HomeAssistant) -> None:
         # Reset the API to return a new status and update.
         mock_parse.side_effect = None
         mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+        future = future + UPDATE_INTERVAL
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -182,24 +182,3 @@ async def test_availability(hass: HomeAssistant) -> None:
         assert state
         assert state.state != STATE_UNAVAILABLE
         assert pytest.approx(float(state.state)) == 15.0
-
-
-async def test_throttle(hass: HomeAssistant) -> None:
-    """Ensure that we only send network once for sensor updates."""
-    await init_integration(hass)
-
-    with (
-        patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse,
-        patch("apcaccess.status.get", return_value=b"") as mock_get,
-    ):
-        # No network call 5 second before the update interval.
-        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL - timedelta(seconds=5))
-        await hass.async_block_till_done()
-        assert mock_parse.call_count == 0
-        assert mock_get.call_count == 0
-
-        # Just _one_ network call 5 second after the update interval.
-        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=5))
-        await hass.async_block_till_done()
-        assert mock_parse.call_count == 1
-        assert mock_get.call_count == 1

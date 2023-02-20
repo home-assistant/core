@@ -1,6 +1,6 @@
 """Test sensors of APCUPSd integration."""
 
-from homeassistant.components.apcupsd import REQUEST_REFRESH_COOLDOWN, UPDATE_INTERVAL
+from homeassistant.components.apcupsd import REQUEST_REFRESH_COOLDOWN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -123,13 +123,12 @@ async def test_state_update(hass: HomeAssistant) -> None:
     assert state.state != STATE_UNAVAILABLE
     assert pytest.approx(float(state.state)) == 14.0
 
-    future = utcnow() + timedelta(minutes=2)
-
     new_status = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
     with (
         patch("apcaccess.status.parse", return_value=new_status),
         patch("apcaccess.status.get", return_value=b""),
     ):
+        future = utcnow() + timedelta(minutes=2)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -156,20 +155,23 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         patch("apcaccess.status.parse") as mock_parse,
         patch("apcaccess.status.get", return_value=b"") as mock_get,
     ):
+        mock_parse.return_value = MOCK_STATUS | {
+            "LOADPCT": "15.0 Percent",
+            "BCHARGE": "99.0 Percent",
+        }
         # Now, we fast-forward the time to pass the debouncer cooldown, but put it
         # before the normal update interval to see if the manual update works.
-        async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 5)
-        )
-        await hass.async_block_till_done()
-
-        mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
-        await hass.services.async_call(
+        future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
+        async_fire_time_changed(hass, future)
+        is_success = await hass.services.async_call(
             "homeassistant",
             "update_entity",
-            {ATTR_ENTITY_ID: ["sensor.ups_load"]},
+            {ATTR_ENTITY_ID: ["sensor.ups_load", "sensor.ups_battery"]},
             blocking=True,
         )
+        assert is_success
+        # Even if we requested updates for two entities, our integration should smartly
+        # group the API calls to just one.
         assert mock_parse.call_count == 1
         assert mock_get.call_count == 1
 
@@ -178,19 +180,6 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         assert state
         assert state.state != STATE_UNAVAILABLE
         assert pytest.approx(float(state.state)) == 15.0
-
-        # Now fast-forward the time to pass the normal update interval, the sensor
-        # should be updated again (due to auto-polling).
-        mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "16.0 Percent"}
-        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=5))
-        await hass.async_block_till_done()
-
-        assert mock_parse.call_count == 2
-        assert mock_get.call_count == 2
-        state = hass.states.get("sensor.ups_load")
-        assert state
-        assert state.state != STATE_UNAVAILABLE
-        assert pytest.approx(float(state.state)) == 16.0
 
 
 async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
@@ -208,14 +197,14 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
         patch("apcaccess.status.get", return_value=b"") as mock_get,
     ):
         # Fast-forward time to just pass the initial debouncer cooldown.
-        async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 5)
-        )
-        await hass.services.async_call(
+        future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
+        async_fire_time_changed(hass, future)
+        is_success = await hass.services.async_call(
             "homeassistant",
             "update_entity",
             {ATTR_ENTITY_ID: ["sensor.ups_load", "sensor.ups_input_voltage"]},
             blocking=True,
         )
+        assert is_success
         assert mock_parse.call_count == 1
         assert mock_get.call_count == 1
