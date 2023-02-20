@@ -1,7 +1,7 @@
 {
   "domain": "date",
   "name": "Date",
-  "documentation": "https://www.home-assistant.io/integrations/date",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/date",
   "quality_scale": "internal"
 }
