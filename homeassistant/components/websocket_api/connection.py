@@ -74,6 +74,8 @@ class ActiveConnection:
     def async_handle(self, msg: dict[str, Any]) -> None:
         """Handle a single incoming message."""
         if (
+            # Not using isinstance as we don't care about children
+            type(msg) is dict and
             not (cur_id := msg.get("id"))
             or not isinstance(cur_id, int)
             or not (type_ := msg.get("type"))
