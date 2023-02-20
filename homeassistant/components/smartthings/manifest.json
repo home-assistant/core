@@ -1,5 +1,4 @@
 {
-  "version": "1.0.0",
   "domain": "smartthings",
   "name": "SmartThings",
   "after_dependencies": ["cloud"],
