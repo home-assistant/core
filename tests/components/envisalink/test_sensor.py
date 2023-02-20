@@ -9,10 +9,6 @@ async def test_sensor_state(
     hass: HomeAssistant, mock_config_entry, init_integration
 ) -> None:
     """Test the creating and values of the Envisalink keypad sensors."""
-    controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
-
     er.async_get(hass)
 
     state = hass.states.get("sensor.test_alarm_name_partition_1_keypad")
@@ -25,8 +21,6 @@ async def test_sensor_update(
 ) -> None:
     """Test updating the keypad's alpha state."""
     controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
 
     er.async_get(hass)
 

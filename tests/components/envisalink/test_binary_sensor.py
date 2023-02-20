@@ -19,10 +19,6 @@ async def test_binary_sensor_state(
     hass: HomeAssistant, mock_config_entry, init_integration
 ) -> None:
     """Test the createion and values of the Envisalink binary sensors."""
-    controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
-
     er.async_get(hass)
 
     state = hass.states.get("binary_sensor.test_alarm_name_zone_1")
@@ -38,8 +34,6 @@ async def test_binary_sensor_update(
 ) -> None:
     """Test updating a zone's state."""
     controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
 
     er.async_get(hass)
 

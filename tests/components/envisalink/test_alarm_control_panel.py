@@ -27,10 +27,6 @@ async def test_alarm_control_panel_state(
     hass: HomeAssistant, mock_config_entry, init_integration
 ) -> None:
     """Test the createion and values of the Envisalink alarm control panels."""
-    controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
-
     er.async_get(hass)
 
     state = hass.states.get("alarm_control_panel.test_alarm_name_partition_1")
@@ -55,8 +51,6 @@ async def test_alarm_control_panel_update(
 ) -> None:
     """Test updating the alarm control panel's state."""
     controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
 
     er.async_get(hass)
 
@@ -93,8 +87,6 @@ async def test_arming_modes(
 ) -> None:
     """Test disarming the alarm."""
     controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
 
     er.async_get(hass)
 
@@ -175,10 +167,6 @@ async def test_services(
     should_succeed,
 ) -> None:
     """Test sending keypresses to the panel."""
-    controller = hass.data[DOMAIN][mock_config_entry.entry_id]
-    controller.async_login_success_callback()
-    await hass.async_block_till_done()
-
     er.async_get(hass)
 
     with patch.object(

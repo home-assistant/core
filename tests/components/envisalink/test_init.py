@@ -1,16 +1,19 @@
 """Test the Envisalink config flow."""
 
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 
 from homeassistant.components.envisalink.const import (
     CONF_CREATE_ZONE_BYPASS_SWITCHES,
+    CONF_HONEYWELL_ARM_NIGHT_MODE,
+    DEFAULT_HONEYWELL_ARM_NIGHT_MODE,
     DOMAIN,
 )
 from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
     EnvisalinkAlarmPanel,
 )
+from homeassistant.components.envisalink.pyenvisalink.const import PANEL_TYPE_HONEYWELL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -122,3 +125,54 @@ async def test_init_fail(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_mismatched_mac(
+    hass: HomeAssistant, mock_unique_id, mock_config_entry, mock_envisalink_alarm_panel
+) -> None:
+    """Test when the discovered MAC doesn't match the unique ID."""
+    mock_config_entry.add_to_hass(hass)
+
+    changed_mac = "1234567890"
+
+    with patch.object(
+        EnvisalinkAlarmPanel,
+        "mac_address",
+        new_callable=PropertyMock,
+        return_value=changed_mac,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        controller = hass.data[DOMAIN][mock_config_entry.entry_id]
+        controller.async_login_success_callback()
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.unique_id == mock_unique_id
+        assert mock_config_entry.unique_id != changed_mac
+
+
+async def test_init_honeywell(
+    hass: HomeAssistant, mock_config_entry_honeywell, mock_envisalink_alarm_panel
+) -> None:
+    """Test initiatlizing the integration as a Honeywell panel."""
+    with patch.object(
+        EnvisalinkAlarmPanel,
+        "panel_type",
+        new_callable=PropertyMock,
+        return_value=PANEL_TYPE_HONEYWELL,
+    ):
+        mock_config_entry_honeywell.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(mock_config_entry_honeywell.entry_id)
+        await hass.async_block_till_done()
+
+        controller = hass.data[DOMAIN][mock_config_entry_honeywell.entry_id]
+        controller.async_login_success_callback()
+        await hass.async_block_till_done()
+
+        assert controller.available
+        assert (
+            mock_config_entry_honeywell.options.get(CONF_HONEYWELL_ARM_NIGHT_MODE)
+            == DEFAULT_HONEYWELL_ARM_NIGHT_MODE
+        )

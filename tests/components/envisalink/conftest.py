@@ -32,6 +32,7 @@ from homeassistant.components.envisalink.pyenvisalink.alarm_state import AlarmSt
 from homeassistant.components.envisalink.pyenvisalink.const import (
     EVL4_MAX_ZONES,
     MAX_PARTITIONS,
+    PANEL_TYPE_DSC,
     PANEL_TYPE_HONEYWELL,
 )
 from homeassistant.const import CONF_HOST, CONF_TIMEOUT
@@ -76,7 +77,7 @@ def mock_envisalink_alarm_panel(mock_unique_id):
         EnvisalinkAlarmPanel,
         "panel_type",
         new_callable=PropertyMock,
-        return_value="DSC",
+        return_value=PANEL_TYPE_DSC,
     ), patch.object(
         EnvisalinkAlarmPanel,
         "envisalink_version",
@@ -110,7 +111,7 @@ def _build_config_data(for_result: bool) -> dict[str, Any]:
     }
     in_result = {
         CONF_EVL_VERSION: 4,
-        CONF_PANEL_TYPE: "DSC",
+        CONF_PANEL_TYPE: PANEL_TYPE_DSC,
     }
     if for_result:
         return in_both | in_result
@@ -153,19 +154,25 @@ async def init_integration(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    controller = hass.data[DOMAIN][mock_config_entry.entry_id]
+    controller.async_login_success_callback()
+    await hass.async_block_till_done()
+
     return mock_config_entry
 
 
 @pytest.fixture
 def mock_config_entry_honeywell(
-    mock_config_data_result, mock_unique_id
+    mock_config_data_result, mock_unique_id, mock_options_data_honeywell
 ) -> MockConfigEntry:
     """Return the default mocked config entry for a Honeywell panel."""
     mock_config_data_result[CONF_PANEL_TYPE] = PANEL_TYPE_HONEYWELL
+    mock_config_data_result.pop(CONF_CODE)
     return MockConfigEntry(
         domain=DOMAIN,
         data=mock_config_data_result,
         unique_id=mock_unique_id,
+        options=mock_options_data_honeywell,
     )
 
 
@@ -194,7 +201,7 @@ def mock_yaml_import_data() -> dict[str, Any]:
     """Return yaml configuration for import from configuration.yaml."""
     return {
         "host": "envisalink-host",
-        "panel_type": "DSC",
+        "panel_type": PANEL_TYPE_DSC,
         "user_name": "USER",
         "password": "PASSWORD",
         "code": "1234",
