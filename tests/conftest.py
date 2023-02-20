@@ -924,8 +924,8 @@ def hass_config() -> ConfigType | None:
     """Fixture to parameterize the content of configuration.yaml using mock_yaml_config.
 
     To set a configuration, tests can be marked with:
-    @pytest.mark.parametrize("hass_config", [{integration: {}}])
-    and the `mock_hass_config: None` fixture to the test parameters.
+    @pytest.mark.parametrize("hass_config", [{integration: {...}}])
+    and the `mock_hass_config: None` fixture added to the test parameters.
     """
     return None
 
@@ -947,8 +947,8 @@ def yaml_configuration() -> str | None:
     """Fixture to parameterize the content of a single yaml configuration file.
 
     To set yaml content, tests can be marked with:
-    @pytest.mark.parametrize("yaml_configuration", ["{yaml_content}"])
-    and the `mock_yaml_configuration: None` fixture to the test parameters.
+    @pytest.mark.parametrize("yaml_configuration", ["..."])
+    and the `mock_yaml_configuration: None` fixture added to the test parameters.
     """
     return None
 
@@ -959,9 +959,9 @@ def yaml_configuration_files(yaml_configuration: str | None) -> dict[str, str] |
 
     To set the YAML files to patch, tests can be marked with:
     @pytest.mark.parametrize(
-        "yaml_configuration_files", [{"configuration.yaml": "{yaml_content}"}]
+        "yaml_configuration_files", [{"configuration.yaml": "..."}]
     )
-    and the `mock_yaml_configuration: None` fixture to the test parameters.
+    and the `mock_yaml_configuration: None` fixture added to the test parameters.
     """
     return (
         None if yaml_configuration is None else {YAML_CONFIG_FILE: yaml_configuration}
