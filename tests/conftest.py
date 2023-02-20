@@ -955,7 +955,7 @@ def hass_config_yaml() -> str | None:
 
 @pytest.fixture
 def hass_config_yaml_files(hass_config_yaml: str | None) -> dict[str, str] | None:
-    """Fixture to parameterize multiple yaml configuration files.
+    """Fixture to parametrize multiple yaml configuration files.
 
     To set the YAML files to patch, tests can be marked with:
     @pytest.mark.parametrize(
