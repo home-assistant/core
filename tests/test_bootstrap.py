@@ -32,7 +32,7 @@ def apply_mock_storage(hass_storage):
 
 
 @pytest.fixture(autouse=True)
-async def apply_stop_hass(stop_hass):
+async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
@@ -774,12 +774,10 @@ async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            await asyncio.sleep(0.1)
-
             async def _background_task():
                 await asyncio.sleep(0.2)
 
-            await hass.async_create_task(_background_task())
+            hass.async_create_task(_background_task())
             return True
 
         return async_setup

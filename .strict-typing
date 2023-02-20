@@ -99,6 +99,7 @@ homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
+homeassistant.components.dormakaba_dkey.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
@@ -332,6 +333,7 @@ homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.worldclock.*
 homeassistant.components.yale_smart_alarm.*
+homeassistant.components.yalexs_ble.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zodiac.*
 homeassistant.components.zone.*

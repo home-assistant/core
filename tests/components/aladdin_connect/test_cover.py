@@ -202,7 +202,7 @@ async def test_yaml_import(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_aladdinconnect_api: MagicMock,
-):
+) -> None:
     """Test setup YAML import."""
     assert COVER_DOMAIN not in hass.config.components
 

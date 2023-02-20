@@ -254,7 +254,9 @@ class ZHAGateway:
             )
 
         # background the fetching of state for mains powered devices
-        asyncio.create_task(fetch_updated_state())
+        self.config_entry.async_create_background_task(
+            self._hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
+        )
 
     def device_joined(self, device: zigpy.device.Device) -> None:
         """Handle device joined.

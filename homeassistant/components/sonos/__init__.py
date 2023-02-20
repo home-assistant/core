@@ -298,6 +298,8 @@ class SonosDiscoveryManager:
         def _add_speakers():
             """Add all speakers in a single executor job."""
             for soco in socos:
+                if soco.uid in self.data.discovered:
+                    continue
                 sub = None
                 if soco.uid == zgs_subscription_uid and zgs_subscription:
                     sub = zgs_subscription
@@ -483,13 +485,15 @@ class SonosDiscoveryManager:
         if uid not in self.data.discovery_known:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
-        asyncio.create_task(
+        self.entry.async_create_background_task(
+            self.hass,
             self._async_handle_discovery_message(
                 uid,
                 discovered_ip,
                 "discovery",
                 boot_seqnum=cast(int | None, boot_seqnum),
-            )
+            ),
+            "sonos-handle_discovery_message",
         )
 
     async def setup_platforms_and_discovery(self) -> None:

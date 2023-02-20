@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_async_setup_entry(mock_now, hass):
+async def test_async_setup_entry(mock_now, hass: HomeAssistant) -> None:
     """Test async_setup_entry."""
     assert hass.state is CoreState.running
 

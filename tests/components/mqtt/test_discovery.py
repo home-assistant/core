@@ -24,8 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -70,7 +69,7 @@ async def test_subscribing_config_topic(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.parametrize(
-    "topic, log",
+    ("topic", "log"),
     [
         ("homeassistant/binary_sensor/bla/not_config", False),
         ("homeassistant/binary_sensor/rörkrökare/config", True),
@@ -240,7 +239,7 @@ async def test_discover_alarm_control_panel(
 
 
 @pytest.mark.parametrize(
-    "topic, config, entity_id, name, domain",
+    ("topic", "config", "entity_id", "name", "domain"),
     [
         (
             "homeassistant/alarm_control_panel/object/bla/config",

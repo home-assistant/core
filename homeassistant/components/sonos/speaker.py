@@ -77,7 +77,7 @@ SUBSCRIPTION_SERVICES = {
     "renderingControl",
     "zoneGroupTopology",
 }
-SUPPORTED_VANISH_REASONS = ("sleeping", "switch to bluetooth", "upgrade")
+SUPPORTED_VANISH_REASONS = ("powered off", "sleeping", "switch to bluetooth", "upgrade")
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 

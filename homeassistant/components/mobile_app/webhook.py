@@ -43,6 +43,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
+    EntityCategory,
 )
 from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
@@ -53,7 +54,6 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -108,8 +108,8 @@ from .const import (
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import (
-    _decrypt_payload,
-    _decrypt_payload_legacy,
+    decrypt_payload,
+    decrypt_payload_legacy,
     empty_okay_response,
     error_response,
     registration_context,
@@ -128,13 +128,20 @@ WEBHOOK_COMMANDS: Registry[
 
 SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)
 
-WEBHOOK_PAYLOAD_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
-        vol.Required(ATTR_WEBHOOK_DATA, default={}): vol.Any(dict, list),
-        vol.Optional(ATTR_WEBHOOK_ENCRYPTED, default=False): cv.boolean,
-        vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
-    }
+WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            vol.Optional(ATTR_WEBHOOK_DATA): vol.Any(dict, list),
+        }
+    ),
+    vol.Schema(
+        {
+            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            vol.Required(ATTR_WEBHOOK_ENCRYPTED): True,
+            vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
+        }
+    ),
 )
 
 
@@ -201,19 +208,19 @@ async def handle_webhook(
 
     webhook_type = req_data[ATTR_WEBHOOK_TYPE]
 
-    webhook_payload = req_data.get(ATTR_WEBHOOK_DATA, {})
+    webhook_payload = None
 
-    if req_data[ATTR_WEBHOOK_ENCRYPTED]:
+    if ATTR_WEBHOOK_ENCRYPTED in req_data:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         try:
-            webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+            webhook_payload = decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
             if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
                 data = {**config_entry.data, ATTR_NO_LEGACY_ENCRYPTION: True}
                 hass.config_entries.async_update_entry(config_entry, data=data)
         except CryptoError:
             if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
                 try:
-                    webhook_payload = _decrypt_payload_legacy(
+                    webhook_payload = decrypt_payload_legacy(
                         config_entry.data[CONF_SECRET], enc_data
                     )
                 except CryptoError:
@@ -221,11 +228,16 @@ async def handle_webhook(
                         "Ignoring encrypted payload because unable to decrypt"
                     )
                 except ValueError:
-                    _LOGGER.warning("Ignoring invalid encrypted payload")
+                    _LOGGER.warning("Ignoring invalid JSON in encrypted payload")
             else:
                 _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
-        except ValueError:
-            _LOGGER.warning("Ignoring invalid encrypted payload")
+        except ValueError as err:
+            _LOGGER.warning("Ignoring invalid JSON in encrypted payload: %s", err)
+    else:
+        webhook_payload = req_data.get(ATTR_WEBHOOK_DATA, {})
+
+    if webhook_payload is None:
+        return empty_okay_response()
 
     if webhook_type not in WEBHOOK_COMMANDS:
         _LOGGER.error(

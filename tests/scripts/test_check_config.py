@@ -23,7 +23,7 @@ BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
 
 
 @pytest.fixture(autouse=True)
-async def apply_stop_hass(stop_hass):
+async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 

@@ -24,6 +24,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
@@ -92,7 +93,7 @@ def gate_fixture():
     return (feature, "cover.gatecontroller_position")
 
 
-async def test_init_gatecontroller(gatecontroller, hass):
+async def test_init_gatecontroller(gatecontroller, hass: HomeAssistant) -> None:
     """Test gateController default state."""
 
     _, entity_id = gatecontroller
@@ -122,7 +123,7 @@ async def test_init_gatecontroller(gatecontroller, hass):
     assert device.sw_version == "1.23"
 
 
-async def test_init_shutterbox(shutterbox, hass):
+async def test_init_shutterbox(shutterbox, hass: HomeAssistant) -> None:
     """Test gateBox default state."""
 
     _, entity_id = shutterbox
@@ -152,7 +153,7 @@ async def test_init_shutterbox(shutterbox, hass):
     assert device.sw_version == "1.23"
 
 
-async def test_init_gatebox(gatebox, hass):
+async def test_init_gatebox(gatebox, hass: HomeAssistant) -> None:
     """Test cover default state."""
 
     _, entity_id = gatebox
@@ -185,7 +186,7 @@ async def test_init_gatebox(gatebox, hass):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_open(feature, hass):
+async def test_open(feature, hass: HomeAssistant) -> None:
     """Test cover opening."""
 
     feature_mock, entity_id = feature
@@ -213,7 +214,7 @@ async def test_open(feature, hass):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_close(feature, hass):
+async def test_close(feature, hass: HomeAssistant) -> None:
     """Test cover closing."""
 
     feature_mock, entity_id = feature
@@ -251,7 +252,7 @@ def opening_to_stop_feature_mock(feature_mock):
 
 
 @pytest.mark.parametrize("feature", FIXTURES_SUPPORTING_STOP, indirect=["feature"])
-async def test_stop(feature, hass):
+async def test_stop(feature, hass: HomeAssistant) -> None:
     """Test cover stopping."""
 
     feature_mock, entity_id = feature
@@ -268,7 +269,7 @@ async def test_stop(feature, hass):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_update(feature, hass):
+async def test_update(feature, hass: HomeAssistant) -> None:
     """Test cover updating."""
 
     feature_mock, entity_id = feature
@@ -289,7 +290,7 @@ async def test_update(feature, hass):
 @pytest.mark.parametrize(
     "feature", ["gatecontroller", "shutterbox"], indirect=["feature"]
 )
-async def test_set_position(feature, hass):
+async def test_set_position(feature, hass: HomeAssistant) -> None:
     """Test cover position setting."""
 
     feature_mock, entity_id = feature
@@ -318,7 +319,7 @@ async def test_set_position(feature, hass):
     assert hass.states.get(entity_id).state == STATE_OPENING
 
 
-async def test_unknown_position(shutterbox, hass):
+async def test_unknown_position(shutterbox, hass: HomeAssistant) -> None:
     """Test cover position setting."""
 
     feature_mock, entity_id = shutterbox
@@ -336,7 +337,7 @@ async def test_unknown_position(shutterbox, hass):
     assert ATTR_CURRENT_POSITION not in state.attributes
 
 
-async def test_with_stop(gatebox, hass):
+async def test_with_stop(gatebox, hass: HomeAssistant) -> None:
     """Test stop capability is available."""
 
     feature_mock, entity_id = gatebox
@@ -350,7 +351,7 @@ async def test_with_stop(gatebox, hass):
     assert supported_features & CoverEntityFeature.STOP
 
 
-async def test_with_no_stop(gatebox, hass):
+async def test_with_no_stop(gatebox, hass: HomeAssistant) -> None:
     """Test stop capability is not available."""
 
     feature_mock, entity_id = gatebox
@@ -365,7 +366,9 @@ async def test_with_no_stop(gatebox, hass):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_update_failure(feature, hass, caplog):
+async def test_update_failure(
+    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that update failures are logged."""
 
     caplog.set_level(logging.ERROR)
@@ -378,7 +381,7 @@ async def test_update_failure(feature, hass, caplog):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_opening_state(feature, hass):
+async def test_opening_state(feature, hass: HomeAssistant) -> None:
     """Test that entity properties work."""
 
     feature_mock, entity_id = feature
@@ -392,7 +395,7 @@ async def test_opening_state(feature, hass):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_closing_state(feature, hass):
+async def test_closing_state(feature, hass: HomeAssistant) -> None:
     """Test that entity properties work."""
 
     feature_mock, entity_id = feature
@@ -406,7 +409,7 @@ async def test_closing_state(feature, hass):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_closed_state(feature, hass):
+async def test_closed_state(feature, hass: HomeAssistant) -> None:
     """Test that entity properties work."""
 
     feature_mock, entity_id = feature

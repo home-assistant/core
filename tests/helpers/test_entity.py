@@ -855,7 +855,7 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "value,expected",
+    ("value", "expected"),
     (
         ("config", entity.EntityCategory.CONFIG),
         ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
@@ -894,7 +894,7 @@ async def test_entity_description_fallback() -> None:
 
 
 @pytest.mark.parametrize(
-    "has_entity_name, entity_name, expected_friendly_name",
+    ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),

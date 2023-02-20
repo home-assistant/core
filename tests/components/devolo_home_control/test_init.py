@@ -17,7 +17,7 @@ from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockBinarySensor
 
 
-async def test_setup_entry(hass: HomeAssistant, mock_zeroconf):
+async def test_setup_entry(hass: HomeAssistant, mock_zeroconf: None) -> None:
     """Test setup entry."""
     entry = configure_integration(hass)
     with patch("homeassistant.components.devolo_home_control.HomeControl"):
@@ -26,7 +26,7 @@ async def test_setup_entry(hass: HomeAssistant, mock_zeroconf):
 
 
 @pytest.mark.parametrize("credentials_valid", [False])
-async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
+async def test_setup_entry_credentials_invalid(hass: HomeAssistant) -> None:
     """Test setup entry fails if credentials are invalid."""
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -34,14 +34,14 @@ async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize("maintenance", [True])
-async def test_setup_entry_maintenance(hass: HomeAssistant):
+async def test_setup_entry_maintenance(hass: HomeAssistant) -> None:
     """Test setup entry fails if mydevolo is in maintenance mode."""
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_gateway_offline(hass: HomeAssistant, mock_zeroconf):
+async def test_setup_gateway_offline(hass: HomeAssistant, mock_zeroconf: None) -> None:
     """Test setup entry fails on gateway offline."""
     entry = configure_integration(hass)
     with patch(
@@ -52,7 +52,7 @@ async def test_setup_gateway_offline(hass: HomeAssistant, mock_zeroconf):
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload entry."""
     entry = configure_integration(hass)
     with patch("homeassistant.components.devolo_home_control.HomeControl"):

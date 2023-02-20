@@ -8,7 +8,7 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 import homeassistant.util.dt as dt_util
 
 from ..common import (

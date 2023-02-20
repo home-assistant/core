@@ -95,6 +95,7 @@ def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
@@ -118,6 +119,7 @@ def test_install_upgrade(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
@@ -142,7 +144,7 @@ def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv):
     assert package.install_package(TEST_NEW_REQ, False, target=target)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
-        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env
+        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env, close_fds=False
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
@@ -185,6 +187,7 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
@@ -211,6 +214,7 @@ def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
@@ -233,6 +237,7 @@ async def test_async_get_user_site(mock_env_copy):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
         env=env,
+        close_fds=False,
     )
     assert ret == os.path.join(deps_dir, "lib_dir")
 

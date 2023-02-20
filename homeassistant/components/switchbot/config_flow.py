@@ -272,7 +272,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
-            raise AbortFlow("no_unconfigured_devices")
+            raise AbortFlow("no_devices_found")
 
     async def _async_set_device(self, discovery: SwitchBotAdvertisement) -> None:
         """Set the device to work with."""
