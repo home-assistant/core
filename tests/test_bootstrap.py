@@ -11,6 +11,7 @@ from homeassistant import bootstrap, runner
 import homeassistant.config as config_util
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .common import (
@@ -545,9 +546,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     assert "Waiting on integrations to complete setup" in caplog.text
 
 
-@pytest.mark.parametrize("hass_config", {"invalid_config_key": None})
 async def test_setup_hass_invalid_yaml(
-    mock_hass_config: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
@@ -556,17 +555,20 @@ async def test_setup_hass_invalid_yaml(
     event_loop,
 ) -> None:
     """Test it works."""
-    hass = await bootstrap.async_setup_hass(
-        runner.RuntimeConfig(
-            config_dir=get_test_config_dir(),
-            verbose=False,
-            log_rotate_days=10,
-            log_file="",
-            log_no_color=False,
-            skip_pip=True,
-            safe_mode=False,
-        ),
-    )
+    with patch(
+        "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                safe_mode=False,
+            ),
+        )
 
     assert "safe_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
