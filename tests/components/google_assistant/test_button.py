@@ -1,5 +1,4 @@
 """Test buttons."""
-
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +13,7 @@ from .test_http import DUMMY_CONFIG
 from tests.common import MockUser
 
 
-async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser):
+async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> None:
     """Test sync button."""
 
     await async_setup_component(

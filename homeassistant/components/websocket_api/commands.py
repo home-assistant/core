@@ -29,7 +29,11 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
+from homeassistant.helpers.json import (
+    JSON_DUMP,
+    ExtendedJSONEncoder,
+    find_paths_unserializable_data,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import (
     Integration,
@@ -39,10 +43,7 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection

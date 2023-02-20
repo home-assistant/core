@@ -34,7 +34,7 @@ from .conftest import (
 
 
 @pytest.mark.parametrize(
-    "integration_type,input_form_step,patched_method,config,entry_title",
+    ("integration_type", "input_form_step", "patched_method", "config", "entry_title"),
     [
         (
             INTEGRATION_TYPE_GEOGRAPHY_COORDS,
@@ -53,7 +53,7 @@ from .conftest import (
     ],
 )
 @pytest.mark.parametrize(
-    "response,errors",
+    ("response", "errors"),
     [
         (AsyncMock(side_effect=AirVisualError), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidKeyError), {CONF_API_KEY: "invalid_api_key"}),

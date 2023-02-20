@@ -32,7 +32,9 @@ async def test_config_no_static(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: False}})
 
 
-async def test_static_duplicate_static_entry(hass, pywemo_device):
+async def test_static_duplicate_static_entry(
+    hass: HomeAssistant, pywemo_device
+) -> None:
     """Duplicate static entries are merged into a single entity."""
     static_config_entry = f"{MOCK_HOST}:{MOCK_PORT}"
     assert await async_setup_component(
@@ -54,7 +56,7 @@ async def test_static_duplicate_static_entry(hass, pywemo_device):
     assert len(entity_entries) == 1
 
 
-async def test_static_config_with_port(hass, pywemo_device):
+async def test_static_config_with_port(hass: HomeAssistant, pywemo_device) -> None:
     """Static device with host and port is added and removed."""
     assert await async_setup_component(
         hass,
@@ -72,7 +74,7 @@ async def test_static_config_with_port(hass, pywemo_device):
     assert len(entity_entries) == 1
 
 
-async def test_static_config_without_port(hass, pywemo_device):
+async def test_static_config_without_port(hass: HomeAssistant, pywemo_device) -> None:
     """Static device with host and no port is added and removed."""
     assert await async_setup_component(
         hass,
@@ -105,7 +107,7 @@ async def test_static_config_with_invalid_host(hass: HomeAssistant) -> None:
     assert not setup_success
 
 
-async def test_discovery(hass, pywemo_registry):
+async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
     """Verify that discovery dispatches devices to the platform for setup."""
 
     def create_device(counter):

@@ -18,10 +18,11 @@ class _AnIntEnum(IntEnum):
 
 class _AnIntFlag(IntFlag):
     VALUE = 1
+    SECOND = 2
 
 
 @pytest.mark.parametrize(
-    "enum_type,value,expected",
+    ("enum_type", "value", "expected"),
     [
         # StrEnum valid checks
         (_AStrEnum, _AStrEnum.VALUE, _AStrEnum.VALUE),

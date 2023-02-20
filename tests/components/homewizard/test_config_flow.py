@@ -116,7 +116,7 @@ async def test_discovery_flow_works(
 
 
 async def test_discovery_flow_during_onboarding(
-    hass, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
 ) -> None:
     """Test discovery setup flow during onboarding."""
 
@@ -159,7 +159,7 @@ async def test_discovery_flow_during_onboarding(
 
 
 async def test_discovery_flow_during_onboarding_disabled_api(
-    hass, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
 ) -> None:
     """Test discovery setup flow during onboarding with a disabled API."""
 

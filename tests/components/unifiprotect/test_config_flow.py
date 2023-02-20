@@ -280,7 +280,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_SSDP, SSDP_DISCOVERY),

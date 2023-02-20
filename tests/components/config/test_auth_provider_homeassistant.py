@@ -1,4 +1,6 @@
 """Test config entries API."""
+from typing import Any
+
 import pytest
 
 from homeassistant.auth.providers import homeassistant as prov_ha
@@ -116,7 +118,9 @@ async def test_create_auth_requires_admin(
 
 
 async def test_create_auth(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_storage
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test create auth command works."""
     client = await hass_ws_client(hass)
@@ -147,7 +151,9 @@ async def test_create_auth(
 
 
 async def test_create_auth_duplicate_username(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_storage
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we can't create auth with a duplicate username."""
     client = await hass_ws_client(hass)
@@ -174,7 +180,9 @@ async def test_create_auth_duplicate_username(
 
 
 async def test_delete_removes_just_auth(
-    hass_ws_client: WebSocketGenerator, hass: HomeAssistant, hass_storage
+    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test deleting an auth without being connected to a user."""
     client = await hass_ws_client(hass)
@@ -198,7 +206,9 @@ async def test_delete_removes_just_auth(
 
 
 async def test_delete_removes_credential(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_storage
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test deleting auth that is connected to a user."""
     client = await hass_ws_client(hass)
