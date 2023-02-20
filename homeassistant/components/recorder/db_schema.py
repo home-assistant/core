@@ -513,10 +513,8 @@ class StatisticsBase:
     """Statistics base class."""
 
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    created: Mapped[datetime] = mapped_column(
-        DATETIME_TYPE, default=dt_util.utcnow
-    )  # No longer used
-    created_ts: Mapped[float] = mapped_column(TIMESTAMP_TYPE, default=time.time)
+    created: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)  # No longer used
+    created_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, default=time.time)
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
