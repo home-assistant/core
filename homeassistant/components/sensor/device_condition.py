@@ -89,6 +89,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_IS_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
+    SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
