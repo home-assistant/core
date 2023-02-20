@@ -1,5 +1,4 @@
 """Test the Renault config flow."""
-from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
@@ -22,14 +21,7 @@ from .const import MOCK_CONFIG
 
 from tests.common import load_fixture
 
-
-@pytest.fixture(autouse=True)
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.renault.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_config_flow_single_account(
