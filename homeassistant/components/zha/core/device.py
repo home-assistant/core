@@ -84,7 +84,7 @@ from .const import (
 from .helpers import LogMixin, async_get_zha_config_value, convert_to_zcl_values
 
 if TYPE_CHECKING:
-    from ..api import ClusterBinding
+    from ..websocket_api import ClusterBinding
     from .gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)

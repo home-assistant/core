@@ -1,4 +1,4 @@
-"""Test ZHA API."""
+"""Test ZHA WebSocket API."""
 from binascii import unhexlify
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
@@ -13,16 +13,6 @@ import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.api import (
-    ATTR_DURATION,
-    ATTR_INSTALL_CODE,
-    ATTR_QR_CODE,
-    ATTR_SOURCE_IEEE,
-    ID,
-    SERVICE_PERMIT,
-    TYPE,
-    async_load_api,
-)
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -40,6 +30,16 @@ from homeassistant.components.zha.core.const import (
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
+)
+from homeassistant.components.zha.websocket_api import (
+    ATTR_DURATION,
+    ATTR_INSTALL_CODE,
+    ATTR_QR_CODE,
+    ATTR_SOURCE_IEEE,
+    ID,
+    SERVICE_PERMIT,
+    TYPE,
+    async_load_api,
 )
 from homeassistant.const import ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
