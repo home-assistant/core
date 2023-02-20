@@ -7,8 +7,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_TVSHOW
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -16,9 +17,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -104,6 +102,7 @@ def setup_platform(
 class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
+    _attr_media_content_type = MediaType.TVSHOW
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -133,22 +132,22 @@ class Enigma2Device(MediaPlayerEntity):
         return self.e2_box.mac_address
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.e2_box.is_recording_playback:
-            return STATE_PLAYING
-        return STATE_OFF if self.e2_box.in_standby else STATE_ON
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.OFF if self.e2_box.in_standby else MediaPlayerState.ON
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if the device is available."""
         return not self.e2_box.is_offline
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.e2_box.turn_off()
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.e2_box.turn_on()
 
@@ -173,11 +172,6 @@ class Enigma2Device(MediaPlayerEntity):
         return self.e2_box.current_service_ref
 
     @property
-    def media_content_type(self):
-        """Type of video currently playing."""
-        return MEDIA_TYPE_TVSHOW
-
-    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self.e2_box.muted
@@ -187,15 +181,15 @@ class Enigma2Device(MediaPlayerEntity):
         """Picon url for the channel."""
         return self.e2_box.picon_url
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.e2_box.set_volume(int(volume * 100))
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         self.e2_box.set_volume(int(self.e2_box.volume * 100) + 5)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         self.e2_box.set_volume(int(self.e2_box.volume * 100) - 5)
 
@@ -204,27 +198,27 @@ class Enigma2Device(MediaPlayerEntity):
         """Volume level of the media player (0..1)."""
         return self.e2_box.volume
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self.e2_box.set_stop()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Play media."""
         self.e2_box.toggle_play_pause()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Pause the media player."""
         self.e2_box.toggle_play_pause()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self.e2_box.set_channel_up()
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send next track command."""
         self.e2_box.set_channel_down()
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
         self.e2_box.mute_volume()
 
@@ -238,11 +232,11 @@ class Enigma2Device(MediaPlayerEntity):
         """List of available input sources."""
         return self.e2_box.source_list
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self.e2_box.select_source(self.e2_box.sources[source])
 
-    def update(self):
+    def update(self) -> None:
         """Update state of the media_player."""
         self.e2_box.update()
 

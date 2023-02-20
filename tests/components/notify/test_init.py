@@ -1,12 +1,14 @@
 """The tests for notify services that change targets."""
-
+import asyncio
+from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
 import yaml
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -37,7 +39,7 @@ def mock_notify_platform(
     return loaded_platform
 
 
-async def test_same_targets(hass: HomeAssistant):
+async def test_same_targets(hass: HomeAssistant) -> None:
     """Test not changing the targets in a notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
@@ -52,7 +54,7 @@ async def test_same_targets(hass: HomeAssistant):
     assert test.registered_targets == {"test_a": 1, "test_b": 2}
 
 
-async def test_change_targets(hass: HomeAssistant):
+async def test_change_targets(hass: HomeAssistant) -> None:
     """Test changing the targets in a notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
@@ -69,7 +71,7 @@ async def test_change_targets(hass: HomeAssistant):
     assert test.registered_targets == {"test_a": 0}
 
 
-async def test_add_targets(hass: HomeAssistant):
+async def test_add_targets(hass: HomeAssistant) -> None:
     """Test adding the targets in a notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
@@ -86,7 +88,7 @@ async def test_add_targets(hass: HomeAssistant):
     assert test.registered_targets == {"test_a": 1, "test_b": 2, "test_c": 3}
 
 
-async def test_remove_targets(hass: HomeAssistant):
+async def test_remove_targets(hass: HomeAssistant) -> None:
     """Test removing targets from the targets in a notify service."""
     test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
@@ -123,7 +125,9 @@ class NotificationService(notify.BaseNotificationService):
         return self.target_list
 
 
-async def test_warn_template(hass, caplog):
+async def test_warn_template(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning when template used."""
     assert await async_setup_component(hass, "notify", {})
 
@@ -138,7 +142,9 @@ async def test_warn_template(hass, caplog):
     assert hass.states.get("persistent_notification.notification") is not None
 
 
-async def test_invalid_platform(hass, caplog, tmp_path):
+async def test_invalid_platform(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
     """Test service setup with an invalid platform."""
     mock_notify_platform(hass, tmp_path, "testnotify1")
     # Setup the platform
@@ -161,7 +167,9 @@ async def test_invalid_platform(hass, caplog, tmp_path):
     assert "Invalid notify platform" in caplog.text
 
 
-async def test_invalid_service(hass, caplog, tmp_path):
+async def test_invalid_service(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
     """Test service setup with an invalid service object or platform."""
 
     def get_service(hass, config, discovery_info=None):
@@ -192,7 +200,9 @@ async def test_invalid_service(hass, caplog, tmp_path):
     assert "Unknown notification service specified" in caplog.text
 
 
-async def test_platform_setup_with_error(hass, caplog, tmp_path):
+async def test_platform_setup_with_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
     """Test service setup with an invalid setup."""
 
     async def async_get_service(hass, config, discovery_info=None):
@@ -214,7 +224,9 @@ async def test_platform_setup_with_error(hass, caplog, tmp_path):
     assert "Error setting up platform testnotify" in caplog.text
 
 
-async def test_reload_with_notify_builtin_platform_reload(hass, caplog, tmp_path):
+async def test_reload_with_notify_builtin_platform_reload(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
     """Test reload using the notify platform reload method."""
 
     async def async_get_service(hass, config, discovery_info=None):
@@ -244,7 +256,9 @@ async def test_reload_with_notify_builtin_platform_reload(hass, caplog, tmp_path
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
 
 
-async def test_setup_platform_and_reload(hass, caplog, tmp_path):
+async def test_setup_platform_and_reload(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
     """Test service setup and reload."""
     get_service_called = Mock()
 
@@ -330,3 +344,103 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     # Check if the dynamically notify services from setup were removed
     assert not hass.services.has_service(notify.DOMAIN, "testnotify2_c")
     assert not hass.services.has_service(notify.DOMAIN, "testnotify2_d")
+
+
+async def test_setup_platform_before_notify_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
+    """Test trying to setup a platform before notify is setup."""
+    get_service_called = Mock()
+
+    async def async_get_service(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"a": 1, "b": 2}
+        return NotificationService(hass, targetlist, "testnotify")
+
+    async def async_get_service2(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"c": 3, "d": 4}
+        return NotificationService(hass, targetlist, "testnotify2")
+
+    # Mock first platform
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
+
+    # Initialize a second platform testnotify2
+    mock_notify_platform(
+        hass, tmp_path, "testnotify2", async_get_service=async_get_service2
+    )
+
+    hass_config = {"notify": [{"platform": "testnotify"}]}
+
+    # Setup the second testnotify2 platform from discovery
+    load_coro = async_load_platform(
+        hass, Platform.NOTIFY, "testnotify2", {}, hass_config=hass_config
+    )
+
+    # Setup the testnotify platform
+    setup_coro = async_setup_component(hass, "notify", hass_config)
+
+    load_task = asyncio.create_task(load_coro)
+    setup_task = asyncio.create_task(setup_coro)
+
+    await asyncio.gather(load_task, setup_task)
+
+    await hass.async_block_till_done()
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_c")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")
+
+
+async def test_setup_platform_after_notify_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+) -> None:
+    """Test trying to setup a platform after notify is setup."""
+    get_service_called = Mock()
+
+    async def async_get_service(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"a": 1, "b": 2}
+        return NotificationService(hass, targetlist, "testnotify")
+
+    async def async_get_service2(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"c": 3, "d": 4}
+        return NotificationService(hass, targetlist, "testnotify2")
+
+    # Mock first platform
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
+
+    # Initialize a second platform testnotify2
+    mock_notify_platform(
+        hass, tmp_path, "testnotify2", async_get_service=async_get_service2
+    )
+
+    hass_config = {"notify": [{"platform": "testnotify"}]}
+
+    # Setup the second testnotify2 platform from discovery
+    load_coro = async_load_platform(
+        hass, Platform.NOTIFY, "testnotify2", {}, hass_config=hass_config
+    )
+
+    # Setup the testnotify platform
+    setup_coro = async_setup_component(hass, "notify", hass_config)
+
+    setup_task = asyncio.create_task(setup_coro)
+    load_task = asyncio.create_task(load_coro)
+
+    await asyncio.gather(load_task, setup_task)
+
+    await hass.async_block_till_done()
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_c")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")

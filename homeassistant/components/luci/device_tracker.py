@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> LuciDeviceScanner | None:
     """Validate the configuration and return a Luci scanner."""
     scanner = LuciDeviceScanner(config[DOMAIN])
 
@@ -77,8 +77,7 @@ class LuciDeviceScanner(DeviceScanner):
         return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include MAC address (mac), network device (dev), IP address

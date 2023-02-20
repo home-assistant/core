@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -58,7 +59,7 @@ class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
 
         super().__init__(zone_name, info, controller)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -71,11 +72,11 @@ class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
         """Return the boolean response if the zone is bypassed."""
         return self._info["bypassed"]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)
 

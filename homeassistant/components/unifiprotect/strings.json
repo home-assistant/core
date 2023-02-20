@@ -24,7 +24,7 @@
       },
       "discovery_confirm": {
         "title": "UniFi Protect Discovered",
-        "description": "Do you want to setup {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
+        "description": "Do you want to set up {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -49,7 +49,54 @@
         "data": {
           "disable_rtsp": "Disable the RTSP stream",
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
-          "override_connection_host": "Override Connection Host"
+          "override_connection_host": "Override Connection Host",
+          "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
+          "allow_ea": "Allow Early Access versions of Protect (WARNING: Will mark your integration as unsupported)"
+        }
+      }
+    }
+  },
+  "issues": {
+    "ea_warning": {
+      "title": "UniFi Protect v{version} is an Early Access version",
+      "fix_flow": {
+        "step": {
+          "start": {
+            "title": "v{version} is an Early Access version",
+            "description": "You are using v{version} of UniFi Protect which is an Early Access version. [Early Access versions are not supported by Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) and it is recommended to go back to a stable release as soon as possible.\n\nBy submitting this form you have either [downgraded UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) or you agree to run an unsupported version of UniFi Protect."
+          },
+          "confirm": {
+            "title": "v{version} is an Early Access version",
+            "description": "Are you sure you want to run unsupported versions of UniFi Protect? This may cause your Home Assistant integration to break."
+          }
+        }
+      }
+    },
+    "ea_setup_failed": {
+      "title": "Setup error using Early Access version",
+      "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}"
+    },
+    "deprecate_smart_sensor": {
+      "title": "Smart Detection Sensor Deprecated",
+      "description": "The unified \"Detected Object\" sensor for smart detections is now deprecated. It has been replaced with individual smart detection binary sensors for each smart detection type.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
+    },
+    "deprecated_service_set_doorbell_message": {
+      "title": "set_doorbell_message is Deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "set_doorbell_message is Deprecated",
+            "description": "The `unifiprotect.set_doorbell_message` service is deprecated in favor of the new Doorbell Text entity added to each Doorbell device. It will be removed in v2023.3.0. Please update to use the [`text.set_value` service]({link})."
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "license_plate": {
+        "state": {
+          "none": "Clear"
         }
       }
     }

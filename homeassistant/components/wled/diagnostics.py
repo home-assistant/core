@@ -17,7 +17,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    data = {
+    data: dict[str, Any] = {
         "info": async_redact_data(coordinator.data.info.__dict__, "wifi"),
         "state": coordinator.data.state.__dict__,
         "effects": {

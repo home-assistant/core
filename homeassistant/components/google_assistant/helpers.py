@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from asyncio import gather
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
@@ -11,6 +11,7 @@ import pprint
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
+from yarl import URL
 
 from homeassistant.components import webhook
 from homeassistant.const import (
@@ -51,7 +52,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[device_registry.DeviceEntry | None, area_registry.AreaEntry | None]:
+) -> tuple[
+    entity_registry.RegistryEntry | None,
+    device_registry.DeviceEntry | None,
+    area_registry.AreaEntry | None,
+]:
     """Get registry entries."""
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
@@ -74,13 +79,13 @@ def _get_registry_entries(
     else:
         area_entry = None
 
-    return device_entry, area_entry
+    return entity_entry, device_entry, area_entry
 
 
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
-    _unsub_report_state = None
+    _unsub_report_state: Callable[[], None] | None = None
 
     def __init__(self, hass):
         """Initialize abstract config."""
@@ -192,7 +197,7 @@ class AbstractConfig(ABC):
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .report_state import async_enable_report_state
 
         if self._unsub_report_state is None:
@@ -284,7 +289,6 @@ class AbstractConfig(ABC):
             return
 
         for user_agent_id, _ in self._store.agent_user_ids.items():
-
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
                 setup_successful = False
                 break
@@ -333,7 +337,7 @@ class AbstractConfig(ABC):
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import smart_home
 
         self._local_last_active = utcnow()
@@ -344,7 +348,10 @@ class AbstractConfig(ABC):
             not version or AwesomeVersion(version) < LOCAL_SDK_MIN_VERSION
         ):
             _LOGGER.warning(
-                "Local SDK version is too old (%s), check documentation on how to update to the latest version",
+                (
+                    "Local SDK version is too old (%s), check documentation on how to"
+                    " update to the latest version"
+                ),
                 version,
             )
             self._local_sdk_version_warn = True
@@ -363,7 +370,10 @@ class AbstractConfig(ABC):
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
-                "Cannot process request for webhook %s as no linked agent user is found:\n%s\n",
+                (
+                    "Cannot process request for webhook %s as no linked agent user is"
+                    " found:\n%s\n"
+                ),
                 webhook_id,
                 pprint.pformat(payload),
             )
@@ -587,7 +597,9 @@ class GoogleEntity:
         name = (entity_config.get(CONF_NAME) or state.name).strip()
 
         # Find entity/device/area registry entries
-        device_entry, area_entry = _get_registry_entries(self.hass, self.entity_id)
+        entity_entry, device_entry, area_entry = _get_registry_entries(
+            self.hass, self.entity_id
+        )
 
         # Build the device info
         device = {
@@ -602,20 +614,20 @@ class GoogleEntity:
         }
 
         # Add aliases
-        if aliases := entity_config.get(CONF_ALIASES):
-            device["name"]["nicknames"] = [name] + aliases
+        if (config_aliases := entity_config.get(CONF_ALIASES, [])) or (
+            entity_entry and entity_entry.aliases
+        ):
+            device["name"]["nicknames"] = [name] + config_aliases
+            if entity_entry:
+                device["name"]["nicknames"].extend(entity_entry.aliases)
 
         # Add local SDK info if enabled
         if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
-                "httpPort": self.hass.http.server_port,
+                "httpPort": URL(get_url(self.hass, allow_external=False)).port,
                 "uuid": instance_uuid,
-                # Below can be removed in HA 2022.9
-                "httpSSL": self.hass.config.api.use_ssl,
-                "baseUrl": get_url(self.hass, prefer_external=True),
-                "proxyDeviceId": agent_user_id,
             }
 
         # Add trait sync attributes

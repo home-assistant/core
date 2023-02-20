@@ -5,6 +5,7 @@ import asyncio
 from dataclasses import dataclass
 from functools import partial
 import logging
+from typing import Any
 
 from miio import AirConditioningCompanionV3, ChuangmiPlug, DeviceException, PowerStrip
 from miio.powerstrip import PowerMode
@@ -23,10 +24,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -37,6 +38,7 @@ from .const import (
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
+    FEATURE_FLAGS_AIRFRESH_VA4,
     FEATURE_FLAGS_AIRHUMIDIFIER,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -44,12 +46,14 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_4,
+    FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_AIRPURIFIER_ZA1,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
@@ -72,6 +76,7 @@ from .const import (
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRFRESH_VA4,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -79,11 +84,14 @@ from .const import (
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_LITE_RMA1,
+    MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -182,6 +190,7 @@ SERVICE_TO_METHOD = {
 MODEL_TO_FEATURES_MAP = {
     MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRFRESH_VA4: FEATURE_FLAGS_AIRFRESH_VA4,
     MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
@@ -193,8 +202,11 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4_LITE_RMA1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
+    MODEL_AIRPURIFIER_4_LITE_RMB1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_ZA1: FEATURE_FLAGS_AIRPURIFIER_ZA1,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
@@ -458,9 +470,11 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
             hass.data[DATA_KEY][host] = device
         else:
             _LOGGER.error(
-                "Unsupported device found! Please create an issue at "
-                "https://github.com/rytilahti/python-miio/issues "
-                "and provide the following data: %s",
+                (
+                    "Unsupported device found! Please create an issue at "
+                    "https://github.com/rytilahti/python-miio/issues "
+                    "and provide the following data: %s"
+                ),
                 model,
             )
 
@@ -524,7 +538,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true when state is known."""
         if (
             super().available
@@ -534,7 +548,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             return False
         return super().available
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on an option of the miio device."""
         method = getattr(self, self.entity_description.method_on)
         if await method():
@@ -542,7 +556,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off an option of the miio device."""
         method = getattr(self, self.entity_description.method_off)
         if await method():
@@ -745,15 +759,15 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
         """Return true if switch is on."""
         return self._sub_device.status[self._data_key] == "on"
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(self._sub_device.on, self._channel)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self._sub_device.off, self._channel)
 
-    async def async_toggle(self, **kwargs):
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
         await self.hass.async_add_executor_job(self._sub_device.toggle, self._channel)
 
@@ -813,7 +827,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 
             return False
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the plug on."""
         result = await self._try_command("Turning the plug on failed", self._device.on)
 
@@ -821,7 +835,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             self._state = True
             self._skip_update = True
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the plug off."""
         result = await self._try_command(
             "Turning the plug off failed", self._device.off
@@ -831,7 +845,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             self._state = False
             self._skip_update = True
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -904,7 +918,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
         if self._device_features & FEATURE_SET_POWER_PRICE == 1:
             self._state_attrs[ATTR_POWER_PRICE] = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -969,7 +983,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             if self._channel_usb is False:
                 self._state_attrs[ATTR_LOAD_POWER] = None
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn a channel on."""
         if self._channel_usb:
             result = await self._try_command(
@@ -984,7 +998,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             self._state = True
             self._skip_update = True
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn a channel off."""
         if self._channel_usb:
             result = await self._try_command(
@@ -999,7 +1013,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             self._state = False
             self._skip_update = True
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
@@ -1039,7 +1053,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
 
         self._state_attrs.update({ATTR_TEMPERATURE: None, ATTR_LOAD_POWER: None})
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the socket on."""
         result = await self._try_command(
             "Turning the socket on failed", self._device.socket_on
@@ -1049,7 +1063,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._state = True
             self._skip_update = True
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the socket off."""
         result = await self._try_command(
             "Turning the socket off failed", self._device.socket_off
@@ -1059,7 +1073,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._state = False
             self._skip_update = True
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:

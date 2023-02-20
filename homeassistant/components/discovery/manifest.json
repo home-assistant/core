@@ -1,10 +1,11 @@
 {
   "domain": "discovery",
   "name": "Discovery",
-  "documentation": "https://www.home-assistant.io/integrations/discovery",
-  "requirements": ["netdisco==3.0.0"],
   "after_dependencies": ["zeroconf"],
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/discovery",
+  "integration_type": "system",
+  "loggers": ["netdisco"],
   "quality_scale": "internal",
-  "loggers": ["netdisco"]
+  "requirements": ["netdisco==3.0.0"]
 }

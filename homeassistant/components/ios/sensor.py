@@ -1,7 +1,6 @@
 """Support for Home Assistant iOS app sensors."""
 from __future__ import annotations
 
-from homeassistant.components import ios
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -12,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .. import ios
 from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -60,7 +60,9 @@ class IOSSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, device_name, device, description: SensorEntityDescription):
+    def __init__(
+        self, device_name, device, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._device = device

@@ -22,13 +22,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SSL,
+    CONF_UUID,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID, DOMAIN
+from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +90,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if not unique_id and info[CONF_SERIAL]:
             _LOGGER.debug(
-                "Printer UUID is missing from IPP response. Falling back to IPP serial number"
+                "Printer UUID is missing from IPP response. Falling back to IPP serial"
+                " number"
             )
             unique_id = info[CONF_SERIAL]
         elif not unique_id:
@@ -153,7 +155,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             unique_id = self.discovery_info[CONF_UUID] = info[CONF_UUID]
         elif not unique_id and info[CONF_SERIAL]:
             _LOGGER.debug(
-                "Printer UUID is missing from discovery info and IPP response. Falling back to IPP serial number"
+                "Printer UUID is missing from discovery info and IPP response. Falling"
+                " back to IPP serial number"
             )
             unique_id = info[CONF_SERIAL]
         elif not unique_id:
@@ -174,7 +177,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a confirmation flow initiated by zeroconf."""
         if user_input is None:

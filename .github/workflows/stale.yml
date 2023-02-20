@@ -11,21 +11,59 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
-      # The 90 day stale policy
+      # The 90 day stale policy for PRs
       # Used for:
-      # - Issues & PRs
+      # - PRs
       # - No PRs marked as no-stale
-      # - No issues marked as no-stale or help-wanted
-      - name: 90 days stale issues & PRs policy
-        uses: actions/stale@v5
+      # - No issues (-1)
+      - name: 90 days stale PRs policy
+        uses: actions/stale@v7.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 90
           days-before-close: 7
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
           operations-per-run: 150
           remove-stale-when-updated: true
+          stale-pr-label: "stale"
+          exempt-pr-labels: "no-stale"
+          stale-pr-message: >
+            There hasn't been any activity on this pull request recently. This
+            pull request has been automatically marked as stale because of that
+            and will be closed if no further activity occurs within 7 days.
+
+            Thank you for your contributions.
+
+      # Generate a token for the GitHub App, we use this method to avoid
+      # hitting API limits for our GitHub actions + have a higher rate limit.
+      # This is only used for issues.
+      - name: Generate app token
+        id: token
+        # Pinned to a specific version of the action for security reasons
+        # v1.7.0
+        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92
+        with:
+          app_id: ${{ secrets.ISSUE_TRIAGE_APP_ID }}
+          private_key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }}
+
+      # The 90 day stale policy for issues
+      # Used for:
+      # - Issues
+      # - No issues marked as no-stale or help-wanted
+      # - No PRs (-1)
+      - name: 90 days stale issues
+        uses: actions/stale@v7.0.0
+        with:
+          repo-token: ${{ steps.token.outputs.token }}
+          days-before-stale: 90
+          days-before-close: 7
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          operations-per-run: 250
+          remove-stale-when-updated: true
           stale-issue-label: "stale"
-          exempt-issue-labels: "no-stale,help-wanted"
+          exempt-issue-labels: "no-stale,help-wanted,needs-more-information"
           stale-issue-message: >
             There hasn't been any activity on this issue recently. Due to the
             high number of incoming GitHub notifications, we have to clean some
@@ -39,54 +77,21 @@ jobs:
             This issue has now been marked as stale and will be closed if no
             further activity occurs. Thank you for your contributions.
 
-          stale-pr-label: "stale"
-          exempt-pr-labels: "no-stale"
-          stale-pr-message: >
-            There hasn't been any activity on this pull request recently. This
-            pull request has been automatically marked as stale because of that
-            and will be closed if no further activity occurs within 7 days.
-
-            Thank you for your contributions.
-
-      # The 30 day stale policy for PRS
-      # Used for:
-      # - PRs
-      # - No PRs marked as no-stale or new-integrations
-      # - No issues (-1)
-      - name: 30 days stale PRs policy
-        uses: actions/stale@v5
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
-          days-before-close: 7
-          days-before-issue-close: -1
-          operations-per-run: 50
-          remove-stale-when-updated: true
-          stale-pr-label: "stale"
-          # Exempt new integrations, these often take more time.
-          # They will automatically be handled by the 90 day version above.
-          exempt-pr-labels: "no-stale,new-integration"
-          stale-pr-message: >
-            There hasn't been any activity on this pull request recently. This
-            pull request has been automatically marked as stale because of that
-            and will be closed if no further activity occurs within 7 days.
-
-            Thank you for your contributions.
-
       # The 30 day stale policy for issues
       # Used for:
       # - Issues that are pending more information (incomplete issues)
       # - No Issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: Needs more information stale issues policy
-        uses: actions/stale@v5
+        uses: actions/stale@v7.0.0
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ steps.token.outputs.token }}
           only-labels: "needs-more-information"
           days-before-stale: 14
           days-before-close: 7
+          days-before-pr-stale: -1
           days-before-pr-close: -1
-          operations-per-run: 50
+          operations-per-run: 250
           remove-stale-when-updated: true
           stale-issue-label: "stale"
           exempt-issue-labels: "no-stale,help-wanted"

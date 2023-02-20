@@ -1,15 +1,16 @@
 {
   "domain": "fritzbox",
   "name": "AVM FRITZ!SmartHome",
+  "codeowners": ["@mib1185", "@flabbamann"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fritzbox",
-  "requirements": ["pyfritzhome==0.6.4"],
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["pyfritzhome"],
+  "requirements": ["pyfritzhome==0.6.7"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:fritzbox:1"
     }
-  ],
-  "codeowners": ["@mib1185", "@flabbamann"],
-  "config_flow": true,
-  "iot_class": "local_polling",
-  "loggers": ["pyfritzhome"]
+  ]
 }

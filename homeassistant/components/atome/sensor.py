@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -262,14 +262,14 @@ class AtomeSensor(SensorEntity):
 
         if sensor_type == LIVE_TYPE:
             self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_native_unit_of_measurement = POWER_WATT
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
             self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         update_function = getattr(self._data, f"update_{self._sensor_type}_usage")
         update_function()

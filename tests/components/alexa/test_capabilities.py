@@ -1,18 +1,13 @@
 """Test Alexa capabilities."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.alexa import smart_home
-from homeassistant.components.climate import const as climate
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
 from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
-from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-)
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ALARM_ARMED_AWAY,
@@ -24,8 +19,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_common import (
     assert_request_calls_service,
@@ -39,7 +35,7 @@ from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize("adjust", ["-5", "5", "-80"])
-async def test_api_adjust_brightness(hass, adjust):
+async def test_api_adjust_brightness(hass: HomeAssistant, adjust: str) -> None:
     """Test api adjust brightness process."""
     request = get_new_request(
         "Alexa.BrightnessController", "AdjustBrightness", "light#test"
@@ -67,7 +63,7 @@ async def test_api_adjust_brightness(hass, adjust):
     assert msg["header"]["name"] == "Response"
 
 
-async def test_api_set_color_rgb(hass):
+async def test_api_set_color_rgb(hass: HomeAssistant) -> None:
     """Test api set color process."""
     request = get_new_request("Alexa.ColorController", "SetColor", "light#test")
 
@@ -97,7 +93,7 @@ async def test_api_set_color_rgb(hass):
     assert msg["header"]["name"] == "Response"
 
 
-async def test_api_set_color_temperature(hass):
+async def test_api_set_color_temperature(hass: HomeAssistant) -> None:
     """Test api set color temperature process."""
     request = get_new_request(
         "Alexa.ColorTemperatureController", "SetColorTemperature", "light#test"
@@ -123,8 +119,10 @@ async def test_api_set_color_temperature(hass):
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize("result,initial", [(383, "333"), (500, "500")])
-async def test_api_decrease_color_temp(hass, result, initial):
+@pytest.mark.parametrize(("result", "initial"), [(383, "333"), (500, "500")])
+async def test_api_decrease_color_temp(
+    hass: HomeAssistant, result: int, initial: str
+) -> None:
     """Test api decrease color temp process."""
     request = get_new_request(
         "Alexa.ColorTemperatureController", "DecreaseColorTemperature", "light#test"
@@ -151,8 +149,10 @@ async def test_api_decrease_color_temp(hass, result, initial):
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize("result,initial", [(283, "333"), (142, "142")])
-async def test_api_increase_color_temp(hass, result, initial):
+@pytest.mark.parametrize(("result", "initial"), [(283, "333"), (142, "142")])
+async def test_api_increase_color_temp(
+    hass: HomeAssistant, result: int, initial: str
+) -> None:
     """Test api increase color temp process."""
     request = get_new_request(
         "Alexa.ColorTemperatureController", "IncreaseColorTemperature", "light#test"
@@ -180,7 +180,7 @@ async def test_api_increase_color_temp(hass, result, initial):
 
 
 @pytest.mark.parametrize(
-    "domain,payload,source_list,idx",
+    ("domain", "payload", "source_list", "idx"),
     [
         ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console"], 0),
@@ -188,7 +188,13 @@ async def test_api_increase_color_temp(hass, result, initial):
         ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),
     ],
 )
-async def test_api_select_input(hass, domain, payload, source_list, idx):
+async def test_api_select_input(
+    hass: HomeAssistant,
+    domain: str,
+    payload: str,
+    source_list: list[Any],
+    idx: int | None,
+) -> None:
     """Test api set input process."""
     hass.states.async_set(
         "media_player.test",
@@ -223,7 +229,7 @@ async def test_api_select_input(hass, domain, payload, source_list, idx):
     assert call.data["source"] == source_list[idx]
 
 
-async def test_report_lock_state(hass):
+async def test_report_lock_state(hass: HomeAssistant) -> None:
     """Test LockController implements lockState property."""
     hass.states.async_set("lock.locked", STATE_LOCKED, {})
     hass.states.async_set("lock.unlocked", STATE_UNLOCKED, {})
@@ -254,7 +260,9 @@ async def test_report_lock_state(hass):
 @pytest.mark.parametrize(
     "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
 )
-async def test_report_dimmable_light_state(hass, supported_color_modes):
+async def test_report_dimmable_light_state(
+    hass: HomeAssistant, supported_color_modes: list[str]
+) -> None:
     """Test BrightnessController reports brightness correctly."""
     hass.states.async_set(
         "light.test_on",
@@ -282,7 +290,9 @@ async def test_report_dimmable_light_state(hass, supported_color_modes):
 
 
 @pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
-async def test_report_colored_light_state(hass, supported_color_modes):
+async def test_report_colored_light_state(
+    hass: HomeAssistant, supported_color_modes: list[str]
+) -> None:
     """Test ColorController reports color correctly."""
     hass.states.async_set(
         "light.test_on",
@@ -316,7 +326,7 @@ async def test_report_colored_light_state(hass, supported_color_modes):
     )
 
 
-async def test_report_colored_temp_light_state(hass):
+async def test_report_colored_temp_light_state(hass: HomeAssistant) -> None:
     """Test ColorTemperatureController reports color temp correctly."""
     hass.states.async_set(
         "light.test_on",
@@ -344,7 +354,7 @@ async def test_report_colored_temp_light_state(hass):
     )
 
 
-async def test_report_fan_speed_state(hass):
+async def test_report_fan_speed_state(hass: HomeAssistant) -> None:
     """Test PercentageController, PowerLevelController reports fan speed correctly."""
     hass.states.async_set(
         "fan.off",
@@ -417,7 +427,73 @@ async def test_report_fan_speed_state(hass):
     properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
 
-async def test_report_fan_preset_mode(hass):
+async def test_report_humidifier_humidity_state(hass: HomeAssistant) -> None:
+    """Test PercentageController, PowerLevelController humidifier humidity reporting."""
+    hass.states.async_set(
+        "humidifier.dry",
+        "on",
+        {
+            "friendly_name": "Humidifier dry",
+            "supported_features": 0,
+            "humidity": 25,
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    hass.states.async_set(
+        "humidifier.wet",
+        "on",
+        {
+            "friendly_name": "Humidifier wet",
+            "supported_features": 0,
+            "humidity": 80,
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    properties = await reported_properties(hass, "humidifier.dry")
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 25)
+
+    properties = await reported_properties(hass, "humidifier.wet")
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 80)
+
+
+async def test_report_humidifier_mode(hass: HomeAssistant) -> None:
+    """Test ModeController reports humidifier mode correctly."""
+    hass.states.async_set(
+        "humidifier.auto",
+        "on",
+        {
+            "friendly_name": "Humidifier auto",
+            "supported_features": 1,
+            "humidity": 50,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    properties = await reported_properties(hass, "humidifier.auto")
+    properties.assert_equal("Alexa.ModeController", "mode", "mode.Auto")
+
+    hass.states.async_set(
+        "humidifier.medium",
+        "on",
+        {
+            "friendly_name": "Humidifier auto",
+            "supported_features": 1,
+            "humidity": 60,
+            "mode": "Medium",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    properties = await reported_properties(hass, "humidifier.medium")
+    properties.assert_equal("Alexa.ModeController", "mode", "mode.Medium")
+
+
+async def test_report_fan_preset_mode(hass: HomeAssistant) -> None:
     """Test ModeController reports fan preset_mode correctly."""
     hass.states.async_set(
         "fan.preset_mode",
@@ -471,7 +547,7 @@ async def test_report_fan_preset_mode(hass):
     properties = await reported_properties(hass, "fan.preset_mode")
 
 
-async def test_report_fan_oscillating(hass):
+async def test_report_fan_oscillating(hass: HomeAssistant) -> None:
     """Test ToggleController reports fan oscillating correctly."""
     hass.states.async_set(
         "fan.oscillating_off",
@@ -495,7 +571,7 @@ async def test_report_fan_oscillating(hass):
     properties.assert_equal("Alexa.ToggleController", "toggleState", "ON")
 
 
-async def test_report_fan_direction(hass):
+async def test_report_fan_direction(hass: HomeAssistant) -> None:
     """Test ModeController reports fan direction correctly."""
     hass.states.async_set(
         "fan.off", "off", {"friendly_name": "Off fan", "supported_features": 4}
@@ -529,7 +605,7 @@ async def test_report_fan_direction(hass):
     properties.assert_equal("Alexa.ModeController", "mode", "direction.forward")
 
 
-async def test_report_cover_range_value(hass):
+async def test_report_cover_range_value(hass: HomeAssistant) -> None:
     """Test RangeController reports cover position correctly."""
     hass.states.async_set(
         "cover.fully_open",
@@ -569,17 +645,17 @@ async def test_report_cover_range_value(hass):
     properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
 
-async def test_report_climate_state(hass):
+async def test_report_climate_state(hass: HomeAssistant) -> None:
     """Test ThermostatController reports state correctly."""
-    for auto_modes in (climate.HVAC_MODE_AUTO, climate.HVAC_MODE_HEAT_COOL):
+    for auto_modes in (HVACMode.AUTO, HVACMode.HEAT_COOL):
         hass.states.async_set(
             "climate.downstairs",
             auto_modes,
             {
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
-                climate.ATTR_CURRENT_TEMPERATURE: 34,
-                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.downstairs")
@@ -590,15 +666,15 @@ async def test_report_climate_state(hass):
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in [climate.HVAC_MODE_OFF]:
+    for off_modes in [HVACMode.OFF]:
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
             {
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
-                climate.ATTR_CURRENT_TEMPERATURE: 34,
-                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.downstairs")
@@ -616,8 +692,8 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.downstairs")
@@ -633,8 +709,8 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 31,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_CURRENT_TEMPERATURE: 31,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.downstairs")
@@ -649,8 +725,8 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Heat",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.heat")
@@ -665,8 +741,8 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Cool",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.cool")
@@ -692,8 +768,8 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Unsupported",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     msg = await reported_properties(hass, "climate.unsupported", True)
@@ -701,20 +777,22 @@ async def test_report_climate_state(hass):
     assert msg["event"]["payload"]["type"] == "INTERNAL_ERROR"
 
 
-async def test_temperature_sensor_sensor(hass):
+async def test_temperature_sensor_sensor(hass: HomeAssistant) -> None:
     """Test TemperatureSensor reports sensor temperature correctly."""
     for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):
         hass.states.async_set(
             "sensor.temp_living_room",
             bad_value,
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         )
 
         properties = await reported_properties(hass, "sensor.temp_living_room")
         properties.assert_not_has_property("Alexa.TemperatureSensor", "temperature")
 
     hass.states.async_set(
-        "sensor.temp_living_room", "34", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.temp_living_room",
+        "34",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     properties = await reported_properties(hass, "sensor.temp_living_room")
     properties.assert_equal(
@@ -722,13 +800,13 @@ async def test_temperature_sensor_sensor(hass):
     )
 
 
-async def test_temperature_sensor_climate(hass):
+async def test_temperature_sensor_climate(hass: HomeAssistant) -> None:
     """Test TemperatureSensor reports climate temperature correctly."""
     for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):
         hass.states.async_set(
             "climate.downstairs",
-            climate.HVAC_MODE_HEAT,
-            {climate.ATTR_CURRENT_TEMPERATURE: bad_value},
+            HVACMode.HEAT,
+            {ATTR_CURRENT_TEMPERATURE: bad_value},
         )
 
         properties = await reported_properties(hass, "climate.downstairs")
@@ -736,8 +814,8 @@ async def test_temperature_sensor_climate(hass):
 
     hass.states.async_set(
         "climate.downstairs",
-        climate.HVAC_MODE_HEAT,
-        {climate.ATTR_CURRENT_TEMPERATURE: 34},
+        HVACMode.HEAT,
+        {ATTR_CURRENT_TEMPERATURE: 34},
     )
     properties = await reported_properties(hass, "climate.downstairs")
     properties.assert_equal(
@@ -745,7 +823,7 @@ async def test_temperature_sensor_climate(hass):
     )
 
 
-async def test_report_alarm_control_panel_state(hass):
+async def test_report_alarm_control_panel_state(hass: HomeAssistant) -> None:
     """Test SecurityPanelController implements armState property."""
     hass.states.async_set("alarm_control_panel.armed_away", STATE_ALARM_ARMED_AWAY, {})
     hass.states.async_set(
@@ -775,14 +853,16 @@ async def test_report_alarm_control_panel_state(hass):
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
 
 
-async def test_report_playback_state(hass):
+async def test_report_playback_state(hass: HomeAssistant) -> None:
     """Test PlaybackStateReporter implements playbackState property."""
     hass.states.async_set(
         "media_player.test",
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP,
+            "supported_features": MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.STOP,
             "volume_level": 0.75,
         },
     )
@@ -794,14 +874,15 @@ async def test_report_playback_state(hass):
     )
 
 
-async def test_report_speaker_volume(hass):
+async def test_report_speaker_volume(hass: HomeAssistant) -> None:
     """Test Speaker reports volume correctly."""
     hass.states.async_set(
         "media_player.test_speaker",
         "on",
         {
             "friendly_name": "Test media player speaker",
-            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+            "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
             "volume_level": None,
             "device_class": "speaker",
         },
@@ -815,7 +896,8 @@ async def test_report_speaker_volume(hass):
             "on",
             {
                 "friendly_name": "Test media player speaker",
-                "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+                "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET,
                 "volume_level": good_value / 100,
                 "device_class": "speaker",
             },
@@ -824,7 +906,7 @@ async def test_report_speaker_volume(hass):
         properties.assert_equal("Alexa.Speaker", "volume", good_value)
 
 
-async def test_report_image_processing(hass):
+async def test_report_image_processing(hass: HomeAssistant) -> None:
     """Test EventDetectionSensor implements humanPresenceDetectionState property."""
     hass.states.async_set(
         "image_processing.test_face",
@@ -867,8 +949,11 @@ async def test_report_image_processing(hass):
 
 
 @pytest.mark.parametrize("domain", ["button", "input_button"])
-async def test_report_button_pressed(hass, domain):
-    """Test button presses report human presence detection events to trigger routines."""
+async def test_report_button_pressed(hass: HomeAssistant, domain: str) -> None:
+    """Test button presses report human presence detection events.
+
+    For use to trigger routines.
+    """
     hass.states.async_set(
         f"{domain}.test_button", "now", {"friendly_name": "Test button"}
     )
@@ -882,7 +967,9 @@ async def test_report_button_pressed(hass, domain):
 
 
 @pytest.mark.parametrize("domain", ["switch", "input_boolean"])
-async def test_toggle_entities_report_contact_events(hass, domain):
+async def test_toggle_entities_report_contact_events(
+    hass: HomeAssistant, domain: str
+) -> None:
     """Test toggles and switches report contact sensor events to trigger routines."""
     hass.states.async_set(
         f"{domain}.test_toggle", "on", {"friendly_name": "Test toggle"}
@@ -917,16 +1004,18 @@ async def test_toggle_entities_report_contact_events(hass, domain):
     )
 
 
-async def test_get_property_blowup(hass, caplog):
+async def test_get_property_blowup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we handle a property blowing up."""
     hass.states.async_set(
         "climate.downstairs",
-        climate.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     with patch(

@@ -25,7 +25,6 @@ METER_TYPES = [
 
 DATA_UTILITY = "utility_meter_data"
 DATA_TARIFF_SENSORS = "utility_meter_sensors"
-DATA_LEGACY_COMPONENT = "utility_meter_legacy_component"
 
 CONF_METER = "meter"
 CONF_SOURCE_SENSOR = "source"
@@ -48,6 +47,4 @@ SIGNAL_START_PAUSE_METER = "utility_meter_start_pause"
 SIGNAL_RESET_METER = "utility_meter_reset"
 
 SERVICE_RESET = "reset"
-SERVICE_SELECT_TARIFF = "select_tariff"
-SERVICE_SELECT_NEXT_TARIFF = "next_tariff"
 SERVICE_CALIBRATE_METER = "calibrate"

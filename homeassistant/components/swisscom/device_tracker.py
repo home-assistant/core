@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import suppress
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
@@ -27,7 +26,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> SwisscomDeviceScanner | None:
     """Return the Swisscom device scanner."""
     scanner = SwisscomDeviceScanner(config[DOMAIN])
 
@@ -79,7 +80,7 @@ class SwisscomDeviceScanner(DeviceScanner):
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
         url = f"http://{self.host}/ws"
-        headers = {CONTENT_TYPE: "application/x-sah-ws-4-call+json"}
+        headers = {"Content-Type": "application/x-sah-ws-4-call+json"}
         data = """
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""

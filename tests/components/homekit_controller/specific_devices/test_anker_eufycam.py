@@ -1,6 +1,6 @@
 """Test against characteristics captured from a eufycam."""
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -39,7 +39,7 @@ async def test_eufycam_setup(hass):
                         EntityTestInfo(
                             entity_id="camera.eufycam2_0000",
                             friendly_name="eufyCam2-0000",
-                            unique_id="homekit-A0000A000000000D-aid:4",
+                            unique_id="00:00:00:00:00:00_4",
                             state="idle",
                         ),
                     ],

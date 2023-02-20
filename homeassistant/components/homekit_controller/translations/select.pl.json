@@ -1,9 +1,0 @@
-{
-    "state": {
-        "homekit_controller__ecobee_mode": {
-            "away": "Poza domem",
-            "home": "W domu",
-            "sleep": "U\u015bpiony"
-        }
-    }
-}

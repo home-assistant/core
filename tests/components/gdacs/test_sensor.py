@@ -19,16 +19,18 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from . import _generate_mock_feed_entry
+
 from tests.common import async_fire_time_changed
-from tests.components.gdacs import _generate_mock_feed_entry
 
 CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(

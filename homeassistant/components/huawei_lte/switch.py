@@ -31,13 +31,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
-    router = hass.data[DOMAIN].routers[config_entry.unique_id]
+    router = hass.data[DOMAIN].routers[config_entry.entry_id]
     switches: list[Entity] = []
 
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):
         switches.append(HuaweiLteMobileDataSwitch(router))
 
-    if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH).get("WifiEnable"):
+    if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH, {}).get("WifiEnable"):
         switches.append(HuaweiLteWifiGuestNetworkSwitch(router))
 
     async_add_entities(switches, True)
@@ -151,6 +151,6 @@ class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
         return "mdi:wifi" if self.is_on else "mdi:wifi-off"
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return {"ssid": self.router.data[self.key].get("WifiSsid")}

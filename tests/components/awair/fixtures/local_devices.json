@@ -1,0 +1,16 @@
+{
+  "device_uuid": "awair-element_24947",
+  "wifi_mac": "00:B0:D0:63:C2:26",
+  "ssid": "Internet of Things",
+  "ip": "192.0.2.5",
+  "netmask": "255.255.255.0",
+  "gateway": "none",
+  "fw_version": "1.2.8",
+  "timezone": "America/Los_Angeles",
+  "display": "score",
+  "led": {
+    "mode": "auto",
+    "brightness": 179
+  },
+  "voc_feature_set": 34
+}

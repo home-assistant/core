@@ -11,13 +11,13 @@ import logging
 import re
 import time
 import traceback
-from typing import TYPE_CHECKING, Any, NamedTuple, Union
+from typing import TYPE_CHECKING, Any, NamedTuple
 
-from serial import SerialException
 from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE
 import zigpy.device
 import zigpy.endpoint
+import zigpy.exceptions
 import zigpy.group
 from zigpy.types.named import EUI64
 
@@ -62,6 +62,8 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
+    STARTUP_FAILURE_DELAY_S,
+    STARTUP_RETRIES,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -89,7 +91,7 @@ if TYPE_CHECKING:
     from ..entity import ZhaEntity
     from .channels.base import ZigbeeChannel
 
-    _LogFilterType = Union[Filter, Callable[[LogRecord], int]]
+    _LogFilterType = Filter | Callable[[LogRecord], bool]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,17 +168,29 @@ class ZHAGateway:
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
         app_config = app_controller_cls.SCHEMA(app_config)
-        try:
-            self.application_controller = await app_controller_cls.new(
-                app_config, auto_form=True, start_radio=True
-            )
-        except (asyncio.TimeoutError, SerialException, OSError) as exception:
-            _LOGGER.error(
-                "Couldn't start %s coordinator",
-                self.radio_description,
-                exc_info=exception,
-            )
-            raise ConfigEntryNotReady from exception
+
+        for attempt in range(STARTUP_RETRIES):
+            try:
+                self.application_controller = await app_controller_cls.new(
+                    app_config, auto_form=True, start_radio=True
+                )
+            except zigpy.exceptions.TransientConnectionError as exc:
+                raise ConfigEntryNotReady from exc
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.warning(
+                    "Couldn't start %s coordinator (attempt %s of %s)",
+                    self.radio_description,
+                    attempt + 1,
+                    STARTUP_RETRIES,
+                    exc_info=exc,
+                )
+
+                if attempt == STARTUP_RETRIES - 1:
+                    raise exc
+
+                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
+            else:
+                break
 
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
@@ -199,7 +213,10 @@ class ZHAGateway:
                 zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
-                "[%s](%s) restored as '%s', last seen: %s, consider_unavailable_time: %s seconds",
+                (
+                    "[%s](%s) restored as '%s', last seen: %s,"
+                    " consider_unavailable_time: %s seconds"
+                ),
                 zha_device.nwk,
                 zha_device.name,
                 "available" if zha_device.available else "unavailable",
@@ -213,7 +230,8 @@ class ZHAGateway:
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
             zha_group = self._async_get_or_create_group(group)
-            # we can do this here because the entities are in the entity registry tied to the devices
+            # we can do this here because the entities are in the
+            # entity registry tied to the devices
             discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
     async def async_initialize_devices_and_entities(self) -> None:
@@ -236,7 +254,9 @@ class ZHAGateway:
             )
 
         # background the fetching of state for mains powered devices
-        asyncio.create_task(fetch_updated_state())
+        self.config_entry.async_create_background_task(
+            self._hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
+        )
 
     def device_joined(self, device: zigpy.device.Device) -> None:
         """Handle device joined.
@@ -308,7 +328,8 @@ class ZHAGateway:
             self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
         if len(zha_group.members) == 2:
-            # we need to do this because there wasn't already a group entity to remove and re-add
+            # we need to do this because there wasn't already
+            # a group entity to remove and re-add
             discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
     def group_added(self, zigpy_group: zigpy.group.Group) -> None:
@@ -402,7 +423,9 @@ class ZHAGateway:
         if entity.zha_device.ieee in self.device_registry:
             entity_refs = self.device_registry.get(entity.zha_device.ieee)
             self.device_registry[entity.zha_device.ieee] = [
-                e for e in entity_refs if e.reference_id != entity.entity_id  # type: ignore[union-attr]
+                e
+                for e in entity_refs  # type: ignore[union-attr]
+                if e.reference_id != entity.entity_id
             ]
 
     def _cleanup_group_entity_registry_entries(
@@ -423,7 +446,8 @@ class ZHAGateway:
             include_disabled_entities=True,
         )
 
-        # then we get the entity entries for this specific group by getting the entries that match
+        # then we get the entity entries for this specific group
+        # by getting the entries that match
         entries_to_remove = [
             entry
             for entry in all_group_entity_entries
@@ -602,7 +626,8 @@ class ZHAGateway:
             zha_device.nwk,
             zha_device.ieee,
         )
-        # we don't have to do this on a nwk swap but we don't have a way to tell currently
+        # we don't have to do this on a nwk swap
+        # but we don't have a way to tell currently
         await zha_device.async_configure()
         device_info = zha_device.device_info
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
@@ -639,7 +664,10 @@ class ZHAGateway:
                 tasks = []
                 for member in members:
                     _LOGGER.debug(
-                        "Adding member with IEEE: %s and endpoint ID: %s to group: %s:0x%04x",
+                        (
+                            "Adding member with IEEE: %s and endpoint ID: %s to group:"
+                            " %s:0x%04x"
+                        ),
                         member.ieee,
                         member.endpoint_id,
                         name,
@@ -744,7 +772,7 @@ class LogRelayHandler(logging.Handler):
                 "|".join([re.escape(x) for x in (hass_path, config_dir)])
             )
         )
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, paths_re))
+        entry = LogEntry(record, _figure_out_source(record, stack, paths_re))
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

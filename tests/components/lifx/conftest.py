@@ -1,5 +1,4 @@
 """Tests for the lifx integration."""
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

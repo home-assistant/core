@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN,

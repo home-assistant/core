@@ -1,7 +1,25 @@
 """Const for forked-daapd."""
-from homeassistant.components.media_player import MediaPlayerEntityFeature
+from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 
 CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
+CAN_PLAY_TYPE = {
+    "audio/mp4",
+    "audio/aac",
+    "audio/mpeg",
+    "audio/flac",
+    "audio/ogg",
+    "audio/x-ms-wma",
+    "audio/aiff",
+    "audio/wav",
+    MediaType.TRACK,
+    MediaType.PLAYLIST,
+    MediaType.ARTIST,
+    MediaType.ALBUM,
+    MediaType.GENRE,
+    MediaType.MUSIC,
+    MediaType.EPISODE,
+    "show",  # this is a spotify constant
+}
 CONF_LIBRESPOT_JAVA_PORT = "librespot_java_port"
 CONF_MAX_PLAYLISTS = "max_playlists"
 CONF_TTS_PAUSE_TIME = "tts_pause_time"
@@ -12,7 +30,7 @@ DEFAULT_TTS_PAUSE_TIME = 1.2
 DEFAULT_TTS_VOLUME = 0.8
 DEFAULT_UNMUTE_VOLUME = 0.6
 DOMAIN = "forked_daapd"  # key for hass.data
-FD_NAME = "forked-daapd"
+FD_NAME = "OwnTone"
 HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
 HASS_DATA_UPDATER_KEY = "UPDATER"
 KNOWN_PIPES = {"librespot-java"}
@@ -72,3 +90,4 @@ SUPPORTED_FEATURES_ZONE = (
     | MediaPlayerEntityFeature.TURN_OFF
 )
 TTS_TIMEOUT = 20  # max time to wait between TTS getting sent and starting to play
+URI_SCHEMA = "owntone"

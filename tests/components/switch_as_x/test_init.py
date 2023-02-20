@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_UNLOCKED,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -56,7 +57,7 @@ async def test_config_entry_unregistered_uuid(
 
 
 @pytest.mark.parametrize(
-    "target_domain,state_on,state_off",
+    ("target_domain", "state_on", "state_off"),
     (
         (Platform.COVER, STATE_OPEN, STATE_CLOSED),
         (Platform.FAN, STATE_ON, STATE_OFF),
@@ -363,7 +364,7 @@ async def test_setup_and_remove_config_entry(
 
 
 @pytest.mark.parametrize(
-    "hidden_by_before,hidden_by_after",
+    ("hidden_by_before", "hidden_by_after"),
     (
         (er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (er.RegistryEntryHider.INTEGRATION, None),
@@ -403,3 +404,37 @@ async def test_reset_hidden_by(
     # Check hidden by is reset
     switch_entity_entry = registry.async_get(switch_entity_entry.entity_id)
     assert switch_entity_entry.hidden_by == hidden_by_after
+
+
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
+async def test_entity_category_inheritance(
+    hass: HomeAssistant,
+    target_domain: Platform,
+) -> None:
+    """Test the entity category is inherited from source device."""
+    registry = er.async_get(hass)
+
+    switch_entity_entry = registry.async_get_or_create("switch", "test", "unique")
+    registry.async_update_entity(
+        switch_entity_entry.entity_id, entity_category=EntityCategory.CONFIG
+    )
+
+    # Add the config entry
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+    switch_as_x_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = registry.async_get(f"{target_domain}.abc")
+    assert entity_entry
+    assert entity_entry.device_id == switch_entity_entry.device_id
+    assert entity_entry.entity_category is EntityCategory.CONFIG

@@ -2,6 +2,7 @@
 import logging
 from numbers import Number
 import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -60,7 +61,7 @@ def async_load_websocket_api(hass: HomeAssistant):
 @websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
 @websocket_api.async_response
 async def websocket_subscribe(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ):
     """Subscribe to supervisor events."""
 
@@ -83,7 +84,7 @@ async def websocket_subscribe(
 )
 @websocket_api.async_response
 async def websocket_supervisor_event(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ):
     """Publish events from the Supervisor."""
     connection.send_result(msg[WS_ID])
@@ -101,7 +102,7 @@ async def websocket_supervisor_event(
 )
 @websocket_api.async_response
 async def websocket_supervisor_api(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ):
     """Websocket handler to call Supervisor API."""
     if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(

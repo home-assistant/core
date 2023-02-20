@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar
 
 from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
 from pydeconz.models.group import Group as PydeconzGroup
@@ -17,20 +17,18 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
+from .util import serial_from_unique_id
 
 _DeviceT = TypeVar(
     "_DeviceT",
-    bound=Union[
-        PydeconzGroup,
-        PydeconzLightBase,
-        PydeconzSensorBase,
-        PydeconzScene,
-    ],
+    bound=PydeconzGroup | PydeconzLightBase | PydeconzSensorBase | PydeconzScene,
 )
 
 
 class DeconzBase(Generic[_DeviceT]):
     """Common base for deconz entities and events."""
+
+    unique_id_suffix: str | None = None
 
     def __init__(
         self,
@@ -45,15 +43,15 @@ class DeconzBase(Generic[_DeviceT]):
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         assert isinstance(self._device, PydeconzDevice)
+        if self.unique_id_suffix is not None:
+            return f"{self._device.unique_id}-{self.unique_id_suffix}"
         return self._device.unique_id
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
         assert isinstance(self._device, PydeconzDevice)
-        if not self._device.unique_id or self._device.unique_id.count(":") != 7:
-            return None
-        return self._device.unique_id.split("-", 1)[0]
+        return serial_from_unique_id(self._device.unique_id)
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -78,6 +76,10 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
 
     _attr_should_poll = False
 
+    _name_suffix: str | None = None
+    _update_key: str | None = None
+    _update_keys: set[str] | None = None
+
     TYPE = ""
 
     def __init__(
@@ -90,6 +92,13 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
         self.gateway.entities[self.TYPE].add(self.unique_id)
 
         self._attr_name = self._device.name
+        if self._name_suffix is not None:
+            self._attr_name += f" {self._name_suffix}"
+
+        if self._update_key is not None:
+            self._update_keys = {self._update_key}
+        if self._update_keys is not None:
+            self._update_keys |= {"reachable"}
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
@@ -118,6 +127,12 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
     def async_update_callback(self) -> None:
         """Update the device's state."""
         if self.gateway.ignore_state_updates:
+            return
+
+        if (
+            self._update_keys is not None
+            and not self._device.changed_keys.intersection(self._update_keys)
+        ):
             return
 
         self.async_write_ha_state()

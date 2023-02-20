@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> TadoDeviceScanner | None:
     """Return a Tado scanner."""
     scanner = TadoDeviceScanner(hass, config[DOMAIN])
     return scanner if scanner.success_init else None
@@ -95,8 +95,7 @@ class TadoDeviceScanner(DeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     async def _async_update_info(self):
-        """
-        Query Tado for device marked as at home.
+        """Query Tado for device marked as at home.
 
         Returns boolean if scanning successful.
         """

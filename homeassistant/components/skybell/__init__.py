@@ -2,38 +2,20 @@
 from __future__ import annotations
 
 import asyncio
-import os
 
 from aioskybell import Skybell
 from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_CACHEDB, DOMAIN
+from .const import DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        # Deprecated in Home Assistant 2022.6
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -48,30 +30,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SkyBell component."""
     hass.data.setdefault(DOMAIN, {})
 
-    entry_config = {}
-    if DOMAIN not in config:
-        return True
-    for parameter, value in config[DOMAIN].items():
-        if parameter == CONF_USERNAME:
-            entry_config[CONF_EMAIL] = value
-        else:
-            entry_config[parameter] = value
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=entry_config,
-            )
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_yaml",
+            breaks_in_ha_version="2022.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
         )
-
-    # Clean up unused cache file since we are using an account specific name
-    # Remove with import
-    def clean_cache():
-        """Clean old cache filename."""
-        if os.path.exists(hass.config.path(DEFAULT_CACHEDB)):
-            os.remove(hass.config.path(DEFAULT_CACHEDB))
-
-    await hass.async_add_executor_job(clean_cache)
 
     return True
 
@@ -90,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         devices = await api.async_initialize()
-    except SkybellAuthenticationException:
-        return False
+    except SkybellAuthenticationException as ex:
+        raise ConfigEntryAuthFailed from ex
     except SkybellException as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 

@@ -12,12 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_CURRENCY,
-    CONF_DISPLAY_OPTIONS,
-    TIME_MINUTES,
-    TIME_SECONDS,
-)
+from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,11 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.com"
-
 DEFAULT_CURRENCY = "USD"
-
-ICON = "mdi:currency-btc"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -65,7 +56,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="minutes_between_blocks",
         name="Time between Blocks",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     SensorEntityDescription(
         key="number_of_transactions",
@@ -74,7 +65,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="hash_rate",
         name="Hash rate",
-        native_unit_of_measurement=f"PH/{TIME_SECONDS}",
+        native_unit_of_measurement=f"PH/{UnitOfTime.SECONDS}",
     ),
     SensorEntityDescription(
         key="timestamp",
@@ -172,16 +163,18 @@ def setup_platform(
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_icon = ICON
+    _attr_attribution = "Data provided by blockchain.com"
+    _attr_icon = "mdi:currency-btc"
 
-    def __init__(self, data, currency, description: SensorEntityDescription):
+    def __init__(
+        self, data: BitcoinData, currency: str, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data
         self._currency = currency
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         self.data.update()
         stats = self.data.stats
@@ -236,12 +229,10 @@ class BitcoinSensor(SensorEntity):
 class BitcoinData:
     """Get the latest data and update the states."""
 
-    def __init__(self):
-        """Initialize the data object."""
-        self.stats = None
-        self.ticker = None
+    stats: statistics.Stats
+    ticker: dict[str, exchangerates.Currency]
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from blockchain.com."""
 
         self.stats = statistics.get()

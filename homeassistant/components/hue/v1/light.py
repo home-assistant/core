@@ -108,7 +108,7 @@ def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id)
 
     if is_group:
         supported_color_modes = set()
-        supported_features = 0
+        supported_features = LightEntityFeature(0)
         for light_id in api_item.lights:
             if light_id not in bridge.api.lights:
                 continue
@@ -262,7 +262,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_safe_fetch(bridge, fetch_method):
     """Safely fetch data."""
     try:
-        with async_timeout.timeout(4):
+        async with async_timeout.timeout(4):
             return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized as err:
         await bridge.handle_unauthorized_error()

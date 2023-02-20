@@ -41,11 +41,9 @@ async def async_setup_entry(
     """
     data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data.bridge
-    bridge_device = data.bridge_device
     light_devices = bridge.get_devices_by_domain(DOMAIN)
     async_add_entities(
-        LutronCasetaLight(light_device, bridge, bridge_device)
-        for light_device in light_devices
+        LutronCasetaLight(light_device, data) for light_device in light_devices
     )
 
 

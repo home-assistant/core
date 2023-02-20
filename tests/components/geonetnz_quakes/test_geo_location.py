@@ -23,20 +23,22 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from . import _generate_mock_feed_entry
 
 from tests.common import async_fire_time_changed
-from tests.components.geonetnz_quakes import _generate_mock_feed_entry
 
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -98,7 +100,7 @@ async def test_setup(hass):
             ATTR_DEPTH: 10.5,
             ATTR_MMI: 5,
             ATTR_QUALITY: "best",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geonetnz_quakes",
             ATTR_ICON: "mdi:pulse",
         }
@@ -113,7 +115,7 @@ async def test_setup(hass):
             ATTR_LONGITUDE: -3.1,
             ATTR_FRIENDLY_NAME: "Title 2",
             ATTR_MAGNITUDE: 4.6,
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geonetnz_quakes",
             ATTR_ICON: "mdi:pulse",
         }
@@ -128,7 +130,7 @@ async def test_setup(hass):
             ATTR_LONGITUDE: -3.2,
             ATTR_FRIENDLY_NAME: "Title 3",
             ATTR_LOCALITY: "Locality 3",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geonetnz_quakes",
             ATTR_ICON: "mdi:pulse",
         }
@@ -168,9 +170,9 @@ async def test_setup(hass):
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass):
+async def test_setup_imperial(hass: HomeAssistant) -> None:
     """Test the setup of the integration using imperial unit system."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (38.0, -3.0))
 

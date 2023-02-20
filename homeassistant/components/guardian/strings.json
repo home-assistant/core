@@ -17,5 +17,18 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "issues": {
+    "deprecated_service": {
+      "title": "The {deprecated_service} service will be removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The {deprecated_service} service will be removed",
+            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
+          }
+        }
+      }
+    }
   }
 }

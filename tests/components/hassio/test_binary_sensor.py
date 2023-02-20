@@ -1,15 +1,16 @@
 """The tests for the hassio binary sensors."""
-
 import os
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -75,6 +76,7 @@ def mock_all(aioclient_mock, request):
                 "result": "ok",
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
+                "auto_update": True,
                 "addons": [
                     {
                         "name": "test",
@@ -132,19 +134,31 @@ def mock_all(aioclient_mock, request):
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
     aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        json={
+            "result": "ok",
+            "data": {
+                "unsupported": [],
+                "unhealthy": [],
+                "suggestions": [],
+                "issues": [],
+                "checks": [],
+            },
+        },
+    )
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected",
+    ("entity_id", "expected"),
     [
-        ("binary_sensor.home_assistant_operating_system_update_available", "off"),
-        ("binary_sensor.test_update_available", "on"),
-        ("binary_sensor.test2_update_available", "off"),
         ("binary_sensor.test_running", "on"),
         ("binary_sensor.test2_running", "off"),
     ],
 )
-async def test_binary_sensor(hass, entity_id, expected, aioclient_mock):
+async def test_binary_sensor(
+    hass: HomeAssistant, entity_id, expected, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test hassio OS and addons binary sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)

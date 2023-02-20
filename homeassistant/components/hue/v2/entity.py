@@ -1,7 +1,7 @@
 """Generic Hue Entity Model."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, TypeAlias
 
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
 
-    HueResource = Union[Light, DevicePower, GroupedLight, LightLevel, Motion]
+    HueResource: TypeAlias = Light | DevicePower | GroupedLight | LightLevel | Motion
 
 
 RESOURCE_TYPE_NAMES = {
@@ -71,11 +71,11 @@ class HueBaseEntity(Entity):
             # creating a pretty name for device-less entities (e.g. groups/scenes)
             # should be handled in the platform instead
             return self.resource.type.value
-        # if resource is a light, use the name from metadata
-        if self.resource.type == ResourceTypes.LIGHT:
-            return self.resource.name
-        # for sensors etc, use devicename + pretty name of type
         dev_name = self.device.metadata.name
+        # if resource is a light, use the device name itself
+        if self.resource.type == ResourceTypes.LIGHT:
+            return dev_name
+        # for sensors etc, use devicename + pretty name of type
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )
@@ -139,11 +139,15 @@ class HueBaseEntity(Entity):
         if event_type == EventType.RESOURCE_DELETED:
             # remove any services created for zones/rooms
             # regular devices are removed automatically by the logic in device.py.
-            if resource.type in [ResourceTypes.ROOM, ResourceTypes.ZONE]:
+            if resource.type in (ResourceTypes.ROOM, ResourceTypes.ZONE):
                 dev_reg = async_get_device_registry(self.hass)
                 if device := dev_reg.async_get_device({(DOMAIN, resource.id)}):
                     dev_reg.async_remove_device(device.id)
-            if resource.type in [ResourceTypes.GROUPED_LIGHT, ResourceTypes.SCENE]:
+            if resource.type in (
+                ResourceTypes.GROUPED_LIGHT,
+                ResourceTypes.SCENE,
+                ResourceTypes.SMART_SCENE,
+            ):
                 ent_reg = async_get_entity_registry(self.hass)
                 ent_reg.async_remove(self.entity_id)
             return
@@ -196,11 +200,13 @@ class HueBaseEntity(Entity):
                 # the device state changed from on->off or off->on
                 # while it was reported as not connected!
                 self.logger.warning(
-                    "Device %s changed state while reported as disconnected. "
-                    "This might be an indicator that routing is not working for this device "
-                    "or the device is having connectivity issues. "
-                    "You can disable availability reporting for this device in the Hue options. "
-                    "Device details: %s - %s (%s) fw: %s",
+                    (
+                        "Device %s changed state while reported as disconnected. This"
+                        " might be an indicator that routing is not working for this"
+                        " device or the device is having connectivity issues. You can"
+                        " disable availability reporting for this device in the Hue"
+                        " options. Device details: %s - %s (%s) fw: %s"
+                    ),
                     self.name,
                     self.device.product_data.manufacturer_name,
                     self.device.product_data.product_name,

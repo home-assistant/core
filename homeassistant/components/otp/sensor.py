@@ -44,6 +44,8 @@ async def async_setup_platform(
 class TOTPSensor(SensorEntity):
     """Representation of a TOTP sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, token):
         """Initialize the sensor."""
         self._name = name
@@ -51,7 +53,7 @@ class TOTPSensor(SensorEntity):
         self._state = None
         self._next_expiration = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         self._call_loop()
 
@@ -74,11 +76,6 @@ class TOTPSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def icon(self):

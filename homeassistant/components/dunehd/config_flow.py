@@ -1,8 +1,6 @@
 """Adds config flow for Dune HD integration."""
 from __future__ import annotations
 
-import ipaddress
-import re
 from typing import Any
 
 from pdunehd import DuneHDPlayer
@@ -11,21 +9,9 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN
-
-
-def host_valid(host: str) -> bool:
-    """Return True if hostname or IP address is valid."""
-    try:
-        if ipaddress.ip_address(host).version in (4, 6):
-            return True
-    except ValueError:
-        pass
-    if len(host) > 253:
-        return False
-    allowed = re.compile(r"(?!-)[A-Z\d\-\_]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in host.split("."))
 
 
 class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -47,7 +33,7 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if host_valid(user_input[CONF_HOST]):
+            if is_host_valid(user_input[CONF_HOST]):
                 host: str = user_input[CONF_HOST]
 
                 try:

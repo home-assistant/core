@@ -18,9 +18,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
@@ -376,9 +376,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Entity class attributes
         self._attr_name = self.generate_name(
-            include_value_name=True,
-            alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[self.info.primary_value.metadata.states[self.state_key]],
+            alternate_value_name=self.info.primary_value.metadata.states[self.state_key]
         )
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 

@@ -10,9 +10,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
-from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -22,23 +22,9 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 from tests.testing_config.custom_components.test.sensor import UNITS_OF_MEASUREMENT
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -47,27 +33,31 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integrations):
+async def test_get_conditions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected conditions from a sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     for device_class in SensorDeviceClass:
-        entity_reg.async_get_or_create(
+        entity_registry.async_get_or_create(
             DOMAIN,
             "test",
             platform.ENTITIES[device_class].unique_id,
             device_id=device_entry.id,
         )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_conditions = [
         {
@@ -86,12 +76,12 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert len(conditions) == 26
+    assert len(conditions) == 27
     assert_lists_same(conditions, expected_conditions)
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -100,20 +90,20 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -139,17 +129,21 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_get_conditions_no_state(hass, device_reg, entity_reg):
+async def test_get_conditions_no_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a sensor."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_ids = {}
     for device_class in SensorDeviceClass:
-        entity_ids[device_class] = entity_reg.async_get_or_create(
+        entity_ids[device_class] = entity_registry.async_get_or_create(
             DOMAIN,
             "test",
             f"5678_{device_class}",
@@ -181,7 +175,7 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
 
 
 @pytest.mark.parametrize(
-    "state_class,unit,condition_types",
+    ("state_class", "unit", "condition_types"),
     (
         (SensorStateClass.MEASUREMENT, None, ["is_value"]),
         (SensorStateClass.TOTAL, None, ["is_value"]),
@@ -191,21 +185,21 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
     ),
 )
 async def test_get_conditions_no_unit_or_stateclass(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     state_class,
     unit,
     condition_types,
-):
+) -> None:
     """Test we get the expected conditions from an entity with no unit or state class."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -231,33 +225,33 @@ async def test_get_conditions_no_unit_or_stateclass(
 
 
 @pytest.mark.parametrize(
-    "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
+    ("set_state", "device_class_reg", "device_class_state", "unit_reg", "unit_state"),
     [
         (False, SensorDeviceClass.BATTERY, None, PERCENTAGE, None),
         (True, None, SensorDeviceClass.BATTERY, None, PERCENTAGE),
     ],
 )
 async def test_get_condition_capabilities(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     device_class_reg,
     device_class_state,
     unit_reg,
     unit_state,
-):
+) -> None:
     """Test we get the expected capabilities from a sensor condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_id = entity_reg.async_get_or_create(
+    entity_id = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["battery"].unique_id,
@@ -300,8 +294,8 @@ async def test_get_condition_capabilities(
 
 
 async def test_get_condition_capabilities_none(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we get the expected capabilities from a sensor condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -338,8 +332,11 @@ async def test_get_condition_capabilities_none(
 
 
 async def test_if_state_not_above_below(
-    hass, calls, caplog, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for bad value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -373,7 +370,9 @@ async def test_if_state_not_above_below(
     assert "must contain at least one of below, above" in caplog.text
 
 
-async def test_if_state_above(hass, calls, enable_custom_integrations):
+async def test_if_state_above(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -431,7 +430,9 @@ async def test_if_state_above(hass, calls, enable_custom_integrations):
     assert calls[0].data["some"] == "event - test_event1"
 
 
-async def test_if_state_below(hass, calls, enable_custom_integrations):
+async def test_if_state_below(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -489,7 +490,9 @@ async def test_if_state_below(hass, calls, enable_custom_integrations):
     assert calls[0].data["some"] == "event - test_event1"
 
 
-async def test_if_state_between(hass, calls, enable_custom_integrations):
+async def test_if_state_between(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

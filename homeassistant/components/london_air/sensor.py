@@ -51,10 +51,7 @@ AUTHORITIES = [
     "Westminster",
 ]
 
-URL = (
-    "http://api.erg.kcl.ac.uk/AirQuality/Hourly/"
-    "MonitoringIndex/GroupName=London/Json"
-)
+URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -84,7 +81,7 @@ def setup_platform(
 class APIData:
     """Get the latest data for all authorities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the AirData object."""
         self.data = None
 
@@ -141,7 +138,7 @@ class AirSensor(SensorEntity):
         attrs["data"] = self._site_data
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         sites_status = []
         self._api_data.update()
@@ -221,7 +218,6 @@ def parse_api_response(response):
     for authority in AUTHORITIES:
         for entry in response["HourlyAirQualityIndex"]["LocalAuthority"]:
             if entry["@LocalAuthorityName"] == authority:
-
                 if isinstance(entry["Site"], dict):
                     entry_sites_data = [entry["Site"]]
                 else:

@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> BTSmartHubScanner | None:
     """Return a BT Smart Hub scanner if successful."""
     info = config[DOMAIN]
     smarthub_client = BTSmartHub(

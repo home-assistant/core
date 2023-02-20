@@ -54,7 +54,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_wait_for_full_advertisement(
         self, discovery_info: BluetoothServiceInfo, device: DeviceData
     ) -> BluetoothServiceInfo:
-        """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
+        """Sometimes first advertisement we receive is blank or incomplete.
+
+        Wait until we get a useful one.
+        """
         if not device.pending:
             return discovery_info
 
@@ -87,15 +90,16 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_device = device
 
-        # Wait until we have received enough information about this device to detect its encryption type
+        # Wait until we have received enough information about
+        # this device to detect its encryption type
         try:
             self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
         except asyncio.TimeoutError:
             # This device might have a really long advertising interval
-            # So create a config entry for it, and if we discover it has encryption later
-            # We can do a reauth
+            # So create a config entry for it, and if we discover it has
+            # encryption later, we can do a reauth
             return await self.async_step_confirm_slow()
 
         if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
@@ -205,19 +209,21 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
             discovery = self._discovered_devices[address]
 
             self.context["title_placeholders"] = {"name": discovery.title}
 
-            # Wait until we have received enough information about this device to detect its encryption type
+            # Wait until we have received enough information about
+            # this device to detect its encryption type
             try:
                 self._discovery_info = await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
             except asyncio.TimeoutError:
                 # This device might have a really long advertising interval
-                # So create a config entry for it, and if we discover it has encryption later
-                # We can do a reauth
+                # So create a config entry for it, and if we discover
+                # it has encryption later, we can do a reauth
                 return await self.async_step_confirm_slow()
 
             self._discovered_device = discovery.device
@@ -231,7 +237,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_get_or_create_entry()
 
         current_addresses = self._async_current_ids()
-        for discovery_info in async_discovered_service_info(self.hass):
+        for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue

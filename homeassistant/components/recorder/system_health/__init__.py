@@ -5,12 +5,12 @@ from typing import Any
 from urllib.parse import urlparse
 
 from homeassistant.components import system_health
-from homeassistant.components.recorder.core import Recorder
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, callback
 
 from .. import get_instance
 from ..const import SupportedDialect
+from ..core import Recorder
+from ..util import session_scope
 from .mysql import db_size_bytes as mysql_db_size_bytes
 from .postgresql import db_size_bytes as postgresql_db_size_bytes
 from .sqlite import db_size_bytes as sqlite_db_size_bytes
@@ -49,8 +49,8 @@ def _async_get_db_engine_info(instance: Recorder) -> dict[str, Any]:
     db_engine_info: dict[str, Any] = {}
     if dialect_name := instance.dialect_name:
         db_engine_info["database_engine"] = dialect_name.value
-    if engine_version := instance.engine_version:
-        db_engine_info["database_version"] = str(engine_version)
+    if database_engine := instance.database_engine:
+        db_engine_info["database_version"] = str(database_engine.version)
     return db_engine_info
 
 

@@ -3,23 +3,26 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Any
 
+from aiohttp.client import ClientSession
 from pyfreedompro import put_state
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +46,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro climate."""
-    api_key = entry.data[CONF_API_KEY]
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    api_key: str = entry.data[CONF_API_KEY]
+    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(
             aiohttp_client.async_get_clientsession(hass), api_key, device, coordinator
@@ -54,13 +57,19 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, ClimateEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
     """Representation of an Freedompro climate."""
 
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, session, api_key, device, coordinator):
+    def __init__(
+        self,
+        session: ClientSession,
+        api_key: str,
+        device: dict[str, Any],
+        coordinator: FreedomproDataUpdateCoordinator,
+    ) -> None:
         """Initialize the Freedompro climate."""
         super().__init__(coordinator)
         self._session = session
@@ -70,7 +79,7 @@ class Device(CoordinatorEntity, ClimateEntity):
         self._characteristics = device["characteristics"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=device["type"],
@@ -107,23 +116,22 @@ class Device(CoordinatorEntity, ClimateEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Async function to set mode to climate."""
         if hvac_mode not in SUPPORTED_HVAC_MODES:
             raise ValueError(f"Got unsupported hvac_mode {hvac_mode}")
 
         payload = {}
         payload["heatingCoolingState"] = HVAC_INVERT_MAP[hvac_mode]
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Async function to set temperature to climate."""
         payload = {}
         if ATTR_HVAC_MODE in kwargs:
@@ -137,11 +145,10 @@ class Device(CoordinatorEntity, ClimateEntity):
             payload["heatingCoolingState"] = HVAC_INVERT_MAP[kwargs[ATTR_HVAC_MODE]]
         if ATTR_TEMPERATURE in kwargs:
             payload["targetTemperature"] = kwargs[ATTR_TEMPERATURE]
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()

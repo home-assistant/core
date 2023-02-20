@@ -4,14 +4,25 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
+from miio import Device
+
+from homeassistant.components.number import (
+    DOMAIN as PLATFORM_DOMAIN,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, DEGREE, TIME_MINUTES
+from homeassistant.const import (
+    CONF_MODEL,
+    DEGREE,
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_DEVICE,
@@ -20,17 +31,20 @@ from .const import (
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
+    FEATURE_FLAGS_AIRFRESH_VA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_4,
+    FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_AIRPURIFIER_ZA1,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
@@ -51,17 +65,21 @@ from .const import (
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
+    MODEL_AIRFRESH_VA4,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_LITE_RMA1,
+    MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -91,11 +109,17 @@ ATTR_VOLUME = "volume"
 
 
 @dataclass
-class XiaomiMiioNumberDescription(NumberEntityDescription):
+class XiaomiMiioNumberMixin:
+    """A class that describes number entities."""
+
+    method: str
+
+
+@dataclass
+class XiaomiMiioNumberDescription(NumberEntityDescription, XiaomiMiioNumberMixin):
     """A class that describes number entities."""
 
     available_with_device_off: bool = True
-    method: str | None = None
 
 
 @dataclass
@@ -121,7 +145,7 @@ NUMBER_TYPES = {
         key=ATTR_MOTOR_SPEED,
         name="Motor speed",
         icon="mdi:fast-forward-outline",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=200,
         native_max_value=2000,
         native_step=10,
@@ -174,7 +198,7 @@ NUMBER_TYPES = {
         key=ATTR_DELAY_OFF_COUNTDOWN,
         name="Delay off countdown",
         icon="mdi:fan-off",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=0,
         native_max_value=480,
         native_step=1,
@@ -205,7 +229,7 @@ NUMBER_TYPES = {
         key=ATTR_FAVORITE_RPM,
         name="Favorite motor speed",
         icon="mdi:star-cog",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=300,
         native_max_value=2200,
         native_step=10,
@@ -217,6 +241,7 @@ NUMBER_TYPES = {
 MODEL_TO_FEATURES_MAP = {
     MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRFRESH_VA4: FEATURE_FLAGS_AIRFRESH_VA4,
     MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
@@ -227,8 +252,11 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4_LITE_RMA1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
+    MODEL_AIRPURIFIER_4_LITE_RMB1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_ZA1: FEATURE_FLAGS_AIRPURIFIER_ZA1,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
@@ -264,7 +292,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Selectors from a config entry."""
     entities = []
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
@@ -325,7 +353,16 @@ async def async_setup_entry(
 class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    entity_description: XiaomiMiioNumberDescription
+
+    def __init__(
+        self,
+        device: Device,
+        entry: ConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator,
+        description: XiaomiMiioNumberDescription,
+    ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
 
@@ -335,7 +372,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         self.entity_description = description
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return the number controller availability."""
         if (
             super().available
@@ -345,7 +382,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             return False
         return super().available
 
-    async def async_set_native_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Set an option of the miio device."""
         method = getattr(self, self.entity_description.method)
         if await method(int(value)):
@@ -353,7 +390,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             self.async_write_ha_state()
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         self._attr_native_value = self._extract_value_from_attribute(
@@ -407,7 +444,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             delay_off_countdown * 60,
         )
 
-    async def async_set_led_brightness_level(self, level: int):
+    async def async_set_led_brightness_level(self, level: int) -> bool:
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
@@ -415,7 +452,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             level,
         )
 
-    async def async_set_led_brightness(self, level: int):
+    async def async_set_led_brightness(self, level: int) -> bool:
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
@@ -423,7 +460,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             level,
         )
 
-    async def async_set_favorite_rpm(self, rpm: int):
+    async def async_set_favorite_rpm(self, rpm: int) -> bool:
         """Set the target motor speed."""
         return await self._try_command(
             "Setting the favorite rpm of the miio device failed.",

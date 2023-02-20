@@ -59,7 +59,6 @@ async def test_full_user_flow_implementation(
 
     assert result["step_id"] == "device"
     assert result["type"] == FlowResultType.SHOW_PROGRESS
-    assert "flow_id" in result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

@@ -1,5 +1,4 @@
 """Test ZHA select entities."""
-
 from unittest.mock import call, patch
 
 import pytest
@@ -8,7 +7,8 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, restore_state
 from homeassistant.util import dt as dt_util
 
@@ -18,7 +18,7 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 @pytest.fixture(autouse=True)
 def select_select_only():
-    """Only setup the select and required base platforms to speed up tests."""
+    """Only set up the select and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -107,8 +107,8 @@ def core_rs(hass_storage):
     return _storage
 
 
-async def test_select(hass, siren):
-    """Test zha select platform."""
+async def test_select(hass: HomeAssistant, siren) -> None:
+    """Test ZHA select platform."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = siren
@@ -136,7 +136,7 @@ async def test_select(hass, siren):
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -155,14 +155,14 @@ async def test_select(hass, siren):
 
 
 async def test_select_restore_state(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     core_rs,
     zha_device_restored,
-):
-    """Test zha select entity restore state."""
+) -> None:
+    """Test ZHA select entity restore state."""
 
-    entity_id = "select.fakemanufacturer_fakemodel_defaulttoneselect"
+    entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
     core_rs(entity_id, state="Burglar")
 
     zigpy_device = zigpy_device_mock(
@@ -192,8 +192,10 @@ async def test_select_restore_state(
     assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
 
 
-async def test_on_off_select_new_join(hass, light, zha_device_joined):
-    """Test zha on off select - new join."""
+async def test_on_off_select_new_join(
+    hass: HomeAssistant, light, zha_device_joined
+) -> None:
+    """Test ZHA on off select - new join."""
 
     entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
@@ -201,12 +203,12 @@ async def test_on_off_select_new_join(hass, light, zha_device_joined):
         "start_up_on_off": general.OnOff.StartUpOnOff.On
     }
     zha_device = await zha_device_joined(light)
-    select_name = general.OnOff.StartUpOnOff.__name__
+    select_name = "start_up_behavior"
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier=select_name,
     )
     assert entity_id is not None
 
@@ -228,7 +230,7 @@ async def test_on_off_select_new_join(hass, light, zha_device_joined):
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -251,8 +253,10 @@ async def test_on_off_select_new_join(hass, light, zha_device_joined):
     assert state.state == general.OnOff.StartUpOnOff.Off.name
 
 
-async def test_on_off_select_restored(hass, light, zha_device_restored):
-    """Test zha on off select - restored."""
+async def test_on_off_select_restored(
+    hass: HomeAssistant, light, zha_device_restored
+) -> None:
+    """Test ZHA on off select - restored."""
 
     entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
@@ -284,12 +288,12 @@ async def test_on_off_select_restored(hass, light, zha_device_restored):
         in on_off_cluster.read_attributes.call_args_list
     )
 
-    select_name = general.OnOff.StartUpOnOff.__name__
+    select_name = "start_up_behavior"
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier=select_name,
     )
     assert entity_id is not None
 
@@ -300,11 +304,13 @@ async def test_on_off_select_restored(hass, light, zha_device_restored):
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
 
-async def test_on_off_select_unsupported(hass, light, zha_device_joined_restored):
-    """Test zha on off select unsupported."""
+async def test_on_off_select_unsupported(
+    hass: HomeAssistant, light, zha_device_joined_restored
+) -> None:
+    """Test ZHA on off select unsupported."""
 
     on_off_cluster = light.endpoints[1].on_off
     on_off_cluster.add_unsupported_attribute("start_up_on_off")

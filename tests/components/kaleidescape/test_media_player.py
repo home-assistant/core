@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from kaleidescape import const as kaleidescape_const
 from kaleidescape.device import Movie
 
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,

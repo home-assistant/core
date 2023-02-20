@@ -3,20 +3,7 @@ from __future__ import annotations
 
 from yarl import URL
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_TV_SHOW,
-    MEDIA_CLASS_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
 
 from .const import DOMAIN, SERVERS
 from .errors import MediaNotFound
@@ -29,18 +16,18 @@ class UnknownMediaType(BrowseError):
 
 EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
 ITEM_TYPE_MEDIA_CLASS = {
-    "album": MEDIA_CLASS_ALBUM,
-    "artist": MEDIA_CLASS_ARTIST,
-    "clip": MEDIA_CLASS_VIDEO,
-    "episode": MEDIA_CLASS_EPISODE,
-    "mixed": MEDIA_CLASS_DIRECTORY,
-    "movie": MEDIA_CLASS_MOVIE,
-    "playlist": MEDIA_CLASS_PLAYLIST,
-    "season": MEDIA_CLASS_SEASON,
-    "show": MEDIA_CLASS_TV_SHOW,
-    "station": MEDIA_CLASS_ARTIST,
-    "track": MEDIA_CLASS_TRACK,
-    "video": MEDIA_CLASS_VIDEO,
+    "album": MediaClass.ALBUM,
+    "artist": MediaClass.ARTIST,
+    "clip": MediaClass.VIDEO,
+    "episode": MediaClass.EPISODE,
+    "mixed": MediaClass.DIRECTORY,
+    "movie": MediaClass.MOVIE,
+    "playlist": MediaClass.PLAYLIST,
+    "season": MediaClass.SEASON,
+    "show": MediaClass.TV_SHOW,
+    "station": MediaClass.ARTIST,
+    "track": MediaClass.TRACK,
+    "video": MediaClass.VIDEO,
 }
 
 
@@ -99,13 +86,13 @@ def browse_media(  # noqa: C901
         """Create response payload to describe libraries of the Plex server."""
         server_info = BrowseMedia(
             title=plex_server.friendly_name,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_id=generate_plex_uri(server_id, "server"),
             media_content_type="server",
             can_play=False,
             can_expand=True,
             children=[],
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
             thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
         )
         if platform != "sonos":
@@ -136,7 +123,7 @@ def browse_media(  # noqa: C901
         """Create response payload for all available playlists."""
         playlists_info = {
             "title": "Playlists",
-            "media_class": MEDIA_CLASS_DIRECTORY,
+            "media_class": MediaClass.DIRECTORY,
             "media_content_id": generate_plex_uri(server_id, "all"),
             "media_content_type": "playlists",
             "can_play": False,
@@ -151,7 +138,7 @@ def browse_media(  # noqa: C901
             except UnknownMediaType:
                 continue
         response = BrowseMedia(**playlists_info)
-        response.children_media_class = MEDIA_CLASS_PLAYLIST
+        response.children_media_class = MediaClass.PLAYLIST
         return response
 
     def build_item_response(payload):
@@ -197,7 +184,7 @@ def browse_media(  # noqa: C901
             raise UnknownMediaType(f"Unknown type received: {hub.type}") from err
         payload = {
             "title": hub.title,
-            "media_class": MEDIA_CLASS_DIRECTORY,
+            "media_class": MediaClass.DIRECTORY,
             "media_content_id": generate_plex_uri(server_id, media_content_id),
             "media_content_type": "hub",
             "can_play": False,
@@ -223,7 +210,7 @@ def browse_media(  # noqa: C901
     if special_folder:
         if media_content_type == "server":
             library_or_section = plex_server.library
-            children_media_class = MEDIA_CLASS_DIRECTORY
+            children_media_class = MediaClass.DIRECTORY
             title = plex_server.friendly_name
         elif media_content_type == "library":
             library_or_section = plex_server.library.sectionByID(int(media_content_id))
@@ -241,7 +228,7 @@ def browse_media(  # noqa: C901
 
         payload = {
             "title": title,
-            "media_class": MEDIA_CLASS_DIRECTORY,
+            "media_class": MediaClass.DIRECTORY,
             "media_content_id": generate_plex_uri(
                 server_id, f"{media_content_id}/{special_folder}"
             ),
@@ -323,7 +310,7 @@ def root_payload(hass, is_internal, platform=None):
 
     return BrowseMedia(
         title="Plex",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type="plex_root",
         can_play=False,
@@ -341,7 +328,7 @@ def library_section_payload(section):
     server_id = section._server.machineIdentifier  # pylint: disable=protected-access
     return BrowseMedia(
         title=section.title,
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id=generate_plex_uri(server_id, section.key),
         media_content_type="library",
         can_play=False,
@@ -374,7 +361,7 @@ def hub_payload(hub):
     server_id = hub._server.machineIdentifier  # pylint: disable=protected-access
     payload = {
         "title": hub.title,
-        "media_class": MEDIA_CLASS_DIRECTORY,
+        "media_class": MediaClass.DIRECTORY,
         "media_content_id": generate_plex_uri(server_id, media_content_id),
         "media_content_type": "hub",
         "can_play": False,

@@ -9,7 +9,7 @@ from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -29,8 +29,6 @@ ATTR_TARGET = "destination"
 ATTR_TRAIN_NUMBER = "train_number"
 ATTR_TRANSFERS = "transfers"
 ATTR_DELAY = "delay"
-
-ATTRIBUTION = "Data provided by transport.opendata.ch"
 
 CONF_DESTINATION = "to"
 CONF_START = "from"
@@ -80,6 +78,8 @@ async def async_setup_platform(
 class SwissPublicTransportSensor(SensorEntity):
     """Implementation of an Swiss public transport sensor."""
 
+    _attr_attribution = "Data provided by transport.opendata.ch"
+
     def __init__(self, opendata, start, destination, name):
         """Initialize the sensor."""
         self._opendata = opendata
@@ -122,7 +122,6 @@ class SwissPublicTransportSensor(SensorEntity):
             ATTR_START: self._opendata.from_name,
             ATTR_TARGET: self._opendata.to_name,
             ATTR_REMAINING_TIME: f"{self._remaining_time}",
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DELAY: self._opendata.connections[0]["delay"],
         }
 
@@ -131,7 +130,7 @@ class SwissPublicTransportSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from opendata.ch and update the states."""
 
         try:

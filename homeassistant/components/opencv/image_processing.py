@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import numpy
+import numpy as np
 import requests
 import voluptuous as vol
 
@@ -87,7 +87,7 @@ def _create_processor_from_config(hass, camera_entity, config):
 def _get_default_classifier(dest_path):
     """Download the default OpenCV classifier."""
     _LOGGER.info("Downloading default classifier")
-    req = requests.get(CASCADE_URL, stream=True)
+    req = requests.get(CASCADE_URL, stream=True, timeout=10)
     with open(dest_path, "wb") as fil:
         for chunk in req.iter_content(chunk_size=1024):
             if chunk:  # filter out keep-alive new chunks
@@ -165,7 +165,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+        cv_image = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
         matches = {}
         total_matches = 0
@@ -189,7 +189,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             )
             regions = []
             # pylint: disable=invalid-name
-            for (x, y, w, h) in detections:
+            for x, y, w, h in detections:
                 regions.append((int(x), int(y), int(w), int(h)))
                 total_matches += 1
 

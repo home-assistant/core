@@ -24,11 +24,8 @@ from .v2.device_trigger import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.components.automation import (
-        AutomationActionType,
-        AutomationTriggerInfo,
-    )
     from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 
     from .bridge import HueBridge
 
@@ -59,8 +56,8 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     device_id = config[CONF_DEVICE_ID]
@@ -75,10 +72,10 @@ async def async_attach_trigger(
         bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
         if bridge.api_version == 1:
             return await async_attach_trigger_v1(
-                bridge, device_entry, config, action, automation_info
+                bridge, device_entry, config, action, trigger_info
             )
         return await async_attach_trigger_v2(
-            bridge, device_entry, config, action, automation_info
+            bridge, device_entry, config, action, trigger_info
         )
     raise InvalidDeviceAutomationConfig(
         f"Device ID {device_id} is not found on any Hue bridge"

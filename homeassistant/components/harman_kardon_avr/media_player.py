@@ -8,8 +8,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,18 +66,17 @@ class HkAvrDevice(MediaPlayerEntity):
 
         self._source_list = avr.sources
 
-        self._state = None
         self._muted = avr.muted
         self._current_source = avr.current_source
 
-    def update(self):
+    def update(self) -> None:
         """Update the state of this media_player."""
         if self._avr.is_on():
-            self._state = STATE_ON
+            self._attr_state = MediaPlayerState.ON
         elif self._avr.is_off():
-            self._state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
         else:
-            self._state = None
+            self._attr_state = None
 
         self._muted = self._avr.muted
         self._current_source = self._avr.current_source
@@ -85,11 +85,6 @@ class HkAvrDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def is_volume_muted(self):
@@ -106,26 +101,26 @@ class HkAvrDevice(MediaPlayerEntity):
         """Available sources."""
         return self._source_list
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the AVR on."""
         self._avr.power_on()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off the AVR."""
         self._avr.power_off()
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         return self._avr.select_source(source)
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the AVR."""
         return self._avr.volume_up()
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down AVR."""
         return self._avr.volume_down()
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         return self._avr.mute(mute)

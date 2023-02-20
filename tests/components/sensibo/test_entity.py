@@ -1,20 +1,15 @@
 """The test for the sensibo entity."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
-)
-from homeassistant.components.number.const import (
-    ATTR_VALUE,
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
 )
 from homeassistant.components.sensibo.const import SENSIBO_ERRORS
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +46,7 @@ async def test_entity(
 
 
 @pytest.mark.parametrize("p_error", SENSIBO_ERRORS)
-async def test_entity_send_command(
+async def test_entity_failed_service_calls(
     hass: HomeAssistant,
     p_error: Exception,
     load_int: ConfigEntry,
@@ -80,40 +75,13 @@ async def test_entity_send_command(
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         side_effect=p_error,
-    ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_FAN_MODE,
-                {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
-                blocking=True,
-            )
-
-    state = hass.states.get("climate.hallway")
-    assert state.attributes["fan_mode"] == "low"
-
-
-async def test_entity_send_command_calibration(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
-    load_int: ConfigEntry,
-    get_data: SensiboData,
-) -> None:
-    """Test the Sensibo send command for calibration."""
-
-    state = hass.states.get("number.hallway_temperature_calibration")
-    assert state.state == "0.1"
-
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_calibration",
-        return_value={"status": "success"},
-    ):
+    ), pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: 0.2},
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
             blocking=True,
         )
 
-    state = hass.states.get("number.hallway_temperature_calibration")
-    assert state.state == "0.2"
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["fan_mode"] == "low"

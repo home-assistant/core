@@ -1,29 +1,22 @@
 """Test the Litter-Robot select entity."""
-from datetime import timedelta
-
-from pylitterbot.robot import VALID_WAIT_TIMES
+from pylitterbot import LitterRobot3
 import pytest
 
-from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util.dt import utcnow
 
 from .conftest import setup_integration
-
-from tests.common import async_fire_time_changed
 
 SELECT_ENTITY_ID = "select.test_clean_cycle_wait_time_minutes"
 
 
-async def test_wait_time_select(hass: HomeAssistant, mock_account):
+async def test_wait_time_select(hass: HomeAssistant, mock_account) -> None:
     """Tests the wait time select entity."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
@@ -38,7 +31,7 @@ async def test_wait_time_select(hass: HomeAssistant, mock_account):
     data = {ATTR_ENTITY_ID: SELECT_ENTITY_ID}
 
     count = 0
-    for wait_time in VALID_WAIT_TIMES:
+    for wait_time in LitterRobot3.VALID_WAIT_TIMES:
         count += 1
         data[ATTR_OPTION] = wait_time
 
@@ -49,12 +42,10 @@ async def test_wait_time_select(hass: HomeAssistant, mock_account):
             blocking=True,
         )
 
-        future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME_SECONDS)
-        async_fire_time_changed(hass, future)
         assert mock_account.robots[0].set_wait_time.call_count == count
 
 
-async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account):
+async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> None:
     """Tests the wait time select entity with invalid value."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 

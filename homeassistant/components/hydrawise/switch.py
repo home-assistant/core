@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -80,12 +81,12 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
 
     def __init__(
         self, data, description: SwitchEntityDescription, default_watering_timer
-    ):
+    ) -> None:
         """Initialize a switch for Hydrawise device."""
         super().__init__(data, description)
         self._default_watering_timer = default_watering_timer
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         relay_data = self.data["relay"] - 1
         if self.entity_description.key == "manual_watering":
@@ -95,7 +96,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         elif self.entity_description.key == "auto_watering":
             self.hass.data[DATA_HYDRAWISE].data.suspend_zone(0, relay_data)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         relay_data = self.data["relay"] - 1
         if self.entity_description.key == "manual_watering":
@@ -103,7 +104,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         elif self.entity_description.key == "auto_watering":
             self.hass.data[DATA_HYDRAWISE].data.suspend_zone(365, relay_data)
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         relay_data = self.data["relay"] - 1
         mydata = self.hass.data[DATA_HYDRAWISE].data

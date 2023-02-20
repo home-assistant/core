@@ -1,5 +1,4 @@
-"""
-Support to use FortiOS device like FortiGate as device tracker.
+"""Support to use FortiOS device like FortiGate as device tracker.
 
 This component is part of the device_tracker platform.
 """
@@ -35,7 +34,7 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner | None:
     """Validate the configuration and return a FortiOSDeviceScanner."""
     host = config[DOMAIN][CONF_HOST]
     verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]

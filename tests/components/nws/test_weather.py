@@ -12,13 +12,13 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.nws.const import (
+from .const import (
     EXPECTED_FORECAST_IMPERIAL,
     EXPECTED_FORECAST_METRIC,
     NONE_FORECAST,
@@ -28,12 +28,14 @@ from tests.components.nws.const import (
     WEATHER_EXPECTED_OBSERVATION_METRIC,
 )
 
+from tests.common import MockConfigEntry, async_fire_time_changed
+
 
 @pytest.mark.parametrize(
-    "units,result_observation,result_forecast",
+    ("units", "result_observation", "result_forecast"),
     [
         (
-            IMPERIAL_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
             WEATHER_EXPECTED_OBSERVATION_IMPERIAL,
             EXPECTED_FORECAST_IMPERIAL,
         ),
@@ -41,8 +43,13 @@ from tests.components.nws.const import (
     ],
 )
 async def test_imperial_metric(
-    hass, units, result_observation, result_forecast, mock_simple_nws, no_sensor
-):
+    hass: HomeAssistant,
+    units,
+    result_observation,
+    result_forecast,
+    mock_simple_nws,
+    no_sensor,
+) -> None:
     """Test with imperial and metric units."""
     # enable the hourly entity
     registry = er.async_get(hass)
@@ -90,7 +97,7 @@ async def test_imperial_metric(
         assert forecast[0].get(key) == value
 
 
-async def test_none_values(hass, mock_simple_nws, no_sensor):
+async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test with none values in observation and forecast dicts."""
     instance = mock_simple_nws.return_value
     instance.observation = NONE_OBSERVATION
@@ -115,7 +122,7 @@ async def test_none_values(hass, mock_simple_nws, no_sensor):
         assert forecast[0].get(key) is None
 
 
-async def test_none(hass, mock_simple_nws, no_sensor):
+async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test with None as observation and forecast."""
     instance = mock_simple_nws.return_value
     instance.observation = None
@@ -141,7 +148,7 @@ async def test_none(hass, mock_simple_nws, no_sensor):
     assert forecast is None
 
 
-async def test_error_station(hass, mock_simple_nws, no_sensor):
+async def test_error_station(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test error in setting station."""
 
     instance = mock_simple_nws.return_value
@@ -159,7 +166,7 @@ async def test_error_station(hass, mock_simple_nws, no_sensor):
     assert hass.states.get("weather.abc_daynight") is None
 
 
-async def test_entity_refresh(hass, mock_simple_nws, no_sensor):
+async def test_entity_refresh(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test manual refresh."""
     instance = mock_simple_nws.return_value
 
@@ -188,7 +195,9 @@ async def test_entity_refresh(hass, mock_simple_nws, no_sensor):
     instance.update_forecast_hourly.assert_called_once()
 
 
-async def test_error_observation(hass, mock_simple_nws, no_sensor):
+async def test_error_observation(
+    hass: HomeAssistant, mock_simple_nws, no_sensor
+) -> None:
     """Test error during update observation."""
     utc_time = dt_util.utcnow()
     with patch("homeassistant.components.nws.utcnow") as mock_utc, patch(
@@ -252,7 +261,7 @@ async def test_error_observation(hass, mock_simple_nws, no_sensor):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_error_forecast(hass, mock_simple_nws, no_sensor):
+async def test_error_forecast(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test error during update forecast."""
     instance = mock_simple_nws.return_value
     instance.update_forecast.side_effect = aiohttp.ClientError
@@ -283,7 +292,9 @@ async def test_error_forecast(hass, mock_simple_nws, no_sensor):
     assert state.state == ATTR_CONDITION_SUNNY
 
 
-async def test_error_forecast_hourly(hass, mock_simple_nws, no_sensor):
+async def test_error_forecast_hourly(
+    hass: HomeAssistant, mock_simple_nws, no_sensor
+) -> None:
     """Test error during update forecast hourly."""
     instance = mock_simple_nws.return_value
     instance.update_forecast_hourly.side_effect = aiohttp.ClientError
@@ -324,7 +335,9 @@ async def test_error_forecast_hourly(hass, mock_simple_nws, no_sensor):
     assert state.state == ATTR_CONDITION_SUNNY
 
 
-async def test_forecast_hourly_disable_enable(hass, mock_simple_nws, no_sensor):
+async def test_forecast_hourly_disable_enable(
+    hass: HomeAssistant, mock_simple_nws, no_sensor
+) -> None:
     """Test error during update forecast hourly."""
     entry = MockConfigEntry(
         domain=nws.DOMAIN,

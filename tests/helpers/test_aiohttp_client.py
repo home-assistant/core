@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.color import RGBColor
 
@@ -45,10 +45,10 @@ def camera_client_fixture(hass, hass_client):
     )
     hass.loop.run_until_complete(hass.async_block_till_done())
 
-    yield hass.loop.run_until_complete(hass_client())
+    return hass.loop.run_until_complete(hass_client())
 
 
-async def test_get_clientsession_with_ssl(hass):
+async def test_get_clientsession_with_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession with ssl."""
     client.async_get_clientsession(hass)
 
@@ -56,7 +56,7 @@ async def test_get_clientsession_with_ssl(hass):
     assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
 
 
-async def test_get_clientsession_without_ssl(hass):
+async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession without ssl."""
     client.async_get_clientsession(hass, verify_ssl=False)
 
@@ -66,21 +66,23 @@ async def test_get_clientsession_without_ssl(hass):
     assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
 
 
-async def test_create_clientsession_with_ssl_and_cookies(hass):
+async def test_create_clientsession_with_ssl_and_cookies(hass: HomeAssistant) -> None:
     """Test create clientsession with ssl."""
     session = client.async_create_clientsession(hass, cookies={"bla": True})
     assert isinstance(session, aiohttp.ClientSession)
     assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
 
 
-async def test_create_clientsession_without_ssl_and_cookies(hass):
+async def test_create_clientsession_without_ssl_and_cookies(
+    hass: HomeAssistant,
+) -> None:
     """Test create clientsession without ssl."""
     session = client.async_create_clientsession(hass, False, cookies={"bla": True})
     assert isinstance(session, aiohttp.ClientSession)
     assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
 
 
-async def test_get_clientsession_cleanup(hass):
+async def test_get_clientsession_cleanup(hass: HomeAssistant) -> None:
     """Test init clientsession with ssl."""
     client.async_get_clientsession(hass)
 
@@ -94,7 +96,7 @@ async def test_get_clientsession_cleanup(hass):
     assert hass.data[client.DATA_CONNECTOR].closed
 
 
-async def test_get_clientsession_cleanup_without_ssl(hass):
+async def test_get_clientsession_cleanup_without_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession with ssl."""
     client.async_get_clientsession(hass, verify_ssl=False)
 
@@ -110,7 +112,7 @@ async def test_get_clientsession_cleanup_without_ssl(hass):
     assert hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
 
 
-async def test_get_clientsession_patched_close(hass):
+async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
     """Test closing clientsession does not work."""
     with patch("aiohttp.ClientSession.close") as mock_close:
         session = client.async_get_clientsession(hass)
@@ -182,9 +184,9 @@ async def test_warning_close_session_custom(hass, caplog):
         session = client.async_get_clientsession(hass)
         await session.close()
     assert (
-        "Detected integration that closes the Home Assistant aiohttp session. "
-        "Please report issue to the custom integration author for hue using this method at "
-        "custom_components/hue/light.py, line 23: await session.close()" in caplog.text
+        "Detected integration that closes the Home Assistant aiohttp session. Please"
+        " report issue to the custom integration author for hue using this method at"
+        " custom_components/hue/light.py, line 23: await session.close()" in caplog.text
     )
 
 
@@ -226,7 +228,7 @@ async def test_sending_named_tuple(hass, aioclient_mock):
     aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
 
 
-async def test_client_session_immutable_headers(hass):
+async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:
     """Test we can't mutate headers."""
     session = client.async_get_clientsession(hass)
 

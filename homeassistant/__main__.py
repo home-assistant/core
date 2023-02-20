@@ -15,7 +15,10 @@ FAULT_LOG_FILENAME = "home-assistant.log.fault"
 def validate_os() -> None:
     """Validate that Home Assistant is running in a supported operating system."""
     if not sys.platform.startswith(("darwin", "linux")):
-        print("Home Assistant only supports Linux, OSX and Windows using WSL")
+        print(
+            "Home Assistant only supports Linux, OSX and Windows using WSL",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
@@ -24,14 +27,15 @@ def validate_python() -> None:
     if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print(
             "Home Assistant requires at least Python "
-            f"{REQUIRED_PYTHON_VER[0]}.{REQUIRED_PYTHON_VER[1]}.{REQUIRED_PYTHON_VER[2]}"
+            f"{REQUIRED_PYTHON_VER[0]}.{REQUIRED_PYTHON_VER[1]}.{REQUIRED_PYTHON_VER[2]}",
+            file=sys.stderr,
         )
         sys.exit(1)
 
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import config as config_util
 
     lib_dir = os.path.join(config_dir, "deps")
@@ -39,18 +43,23 @@ def ensure_config_path(config_dir: str) -> None:
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
+            if os.path.exists(config_dir):
+                reason = "is not a directory"
+            else:
+                reason = "does not exist"
             print(
-                f"Fatal Error: Specified configuration directory {config_dir} "
-                "does not exist"
+                f"Fatal Error: Specified configuration directory {config_dir} {reason}",
+                file=sys.stderr,
             )
             sys.exit(1)
 
         try:
             os.mkdir(config_dir)
-        except OSError:
+        except OSError as ex:
             print(
                 "Fatal Error: Unable to create default configuration "
-                f"directory {config_dir}"
+                f"directory {config_dir}: {ex}",
+                file=sys.stderr,
             )
             sys.exit(1)
 
@@ -58,14 +67,17 @@ def ensure_config_path(config_dir: str) -> None:
     if not os.path.isdir(lib_dir):
         try:
             os.mkdir(lib_dir)
-        except OSError:
-            print(f"Fatal Error: Unable to create library directory {lib_dir}")
+        except OSError as ex:
+            print(
+                f"Fatal Error: Unable to create library directory {lib_dir}: {ex}",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import config as config_util
 
     parser = argparse.ArgumentParser(
@@ -89,11 +101,21 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--open-ui", action="store_true", help="Open the webinterface in a browser"
     )
-    parser.add_argument(
+
+    skip_pip_group = parser.add_mutually_exclusive_group()
+    skip_pip_group.add_argument(
         "--skip-pip",
         action="store_true",
         help="Skips pip install of required packages on startup",
     )
+    skip_pip_group.add_argument(
+        "--skip-pip-packages",
+        metavar="package_names",
+        type=lambda arg: arg.split(","),
+        default=[],
+        help="Skip pip install of specific packages on startup",
+    )
+
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging to file."
     )
@@ -162,7 +184,7 @@ def main() -> int:
         validate_os()
 
     if args.script is not None:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import scripts
 
         return scripts.run(args.script)
@@ -170,7 +192,7 @@ def main() -> int:
     config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
     ensure_config_path(config_dir)
 
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from . import runner
 
     runtime_conf = runner.RuntimeConfig(
@@ -180,6 +202,7 @@ def main() -> int:
         log_file=args.log_file,
         log_no_color=args.log_no_color,
         skip_pip=args.skip_pip,
+        skip_pip_packages=args.skip_pip_packages,
         safe_mode=args.safe_mode,
         debug=args.debug,
         open_ui=args.open_ui,

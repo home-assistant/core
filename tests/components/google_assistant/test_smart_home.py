@@ -3,13 +3,10 @@ import asyncio
 from unittest.mock import ANY, call, patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import camera
-from homeassistant.components.climate.const import (
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    HVAC_MODE_HEAT,
-)
+from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
@@ -24,8 +21,8 @@ from homeassistant.components.google_assistant import (
     trait,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
-from homeassistant.core import EVENT_CALL_SERVICE, State
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, __version__
+from homeassistant.core import EVENT_CALL_SERVICE, HomeAssistant, State
 from homeassistant.helpers import device_registry, entity_platform
 from homeassistant.setup import async_setup_component
 
@@ -53,7 +50,7 @@ def registries(hass):
     return ret
 
 
-async def test_async_handle_message(hass):
+async def test_async_handle_message(hass: HomeAssistant) -> None:
     """Test the async handle message method."""
     config = MockConfig(
         should_expose=lambda state: state.entity_id != "light.not_expose",
@@ -105,10 +102,21 @@ async def test_async_handle_message(hass):
     await hass.async_block_till_done()
 
 
-async def test_sync_message(hass):
+async def test_sync_message(hass: HomeAssistant, registries) -> None:
     """Test a sync message."""
+    entity = registries.entity.async_get_or_create(
+        "light",
+        "test",
+        "unique-demo-light",
+        suggested_object_id="demo_light",
+    )
+    registries.entity.async_update_entity(
+        entity.entity_id,
+        aliases={"Stay", "Healthy"},
+    )
+
     light = DemoLight(
-        None,
+        "unique-demo-light",
         "Demo Light",
         state=False,
         hs_color=(180, 75),
@@ -154,7 +162,15 @@ async def test_sync_message(hass):
                     "id": "light.demo_light",
                     "name": {
                         "name": "Demo Light",
-                        "nicknames": ["Demo Light", "Hello", "World"],
+                        "nicknames": unordered(
+                            [
+                                "Demo Light",
+                                "Hello",
+                                "World",
+                                "Stay",
+                                "Healthy",
+                            ]
+                        ),
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
@@ -185,7 +201,10 @@ async def test_sync_message(hass):
                                     {
                                         "setting_name": "none",
                                         "setting_values": [
-                                            {"lang": "en", "setting_synonym": ["none"]}
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["none"],
+                                            }
                                         ],
                                     },
                                 ],
@@ -209,9 +228,8 @@ async def test_sync_message(hass):
     assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
-# pylint: disable=redefined-outer-name
 @pytest.mark.parametrize("area_on_device", [True, False])
-async def test_sync_in_area(area_on_device, hass, registries):
+async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> None:
     """Test a sync message where room hint comes from area."""
     area = registries.area.async_create("Living Room")
 
@@ -232,7 +250,9 @@ async def test_sync_in_area(area_on_device, hass, registries):
         "1235",
         suggested_object_id="demo_light",
         device_id=device.id,
-        area_id=area.id if not area_on_device else None,
+    )
+    entity = registries.entity.async_update_entity(
+        entity.entity_id, area_id=area.id if not area_on_device else None
     )
 
     light = DemoLight(
@@ -325,7 +345,7 @@ async def test_sync_in_area(area_on_device, hass, registries):
     assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
-async def test_query_message(hass):
+async def test_query_message(hass: HomeAssistant) -> None:
     """Test a sync message."""
     light = DemoLight(
         None,
@@ -381,7 +401,7 @@ async def test_query_message(hass):
         "payload": {
             "devices": {
                 "light.non_existing": {"online": False},
-                "light.demo_light": {"on": False, "online": True, "brightness": 0},
+                "light.demo_light": {"on": False, "online": True},
                 "light.another_light": {
                     "on": True,
                     "online": True,
@@ -421,9 +441,12 @@ async def test_query_message(hass):
 
 
 @pytest.mark.parametrize(
-    "report_state,on,brightness,value", [(False, True, 20, 0.2), (True, ANY, ANY, ANY)]
+    ("report_state", "on", "brightness", "value"),
+    [(False, True, 20, 0.2), (True, ANY, ANY, ANY)],
 )
-async def test_execute(hass, report_state, on, brightness, value):
+async def test_execute(
+    hass: HomeAssistant, report_state, on, brightness, value
+) -> None:
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -599,8 +622,12 @@ async def test_execute(hass, report_state, on, brightness, value):
     assert service_events[3].context == events[0].context
 
 
-@pytest.mark.parametrize("report_state,on,brightness,value", [(False, False, ANY, ANY)])
-async def test_execute_times_out(hass, report_state, on, brightness, value):
+@pytest.mark.parametrize(
+    ("report_state", "on", "brightness", "value"), [(False, False, ANY, ANY)]
+)
+async def test_execute_times_out(
+    hass: HomeAssistant, report_state, on, brightness, value
+) -> None:
     """Test an execute command which times out."""
     orig_execute_limit = sh.EXECUTE_LIMIT
     sh.EXECUTE_LIMIT = 0.02  # Decrease timeout to 20ms
@@ -725,7 +752,6 @@ async def test_execute_times_out(hass, report_state, on, brightness, value):
                     "states": {
                         "on": on,
                         "online": True,
-                        "brightness": brightness,
                     },
                 },
                 {
@@ -802,12 +828,16 @@ async def test_execute_times_out(hass, report_state, on, brightness, value):
     sh.EXECUTE_LIMIT = orig_execute_limit
 
 
-async def test_raising_error_trait(hass):
+async def test_raising_error_trait(hass: HomeAssistant) -> None:
     """Test raising an error while executing a trait command."""
     hass.states.async_set(
         "climate.bla",
-        HVAC_MODE_HEAT,
-        {ATTR_MIN_TEMP: 15, ATTR_MAX_TEMP: 30, ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        HVACMode.HEAT,
+        {
+            ATTR_MIN_TEMP: 15,
+            ATTR_MAX_TEMP: 30,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
     )
 
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
@@ -870,10 +900,9 @@ async def test_raising_error_trait(hass):
     }
 
 
-async def test_serialize_input_boolean(hass):
+async def test_serialize_input_boolean(hass: HomeAssistant) -> None:
     """Test serializing an input boolean entity."""
     state = State("input_boolean.bla", "on")
-    # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
     result = entity.sync_serialize(None, "mock-uuid")
     assert result == {
@@ -886,7 +915,7 @@ async def test_serialize_input_boolean(hass):
     }
 
 
-async def test_unavailable_state_does_sync(hass):
+async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
     """Test that an unavailable entity does sync over."""
     light = DemoLight(
         None,
@@ -898,7 +927,7 @@ async def test_unavailable_state_does_sync(hass):
     )
     light.hass = hass
     light.entity_id = "light.demo_light"
-    light._available = False  # pylint: disable=protected-access
+    light._available = False
     await light.async_update_ha_state()
 
     events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
@@ -972,14 +1001,16 @@ async def test_unavailable_state_does_sync(hass):
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.SWITCH"),
         ("switch", "action.devices.types.SWITCH"),
         ("outlet", "action.devices.types.OUTLET"),
     ],
 )
-async def test_device_class_switch(hass, device_class, google_type):
+async def test_device_class_switch(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a cover entity syncs to the correct device type."""
     sensor = DemoSwitch(
         None,
@@ -1020,7 +1051,7 @@ async def test_device_class_switch(hass, device_class, google_type):
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("door", "action.devices.types.DOOR"),
         ("garage_door", "action.devices.types.GARAGE"),
@@ -1029,7 +1060,9 @@ async def test_device_class_switch(hass, device_class, google_type):
         ("window", "action.devices.types.WINDOW"),
     ],
 )
-async def test_device_class_binary_sensor(hass, device_class, google_type):
+async def test_device_class_binary_sensor(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a binary entity syncs to the correct device type."""
     sensor = DemoBinarySensor(
         None, "Demo Sensor", state=False, device_class=device_class
@@ -1068,7 +1101,7 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
@@ -1079,7 +1112,9 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
         ("curtain", "action.devices.types.CURTAIN"),
     ],
 )
-async def test_device_class_cover(hass, device_class, google_type):
+async def test_device_class_cover(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a cover entity syncs to the correct device type."""
     sensor = DemoCover(None, hass, "Demo Sensor", device_class=device_class)
     sensor.hass = hass
@@ -1116,7 +1151,7 @@ async def test_device_class_cover(hass, device_class, google_type):
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),
@@ -1124,7 +1159,9 @@ async def test_device_class_cover(hass, device_class, google_type):
         ("receiver", "action.devices.types.AUDIO_VIDEO_RECEIVER"),
     ],
 )
-async def test_device_media_player(hass, device_class, google_type):
+async def test_device_media_player(
+    hass: HomeAssistant, device_class, google_type
+) -> None:
     """Test that a binary entity syncs to the correct device type."""
     sensor = AbstractDemoPlayer("Demo", device_class=device_class)
     sensor.hass = hass
@@ -1163,7 +1200,7 @@ async def test_device_media_player(hass, device_class, google_type):
     }
 
 
-async def test_query_disconnect(hass):
+async def test_query_disconnect(hass: HomeAssistant) -> None:
     """Test a disconnect message."""
     config = MockConfig(hass=hass)
     config.async_enable_report_state()
@@ -1180,7 +1217,7 @@ async def test_query_disconnect(hass):
     assert len(mock_disconnect.mock_calls) == 1
 
 
-async def test_trait_execute_adding_query_data(hass):
+async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
     """Test a trait execute influencing query data."""
     await async_process_ha_core_config(
         hass,
@@ -1248,7 +1285,7 @@ async def test_trait_execute_adding_query_data(hass):
     }
 
 
-async def test_identify(hass):
+async def test_identify(hass: HomeAssistant) -> None:
     """Test identify message."""
     user_agent_id = "mock-user-id"
     proxy_device_id = user_agent_id
@@ -1316,7 +1353,7 @@ async def test_identify(hass):
     }
 
 
-async def test_reachable_devices(hass):
+async def test_reachable_devices(hass: HomeAssistant) -> None:
     """Test REACHABLE_DEVICES intent."""
     # Matching passed in device.
     hass.states.async_set("light.ceiling_lights", "on")
@@ -1401,7 +1438,9 @@ async def test_reachable_devices(hass):
     }
 
 
-async def test_sync_message_recovery(hass, caplog):
+async def test_sync_message_recovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a sync message recovers from bad entities."""
     light = DemoLight(
         None,
@@ -1460,7 +1499,9 @@ async def test_sync_message_recovery(hass, caplog):
     assert "Error serializing light.bad_light" in caplog.text
 
 
-async def test_query_recover(hass, caplog):
+async def test_query_recover(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we recover if an entity raises during query."""
 
     hass.states.async_set(
@@ -1516,7 +1557,9 @@ async def test_query_recover(hass, caplog):
     }
 
 
-async def test_proxy_selected(hass, caplog):
+async def test_proxy_selected(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we handle proxy selected."""
 
     result = await sh.async_handle_message(

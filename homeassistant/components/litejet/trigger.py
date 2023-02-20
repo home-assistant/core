@@ -3,16 +3,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from pylitejet import LiteJet
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -39,11 +37,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     number = config.get(CONF_NUMBER)
     held_more_than = config.get(CONF_HELD_MORE_THAN)
     held_less_than = config.get(CONF_HELD_LESS_THAN)
@@ -94,7 +92,6 @@ async def async_attach_trigger(
         """Handle the release of the LiteJet switch's button."""
         nonlocal cancel_pressed_more_than, pressed_time
         nonlocal held_less_than, held_more_than
-        # pylint: disable=not-callable
         if cancel_pressed_more_than is not None:
             cancel_pressed_more_than()
             cancel_pressed_more_than = None
@@ -107,7 +104,7 @@ async def async_attach_trigger(
         ):
             hass.add_job(call_action)
 
-    system = hass.data[DOMAIN]
+    system: LiteJet = hass.data[DOMAIN]
 
     system.on_switch_pressed(number, pressed)
     system.on_switch_released(number, released)

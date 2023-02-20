@@ -16,7 +16,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_ZONE_RUN_TIME, DEFAULT_PORT, DEFAULT_ZONE_RUN, DOMAIN
+from .const import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_USE_APP_RUN_TIMES,
+    DEFAULT_PORT,
+    DEFAULT_ZONE_RUN,
+    DOMAIN,
+)
 
 
 @callback
@@ -35,8 +41,8 @@ async def async_get_controller(
         await client.load_local(ip_address, password, port=port, use_ssl=ssl)
     except RainMachineError:
         return None
-    else:
-        return get_client_controller(client)
+
+    return get_client_controller(client)
 
 
 class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -132,14 +138,14 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # access token without using the IP address and password, so we have to
                 # store it:
                 return self.async_create_entry(
-                    title=str(controller.name),
+                    title=controller.name.capitalize(),
                     data={
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_SSL: user_input.get(CONF_SSL, True),
-                        CONF_ZONE_RUN_TIME: user_input.get(
-                            CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
+                        CONF_DEFAULT_ZONE_RUN_TIME: user_input.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
                         ),
                     },
                 )
@@ -166,16 +172,22 @@ class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_ZONE_RUN_TIME,
-                        default=self.config_entry.options.get(CONF_ZONE_RUN_TIME),
-                    ): cv.positive_int
+                        CONF_DEFAULT_ZONE_RUN_TIME,
+                        default=self.config_entry.options.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME
+                        ),
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_USE_APP_RUN_TIMES,
+                        default=self.config_entry.options.get(CONF_USE_APP_RUN_TIMES),
+                    ): bool,
                 }
             ),
         )

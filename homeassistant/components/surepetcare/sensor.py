@@ -9,9 +9,8 @@ from surepy.enums import EntityType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, VOLUME_MILLILITERS
+from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SurePetcareDataCoordinator
@@ -29,7 +28,6 @@ async def async_setup_entry(
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
-
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
@@ -87,7 +85,8 @@ class SureBattery(SurePetcareEntity, SensorEntity):
 class Felaqua(SurePetcareEntity, SensorEntity):
     """Sure Petcare Felaqua."""
 
-    _attr_native_unit_of_measurement = VOLUME_MILLILITERS
+    _attr_device_class = SensorDeviceClass.VOLUME
+    _attr_native_unit_of_measurement = UnitOfVolume.MILLILITERS
 
     def __init__(
         self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
@@ -95,7 +94,7 @@ class Felaqua(SurePetcareEntity, SensorEntity):
         """Initialize a Sure Petcare Felaqua sensor."""
         super().__init__(surepetcare_id, coordinator)
 
-        surepy_entity: SurepyFelaqua = coordinator.data[surepetcare_id]
+        surepy_entity = cast(SurepyFelaqua, coordinator.data[surepetcare_id])
 
         self._attr_name = self._device_name
         self._attr_unique_id = self._device_id

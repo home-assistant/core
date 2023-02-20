@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings fan platform.
+"""Test for the SmartThings fan platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -9,7 +8,7 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
@@ -18,13 +17,14 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
 
 
-async def test_entity_state(hass, device_factory):
+async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
     """Tests the state attributes properly match the fan types."""
     device = device_factory(
         "Fan 1",
@@ -36,11 +36,13 @@ async def test_entity_state(hass, device_factory):
     # Dimmer 1
     state = hass.states.get("fan.fan_1")
     assert state.state == "on"
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SET_SPEED
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FanEntityFeature.SET_SPEED
     assert state.attributes[ATTR_PERCENTAGE] == 66
 
 
-async def test_entity_and_device_attributes(hass, device_factory):
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
@@ -66,7 +68,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry.manufacturer == "Unavailable"
 
 
-async def test_turn_off(hass, device_factory):
+async def test_turn_off(hass: HomeAssistant, device_factory) -> None:
     """Test the fan turns of successfully."""
     # Arrange
     device = device_factory(
@@ -85,7 +87,7 @@ async def test_turn_off(hass, device_factory):
     assert state.state == "off"
 
 
-async def test_turn_on(hass, device_factory):
+async def test_turn_on(hass: HomeAssistant, device_factory) -> None:
     """Test the fan turns of successfully."""
     # Arrange
     device = device_factory(
@@ -104,7 +106,7 @@ async def test_turn_on(hass, device_factory):
     assert state.state == "on"
 
 
-async def test_turn_on_with_speed(hass, device_factory):
+async def test_turn_on_with_speed(hass: HomeAssistant, device_factory) -> None:
     """Test the fan turns on to the specified speed."""
     # Arrange
     device = device_factory(
@@ -127,7 +129,7 @@ async def test_turn_on_with_speed(hass, device_factory):
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
 
-async def test_set_percentage(hass, device_factory):
+async def test_set_percentage(hass: HomeAssistant, device_factory) -> None:
     """Test setting to specific fan speed."""
     # Arrange
     device = device_factory(
@@ -150,7 +152,7 @@ async def test_set_percentage(hass, device_factory):
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
 
-async def test_update_from_signal(hass, device_factory):
+async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
     """Test the fan updates when receiving a signal."""
     # Arrange
     device = device_factory(
@@ -169,7 +171,7 @@ async def test_update_from_signal(hass, device_factory):
     assert state.state == "on"
 
 
-async def test_unload_config_entry(hass, device_factory):
+async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     """Test the fan is removed when the config entry is unloaded."""
     # Arrange
     device = device_factory(

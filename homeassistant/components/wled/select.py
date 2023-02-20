@@ -7,11 +7,11 @@ from wled import Live, Playlist, Preset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CLASS_WLED_LIVE_OVERRIDE, DOMAIN
+from .const import DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 from .helpers import wled_exception_handler
 from .models import WLEDEntity
@@ -48,10 +48,10 @@ async def async_setup_entry(
 class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
     """Defined a WLED Live Override select."""
 
-    _attr_device_class = DEVICE_CLASS_WLED_LIVE_OVERRIDE
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:theater"
     _attr_name = "Live override"
+    _attr_translation_key = "live_override"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED ."""
@@ -183,17 +183,16 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
     segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
 
-    new_entities = []
+    new_entities: list[WLEDPaletteSelect] = []
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:
         current_ids.add(segment_id)
         new_entities.append(WLEDPaletteSelect(coordinator, segment_id))
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)

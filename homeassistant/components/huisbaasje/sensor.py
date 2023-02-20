@@ -1,11 +1,27 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
+from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from energyflip.const import (
+    SOURCE_TYPE_ELECTRICITY,
+    SOURCE_TYPE_ELECTRICITY_IN,
+    SOURCE_TYPE_ELECTRICITY_IN_LOW,
+    SOURCE_TYPE_ELECTRICITY_OUT,
+    SOURCE_TYPE_ELECTRICITY_OUT_LOW,
+    SOURCE_TYPE_GAS,
+)
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, POWER_WATT
+from homeassistant.const import CONF_ID, UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -13,9 +29,204 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DATA_COORDINATOR, DOMAIN, SENSOR_TYPE_RATE, SENSORS_INFO
+from .const import (
+    DATA_COORDINATOR,
+    DOMAIN,
+    FLOW_CUBIC_METERS_PER_HOUR,
+    SENSOR_TYPE_RATE,
+    SENSOR_TYPE_THIS_DAY,
+    SENSOR_TYPE_THIS_MONTH,
+    SENSOR_TYPE_THIS_WEEK,
+    SENSOR_TYPE_THIS_YEAR,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class HuisbaasjeSensorEntityDescription(SensorEntityDescription):
+    """Class describing Airly sensor entities."""
+
+    sensor_type: str = SENSOR_TYPE_RATE
+    precision: int = 0
+
+
+SENSORS_INFO = [
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Current Power",
+        sensor_type=SENSOR_TYPE_RATE,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        key=SOURCE_TYPE_ELECTRICITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Current Power In Peak",
+        sensor_type=SENSOR_TYPE_RATE,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        key=SOURCE_TYPE_ELECTRICITY_IN,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Current Power In Off Peak",
+        sensor_type=SENSOR_TYPE_RATE,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        key=SOURCE_TYPE_ELECTRICITY_IN_LOW,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Current Power Out Peak",
+        sensor_type=SENSOR_TYPE_RATE,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        key=SOURCE_TYPE_ELECTRICITY_OUT,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Current Power Out Off Peak",
+        sensor_type=SENSOR_TYPE_RATE,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        key=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy Consumption Peak Today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key=SOURCE_TYPE_ELECTRICITY_IN,
+        sensor_type=SENSOR_TYPE_THIS_DAY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        precision=3,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy Consumption Off Peak Today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key=SOURCE_TYPE_ELECTRICITY_IN_LOW,
+        sensor_type=SENSOR_TYPE_THIS_DAY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        precision=3,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy Production Peak Today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key=SOURCE_TYPE_ELECTRICITY_OUT,
+        sensor_type=SENSOR_TYPE_THIS_DAY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        precision=3,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy Production Off Peak Today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        key=SOURCE_TYPE_ELECTRICITY_OUT_LOW,
+        sensor_type=SENSOR_TYPE_THIS_DAY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        precision=3,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy Today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        key=SOURCE_TYPE_ELECTRICITY,
+        sensor_type=SENSOR_TYPE_THIS_DAY,
+        precision=1,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy This Week",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        key=SOURCE_TYPE_ELECTRICITY,
+        sensor_type=SENSOR_TYPE_THIS_WEEK,
+        precision=1,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy This Month",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        key=SOURCE_TYPE_ELECTRICITY,
+        sensor_type=SENSOR_TYPE_THIS_MONTH,
+        precision=1,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Energy This Year",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        key=SOURCE_TYPE_ELECTRICITY,
+        sensor_type=SENSOR_TYPE_THIS_YEAR,
+        precision=1,
+        icon="mdi:lightning-bolt",
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Current Gas",
+        native_unit_of_measurement=FLOW_CUBIC_METERS_PER_HOUR,
+        sensor_type=SENSOR_TYPE_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        key=SOURCE_TYPE_GAS,
+        icon="mdi:fire",
+        precision=1,
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Gas Today",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        key=SOURCE_TYPE_GAS,
+        sensor_type=SENSOR_TYPE_THIS_DAY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:counter",
+        precision=1,
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Gas This Week",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        key=SOURCE_TYPE_GAS,
+        sensor_type=SENSOR_TYPE_THIS_WEEK,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:counter",
+        precision=1,
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Gas This Month",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        key=SOURCE_TYPE_GAS,
+        sensor_type=SENSOR_TYPE_THIS_MONTH,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:counter",
+        precision=1,
+    ),
+    HuisbaasjeSensorEntityDescription(
+        name="Huisbaasje Gas This Year",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        key=SOURCE_TYPE_GAS,
+        sensor_type=SENSOR_TYPE_THIS_YEAR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:counter",
+        precision=1,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -24,82 +235,55 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DATA_COORDINATOR]
     user_id = config_entry.data[CONF_ID]
 
     async_add_entities(
-        HuisbaasjeSensor(coordinator, user_id=user_id, **sensor_info)
-        for sensor_info in SENSORS_INFO
+        HuisbaasjeSensor(coordinator, user_id, description)
+        for description in SENSORS_INFO
     )
 
 
-class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
+class HuisbaasjeSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], SensorEntity
+):
     """Defines a Huisbaasje sensor."""
+
+    entity_description: HuisbaasjeSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
         user_id: str,
-        name: str,
-        source_type: str,
-        device_class: str = None,
-        sensor_type: str = SENSOR_TYPE_RATE,
-        unit_of_measurement: str = POWER_WATT,
-        icon: str = "mdi:lightning-bolt",
-        precision: int = 0,
-        state_class: str | None = SensorStateClass.MEASUREMENT,
+        description: HuisbaasjeSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._user_id = user_id
-        self._name = name
-        self._device_class = device_class
-        self._unit_of_measurement = unit_of_measurement
-        self._source_type = source_type
-        self._sensor_type = sensor_type
-        self._icon = icon
-        self._precision = precision
-        self._attr_state_class = state_class
+        self.entity_description = description
+        self._source_type = description.key
+        self._sensor_type = description.sensor_type
+        self._precision = description.precision
+        self._attr_unique_id = (
+            f"{DOMAIN}_{user_id}_{description.key}_{description.sensor_type}"
+        )
 
     @property
-    def unique_id(self) -> str:
-        """Return an unique id for the sensor."""
-        return f"{DOMAIN}_{self._user_id}_{self._source_type}_{self._sensor_type}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use for the sensor."""
-        return self._icon
-
-    @property
-    def native_value(self):
+    def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        if self.coordinator.data[self._source_type][self._sensor_type] is not None:
-            return round(
-                self.coordinator.data[self._source_type][self._sensor_type],
-                self._precision,
-            )
+        if (
+            data := self.coordinator.data[self.entity_description.key][
+                self.entity_description.sensor_type
+            ]
+        ) is not None:
+            return round(data, self._precision)
         return None
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
+        return bool(
             super().available
             and self.coordinator.data
             and self._source_type in self.coordinator.data

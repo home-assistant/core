@@ -124,7 +124,7 @@ class LinuxBatterySensor(SensorEntity):
             ATTR_VOLTAGE_NOW: self._battery_stat.voltage_now,
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         self._battery.update()
         self._battery_stat = self._battery.stat[self._battery_id]

@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import cast
 
-from abodepy.devices.sensor import CONST, AbodeSensor as AbodeSense
+from jaraco.abode.devices.sensor import Sensor as AbodeSense
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -42,19 +43,12 @@ async def async_setup_entry(
     """Set up Abode sensor devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        conditions = device.get_value(CONST.STATUSES_KEY)
-        entities.extend(
-            [
-                AbodeSensor(data, device, description)
-                for description in SENSOR_TYPES
-                if description.key in conditions
-            ]
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeSensor(data, device, description)
+        for description in SENSOR_TYPES
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR)
+        if description.key in device.get_value(CONST.STATUSES_KEY)
+    )
 
 
 class AbodeSensor(AbodeDevice, SensorEntity):
@@ -71,7 +65,6 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self.entity_description = description
-        self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{device.device_uuid}-{description.key}"
         if description.key == CONST.TEMP_STATUS_KEY:
             self._attr_native_unit_of_measurement = device.temp_unit

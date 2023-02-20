@@ -4,35 +4,24 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from simplepush import BadRequest, UnknownError, send, send_encrypted
-import voluptuous as vol
+from simplepush import BadRequest, UnknownError, send
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.components.repairs.issue_handler import async_create_issue
-from homeassistant.components.repairs.models import IssueSeverity
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_ENCRYPTED, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT, DOMAIN
+from .const import ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT, DOMAIN
 
-# Configuring simplepush under the notify platform will be removed in 2022.9.0
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DEVICE_KEY): cv.string,
-        vol.Optional(CONF_EVENT): cv.string,
-        vol.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): cv.string,
-        vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): cv.string,
-    }
-)
+# Configuring Simplepush under the notify has been removed in 2022.9.0
+PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,16 +36,11 @@ async def async_get_service(
         async_create_issue(
             hass,
             DOMAIN,
-            "deprecated_yaml",
+            "removed_yaml",
             breaks_in_ha_version="2022.9.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
+            translation_key="removed_yaml",
         )
         return None
 
@@ -87,16 +71,16 @@ class SimplePushNotificationService(BaseNotificationService):
 
         try:
             if self._password:
-                send_encrypted(
-                    self._device_key,
-                    self._password,
-                    self._salt,
-                    title,
-                    message,
+                send(
+                    key=self._device_key,
+                    password=self._password,
+                    salt=self._salt,
+                    title=title,
+                    message=message,
                     event=event,
                 )
             else:
-                send(self._device_key, title, message, event=event)
+                send(key=self._device_key, title=title, message=message, event=event)
 
         except BadRequest:
             _LOGGER.error("Bad request. Title or message are too long")

@@ -6,18 +6,13 @@ from dataclasses import dataclass
 from aiohttp import hdrs
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, async_register, async_unregister
-
-# mypy: allow-untyped-defs
 
 DEPENDENCIES = ("webhook",)
 
@@ -35,7 +30,7 @@ WEBHOOK_TRIGGERS = f"{DOMAIN}_triggers"
 class TriggerInstance:
     """Attached trigger settings."""
 
-    automation_info: AutomationTriggerInfo
+    trigger_info: TriggerInfo
     job: HassJob
 
 
@@ -55,15 +50,15 @@ async def _handle_webhook(hass, webhook_id, request):
         WEBHOOK_TRIGGERS, {}
     )
     for trigger in triggers[webhook_id]:
-        result = {**base_result, **trigger.automation_info["trigger_data"]}
+        result = {**base_result, **trigger.trigger_info["trigger_data"]}
         hass.async_run_hass_job(trigger.job, {"trigger": result})
 
 
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
     webhook_id: str = config[CONF_WEBHOOK_ID]
@@ -76,14 +71,14 @@ async def async_attach_trigger(
     if webhook_id not in triggers:
         async_register(
             hass,
-            automation_info["domain"],
-            automation_info["name"],
+            trigger_info["domain"],
+            trigger_info["name"],
             webhook_id,
             _handle_webhook,
         )
         triggers[webhook_id] = []
 
-    trigger_instance = TriggerInstance(automation_info, job)
+    trigger_instance = TriggerInstance(trigger_info, job)
     triggers[webhook_id].append(trigger_instance)
 
     @callback

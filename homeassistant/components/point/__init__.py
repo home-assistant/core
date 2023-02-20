@@ -256,6 +256,8 @@ class MinutPointClient:
 class MinutPointEntity(Entity):
     """Base Entity used by the sensors."""
 
+    _attr_should_poll = False
+
     def __init__(self, point_client, device_id, device_class):
         """Initialize the entity."""
         self._async_unsub_dispatcher_connect = None
@@ -346,11 +348,6 @@ class MinutPointEntity(Entity):
         """Return the last_update time for the device."""
         last_update = parse_datetime(self.device.last_update)
         return last_update
-
-    @property
-    def should_poll(self):
-        """No polling needed for point."""
-        return False
 
     @property
     def unique_id(self):

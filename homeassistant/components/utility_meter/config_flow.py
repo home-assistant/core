@@ -6,13 +6,14 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowError,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -34,32 +35,34 @@ from .const import (
 )
 
 METER_TYPES = [
-    selector.SelectOptionDict(value="none", label="No cycle"),
-    selector.SelectOptionDict(value=QUARTER_HOURLY, label="Every 15 minutes"),
-    selector.SelectOptionDict(value=HOURLY, label="Hourly"),
-    selector.SelectOptionDict(value=DAILY, label="Daily"),
-    selector.SelectOptionDict(value=WEEKLY, label="Weekly"),
-    selector.SelectOptionDict(value=MONTHLY, label="Monthly"),
-    selector.SelectOptionDict(value=BIMONTHLY, label="Every two months"),
-    selector.SelectOptionDict(value=QUARTERLY, label="Quarterly"),
-    selector.SelectOptionDict(value=YEARLY, label="Yearly"),
+    "none",
+    QUARTER_HOURLY,
+    HOURLY,
+    DAILY,
+    WEEKLY,
+    MONTHLY,
+    BIMONTHLY,
+    QUARTERLY,
+    YEARLY,
 ]
 
 
-def _validate_config(data: Any) -> Any:
+async def _validate_config(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate config."""
     try:
-        vol.Unique()(data[CONF_TARIFFS])
+        vol.Unique()(user_input[CONF_TARIFFS])
     except vol.Invalid as exc:
         raise SchemaFlowError("tariffs_not_unique") from exc
 
-    return data
+    return user_input
 
 
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor"),
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
     }
 )
@@ -68,10 +71,12 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor"),
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
         vol.Required(CONF_METER_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=METER_TYPES),
+            selector.SelectSelectorConfig(
+                options=METER_TYPES, translation_key=CONF_METER_TYPE
+            ),
         ),
         vol.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -93,12 +98,12 @@ CONFIG_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+CONFIG_FLOW = {
     "user": SchemaFlowFormStep(CONFIG_SCHEMA, validate_user_input=_validate_config)
 }
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 

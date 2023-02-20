@@ -1,9 +1,0 @@
-{
-    "system_health": {
-        "info": {
-            "config_dir": "Konfigurationskatalog",
-            "hassio": "Supervisor",
-            "user": "Anv\u00e4ndare"
-        }
-    }
-}

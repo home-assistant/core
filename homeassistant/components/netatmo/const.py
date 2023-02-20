@@ -10,60 +10,18 @@ DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
-NETATMO_SCOPES = [
-    "access_camera",
-    "access_presence",
-    "read_camera",
-    "read_homecoach",
-    "read_presence",
-    "read_smokedetector",
-    "read_station",
-    "read_thermostat",
-    "write_camera",
-    "write_presence",
-    "write_thermostat",
-]
-
-MODEL_NAPLUG = "Relay"
-MODEL_NATHERM1 = "Smart Thermostat"
-MODEL_NRV = "Smart Radiator Valves"
-MODEL_NOC = "Smart Outdoor Camera"
-MODEL_NACAMERA = "Smart Indoor Camera"
-MODEL_NSD = "Smart Smoke Alarm"
-MODEL_NACAMDOORTAG = "Smart Door and Window Sensors"
-MODEL_NHC = "Smart Indoor Air Quality Monitor"
-MODEL_NAMAIN = "Smart Home Weather station – indoor module"
-MODEL_NAMODULE1 = "Smart Home Weather station – outdoor module"
-MODEL_NAMODULE4 = "Smart Additional Indoor module"
-MODEL_NAMODULE3 = "Smart Rain Gauge"
-MODEL_NAMODULE2 = "Smart Anemometer"
-MODEL_PUBLIC = "Public Weather stations"
-
-MODELS = {
-    "NAPlug": MODEL_NAPLUG,
-    "NATherm1": MODEL_NATHERM1,
-    "NRV": MODEL_NRV,
-    "NACamera": MODEL_NACAMERA,
-    "NOC": MODEL_NOC,
-    "NSD": MODEL_NSD,
-    "NACamDoorTag": MODEL_NACAMDOORTAG,
-    "NHC": MODEL_NHC,
-    "NAMain": MODEL_NAMAIN,
-    "NAModule1": MODEL_NAMODULE1,
-    "NAModule4": MODEL_NAMODULE4,
-    "NAModule3": MODEL_NAMODULE3,
-    "NAModule2": MODEL_NAMODULE2,
-    "public": MODEL_PUBLIC,
-}
-
-TYPE_SECURITY = "security"
-TYPE_ENERGY = "energy"
-TYPE_WEATHER = "weather"
+CONF_URL_SECURITY = "https://home.netatmo.com/security"
+CONF_URL_ENERGY = "https://my.netatmo.com/app/energy"
+CONF_URL_WEATHER = "https://my.netatmo.com/app/weather"
+CONF_URL_CONTROL = "https://home.netatmo.com/control"
+CONF_URL_PUBLIC_WEATHER = "https://weathermap.netatmo.com/"
 
 AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
@@ -71,7 +29,18 @@ CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
+
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
+NETATMO_CREATE_CAMERA = "netatmo_create_camera"
+NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
+NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
+NETATMO_CREATE_COVER = "netatmo_create_cover"
+NETATMO_CREATE_LIGHT = "netatmo_create_light"
+NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
+NETATMO_CREATE_SELECT = "netatmo_create_select"
+NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
+NETATMO_CREATE_SWITCH = "netatmo_create_switch"
+NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
 CONF_AREA_NAME = "area_name"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
@@ -81,7 +50,6 @@ CONF_LON_NE = "lon_ne"
 CONF_LON_SW = "lon_sw"
 CONF_NEW_AREA = "new_area"
 CONF_PUBLIC_MODE = "mode"
-CONF_UUID = "uuid"
 CONF_WEATHER_AREAS = "weather_areas"
 
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
@@ -95,7 +63,6 @@ DATA_PERSONS = "netatmo_persons"
 DATA_SCHEDULES = "netatmo_schedules"
 
 NETATMO_EVENT = "netatmo_event"
-NETATMO_WEBHOOK_URL = None
 
 DEFAULT_DISCOVERY = True
 DEFAULT_PERSON = "unknown"

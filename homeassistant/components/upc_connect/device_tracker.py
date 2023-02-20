@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 
 async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
+) -> UPCDeviceScanner | None:
     """Return the UPC device scanner."""
     conf = config[DOMAIN]
     session = async_get_clientsession(hass)

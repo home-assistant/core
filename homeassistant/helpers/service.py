@@ -6,9 +6,8 @@ from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar
 
-from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -19,6 +18,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
     ENTITY_MATCH_ALL,
@@ -48,9 +48,10 @@ if TYPE_CHECKING:
     from .entity import Entity
     from .entity_platform import EntityPlatform
 
+    _EntityT = TypeVar("_EntityT", bound=Entity)
+
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
-CONF_SERVICE_DATA_TEMPLATE = "data_template"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,7 +201,7 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid service: {domain_service}"
             ) from ex
 
-    domain, service = domain_service.split(".", 1)
+    domain, _, service = domain_service.partition(".")
 
     target = {}
     if CONF_TARGET in config:
@@ -276,10 +277,10 @@ def extract_entity_ids(
 @bind_hass
 async def async_extract_entities(
     hass: HomeAssistant,
-    entities: Iterable[Entity],
+    entities: Iterable[_EntityT],
     service_call: ServiceCall,
     expand_group: bool = True,
-) -> list[Entity]:
+) -> list[_EntityT]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -369,7 +370,8 @@ def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        # Do not add entities which are hidden or which are config or diagnostic entities
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
         if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
             continue
 
@@ -435,7 +437,7 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
 def _load_services_files(
     hass: HomeAssistant, integrations: Iterable[Integration]
 ) -> list[JSON_TYPE]:
-    """Load service files for multiple intergrations."""
+    """Load service files for multiple integrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
 
 
@@ -487,7 +489,10 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})  # type: ignore[union-attr]
+
+                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
+                    service, {}
+                )
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
@@ -608,7 +613,6 @@ async def entity_service_call(  # noqa: C901
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
-
                 if entity.entity_id not in all_referenced:
                     continue
 
@@ -704,17 +708,23 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        result = hass.async_run_job(
+            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        )
     else:
         result = hass.async_run_job(func, entity, data)
 
-    # Guard because callback functions do not return a task when passed to async_run_job.
+    # Guard because callback functions do not return a task when passed to
+    # async_run_job.
     if result is not None:
         await result
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
-            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author",
+            (
+                "Service %s for %s incorrectly returns a coroutine object. Await result"
+                " instead in service handler. Report bug to integration author"
+            ),
             func,
             entity.entity_id,
         )

@@ -1,51 +1,70 @@
 """Support for Overkiz (virtual) buttons."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+from pyoverkiz.types import StateType as OverkizStateType
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
-BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
+
+@dataclass
+class OverkizButtonDescription(ButtonEntityDescription):
+    """Class to describe an Overkiz button."""
+
+    press_args: OverkizStateType | None = None
+
+
+BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     # My Position (cover, light)
-    ButtonEntityDescription(
+    OverkizButtonDescription(
         key="my",
-        name="My Position",
+        name="My position",
         icon="mdi:star",
     ),
     # Identify
-    ButtonEntityDescription(
+    OverkizButtonDescription(
         key="identify",  # startIdentify and identify are reversed... Swap this when fixed in API.
-        name="Start Identify",
+        name="Start identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    ButtonEntityDescription(
+    OverkizButtonDescription(
         key="stopIdentify",
-        name="Stop Identify",
+        name="Stop identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    ButtonEntityDescription(
+    OverkizButtonDescription(
         key="startIdentify",  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # RTDIndoorSiren / RTDOutdoorSiren
-    ButtonEntityDescription(key="dingDong", name="Ding Dong", icon="mdi:bell-ring"),
-    ButtonEntityDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
-    ButtonEntityDescription(
-        key="fastBipSequence", name="Fast Bip Sequence", icon="mdi:bell-ring"
+    OverkizButtonDescription(key="dingDong", name="Ding dong", icon="mdi:bell-ring"),
+    OverkizButtonDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
+    OverkizButtonDescription(
+        key="fastBipSequence", name="Fast bip sequence", icon="mdi:bell-ring"
     ),
-    ButtonEntityDescription(key="ring", name="Ring", icon="mdi:bell-ring"),
+    OverkizButtonDescription(key="ring", name="Ring", icon="mdi:bell-ring"),
+    # DynamicScreen (ogp:blind) uses goToAlias (id 1: favorite1) instead of 'my'
+    OverkizButtonDescription(
+        key="goToAlias",
+        press_args="1",
+        name="My position",
+        icon="mdi:star",
+    ),
 ]
 
 SUPPORTED_COMMANDS = {
@@ -85,6 +104,14 @@ async def async_setup_entry(
 class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
     """Representation of an Overkiz Button."""
 
+    entity_description: OverkizButtonDescription
+
     async def async_press(self) -> None:
         """Handle the button press."""
+        if self.entity_description.press_args:
+            await self.executor.async_execute_command(
+                self.entity_description.key, self.entity_description.press_args
+            )
+            return
+
         await self.executor.async_execute_command(self.entity_description.key)

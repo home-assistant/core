@@ -1,6 +1,8 @@
 """Allows to configuration ecoal (esterownik.pl) pumps as switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,8 +32,7 @@ class EcoalSwitch(SwitchEntity):
     """Representation of Ecoal switch."""
 
     def __init__(self, ecoal_contr, name, state_attr):
-        """
-        Initialize switch.
+        """Initialize switch.
 
         Sets HA switch to state as read from controller.
         """
@@ -45,7 +46,7 @@ class EcoalSwitch(SwitchEntity):
         #   status.<attr>
         self._contr_set_fun = getattr(self._ecoal_contr, f"set_{state_attr}")
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.
@@ -60,12 +61,12 @@ class EcoalSwitch(SwitchEntity):
         """
         self._ecoal_contr.status = None
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._contr_set_fun(1)
         self.invalidate_ecoal_cache()
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._contr_set_fun(0)
         self.invalidate_ecoal_cache()

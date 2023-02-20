@@ -120,12 +120,13 @@ class TasmotaLight(
     def _setup_from_entity(self) -> None:
         """(Re)Setup the entity."""
         self._supported_color_modes = set()
-        supported_features = 0
+        supported_features = LightEntityFeature(0)
         light_type = self._tasmota_entity.light_type
 
         if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
-            # Mark HS support for RGBW light because we don't have direct control over the
-            # white channel, so the base component's RGB->RGBW translation does not work
+            # Mark HS support for RGBW light because we don't have direct
+            # control over the white channel, so the base component's RGB->RGBW
+            # translation does not work
             self._supported_color_modes.add(ColorMode.HS)
             self._color_mode = ColorMode.HS
 
@@ -228,11 +229,6 @@ class TasmotaLight(
             return None
         hs_color = self._hs
         return (hs_color[0], hs_color[1])
-
-    @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return False
 
     @property
     def supported_color_modes(self) -> set[str] | None:

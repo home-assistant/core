@@ -1,5 +1,4 @@
-"""
-Regression tests for Aqara AR004.
+"""Regression tests for Aqara AR004.
 
 This device has a non-standard programmable stateless switch service that has a
 service-label-index despite not being linked to a service-label.
@@ -8,9 +7,9 @@ https://github.com/home-assistant/core/pull/39090
 """
 
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     DeviceTriggerInfo,
@@ -41,8 +40,9 @@ async def test_aqara_switch_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.programmable_switch_battery_sensor",
                     friendly_name="Programmable Switch Battery Sensor",
-                    unique_id="homekit-111a1111a1a111-5",
+                    unique_id="00:00:00:00:00:00_1_5",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    entity_category=EntityCategory.DIAGNOSTIC,
                     unit_of_measurement=PERCENTAGE,
                     state="100",
                 ),

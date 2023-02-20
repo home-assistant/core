@@ -113,7 +113,7 @@ async def _create_august_api_with_devices(  # noqa: C901
                 {"base": _mock_august_doorbell(device.device_id), "detail": device}
             )
         else:
-            raise ValueError
+            raise ValueError  # noqa: TRY004
 
     def _get_device_detail(device_type, device_id):
         for device in device_data[device_type]:
@@ -300,6 +300,10 @@ def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
 
 async def _mock_operative_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.online.json")
+
+
+async def _mock_lock_with_offline_key(hass):
+    return await _mock_lock_from_fixture(hass, "get_lock.online_with_keys.json")
 
 
 async def _mock_inoperative_august_lock_detail(hass):

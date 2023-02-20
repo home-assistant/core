@@ -1,6 +1,8 @@
 """Support for ZoneMinder binary sensors."""
 from __future__ import annotations
 
+from zoneminder.zm import ZoneMinder
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -28,27 +30,13 @@ async def async_setup_platform(
 class ZMAvailabilitySensor(BinarySensorEntity):
     """Representation of the availability of ZoneMinder as a binary sensor."""
 
-    def __init__(self, host_name, client):
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+    def __init__(self, host_name: str, client: ZoneMinder) -> None:
         """Initialize availability sensor."""
-        self._state = None
-        self._name = host_name
+        self._attr_name = host_name
         self._client = client
 
-    @property
-    def name(self):
-        """Return the name of this binary sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.CONNECTIVITY
-
-    def update(self):
+    def update(self) -> None:
         """Update the state of this sensor (availability of ZoneMinder)."""
-        self._state = self._client.is_available
+        self._attr_is_on = self._client.is_available

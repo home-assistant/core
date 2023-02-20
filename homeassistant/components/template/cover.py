@@ -105,7 +105,6 @@ async def _async_create_entities(hass, config):
     covers = []
 
     for object_id, entity_config in config[CONF_COVERS].items():
-
         entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
@@ -309,7 +308,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         return self._device_class
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 

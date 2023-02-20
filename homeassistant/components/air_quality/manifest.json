@@ -1,7 +1,8 @@
 {
   "domain": "air_quality",
   "name": "Air Quality",
-  "documentation": "https://www.home-assistant.io/integrations/air_quality",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/air_quality",
+  "integration_type": "entity",
   "quality_scale": "internal"
 }

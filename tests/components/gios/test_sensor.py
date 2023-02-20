@@ -25,14 +25,16 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
+from . import init_integration
+
 from tests.common import async_fire_time_changed, load_fixture
-from tests.components.gios import init_integration
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test states of the sensor."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -59,7 +61,7 @@ async def test_sensor(hass):
     assert state.state == "252"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -161,7 +163,6 @@ async def test_sensor(hass):
     assert state.state == "dobry"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.AQI
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
@@ -170,7 +171,7 @@ async def test_sensor(hass):
     assert entry.unique_id == "123-aqi"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
@@ -212,7 +213,7 @@ async def test_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_invalid_indexes(hass):
+async def test_invalid_indexes(hass: HomeAssistant) -> None:
     """Test states of the sensor when API returns invalid indexes."""
     await init_integration(hass, invalid_indexes=True)
     registry = er.async_get(hass)
@@ -334,7 +335,7 @@ async def test_invalid_indexes(hass):
     assert state is None
 
 
-async def test_aqi_sensor_availability(hass):
+async def test_aqi_sensor_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the AQI sensor unavailable correctly when indexes are invalid."""
     await init_integration(hass)
 
@@ -359,7 +360,7 @@ async def test_aqi_sensor_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_unique_id_migration(hass):
+async def test_unique_id_migration(hass: HomeAssistant) -> None:
     """Test states of the unique_id migration."""
     registry = er.async_get(hass)
 

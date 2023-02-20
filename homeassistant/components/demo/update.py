@@ -4,8 +4,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
-from homeassistant.components.update.const import UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant

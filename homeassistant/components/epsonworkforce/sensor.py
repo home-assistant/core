@@ -94,7 +94,9 @@ def setup_platform(
 class EpsonPrinterCartridge(SensorEntity):
     """Representation of a cartridge sensor."""
 
-    def __init__(self, api, description: SensorEntityDescription):
+    def __init__(
+        self, api: EpsonPrinterAPI, description: SensorEntityDescription
+    ) -> None:
         """Initialize a cartridge sensor."""
         self._api = api
         self.entity_description = description
@@ -105,10 +107,10 @@ class EpsonPrinterCartridge(SensorEntity):
         return self._api.getSensorValue(self.entity_description.key)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._api.available
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the Epson printer."""
         self._api.update()

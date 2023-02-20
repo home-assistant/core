@@ -219,8 +219,7 @@ class EmailContentSensor(SensorEntity):
 
     @staticmethod
     def get_msg_text(email_message):
-        """
-        Get the message text from the email.
+        """Get the message text from the email.
 
         Will look for text/plain or use text/html if not found.
         """
@@ -252,7 +251,7 @@ class EmailContentSensor(SensorEntity):
 
         return email_message.get_payload()
 
-    def update(self):
+    def update(self) -> None:
         """Read emails and publish state change."""
         email_message = self._email_reader.read_next()
 

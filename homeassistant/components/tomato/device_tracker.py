@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
     """Validate the configuration and returns a Tomato scanner."""
     return TomatoDeviceScanner(config[DOMAIN])
 
@@ -108,9 +108,7 @@ class TomatoDeviceScanner(DeviceScanner):
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
             if response.status_code == HTTPStatus.OK:
-
                 for param, value in self.parse_api_pattern.findall(response.text):
-
                     if param in ("wldev", "dhcpd_lease"):
                         self.last_results[param] = json.loads(value.replace("'", '"'))
                 return True

@@ -18,10 +18,12 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
 )
+from homeassistant.helpers.issue_registry import (
+    async_get as async_get_issue_registry,
+    async_ignore_issue,
+)
 
 from .const import DOMAIN
-from .issue_handler import async_ignore_issue
-from .issue_registry import async_get as async_get_issue_registry
 
 
 @callback
@@ -44,7 +46,7 @@ def async_setup(hass: HomeAssistant) -> None:
     }
 )
 def ws_ignore_issue(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
     async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
@@ -59,12 +61,13 @@ def ws_ignore_issue(
 )
 @callback
 def ws_list_issues(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return a list of issues."""
 
     def ws_dict(kv_pairs: list[tuple[Any, Any]]) -> dict[Any, Any]:
-        result = {k: v for k, v in kv_pairs if k not in ("active")}
+        excluded_keys = ("active", "data", "is_persistent")
+        result = {k: v for k, v in kv_pairs if k not in excluded_keys}
         result["ignored"] = result["dismissed_version"] is not None
         result["created"] = result["created"].isoformat()
         return result

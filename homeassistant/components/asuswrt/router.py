@@ -8,7 +8,7 @@ from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt, Device as WrtDevice
 
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
     DOMAIN as TRACKER_DOMAIN,
@@ -274,7 +274,6 @@ class AsusWrtRouter:
             entity_reg, self._entry.entry_id
         )
         for entry in track_entries:
-
             if entry.domain != TRACKER_DOMAIN:
                 continue
             device_mac = format_mac(entry.unique_id)
@@ -402,7 +401,10 @@ class AsusWrtRouter:
             ]
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.debug(
-                "Failed checking temperature sensor availability for ASUS router %s. Exception: %s",
+                (
+                    "Failed checking temperature sensor availability for ASUS router"
+                    " %s. Exception: %s"
+                ),
                 self._host,
                 exc,
             )

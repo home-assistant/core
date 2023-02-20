@@ -5,6 +5,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, cast
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -31,7 +32,6 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callbac
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
-    entity,
     entity_component,
     event,
     service,
@@ -186,14 +186,14 @@ class ZoneStorageCollection(collection.StorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
-    component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
+    component = entity_component.EntityComponent[Zone](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.IDLessCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Zone.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Zone
     )
 
     storage_collection = ZoneStorageCollection(
@@ -284,21 +284,30 @@ async def async_unload_entry(
     return True
 
 
-class Zone(entity.Entity):
+class Zone(collection.CollectionEntity):
     """Representation of a Zone."""
 
-    def __init__(self, config: dict) -> None:
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the zone."""
         self._config = config
         self.editable = True
         self._attrs: dict | None = None
         self._remove_listener: Callable[[], None] | None = None
         self._persons_in_zone: set[str] = set()
-        self._generate_attrs()
 
     @classmethod
-    def from_yaml(cls, config: dict) -> Zone:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from storage."""
+        zone = cls(config)
+        zone.editable = True
+        zone._generate_attrs()
+        return zone
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False
         zone._generate_attrs()
@@ -329,7 +338,7 @@ class Zone(entity.Entity):
         """Zone does not poll."""
         return False
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         if self._config == config:
             return

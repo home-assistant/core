@@ -1,142 +1,137 @@
 """Support for Subaru sensors."""
+from __future__ import annotations
+
+import logging
+from typing import Any, cast
+
 import subarulink.const as sc
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-    TIME_MINUTES,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.distance import convert as dist_convert
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
 from homeassistant.util.unit_system import (
-    IMPERIAL_SYSTEM,
     LENGTH_UNITS,
     PRESSURE_UNITS,
-    TEMPERATURE_UNITS,
+    US_CUSTOMARY_SYSTEM,
 )
-from homeassistant.util.volume import convert as vol_convert
 
+from . import get_device_info
 from .const import (
     API_GEN_2,
     DOMAIN,
     ENTRY_COORDINATOR,
     ENTRY_VEHICLES,
-    ICONS,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_SAFETY_SERVICE,
     VEHICLE_STATUS,
+    VEHICLE_VIN,
 )
-from .entity import SubaruEntity
 
-L_PER_GAL = vol_convert(1, VOLUME_GALLONS, VOLUME_LITERS)
-KM_PER_MI = dist_convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
+_LOGGER = logging.getLogger(__name__)
 
-# Fuel Economy Constants
-FUEL_CONSUMPTION_L_PER_100KM = "L/100km"
-FUEL_CONSUMPTION_MPG = "mi/gal"
-FUEL_CONSUMPTION_UNITS = [FUEL_CONSUMPTION_L_PER_100KM, FUEL_CONSUMPTION_MPG]
 
-SENSOR_TYPE = "type"
-SENSOR_CLASS = "class"
-SENSOR_FIELD = "field"
-SENSOR_UNITS = "units"
+# Fuel consumption units
+FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
+FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 
-# Sensor data available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
+L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
+KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOMETERS)
+
+# Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
-    {
-        SENSOR_TYPE: "Odometer",
-        SENSOR_CLASS: None,
-        SENSOR_FIELD: sc.ODOMETER,
-        SENSOR_UNITS: LENGTH_KILOMETERS,
-    },
+    SensorEntityDescription(
+        key=sc.ODOMETER,
+        device_class=SensorDeviceClass.DISTANCE,
+        icon="mdi:road-variant",
+        name="Odometer",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
 ]
 
-# Sensor data available to "Subaru Safety Plus" subscribers with Gen2 vehicles
+# Sensors available to "Subaru Safety Plus" subscribers with Gen2 vehicles
 API_GEN_2_SENSORS = [
-    {
-        SENSOR_TYPE: "Avg Fuel Consumption",
-        SENSOR_CLASS: None,
-        SENSOR_FIELD: sc.AVG_FUEL_CONSUMPTION,
-        SENSOR_UNITS: FUEL_CONSUMPTION_L_PER_100KM,
-    },
-    {
-        SENSOR_TYPE: "Range",
-        SENSOR_CLASS: None,
-        SENSOR_FIELD: sc.DIST_TO_EMPTY,
-        SENSOR_UNITS: LENGTH_KILOMETERS,
-    },
-    {
-        SENSOR_TYPE: "Tire Pressure FL",
-        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
-        SENSOR_FIELD: sc.TIRE_PRESSURE_FL,
-        SENSOR_UNITS: PRESSURE_HPA,
-    },
-    {
-        SENSOR_TYPE: "Tire Pressure FR",
-        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
-        SENSOR_FIELD: sc.TIRE_PRESSURE_FR,
-        SENSOR_UNITS: PRESSURE_HPA,
-    },
-    {
-        SENSOR_TYPE: "Tire Pressure RL",
-        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
-        SENSOR_FIELD: sc.TIRE_PRESSURE_RL,
-        SENSOR_UNITS: PRESSURE_HPA,
-    },
-    {
-        SENSOR_TYPE: "Tire Pressure RR",
-        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
-        SENSOR_FIELD: sc.TIRE_PRESSURE_RR,
-        SENSOR_UNITS: PRESSURE_HPA,
-    },
-    {
-        SENSOR_TYPE: "External Temp",
-        SENSOR_CLASS: SensorDeviceClass.TEMPERATURE,
-        SENSOR_FIELD: sc.EXTERNAL_TEMP,
-        SENSOR_UNITS: TEMP_CELSIUS,
-    },
-    {
-        SENSOR_TYPE: "12V Battery Voltage",
-        SENSOR_CLASS: SensorDeviceClass.VOLTAGE,
-        SENSOR_FIELD: sc.BATTERY_VOLTAGE,
-        SENSOR_UNITS: ELECTRIC_POTENTIAL_VOLT,
-    },
+    SensorEntityDescription(
+        key=sc.AVG_FUEL_CONSUMPTION,
+        icon="mdi:leaf",
+        name="Avg fuel consumption",
+        native_unit_of_measurement=FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=sc.DIST_TO_EMPTY,
+        device_class=SensorDeviceClass.DISTANCE,
+        icon="mdi:gas-station",
+        name="Range",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=sc.TIRE_PRESSURE_FL,
+        device_class=SensorDeviceClass.PRESSURE,
+        name="Tire pressure FL",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=sc.TIRE_PRESSURE_FR,
+        device_class=SensorDeviceClass.PRESSURE,
+        name="Tire pressure FR",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=sc.TIRE_PRESSURE_RL,
+        device_class=SensorDeviceClass.PRESSURE,
+        name="Tire pressure RL",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=sc.TIRE_PRESSURE_RR,
+        device_class=SensorDeviceClass.PRESSURE,
+        name="Tire pressure RR",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 ]
 
-# Sensor data available to "Subaru Safety Plus" subscribers with PHEV vehicles
+# Sensors available to "Subaru Safety Plus" subscribers with PHEV vehicles
 EV_SENSORS = [
-    {
-        SENSOR_TYPE: "EV Range",
-        SENSOR_CLASS: None,
-        SENSOR_FIELD: sc.EV_DISTANCE_TO_EMPTY,
-        SENSOR_UNITS: LENGTH_MILES,
-    },
-    {
-        SENSOR_TYPE: "EV Battery Level",
-        SENSOR_CLASS: SensorDeviceClass.BATTERY,
-        SENSOR_FIELD: sc.EV_STATE_OF_CHARGE_PERCENT,
-        SENSOR_UNITS: PERCENTAGE,
-    },
-    {
-        SENSOR_TYPE: "EV Time to Full Charge",
-        SENSOR_CLASS: SensorDeviceClass.TIMESTAMP,
-        SENSOR_FIELD: sc.EV_TIME_TO_FULLY_CHARGED,
-        SENSOR_UNITS: TIME_MINUTES,
-    },
+    SensorEntityDescription(
+        key=sc.EV_DISTANCE_TO_EMPTY,
+        device_class=SensorDeviceClass.DISTANCE,
+        icon="mdi:ev-station",
+        name="EV range",
+        native_unit_of_measurement=UnitOfLength.MILES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=sc.EV_STATE_OF_CHARGE_PERCENT,
+        device_class=SensorDeviceClass.BATTERY,
+        name="EV battery level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        name="EV time to full charge",
+    ),
 ]
 
 
@@ -146,140 +141,163 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Subaru sensors by config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
-    vehicle_info = hass.data[DOMAIN][config_entry.entry_id][ENTRY_VEHICLES]
+    entry = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry[ENTRY_COORDINATOR]
+    vehicle_info = entry[ENTRY_VEHICLES]
     entities = []
-    for vin in vehicle_info:
-        entities.extend(create_vehicle_sensors(vehicle_info[vin], coordinator))
-    async_add_entities(entities, True)
+    await _async_migrate_entries(hass, config_entry)
+    for info in vehicle_info.values():
+        entities.extend(create_vehicle_sensors(info, coordinator))
+    async_add_entities(entities)
 
 
-def create_vehicle_sensors(vehicle_info, coordinator):
+def create_vehicle_sensors(
+    vehicle_info, coordinator: DataUpdateCoordinator
+) -> list[SubaruSensor]:
     """Instantiate all available sensors for the vehicle."""
-    sensors_to_add = []
+    sensor_descriptions_to_add = []
     if vehicle_info[VEHICLE_HAS_SAFETY_SERVICE]:
-        sensors_to_add.extend(SAFETY_SENSORS)
+        sensor_descriptions_to_add.extend(SAFETY_SENSORS)
 
         if vehicle_info[VEHICLE_API_GEN] == API_GEN_2:
-            sensors_to_add.extend(API_GEN_2_SENSORS)
+            sensor_descriptions_to_add.extend(API_GEN_2_SENSORS)
 
         if vehicle_info[VEHICLE_HAS_EV]:
-            sensors_to_add.extend(EV_SENSORS)
+            sensor_descriptions_to_add.extend(EV_SENSORS)
 
     return [
         SubaruSensor(
             vehicle_info,
             coordinator,
-            s[SENSOR_TYPE],
-            s[SENSOR_CLASS],
-            s[SENSOR_FIELD],
-            s[SENSOR_UNITS],
+            description,
         )
-        for s in sensors_to_add
+        for description in sensor_descriptions_to_add
     ]
 
 
-class SubaruSensor(SubaruEntity, SensorEntity):
+class SubaruSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]], SensorEntity
+):
     """Class for Subaru sensors."""
 
+    _attr_has_entity_name = True
+
     def __init__(
-        self, vehicle_info, coordinator, entity_type, sensor_class, data_field, api_unit
-    ):
+        self,
+        vehicle_info: dict,
+        coordinator: DataUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(vehicle_info, coordinator)
-        self.hass_type = "sensor"
-        self.current_value = None
-        self.entity_type = entity_type
-        self.sensor_class = sensor_class
-        self.data_field = data_field
-        self.api_unit = api_unit
+        super().__init__(coordinator)
+        self.vin = vehicle_info[VEHICLE_VIN]
+        self.entity_description = description
+        self._attr_device_info = get_device_info(vehicle_info)
+        self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        if self.sensor_class in DEVICE_CLASSES:
-            return self.sensor_class
-        return None
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        if not self.device_class:
-            return ICONS.get(self.entity_type)
-        return None
-
-    @property
-    def native_value(self):
+    def native_value(self) -> None | int | float:
         """Return the state of the sensor."""
-        self.current_value = self.get_current_value()
+        vehicle_data = self.coordinator.data[self.vin]
+        current_value = vehicle_data[VEHICLE_STATUS].get(self.entity_description.key)
+        unit = self.entity_description.native_unit_of_measurement
+        unit_system = self.hass.config.units
 
-        if self.current_value is None:
+        if current_value is None:
             return None
 
-        if self.api_unit in TEMPERATURE_UNITS:
-            return round(
-                self.hass.config.units.temperature(self.current_value, self.api_unit), 1
-            )
+        if unit in LENGTH_UNITS:
+            return round(unit_system.length(current_value, cast(str, unit)), 1)
 
-        if self.api_unit in LENGTH_UNITS:
+        if unit in PRESSURE_UNITS and unit_system == US_CUSTOMARY_SYSTEM:
             return round(
-                self.hass.config.units.length(self.current_value, self.api_unit), 1
-            )
-
-        if (
-            self.api_unit in PRESSURE_UNITS
-            and self.hass.config.units == IMPERIAL_SYSTEM
-        ):
-            return round(
-                self.hass.config.units.pressure(self.current_value, self.api_unit),
+                unit_system.pressure(current_value, cast(str, unit)),
                 1,
             )
 
         if (
-            self.api_unit in FUEL_CONSUMPTION_UNITS
-            and self.hass.config.units == IMPERIAL_SYSTEM
+            unit
+            in [
+                FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
+                FUEL_CONSUMPTION_MILES_PER_GALLON,
+            ]
+            and unit_system == US_CUSTOMARY_SYSTEM
         ):
-            return round((100.0 * L_PER_GAL) / (KM_PER_MI * self.current_value), 1)
+            return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
-        return self.current_value
+        return current_value
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the device."""
-        if self.api_unit in TEMPERATURE_UNITS:
-            return self.hass.config.units.temperature_unit
+        unit = self.entity_description.native_unit_of_measurement
 
-        if self.api_unit in LENGTH_UNITS:
+        if unit in LENGTH_UNITS:
             return self.hass.config.units.length_unit
 
-        if self.api_unit in PRESSURE_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
+        if unit in PRESSURE_UNITS:
+            if self.hass.config.units == US_CUSTOMARY_SYSTEM:
                 return self.hass.config.units.pressure_unit
-            return PRESSURE_HPA
 
-        if self.api_unit in FUEL_CONSUMPTION_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
-                return FUEL_CONSUMPTION_MPG
-            return FUEL_CONSUMPTION_L_PER_100KM
+        if unit in [
+            FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
+            FUEL_CONSUMPTION_MILES_PER_GALLON,
+        ]:
+            if self.hass.config.units == US_CUSTOMARY_SYSTEM:
+                return FUEL_CONSUMPTION_MILES_PER_GALLON
 
-        return self.api_unit
+        return unit
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         last_update_success = super().available
         if last_update_success and self.vin not in self.coordinator.data:
             return False
         return last_update_success
 
-    def get_current_value(self):
-        """Get raw value from the coordinator."""
-        value = self.coordinator.data[self.vin][VEHICLE_STATUS].get(self.data_field)
-        if value in sc.BAD_SENSOR_VALUES:
-            value = None
-        if isinstance(value, str):
-            if "." in value:
-                value = float(value)
-            else:
-                value = int(value)
-        return value
+
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Migrate sensor entries from HA<=2022.10 to use preferred unique_id."""
+    entity_registry = er.async_get(hass)
+
+    all_sensors = []
+    all_sensors.extend(EV_SENSORS)
+    all_sensors.extend(API_GEN_2_SENSORS)
+    all_sensors.extend(SAFETY_SENSORS)
+
+    # Old unique_id is (previously title-cased) sensor name
+    # (e.g. "VIN_Avg Fuel Consumption")
+    replacements = {str(s.name).upper(): s.key for s in all_sensors}
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, Any] | None:
+        id_split = entry.unique_id.split("_")
+        key = id_split[1].upper() if len(id_split) == 2 else None
+
+        if key not in replacements or id_split[1] == replacements[key]:
+            return None
+
+        new_unique_id = entry.unique_id.replace(id_split[1], replacements[key])
+        _LOGGER.debug(
+            "Migrating entity '%s' unique_id from '%s' to '%s'",
+            entry.entity_id,
+            entry.unique_id,
+            new_unique_id,
+        )
+        if existing_entity_id := entity_registry.async_get_entity_id(
+            entry.domain, entry.platform, new_unique_id
+        ):
+            _LOGGER.debug(
+                "Cannot migrate to unique_id '%s', already exists for '%s'",
+                new_unique_id,
+                existing_entity_id,
+            )
+            return None
+        return {
+            "new_unique_id": new_unique_id,
+        }
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)

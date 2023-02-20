@@ -1,7 +1,7 @@
 """Fixtures for sma tests."""
 from unittest.mock import patch
 
-from pysma.const import DEVCLASS_INVERTER
+from pysma.const import GENERIC_SENSORS
 from pysma.definitions import sensor_map
 from pysma.sensor import Sensors
 import pytest
@@ -32,7 +32,7 @@ async def init_integration(hass, mock_config_entry):
     mock_config_entry.add_to_hass(hass)
 
     with patch("pysma.SMA.read"), patch(
-        "pysma.SMA.get_sensors", return_value=Sensors(sensor_map[DEVCLASS_INVERTER])
+        "pysma.SMA.get_sensors", return_value=Sensors(sensor_map[GENERIC_SENSORS])
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

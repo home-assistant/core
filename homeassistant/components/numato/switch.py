@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from numato_gpio import NumatoGpioError
 
@@ -67,6 +68,8 @@ def setup_platform(
 class NumatoGpioSwitch(SwitchEntity):
     """Representation of a Numato USB GPIO switch port."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the port."""
         self._name = name or DEVICE_DEFAULT_NAME
@@ -82,16 +85,11 @@ class NumatoGpioSwitch(SwitchEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if port is turned on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the port on."""
         try:
             self._api.write_output(
@@ -107,7 +105,7 @@ class NumatoGpioSwitch(SwitchEntity):
                 err,
             )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the port off."""
         try:
             self._api.write_output(

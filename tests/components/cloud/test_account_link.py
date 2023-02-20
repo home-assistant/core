@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.cloud import account_link
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
@@ -36,7 +37,7 @@ def flow_handler(hass):
         yield TestFlowHandler
 
 
-async def test_setup_provide_implementation(hass):
+async def test_setup_provide_implementation(hass: HomeAssistant) -> None:
     """Test that we provide implementations."""
     legacy_entry = MockConfigEntry(
         domain="legacy",
@@ -57,6 +58,7 @@ async def test_setup_provide_implementation(hass):
         return_value=[
             {"service": "test", "min_version": "0.1.0"},
             {"service": "too_new", "min_version": "1000000.0.0"},
+            {"service": "dev", "min_version": "2022.9.0"},
             {
                 "service": "deprecated",
                 "min_version": "0.1.0",
@@ -73,6 +75,8 @@ async def test_setup_provide_implementation(hass):
                 "accepts_new_authorizations": False,
             },
         ],
+    ), patch(
+        "homeassistant.components.cloud.account_link.HA_VERSION", "2022.9.0.dev20220817"
     ):
         assert (
             await config_entry_oauth2_flow.async_get_implementations(
@@ -101,6 +105,10 @@ async def test_setup_provide_implementation(hass):
             await config_entry_oauth2_flow.async_get_implementations(hass, "legacy")
         )
 
+        dev_implementations = await config_entry_oauth2_flow.async_get_implementations(
+            hass, "dev"
+        )
+
     assert "cloud" in implementations
     assert implementations["cloud"].domain == "cloud"
     assert implementations["cloud"].service == "test"
@@ -111,8 +119,13 @@ async def test_setup_provide_implementation(hass):
     assert legacy_implementations["cloud"].service == "legacy"
     assert legacy_implementations["cloud"].hass is hass
 
+    assert "cloud" in dev_implementations
+    assert dev_implementations["cloud"].domain == "cloud"
+    assert dev_implementations["cloud"].service == "dev"
+    assert dev_implementations["cloud"].hass is hass
 
-async def test_get_services_cached(hass):
+
+async def test_get_services_cached(hass: HomeAssistant) -> None:
     """Test that we cache services."""
     hass.data["cloud"] = None
 
@@ -141,7 +154,7 @@ async def test_get_services_cached(hass):
         assert await account_link._get_services(hass) == 4
 
 
-async def test_get_services_error(hass):
+async def test_get_services_error(hass: HomeAssistant) -> None:
     """Test that we cache services."""
     hass.data["cloud"] = None
 
@@ -153,7 +166,9 @@ async def test_get_services_error(hass):
         assert account_link.DATA_SERVICES not in hass.data
 
 
-async def test_implementation(hass, flow_handler, current_request_with_host):
+async def test_implementation(
+    hass: HomeAssistant, flow_handler, current_request_with_host: None
+) -> None:
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
 

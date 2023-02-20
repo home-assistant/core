@@ -12,12 +12,10 @@ from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DEFAULT_TRACK_NEW,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     SourceType,
 )
@@ -98,8 +96,7 @@ async def see_device(
 
 
 async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]:
-    """
-    Load all known devices.
+    """Load all known devices.
 
     We just need the devices so set consider_home and home range to 0
     """
@@ -189,7 +186,10 @@ async def async_setup_scanner(
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
             _LOGGER.debug(
-                "Previous execution of update_bluetooth is taking longer than the scheduled update of interval %s",
+                (
+                    "Previous execution of update_bluetooth is taking longer than the"
+                    " scheduled update of interval %s"
+                ),
                 interval,
             )
             return

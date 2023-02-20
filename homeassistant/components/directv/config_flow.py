@@ -100,7 +100,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a confirmation flow initiated by SSDP."""
         if user_input is None:

@@ -2,7 +2,10 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from tests.components.homekit_controller.common import setup_test_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .common import get_next_aid, setup_test_component
 
 
 def create_security_system_service(accessory):
@@ -23,7 +26,7 @@ def create_security_system_service(accessory):
     targ_state.value = 50
 
 
-async def test_switch_change_alarm_state(hass, utcnow):
+async def test_switch_change_alarm_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can turn a HomeKit alarm on and off again."""
     helper = await setup_test_component(hass, create_security_system_service)
 
@@ -80,7 +83,7 @@ async def test_switch_change_alarm_state(hass, utcnow):
     )
 
 
-async def test_switch_read_alarm_state(hass, utcnow):
+async def test_switch_read_alarm_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit alarm accessory."""
     helper = await setup_test_component(hass, create_security_system_service)
 
@@ -119,3 +122,20 @@ async def test_switch_read_alarm_state(hass, utcnow):
     )
     state = await helper.poll_and_get_state()
     assert state.state == "triggered"
+
+
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+    """Test a we can migrate a alarm_control_panel unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    alarm_control_panel_entry = entity_registry.async_get_or_create(
+        "alarm_control_panel",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_security_system_service)
+
+    assert (
+        entity_registry.async_get(alarm_control_panel_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

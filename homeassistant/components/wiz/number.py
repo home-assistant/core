@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from pywizlight import wizlight
 
@@ -13,6 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -53,9 +54,10 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_step=1,
         icon="mdi:speedometer",
         name="Effect speed",
-        value_fn=lambda device: cast(Optional[int], device.state.get_speed()),
+        value_fn=lambda device: cast(int | None, device.state.get_speed()),
         set_value_fn=_async_set_speed,
         required_feature="effect",
+        entity_category=EntityCategory.CONFIG,
     ),
     WizNumberEntityDescription(
         key="dual_head_ratio",
@@ -64,9 +66,10 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
         native_step=1,
         icon="mdi:floor-lamp-dual",
         name="Dual head ratio",
-        value_fn=lambda device: cast(Optional[int], device.state.get_ratio()),
+        value_fn=lambda device: cast(int | None, device.state.get_ratio()),
         set_value_fn=_async_set_ratio,
         required_feature="dual_head",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

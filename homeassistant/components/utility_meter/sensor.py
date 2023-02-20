@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from croniter import croniter
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -22,10 +23,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform, entity_registry as er
@@ -88,8 +88,8 @@ ATTR_LAST_PERIOD = "last_period"
 ATTR_TARIFF = "tariff"
 
 DEVICE_CLASS_MAP = {
-    ENERGY_WATT_HOUR: SensorDeviceClass.ENERGY,
-    ENERGY_KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
+    UnitOfEnergy.WATT_HOUR: SensorDeviceClass.ENERGY,
+    UnitOfEnergy.KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
 }
 
 ICON = "mdi:counter"
@@ -275,7 +275,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         return data
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> UtilitySensorExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         extra = SensorExtraStoredData.from_dict(restored)
         if extra is None:
@@ -303,6 +303,8 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 
 class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -580,11 +582,6 @@ class UtilityMeterSensor(RestoreSensor):
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

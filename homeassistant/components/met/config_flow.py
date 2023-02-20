@@ -1,11 +1,14 @@
 """Config flow to configure Met component."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -18,7 +21,7 @@ from .const import (
 
 
 @callback
-def configured_instances(hass):
+def configured_instances(hass: HomeAssistant) -> set[str]:
     """Return a set of configured SimpliSafe instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
@@ -36,11 +39,13 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init MetFlowHandler."""
-        self._errors = {}
+        self._errors: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         self._errors = {}
 
@@ -62,8 +67,12 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _show_config_form(
-        self, name=None, latitude=None, longitude=None, elevation=None
-    ):
+        self,
+        name: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        elevation: int | None = None,
+    ) -> FlowResult:
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
@@ -78,7 +87,9 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_onboarding(self, data=None):
+    async def async_step_onboarding(
+        self, data: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by onboarding."""
         # Don't create entry if latitude or longitude isn't set.
         # Also, filters out our onboarding default location.

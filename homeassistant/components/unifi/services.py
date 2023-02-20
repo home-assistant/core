@@ -1,9 +1,12 @@
 """UniFi Network services."""
+from collections.abc import Mapping
+from typing import Any
 
+from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -24,7 +27,7 @@ SERVICE_TO_SCHEMA = {
 
 
 @callback
-def async_setup_services(hass) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for UniFi integration."""
 
     services = {
@@ -46,13 +49,13 @@ def async_setup_services(hass) -> None:
 
 
 @callback
-def async_unload_services(hass) -> None:
+def async_unload_services(hass: HomeAssistant) -> None:
     """Unload UniFi Network services."""
     for service in SUPPORTED_SERVICES:
         hass.services.async_remove(UNIFI_DOMAIN, service)
 
 
-async def async_reconnect_client(hass, data) -> None:
+async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
@@ -77,10 +80,10 @@ async def async_reconnect_client(hass, data) -> None:
         ):
             continue
 
-        await controller.api.clients.reconnect(mac)
+        await controller.api.request(ClientReconnectRequest.create(mac))
 
 
-async def async_remove_clients(hass, data) -> None:
+async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Remove select clients from controller.
 
     Validates based on:
@@ -88,14 +91,12 @@ async def async_remove_clients(hass, data) -> None:
     - Neither IP, hostname nor name is configured.
     """
     for controller in hass.data[UNIFI_DOMAIN].values():
-
         if not controller.available:
             continue
 
         clients_to_remove = []
 
         for client in controller.api.clients_all.values():
-
             if (
                 client.last_seen
                 and client.first_seen
@@ -109,4 +110,4 @@ async def async_remove_clients(hass, data) -> None:
             clients_to_remove.append(client.mac)
 
         if clients_to_remove:
-            await controller.api.clients.remove_clients(macs=clients_to_remove)
+            await controller.api.request(ClientRemoveRequest.create(clients_to_remove))

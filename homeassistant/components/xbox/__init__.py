@@ -21,7 +21,6 @@ from xbox.webapi.api.provider.smartglass.models import (
 )
 
 from homeassistant.components import application_credentials
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
@@ -30,6 +29,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -174,7 +174,7 @@ class XboxData:
     presence: dict[str, PresenceData]
 
 
-class XboxUpdateCoordinator(DataUpdateCoordinator):
+class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     """Store Xbox Console Status."""
 
     def __init__(
@@ -190,7 +190,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
-        self.data: XboxData = XboxData({}, {})
+        self.data = XboxData({}, {})
         self.client: XboxLiveClient = client
         self.consoles: SmartglassConsoleList = consoles
 

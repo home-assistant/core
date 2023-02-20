@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from abodepy.devices.switch import CONST, AbodeSwitch as AbodeSW
+from jaraco.abode.devices.switch import Switch as AbodeSW
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -25,14 +26,16 @@ async def async_setup_entry(
     """Set up Abode switch devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities: list[SwitchEntity] = []
+    entities: list[SwitchEntity] = [
+        AbodeSwitch(data, device)
+        for device_type in DEVICE_TYPES
+        for device in data.abode.get_devices(generic_type=device_type)
+    ]
 
-    for device_type in DEVICE_TYPES:
-        for device in data.abode.get_devices(generic_type=device_type):
-            entities.append(AbodeSwitch(data, device))
-
-    for automation in data.abode.get_automations():
-        entities.append(AbodeAutomationSwitch(data, automation))
+    entities.extend(
+        AbodeAutomationSwitch(data, automation)
+        for automation in data.abode.get_automations()
+    )
 
     async_add_entities(entities)
 

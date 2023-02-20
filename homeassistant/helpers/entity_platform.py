@@ -145,7 +145,12 @@ class EntityPlatform:
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
-        return f"<EntityPlatform domain={self.domain} platform_name={self.platform_name} config_entry={self.config_entry}>"
+        return (
+            "<EntityPlatform "
+            f"domain={self.domain} "
+            f"platform_name={self.platform_name} "
+            f"config_entry={self.config_entry}>"
+        )
 
     @callback
     def _get_parallel_updates_semaphore(
@@ -153,12 +158,16 @@ class EntityPlatform:
     ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
-        Semaphore will be created on demand because we base it off if update method is async or not.
+        Semaphore will be created on demand because we base it off if update
+        method is async or not.
 
-        If parallel updates is set to 0, we skip the semaphore.
-        If parallel updates is set to a number, we initialize the semaphore to that number.
-        The default value for parallel requests is decided based on the first entity that is added to Home Assistant.
-        It's 0 if the entity defines the async_update method, else it's 1.
+        - If parallel updates is set to 0, we skip the semaphore.
+        - If parallel updates is set to a number, we initialize the semaphore
+          to that number.
+
+        The default value for parallel requests is decided based on the first
+        entity that is added to Home Assistant. It's 0 if the entity defines
+        the async_update method, else it's 1.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -191,16 +200,19 @@ class EntityPlatform:
             platform, "setup_platform"
         ):
             self.logger.error(
-                "The %s platform for the %s integration does not support platform setup. Please remove it from your config.",
+                (
+                    "The %s platform for the %s integration does not support platform"
+                    " setup. Please remove it from your config."
+                ),
                 self.platform_name,
                 self.domain,
             )
             return
 
         @callback
-        def async_create_setup_task() -> Coroutine[
-            Any, Any, None
-        ] | asyncio.Future[None]:
+        def async_create_setup_task() -> (
+            Coroutine[Any, Any, None] | asyncio.Future[None]
+        ):
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
                 return platform.async_setup_platform(  # type: ignore[union-attr]
@@ -327,8 +339,10 @@ class EntityPlatform:
                 return False
             except asyncio.TimeoutError:
                 logger.error(
-                    "Setup of platform %s is taking longer than %s seconds."
-                    " Startup will proceed without waiting any longer.",
+                    (
+                        "Setup of platform %s is taking longer than %s seconds."
+                        " Startup will proceed without waiting any longer."
+                    ),
                     self.platform_name,
                     SLOW_SETUP_MAX_WAIT,
                 )
@@ -404,7 +418,7 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         # handle empty list from component/platform
-        if not new_entities:
+        if not new_entities:  # type: ignore[truthy-iterable]
             return
 
         hass = self.hass
@@ -454,6 +468,22 @@ class EntityPlatform:
             self.scan_interval,
         )
 
+    def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:
+        """Check if an entity_id already exists.
+
+        Returns a tuple [already_exists, restored]
+        """
+        already_exists = entity_id in self.entities
+        restored = False
+
+        if not already_exists and not self.hass.states.async_available(entity_id):
+            existing = self.hass.states.get(entity_id)
+            if existing is not None and ATTR_RESTORED in existing.attributes:
+                restored = True
+            else:
+                already_exists = True
+        return (already_exists, restored)
+
     async def _async_add_entity(  # noqa: C901
         self,
         entity: Entity,
@@ -480,12 +510,37 @@ class EntityPlatform:
                 entity.add_to_platform_abort()
                 return
 
-        requested_entity_id = None
         suggested_object_id: str | None = None
         generate_new_entity_id = False
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
+            registered_entity_id = entity_registry.async_get_entity_id(
+                self.domain, self.platform_name, entity.unique_id
+            )
+            if registered_entity_id:
+                already_exists, _ = self._entity_id_already_exists(registered_entity_id)
+
+                if already_exists:
+                    # If there's a collision, the entry belongs to another entity
+                    entity.registry_entry = None
+                    msg = (
+                        f"Platform {self.platform_name} does not generate unique IDs. "
+                    )
+                    if entity.entity_id:
+                        msg += (
+                            f"ID {entity.unique_id} is already used by"
+                            f" {registered_entity_id} - ignoring {entity.entity_id}"
+                        )
+                    else:
+                        msg += (
+                            f"ID {entity.unique_id} already exists - ignoring"
+                            f" {registered_entity_id}"
+                        )
+                    self.logger.error(msg)
+                    entity.add_to_platform_abort()
+                    return
+
             if self.config_entry is not None:
                 config_entry_id: str | None = self.config_entry.entry_id
             else:
@@ -515,7 +570,9 @@ class EntityPlatform:
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
+                        processed_dev_info[key] = device_info[
+                            key  # type: ignore[literal-required]
+                        ]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
@@ -535,13 +592,14 @@ class EntityPlatform:
                             )
 
                 try:
-                    device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
+                    device = device_registry.async_get_or_create(
+                        **processed_dev_info  # type: ignore[arg-type]
+                    )
                     device_id = device.id
                 except RequiredParameterMissing:
                     pass
 
             if entity.entity_id is not None:
-                requested_entity_id = entity.entity_id
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
             else:
                 if device and entity.has_entity_name:  # type: ignore[unreachable]
@@ -573,14 +631,16 @@ class EntityPlatform:
                 device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
+                get_initial_options=entity.get_initial_entity_options,
+                has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
-                has_entity_name=entity.has_entity_name,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity.name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
+                translation_key=entity.translation_key,
                 unit_of_measurement=entity.unit_of_measurement,
             )
 
@@ -591,16 +651,6 @@ class EntityPlatform:
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id
-
-            if entry.disabled:
-                self.logger.debug(
-                    "Not adding entity %s because it's disabled",
-                    entry.name
-                    or entity.name
-                    or f'"{self.platform_name} {entity.unique_id}"',
-                )
-                entity.add_to_platform_abort()
-                return
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
@@ -628,28 +678,22 @@ class EntityPlatform:
             entity.add_to_platform_abort()
             raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 
-        already_exists = entity.entity_id in self.entities
-        restored = False
-
-        if not already_exists and not self.hass.states.async_available(
-            entity.entity_id
-        ):
-            existing = self.hass.states.get(entity.entity_id)
-            if existing is not None and ATTR_RESTORED in existing.attributes:
-                restored = True
-            else:
-                already_exists = True
+        already_exists, restored = self._entity_id_already_exists(entity.entity_id)
 
         if already_exists:
-            if entity.unique_id is not None:
-                msg = f"Platform {self.platform_name} does not generate unique IDs. "
-                if requested_entity_id:
-                    msg += f"ID {entity.unique_id} is already used by {entity.entity_id} - ignoring {requested_entity_id}"
-                else:
-                    msg += f"ID {entity.unique_id} already exists - ignoring {entity.entity_id}"
-            else:
-                msg = f"Entity id already exists - ignoring: {entity.entity_id}"
-            self.logger.error(msg)
+            self.logger.error(
+                f"Entity id already exists - ignoring: {entity.entity_id}"
+            )
+            entity.add_to_platform_abort()
+            return
+
+        if entity.registry_entry and entity.registry_entry.disabled:
+            self.logger.debug(
+                "Not adding entity %s because it's disabled",
+                entry.name
+                or entity.name
+                or f'"{self.platform_name} {entity.unique_id}"',
+            )
             entity.add_to_platform_abort()
             return
 

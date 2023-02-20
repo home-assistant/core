@@ -1,6 +1,7 @@
 """Test the Aladdin Connect config flow."""
 from unittest.mock import MagicMock, patch
 
+from AIOAladdinConnect.session_manager import InvalidPasswordError
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant import config_entries
@@ -54,6 +55,7 @@ async def test_form_failed_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     mock_aladdinconnect_api.login.return_value = False
+    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
     with patch(
         "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -96,7 +98,7 @@ async def test_form_connection_timeout(
 
 async def test_form_already_configured(
     hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-):
+) -> None:
     """Test we handle already configured error."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -231,6 +233,7 @@ async def test_reauth_flow_auth_error(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
     mock_aladdinconnect_api.login.return_value = False
+    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
     with patch(
         "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,

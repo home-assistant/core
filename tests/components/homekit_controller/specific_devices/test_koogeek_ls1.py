@@ -8,11 +8,10 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -21,6 +20,8 @@ from tests.components.homekit_controller.common import (
     setup_accessories_from_file,
     setup_test_accessories,
 )
+
+from tests.common import async_fire_time_changed
 
 LIGHT_ON = ("lightbulb", "on")
 
@@ -45,7 +46,7 @@ async def test_koogeek_ls1_setup(hass):
                 EntityTestInfo(
                     entity_id="light.koogeek_ls1_20833f_light_strip",
                     friendly_name="Koogeek-LS1-20833F Light Strip",
-                    unique_id="homekit-AAAA011111111111-7",
+                    unique_id="00:00:00:00:00:00_1_7",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",
@@ -53,7 +54,7 @@ async def test_koogeek_ls1_setup(hass):
                 EntityTestInfo(
                     entity_id="button.koogeek_ls1_20833f_identify",
                     friendly_name="Koogeek-LS1-20833F Identify",
-                    unique_id="homekit-AAAA011111111111-aid:1-sid:1-cid:6",
+                    unique_id="00:00:00:00:00:00_1_1_6",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     state="unknown",
                 ),
@@ -64,8 +65,7 @@ async def test_koogeek_ls1_setup(hass):
 
 @pytest.mark.parametrize("failure_cls", [AccessoryDisconnectedError, EncryptionError])
 async def test_recover_from_failure(hass, utcnow, failure_cls):
-    """
-    Test that entity actually recovers from a network connection drop.
+    """Test that entity actually recovers from a network connection drop.
 
     See https://github.com/home-assistant/core/issues/18949
     """

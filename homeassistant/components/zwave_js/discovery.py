@@ -43,6 +43,8 @@ from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
+from homeassistant.backports.enum import StrEnum
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -57,6 +59,15 @@ from .discovery_data_template import (
     NumericSensorDataTemplate,
 )
 from .helpers import ZwaveValueID
+
+
+class ValueType(StrEnum):
+    """Enum with all value types."""
+
+    ANY = "any"
+    BOOLEAN = "boolean"
+    NUMBER = "number"
+    STRING = "string"
 
 
 class DataclassMustHaveAtLeastOne:
@@ -97,7 +108,7 @@ class ZwaveDiscoveryInfo:
     # bool to specify whether state is assumed and events should be fired on value update
     assumed_state: bool
     # the home assistant platform for which an entity should be created
-    platform: str
+    platform: Platform
     # helper data to use in platform setup
     platform_data: Any
     # additional values that need to be watched by entity
@@ -145,7 +156,7 @@ class ZWaveDiscoverySchema:
     """
 
     # specify the hass platform for which this scheme applies (e.g. light, sensor)
-    platform: str
+    platform: Platform
     # primary value belonging to this discovery scheme
     primary_value: ZWaveValueDiscoverySchema
     # [optional] hint for platform
@@ -168,13 +179,17 @@ class ZWaveDiscoverySchema:
     device_class_generic: set[str | int] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str | int] | None = None
-    # [optional] additional values that ALL need to be present on the node for this scheme to pass
+    # [optional] additional values that ALL need to be present
+    # on the node for this scheme to pass
     required_values: list[ZWaveValueDiscoverySchema] | None = None
-    # [optional] additional values that MAY NOT be present on the node for this scheme to pass
+    # [optional] additional values that MAY NOT be present
+    # on the node for this scheme to pass
     absent_values: list[ZWaveValueDiscoverySchema] | None = None
-    # [optional] bool to specify if this primary value may be discovered by multiple platforms
+    # [optional] bool to specify if this primary value may be discovered
+    # by multiple platforms
     allow_multi: bool = False
-    # [optional] bool to specify whether state is assumed and events should be fired on value update
+    # [optional] bool to specify whether state is assumed
+    # and events should be fired on value update
     assumed_state: bool = False
     # [optional] bool to specify whether entity should be enabled by default
     entity_registry_enabled_default: bool = True
@@ -187,14 +202,13 @@ def get_config_parameter_discovery_schema(
     property_key_name: set[str | None] | None = None,
     **kwargs: Any,
 ) -> ZWaveDiscoverySchema:
-    """
-    Return a discovery schema for a config parameter.
+    """Return a discovery schema for a config parameter.
 
     Supports all keyword arguments to ZWaveValueDiscoverySchema except platform, hint,
     and primary_value.
     """
     return ZWaveDiscoverySchema(
-        platform="sensor",
+        platform=Platform.SENSOR,
         hint="config_parameter",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.CONFIGURATION},
@@ -202,7 +216,7 @@ def get_config_parameter_discovery_schema(
             property_name=property_name,
             property_key=property_key,
             property_key_name=property_key_name,
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         entity_registry_enabled_default=False,
         **kwargs,
@@ -212,13 +226,13 @@ def get_config_parameter_discovery_schema(
 DOOR_LOCK_CURRENT_MODE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.DOOR_LOCK},
     property={CURRENT_MODE_PROPERTY},
-    type={"number"},
+    type={ValueType.NUMBER},
 )
 
 SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_MULTILEVEL},
     property={CURRENT_VALUE_PROPERTY},
-    type={"number"},
+    type={ValueType.NUMBER},
 )
 
 SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -228,7 +242,7 @@ SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SOUND_SWITCH},
     property={TONE_ID_PROPERTY},
-    type={"number"},
+    type={ValueType.NUMBER},
 )
 
 # For device class mapping see:
@@ -237,7 +251,7 @@ DISCOVERY_SCHEMAS = [
     # ====== START OF DEVICE SPECIFIC MAPPING SCHEMAS =======
     # Honeywell 39358 In-Wall Fan Control using switch multilevel CC
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         manufacturer_id={0x0039},
         product_id={0x3131},
         product_type={0x4944},
@@ -245,7 +259,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # GE/Jasco - In-Wall Smart Fan Control - 12730 / ZW4002
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
         product_id={0x3034},
@@ -257,7 +271,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # GE/Jasco - In-Wall Smart Fan Control - 14287 / ZW4002
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
         product_id={0x3131},
@@ -269,7 +283,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # GE/Jasco - In-Wall Smart Fan Control - 14314 / ZW4002
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         manufacturer_id={0x0063},
         product_id={0x3138},
         product_type={0x4944},
@@ -277,16 +291,20 @@ DISCOVERY_SCHEMAS = [
     ),
     # Leviton ZW4SF fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
+        hint="has_fan_value_mapping",
         manufacturer_id={0x001D},
         product_id={0x0002},
         product_type={0x0038},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 25), (26, 50), (51, 75), (76, 99)]),
+        ),
     ),
     # Inovelli LZW36 light / fan controller combo using switch multilevel CC
     # The fan is endpoint 2, the light is endpoint 1.
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x031E},
         product_id={0x0001},
@@ -295,7 +313,7 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.SWITCH_MULTILEVEL},
             endpoint={2},
             property={CURRENT_VALUE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         data_template=FixedFanValueMappingDataTemplate(
             FanValueMapping(
@@ -305,7 +323,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # HomeSeer HS-FC200+
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x000C},
         product_id={0x0001},
@@ -323,7 +341,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
-        platform="cover",
+        platform=Platform.COVER,
         hint="window_shutter_tilt",
         manufacturer_id={0x010F},
         product_id={0x1000, 0x1001},
@@ -347,7 +365,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
-        platform="cover",
+        platform=Platform.COVER,
         hint="window_shutter",
         manufacturer_id={0x0159},
         product_id={0x0052, 0x0053},
@@ -356,7 +374,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
-        platform="cover",
+        platform=Platform.COVER,
         hint="window_blind",
         manufacturer_id={0x026E},
         product_id={0x5A31},
@@ -365,7 +383,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # iBlinds v2 window blind motor
     ZWaveDiscoverySchema(
-        platform="cover",
+        platform=Platform.COVER,
         hint="window_blind",
         manufacturer_id={0x0287},
         product_id={0x000D},
@@ -374,7 +392,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
-        platform="switch",
+        platform=Platform.SWITCH,
         manufacturer_id={0x0109},
         product_id={0x1711, 0x1717},
         product_type={0x2017},
@@ -383,7 +401,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # Heatit Z-TRM3
     ZWaveDiscoverySchema(
-        platform="climate",
+        platform=Platform.CLIMATE,
         hint="dynamic_current_temp",
         manufacturer_id={0x019B},
         product_id={0x0203},
@@ -391,7 +409,7 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
             property={THERMOSTAT_MODE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
             lookup_table={
@@ -431,7 +449,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # Heatit Z-TRM2fx
     ZWaveDiscoverySchema(
-        platform="climate",
+        platform=Platform.CLIMATE,
         hint="dynamic_current_temp",
         manufacturer_id={0x019B},
         product_id={0x0202},
@@ -440,7 +458,7 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
             property={THERMOSTAT_MODE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
             lookup_table={
@@ -469,7 +487,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # FortrezZ SSA1/SSA2/SSA3
     ZWaveDiscoverySchema(
-        platform="select",
+        platform=Platform.SELECT,
         hint="multilevel_switch",
         manufacturer_id={0x0084},
         product_id={0x0107, 0x0108, 0x010B, 0x0205},
@@ -486,7 +504,7 @@ DISCOVERY_SCHEMAS = [
     ),
     # HomeSeer HSM-200 v1
     ZWaveDiscoverySchema(
-        platform="light",
+        platform=Platform.LIGHT,
         hint="black_is_off",
         manufacturer_id={0x001E},
         product_id={0x0001},
@@ -508,20 +526,22 @@ DISCOVERY_SCHEMAS = [
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     # Door Lock CC
-    ZWaveDiscoverySchema(platform="lock", primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA),
+    ZWaveDiscoverySchema(
+        platform=Platform.LOCK, primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA
+    ),
     # Only discover the Lock CC if the Door Lock CC isn't also present on the node
     ZWaveDiscoverySchema(
-        platform="lock",
+        platform=Platform.LOCK,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.LOCK},
             property={LOCKED_PROPERTY},
-            type={"boolean"},
+            type={ValueType.BOOLEAN},
         ),
         absent_values=[DOOR_LOCK_CURRENT_MODE_SCHEMA],
     ),
     # door lock door status
     ZWaveDiscoverySchema(
-        platform="binary_sensor",
+        platform=Platform.BINARY_SENSOR,
         hint="property",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
@@ -529,53 +549,53 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.DOOR_LOCK,
             },
             property={DOOR_STATUS_PROPERTY},
-            type={"any"},
+            type={ValueType.ANY},
         ),
     ),
     # thermostat fan
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         hint="thermostat_fan",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_FAN_MODE},
             property={THERMOSTAT_FAN_MODE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         entity_registry_enabled_default=False,
     ),
     # humidifier
     # hygrostats supporting mode (and optional setpoint)
     ZWaveDiscoverySchema(
-        platform="humidifier",
+        platform=Platform.HUMIDIFIER,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.HUMIDITY_CONTROL_MODE},
             property={HUMIDITY_CONTROL_MODE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
     ),
     # climate
     # thermostats supporting mode (and optional setpoint)
     ZWaveDiscoverySchema(
-        platform="climate",
+        platform=Platform.CLIMATE,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
             property={THERMOSTAT_MODE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
     ),
     # thermostats supporting setpoint only (and thus not mode)
     ZWaveDiscoverySchema(
-        platform="climate",
+        platform=Platform.CLIMATE,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_SETPOINT},
             property={THERMOSTAT_SETPOINT_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         absent_values=[  # mode must not be present to prevent dupes
             ZWaveValueDiscoverySchema(
                 command_class={CommandClass.THERMOSTAT_MODE},
                 property={THERMOSTAT_MODE_PROPERTY},
-                type={"number"},
+                type={ValueType.NUMBER},
             ),
         ],
     ),
@@ -583,68 +603,68 @@ DISCOVERY_SCHEMAS = [
     # When CC is Sensor Binary and device class generic is Binary Sensor, entity should
     # be enabled by default
     ZWaveDiscoverySchema(
-        platform="binary_sensor",
+        platform=Platform.BINARY_SENSOR,
         hint="boolean",
         device_class_generic={"Binary Sensor"},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SENSOR_BINARY},
-            type={"boolean"},
+            type={ValueType.BOOLEAN},
         ),
     ),
     # Legacy binary sensors are phased out (replaced by notification sensors)
     # Disable by default to not confuse users
     ZWaveDiscoverySchema(
-        platform="binary_sensor",
+        platform=Platform.BINARY_SENSOR,
         hint="boolean",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SENSOR_BINARY},
-            type={"boolean"},
+            type={ValueType.BOOLEAN},
         ),
         entity_registry_enabled_default=False,
     ),
     ZWaveDiscoverySchema(
-        platform="binary_sensor",
+        platform=Platform.BINARY_SENSOR,
         hint="boolean",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.BATTERY,
                 CommandClass.SENSOR_ALARM,
             },
-            type={"boolean"},
+            type={ValueType.BOOLEAN},
         ),
     ),
     ZWaveDiscoverySchema(
-        platform="binary_sensor",
+        platform=Platform.BINARY_SENSOR,
         hint="notification",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.NOTIFICATION,
             },
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         allow_multi=True,
     ),
     # generic text sensors
     ZWaveDiscoverySchema(
-        platform="sensor",
+        platform=Platform.SENSOR,
         hint="string_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SENSOR_ALARM},
-            type={"string"},
+            type={ValueType.STRING},
         ),
     ),
     ZWaveDiscoverySchema(
-        platform="sensor",
+        platform=Platform.SENSOR,
         hint="string_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.INDICATOR},
-            type={"string"},
+            type={ValueType.STRING},
         ),
         entity_registry_enabled_default=False,
     ),
     # generic numeric sensors
     ZWaveDiscoverySchema(
-        platform="sensor",
+        platform=Platform.SENSOR,
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
@@ -652,55 +672,55 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.SENSOR_ALARM,
                 CommandClass.BATTERY,
             },
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
     ZWaveDiscoverySchema(
-        platform="sensor",
+        platform=Platform.SENSOR,
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.INDICATOR},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
     ZWaveDiscoverySchema(
-        platform="sensor",
+        platform=Platform.SENSOR,
         hint="meter",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.METER,
             },
-            type={"number"},
+            type={ValueType.NUMBER},
             property={VALUE_PROPERTY},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
     # special list sensors (Notification CC)
     ZWaveDiscoverySchema(
-        platform="sensor",
+        platform=Platform.SENSOR,
         hint="list_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.NOTIFICATION,
             },
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         allow_multi=True,
         entity_registry_enabled_default=False,
     ),
     # number for Basic CC
     ZWaveDiscoverySchema(
-        platform="number",
+        platform=Platform.NUMBER,
         hint="Basic",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.BASIC,
             },
-            type={"number"},
+            type={ValueType.NUMBER},
             property={CURRENT_VALUE_PROPERTY},
         ),
         required_values=[
@@ -708,7 +728,7 @@ DISCOVERY_SCHEMAS = [
                 command_class={
                     CommandClass.BASIC,
                 },
-                type={"number"},
+                type={ValueType.NUMBER},
                 property={TARGET_VALUE_PROPERTY},
             )
         ],
@@ -717,24 +737,24 @@ DISCOVERY_SCHEMAS = [
     ),
     # binary switches
     ZWaveDiscoverySchema(
-        platform="switch",
+        platform=Platform.SWITCH,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
     ),
     # binary switch
     # barrier operator signaling states
     ZWaveDiscoverySchema(
-        platform="switch",
+        platform=Platform.SWITCH,
         hint="barrier_event_signaling_state",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BARRIER_OPERATOR},
             property={SIGNALING_STATE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
     ),
     # cover
     # window coverings
     ZWaveDiscoverySchema(
-        platform="cover",
+        platform=Platform.COVER,
         hint="window_cover",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
@@ -748,24 +768,24 @@ DISCOVERY_SCHEMAS = [
     # cover
     # motorized barriers
     ZWaveDiscoverySchema(
-        platform="cover",
+        platform=Platform.COVER,
         hint="motorized_barrier",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BARRIER_OPERATOR},
             property={CURRENT_STATE_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
                 command_class={CommandClass.BARRIER_OPERATOR},
                 property={TARGET_STATE_PROPERTY},
-                type={"number"},
+                type={ValueType.NUMBER},
             ),
         ],
     ),
     # fan
     ZWaveDiscoverySchema(
-        platform="fan",
+        platform=Platform.FAN,
         hint="fan",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={"Fan Switch"},
@@ -774,7 +794,7 @@ DISCOVERY_SCHEMAS = [
     # number platform
     # valve control for thermostats
     ZWaveDiscoverySchema(
-        platform="number",
+        platform=Platform.NUMBER,
         hint="Valve control",
         device_class_generic={"Thermostat"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
@@ -785,46 +805,46 @@ DISCOVERY_SCHEMAS = [
     # NOTE: keep this at the bottom of the discovery scheme,
     # to handle all others that need the multilevel CC first
     ZWaveDiscoverySchema(
-        platform="light",
+        platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # sirens
     ZWaveDiscoverySchema(
-        platform="siren",
+        platform=Platform.SIREN,
         primary_value=SIREN_TONE_SCHEMA,
     ),
     # select
     # siren default tone
     ZWaveDiscoverySchema(
-        platform="select",
+        platform=Platform.SELECT,
         hint="Default tone",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SOUND_SWITCH},
             property={DEFAULT_TONE_ID_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         required_values=[SIREN_TONE_SCHEMA],
     ),
     # number
     # siren default volume
     ZWaveDiscoverySchema(
-        platform="number",
+        platform=Platform.NUMBER,
         hint="volume",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SOUND_SWITCH},
             property={DEFAULT_VOLUME_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
         required_values=[SIREN_TONE_SCHEMA],
     ),
     # select
     # protection CC
     ZWaveDiscoverySchema(
-        platform="select",
+        platform=Platform.SELECT,
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.PROTECTION},
             property={LOCAL_PROPERTY, RF_PROPERTY},
-            type={"number"},
+            type={ValueType.NUMBER},
         ),
     ),
 ]
@@ -961,7 +981,8 @@ def async_discover_single_value(
         )
 
         if not schema.allow_multi:
-            # return early since this value may not be discovered by other schemas/platforms
+            # return early since this value may not be discovered
+            # by other schemas/platforms
             return
 
 

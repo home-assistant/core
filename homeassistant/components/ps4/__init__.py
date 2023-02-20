@@ -7,10 +7,10 @@ from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_GAME,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,9 +25,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
 from .const import (
@@ -108,8 +109,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 version = entry.version = 2
                 config_entries.async_update_entry(entry, data=data)
                 _LOGGER.info(
-                    "PlayStation 4 Config Updated: \
-                    Region changed to: %s",
+                    "PlayStation 4 Config Updated: Region changed to: %s",
                     country,
                 )
 
@@ -140,8 +140,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 entry.version = 3
                 _LOGGER.info(
-                    "PlayStation 4 identifier for entity: %s \
-                    has changed",
+                    "PlayStation 4 identifier for entity: %s has changed",
                     entity_id,
                 )
                 config_entries.async_update_entry(entry)
@@ -206,7 +205,7 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
                 ATTR_LOCKED: False,
                 ATTR_MEDIA_TITLE: data,
                 ATTR_MEDIA_IMAGE_URL: None,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.GAME,
             }
             data_reformatted = True
 

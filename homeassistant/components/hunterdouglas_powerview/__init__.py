@@ -42,7 +42,13 @@ PARALLEL_UPDATES = 1
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SCENE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -138,6 +138,8 @@ class SW16Device(Entity):
     Contains the common logic for HLK-SW16 entities.
     """
 
+    _attr_should_poll = False
+
     def __init__(self, device_port, entry_id, client):
         """Initialize the device."""
         # HLK-SW16 specific attributes for every component type
@@ -158,11 +160,6 @@ class SW16Device(Entity):
         _LOGGER.debug("Relay %s new state callback: %r", self.unique_id, event)
         self._is_on = event
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

@@ -1,16 +1,18 @@
 """Tests for the solax config flow."""
 from unittest.mock import patch
 
-from solax import RealTimeAPI, inverter
+from solax import RealTimeAPI
 from solax.inverter import InverterResponse
+from solax.inverters import X1MiniV34
 
 from homeassistant import config_entries
 from homeassistant.components.solax.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 
 def __mock_real_time_api_success():
-    return RealTimeAPI(inverter.X1MiniV34)
+    return RealTimeAPI(X1MiniV34)
 
 
 def __mock_get_data():
@@ -19,7 +21,7 @@ def __mock_get_data():
     )
 
 
-async def test_form_success(hass):
+async def test_form_success(hass: HomeAssistant) -> None:
     """Test successful form."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -50,7 +52,7 @@ async def test_form_success(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_connect_error(hass):
+async def test_form_connect_error(hass: HomeAssistant) -> None:
     """Test cannot connect form."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +73,7 @@ async def test_form_connect_error(hass):
     assert entry_result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test unknown error form."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

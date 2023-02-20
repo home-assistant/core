@@ -1,40 +1,23 @@
 """Const for Sonos."""
+from __future__ import annotations
+
 import datetime
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_COMPOSER,
-    MEDIA_CLASS_CONTRIBUTING_ARTIST,
-    MEDIA_CLASS_GENRE,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_COMPOSER,
-    MEDIA_TYPE_CONTRIBUTING_ARTIST,
-    MEDIA_TYPE_GENRE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
-)
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.media_player import MediaClass, MediaType
+from homeassistant.const import Platform
 
 UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 
 DOMAIN = "sonos"
 DATA_SONOS = "sonos_media_player"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
-PLATFORMS = {
-    BINARY_SENSOR_DOMAIN,
-    MP_DOMAIN,
-    NUMBER_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-}
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 SONOS_ARTIST = "artists"
 SONOS_ALBUM = "albums"
@@ -50,11 +33,11 @@ SONOS_STATE_PLAYING = "PLAYING"
 SONOS_STATE_TRANSITIONING = "TRANSITIONING"
 
 EXPANDABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_COMPOSER,
-    MEDIA_TYPE_GENRE,
-    MEDIA_TYPE_PLAYLIST,
+    MediaType.ALBUM,
+    MediaType.ARTIST,
+    MediaType.COMPOSER,
+    MediaType.GENRE,
+    MediaType.PLAYLIST,
     SONOS_ALBUM,
     SONOS_ALBUM_ARTIST,
     SONOS_ARTIST,
@@ -64,49 +47,49 @@ EXPANDABLE_MEDIA_TYPES = [
 ]
 
 SONOS_TO_MEDIA_CLASSES = {
-    SONOS_ALBUM: MEDIA_CLASS_ALBUM,
-    SONOS_ALBUM_ARTIST: MEDIA_CLASS_ARTIST,
-    SONOS_ARTIST: MEDIA_CLASS_CONTRIBUTING_ARTIST,
-    SONOS_COMPOSER: MEDIA_CLASS_COMPOSER,
-    SONOS_GENRE: MEDIA_CLASS_GENRE,
-    SONOS_PLAYLISTS: MEDIA_CLASS_PLAYLIST,
-    SONOS_TRACKS: MEDIA_CLASS_TRACK,
-    "object.container.album.musicAlbum": MEDIA_CLASS_ALBUM,
-    "object.container.genre.musicGenre": MEDIA_CLASS_PLAYLIST,
-    "object.container.person.composer": MEDIA_CLASS_PLAYLIST,
-    "object.container.person.musicArtist": MEDIA_CLASS_ARTIST,
-    "object.container.playlistContainer.sameArtist": MEDIA_CLASS_ARTIST,
-    "object.container.playlistContainer": MEDIA_CLASS_PLAYLIST,
-    "object.item": MEDIA_CLASS_TRACK,
-    "object.item.audioItem.musicTrack": MEDIA_CLASS_TRACK,
-    "object.item.audioItem.audioBroadcast": MEDIA_CLASS_GENRE,
+    SONOS_ALBUM: MediaClass.ALBUM,
+    SONOS_ALBUM_ARTIST: MediaClass.ARTIST,
+    SONOS_ARTIST: MediaClass.CONTRIBUTING_ARTIST,
+    SONOS_COMPOSER: MediaClass.COMPOSER,
+    SONOS_GENRE: MediaClass.GENRE,
+    SONOS_PLAYLISTS: MediaClass.PLAYLIST,
+    SONOS_TRACKS: MediaClass.TRACK,
+    "object.container.album.musicAlbum": MediaClass.ALBUM,
+    "object.container.genre.musicGenre": MediaClass.PLAYLIST,
+    "object.container.person.composer": MediaClass.PLAYLIST,
+    "object.container.person.musicArtist": MediaClass.ARTIST,
+    "object.container.playlistContainer.sameArtist": MediaClass.ARTIST,
+    "object.container.playlistContainer": MediaClass.PLAYLIST,
+    "object.item": MediaClass.TRACK,
+    "object.item.audioItem.musicTrack": MediaClass.TRACK,
+    "object.item.audioItem.audioBroadcast": MediaClass.GENRE,
 }
 
 SONOS_TO_MEDIA_TYPES = {
-    SONOS_ALBUM: MEDIA_TYPE_ALBUM,
-    SONOS_ALBUM_ARTIST: MEDIA_TYPE_ARTIST,
-    SONOS_ARTIST: MEDIA_TYPE_CONTRIBUTING_ARTIST,
-    SONOS_COMPOSER: MEDIA_TYPE_COMPOSER,
-    SONOS_GENRE: MEDIA_TYPE_GENRE,
-    SONOS_PLAYLISTS: MEDIA_TYPE_PLAYLIST,
-    SONOS_TRACKS: MEDIA_TYPE_TRACK,
-    "object.container.album.musicAlbum": MEDIA_TYPE_ALBUM,
-    "object.container.genre.musicGenre": MEDIA_TYPE_PLAYLIST,
-    "object.container.person.composer": MEDIA_TYPE_PLAYLIST,
-    "object.container.person.musicArtist": MEDIA_TYPE_ARTIST,
-    "object.container.playlistContainer.sameArtist": MEDIA_TYPE_ARTIST,
-    "object.container.playlistContainer": MEDIA_TYPE_PLAYLIST,
-    "object.item.audioItem.musicTrack": MEDIA_TYPE_TRACK,
+    SONOS_ALBUM: MediaType.ALBUM,
+    SONOS_ALBUM_ARTIST: MediaType.ARTIST,
+    SONOS_ARTIST: MediaType.CONTRIBUTING_ARTIST,
+    SONOS_COMPOSER: MediaType.COMPOSER,
+    SONOS_GENRE: MediaType.GENRE,
+    SONOS_PLAYLISTS: MediaType.PLAYLIST,
+    SONOS_TRACKS: MediaType.TRACK,
+    "object.container.album.musicAlbum": MediaType.ALBUM,
+    "object.container.genre.musicGenre": MediaType.PLAYLIST,
+    "object.container.person.composer": MediaType.PLAYLIST,
+    "object.container.person.musicArtist": MediaType.ARTIST,
+    "object.container.playlistContainer.sameArtist": MediaType.ARTIST,
+    "object.container.playlistContainer": MediaType.PLAYLIST,
+    "object.item.audioItem.musicTrack": MediaType.TRACK,
 }
 
-MEDIA_TYPES_TO_SONOS = {
-    MEDIA_TYPE_ALBUM: SONOS_ALBUM,
-    MEDIA_TYPE_ARTIST: SONOS_ALBUM_ARTIST,
-    MEDIA_TYPE_CONTRIBUTING_ARTIST: SONOS_ARTIST,
-    MEDIA_TYPE_COMPOSER: SONOS_COMPOSER,
-    MEDIA_TYPE_GENRE: SONOS_GENRE,
-    MEDIA_TYPE_PLAYLIST: SONOS_PLAYLISTS,
-    MEDIA_TYPE_TRACK: SONOS_TRACKS,
+MEDIA_TYPES_TO_SONOS: dict[MediaType | str, str] = {
+    MediaType.ALBUM: SONOS_ALBUM,
+    MediaType.ARTIST: SONOS_ALBUM_ARTIST,
+    MediaType.CONTRIBUTING_ARTIST: SONOS_ARTIST,
+    MediaType.COMPOSER: SONOS_COMPOSER,
+    MediaType.GENRE: SONOS_GENRE,
+    MediaType.PLAYLIST: SONOS_PLAYLISTS,
+    MediaType.TRACK: SONOS_TRACKS,
 }
 
 SONOS_TYPES_MAPPING = {
@@ -139,13 +122,13 @@ LIBRARY_TITLES_MAPPING = {
 }
 
 PLAYABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_COMPOSER,
-    MEDIA_TYPE_CONTRIBUTING_ARTIST,
-    MEDIA_TYPE_GENRE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
+    MediaType.ALBUM,
+    MediaType.ARTIST,
+    MediaType.COMPOSER,
+    MediaType.CONTRIBUTING_ARTIST,
+    MediaType.GENRE,
+    MediaType.PLAYLIST,
+    MediaType.TRACK,
 ]
 
 SONOS_CHECK_ACTIVITY = "sonos_check_activity"

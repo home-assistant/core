@@ -1,6 +1,4 @@
 """Test KNX select."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.knx.const import (
@@ -17,8 +15,10 @@ from homeassistant.core import HomeAssistant, State
 
 from .conftest import KNXTestKit
 
+from tests.common import mock_restore_cache
 
-async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit):
+
+async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX select."""
     _options = [
         {CONF_PAYLOAD: 0b00, SelectSchema.CONF_OPTION: "No control"},
@@ -88,7 +88,7 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_no_telegram()
 
 
-async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit):
+async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX select with passive_address and respond_to_read restoring state."""
     _options = [
         {CONF_PAYLOAD: 0b00, SelectSchema.CONF_OPTION: "No control"},
@@ -98,22 +98,19 @@ async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit):
     test_address = "1/1/1"
     test_passive_address = "3/3/3"
     fake_state = State("select.test", "Control - On")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await knx.setup_integration(
-            {
-                SelectSchema.PLATFORM: {
-                    CONF_NAME: "test",
-                    KNX_ADDRESS: [test_address, test_passive_address],
-                    CONF_RESPOND_TO_READ: True,
-                    CONF_PAYLOAD_LENGTH: 0,
-                    SelectSchema.CONF_OPTIONS: _options,
-                }
+    await knx.setup_integration(
+        {
+            SelectSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: [test_address, test_passive_address],
+                CONF_RESPOND_TO_READ: True,
+                CONF_PAYLOAD_LENGTH: 0,
+                SelectSchema.CONF_OPTIONS: _options,
             }
-        )
+        }
+    )
     # restored state - doesn't send telegram
     state = hass.states.get("select.test")
     assert state.state == "Control - On"
@@ -128,7 +125,9 @@ async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_no_telegram()
 
 
-async def test_select_dpt_20_103_all_options(hass: HomeAssistant, knx: KNXTestKit):
+async def test_select_dpt_20_103_all_options(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test KNX select with state_address, passive_address and respond_to_read."""
     _options = [
         {CONF_PAYLOAD: 0, SelectSchema.CONF_OPTION: "Auto"},

@@ -6,8 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -16,6 +15,7 @@ from homeassistant.components.number.const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
+    NumberEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant

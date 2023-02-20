@@ -36,14 +36,7 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from google_nest_sdm.transcoder import Transcoder
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -450,9 +443,9 @@ def _browse_root() -> BrowseMediaSource:
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier="",
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=MEDIA_SOURCE_TITLE,
         can_play=False,
         can_expand=True,
@@ -482,9 +475,9 @@ def _browse_device(device_id: MediaId, device: Device) -> BrowseMediaSource:
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=device_id.identifier,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=DEVICE_TITLE_FORMAT.format(device_name=device_info.device_name),
         can_play=False,
         can_expand=True,
@@ -503,8 +496,8 @@ def _browse_clip_preview(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,
-        media_class=MEDIA_CLASS_IMAGE,
-        media_content_type=MEDIA_TYPE_IMAGE,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=", ".join(types),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
@@ -525,8 +518,8 @@ def _browse_image_event(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,
-        media_class=MEDIA_CLASS_IMAGE,
-        media_content_type=MEDIA_TYPE_IMAGE,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),

@@ -1,10 +1,11 @@
 {
   "domain": "geonetnz_volcano",
   "name": "GeoNet NZ Volcano",
+  "codeowners": ["@exxamalte"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geonetnz_volcano",
-  "requirements": ["aio_geojson_geonetnz_volcano==0.6"],
-  "codeowners": ["@exxamalte"],
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["aio_geojson_geonetnz_volcano"]
+  "loggers": ["aio_geojson_geonetnz_volcano"],
+  "requirements": ["aio_geojson_geonetnz_volcano==0.8"]
 }

@@ -9,9 +9,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_BATTERY, SONOS_CREATE_MIC_SENSOR
@@ -109,6 +109,6 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         self.speaker.mic_enabled = self.soco.mic_enabled
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.speaker.mic_enabled

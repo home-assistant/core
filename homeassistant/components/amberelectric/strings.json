@@ -15,6 +15,11 @@
         },
         "description": "Select the NMI of the site you would like to add"
       }
+    },
+    "error": {
+      "invalid_api_token": "[%key:common::config_flow::error::invalid_api_key%]",
+      "no_site": "No site provided",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

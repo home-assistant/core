@@ -1,5 +1,6 @@
 """Tests for Search integration."""
 from homeassistant.components import search
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -10,6 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import WebSocketGenerator
 
 MOCK_ENTITY_SOURCES = {
     "light.platform_config_source": {
@@ -24,27 +26,28 @@ MOCK_ENTITY_SOURCES = {
 }
 
 
-async def test_search(hass):
+async def test_search(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that search works."""
-    area_reg = ar.async_get(hass)
-    device_reg = dr.async_get(hass)
-    entity_reg = er.async_get(hass)
-
-    living_room_area = area_reg.async_create("Living Room")
+    living_room_area = area_registry.async_create("Living Room")
 
     # Light strip with 2 lights.
     wled_config_entry = MockConfigEntry(domain="wled")
     wled_config_entry.add_to_hass(hass)
 
-    wled_device = device_reg.async_get_or_create(
+    wled_device = device_registry.async_get_or_create(
         config_entry_id=wled_config_entry.entry_id,
         name="Light Strip",
         identifiers=({"wled", "wled-1"}),
     )
 
-    device_reg.async_update_device(wled_device.id, area_id=living_room_area.id)
+    device_registry.async_update_device(wled_device.id, area_id=living_room_area.id)
 
-    wled_segment_1_entity = entity_reg.async_get_or_create(
+    wled_segment_1_entity = entity_registry.async_get_or_create(
         "light",
         "wled",
         "wled-1-seg-1",
@@ -52,7 +55,7 @@ async def test_search(hass):
         config_entry=wled_config_entry,
         device_id=wled_device.id,
     )
-    wled_segment_2_entity = entity_reg.async_get_or_create(
+    wled_segment_2_entity = entity_registry.async_get_or_create(
         "light",
         "wled",
         "wled-1-seg-2",
@@ -74,20 +77,20 @@ async def test_search(hass):
     }
 
     # Non related info.
-    kitchen_area = area_reg.async_create("Kitchen")
+    kitchen_area = area_registry.async_create("Kitchen")
 
     hue_config_entry = MockConfigEntry(domain="hue")
     hue_config_entry.add_to_hass(hass)
 
-    hue_device = device_reg.async_get_or_create(
+    hue_device = device_registry.async_get_or_create(
         config_entry_id=hue_config_entry.entry_id,
         name="Light Strip",
         identifiers=({"hue", "hue-1"}),
     )
 
-    device_reg.async_update_device(hue_device.id, area_id=kitchen_area.id)
+    device_registry.async_update_device(hue_device.id, area_id=kitchen_area.id)
 
-    hue_segment_1_entity = entity_reg.async_get_or_create(
+    hue_segment_1_entity = entity_registry.async_get_or_create(
         "light",
         "hue",
         "hue-1-seg-1",
@@ -95,7 +98,7 @@ async def test_search(hass):
         config_entry=hue_config_entry,
         device_id=hue_device.id,
     )
-    hue_segment_2_entity = entity_reg.async_get_or_create(
+    hue_segment_2_entity = entity_registry.async_get_or_create(
         "light",
         "hue",
         "hue-1-seg-2",
@@ -183,6 +186,22 @@ async def test_search(hass):
                         },
                     ]
                 },
+                "script_with_templated_services": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "target": "{{ {'entity_id':'test.test1'} }}",
+                        },
+                        {
+                            "service": "test.script",
+                            "data": "{{ {'entity_id':'test.test2'} }}",
+                        },
+                        {
+                            "service": "test.script",
+                            "data_template": "{{ {'entity_id':'test.test3'} }}",
+                        },
+                    ]
+                },
             }
         },
     )
@@ -246,7 +265,9 @@ async def test_search(hass):
         ("automation", "automation.wled_entity"),
         ("automation", "automation.wled_device"),
     ):
-        searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
+        searcher = search.Searcher(
+            hass, device_registry, entity_registry, entity_sources
+        )
         results = searcher.async_search(search_type, search_id)
         # Add the item we searched for, it's omitted from results
         results.setdefault(search_type, set()).add(search_id)
@@ -279,7 +300,9 @@ async def test_search(hass):
         ("scene", "scene.scene_wled_hue"),
         ("group", "group.wled_hue"),
     ):
-        searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
+        searcher = search.Searcher(
+            hass, device_registry, entity_registry, entity_sources
+        )
         results = searcher.async_search(search_type, search_id)
         # Add the item we searched for, it's omitted from results
         results.setdefault(search_type, set()).add(search_id)
@@ -301,22 +324,39 @@ async def test_search(hass):
         ("script", "script.non_existing"),
         ("automation", "automation.non_existing"),
     ):
-        searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
+        searcher = search.Searcher(
+            hass, device_registry, entity_registry, entity_sources
+        )
         assert searcher.async_search(search_type, search_id) == {}
 
-    searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
+    # Test search of templated script. We can't find referenced areas, devices or
+    # entities within templated services, but searching them should not raise or
+    # otherwise fail.
+    assert hass.states.get("script.script_with_templated_services")
+    for search_type, search_id in (
+        ("area", "script.script_with_templated_services"),
+        ("device", "script.script_with_templated_services"),
+        ("entity", "script.script_with_templated_services"),
+    ):
+        searcher = search.Searcher(
+            hass, device_registry, entity_registry, entity_sources
+        )
+        assert searcher.async_search(search_type, search_id) == {}
+
+    searcher = search.Searcher(hass, device_registry, entity_registry, entity_sources)
     assert searcher.async_search("entity", "light.wled_config_entry_source") == {
         "config_entry": {wled_config_entry.entry_id},
     }
 
 
-async def test_area_lookup(hass):
+async def test_area_lookup(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test area based lookup."""
-    area_reg = ar.async_get(hass)
-    device_reg = dr.async_get(hass)
-    entity_reg = er.async_get(hass)
-
-    living_room_area = area_reg.async_create("Living Room")
+    living_room_area = area_registry.async_create("Living Room")
 
     await async_setup_component(
         hass,
@@ -356,19 +396,53 @@ async def test_area_lookup(hass):
         },
     )
 
-    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    searcher = search.Searcher(
+        hass, device_registry, entity_registry, MOCK_ENTITY_SOURCES
+    )
     assert searcher.async_search("area", living_room_area.id) == {
         "script": {"script.wled"},
         "automation": {"automation.area_turn_on"},
     }
 
-    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    searcher = search.Searcher(
+        hass, device_registry, entity_registry, MOCK_ENTITY_SOURCES
+    )
     assert searcher.async_search("automation", "automation.area_turn_on") == {
         "area": {living_room_area.id},
     }
 
 
-async def test_ws_api(hass, hass_ws_client):
+async def test_person_lookup(hass: HomeAssistant) -> None:
+    """Test searching persons."""
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "id": "abcd",
+                    "name": "Paulus",
+                    "device_trackers": ["device_tracker.paulus_iphone"],
+                }
+            ]
+        },
+    )
+
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("entity", "device_tracker.paulus_iphone") == {
+        "person": {"person.paulus"},
+    }
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("entity", "person.paulus") == {
+        "entity": {"device_tracker.paulus_iphone"},
+    }
+
+
+async def test_ws_api(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
     """Test WS API."""
     assert await async_setup_component(hass, "search", {})
 

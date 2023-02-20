@@ -49,20 +49,23 @@
       "1": "First button",
       "2": "Second button",
       "3": "Third button",
-      "4": "Fourth button"
+      "4": "Fourth button",
+      "clock_wise": "Rotation clockwise",
+      "counter_clock_wise": "Rotation counter-clockwise"
     },
     "trigger_type": {
-      "remote_button_long_release": "\"{subtype}\" button released after long press",
-      "remote_button_short_press": "\"{subtype}\" button pressed",
-      "remote_button_short_release": "\"{subtype}\" button released",
+      "remote_button_long_release": "\"{subtype}\" released after long press",
+      "remote_button_short_press": "\"{subtype}\" pressed",
+      "remote_button_short_release": "\"{subtype}\" released",
       "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
       "remote_double_button_short_press": "Both \"{subtype}\" released",
 
-      "initial_press": "Button \"{subtype}\" pressed initially",
-      "repeat": "Button \"{subtype}\" held down",
-      "short_release": "Button \"{subtype}\" released after short press",
-      "long_release": "Button \"{subtype}\" released after long press",
-      "double_short_release": "Both \"{subtype}\" released"
+      "initial_press": "\"{subtype}\" pressed initially",
+      "repeat": "\"{subtype}\" held down",
+      "short_release": "\"{subtype}\" released after short press",
+      "long_release": "\"{subtype}\" released after long press",
+      "double_short_release": "Both \"{subtype}\" released",
+      "start": "\"{subtype}\" pressed initially"
     }
   },
   "options": {

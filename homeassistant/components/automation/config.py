@@ -1,15 +1,17 @@
 """Config validation helper for the automation integration."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
+from typing import Any
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
-from homeassistant.config import async_log_exception, config_without_domain
+from homeassistant.config import config_without_domain
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_CONDITION,
@@ -17,11 +19,13 @@ from homeassistant.const import (
     CONF_ID,
     CONF_VARIABLES,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
-from homeassistant.loader import IntegrationNotFound
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
     CONF_ACTION,
@@ -31,11 +35,9 @@ from .const import (
     CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
     DOMAIN,
+    LOGGER,
 )
 from .helpers import async_get_blueprints
-
-# mypy: allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -63,69 +65,167 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_validate_config_item(hass, config, full_config=None):
+async def _async_validate_config_item(
+    hass: HomeAssistant,
+    config: ConfigType,
+    warn_on_errors: bool,
+) -> AutomationConfig:
     """Validate config item."""
-    if blueprint.is_blueprint_instance_config(config):
-        blueprints = async_get_blueprints(hass)
-        return await blueprints.async_inputs_from_config(config)
+    raw_config = None
+    raw_blueprint_inputs = None
+    uses_blueprint = False
+    with suppress(ValueError):
+        raw_config = dict(config)
 
-    config = PLATFORM_SCHEMA(config)
+    def _log_invalid_automation(
+        err: Exception,
+        automation_name: str,
+        problem: str,
+        config: ConfigType,
+    ) -> None:
+        """Log an error about invalid automation."""
+        if not warn_on_errors:
+            return
 
-    config[CONF_TRIGGER] = await async_validate_trigger_config(
-        hass, config[CONF_TRIGGER]
-    )
+        if uses_blueprint:
+            LOGGER.error(
+                "Blueprint '%s' generated invalid automation with inputs %s: %s",
+                blueprint_inputs.blueprint.name,
+                blueprint_inputs.inputs,
+                humanize_error(config, err) if isinstance(err, vol.Invalid) else err,
+            )
+            return
 
-    if CONF_CONDITION in config:
-        config[CONF_CONDITION] = await async_validate_conditions_config(
-            hass, config[CONF_CONDITION]
+        LOGGER.error(
+            "%s %s and has been disabled: %s",
+            automation_name,
+            problem,
+            humanize_error(config, err) if isinstance(err, vol.Invalid) else err,
         )
+        return
 
-    config[CONF_ACTION] = await script.async_validate_actions_config(
-        hass, config[CONF_ACTION]
-    )
+    if blueprint.is_blueprint_instance_config(config):
+        uses_blueprint = True
+        blueprints = async_get_blueprints(hass)
+        try:
+            blueprint_inputs = await blueprints.async_inputs_from_config(config)
+        except blueprint.BlueprintException as err:
+            if warn_on_errors:
+                LOGGER.error(
+                    "Failed to generate automation from blueprint: %s",
+                    err,
+                )
+            raise
 
-    return config
+        raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+
+        try:
+            config = blueprint_inputs.async_substitute()
+            raw_config = dict(config)
+        except UndefinedSubstitution as err:
+            if warn_on_errors:
+                LOGGER.error(
+                    "Blueprint '%s' failed to generate automation with inputs %s: %s",
+                    blueprint_inputs.blueprint.name,
+                    blueprint_inputs.inputs,
+                    err,
+                )
+            raise HomeAssistantError from err
+
+    automation_name = "Unnamed automation"
+    if isinstance(config, Mapping):
+        if CONF_ALIAS in config:
+            automation_name = f"Automation with alias '{config[CONF_ALIAS]}'"
+        elif CONF_ID in config:
+            automation_name = f"Automation with ID '{config[CONF_ID]}'"
+
+    try:
+        validated_config = PLATFORM_SCHEMA(config)
+    except vol.Invalid as err:
+        _log_invalid_automation(err, automation_name, "could not be validated", config)
+        raise
+
+    try:
+        validated_config[CONF_TRIGGER] = await async_validate_trigger_config(
+            hass, validated_config[CONF_TRIGGER]
+        )
+    except (
+        vol.Invalid,
+        HomeAssistantError,
+    ) as err:
+        _log_invalid_automation(
+            err, automation_name, "failed to setup triggers", validated_config
+        )
+        raise
+
+    if CONF_CONDITION in validated_config:
+        try:
+            validated_config[CONF_CONDITION] = await async_validate_conditions_config(
+                hass, validated_config[CONF_CONDITION]
+            )
+        except (
+            vol.Invalid,
+            HomeAssistantError,
+        ) as err:
+            _log_invalid_automation(
+                err, automation_name, "failed to setup conditions", validated_config
+            )
+            raise
+
+    try:
+        validated_config[CONF_ACTION] = await script.async_validate_actions_config(
+            hass, validated_config[CONF_ACTION]
+        )
+    except (
+        vol.Invalid,
+        HomeAssistantError,
+    ) as err:
+        _log_invalid_automation(
+            err, automation_name, "failed to setup actions", validated_config
+        )
+        raise
+
+    automation_config = AutomationConfig(validated_config)
+    automation_config.raw_blueprint_inputs = raw_blueprint_inputs
+    automation_config.raw_config = raw_config
+    return automation_config
 
 
 class AutomationConfig(dict):
     """Dummy class to allow adding attributes."""
 
-    raw_config = None
+    raw_config: dict[str, Any] | None = None
+    raw_blueprint_inputs: dict[str, Any] | None = None
 
 
-async def _try_async_validate_config_item(hass, config, full_config=None):
+async def _try_async_validate_config_item(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+) -> AutomationConfig | None:
     """Validate config item."""
-    raw_config = None
-    with suppress(ValueError):
-        raw_config = dict(config)
-
     try:
-        config = await async_validate_config_item(hass, config, full_config)
-    except (
-        vol.Invalid,
-        HomeAssistantError,
-        IntegrationNotFound,
-        InvalidDeviceAutomationConfig,
-    ) as ex:
-        async_log_exception(ex, DOMAIN, full_config or config, hass)
+        return await _async_validate_config_item(hass, config, True)
+    except (vol.Invalid, HomeAssistantError):
         return None
 
-    if isinstance(config, blueprint.BlueprintInputs):
-        return config
 
-    config = AutomationConfig(config)
-    config.raw_config = raw_config
-    return config
+async def async_validate_config_item(
+    hass: HomeAssistant,
+    config_key: str,
+    config: dict[str, Any],
+) -> AutomationConfig | None:
+    """Validate config item, called by EditAutomationConfigView."""
+    return await _async_validate_config_item(hass, config, False)
 
 
-async def async_validate_config(hass, config):
+async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
     automations = list(
         filter(
             lambda x: x is not None,
             await asyncio.gather(
                 *(
-                    _try_async_validate_config_item(hass, p_config, config)
+                    _try_async_validate_config_item(hass, p_config)
                     for _, p_config in config_per_platform(config, DOMAIN)
                 )
             ),

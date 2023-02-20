@@ -46,7 +46,7 @@ async def async_get_conditions(
 ) -> list[dict[str, str]]:
     """List device conditions for Media player devices."""
     registry = entity_registry.async_get(hass)
-    conditions = []
+    conditions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):

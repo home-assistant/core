@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import datetime as dt
 import json
 from typing import Any, cast
@@ -12,7 +13,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import (
@@ -21,7 +22,6 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.generated import supported_brands
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
@@ -29,19 +29,21 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
+from homeassistant.helpers.json import (
+    JSON_DUMP,
+    ExtendedJSONEncoder,
+    find_paths_unserializable_data,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
     async_get_integration,
+    async_get_integration_descriptions,
     async_get_integrations,
 )
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
@@ -73,7 +75,8 @@ def async_register_commands(
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
-    async_reg(hass, handle_supported_brands)
+    async_reg(hass, handle_supported_features)
+    async_reg(hass, handle_integration_descriptions)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -93,7 +96,7 @@ def handle_subscribe_events(
 ) -> None:
     """Handle subscribe events command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .permissions import SUBSCRIBE_ALLOWLIST
 
     event_type = msg["event_type"]
@@ -111,18 +114,14 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events, run_immediately=True
@@ -148,7 +147,7 @@ def handle_subscribe_bootstrap_integrations(
         connection.send_message(messages.event_message(msg["id"], message))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
+        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, forward_bootstrap_integrations
     )
 
     connection.send_result(msg["id"])
@@ -261,11 +260,9 @@ def handle_get_states(
     # If we can't serialize, we'll filter out unserializable states
     serialized = []
     for state in states:
-        try:
+        # Error is already logged above
+        with suppress(ValueError, TypeError):
             serialized.append(JSON_DUMP(state))
-        except (ValueError, TypeError):
-            # Error is already logged above
-            pass
 
     # We now have partially serialized states. Craft some JSON.
     response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
@@ -296,9 +293,7 @@ def handle_subscribe_entities(
         if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
-        connection.send_message(
-            lambda: messages.cached_state_diff_message(msg["id"], event)
-        )
+        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
@@ -310,7 +305,7 @@ def handle_subscribe_entities(
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
         messages.ENTITY_EVENT_ADD: {
-            state.entity_id: messages.compressed_state_dict_add(state)
+            state.entity_id: state.as_compressed_state()
             for state in states
             if not entity_ids or state.entity_id in entity_ids
         }
@@ -445,7 +440,7 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = template.Template(template_str, hass)  # type: ignore[no-untyped-call]
+    template_obj = template.Template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
@@ -560,7 +555,7 @@ async def handle_subscribe_trigger(
 ) -> None:
     """Handle subscribe trigger command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import trigger
 
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
@@ -611,12 +606,11 @@ async def handle_test_condition(
 ) -> None:
     """Handle test condition command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition
 
     # Do static + dynamic validation of the condition
-    config = cv.CONDITION_SCHEMA(msg["condition"])
-    config = await condition.async_validate_condition_config(hass, config)
+    config = await condition.async_validate_condition_config(hass, msg["condition"])
     # Test the condition
     check_condition = await condition.async_from_config(hass, config)
     connection.send_result(
@@ -638,7 +632,7 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers.script import Script
 
     context = connection.context(msg)
@@ -680,7 +674,7 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition, script, trigger
 
     result = {}
@@ -703,23 +697,26 @@ async def handle_validate_config(
     connection.send_result(msg["id"], result)
 
 
+@callback
 @decorators.websocket_command(
     {
-        vol.Required("type"): "supported_brands",
+        vol.Required("type"): "supported_features",
+        vol.Required("features"): {str: int},
     }
 )
-@decorators.async_response
-async def handle_supported_brands(
+def handle_supported_features(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle supported brands command."""
-    data = {}
+    """Handle setting supported features."""
+    connection.supported_features = msg["features"]
+    connection.send_result(msg["id"])
 
-    ints_or_excs = await async_get_integrations(
-        hass, supported_brands.HAS_SUPPORTED_BRANDS
-    )
-    for int_or_exc in ints_or_excs.values():
-        if isinstance(int_or_exc, Exception):
-            raise int_or_exc
-        data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
-    connection.send_result(msg["id"], data)
+
+@decorators.require_admin
+@decorators.websocket_command({"type": "integration/descriptions"})
+@decorators.async_response
+async def handle_integration_descriptions(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get metadata for all brands and integrations."""
+    connection.send_result(msg["id"], await async_get_integration_descriptions(hass))

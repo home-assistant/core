@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -61,17 +62,11 @@ SERVICE_FINISH = "finish"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-CREATE_FIELDS = {
+STORAGE_FIELDS = {
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
     vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
-}
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_DURATION): cv.time_period,
-    vol.Optional(CONF_RESTORE): cv.boolean,
 }
 
 
@@ -112,14 +107,14 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Timer](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Timer.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Timer
     )
 
     storage_collection = TimerStorageCollection(
@@ -137,7 +132,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
@@ -171,12 +166,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class TimerStorageCollection(collection.StorageCollection):
     """Timer storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        data = self.CREATE_SCHEMA(data)
+        data = self.CREATE_UPDATE_SCHEMA(data)
         # make duration JSON serializeable
         data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
         return data
@@ -188,20 +182,21 @@ class TimerStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        data = {**data, **self.UPDATE_SCHEMA(update_data)}
+        data = {CONF_ID: data[CONF_ID]} | self.CREATE_UPDATE_SCHEMA(update_data)
         # make duration JSON serializeable
         if CONF_DURATION in update_data:
             data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
         return data
 
 
-class Timer(RestoreEntity):
+class Timer(collection.CollectionEntity, RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, config: dict) -> None:
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a timer."""
         self._config: dict = config
-        self.editable: bool = True
         self._state: str = STATUS_IDLE
         self._duration = cv.time_period_str(config[CONF_DURATION])
         self._remaining: timedelta | None = None
@@ -213,8 +208,15 @@ class Timer(RestoreEntity):
         self._attr_force_update = True
 
     @classmethod
-    def from_yaml(cls, config: dict) -> Timer:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from storage."""
+        timer = cls(config)
+        timer.editable = True
+        return timer
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
         timer = cls(config)
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
         timer.editable = False
@@ -384,7 +386,7 @@ class Timer(RestoreEntity):
         )
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self._duration = cv.time_period_str(config[CONF_DURATION])
