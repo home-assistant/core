@@ -1011,7 +1011,7 @@ def list_statistic_ids(
         }
 
     if not statistic_ids_set or statistic_ids_set.difference(result):
-        # If we all statistic_ids, or some are missing, we need to query
+        # If we want all statistic_ids, or some are missing, we need to query
         # the integrations for the missing ones.
         #
         # Query all integrations with a registered recorder platform
