@@ -42,12 +42,19 @@ class LiteJetSwitch(SwitchEntity):
 
     def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
         """Initialize a LiteJet switch."""
-        self._entry_id = entry_id
         self._lj = system
         self._index = i
         self._attr_is_on = False
         self._attr_unique_id = f"{entry_id}_{i}"
         self._attr_name = name
+
+        # Keypad #1 has switches 1-6, #2 has 7-12, ...
+        keypad_number = int((i - 1) / 6) + 1
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry_id}_keypad_{keypad_number}")},
+            name=f"Keypad #{keypad_number}",
+            manufacturer="Centralite",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
@@ -60,17 +67,6 @@ class LiteJetSwitch(SwitchEntity):
         self._lj.unsubscribe(self._on_switch_pressed)
         self._lj.unsubscribe(self._on_switch_released)
         self._lj.unsubscribe(self._on_connected_changed)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        # Keypad #1 has switches 1-6, #2 has 7-12, ...
-        keypad_number = int((self._index - 1) / 6) + 1
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._entry_id}_keypad_{keypad_number}")},
-            name=f"Keypad #{keypad_number}",
-            manufacturer="Centralite",
-        )
 
     def _on_switch_pressed(self) -> None:
         self._attr_is_on = True

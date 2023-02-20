@@ -39,16 +39,20 @@ class LiteJetScene(Scene):
     """Representation of a single LiteJet scene."""
 
     _attr_has_entity_name = True
-    _attr_name: str | None = None
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
         """Initialize the scene."""
-        self._entry_id = entry_id
         self._lj = system
         self._index = i
         self._attr_unique_id = f"{entry_id}_{i}"
         self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry_id}_mcp")},
+            name="LiteJet",
+            manufacturer="Centralite",
+            model="CL24",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
@@ -61,16 +65,6 @@ class LiteJetScene(Scene):
     def _on_connected_changed(self, connected: bool, reason: str) -> None:
         self._attr_available = connected
         self.async_write_ha_state()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._entry_id}_mcp")},
-            name="LiteJet",
-            manufacturer="Centralite",
-            model="CL24",
-        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

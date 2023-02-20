@@ -57,11 +57,13 @@ class LiteJetLight(LightEntity):
         self._config_entry = config_entry
         self._lj = system
         self._index = index
-        self._name = name
         self._attr_brightness = 0
         self._attr_is_on = False
         self._attr_unique_id = f"{config_entry.entry_id}_{index}"
         self._attr_extra_state_attributes = {ATTR_NUMBER: self._index}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_light_{index}")}, name=name
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
@@ -73,16 +75,6 @@ class LiteJetLight(LightEntity):
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_load_changed)
         self._lj.unsubscribe(self._on_connected_changed)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, f"{self._config_entry.entry_id}_light_{self._index}")
-            },
-            name=self._name,
-        )
 
     def _on_load_changed(self, level: int | None) -> None:
         """Handle state changes."""
