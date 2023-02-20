@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from unittest.mock import patch
+import uuid
 
 from homeassistant import config_entries
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
@@ -18,6 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -78,6 +80,7 @@ async def test_form(hass: HomeAssistant, get_data: MockRestData) -> None:
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
             }
         ],
     }
@@ -112,7 +115,26 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
 
     assert result2["errors"] == {"base": "resource_error"}
 
-    with patch("homeassistant.components.rest.RestData", return_value=get_data,), patch(
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=MockRestData("test_scrape_sensor_no_data"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RESOURCE: "https://www.home-assistant.io",
+                CONF_METHOD: "GET",
+                CONF_VERIFY_SSL: True,
+                CONF_TIMEOUT: 10.0,
+            },
+        )
+
+    assert result2["errors"] == {"base": "resource_error"}
+
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ), patch(
         "homeassistant.components.scrape.async_setup_entry",
         return_value=True,
     ):
@@ -148,21 +170,32 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
             }
         ],
     }
 
 
-async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
-    """Test options config flow."""
+async def test_options_resource_flow(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test options flow for a resource."""
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "Current Version: 2021.12.10"
 
     result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == FlowResultType.MENU
     assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "resource"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "resource"
 
     mocker = MockRestData("test_scrape_sensor2")
     with patch("homeassistant.components.rest.RestData", return_value=mocker):
@@ -179,28 +212,216 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"] == {
-            CONF_RESOURCE: "https://www.home-assistant.io",
-            CONF_METHOD: "GET",
-            CONF_VERIFY_SSL: True,
-            CONF_TIMEOUT: 10.0,
-            CONF_USERNAME: "secret_username",
-            CONF_PASSWORD: "secret_password",
-            "sensor": [
-                {
-                    CONF_NAME: "Current version",
-                    CONF_SELECT: ".current-version h1",
-                    CONF_INDEX: 0.0,
-                }
-            ],
-        }
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RESOURCE: "https://www.home-assistant.io",
+        CONF_METHOD: "GET",
+        CONF_VERIFY_SSL: True,
+        CONF_TIMEOUT: 10.0,
+        CONF_USERNAME: "secret_username",
+        CONF_PASSWORD: "secret_password",
+        "sensor": [
+            {
+                CONF_NAME: "Current version",
+                CONF_SELECT: ".current-version h1",
+                CONF_INDEX: 0.0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+            }
+        ],
+    }
 
+    await hass.async_block_till_done()
+
+    # Check the entity was updated, no new entity was created
+    assert len(hass.states.async_all()) == 1
+
+    # Check the state of the entity has changed as expected
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Hidden Version: 2021.12.10"
+
+
+async def test_options_add_remove_sensor_flow(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test options flow to add and remove a sensor."""
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Current Version: 2021.12.10"
+
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_sensor"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "add_sensor"
+
+    mocker = MockRestData("test_scrape_sensor2")
+    with patch("homeassistant.components.rest.RestData", return_value=mocker), patch(
+        "homeassistant.components.scrape.config_flow.uuid.uuid1",
+        return_value=uuid.UUID("3699ef88-69e6-11ed-a1eb-0242ac120003"),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_NAME: "Template",
+                CONF_SELECT: "template",
+                CONF_INDEX: 0.0,
+            },
+        )
         await hass.async_block_till_done()
 
-        # Check the entity was updated, no new entity was created
-        assert len(hass.states.async_all()) == 1
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RESOURCE: "https://www.home-assistant.io",
+        CONF_METHOD: "GET",
+        CONF_VERIFY_SSL: True,
+        CONF_TIMEOUT: 10,
+        "sensor": [
+            {
+                CONF_NAME: "Current version",
+                CONF_SELECT: ".current-version h1",
+                CONF_INDEX: 0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+            },
+            {
+                CONF_NAME: "Template",
+                CONF_SELECT: "template",
+                CONF_INDEX: 0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120003",
+            },
+        ],
+    }
 
-        # Check the state of the entity has changed as expected
-        state = hass.states.get("sensor.current_version")
-        assert state.state == "Hidden Version: 2021.12.10"
+    await hass.async_block_till_done()
+
+    # Check the entity was updated, with the new entity
+    assert len(hass.states.async_all()) == 2
+
+    # Check the state of the entity has changed as expected
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Hidden Version: 2021.12.10"
+
+    state = hass.states.get("sensor.template")
+    assert state.state == "Trying to get"
+
+    # Now remove the original sensor
+
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "remove_sensor"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "remove_sensor"
+
+    mocker = MockRestData("test_scrape_sensor2")
+    with patch("homeassistant.components.rest.RestData", return_value=mocker):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_INDEX: ["0"],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RESOURCE: "https://www.home-assistant.io",
+        CONF_METHOD: "GET",
+        CONF_VERIFY_SSL: True,
+        CONF_TIMEOUT: 10,
+        "sensor": [
+            {
+                CONF_NAME: "Template",
+                CONF_SELECT: "template",
+                CONF_INDEX: 0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120003",
+            },
+        ],
+    }
+
+    await hass.async_block_till_done()
+
+    # Check the original entity was removed, with only the new entity left
+    assert len(hass.states.async_all()) == 1
+
+    # Check the state of the new entity
+    state = hass.states.get("sensor.template")
+    assert state.state == "Trying to get"
+
+
+async def test_options_edit_sensor_flow(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test options flow to edit a sensor."""
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Current Version: 2021.12.10"
+
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "select_edit_sensor"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "select_edit_sensor"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"index": "0"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "edit_sensor"
+
+    mocker = MockRestData("test_scrape_sensor2")
+    with patch("homeassistant.components.rest.RestData", return_value=mocker):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_SELECT: "template",
+                CONF_INDEX: 0.0,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_RESOURCE: "https://www.home-assistant.io",
+        CONF_METHOD: "GET",
+        CONF_VERIFY_SSL: True,
+        CONF_TIMEOUT: 10,
+        "sensor": [
+            {
+                CONF_NAME: "Current version",
+                CONF_SELECT: "template",
+                CONF_INDEX: 0,
+                CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+            },
+        ],
+    }
+
+    await hass.async_block_till_done()
+
+    # Check the entity was updated
+    assert len(hass.states.async_all()) == 1
+
+    # Check the state of the entity has changed as expected
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Trying to get"

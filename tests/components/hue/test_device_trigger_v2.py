@@ -5,6 +5,7 @@ from homeassistant.components import hue
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
+from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform
 
@@ -15,7 +16,9 @@ from tests.common import (
 )
 
 
-async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_hue_event(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test hue button events."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])
@@ -43,7 +46,9 @@ async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
     assert events[0].data["subtype"] == btn_event["metadata"]["control_id"]
 
 
-async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device_reg):
+async def test_get_triggers(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data, device_reg
+) -> None:
     """Test we get the expected triggers from a hue remote."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])

@@ -9,6 +9,7 @@ import logging
 import aiohttp
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
+from homeassistant.components.hassio import get_supervisor_info, is_hassio
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,7 +21,6 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.yaml import parse_yaml
 
 DOMAIN = "homeassistant_alerts"
 UPDATE_INTERVAL = timedelta(hours=3)
@@ -45,35 +45,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # Fetch alert to get title + description
             try:
                 response = await async_get_clientsession(hass).get(
-                    f"https://alerts.home-assistant.io/alerts/{alert.filename}",
+                    f"https://alerts.home-assistant.io/alerts/{alert.alert_id}.json",
                     timeout=aiohttp.ClientTimeout(total=10),
                 )
             except asyncio.TimeoutError:
                 _LOGGER.warning("Error fetching %s: timeout", alert.filename)
                 continue
 
-            alert_content = await response.text()
-            alert_parts = alert_content.split("---")
-
-            if len(alert_parts) != 3:
-                _LOGGER.warning(
-                    "Error parsing %s: unexpected metadata format", alert.filename
-                )
-                continue
-
-            try:
-                alert_info = parse_yaml(alert_parts[1])
-            except ValueError as err:
-                _LOGGER.warning("Error parsing %s metadata: %s", alert.filename, err)
-                continue
-
-            if not isinstance(alert_info, dict) or "title" not in alert_info:
-                _LOGGER.warning("Error in %s metadata: title not found", alert.filename)
-                continue
-
-            alert_title = alert_info["title"]
-            alert_content = alert_parts[2].strip()
-
+            alert_content = await response.json()
             async_create_issue(
                 hass,
                 DOMAIN,
@@ -83,8 +62,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 severity=IssueSeverity.WARNING,
                 translation_key="alert",
                 translation_placeholders={
-                    "title": alert_title,
-                    "description": alert_content,
+                    "title": alert_content["title"],
+                    "description": alert_content["content"],
                 },
             )
             active_alerts[issue_id] = alert.date_updated
@@ -117,6 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class IntegrationAlert:
     """Issue Registry Entry."""
 
+    alert_id: str
     integration: str
     filename: str
     date_updated: str | None
@@ -142,6 +122,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
             __version__,
             ensure_strategy=AwesomeVersionStrategy.CALVER,
         )
+        self.supervisor = is_hassio(self.hass)
 
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
         response = await async_get_clientsession(self.hass).get(
@@ -170,6 +151,23 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
                     if self.ha_version >= resolved_in_version:
                         continue
 
+            if self.supervisor and "supervisor" in alert:
+                if (supervisor_info := get_supervisor_info(self.hass)) is None:
+                    continue
+
+                if "affected_from_version" in alert["supervisor"]:
+                    affected_from_version = AwesomeVersion(
+                        alert["supervisor"]["affected_from_version"],
+                    )
+                    if supervisor_info["version"] < affected_from_version:
+                        continue
+                if "resolved_in_version" in alert["supervisor"]:
+                    resolved_in_version = AwesomeVersion(
+                        alert["supervisor"]["resolved_in_version"],
+                    )
+                    if supervisor_info["version"] >= resolved_in_version:
+                        continue
+
             for integration in alert["integrations"]:
                 if "package" not in integration:
                     continue
@@ -178,9 +176,10 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
                     continue
 
                 integration_alert = IntegrationAlert(
+                    alert_id=alert["id"],
                     integration=integration["package"],
                     filename=alert["filename"],
-                    date_updated=alert.get("date_updated"),
+                    date_updated=alert.get("updated"),
                 )
 
                 result[integration_alert.issue_id] = integration_alert

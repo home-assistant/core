@@ -1,6 +1,4 @@
 """Test the SSDP integration."""
-# pylint: disable=protected-access
-
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
@@ -11,7 +9,6 @@ from async_upnp_client.ssdp_listener import SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
-import homeassistant
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import (
@@ -19,10 +16,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def _ssdp_headers(headers):
@@ -31,7 +30,7 @@ def _ssdp_headers(headers):
     return ssdp_headers
 
 
-async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
+async def init_ssdp_component(hass: HomeAssistant) -> SsdpListener:
     """Initialize ssdp component and get SsdpListener."""
     await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
     await hass.async_block_till_done()
@@ -43,7 +42,9 @@ async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
 @pytest.mark.usefixtures("mock_get_source_ip")
-async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow_init):
+async def test_ssdp_flow_dispatched_on_st(
+    mock_get_ssdp, hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_flow_init
+) -> None:
     """Test matching based on ST."""
     mock_ssdp_search_response = _ssdp_headers(
         {
@@ -55,7 +56,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -84,8 +85,8 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
 )
 @pytest.mark.usefixtures("mock_get_source_ip")
 async def test_ssdp_flow_dispatched_on_manufacturer_url(
-    mock_get_ssdp, hass, caplog, mock_flow_init
-):
+    mock_get_ssdp, hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_flow_init
+) -> None:
     """Test matching based on manufacturerURL."""
     mock_ssdp_search_response = _ssdp_headers(
         {
@@ -98,7 +99,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -127,8 +128,11 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
     return_value={"mock-domain": [{"manufacturer": "Paulus"}]},
 )
 async def test_scan_match_upnp_devicedesc_manufacturer(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
-):
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
     """Test matching based on UPnP device description data."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -148,7 +152,7 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -168,8 +172,11 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
     return_value={"mock-domain": [{"deviceType": "Paulus"}]},
 )
 async def test_scan_match_upnp_devicedesc_devicetype(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
-):
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
     """Test matching based on UPnP device description data."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -189,7 +196,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -217,8 +224,11 @@ async def test_scan_match_upnp_devicedesc_devicetype(
     },
 )
 async def test_scan_not_all_present(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
-):
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
     """Test match fails if some specified attributes are not present."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -237,7 +247,7 @@ async def test_scan_not_all_present(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -257,7 +267,12 @@ async def test_scan_not_all_present(
         ]
     },
 )
-async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow_init):
+async def test_scan_not_all_match(
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
     """Test match fails if some specified attribute values differ."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -278,7 +293,7 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -292,8 +307,11 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
     return_value={"mock-domain": [{"deviceType": "Paulus"}]},
 )
 async def test_flow_start_only_alive(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
-):
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
     """Test config flow is only started for alive devices."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -317,7 +335,7 @@ async def test_flow_start_only_alive(
             "usn": "uuid:mock-udn::mock-st",
         }
     )
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
 
     mock_flow_init.assert_awaited_once_with(
@@ -334,7 +352,7 @@ async def test_flow_start_only_alive(
             "nts": "ssdp:alive",
         }
     )
-    await ssdp_listener._on_alive(mock_ssdp_advertisement)
+    ssdp_listener._on_alive(mock_ssdp_advertisement)
     await hass.async_block_till_done()
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -343,14 +361,14 @@ async def test_flow_start_only_alive(
     # ssdp:byebye advertisement should not start a flow
     mock_flow_init.reset_mock()
     mock_ssdp_advertisement["nts"] = "ssdp:byebye"
-    await ssdp_listener._on_byebye(mock_ssdp_advertisement)
+    ssdp_listener._on_byebye(mock_ssdp_advertisement)
     await hass.async_block_till_done()
     mock_flow_init.assert_not_called()
 
     # ssdp:update advertisement should start a flow
     mock_flow_init.reset_mock()
     mock_ssdp_advertisement["nts"] = "ssdp:update"
-    await ssdp_listener._on_update(mock_ssdp_advertisement)
+    ssdp_listener._on_update(mock_ssdp_advertisement)
     await hass.async_block_till_done()
     mock_flow_init.assert_awaited_once_with(
         "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
@@ -363,8 +381,11 @@ async def test_flow_start_only_alive(
     return_value={},
 )
 async def test_discovery_from_advertisement_sets_ssdp_st(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
-):
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
     """Test discovery from advertisement sets `ssdp_st` for more compatibility."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -388,7 +409,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
             "usn": "uuid:mock-udn::mock-st",
         }
     )
-    await ssdp_listener._on_alive(mock_ssdp_advertisement)
+    ssdp_listener._on_alive(mock_ssdp_advertisement)
     await hass.async_block_till_done()
 
     discovery_info = await ssdp.async_get_discovery_info_by_udn(hass, "uuid:mock-udn")
@@ -412,7 +433,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
     return_value={IPv4Address("192.168.1.1")},
 )
 @pytest.mark.usefixtures("mock_get_source_ip")
-async def test_start_stop_scanner(mock_source_set, hass):
+async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
     """Test we start and stop the scanner."""
     ssdp_listener = await init_ssdp_component(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -436,8 +457,11 @@ async def test_start_stop_scanner(mock_source_set, hass):
 @pytest.mark.usefixtures("mock_get_source_ip")
 @patch("homeassistant.components.ssdp.async_get_ssdp", return_value={})
 async def test_scan_with_registered_callback(
-    mock_get_ssdp, hass, aioclient_mock, caplog
-):
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test matching based on callback."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -469,34 +493,35 @@ async def test_scan_with_registered_callback(
         hass, async_integration_callback, {"st": "mock-st"}
     )
 
-    async_integration_match_all_callback1 = AsyncMock()
+    async_integration_match_all_callback = AsyncMock()
     await ssdp.async_register_callback(
-        hass, async_integration_match_all_callback1, {"x-rincon-bootseq": MATCH_ALL}
+        hass, async_integration_match_all_callback, {"x-rincon-bootseq": MATCH_ALL}
     )
 
-    async_integration_match_all_not_present_callback1 = AsyncMock()
+    async_integration_match_all_not_present_callback = AsyncMock()
     await ssdp.async_register_callback(
         hass,
-        async_integration_match_all_not_present_callback1,
+        async_integration_match_all_not_present_callback,
         {"x-not-there": MATCH_ALL},
     )
 
-    async_not_matching_integration_callback1 = AsyncMock()
+    async_not_matching_integration_callback = AsyncMock()
     await ssdp.async_register_callback(
-        hass, async_not_matching_integration_callback1, {"st": "not-match-mock-st"}
+        hass, async_not_matching_integration_callback, {"st": "not-match-mock-st"}
     )
 
-    async_match_any_callback1 = AsyncMock()
-    await ssdp.async_register_callback(hass, async_match_any_callback1)
+    async_match_any_callback = AsyncMock()
+    await ssdp.async_register_callback(hass, async_match_any_callback)
 
     await hass.async_block_till_done()
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
 
     assert async_integration_callback.call_count == 1
-    assert async_integration_match_all_callback1.call_count == 1
-    assert async_integration_match_all_not_present_callback1.call_count == 0
-    assert async_match_any_callback1.call_count == 1
-    assert async_not_matching_integration_callback1.call_count == 0
+    assert async_integration_match_all_callback.call_count == 1
+    assert async_integration_match_all_not_present_callback.call_count == 0
+    assert async_match_any_callback.call_count == 1
+    assert async_not_matching_integration_callback.call_count == 0
     assert async_integration_callback.call_args[0][1] == ssdp.SsdpChange.ALIVE
     mock_call_data: ssdp.SsdpServiceInfo = async_integration_callback.call_args[0][0]
     assert mock_call_data.ssdp_ext == ""
@@ -529,8 +554,11 @@ async def test_scan_with_registered_callback(
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
 async def test_getting_existing_headers(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
-):
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
     """Test getting existing/previously scanned headers."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -552,7 +580,7 @@ async def test_getting_existing_headers(
         }
     )
     ssdp_listener = await init_ssdp_component(hass)
-    await ssdp_listener._on_search(mock_ssdp_search_response)
+    ssdp_listener._on_search(mock_ssdp_search_response)
 
     discovery_info_by_st = await ssdp.async_get_discovery_info_by_st(hass, "mock-st")
     discovery_info_by_st = discovery_info_by_st[0]
@@ -664,8 +692,8 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_async_detect_interfaces_setting_empty_route(
-    mock_get_adapters, mock_get_ssdp, hass
-):
+    mock_get_adapters, mock_get_ssdp, hass: HomeAssistant
+) -> None:
     """Test without default interface config and the route returns nothing."""
     await init_ssdp_component(hass)
 
@@ -690,8 +718,11 @@ async def test_async_detect_interfaces_setting_empty_route(
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_bind_failure_skips_adapter(
-    mock_get_adapters, mock_get_ssdp, hass, caplog
-):
+    mock_get_adapters,
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that an adapter with a bind failure is skipped."""
 
     async def _async_start(self):
@@ -735,8 +766,8 @@ async def test_bind_failure_skips_adapter(
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_ipv4_does_additional_search_for_sonos(
-    mock_get_adapters, mock_get_ssdp, hass
-):
+    mock_get_adapters, mock_get_ssdp, hass: HomeAssistant
+) -> None:
     """Test that only ipv4 does an additional search for Sonos."""
     ssdp_listener = await init_ssdp_component(hass)
 
@@ -753,3 +784,76 @@ async def test_ipv4_does_additional_search_for_sonos(
         ),
     )
     assert ssdp_listener.async_search.call_args[1] == {}
+
+
+@pytest.mark.usefixtures("mock_get_source_ip")
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"deviceType": "Paulus"}]},
+)
+async def test_flow_dismiss_on_byebye(
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
+    """Test config flow is only started for alive devices."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    # Search should start a flow
+    mock_ssdp_search_response = _ssdp_headers(
+        {
+            "st": "mock-st",
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+        }
+    )
+    ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
+
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    # ssdp:alive advertisement should start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement = _ssdp_headers(
+        {
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+            "nt": "upnp:rootdevice",
+            "nts": "ssdp:alive",
+        }
+    )
+    ssdp_listener._on_alive(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    mock_ssdp_advertisement["nts"] = "ssdp:byebye"
+    # ssdp:byebye advertisement should dismiss existing flows
+    with patch.object(
+        hass.config_entries.flow,
+        "async_progress_by_init_data_type",
+        return_value=[{"flow_id": "mock_flow_id"}],
+    ) as mock_async_progress_by_init_data_type, patch.object(
+        hass.config_entries.flow, "async_abort"
+    ) as mock_async_abort:
+        ssdp_listener._on_byebye(mock_ssdp_advertisement)
+        await hass.async_block_till_done()
+
+    assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
+    assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"

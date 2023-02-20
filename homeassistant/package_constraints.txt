@@ -1,49 +1,53 @@
 PyJWT==2.5.0
 PyNaCl==1.5.0
 aiodiscover==1.4.13
-aiohttp==3.8.1
+aiohttp==3.8.4
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.32.2
+async-upnp-client==0.33.1
 async_timeout==4.0.2
 atomicwrites-homeassistant==1.4.1
-attrs==21.2.0
+attrs==22.2.0
 awesomeversion==22.9.0
-bcrypt==3.1.7
-bleak-retry-connector==2.8.5
-bleak==0.19.2
-bluetooth-adapters==0.8.0
-bluetooth-auto-recovery==0.4.0
-bluetooth-data-tools==0.3.0
+bcrypt==4.0.1
+bleak-retry-connector==2.13.0
+bleak==0.19.5
+bluetooth-adapters==0.15.2
+bluetooth-auto-recovery==1.0.3
+bluetooth-data-tools==0.3.1
 certifi>=2021.5.30
-ciso8601==2.2.0
-cryptography==38.0.3
-dbus-fast==1.75.0
+ciso8601==2.3.0
+cryptography==39.0.1
+dbus-fast==1.84.1
 fnvhash==0.1.0
-hass-nabucasa==0.56.0
-home-assistant-bluetooth==1.8.1
-home-assistant-frontend==20221108.0
-httpx==0.23.0
+hass-nabucasa==0.61.0
+hassil==0.2.6
+home-assistant-bluetooth==1.9.3
+home-assistant-frontend==20230202.0
+home-assistant-intents==2023.1.31
+httpx==0.23.3
 ifaddr==0.1.7
+janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.8.1
+orjson==3.8.6
 paho-mqtt==1.6.1
-pillow==9.3.0
-pip>=21.0,<22.4
+pillow==9.4.0
+pip>=21.0,<23.1
 psutil-home-assistant==0.0.1
+pyOpenSSL==23.0.0
 pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.23.2
 pyyaml==6.0
 requests==2.28.1
-scapy==2.4.5
-sqlalchemy==1.4.44
-typing-extensions>=4.4.0,<5.0
-voluptuous-serialize==2.5.0
+scapy==2.5.0
+sqlalchemy==2.0.3
+typing-extensions>=4.5.0,<5.0
+voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 yarl==1.8.1
-zeroconf==0.39.4
+zeroconf==0.47.3
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -59,8 +63,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.48.0
-grpcio-status==1.48.0
+grpcio==1.51.1
+grpcio-status==1.51.1
+grpcio-reflection==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -69,6 +74,9 @@ libcst==0.3.23
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# This is a old unmaintained library and is replaced with faust-cchardet
+cchardet==1000000000.0.0
 
 # To remove reliance on typing
 btlewrap>=0.0.10
@@ -87,9 +95,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.6.1
-h11==0.12.0
-httpcore==0.15.0
+anyio==3.6.2
+h11==0.14.0
+httpcore==0.16.3
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -97,9 +105,6 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==1.23.2
-
-# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
-pytest_asyncio==1000000000.0.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
@@ -133,5 +138,14 @@ iso4217!=1.10.20220401
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
 pandas==1.4.3
 
-# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
-uamqp==1.6.0
+# Matplotlib 3.6.2 has issues building wheels on armhf/armv7
+# We need at least >=2.1.0 (tensorflow integration -> pycocotools)
+matplotlib==3.6.1
+
+# pyOpenSSL 23.0.0 or later required to avoid import errors when
+# cryptography 39.0.0 is installed with botocore
+pyOpenSSL>=23.0.0
+
+# uamqp newer versions we currently can't build for armv7/armhf
+# Limit this to Python 3.10, to not block Python 3.11 dev for now
+uamqp==1.6.0;python_version<'3.11'

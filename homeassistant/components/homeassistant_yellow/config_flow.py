@@ -51,8 +51,12 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
         Passed to ZHA do determine if the ZHA config entry is connected to the radio
         being migrated.
         """
-        return ZHA_HW_DISCOVERY_DATA
+        return {"hw": ZHA_HW_DISCOVERY_DATA}
 
     def _zha_name(self) -> str:
         """Return the ZHA name."""
         return "Yellow Multi-PAN"
+
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
+        return "Home Assistant Yellow"

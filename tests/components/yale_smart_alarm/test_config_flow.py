@@ -51,7 +51,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("sideeffect", "p_error"),
     [
         (AuthenticationError, "invalid_auth"),
         (ConnectionError, "cannot_connect"),
@@ -166,7 +166,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("sideeffect", "p_error"),
     [
         (AuthenticationError, "invalid_auth"),
         (ConnectionError, "cannot_connect"),

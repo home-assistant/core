@@ -45,8 +45,7 @@ async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
 async def async_migrate_buttons(
     hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
 ) -> None:
-    """
-    Migrate existing Reboot button unique IDs from {device_id} to {deivce_id}_reboot.
+    """Migrate existing Reboot button unique IDs from {device_id} to {deivce_id}_reboot.
 
     This allows for additional types of buttons that are outside of just a reboot button.
 
@@ -97,8 +96,7 @@ async def async_migrate_buttons(
 async def async_migrate_device_ids(
     hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
 ) -> None:
-    """
-    Migrate unique IDs from {device_id}_{name} format to {mac}_{name} format.
+    """Migrate unique IDs from {device_id}_{name} format to {mac}_{name} format.
 
     This makes devices persist better with in HA. Anything a device is unadopted/readopted or
     the Protect instance has to rebuild the disk array, the device IDs of Protect devices
@@ -146,7 +144,10 @@ async def async_migrate_device_ids(
             registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
         except ValueError as err:
             _LOGGER.warning(
-                "Could not migrate entity %s (old unique_id: %s, new unique_id: %s): %s",
+                (
+                    "Could not migrate entity %s (old unique_id: %s, new unique_id:"
+                    " %s): %s"
+                ),
                 entity.entity_id,
                 entity.unique_id,
                 new_unique_id,

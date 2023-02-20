@@ -106,6 +106,10 @@ def one_adapter_fixture():
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": True,
                 "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
             },
         },
     ):
@@ -132,12 +136,22 @@ def two_adapters_fixture():
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": False,
                 "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
+                "connection_slots": 1,
             },
             "hci1": {
                 "address": "00:00:00:00:00:02",
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": True,
                 "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
+                "connection_slots": 2,
             },
         },
     ):
@@ -164,7 +178,26 @@ def one_adapter_old_bluez():
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": False,
                 "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
             },
         },
     ):
         yield
+
+
+@pytest.fixture(name="disable_new_discovery_flows")
+def disable_new_discovery_flows_fixture():
+    """Fixture that disables new discovery flows.
+
+    We want to disable new discovery flows as we are testing the
+    BluetoothManager and not the discovery flows. This fixture
+    will patch the discovery_flow.async_create_flow method to
+    ensure we do not load other integrations.
+    """
+    with patch(
+        "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        yield mock_create_flow

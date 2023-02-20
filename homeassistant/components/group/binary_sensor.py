@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -94,7 +95,7 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         self,
         unique_id: str | None,
         name: str,
-        device_class: str | None,
+        device_class: BinarySensorDeviceClass | None,
         entity_ids: list[str],
         mode: str | None,
     ) -> None:
@@ -149,6 +150,6 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
             self._attr_is_on = self.mode(state == STATE_ON for state in states)
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the sensor class of the binary sensor."""
         return self._device_class

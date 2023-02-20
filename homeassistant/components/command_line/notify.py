@@ -52,6 +52,7 @@ class CommandLineNotificationService(BaseNotificationService):
             self.command,
             universal_newlines=True,
             stdin=subprocess.PIPE,
+            close_fds=False,  # required for posix_spawn
             shell=True,  # nosec # shell by design
         ) as proc:
             try:

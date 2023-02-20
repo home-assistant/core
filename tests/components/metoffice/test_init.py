@@ -5,8 +5,10 @@ import datetime
 
 from freezegun import freeze_time
 import pytest
+import requests_mock
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, METOFFICE_CONFIG_WAVERTREE, TEST_COORDINATES_WAVERTREE
@@ -16,7 +18,7 @@ from tests.common import MockConfigEntry
 
 @freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
 @pytest.mark.parametrize(
-    "old_unique_id,new_unique_id,migration_needed",
+    ("old_unique_id", "new_unique_id", "migration_needed"),
     [
         (
             f"Station Name_{TEST_COORDINATES_WAVERTREE}",
@@ -87,12 +89,12 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_migrate_unique_id(
-    hass,
+    hass: HomeAssistant,
     old_unique_id: str,
     new_unique_id: str,
     migration_needed: bool,
-    requests_mock,
-):
+    requests_mock: requests_mock.Mocker,
+) -> None:
     """Test unique id migration."""
 
     entry = MockConfigEntry(

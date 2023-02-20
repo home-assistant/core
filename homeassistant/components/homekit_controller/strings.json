@@ -69,5 +69,39 @@
       "button9": "Button 9",
       "button10": "Button 10"
     }
+  },
+  "entity": {
+    "select": {
+      "ecobee_mode": {
+        "state": {
+          "away": "Away",
+          "home": "Home",
+          "sleep": "Sleep"
+        }
+      }
+    },
+    "sensor": {
+      "thread_node_capabilities": {
+        "state": {
+          "border_router_capable": "Border Router Capable",
+          "full": "Full End Device",
+          "minimal": "Minimal End Device",
+          "none": "None",
+          "router_eligible": "Router Eligible End Device",
+          "sleepy": "Sleepy End Device"
+        }
+      },
+      "thread_status": {
+        "state": {
+          "border_router": "Border Router",
+          "child": "Child",
+          "detached": "Detached",
+          "disabled": "Disabled",
+          "joining": "Joining",
+          "leader": "Leader",
+          "router": "Router"
+        }
+      }
+    }
   }
 }

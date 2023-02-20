@@ -109,7 +109,7 @@ class RovaSensor(SensorEntity):
 
     def __init__(
         self, platform_name, description: SensorEntityDescription, data_service
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data_service = data_service

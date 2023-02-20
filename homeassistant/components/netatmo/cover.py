@@ -99,7 +99,7 @@ class NetatmoCover(NetatmoBase, CoverEntity):
         await self._cover.async_set_target_position(kwargs[ATTR_POSITION])
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> CoverDeviceClass:
         """Return the device class."""
         return CoverDeviceClass.SHUTTER
 

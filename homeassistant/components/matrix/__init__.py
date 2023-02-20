@@ -19,8 +19,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
 from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
 
@@ -276,8 +277,7 @@ class MatrixBot:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
 
     def _get_auth_tokens(self):
-        """
-        Read sorted authentication tokens from disk.
+        """Read sorted authentication tokens from disk.
 
         Returns the auth_tokens dictionary.
         """

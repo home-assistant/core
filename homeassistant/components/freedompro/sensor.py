@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,7 +27,7 @@ STATE_CLASS_MAP = {
     "lightSensor": None,
 }
 UNIT_MAP = {
-    "temperatureSensor": TEMP_CELSIUS,
+    "temperatureSensor": UnitOfTemperature.CELSIUS,
     "humiditySensor": PERCENTAGE,
     "lightSensor": LIGHT_LUX,
 }

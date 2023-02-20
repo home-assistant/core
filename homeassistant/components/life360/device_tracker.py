@@ -152,16 +152,20 @@ class Life360DeviceTracker(
             if bad_last_seen or bad_accuracy:
                 if bad_last_seen:
                     LOGGER.warning(
-                        "%s: Ignoring location update because "
-                        "last_seen (%s) < previous last_seen (%s)",
+                        (
+                            "%s: Ignoring location update because "
+                            "last_seen (%s) < previous last_seen (%s)"
+                        ),
                         self.entity_id,
                         last_seen,
                         prev_seen,
                     )
                 if bad_accuracy:
                     LOGGER.warning(
-                        "%s: Ignoring location update because "
-                        "expected GPS accuracy (%0.1f) is not met: %i",
+                        (
+                            "%s: Ignoring location update because "
+                            "expected GPS accuracy (%0.1f) is not met: %i"
+                        ),
                         self.entity_id,
                         max_gps_acc,
                         self.location_accuracy,
