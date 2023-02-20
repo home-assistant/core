@@ -77,7 +77,11 @@ from homeassistant.components.zwave_js.const import (
     DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from tests.common import MockUser
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 def get_device(hass, node):
@@ -88,8 +92,13 @@ def get_device(hass, node):
 
 
 async def test_no_driver(
-    hass, client, multisensor_6, controller_state, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    controller_state,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test driver missing results in error."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -108,8 +117,12 @@ async def test_no_driver(
 
 
 async def test_network_status(
-    hass, multisensor_6, controller_state, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    controller_state,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the network status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -226,12 +239,12 @@ async def test_network_status(
 
 
 async def test_subscribe_node_status(
-    hass,
+    hass: HomeAssistant,
     multisensor_6_state,
     client,
     integration,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the subscribe node status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -294,7 +307,9 @@ async def test_subscribe_node_status(
     assert msg["event"]["ready"]
 
 
-async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
+async def test_node_status(
+    hass: HomeAssistant, multisensor_6, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the node status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -350,7 +365,12 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_client):
+async def test_node_metadata(
+    hass: HomeAssistant,
+    wallmote_central_scene,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the node metadata websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -425,7 +445,12 @@ async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_node_comments(hass, wallmote_central_scene, integration, hass_ws_client):
+async def test_node_comments(
+    hass: HomeAssistant,
+    wallmote_central_scene,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the node comments websocket command."""
     ws_client = await hass_ws_client(hass)
 
@@ -446,8 +471,12 @@ async def test_node_comments(hass, wallmote_central_scene, integration, hass_ws_
 
 
 async def test_add_node(
-    hass, nortek_thermostat_added_event, integration, client, hass_ws_client
-):
+    hass: HomeAssistant,
+    nortek_thermostat_added_event,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the add_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -857,7 +886,9 @@ async def test_add_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_grant_security_classes(hass, integration, client, hass_ws_client):
+async def test_grant_security_classes(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the grant_security_classes websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -902,7 +933,9 @@ async def test_grant_security_classes(hass, integration, client, hass_ws_client)
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_validate_dsk_and_enter_pin(hass, integration, client, hass_ws_client):
+async def test_validate_dsk_and_enter_pin(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the validate_dsk_and_enter_pin websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -945,7 +978,9 @@ async def test_validate_dsk_and_enter_pin(hass, integration, client, hass_ws_cli
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_provision_smart_start_node(hass, integration, client, hass_ws_client):
+async def test_provision_smart_start_node(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test provision_smart_start_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1127,7 +1162,9 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_unprovision_smart_start_node(hass, integration, client, hass_ws_client):
+async def test_unprovision_smart_start_node(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test unprovision_smart_start_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1229,7 +1266,9 @@ async def test_unprovision_smart_start_node(hass, integration, client, hass_ws_c
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_get_provisioning_entries(hass, integration, client, hass_ws_client):
+async def test_get_provisioning_entries(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test get_provisioning_entries websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1294,7 +1333,9 @@ async def test_get_provisioning_entries(hass, integration, client, hass_ws_clien
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
+async def test_parse_qr_code_string(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test parse_qr_code_string websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1390,7 +1431,9 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_supports_feature(hass, integration, client, hass_ws_client):
+async def test_supports_feature(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test supports_feature websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1411,7 +1454,9 @@ async def test_supports_feature(hass, integration, client, hass_ws_client):
     assert msg["result"] == {"supported": True}
 
 
-async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_client):
+async def test_cancel_inclusion_exclusion(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test cancelling the inclusion and exclusion process."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1490,13 +1535,13 @@ async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_cli
 
 
 async def test_remove_node(
-    hass,
+    hass: HomeAssistant,
     integration,
     client,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     nortek_thermostat,
     nortek_thermostat_removed_event,
-):
+) -> None:
     """Test the remove_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1601,14 +1646,14 @@ async def test_remove_node(
 
 
 async def test_replace_failed_node(
-    hass,
+    hass: HomeAssistant,
     nortek_thermostat,
     integration,
     client,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     nortek_thermostat_added_event,
     nortek_thermostat_removed_event,
-):
+) -> None:
     """Test the replace_failed_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -1950,14 +1995,14 @@ async def test_replace_failed_node(
 
 
 async def test_remove_failed_node(
-    hass,
+    hass: HomeAssistant,
     nortek_thermostat,
     integration,
     client,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     nortek_thermostat_removed_event,
     nortek_thermostat_added_event,
-):
+) -> None:
     """Test the remove_failed_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2037,11 +2082,11 @@ async def test_remove_failed_node(
 
 
 async def test_begin_healing_network(
-    hass,
+    hass: HomeAssistant,
     integration,
     client,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the begin_healing_network websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2096,8 +2141,8 @@ async def test_begin_healing_network(
 
 
 async def test_subscribe_heal_network_progress(
-    hass, integration, client, hass_ws_client
-):
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the subscribe_heal_network_progress command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2146,8 +2191,8 @@ async def test_subscribe_heal_network_progress(
 
 
 async def test_subscribe_heal_network_progress_initial_value(
-    hass, integration, client, hass_ws_client
-):
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test subscribe_heal_network_progress command when heal network in progress."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2179,11 +2224,11 @@ async def test_subscribe_heal_network_progress_initial_value(
 
 
 async def test_stop_healing_network(
-    hass,
+    hass: HomeAssistant,
     integration,
     client,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the stop_healing_network websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2238,12 +2283,12 @@ async def test_stop_healing_network(
 
 
 async def test_heal_node(
-    hass,
+    hass: HomeAssistant,
     multisensor_6,
     integration,
     client,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the heal_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2299,8 +2344,12 @@ async def test_heal_node(
 
 
 async def test_refresh_node_info(
-    hass, client, multisensor_6, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test that the refresh_node_info WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2423,8 +2472,12 @@ async def test_refresh_node_info(
 
 
 async def test_refresh_node_values(
-    hass, client, multisensor_6, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test that the refresh_node_values WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2496,8 +2549,12 @@ async def test_refresh_node_values(
 
 
 async def test_refresh_node_cc_values(
-    hass, multisensor_6, client, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    client,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test that the refresh_node_cc_values WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2587,8 +2644,12 @@ async def test_refresh_node_cc_values(
 
 
 async def test_set_config_parameter(
-    hass, multisensor_6, client, hass_ws_client, integration
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    client,
+    hass_ws_client: WebSocketGenerator,
+    integration,
+) -> None:
     """Test the set_config_parameter service."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2772,7 +2833,9 @@ async def test_set_config_parameter(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_client):
+async def test_get_config_parameters(
+    hass: HomeAssistant, multisensor_6, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the get config parameters websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -2831,8 +2894,12 @@ async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_c
 
 
 async def test_firmware_upload_view(
-    hass, multisensor_6, integration, hass_client, firmware_file
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    hass_client: ClientSessionGenerator,
+    firmware_file,
+) -> None:
     """Test the HTTP firmware upload view."""
     client = await hass_client()
     device = get_device(hass, multisensor_6)
@@ -2857,8 +2924,12 @@ async def test_firmware_upload_view(
 
 
 async def test_firmware_upload_view_failed_command(
-    hass, multisensor_6, integration, hass_client, firmware_file
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    hass_client: ClientSessionGenerator,
+    firmware_file,
+) -> None:
     """Test failed command for the HTTP firmware upload view."""
     client = await hass_client()
     device = get_device(hass, multisensor_6)
@@ -2874,8 +2945,8 @@ async def test_firmware_upload_view_failed_command(
 
 
 async def test_firmware_upload_view_invalid_payload(
-    hass, multisensor_6, integration, hass_client
-):
+    hass: HomeAssistant, multisensor_6, integration, hass_client: ClientSessionGenerator
+) -> None:
     """Test an invalid payload for the HTTP firmware upload view."""
     device = get_device(hass, multisensor_6)
     client = await hass_client()
@@ -2891,8 +2962,14 @@ async def test_firmware_upload_view_invalid_payload(
     [("post", "/api/zwave_js/firmware/upload/{}")],
 )
 async def test_node_view_non_admin_user(
-    hass, multisensor_6, integration, hass_client, hass_admin_user, method, url
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    method,
+    url,
+) -> None:
     """Test node level views for non-admin users."""
     client = await hass_client()
     device = get_device(hass, multisensor_6)
@@ -2909,8 +2986,13 @@ async def test_node_view_non_admin_user(
     ],
 )
 async def test_view_unloaded_config_entry(
-    hass, multisensor_6, integration, hass_client, method, url
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    hass_client: ClientSessionGenerator,
+    method,
+    url,
+) -> None:
     """Test an unloaded config entry raises Bad Request."""
     client = await hass_client()
     device = get_device(hass, multisensor_6)
@@ -2923,14 +3005,18 @@ async def test_view_unloaded_config_entry(
     ("method", "url"),
     [("post", "/api/zwave_js/firmware/upload/INVALID")],
 )
-async def test_view_invalid_device_id(integration, hass_client, method, url):
+async def test_view_invalid_device_id(
+    integration, hass_client: ClientSessionGenerator, method, url
+) -> None:
     """Test an invalid device id parameter."""
     client = await hass_client()
     resp = await client.request(method, url.format(integration.entry_id))
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_subscribe_log_updates(hass, integration, client, hass_ws_client):
+async def test_subscribe_log_updates(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the subscribe_log_updates websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3033,7 +3119,9 @@ async def test_subscribe_log_updates(hass, integration, client, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_update_log_config(hass, client, integration, hass_ws_client):
+async def test_update_log_config(
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the update_log_config WS API call works and that schema validation works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3189,7 +3277,9 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_get_log_config(hass, client, integration, hass_ws_client):
+async def test_get_log_config(
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the get_log_config WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3230,7 +3320,9 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_data_collection(hass, client, integration, hass_ws_client):
+async def test_data_collection(
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the data collection WS API commands work."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3368,8 +3460,12 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
 
 
 async def test_abort_firmware_update(
-    hass, client, multisensor_6, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test that the abort_firmware_update WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3440,8 +3536,12 @@ async def test_abort_firmware_update(
 
 
 async def test_is_node_firmware_update_in_progress(
-    hass, client, multisensor_6, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test that the is_firmware_update_in_progress WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3500,8 +3600,12 @@ async def test_is_node_firmware_update_in_progress(
 
 
 async def test_subscribe_firmware_update_status(
-    hass, multisensor_6, integration, client, hass_ws_client
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the subscribe_firmware_update_status websocket command."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
@@ -3574,8 +3678,12 @@ async def test_subscribe_firmware_update_status(
 
 
 async def test_subscribe_firmware_update_status_initial_value(
-    hass, multisensor_6, client, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    client,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test subscribe_firmware_update_status websocket command with in progress update."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
@@ -3626,8 +3734,12 @@ async def test_subscribe_firmware_update_status_initial_value(
 
 
 async def test_subscribe_firmware_update_status_failures(
-    hass, multisensor_6, client, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    multisensor_6,
+    client,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test failures for the subscribe_firmware_update_status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3663,8 +3775,12 @@ async def test_subscribe_firmware_update_status_failures(
 
 
 async def test_get_node_firmware_update_capabilities(
-    hass, client, multisensor_6, integration, hass_ws_client
-):
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    integration,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test that the get_node_firmware_update_capabilities WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3748,8 +3864,8 @@ async def test_get_node_firmware_update_capabilities(
 
 
 async def test_is_any_ota_firmware_update_in_progress(
-    hass, client, integration, hass_ws_client
-):
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the is_any_ota_firmware_update_in_progress WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3818,7 +3934,9 @@ async def test_is_any_ota_firmware_update_in_progress(
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
-async def test_check_for_config_updates(hass, client, integration, hass_ws_client):
+async def test_check_for_config_updates(
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the check_for_config_updates WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3891,7 +4009,9 @@ async def test_check_for_config_updates(hass, client, integration, hass_ws_clien
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
-async def test_install_config_update(hass, client, integration, hass_ws_client):
+async def test_install_config_update(
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the install_config_update WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -3957,8 +4077,8 @@ async def test_install_config_update(hass, client, integration, hass_ws_client):
 
 
 async def test_subscribe_controller_statistics(
-    hass, integration, client, hass_ws_client
-):
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test the subscribe_controller_statistics command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -4056,14 +4176,14 @@ async def test_subscribe_controller_statistics(
 
 
 async def test_subscribe_node_statistics(
-    hass,
+    hass: HomeAssistant,
     multisensor_6,
     wallmote_central_scene,
     zen_31,
     integration,
     client,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test the subscribe_node_statistics command."""
     entry = integration
     ws_client = await hass_ws_client(hass)

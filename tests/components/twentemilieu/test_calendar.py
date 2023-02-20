@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2022-01-05 00:00:00+00:00")
@@ -47,7 +48,7 @@ async def test_waste_pickup_calendar(
 async def test_api_calendar(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    hass_client,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the API returns the calendar."""
     client = await hass_client()
@@ -65,7 +66,7 @@ async def test_api_calendar(
 async def test_api_events(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    hass_client,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the Twente Milieu calendar view."""
     client = await hass_client()
