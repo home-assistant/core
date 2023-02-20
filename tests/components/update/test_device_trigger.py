@@ -8,9 +8,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.update import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryHider
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -33,8 +31,8 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 async def test_get_triggers(
     hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    entity_registry: EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we get the expected triggers from a update entity."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -66,19 +64,19 @@ async def test_get_triggers(
 @pytest.mark.parametrize(
     ("hidden_by", "entity_category"),
     (
-        (RegistryEntryHider.INTEGRATION, None),
-        (RegistryEntryHider.USER, None),
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -113,8 +111,8 @@ async def test_get_triggers_hidden_auxiliary(
 
 async def test_get_trigger_capabilities(
     hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    entity_registry: EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we get the expected capabilities from a update trigger."""
     config_entry = MockConfigEntry(domain="test", data={})

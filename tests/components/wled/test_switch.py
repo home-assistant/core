@@ -28,64 +28,54 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, load_fixture
+
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_switch_state(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the creation and values of the WLED switches."""
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("switch.wled_rgb_light_nightlight")
-    assert state
+    assert (state := hass.states.get("switch.wled_rgb_light_nightlight"))
     assert state.attributes.get(ATTR_DURATION) == 60
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-night"
     assert state.attributes.get(ATTR_TARGET_BRIGHTNESS) == 0
     assert state.attributes.get(ATTR_FADE)
     assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get("switch.wled_rgb_light_nightlight")
-    assert entry
+    assert (entry := entity_registry.async_get("switch.wled_rgb_light_nightlight"))
     assert entry.unique_id == "aabbccddeeff_nightlight"
     assert entry.entity_category is EntityCategory.CONFIG
 
-    state = hass.states.get("switch.wled_rgb_light_sync_send")
-    assert state
+    assert (state := hass.states.get("switch.wled_rgb_light_sync_send"))
     assert state.attributes.get(ATTR_ICON) == "mdi:upload-network-outline"
     assert state.attributes.get(ATTR_UDP_PORT) == 21324
     assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get("switch.wled_rgb_light_sync_send")
-    assert entry
+    assert (entry := entity_registry.async_get("switch.wled_rgb_light_sync_send"))
     assert entry.unique_id == "aabbccddeeff_sync_send"
     assert entry.entity_category is EntityCategory.CONFIG
 
-    state = hass.states.get("switch.wled_rgb_light_sync_receive")
-    assert state
+    assert (state := hass.states.get("switch.wled_rgb_light_sync_receive"))
     assert state.attributes.get(ATTR_ICON) == "mdi:download-network-outline"
     assert state.attributes.get(ATTR_UDP_PORT) == 21324
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("switch.wled_rgb_light_sync_receive")
-    assert entry
+    assert (entry := entity_registry.async_get("switch.wled_rgb_light_sync_receive"))
     assert entry.unique_id == "aabbccddeeff_sync_receive"
     assert entry.entity_category is EntityCategory.CONFIG
 
-    state = hass.states.get("switch.wled_rgb_light_reverse")
-    assert state
+    assert (state := hass.states.get("switch.wled_rgb_light_reverse"))
     assert state.attributes.get(ATTR_ICON) == "mdi:swap-horizontal-bold"
     assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get("switch.wled_rgb_light_reverse")
-    assert entry
+    assert (entry := entity_registry.async_get("switch.wled_rgb_light_reverse"))
     assert entry.unique_id == "aabbccddeeff_reverse_0"
     assert entry.entity_category is EntityCategory.CONFIG
 
 
-async def test_switch_change_state(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
-) -> None:
+async def test_switch_change_state(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     """Test the change of state of the WLED switches."""
 
     # Nightlight
@@ -95,7 +85,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.nightlight.call_count == 1
     mock_wled.nightlight.assert_called_with(on=True)
 
@@ -105,7 +94,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.nightlight.call_count == 2
     mock_wled.nightlight.assert_called_with(on=False)
 
@@ -116,7 +104,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.sync.call_count == 1
     mock_wled.sync.assert_called_with(send=True)
 
@@ -126,7 +113,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.sync.call_count == 2
     mock_wled.sync.assert_called_with(send=False)
 
@@ -137,7 +123,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.sync.call_count == 3
     mock_wled.sync.assert_called_with(receive=False)
 
@@ -147,7 +132,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.sync.call_count == 4
     mock_wled.sync.assert_called_with(receive=True)
 
@@ -157,7 +141,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_reverse"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(segment_id=0, reverse=True)
 
@@ -167,14 +150,12 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_reverse"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.segment.call_count == 2
     mock_wled.segment.assert_called_with(segment_id=0, reverse=False)
 
 
 async def test_switch_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED switches."""
@@ -187,7 +168,6 @@ async def test_switch_error(
             {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("switch.wled_rgb_light_nightlight")
     assert state
@@ -196,7 +176,6 @@ async def test_switch_error(
 
 async def test_switch_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED switches."""
@@ -209,17 +188,14 @@ async def test_switch_connection_error(
             {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("switch.wled_rgb_light_nightlight")
-    assert state
+    assert (state := hass.states.get("switch.wled_rgb_light_nightlight"))
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_switch_dynamically_handle_segments(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""

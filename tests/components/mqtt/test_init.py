@@ -1446,6 +1446,69 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
 
+async def test_reload_entry_with_restored_subscriptions(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
+    record_calls: MessageCallbackType,
+    calls: list[ReceiveMessage],
+) -> None:
+    """Test reloading the config entry with with subscriptions restored."""
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+    mqtt_client_mock.connect.return_value = 0
+    assert await mqtt.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload"
+    calls.clear()
+
+    # Reload the entry
+    config_yaml_new = {}
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
+
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload2")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload2")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload2"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload2"
+    calls.clear()
+
+    # Reload the entry again
+    config_yaml_new = {}
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
+
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload3")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload3")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload3"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload3"
+
+
 async def test_initial_setup_logs_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1816,7 +1879,7 @@ async def test_tls_version(
         await mqtt_mock_entry_with_yaml_config()
 
         assert calls
-        assert calls[0][3] == ssl.PROTOCOL_TLS
+        assert calls[0][3] == ssl.PROTOCOL_TLS_CLIENT
 
 
 @pytest.mark.parametrize(
@@ -2051,19 +2114,16 @@ async def test_mqtt_subscribes_topics_on_connect(
     await mqtt.async_subscribe(hass, "still/pending", record_calls)
     await mqtt.async_subscribe(hass, "still/pending", record_calls, 1)
 
-    with patch.object(hass, "add_job") as hass_jobs:
-        mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        assert mqtt_client_mock.disconnect.call_count == 0
+    assert mqtt_client_mock.disconnect.call_count == 0
 
-        assert len(hass_jobs.mock_calls) == 1
-        assert set(hass_jobs.mock_calls[0][1][1]) == {
-            ("home/sensor", 2),
-            ("still/pending", 1),
-            ("topic/test", 0),
-        }
+    assert mqtt_client_mock.subscribe.call_count == 3
+    mqtt_client_mock.subscribe.assert_any_call("topic/test", 0)
+    mqtt_client_mock.subscribe.assert_any_call("home/sensor", 2)
+    mqtt_client_mock.subscribe.assert_any_call("still/pending", 1)
 
 
 async def test_setup_entry_with_config_override(

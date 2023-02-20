@@ -19,7 +19,7 @@ from . import (
 )
 
 
-async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf) -> None:
+async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
     """Test discovering thread routers."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
     mock_async_zeroconf.async_remove_service_listener = AsyncMock()
@@ -130,7 +130,7 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf) -> Non
     "data", (ROUTER_DISCOVERY_HASS_BAD_DATA, ROUTER_DISCOVERY_HASS_MISSING_DATA)
 )
 async def test_discover_routers_bad_data(
-    hass: HomeAssistant, mock_async_zeroconf, data
+    hass: HomeAssistant, mock_async_zeroconf: None, data
 ) -> None:
     """Test discovering thread routers with bad or missing vendor mDNS data."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -168,7 +168,7 @@ async def test_discover_routers_bad_data(
 
 
 async def test_discover_routers_missing_mandatory_data(
-    hass: HomeAssistant, mock_async_zeroconf
+    hass: HomeAssistant, mock_async_zeroconf: None
 ) -> None:
     """Test discovering thread routers with missing mandatory mDNS data."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -202,7 +202,7 @@ async def test_discover_routers_missing_mandatory_data(
 
 
 async def test_discover_routers_get_service_info_fails(
-    hass: HomeAssistant, mock_async_zeroconf
+    hass: HomeAssistant, mock_async_zeroconf: None
 ) -> None:
     """Test discovering thread routers with invalid mDNS data."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -232,7 +232,7 @@ async def test_discover_routers_get_service_info_fails(
 
 
 async def test_discover_routers_update_unchanged(
-    hass: HomeAssistant, mock_async_zeroconf
+    hass: HomeAssistant, mock_async_zeroconf: None
 ) -> None:
     """Test discovering thread routers with identical mDNS data in update."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -274,7 +274,7 @@ async def test_discover_routers_update_unchanged(
 
 
 async def test_discover_routers_stop_twice(
-    hass: HomeAssistant, mock_async_zeroconf
+    hass: HomeAssistant, mock_async_zeroconf: None
 ) -> None:
     """Test discovering thread routers stopping discovery twice."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
