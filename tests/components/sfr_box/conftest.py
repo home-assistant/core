@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(

@@ -40,7 +40,7 @@ SLEEPIQ_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(

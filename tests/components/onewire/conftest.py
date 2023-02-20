@@ -15,7 +15,7 @@ from .const import MOCK_OWPROXY_DEVICES
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(

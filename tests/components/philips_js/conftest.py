@@ -12,7 +12,7 @@ from . import MOCK_CONFIG, MOCK_ENTITY_ID, MOCK_NAME, MOCK_SERIAL_NO, MOCK_SYSTE
 from tests.common import MockConfigEntry, mock_device_registry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Disable component setup."""
     with patch(
