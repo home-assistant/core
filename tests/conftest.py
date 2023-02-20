@@ -932,7 +932,7 @@ def hass_config() -> ConfigType:
 
 @pytest.fixture
 def mock_hass_config(
-    hass: HomeAssistant, hass_config: ConfigType | None
+    hass: HomeAssistant, hass_config: ConfigType
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of main configuration.
 
