@@ -29,6 +29,12 @@ async def test_load_unload_config_entry(hass: HomeAssistant, init_integration) -
     assert hass.data[DOMAIN][entries[0].entry_id]
     # TODO
 
+    # Test a reload
+    result = hass.config_entries.async_update_entry(init_integration, options={})
+    await hass.async_block_till_done()
+    assert result
+
+    # Unload the integration
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
 
@@ -88,7 +94,7 @@ async def test_async_setup_import_update(
     config_entry.add_to_hass(hass)
     options = dict(config_entry.options)
     options[CONF_CREATE_ZONE_BYPASS_SWITCHES] = True
-    hass.config_entries.async_update_entry(config_entry, options=options)
+    assert hass.config_entries.async_update_entry(config_entry, options=options)
 
     # Reload it and make sure the zone bypass switches got created
     await hass.config_entries.async_setup(config_entry.entry_id)
