@@ -934,7 +934,7 @@ def hass_config() -> ConfigType | None:
 def mock_hass_config(
     hass: HomeAssistant, hass_config: ConfigType | None
 ) -> Generator[None, None, None]:
-    """Fixture to mock the content of configuration.yaml.
+    """Fixture to mock the content of main configuration.
 
     Patches homeassistant.config.load_yaml_config_file with `hass_config` parameterized as content.
     """
