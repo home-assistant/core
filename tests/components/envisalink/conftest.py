@@ -7,7 +7,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.envisalink.const import (
     CONF_ALARM_NAME,
-    CONF_CODE,
     CONF_CREATE_ZONE_BYPASS_SWITCHES,
     CONF_EVL_DISCOVERY_PORT,
     CONF_EVL_KEEPALIVE,
@@ -35,7 +34,7 @@ from homeassistant.components.envisalink.pyenvisalink.const import (
     PANEL_TYPE_DSC,
     PANEL_TYPE_HONEYWELL,
 )
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -196,9 +195,7 @@ def mock_config_entry_yaml_options(
     )
 
 
-@pytest.fixture
-def mock_yaml_import_data() -> dict[str, Any]:
-    """Return yaml configuration for import from configuration.yaml."""
+def _build_yaml_import_data() -> dict[str, Any]:
     return {
         "host": "envisalink-host",
         "panel_type": PANEL_TYPE_DSC,
@@ -228,22 +225,26 @@ def mock_yaml_import_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_config_entry_yaml_import(
-    mock_unique_id, mock_yaml_import_data
-) -> MockConfigEntry:
+def mock_yaml_import_data() -> dict[str, Any]:
+    """Return yaml configuration for import from configuration.yaml."""
+    return _build_yaml_import_data()
+
+
+@pytest.fixture
+def mock_config_entry_yaml_import(mock_unique_id) -> MockConfigEntry:
     """Return the config data from after a configuration.yaml import."""
+    data = _build_yaml_import_data()
     options = {}
     for key in CONF_PANIC, CONF_EVL_KEEPALIVE, CONF_ZONEDUMP_INTERVAL, CONF_TIMEOUT:
-        options[key] = mock_yaml_import_data[key]
-        mock_yaml_import_data.pop(key)
-    mock_yaml_import_data[CONF_ZONE_SET] = "1-8"
-    mock_yaml_import_data[CONF_PARTITION_SET] = "1"
-    mock_yaml_import_data[CONF_YAML_OPTIONS] = {}
+        options[key] = data[key]
+        data.pop(key)
+    data[CONF_ZONE_SET] = "1-8"
+    data[CONF_PARTITION_SET] = "1"
 
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=mock_unique_id,
-        data=mock_yaml_import_data,
+        data=data,
         options=options,
     )
 

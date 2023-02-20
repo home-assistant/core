@@ -59,7 +59,7 @@ async def test_async_setup_import(
     options = entries[0].options
 
     assert data == mock_config_entry_yaml_import.data
-    assert options == {}
+    assert options == mock_config_entry_yaml_import.options
 
 
 async def test_async_setup_import_update(
