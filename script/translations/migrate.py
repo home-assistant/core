@@ -263,7 +263,6 @@ def find_frontend_states():
         from_key_base = f"state::{domain}"
 
         if domain in STATES_WITH_DEV_CLASS:
-
             domain_to_write = dict(states)
 
             for device_class, dev_class_states in domain_to_write.items():
@@ -338,7 +337,6 @@ def apply_data_references(to_migrate):
         for step_data in steps.values():
             step_data = step_data.get("data", {})
             for key, value in step_data.items():
-
                 if key in to_migrate and value != to_migrate[key]:
                     if key.split("_")[0].lower() in value.lower():
                         step_data[key] = to_migrate[key]

@@ -21,8 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -167,7 +166,7 @@ class WaterHeaterEntity(Entity):
     _attr_operation_list: list[str] | None = None
     _attr_precision: float
     _attr_state: None = None
-    _attr_supported_features: WaterHeaterEntityFeature | int = 0
+    _attr_supported_features: WaterHeaterEntityFeature = WaterHeaterEntityFeature(0)
     _attr_target_temperature_high: float | None = None
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None
@@ -184,7 +183,7 @@ class WaterHeaterEntity(Entity):
         """Return the precision of the system."""
         if hasattr(self, "_attr_precision"):
             return self._attr_precision
-        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 
@@ -325,7 +324,7 @@ class WaterHeaterEntity(Entity):
         if hasattr(self, "_attr_min_temp"):
             return self._attr_min_temp
         return TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
+            DEFAULT_MIN_TEMP, UnitOfTemperature.FAHRENHEIT, self.temperature_unit
         )
 
     @property
@@ -334,11 +333,11 @@ class WaterHeaterEntity(Entity):
         if hasattr(self, "_attr_max_temp"):
             return self._attr_max_temp
         return TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
+            DEFAULT_MAX_TEMP, UnitOfTemperature.FAHRENHEIT, self.temperature_unit
         )
 
     @property
-    def supported_features(self) -> WaterHeaterEntityFeature | int:
+    def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 

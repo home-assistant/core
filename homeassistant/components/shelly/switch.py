@@ -138,7 +138,7 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """If switch is on."""
-        return bool(self.coordinator.device.status[self.key]["output"])
+        return bool(self.status["output"])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""

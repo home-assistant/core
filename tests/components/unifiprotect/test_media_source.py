@@ -52,7 +52,7 @@ async def test_get_media_source(hass: HomeAssistant) -> None:
 )
 async def test_resolve_media_bad_identifier(
     hass: HomeAssistant, ufp: MockUFPFixture, identifier: str
-):
+) -> None:
     """Test resolving bad identifiers."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -67,7 +67,7 @@ async def test_resolve_media_bad_identifier(
 
 async def test_resolve_media_thumbnail(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test resolving event thumbnails."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -98,7 +98,7 @@ async def test_resolve_media_thumbnail(
 
 async def test_resolve_media_event(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test resolving event clips."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -152,7 +152,7 @@ async def test_resolve_media_event(
 )
 async def test_browse_media_bad_identifier(
     hass: HomeAssistant, ufp: MockUFPFixture, identifier: str
-):
+) -> None:
     """Test browsing media with bad identifiers."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -167,7 +167,7 @@ async def test_browse_media_bad_identifier(
 
 async def test_browse_media_event_ongoing(
     hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime, doorbell: Camera
-):
+) -> None:
     """Test browsing event that is still ongoing."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -194,7 +194,7 @@ async def test_browse_media_event_ongoing(
 
 async def test_browse_media_root_multiple_consoles(
     hass: HomeAssistant, ufp: MockUFPFixture, bootstrap: Bootstrap
-):
+) -> None:
     """Test browsing root level media with multiple consoles."""
 
     ufp.api.bootstrap._has_media = True
@@ -259,7 +259,7 @@ async def test_browse_media_root_multiple_consoles(
 
 async def test_browse_media_root_multiple_consoles_only_one_media(
     hass: HomeAssistant, ufp: MockUFPFixture, bootstrap: Bootstrap
-):
+) -> None:
     """Test browsing root level media with multiple consoles."""
 
     ufp.api.bootstrap._has_media = True
@@ -323,7 +323,7 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
 
 async def test_browse_media_root_single_console(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test browsing root level media with a single console."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -346,7 +346,7 @@ async def test_browse_media_root_single_console(
 
 async def test_browse_media_camera(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, camera: Camera
-):
+) -> None:
     """Test browsing camera selector level media."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -384,7 +384,7 @@ async def test_browse_media_camera(
 
 async def test_browse_media_camera_offline(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test browsing camera selector level media when camera is offline."""
 
     doorbell.is_connected = False
@@ -409,7 +409,7 @@ async def test_browse_media_camera_offline(
 
 async def test_browse_media_event_type(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test browsing event type selector level media."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -462,7 +462,7 @@ TWO_MONTH_SIMPLE = (
 
 
 @pytest.mark.parametrize(
-    "start,months",
+    ("start", "months"),
     [ONE_MONTH_SIMPLE, TWO_MONTH_SIMPLE],
 )
 @freeze_time("2022-09-15 03:00:00-07:00")
@@ -472,7 +472,7 @@ async def test_browse_media_time(
     doorbell: Camera,
     start: datetime,
     months: int,
-):
+) -> None:
     """Test browsing time selector level media."""
 
     end = datetime.fromisoformat("2022-09-15 03:00:00-07:00")
@@ -534,7 +534,7 @@ TWO_MONTH_TIMEZONE = (
 
 
 @pytest.mark.parametrize(
-    "start,months",
+    ("start", "months"),
     [ONE_MONTH_TIMEZONE, TWO_MONTH_TIMEZONE],
 )
 @freeze_time("2022-08-31 21:00:00-07:00")
@@ -544,7 +544,7 @@ async def test_browse_media_time_timezone(
     doorbell: Camera,
     start: datetime,
     months: int,
-):
+) -> None:
     """Test browsing time selector level media."""
 
     end = datetime.fromisoformat("2022-08-31 21:00:00-07:00")
@@ -579,7 +579,7 @@ async def test_browse_media_time_timezone(
 
 async def test_browse_media_recent(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test browsing event selector level media for recent days."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -615,7 +615,7 @@ async def test_browse_media_recent(
 
 async def test_browse_media_recent_truncated(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test browsing event selector level media for recent days."""
 
     ufp.entry.options = {"max_media": 1}
@@ -653,7 +653,7 @@ async def test_browse_media_recent_truncated(
 
 async def test_browse_media_event(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test browsing specific event."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -684,7 +684,7 @@ async def test_browse_media_event(
 
 async def test_browse_media_eventthumb(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test browsing specific event."""
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
@@ -716,7 +716,7 @@ async def test_browse_media_eventthumb(
 @freeze_time("2022-09-15 03:00:00-07:00")
 async def test_browse_media_day(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test browsing day selector level media."""
 
     start = datetime.fromisoformat("2022-09-03 03:00:00-07:00")
@@ -744,7 +744,7 @@ async def test_browse_media_day(
 
 async def test_browse_media_browse_day(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test events for a specific day."""
 
     last_month = fixed_now.replace(day=1) - timedelta(days=1)
@@ -784,7 +784,7 @@ async def test_browse_media_browse_day(
 
 async def test_browse_media_browse_whole_month(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test events for a specific day."""
 
     fixed_now = fixed_now.replace(month=10)
@@ -826,7 +826,7 @@ async def test_browse_media_browse_whole_month(
 
 async def test_browse_media_browse_whole_month_december(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
-):
+) -> None:
     """Test events for a specific day."""
 
     fixed_now = fixed_now.replace(month=12)

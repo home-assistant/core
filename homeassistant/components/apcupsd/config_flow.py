@@ -78,9 +78,3 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             title=title,
             data=user_input,
         )
-
-    async def async_step_import(self, conf: dict[str, Any]) -> FlowResult:
-        """Import a configuration from yaml configuration."""
-        # If we are importing from YAML configuration, user_input could contain a
-        # CONF_RESOURCES with a list of resources (sensors) to be enabled.
-        return await self.async_step_user(user_input=conf)

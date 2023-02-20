@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Final, TypedDict
+from typing import Final
 
 DOMAIN = "bluetooth"
 
@@ -10,18 +10,6 @@ CONF_ADAPTER = "adapter"
 CONF_DETAILS = "details"
 CONF_PASSIVE = "passive"
 
-WINDOWS_DEFAULT_BLUETOOTH_ADAPTER = "bluetooth"
-MACOS_DEFAULT_BLUETOOTH_ADAPTER = "Core Bluetooth"
-UNIX_DEFAULT_BLUETOOTH_ADAPTER = "hci0"
-
-DEFAULT_ADAPTER_BY_PLATFORM = {
-    "Windows": WINDOWS_DEFAULT_BLUETOOTH_ADAPTER,
-    "Darwin": MACOS_DEFAULT_BLUETOOTH_ADAPTER,
-}
-
-
-# Some operating systems hide the adapter address for privacy reasons (ex MacOS)
-DEFAULT_ADDRESS: Final = "00:00:00:00:00:00"
 
 SOURCE_LOCAL: Final = "local"
 
@@ -42,6 +30,15 @@ START_TIMEOUT = 15
 # switch over to using that adapter anyways.
 #
 FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 60 * 15
+
+# The maximum time between advertisements for a device to be considered
+# stale when the advertisement tracker can determine the interval for
+# connectable devices.
+#
+# BlueZ uses 180 seconds by default but we give it a bit more time
+# to account for the esp32's bluetooth stack being a bit slower
+# than BlueZ's.
+CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 195
 
 
 # We must recover before we hit the 180s mark
@@ -66,18 +63,3 @@ SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
 # are not present
 LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS = 120
 BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS = 5
-
-
-class AdapterDetails(TypedDict, total=False):
-    """Adapter details."""
-
-    address: str
-    sw_version: str
-    hw_version: str | None
-    passive_scan: bool
-
-
-ADAPTER_ADDRESS: Final = "address"
-ADAPTER_SW_VERSION: Final = "sw_version"
-ADAPTER_HW_VERSION: Final = "hw_version"
-ADAPTER_PASSIVE_SCAN: Final = "passive_scan"

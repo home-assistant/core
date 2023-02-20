@@ -89,7 +89,6 @@ class LgTVDevice(MediaPlayerEntity):
         self._channel_id = None
         self._channel_name = ""
         self._program_name = ""
-        self._state = None
         self._sources = {}
         self._source_names = []
 
@@ -100,14 +99,14 @@ class LgTVDevice(MediaPlayerEntity):
             with self._client as client:
                 client.send_command(command)
         except (LgNetCastError, RequestException):
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
 
     def update(self) -> None:
         """Retrieve the latest data from the LG TV."""
 
         try:
             with self._client as client:
-                self._state = MediaPlayerState.PLAYING
+                self._attr_state = MediaPlayerState.PLAYING
 
                 self.__update_volume()
 
@@ -142,7 +141,7 @@ class LgTVDevice(MediaPlayerEntity):
                     )
                     self._source_names = [n for n, k in sorted_sources]
         except (LgNetCastError, RequestException):
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
 
     def __update_volume(self):
         volume_info = self._client.get_volume()
@@ -155,11 +154,6 @@ class LgTVDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     @property
     def is_volume_muted(self):
@@ -249,13 +243,13 @@ class LgTVDevice(MediaPlayerEntity):
     def media_play(self) -> None:
         """Send play command."""
         self._playing = True
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self.send_command(LG_COMMAND.PLAY)
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._playing = False
-        self._state = MediaPlayerState.PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
         self.send_command(LG_COMMAND.PAUSE)
 
     def media_next_track(self) -> None:

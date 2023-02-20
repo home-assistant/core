@@ -174,7 +174,7 @@ class XboxData:
     presence: dict[str, PresenceData]
 
 
-class XboxUpdateCoordinator(DataUpdateCoordinator):
+class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     """Store Xbox Console Status."""
 
     def __init__(
@@ -190,7 +190,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
-        self.data: XboxData = XboxData({}, {})
+        self.data = XboxData({}, {})
         self.client: XboxLiveClient = client
         self.consoles: SmartglassConsoleList = consoles
 

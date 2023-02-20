@@ -8,6 +8,9 @@ tests/testing_config/home-assistant.log*
 data/
 .token
 
+# Translations
+homeassistant/components/*/translations
+
 # Hide sublime text stuff
 *.sublime-project
 *.sublime-workspace
@@ -58,7 +61,6 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
-.tox
 coverage.xml
 nosetests.xml
 htmlcov/

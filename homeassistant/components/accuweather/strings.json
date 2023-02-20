@@ -22,9 +22,20 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "pressure_tendency": {
+        "state": {
+          "steady": "Steady",
+          "rising": "Rising",
+          "falling": "Falling"
+        }
+      }
+    }
+  },
   "options": {
     "step": {
-      "user": {
+      "init": {
         "description": "Due to the limitations of the free version of the AccuWeather API key, when you enable weather forecast, data updates will be performed every 80 minutes instead of every 40 minutes.",
         "data": {
           "forecast": "Weather forecast"

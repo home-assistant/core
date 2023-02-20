@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "dsmr_version,old_unique_id,new_unique_id",
+    ("dsmr_version", "old_unique_id", "new_unique_id"),
     [
         ("5", "1234_Power_Consumption", "1234_current_electricity_usage"),
         ("5", "1234_Power_Production", "1234_current_electricity_delivery"),

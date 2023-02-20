@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Transmission Client",
+        "title": "Set up Transmission Client",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
@@ -37,19 +37,6 @@
           "scan_interval": "Update frequency",
           "limit": "Limit",
           "order": "Order"
-        }
-      }
-    }
-  },
-  "issues": {
-    "deprecated_key": {
-      "title": "The name key in Transmission services is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The name key in Transmission services is being removed",
-            "description": "Update any automations or scripts that use this service and replace the name key with the entry_id key."
-          }
         }
       }
     }

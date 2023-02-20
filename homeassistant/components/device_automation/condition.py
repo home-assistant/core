@@ -1,7 +1,7 @@
 """Validate device conditions."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
 
@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
-from .exceptions import InvalidDeviceAutomationConfig
+from .helpers import async_validate_device_automation_config
 
 if TYPE_CHECKING:
     from homeassistant.helpers import condition
@@ -50,16 +50,9 @@ async def async_validate_condition_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate device condition config."""
-    try:
-        config = cv.DEVICE_CONDITION_SCHEMA(config)
-        platform = await async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
-        )
-        if hasattr(platform, "async_validate_condition_config"):
-            return await platform.async_validate_condition_config(hass, config)
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))
-    except InvalidDeviceAutomationConfig as err:
-        raise vol.Invalid(str(err) or "Invalid condition configuration") from err
+    return await async_validate_device_automation_config(
+        hass, config, cv.DEVICE_CONDITION_SCHEMA, DeviceAutomationType.CONDITION
+    )
 
 
 async def async_condition_from_config(

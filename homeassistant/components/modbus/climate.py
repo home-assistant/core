@@ -17,8 +17,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -89,7 +88,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_current_temperature = None
         self._attr_target_temperature = None
         self._attr_temperature_unit = (
-            TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
+            UnitOfTemperature.FAHRENHEIT
+            if self._unit == "F"
+            else UnitOfTemperature.CELSIUS
         )
         self._attr_precision = (
             PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE

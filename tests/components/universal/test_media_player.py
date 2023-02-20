@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
@@ -277,7 +277,7 @@ def config_children_and_attr(mock_states):
     }
 
 
-async def test_config_children_only(hass):
+async def test_config_children_only(hass: HomeAssistant) -> None:
     """Check config with only children."""
     config_start = copy(CONFIG_CHILDREN_ONLY)
     del config_start["platform"]
@@ -288,7 +288,9 @@ async def test_config_children_only(hass):
     assert config_start == config
 
 
-async def test_config_children_and_attr(hass, config_children_and_attr):
+async def test_config_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr
+) -> None:
     """Check config with children and attributes."""
     config_start = copy(config_children_and_attr)
     del config_start["platform"]
@@ -298,7 +300,7 @@ async def test_config_children_and_attr(hass, config_children_and_attr):
     assert config_start == config
 
 
-async def test_config_no_name(hass):
+async def test_config_no_name(hass: HomeAssistant) -> None:
     """Check config with no Name entry."""
     response = True
     try:
@@ -308,7 +310,7 @@ async def test_config_no_name(hass):
     assert not response
 
 
-async def test_config_bad_children(hass):
+async def test_config_bad_children(hass: HomeAssistant) -> None:
     """Check config with bad children entry."""
     config_no_children = {"name": "test", "platform": "universal"}
     config_bad_children = {"name": "test", "children": {}, "platform": "universal"}
@@ -320,7 +322,7 @@ async def test_config_bad_children(hass):
     assert [] == config_bad_children["children"]
 
 
-async def test_config_bad_commands(hass):
+async def test_config_bad_commands(hass: HomeAssistant) -> None:
     """Check config with bad commands entry."""
     config = {"name": "test", "platform": "universal"}
 
@@ -328,7 +330,7 @@ async def test_config_bad_commands(hass):
     assert {} == config["commands"]
 
 
-async def test_config_bad_attributes(hass):
+async def test_config_bad_attributes(hass: HomeAssistant) -> None:
     """Check config with bad attributes."""
     config = {"name": "test", "platform": "universal"}
 
@@ -336,7 +338,7 @@ async def test_config_bad_attributes(hass):
     assert {} == config["attributes"]
 
 
-async def test_config_bad_key(hass):
+async def test_config_bad_key(hass: HomeAssistant) -> None:
     """Check config with bad key."""
     config = {"name": "test", "asdf": 5, "platform": "universal"}
 
@@ -344,7 +346,7 @@ async def test_config_bad_key(hass):
     assert "asdf" not in config
 
 
-async def test_platform_setup(hass):
+async def test_platform_setup(hass: HomeAssistant) -> None:
     """Test platform setup."""
     config = {"name": "test", "platform": "universal"}
     bad_config = {"platform": "universal"}
@@ -370,7 +372,7 @@ async def test_platform_setup(hass):
     assert entities[0].name == "test"
 
 
-async def test_master_state(hass):
+async def test_master_state(hass: HomeAssistant) -> None:
     """Test master state property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -379,7 +381,9 @@ async def test_master_state(hass):
     assert ump.master_state is None
 
 
-async def test_master_state_with_attrs(hass, config_children_and_attr, mock_states):
+async def test_master_state_with_attrs(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test master state property."""
     config = validate_config(config_children_and_attr)
 
@@ -390,7 +394,9 @@ async def test_master_state_with_attrs(hass, config_children_and_attr, mock_stat
     assert ump.master_state == STATE_ON
 
 
-async def test_master_state_with_bad_attrs(hass, config_children_and_attr):
+async def test_master_state_with_bad_attrs(
+    hass: HomeAssistant, config_children_and_attr
+) -> None:
     """Test master state property."""
     config = copy(config_children_and_attr)
     config["attributes"]["state"] = "bad.entity_id"
@@ -401,7 +407,7 @@ async def test_master_state_with_bad_attrs(hass, config_children_and_attr):
     assert ump.master_state == STATE_OFF
 
 
-async def test_active_child_state(hass, mock_states):
+async def test_active_child_state(hass: HomeAssistant, mock_states) -> None:
     """Test active child state property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -442,7 +448,7 @@ async def test_active_child_state(hass, mock_states):
     assert mock_states.mock_mp_2.entity_id == ump._child_state.entity_id
 
 
-async def test_name(hass):
+async def test_name(hass: HomeAssistant) -> None:
     """Test name property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -451,7 +457,7 @@ async def test_name(hass):
     assert config["name"] == ump.name
 
 
-async def test_polling(hass):
+async def test_polling(hass: HomeAssistant) -> None:
     """Test should_poll property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -460,7 +466,7 @@ async def test_polling(hass):
     assert ump.should_poll is False
 
 
-async def test_state_children_only(hass, mock_states):
+async def test_state_children_only(hass: HomeAssistant, mock_states) -> None:
     """Test media player state with only children."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -478,8 +484,8 @@ async def test_state_children_only(hass, mock_states):
 
 
 async def test_state_with_children_and_attrs(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test media player with children and master state."""
     config = validate_config(config_children_and_attr)
 
@@ -504,7 +510,7 @@ async def test_state_with_children_and_attrs(
     assert ump.state == STATE_OFF
 
 
-async def test_volume_level(hass, mock_states):
+async def test_volume_level(hass: HomeAssistant, mock_states) -> None:
     """Test volume level property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -527,7 +533,7 @@ async def test_volume_level(hass, mock_states):
     assert ump.volume_level == 1
 
 
-async def test_media_image_url(hass, mock_states):
+async def test_media_image_url(hass: HomeAssistant, mock_states) -> None:
     """Test media_image_url property."""
     test_url = "test_url"
     config = validate_config(CONFIG_CHILDREN_ONLY)
@@ -548,7 +554,7 @@ async def test_media_image_url(hass, mock_states):
     assert mock_states.mock_mp_1.entity_picture == ump.entity_picture
 
 
-async def test_is_volume_muted_children_only(hass, mock_states):
+async def test_is_volume_muted_children_only(hass: HomeAssistant, mock_states) -> None:
     """Test is volume muted property w/ children only."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -572,8 +578,8 @@ async def test_is_volume_muted_children_only(hass, mock_states):
 
 
 async def test_sound_mode_list_children_and_attr(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test sound mode list property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
@@ -588,8 +594,8 @@ async def test_sound_mode_list_children_and_attr(
 
 
 async def test_source_list_children_and_attr(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test source list property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
@@ -602,8 +608,8 @@ async def test_source_list_children_and_attr(
 
 
 async def test_sound_mode_children_and_attr(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test sound modeproperty w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
@@ -615,7 +621,9 @@ async def test_sound_mode_children_and_attr(
     assert ump.sound_mode == "movie"
 
 
-async def test_source_children_and_attr(hass, config_children_and_attr, mock_states):
+async def test_source_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test source property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
@@ -628,8 +636,8 @@ async def test_source_children_and_attr(hass, config_children_and_attr, mock_sta
 
 
 async def test_volume_level_children_and_attr(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test volume level property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
@@ -642,8 +650,8 @@ async def test_volume_level_children_and_attr(
 
 
 async def test_is_volume_muted_children_and_attr(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test is volume muted property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
@@ -655,7 +663,9 @@ async def test_is_volume_muted_children_and_attr(
     assert ump.is_volume_muted
 
 
-async def test_supported_features_children_only(hass, mock_states):
+async def test_supported_features_children_only(
+    hass: HomeAssistant, mock_states
+) -> None:
     """Test supported media commands with only children."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -674,8 +684,8 @@ async def test_supported_features_children_only(hass, mock_states):
 
 
 async def test_supported_features_children_and_cmds(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test supported media commands with children and attrs."""
     config = copy(config_children_and_attr)
     excmd = {"service": "media_player.test", "data": {}}
@@ -732,7 +742,7 @@ async def test_supported_features_children_and_cmds(
     assert check_flags == ump.supported_features
 
 
-async def test_overrides(hass, config_children_and_attr):
+async def test_overrides(hass: HomeAssistant, config_children_and_attr) -> None:
     """Test overrides."""
     config = copy(config_children_and_attr)
     excmd = {"service": "test.override", "data": {}}
@@ -908,8 +918,8 @@ async def test_overrides(hass, config_children_and_attr):
 
 
 async def test_supported_features_play_pause(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test supported media commands with play_pause function."""
     config = copy(config_children_and_attr)
     excmd = {"service": "media_player.test", "data": {"entity_id": "test"}}
@@ -931,8 +941,8 @@ async def test_supported_features_play_pause(
 
 
 async def test_service_call_no_active_child(
-    hass, config_children_and_attr, mock_states
-):
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
     """Test a service call to children with no active child."""
     config = validate_config(config_children_and_attr)
 
@@ -952,7 +962,7 @@ async def test_service_call_no_active_child(
     assert len(mock_states.mock_mp_2.service_calls["turn_off"]) == 0
 
 
-async def test_service_call_to_child(hass, mock_states):
+async def test_service_call_to_child(hass: HomeAssistant, mock_states) -> None:
     """Test service calls that should be routed to a child."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
@@ -1027,7 +1037,7 @@ async def test_service_call_to_child(hass, mock_states):
     assert len(mock_states.mock_mp_2.service_calls["turn_off"]) == 2
 
 
-async def test_service_call_to_command(hass, mock_states):
+async def test_service_call_to_command(hass: HomeAssistant, mock_states) -> None:
     """Test service call to command."""
     config = copy(CONFIG_CHILDREN_ONLY)
     config["commands"] = {"turn_off": {"service": "test.turn_off", "data": {}}}
@@ -1048,7 +1058,7 @@ async def test_service_call_to_command(hass, mock_states):
     assert len(service) == 1
 
 
-async def test_state_template(hass):
+async def test_state_template(hass: HomeAssistant) -> None:
     """Test with a simple valid state template."""
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
@@ -1074,7 +1084,7 @@ async def test_state_template(hass):
     assert hass.states.get("media_player.tv").state == STATE_OFF
 
 
-async def test_device_class(hass):
+async def test_device_class(hass: HomeAssistant) -> None:
     """Test device_class property."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1093,7 +1103,7 @@ async def test_device_class(hass):
     assert hass.states.get("media_player.tv").attributes["device_class"] == "tv"
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id property."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1113,7 +1123,7 @@ async def test_unique_id(hass):
     assert er.async_get("media_player.tv").unique_id == "universal_master_bed_tv"
 
 
-async def test_invalid_state_template(hass):
+async def test_invalid_state_template(hass: HomeAssistant) -> None:
     """Test invalid state template sets state to None."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1139,7 +1149,7 @@ async def test_invalid_state_template(hass):
     assert hass.states.get("media_player.tv").state == STATE_UNKNOWN
 
 
-async def test_master_state_with_template(hass):
+async def test_master_state_with_template(hass: HomeAssistant) -> None:
     """Test the state_template option."""
     hass.states.async_set("input_boolean.test", STATE_OFF)
     hass.states.async_set("media_player.mock1", STATE_OFF)
@@ -1182,7 +1192,7 @@ async def test_master_state_with_template(hass):
     assert events[0].context == context
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test reloading the media player from yaml."""
     hass.states.async_set("input_boolean.test", STATE_OFF)
     hass.states.async_set("media_player.mock1", STATE_OFF)

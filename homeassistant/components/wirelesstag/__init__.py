@@ -12,9 +12,9 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -118,8 +118,7 @@ class WirelessTagPlatform:
                             )
                 except Exception as ex:  # pylint: disable=broad-except
                     _LOGGER.error(
-                        "Unable to handle tag update:\
-                                %s error: %s",
+                        "Unable to handle tag update: %s error: %s",
                         str(tag),
                         str(ex),
                     )
@@ -213,8 +212,14 @@ class WirelessTagBaseSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
-            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{ELECTRIC_POTENTIAL_VOLT}",
-            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
+            ATTR_VOLTAGE: (
+                f"{self._tag.battery_volts:.2f}{UnitOfElectricPotential.VOLT}"
+            ),
+            ATTR_TAG_SIGNAL_STRENGTH: (
+                f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}"
+            ),
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{PERCENTAGE}",
+            ATTR_TAG_POWER_CONSUMPTION: (
+                f"{self._tag.power_consumption:.2f}{PERCENTAGE}"
+            ),
         }

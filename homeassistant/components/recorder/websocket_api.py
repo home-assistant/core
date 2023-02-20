@@ -1,9 +1,9 @@
 """The Recorder websocket API."""
 from __future__ import annotations
 
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
 import logging
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import voluptuous as vol
 
@@ -15,17 +15,23 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
 from .const import MAX_QUEUE_BACKLOG
+from .models import StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
@@ -36,9 +42,33 @@ from .statistics import (
     statistics_during_period,
     validate_statistics,
 )
-from .util import async_migration_in_progress, async_migration_is_live, get_instance
+from .util import (
+    PERIOD_SCHEMA,
+    async_migration_in_progress,
+    async_migration_is_live,
+    get_instance,
+    resolve_period,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+UNIT_SCHEMA = vol.Schema(
+    {
+        vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
+        vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
+        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
+        vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+        vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
+        vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
+        vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
+        vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
+        vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
+    }
+)
 
 
 @callback
@@ -82,40 +112,12 @@ def _ws_get_statistic_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
-        vol.Exclusive("calendar", "period"): vol.Schema(
-            {
-                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
-                vol.Optional("offset"): int,
-            }
-        ),
-        vol.Exclusive("fixed_period", "period"): vol.Schema(
-            {
-                vol.Optional("start_time"): str,
-                vol.Optional("end_time"): str,
-            }
-        ),
-        vol.Exclusive("rolling_window", "period"): vol.Schema(
-            {
-                vol.Required("duration"): cv.time_period_dict,
-                vol.Optional("offset"): cv.time_period_dict,
-            }
-        ),
-        vol.Optional("statistic_id"): str,
+        vol.Required("statistic_id"): str,
         vol.Optional("types"): vol.All(
             [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
         ),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
+        **PERIOD_SCHEMA.schema,
     }
 )
 @websocket_api.async_response
@@ -128,67 +130,7 @@ async def ws_get_statistic_during_period(
     if "offset" in msg and "duration" not in msg:
         raise HomeAssistantError
 
-    start_time = None
-    end_time = None
-
-    if "calendar" in msg:
-        calendar_period = msg["calendar"]["period"]
-        start_of_day = dt_util.start_of_local_day()
-        offset = msg["calendar"].get("offset", 0)
-        if calendar_period == "hour":
-            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
-            start_time += timedelta(hours=offset)
-            end_time = start_time + timedelta(hours=1)
-        elif calendar_period == "day":
-            start_time = start_of_day
-            start_time += timedelta(days=offset)
-            end_time = start_time + timedelta(days=1)
-        elif calendar_period == "week":
-            start_time = start_of_day - timedelta(days=start_of_day.weekday())
-            start_time += timedelta(days=offset * 7)
-            end_time = start_time + timedelta(weeks=1)
-        elif calendar_period == "month":
-            start_time = start_of_day.replace(day=28)
-            # This works for up to 48 months of offset
-            start_time = (start_time + timedelta(days=offset * 31)).replace(day=1)
-            end_time = (start_time + timedelta(days=31)).replace(day=1)
-        else:  # calendar_period = "year"
-            start_time = start_of_day.replace(month=12, day=31)
-            # This works for 100+ years of offset
-            start_time = (start_time + timedelta(days=offset * 366)).replace(
-                month=1, day=1
-            )
-            end_time = (start_time + timedelta(days=365)).replace(day=1)
-
-        start_time = dt_util.as_utc(start_time)
-        end_time = dt_util.as_utc(end_time)
-
-    elif "fixed_period" in msg:
-        if start_time_str := msg["fixed_period"].get("start_time"):
-            if start_time := dt_util.parse_datetime(start_time_str):
-                start_time = dt_util.as_utc(start_time)
-            else:
-                connection.send_error(
-                    msg["id"], "invalid_start_time", "Invalid start_time"
-                )
-                return
-
-        if end_time_str := msg["fixed_period"].get("end_time"):
-            if end_time := dt_util.parse_datetime(end_time_str):
-                end_time = dt_util.as_utc(end_time)
-            else:
-                connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
-                return
-
-    elif "rolling_window" in msg:
-        duration = msg["rolling_window"]["duration"]
-        now = dt_util.utcnow()
-        start_time = now - duration
-        end_time = start_time + duration
-
-        if offset := msg["rolling_window"].get("offset"):
-            start_time += offset
-            end_time += offset
+    start_time, end_time = resolve_period(cast(StatisticPeriod, msg))
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
@@ -197,7 +139,7 @@ async def ws_get_statistic_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_id"),
+            msg["statistic_id"],
             msg.get("types"),
             msg.get("units"),
         )
@@ -227,11 +169,11 @@ def _ws_get_statistics_during_period(
     for statistic_id in result:
         for item in result[statistic_id]:
             if (start := item.get("start")) is not None:
-                item["start"] = int(start.timestamp() * 1000)
+                item["start"] = int(start * 1000)
             if (end := item.get("end")) is not None:
-                item["end"] = int(end.timestamp() * 1000)
+                item["end"] = int(end * 1000)
             if (last_reset := item.get("last_reset")) is not None:
-                item["last_reset"] = int(last_reset.timestamp() * 1000)
+                item["last_reset"] = int(last_reset * 1000)
     return JSON_DUMP(messages.result_message(msg_id, result))
 
 
@@ -266,7 +208,7 @@ async def ws_handle_get_statistics_during_period(
             msg["id"],
             start_time,
             end_time,
-            msg.get("statistic_ids"),
+            msg["statistic_ids"],
             msg.get("period"),
             msg.get("units"),
             types,
@@ -279,20 +221,9 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("type"): "recorder/statistics_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("statistic_ids"): [str],
+        vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
         vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
-        vol.Optional("units"): vol.Schema(
-            {
-                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
-                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
-                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
-                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
-                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
-                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
-            }
-        ),
+        vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
             [vol.Any("last_reset", "max", "mean", "min", "state", "sum")],
             vol.Coerce(set),
@@ -312,7 +243,10 @@ def _ws_get_list_statistic_ids(
     msg_id: int,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> str:
-    """Fetch a list of available statistic_id and convert them to json in the executor."""
+    """Fetch a list of available statistic_id and convert them to JSON.
+
+    Runs in the executor.
+    """
     return JSON_DUMP(
         messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
     )

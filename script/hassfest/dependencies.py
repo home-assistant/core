@@ -7,19 +7,19 @@ from pathlib import Path
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
-from .model import Integration
+from .model import Config, Integration
 
 
 class ImportCollector(ast.NodeVisitor):
     """Collect all integrations referenced."""
 
-    def __init__(self, integration: Integration):
+    def __init__(self, integration: Integration) -> None:
         """Initialize the import collector."""
         self.integration = integration
         self.referenced: dict[Path, set[str]] = {}
 
         # Current file or dir we're inspecting
-        self._cur_fil_dir = None
+        self._cur_fil_dir: Path | None = None
 
     def collect(self) -> None:
         """Collect imports from a source file."""
@@ -32,11 +32,12 @@ class ImportCollector(ast.NodeVisitor):
             self.visit(ast.parse(fil.read_text()))
             self._cur_fil_dir = None
 
-    def _add_reference(self, reference_domain: str):
+    def _add_reference(self, reference_domain: str) -> None:
         """Add a reference."""
+        assert self._cur_fil_dir
         self.referenced[self._cur_fil_dir].add(reference_domain)
 
-    def visit_ImportFrom(self, node):
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Visit ImportFrom node."""
         if node.module is None:
             return
@@ -59,14 +60,14 @@ class ImportCollector(ast.NodeVisitor):
             for name_node in node.names:
                 self._add_reference(name_node.name)
 
-    def visit_Import(self, node):
+    def visit_Import(self, node: ast.Import) -> None:
         """Visit Import node."""
         # import homeassistant.components.hue as hue
         for name_node in node.names:
             if name_node.name.startswith("homeassistant.components."):
                 self._add_reference(name_node.name.split(".")[2])
 
-    def visit_Attribute(self, node):
+    def visit_Attribute(self, node: ast.Attribute) -> None:
         """Visit Attribute node."""
         # hass.components.hue.async_create()
         # Name(id=hass)
@@ -156,15 +157,22 @@ IGNORE_VIOLATIONS = {
 
 def calc_allowed_references(integration: Integration) -> set[str]:
     """Return a set of allowed references."""
+    manifest = integration.manifest
     allowed_references = (
         ALLOWED_USED_COMPONENTS
-        | set(integration.manifest.get("dependencies", []))
-        | set(integration.manifest.get("after_dependencies", []))
+        | set(manifest.get("dependencies", []))
+        | set(manifest.get("after_dependencies", []))
     )
+    # bluetooth_adapters is a wrapper to ensure
+    # that all the integrations that provide bluetooth
+    # adapters are setup before loading integrations
+    # that use them.
+    if "bluetooth_adapters" in allowed_references:
+        allowed_references.add("bluetooth")
 
     # Discovery requirements are ok if referenced in manifest
     for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
-        if any(check in integration.manifest for check in to_check):
+        if any(check in manifest for check in to_check):
             allowed_references.add(check_domain)
 
     return allowed_references
@@ -174,8 +182,8 @@ def find_non_referenced_integrations(
     integrations: dict[str, Integration],
     integration: Integration,
     references: dict[Path, set[str]],
-):
-    """Find intergrations that are not allowed to be referenced."""
+) -> set[str]:
+    """Find integrations that are not allowed to be referenced."""
     allowed_references = calc_allowed_references(integration)
     referenced = set()
     for path, refs in references.items():
@@ -219,8 +227,9 @@ def find_non_referenced_integrations(
 
 
 def validate_dependencies(
-    integrations: dict[str, Integration], integration: Integration
-):
+    integrations: dict[str, Integration],
+    integration: Integration,
+) -> None:
     """Validate all dependencies."""
     # Some integrations are allowed to have violations.
     if integration.domain in IGNORE_VIOLATIONS:
@@ -242,13 +251,10 @@ def validate_dependencies(
         )
 
 
-def validate(integrations: dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle dependencies for integrations."""
     # check for non-existing dependencies
     for integration in integrations.values():
-        if not integration.manifest:
-            continue
-
         validate_dependencies(integrations, integration)
 
         if config.specific_integrations:

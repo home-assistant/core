@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import sensor
 from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -30,7 +31,6 @@ class MockUser:
 
     def get_image(self):
         """Get mock image."""
-        pass
 
     def get_recent_tracks(self, limit):
         """Get mock recent tracks."""
@@ -52,7 +52,7 @@ def lastfm_network_fixture():
         yield lastfm_network
 
 
-async def test_update_not_playing(hass, lastfm_network):
+async def test_update_not_playing(hass: HomeAssistant, lastfm_network) -> None:
     """Test update when no playing song."""
 
     lastfm_network.return_value.get_user.return_value = MockUser(None)
@@ -71,7 +71,7 @@ async def test_update_not_playing(hass, lastfm_network):
     assert state.state == STATE_NOT_SCROBBLING
 
 
-async def test_update_playing(hass, lastfm_network):
+async def test_update_playing(hass: HomeAssistant, lastfm_network) -> None:
     """Test update when song playing."""
 
     lastfm_network.return_value.get_user.return_value = MockUser(

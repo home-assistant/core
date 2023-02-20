@@ -4,12 +4,13 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from homeassistant.components.sensor import RestoreSensor
+from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.enum import try_parse_enum
 
 from .base import ONVIFBaseEntity
 from .const import DOMAIN
@@ -54,18 +55,24 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
 
     _attr_should_poll = False
 
-    def __init__(self, uid, device: ONVIFDevice, entry: er.RegistryEntry | None = None):
+    def __init__(
+        self, uid, device: ONVIFDevice, entry: er.RegistryEntry | None = None
+    ) -> None:
         """Initialize the ONVIF binary sensor."""
         self._attr_unique_id = uid
         if entry is not None:
-            self._attr_device_class = entry.original_device_class
+            self._attr_device_class = try_parse_enum(
+                SensorDeviceClass, entry.original_device_class
+            )
             self._attr_entity_category = entry.entity_category
             self._attr_name = entry.name
             self._attr_native_unit_of_measurement = entry.unit_of_measurement
         else:
             event = device.events.get_uid(uid)
             assert event
-            self._attr_device_class = event.device_class
+            self._attr_device_class = try_parse_enum(
+                SensorDeviceClass, event.device_class
+            )
             self._attr_entity_category = event.entity_category
             self._attr_entity_registry_enabled_default = event.entity_enabled
             self._attr_name = f"{device.name} {event.name}"

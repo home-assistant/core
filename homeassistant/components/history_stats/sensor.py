@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_TYPE,
     PERCENTAGE,
     TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady

@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DOMAIN, ZHA_HW_DISCOVERY_DATA
 
 
 class HomeAssistantYellowConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -44,3 +44,19 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
             baudrate="115200",
             flow_control=True,
         )
+
+    async def _async_zha_physical_discovery(self) -> dict[str, Any]:
+        """Return ZHA discovery data when multiprotocol FW is not used.
+
+        Passed to ZHA do determine if the ZHA config entry is connected to the radio
+        being migrated.
+        """
+        return {"hw": ZHA_HW_DISCOVERY_DATA}
+
+    def _zha_name(self) -> str:
+        """Return the ZHA name."""
+        return "Yellow Multi-PAN"
+
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
+        return "Home Assistant Yellow"

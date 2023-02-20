@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime as dt
 import json
 from typing import Any, cast
 
@@ -10,6 +9,7 @@ from sqlalchemy.engine.row import Row
 
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
+import homeassistant.util.dt as dt_util
 
 
 class LazyEventPartialState:
@@ -66,7 +66,7 @@ class EventAsRow:
     data: dict[str, Any]
     context: Context
     context_id: str
-    time_fired: dt
+    time_fired_ts: float
     state_id: int
     event_data: str | None = None
     old_format_icon: None = None
@@ -82,7 +82,7 @@ class EventAsRow:
 
 
 @callback
-def async_event_to_row(event: Event) -> EventAsRow | None:
+def async_event_to_row(event: Event) -> EventAsRow:
     """Convert an event to a row."""
     if event.event_type != EVENT_STATE_CHANGED:
         return EventAsRow(
@@ -92,7 +92,7 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
-            time_fired=event.time_fired,
+            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             state_id=hash(event),
         )
     # States are prefiltered so we never get states
@@ -107,7 +107,7 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
         context_id=new_state.context.id,
         context_user_id=new_state.context.user_id,
         context_parent_id=new_state.context.parent_id,
-        time_fired=new_state.last_updated,
+        time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
         state_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),
     )
