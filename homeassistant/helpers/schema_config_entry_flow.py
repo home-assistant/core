@@ -149,7 +149,7 @@ class SchemaCommonFlowHandler:
             and not self._handler.show_advanced_options
         ):
             # Add advanced field default if not set
-            for key in data_schema.schema.keys():
+            for key in data_schema.schema:
                 if isinstance(key, (vol.Optional, vol.Required)):
                     if (
                         key.description

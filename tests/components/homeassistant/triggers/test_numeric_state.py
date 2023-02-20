@@ -510,7 +510,7 @@ async def test_if_not_above_fires_on_entity_change_to_equal(hass, calls, above):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (5, 10),
         (5, "input_number.value_10"),
@@ -545,7 +545,7 @@ async def test_if_fires_on_entity_change_below_range(hass, calls, above, below):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (5, 10),
         (5, "input_number.value_10"),
@@ -577,7 +577,7 @@ async def test_if_fires_on_entity_change_below_above_range(hass, calls, above, b
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (5, 10),
         (5, "input_number.value_10"),
@@ -613,7 +613,7 @@ async def test_if_fires_on_entity_change_over_to_below_range(hass, calls, above,
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (5, 10),
         (5, "input_number.value_10"),
@@ -983,7 +983,7 @@ async def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(hass, 
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1031,7 +1031,7 @@ async def test_if_action(hass, calls, above, below):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1087,7 +1087,7 @@ async def test_if_fails_setup_for_without_above_below(hass, calls):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1124,7 +1124,7 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls, above, below)
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1182,7 +1182,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1231,7 +1231,7 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1310,7 +1310,7 @@ async def test_wait_template_with_trigger(hass, calls, above):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1366,7 +1366,7 @@ async def test_if_fires_on_entities_change_no_overlap(hass, calls, above, below)
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1433,7 +1433,7 @@ async def test_if_fires_on_entities_change_overlap(hass, calls, above, below):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1472,7 +1472,7 @@ async def test_if_fires_on_change_with_for_template_1(hass, calls, above, below)
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1511,7 +1511,7 @@ async def test_if_fires_on_change_with_for_template_2(hass, calls, above, below)
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1586,7 +1586,7 @@ async def test_if_not_fires_on_error_with_for_template(hass, calls):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1623,7 +1623,7 @@ async def test_invalid_for_template(hass, calls, above, below):
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     (
         (8, 12),
         (8, "input_number.value_12"),
@@ -1791,7 +1791,7 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
 
 
 @pytest.mark.parametrize(
-    "above, below",
+    ("above", "below"),
     ((8, 12),),
 )
 async def test_variables_priority(hass, calls, above, below):

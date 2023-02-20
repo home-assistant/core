@@ -146,7 +146,7 @@ def test_parse_datetime_returns_none_for_incorrect_format() -> None:
 
 
 @pytest.mark.parametrize(
-    "duration_string,expected_result",
+    ("duration_string", "expected_result"),
     [
         ("PT10M", timedelta(minutes=10)),
         ("PT0S", timedelta(0)),
@@ -316,7 +316,7 @@ def test_find_next_time_expression_time_dst() -> None:
 
 # DST begins on 2021.03.28 2:00, clocks were turned forward 1h; 2:00-3:00 time does not exist
 @pytest.mark.parametrize(
-    "now_dt, expected_dt",
+    ("now_dt", "expected_dt"),
     [
         # 00:00 -> 2:30
         (
@@ -345,7 +345,7 @@ def test_find_next_time_expression_entering_dst(now_dt, expected_dt):
 
 # DST ends on 2021.10.31 2:00, clocks were turned backward 1h; 2:00-3:00 time is ambiguous
 @pytest.mark.parametrize(
-    "now_dt, expected_dt",
+    ("now_dt", "expected_dt"),
     [
         # 00:00 -> 2:30
         (
@@ -724,7 +724,7 @@ def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_
     )
     assert next_time == datetime(2021, 3, 15, 2, 30, 10, tzinfo=tz)
     prev_target = next_time
-    for i in range(1000):
+    for _ in range(1000):
         next_target = dt_util.find_next_time_expression_time(
             prev_target.replace(microsecond=999999) + timedelta(seconds=1),
             matching_seconds,

@@ -63,7 +63,7 @@ def test_convert_nonnumeric_value() -> None:
 
 
 @pytest.mark.parametrize(
-    "from_value, from_unit, expected, to_unit",
+    ("from_value", "from_unit", "expected", "to_unit"),
     [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.10686, UnitOfSpeed.MILES_PER_HOUR),
