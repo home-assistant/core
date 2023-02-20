@@ -47,7 +47,6 @@ async def test_climate_hvac_mode(
     monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     await init_integration(hass, 1, sleep_period=1000, model="SHTRV-01")
 
-
     # Make device online
     mock_block_device.mock_update()
     await hass.async_block_till_done()
