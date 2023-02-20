@@ -39,7 +39,7 @@ class ReisingerCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch devicedatas from intellidrive device."""
 
-        data = await self._device.async_update_state()
+        data = await self._device.async_get_door_state()
         if data is None:
             raise UpdateFailed("Unable to connect to Intellidrive device")
         return data

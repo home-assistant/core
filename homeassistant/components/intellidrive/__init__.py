@@ -6,6 +6,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import ReisingerCoordinator
@@ -27,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     #  3. Store an API object for your platforms to access
 
     device_api = ReisingerSlidingDoorDeviceApi(
-        str(entry.data.get("host")), str(entry.data.get("token"))
+        str(entry.data.get("host")),
+        str(entry.data.get("token")),
+        async_get_clientsession(hass),
     )
 
     if not await device_api.authenticate():
@@ -36,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = ReisingerCoordinator(hass, entry, device_api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

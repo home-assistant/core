@@ -1,28 +1,33 @@
 """Config flow for Intellidrive integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
+import aiohttp
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 # move to pypi
-from .device import ReisingerSlidingDoorDevice
+from .device import ReisingerSlidingDoorDeviceApi
 
 _LOGGER = logging.getLogger(__name__)
 
 # adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("token"): str,
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_TOKEN): str,
     }
 )
 
@@ -40,18 +45,34 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = ReisingerSlidingDoorDevice(data["host"], data["token"])
+    api_token = "None"
+    if data.get(CONF_TOKEN) is not None:
+        api_token = data[CONF_TOKEN]
 
-    if not await hub.authenticate():
+    hub = ReisingerSlidingDoorDeviceApi(
+        data[CONF_HOST], api_token, async_get_clientsession(hass)
+    )
+
+    try:
+        result = await hub.authenticate()
+    except web.HTTPUnauthorized as err:
+        raise InvalidAuth from err
+    except asyncio.TimeoutError as err:
+        raise CannotConnect from err
+    except aiohttp.ClientError as err:
+        raise CannotConnect from err
+
+    if result is False:
         raise InvalidAuth
 
+    await hub.async_get_door_state()
     # If you cannot connect:
     # throw CannotConnect
     # If the authentication is wrong:
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": "Intellidrive "}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

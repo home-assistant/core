@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from aiohttp import web
 import async_timeout
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,10 +27,19 @@ class ReisingerSlidingDoorDeviceApi:
 
             async def _create_session():
                 _LOGGER.error("Creating session")
-                return aiohttp.ClientSession()
+                if token == "None":
+                    return aiohttp.ClientSession()
 
-            loop = asyncio.get_event_loop()
-            self.websession = loop.run_until_complete(_create_session())
+                return aiohttp.ClientSession(headers={"Authorization": token})
+
+            # loop = asyncio.get_event_loop()
+            # self.websession = loop.run_until_complete(_create_session())
+            if token == "None":
+                self.websession = aiohttp.ClientSession()
+            else:
+                self.websession = aiohttp.ClientSession(
+                    headers={"Authorization": token}
+                )
         else:
             self.websession = websession
 
@@ -75,14 +85,8 @@ class ReisingerSlidingDoorDeviceApi:
         """
         return False
 
-    async def authenticate(self) -> bool:
-        """Test if we can authenticate with the host."""
-
-        authenticated = await self._execute("system/authenticate")
-        return authenticated
-
-    async def async_update_state(self) -> dict[str, Any]:
-        """Update the door: Retrieves the device vcalues.
+    async def async_get_door_state(self) -> dict[str, Any]:
+        """Update the door: Retrieves the device values.
 
         :return: Datas from device.
         """
@@ -90,12 +94,35 @@ class ReisingerSlidingDoorDeviceApi:
 
         # return cast(dict[str, Any], self._retrievedData.dict())
 
+    async def authenticate(self) -> bool:
+        """Test if we can authenticate with the host.
+
+        :return: True if everything is fine, web.HTTPUnauthorized if 401, asyncio.TimeoutError and aiohttp.ClientError if not found
+        """
+
+        try:
+            authenticated = await self._execute("door/state")
+            if authenticated is None:
+                return False
+            return True
+        except web.HTTPUnauthorized:
+            return False
+        except asyncio.TimeoutError as err:
+            raise asyncio.TimeoutError from err
+        except aiohttp.ClientError as err:
+            raise aiohttp.ClientError from err
+
+        return authenticated
+
     async def _execute(self, command, retry=2):
         """Execute command."""
-        url = f"{self._host}/{command}"
+        url = f"http://{self._host}/{command}"
         try:
             async with async_timeout.timeout(self._timeout):
                 resp = await self.websession.get(url)
+            if resp.status == 401:
+                _LOGGER.error("Authorization failed: %s", resp.status)
+                raise web.HTTPUnauthorized
             if resp.status != 200:
                 _LOGGER.error(
                     "Error connecting to Reisinger Drive, resp code: %s", resp.status
