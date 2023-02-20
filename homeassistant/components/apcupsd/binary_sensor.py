@@ -24,11 +24,6 @@ _DESCRIPTION = BinarySensorEntityDescription(
 _VALUE_ONLINE: Final = 8
 
 
-def _is_online(statflag: str) -> bool:
-    """Check if online flag bit is set in STATFLAG."""
-    return int(statflag, 16) & _VALUE_ONLINE > 0
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -39,7 +34,7 @@ async def async_setup_entry(
 
     # Do not create the binary sensor if APCUPSd does not provide STATFLAG field for us
     # to determine the online status.
-    if coordinator.statflag is None:
+    if _DESCRIPTION.key.upper() not in coordinator.data:
         return
 
     async_add_entities(
@@ -70,4 +65,5 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the UPS online."""
         key = self.entity_description.key.upper()
-        return _is_online(self.coordinator.data[key])
+        # Check if _VALUE_ONLINE bit is set in STATFLAG.
+        return int(self.coordinator.data[key], 16) & _VALUE_ONLINE > 0

@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await coordinator.async_config_entry_first_refresh()
 
-    # Store the data service object.
+    # Store the coordinator for later uses.
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
@@ -116,8 +116,8 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
             model=self.model,
             manufacturer="APC",
             name=self.name if self.name is not None else "APC UPS",
-            hw_version=self.status.get("FIRMWARE"),
-            sw_version=self.status.get("VERSION"),
+            hw_version=self.data.get("FIRMWARE"),
+            sw_version=self.data.get("VERSION"),
         )
 
     async def _async_update_data(self) -> OrderedDict[str, str]:

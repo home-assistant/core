@@ -455,8 +455,8 @@ async def async_setup_entry(
     """Set up the APCUPSd sensors from config entries."""
     coordinator: APCUPSdCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # The resources from data service are in upper-case by default, but we use
-    # lower cases throughout this integration.
+    # The resource keys in the data dict collected in the coordinator is in upper-case
+    # by default, but we use lower cases throughout this integration.
     available_resources: set[str] = {k.lower() for k, _ in coordinator.data.items()}
 
     entities = []
