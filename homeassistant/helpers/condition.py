@@ -7,15 +7,13 @@ from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
-import logging
 import re
 import sys
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
 from homeassistant.components import zone as zone_cmp
-from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -55,6 +53,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
 )
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
@@ -73,11 +72,28 @@ from .trace import (
 )
 from .typing import ConfigType, TemplateVarsType
 
+if TYPE_CHECKING:
+    from homeassistant.components.device_automation.condition import (
+        DeviceAutomationConditionProtocol,
+    )
+
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
 
-_LOGGER = logging.getLogger(__name__)
+_PLATFORM_ALIASES = {
+    "and": None,
+    "device": "device_automation",
+    "not": None,
+    "numeric_state": None,
+    "or": None,
+    "state": None,
+    "sun": None,
+    "template": None,
+    "time": None,
+    "trigger": None,
+    "zone": None,
+}
 
 INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
@@ -152,6 +168,27 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
     return wrapper
 
 
+async def _async_get_condition_platform(
+    hass: HomeAssistant, config: ConfigType
+) -> DeviceAutomationConditionProtocol | None:
+    platform = config[CONF_CONDITION]
+    platform = _PLATFORM_ALIASES.get(platform, platform)
+    if platform is None:
+        return None
+    try:
+        integration = await async_get_integration(hass, platform)
+    except IntegrationNotFound:
+        raise HomeAssistantError(
+            f'Invalid condition "{platform}" specified {config}'
+        ) from None
+    try:
+        return integration.get_platform("condition")
+    except ImportError:
+        raise HomeAssistantError(
+            f"Integration '{platform}' does not provide condition support"
+        ) from None
+
+
 async def async_from_config(
     hass: HomeAssistant,
     config: ConfigType,
@@ -160,15 +197,18 @@ async def async_from_config(
 
     Should be run on the event loop.
     """
-    condition = config.get(CONF_CONDITION)
-    for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
-        factory = getattr(sys.modules[__name__], fmt.format(condition), None)
+    factory: Any = None
+    platform = await _async_get_condition_platform(hass, config)
 
-        if factory:
-            break
+    if platform is None:
+        condition = config.get(CONF_CONDITION)
+        for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
+            factory = getattr(sys.modules[__name__], fmt.format(condition), None)
 
-    if factory is None:
-        raise HomeAssistantError(f'Invalid condition "{condition}" specified {config}')
+            if factory:
+                break
+    else:
+        factory = platform.async_condition_from_config
 
     # Check if condition is not enabled
     if not config.get(CONF_ENABLED, True):
@@ -928,14 +968,6 @@ def zone_from_config(config: ConfigType) -> ConditionCheckerType:
     return if_in_zone
 
 
-async def async_device_from_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
-    """Test a device condition."""
-    checker = await device_condition.async_condition_from_config(hass, config)
-    return trace_condition_function(checker)
-
-
 async def async_trigger_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConditionCheckerType:
@@ -991,10 +1023,10 @@ async def async_validate_condition_config(
         config["conditions"] = conditions
         return config
 
-    if condition == "device":
-        return await device_condition.async_validate_condition_config(hass, config)
-
-    if condition in ("numeric_state", "state"):
+    platform = await _async_get_condition_platform(hass, config)
+    if platform is not None and hasattr(platform, "async_validate_condition_config"):
+        return await platform.async_validate_condition_config(hass, config)
+    if platform is None and condition in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],
             getattr(sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)),

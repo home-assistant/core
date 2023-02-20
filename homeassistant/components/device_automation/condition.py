@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.condition import trace_condition_function
 from homeassistant.helpers.typing import ConfigType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
@@ -62,4 +63,4 @@ async def async_condition_from_config(
     platform = await async_get_device_automation_platform(
         hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
     )
-    return platform.async_condition_from_config(hass, config)
+    return trace_condition_function(platform.async_condition_from_config(hass, config))
