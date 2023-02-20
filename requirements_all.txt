@@ -1494,7 +1494,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.1.0
+pyairnow==1.2.0
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
