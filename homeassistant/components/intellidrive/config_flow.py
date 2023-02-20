@@ -65,14 +65,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if result is False:
         raise InvalidAuth
 
-    await hub.async_get_door_state()
+    door_state_values = await hub.async_get_door_state()
     # If you cannot connect:
     # throw CannotConnect
     # If the authentication is wrong:
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Intellidrive "}
+    return {"title": "Intellidrive ", "serialnumber": door_state_values["serial"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -101,6 +101,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(info["serialnumber"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

@@ -18,6 +18,7 @@ class ReisingerCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Openreisinger data."""
 
     config_entry: ConfigEntry
+    device: ReisingerSlidingDoorDeviceApi
 
     def __init__(
         self,
@@ -26,7 +27,7 @@ class ReisingerCoordinator(DataUpdateCoordinator):
         device: ReisingerSlidingDoorDeviceApi,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
-        self._device = device
+        self.device = device
         self.config_entry = config_entry
 
         super().__init__(
@@ -39,7 +40,7 @@ class ReisingerCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch devicedatas from intellidrive device."""
 
-        data = await self._device.async_get_door_state()
+        data = await self.device.async_get_door_state()
         if data is None:
             raise UpdateFailed("Unable to connect to Intellidrive device")
         return data

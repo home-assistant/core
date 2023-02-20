@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,7 +30,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             SlidingDoorCoverEntity(
-                coordinator, str(entry.data.get("host")), str(entry.data.get("token"))
+                coordinator,
+                str(entry.data.get(CONF_HOST)),
+                str(entry.data.get(CONF_TOKEN)),
             )
         ]
     )

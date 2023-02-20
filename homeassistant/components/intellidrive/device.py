@@ -17,10 +17,11 @@ class ReisingerSlidingDoorDeviceApi:
     """The api object for communication with reisinger slidingdoor api."""
 
     _retrievedData: Any
+    host: str
 
     def __init__(self, host: str, token: str, websession=None, **kwargs) -> None:
         """Initialize the slidingdoor device."""
-        self._host = host
+        self.host = host
         self._token = token
         self._timeout = 500
         if websession is None:
@@ -116,7 +117,7 @@ class ReisingerSlidingDoorDeviceApi:
 
     async def _execute(self, command, retry=2):
         """Execute command."""
-        url = f"http://{self._host}/{command}"
+        url = f"http://{self.host}/{command}"
         try:
             async with async_timeout.timeout(self._timeout):
                 resp = await self.websession.get(url)
