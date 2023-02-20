@@ -31,7 +31,6 @@ import pytest
 import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
-import yaml
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -937,9 +936,9 @@ def mock_hass_config(
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of configuration.yaml.
 
-    Patches configuration files with the yaml dump of `hass_config` as content.
+    Patches homeassistant.config.load_yaml_config_file with `hass_config` parameterized as content.
     """
-    with patch_yaml_files({YAML_CONFIG_FILE: yaml.dump(hass_config)}):
+    with patch("homeassistant.config.load_yaml_config_file", return_value=hass_config):
         yield
 
 
