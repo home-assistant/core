@@ -28,8 +28,8 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
-from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.node.firmware import NodeFirmwareUpdateData
 
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
@@ -2893,12 +2893,17 @@ async def test_get_config_parameters(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("include_target"),
+    [(True), (False)],
+)
 async def test_firmware_upload_view(
     hass: HomeAssistant,
     multisensor_6,
     integration,
     hass_client: ClientSessionGenerator,
     firmware_file,
+    include_target,
 ) -> None:
     """Test the HTTP firmware upload view."""
     client = await hass_client()
@@ -2909,14 +2914,19 @@ async def test_firmware_upload_view(
         "homeassistant.components.zwave_js.api.USER_AGENT",
         {"HomeAssistant": "0.0.0"},
     ):
+        data = {"file": firmware_file}
+        if include_target:
+            data["target"] = "1"
+
         resp = await client.post(
-            f"/api/zwave_js/firmware/upload/{device.id}",
-            data={"file": firmware_file},
+            f"/api/zwave_js/firmware/upload/{device.id}", data=data
         )
-        assert mock_cmd.call_args[0][1:3] == (
-            multisensor_6,
-            [FirmwareUpdateData("file", bytes(10))],
-        )
+
+        update_data = NodeFirmwareUpdateData("file", bytes(10))
+        if include_target:
+            update_data.firmware_target = 1
+
+        assert mock_cmd.call_args[0][1:3] == (multisensor_6, [update_data])
         assert mock_cmd.call_args[1] == {
             "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
         }

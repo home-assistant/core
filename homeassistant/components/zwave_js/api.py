@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -35,11 +35,11 @@ from zwave_js_server.model.controller import (
     QRProvisioningInformation,
 )
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node, NodeStatistics
 from zwave_js_server.model.node.firmware import (
+    NodeFirmwareUpdateData,
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
@@ -2066,15 +2066,19 @@ class FirmwareUploadView(HomeAssistantView):
             raise web_exceptions.HTTPBadRequest
 
         uploaded_file: web_request.FileField = data["file"]
+        firmware_target: int | None = None
+        if "target" in data:
+            firmware_target = int(cast(str, data["target"]))
 
         try:
             await update_firmware(
                 node.client.ws_server_url,
                 node,
                 [
-                    FirmwareUpdateData(
+                    NodeFirmwareUpdateData(
                         uploaded_file.filename,
                         await hass.async_add_executor_job(uploaded_file.file.read),
+                        firmware_target=firmware_target,
                     )
                 ],
                 async_get_clientsession(hass),
