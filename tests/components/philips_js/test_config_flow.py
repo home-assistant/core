@@ -20,8 +20,8 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def mock_setup_entry_fixture():
+@pytest.fixture(autouse=True)
+def mock_setup_entry():
     """Disable component setup."""
     with patch(
         "homeassistant.components.philips_js.async_setup_entry", return_value=True

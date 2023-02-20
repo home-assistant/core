@@ -20,8 +20,8 @@ from homeassistant.helpers.config_validation import ensure_list
 from .const import MOCK_OWPROXY_DEVICES
 
 
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.onewire.async_setup_entry", return_value=True

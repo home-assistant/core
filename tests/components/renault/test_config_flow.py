@@ -1,4 +1,5 @@
 """Test the Renault config flow."""
+from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
@@ -22,8 +23,8 @@ from .const import MOCK_CONFIG
 from tests.common import load_fixture
 
 
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> AsyncMock:
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.renault.async_setup_entry", return_value=True

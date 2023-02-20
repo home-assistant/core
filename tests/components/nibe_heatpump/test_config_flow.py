@@ -32,8 +32,8 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-async def fixture_mock_setup():
+@pytest.fixture(autouse=True)
+async def mock_setup_entry():
     """Make sure we never actually run setup."""
     with patch(
         "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=True
