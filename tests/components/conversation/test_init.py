@@ -595,12 +595,18 @@ async def test_custom_sentences(
     # Expecting testing_config/custom_sentences/en/beer.yaml
     intent.async_register(hass, OrderBeerIntentHandler())
 
+    # Don't use "en" to test loading custom sentences with language variants.
+    language = "en-us"
+
     # Invoke intent via HTTP API
     client = await hass_client()
     for beer_style in ("stout", "lager"):
         resp = await client.post(
             "/api/conversation/process",
-            json={"text": f"I'd like to order a {beer_style}, please"},
+            json={
+                "text": f"I'd like to order a {beer_style}, please",
+                "language": language,
+            },
         )
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
@@ -614,7 +620,7 @@ async def test_custom_sentences(
                         "speech": f"You ordered a {beer_style}",
                     }
                 },
-                "language": hass.config.language,
+                "language": language,
                 "response_type": "action_done",
                 "data": {
                     "targets": [],
