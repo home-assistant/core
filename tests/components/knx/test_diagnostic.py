@@ -29,7 +29,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.parametrize("yaml_config", [{}])
+@pytest.mark.parametrize("hass_config", [{}])
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -59,7 +59,7 @@ async def test_diagnostics(
     }
 
 
-@pytest.mark.parametrize("yaml_config", [{"knx": {"wrong_key": {}}}])
+@pytest.mark.parametrize("hass_config", [{"knx": {"wrong_key": {}}}])
 async def test_diagnostic_config_error(
     hass: HomeAssistant,
     mock_yaml_configuration: None,
@@ -89,7 +89,7 @@ async def test_diagnostic_config_error(
     }
 
 
-@pytest.mark.parametrize("yaml_config", [{}])
+@pytest.mark.parametrize("hass_config", [{}])
 async def test_diagnostic_redact(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

@@ -109,6 +109,8 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_admin_user": "MockUser",
     "hass_client": "ClientSessionGenerator",
     "hass_client_no_auth": "ClientSessionGenerator",
+    "hass_config": "ConfigType | None",
+    "hass_config_yaml": "str | None",
     "hass_owner_user": "MockUser",
     "hass_read_only_access_token": "str",
     "hass_read_only_user": "MockUser",
@@ -137,8 +139,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
     "tmp_path": "Path",
-    "yaml_config": "ConfigType | None",
-    "yaml_configuration": "str | None",
     "yaml_configuration_files": "dict[str, str] | None",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(

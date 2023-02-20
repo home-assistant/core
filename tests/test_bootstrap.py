@@ -453,7 +453,7 @@ def mock_ensure_config_exists():
         yield ensure_config_exists
 
 
-@pytest.mark.parametrize("yaml_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass(
     mock_yaml_configuration: None,
     mock_enable_logging,
@@ -503,7 +503,7 @@ async def test_setup_hass(
     assert hass == async_get_hass()
 
 
-@pytest.mark.parametrize("yaml_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_yaml_configuration: None,
     mock_enable_logging,
@@ -545,7 +545,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     assert "Waiting on integrations to complete setup" in caplog.text
 
 
-@pytest.mark.parametrize("yaml_config", {"invalid_config_key": None})
+@pytest.mark.parametrize("hass_config", {"invalid_config_key": None})
 async def test_setup_hass_invalid_yaml(
     mock_yaml_configuration: None,
     mock_enable_logging,
@@ -632,7 +632,7 @@ async def test_setup_hass_safe_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
-@pytest.mark.parametrize("yaml_config", [{"homeassistant": {"non-existing": 1}}])
+@pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 async def test_setup_hass_invalid_core_config(
     mock_yaml_configuration: None,
     mock_enable_logging,
@@ -659,7 +659,7 @@ async def test_setup_hass_invalid_core_config(
 
 
 @pytest.mark.parametrize(
-    "yaml_config",
+    "hass_config",
     [
         {
             "homeassistant": {

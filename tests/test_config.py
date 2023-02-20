@@ -737,7 +737,7 @@ async def test_check_ha_config_file_wrong(mock_check, hass):
 
 
 @pytest.mark.parametrize(
-    "yaml_config",
+    "hass_config",
     [
         {
             config_util.CONF_CORE: {

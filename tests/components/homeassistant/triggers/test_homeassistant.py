@@ -12,7 +12,7 @@ from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(
-    "yaml_config",
+    "hass_config",
     [
         {
             automation.DOMAIN: {
@@ -27,13 +27,13 @@ from tests.common import async_mock_service
     ],
 )
 async def test_if_fires_on_hass_start(
-    hass: HomeAssistant, mock_yaml_configuration: None, yaml_config: ConfigType | None
+    hass: HomeAssistant, mock_yaml_configuration: None, hass_config: ConfigType | None
 ) -> None:
     """Test the firing when Home Assistant starts."""
     calls = async_mock_service(hass, "test", "automation")
     hass.state = CoreState.not_running
 
-    assert await async_setup_component(hass, automation.DOMAIN, yaml_config)
+    assert await async_setup_component(hass, automation.DOMAIN, hass_config)
     assert automation.is_on(hass, "automation.hello")
     assert len(calls) == 0
 

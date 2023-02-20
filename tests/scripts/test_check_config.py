@@ -43,7 +43,7 @@ def normalize_yaml_files(check_dict):
     return [key.replace(root, "...") for key in sorted(check_dict["yaml_files"].keys())]
 
 
-@pytest.mark.parametrize("yaml_configuration", [BAD_CORE_CONFIG])
+@pytest.mark.parametrize("hass_config_yaml", [BAD_CORE_CONFIG])
 def test_bad_core_config(
     mock_is_file, event_loop, mock_yaml_configuration: None
 ) -> None:
@@ -53,9 +53,7 @@ def test_bad_core_config(
     assert res["except"]["homeassistant"][1] == {"unit_system": "bad"}
 
 
-@pytest.mark.parametrize(
-    "yaml_configuration", [BASE_CONFIG + "light:\n  platform: demo"]
-)
+@pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG + "light:\n  platform: demo"])
 def test_config_platform_valid(
     mock_is_file, event_loop, mock_yaml_configuration: None
 ) -> None:
@@ -70,7 +68,7 @@ def test_config_platform_valid(
 
 
 @pytest.mark.parametrize(
-    ("yaml_configuration", "platforms", "error"),
+    ("hass_config_yaml", "platforms", "error"),
     [
         (
             BASE_CONFIG + "beer:",
@@ -133,7 +131,7 @@ def test_secrets(mock_is_file, event_loop, mock_yaml_configuration: None) -> Non
 
 
 @pytest.mark.parametrize(
-    "yaml_configuration", [BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]']
+    "hass_config_yaml", [BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]']
 )
 def test_package_invalid(
     mock_is_file, event_loop, mock_yaml_configuration: None
@@ -152,7 +150,7 @@ def test_package_invalid(
 
 
 @pytest.mark.parametrize(
-    "yaml_configuration", [BASE_CONFIG + "automation: !include no.yaml"]
+    "hass_config_yaml", [BASE_CONFIG + "automation: !include no.yaml"]
 )
 def test_bootstrap_error(event_loop, mock_yaml_configuration: None) -> None:
     """Test a valid platform setup."""

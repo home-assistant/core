@@ -921,36 +921,34 @@ async def _mqtt_mock_entry(
 
 
 @pytest.fixture
-def yaml_config() -> ConfigType | None:
+def hass_config() -> ConfigType | None:
     """Fixture to override configuration.yaml using mock_yaml_config.
 
-    Patches the content of configuration.yaml with the
+    Fixture to parameterize the content of configuration.yaml with the
     yaml dump of a config dict.
     """
     return None
 
 
 @pytest.fixture
-def yaml_configuration(yaml_config: ConfigType | None) -> str | None:
+def hass_config_yaml(hass_config: ConfigType | None) -> str | None:
     """Fixture to override configuration.yaml using mock_yaml_config.
 
-    Patches the content of configuration.yaml using yaml string content.
-    Defaults to a yaml dump of `yaml_config`.
+    Fixture to parameterize the content of configuration.yaml using
+    yaml string content. Defaults to a yaml dump of `hass_config`.
     """
-    return None if yaml_config is None else yaml.dump(yaml_config)
+    return None if hass_config is None else yaml.dump(hass_config)
 
 
 @pytest.fixture
-def yaml_configuration_files(yaml_configuration: str | None) -> dict[str, str] | None:
+def yaml_configuration_files(hass_config_yaml: str | None) -> dict[str, str] | None:
     """Fixture to override yaml configuration files using mock_yaml_config.
 
     Configures yaml files to patch, defaults to patching `configuration.yaml`
-    with the content of `yaml_configuration`.
+    with the content of `hass_config_yaml`.
     Format dict[{yaml_file_name},{yamlcontent}]
     """
-    return (
-        None if yaml_configuration is None else {YAML_CONFIG_FILE: yaml_configuration}
-    )
+    return None if hass_config_yaml is None else {YAML_CONFIG_FILE: hass_config_yaml}
 
 
 @pytest.fixture
@@ -959,8 +957,8 @@ def mock_yaml_configuration(
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of the yaml configuration files.
 
-    Parameterize configuration files using the `yaml_config`,
-    `yaml_configuration` and `yaml_configuration_files` fixtures.
+    Parameterize configuration files using the `hass_config`,
+    `hass_config_yaml` and `yaml_configuration_files` fixtures.
     """
     with patch_yaml_files(yaml_configuration_files):
         yield
