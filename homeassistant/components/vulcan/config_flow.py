@@ -5,7 +5,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 import voluptuous as vol
-from vulcan import (
+from vulcan import (  # pylint: disable=import-error
     Account,
     ExpiredTokenException,
     InvalidPINException,
@@ -38,7 +38,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
         self.account = None
         self.keystore = None

@@ -2,8 +2,7 @@
 
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, UnitOfPressure
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, EntityCategory, UnitOfPressure
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

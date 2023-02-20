@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -57,23 +57,29 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
-        if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
-        credentials = Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-
-        def _get_profile() -> dict[str, Any]:
+        def _get_profile() -> str:
             """Get profile from inside the executor."""
             users = build(  # pylint: disable=no-member
                 "gmail", "v1", credentials=credentials
             ).users()
-            return users.getProfile(userId="me").execute()
+            return users.getProfile(userId="me").execute()["emailAddress"]
 
-        email = (await self.hass.async_add_executor_job(_get_profile))["emailAddress"]
+        credentials = Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        email = await self.hass.async_add_executor_job(_get_profile)
 
-        await self.async_set_unique_id(email)
-        self._abort_if_unique_id_configured()
+        if not self.reauth_entry:
+            await self.async_set_unique_id(email)
+            self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=email, data=data)
+            return self.async_create_entry(title=email, data=data)
+
+        if self.reauth_entry.unique_id == email:
+            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_abort(
+            reason="wrong_account",
+            description_placeholders={"email": cast(str, self.reauth_entry.unique_id)},
+        )

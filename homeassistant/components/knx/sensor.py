@@ -1,7 +1,6 @@
 """Support for KNX/IP sensors."""
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import Any
 
 from xknx import XKNX
@@ -23,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util.enum import try_parse_enum
 
 from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxEntity
@@ -64,10 +64,10 @@ class KNXSensor(KnxEntity, SensorEntity):
         if device_class := config.get(CONF_DEVICE_CLASS):
             self._attr_device_class = device_class
         else:
-            with suppress(ValueError):
-                self._attr_device_class = SensorDeviceClass(
-                    str(self._device.ha_device_class())
-                )
+            self._attr_device_class = try_parse_enum(
+                SensorDeviceClass, self._device.ha_device_class()
+            )
+
         self._attr_force_update = self._device.always_callback
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.sensor_value.group_address_state)

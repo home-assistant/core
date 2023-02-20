@@ -214,6 +214,7 @@ ABBREVIATIONS = {
     "stat_val_tpl": "state_value_template",
     "step": "step",
     "stype": "subtype",
+    "sug_dsp_prc": "suggested_display_precision",
     "sup_dur": "support_duration",
     "sup_vol": "support_volume_set",
     "sup_feat": "supported_features",

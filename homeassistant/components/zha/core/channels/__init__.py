@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.endpoint
 import zigpy.zcl.clusters.closures
 
@@ -36,8 +37,6 @@ if TYPE_CHECKING:
     from ...entity import ZhaEntity
     from ..device import ZHADevice
 
-_ChannelsSelfT = TypeVar("_ChannelsSelfT", bound="Channels")
-_ChannelPoolSelfT = TypeVar("_ChannelPoolSelfT", bound="ChannelPool")
 _ChannelsDictType = dict[str, base.ZigbeeChannel]
 
 
@@ -104,7 +103,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls: type[_ChannelsSelfT], zha_device: ZHADevice) -> _ChannelsSelfT:
+    def new(cls, zha_device: ZHADevice) -> Self:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -272,9 +271,7 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(
-        cls: type[_ChannelPoolSelfT], channels: Channels, ep_id: int
-    ) -> _ChannelPoolSelfT:
+    def new(cls, channels: Channels, ep_id: int) -> Self:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()

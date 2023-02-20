@@ -200,7 +200,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str, Any] | vol.Schema,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
     ) -> None:

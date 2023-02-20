@@ -1,10 +1,11 @@
 {
   "domain": "vulcan",
   "name": "Uonet+ Vulcan",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/vulcan",
-  "requirements": ["vulcan-api==2.1.1"],
   "codeowners": ["@Antoni-Czaplicki"],
+  "config_flow": true,
+  "disabled": "Temporarily unblock nightly build",
+  "documentation": "https://www.home-assistant.io/integrations/vulcan",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "requirements": ["vulcan-api==2.3.0"]
 }

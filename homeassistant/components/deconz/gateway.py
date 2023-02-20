@@ -235,7 +235,7 @@ class DeconzGateway:
     ) -> None:
         """Handle signals of config entry being updated.
 
-        This is a static method because a class method (bound method), can not be used with weak references.
+        This is a static method because a class method (bound method), cannot be used with weak references.
         Causes for this is either discovery updating host address or config entry options changing.
         """
         gateway = get_gateway_from_config_entry(hass, entry)

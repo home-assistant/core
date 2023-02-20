@@ -13,12 +13,20 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
-from .const import DATA_AUTH, DOMAIN
+from .const import DATA_AUTH, DATA_HASS_CONFIG, DOMAIN
 from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google Mail platform."""
+    hass.data.setdefault(DOMAIN, {})[DATA_HASS_CONFIG] = config
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -36,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = auth
+    hass.data[DOMAIN][entry.entry_id] = auth
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -44,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {DATA_AUTH: auth, CONF_NAME: entry.title},
-            {},
+            hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
     )
 

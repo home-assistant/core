@@ -1,6 +1,6 @@
 """Make sure that Nanoleaf NL55 works with BLE."""
 
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

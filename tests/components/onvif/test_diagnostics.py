@@ -1,4 +1,5 @@
 """Test ONVIF diagnostics."""
+from homeassistant.core import HomeAssistant
 
 from . import (
     FIRMWARE_VERSION,
@@ -10,9 +11,12 @@ from . import (
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client):
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for a config entry."""
 
     entry, _, _ = await setup_onvif_integration(hass)
@@ -48,7 +52,21 @@ async def test_diagnostics(hass, hass_client):
                 "serial_number": SERIAL_NUMBER,
                 "mac": MAC,
             },
-            "capabilities": {"snapshot": False, "events": False, "ptz": False},
-            "profiles": [],
+            "capabilities": {
+                "snapshot": False,
+                "events": False,
+                "ptz": False,
+                "imaging": True,
+            },
+            "profiles": [
+                {
+                    "index": 0,
+                    "token": "dummy",
+                    "name": "profile1",
+                    "video": None,
+                    "ptz": None,
+                    "video_source_token": None,
+                }
+            ],
         },
     }

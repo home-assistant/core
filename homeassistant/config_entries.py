@@ -14,6 +14,8 @@ from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 import weakref
 
+from typing_extensions import Self
+
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
 from .components import persistent_notification
@@ -86,7 +88,6 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-_ConfigEntryStateSelfT = TypeVar("_ConfigEntryStateSelfT", bound="ConfigEntryState")
 _R = TypeVar("_R")
 
 
@@ -110,9 +111,7 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(
-        cls: type[_ConfigEntryStateSelfT], value: str, recoverable: bool
-    ) -> _ConfigEntryStateSelfT:
+    def __new__(cls, value: str, recoverable: bool) -> Self:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
@@ -221,7 +220,8 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
-        "_pending_tasks",
+        "_tasks",
+        "_background_tasks",
     )
 
     def __init__(
@@ -316,7 +316,8 @@ class ConfigEntry:
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
 
-        self._pending_tasks: list[asyncio.Future[Any]] = []
+        self._tasks: set[asyncio.Future[Any]] = set()
+        self._background_tasks: set[asyncio.Future[Any]] = set()
 
     async def async_setup(
         self,
@@ -682,11 +683,23 @@ class ConfigEntry:
             while self._on_unload:
                 self._on_unload.pop()()
 
-        while self._pending_tasks:
-            pending = [task for task in self._pending_tasks if not task.done()]
-            self._pending_tasks.clear()
-            if pending:
-                await asyncio.gather(*pending)
+        if not self._tasks and not self._background_tasks:
+            return
+
+        for task in self._background_tasks:
+            task.cancel()
+
+        _, pending = await asyncio.wait(
+            [*self._tasks, *self._background_tasks], timeout=10
+        )
+
+        for task in pending:
+            _LOGGER.warning(
+                "Unloading %s (%s) config entry. Task %s did not complete in time",
+                self.title,
+                self.domain,
+                task,
+            )
 
     @callback
     def async_start_reauth(
@@ -737,9 +750,24 @@ class ConfigEntry:
         target: target to call.
         """
         task = hass.async_create_task(target)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
-        self._pending_tasks.append(task)
+        return task
 
+    @callback
+    def async_create_background_task(
+        self, hass: HomeAssistant, target: Coroutine[Any, Any, _R], name: str
+    ) -> asyncio.Task[_R]:
+        """Create a background task tied to the config entry lifecycle.
+
+        Background tasks are automatically canceled when config entry is unloaded.
+
+        target: target to call.
+        """
+        task = hass.async_create_background_task(target, name)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
 

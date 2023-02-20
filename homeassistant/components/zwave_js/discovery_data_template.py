@@ -225,8 +225,7 @@ class BaseDiscoverySchemaDataTemplate:
     static_data: Any | None = None
 
     def resolve_data(self, value: ZwaveValue) -> Any:
-        """
-        Resolve helper class data for a discovered value.
+        """Resolve helper class data for a discovered value.
 
         Can optionally be implemented by subclasses if input data needs to be
         transformed once discovered Value is available.
@@ -234,16 +233,14 @@ class BaseDiscoverySchemaDataTemplate:
         return {}
 
     def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue | None]:
-        """
-        Return list of all ZwaveValues resolved by helper that should be watched.
+        """Return list of all ZwaveValues resolved by helper that should be watched.
 
         Should be implemented by subclasses only if there are values to watch.
         """
         return []
 
     def value_ids_to_watch(self, resolved_data: Any) -> set[str]:
-        """
-        Return list of all Value IDs resolved by helper that should be watched.
+        """Return list of all Value IDs resolved by helper that should be watched.
 
         Not to be overwritten by subclasses.
         """
@@ -430,8 +427,7 @@ class FanValueMapping:
     speeds: list[tuple[int, int]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        """
-        Validate inputs.
+        """Validate inputs.
 
         These inputs are hardcoded in `discovery.py`, so these checks should
         only fail due to developer error.
@@ -467,8 +463,7 @@ class ConfigurableFanValueMappingDataTemplate(
     FanValueMappingDataTemplate,
     ConfigurableFanValueMappingValueMix,
 ):
-    """
-    Gets fan speeds based on a configuration value.
+    """Gets fan speeds based on a configuration value.
 
     Example:
       ZWaveDiscoverySchema(
@@ -547,8 +542,7 @@ class FixedFanValueMappingDataTemplate(
     FanValueMappingDataTemplate,
     FixedFanValueMappingValueMix,
 ):
-    """
-    Specifies a fixed set of properties for a fan.
+    """Specifies a fixed set of properties for a fan.
 
     Example:
       ZWaveDiscoverySchema(

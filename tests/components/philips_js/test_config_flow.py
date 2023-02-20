@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_CONFIG,
@@ -44,7 +45,7 @@ async def mock_tv_pairable(mock_tv):
     return mock_tv
 
 
-async def test_form(hass, mock_setup_entry):
+async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -64,7 +65,7 @@ async def test_form(hass, mock_setup_entry):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass, mock_tv):
+async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,7 +80,7 @@ async def test_form_cannot_connect(hass, mock_tv):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unexpected_error(hass, mock_tv):
+async def test_form_unexpected_error(hass: HomeAssistant, mock_tv) -> None:
     """Test we handle unexpected exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -94,7 +95,7 @@ async def test_form_unexpected_error(hass, mock_tv):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_pairing(hass, mock_tv_pairable, mock_setup_entry):
+async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 
@@ -137,7 +138,9 @@ async def test_pairing(hass, mock_tv_pairable, mock_setup_entry):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_pair_request_failed(hass, mock_tv_pairable, mock_setup_entry):
+async def test_pair_request_failed(
+    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
+) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
     mock_tv.pairRequest.side_effect = PairingFailure({})
@@ -162,7 +165,9 @@ async def test_pair_request_failed(hass, mock_tv_pairable, mock_setup_entry):
     }
 
 
-async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup_entry):
+async def test_pair_grant_failed(
+    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
+) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 
@@ -206,7 +211,7 @@ async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup_entry):
     }
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

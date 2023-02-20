@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -44,7 +45,12 @@ async def velbus_connect_task(
     controller: Velbus, hass: HomeAssistant, entry_id: str
 ) -> None:
     """Task to offload the long running connect."""
-    await controller.connect()
+    try:
+        await controller.connect()
+    except ConnectionError as ex:
+        raise PlatformNotReady(
+            f"Connection error while connecting to Velbus {entry_id}: {ex}"
+        ) from ex
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:

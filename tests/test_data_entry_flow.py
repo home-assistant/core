@@ -1,4 +1,5 @@
 """Test the flow classes."""
+import dataclasses
 import logging
 from unittest.mock import Mock, patch
 
@@ -73,7 +74,7 @@ async def test_configure_reuses_handler_instance(manager):
     assert len(manager.mock_created_entries) == 0
 
 
-async def test_configure_two_steps(manager):
+async def test_configure_two_steps(manager: data_entry_flow.FlowManager) -> None:
     """Test that we reuse instances."""
 
     @manager.mock_reg_handler("test")
@@ -82,7 +83,6 @@ async def test_configure_two_steps(manager):
 
         async def async_step_first(self, user_input=None):
             if user_input is not None:
-                self.init_data = user_input
                 return await self.async_step_second()
             return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
 
@@ -93,12 +93,13 @@ async def test_configure_two_steps(manager):
                 )
             return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
 
-    form = await manager.async_init("test", context={"init_step": "first"})
+    form = await manager.async_init(
+        "test", context={"init_step": "first"}, data=["INIT-DATA"]
+    )
 
     with pytest.raises(vol.Invalid):
         form = await manager.async_configure(form["flow_id"], "INCORRECT-DATA")
 
-    form = await manager.async_configure(form["flow_id"], ["INIT-DATA"])
     form = await manager.async_configure(form["flow_id"], ["SECOND-DATA"])
     assert form["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert len(manager.async_progress()) == 0
@@ -236,7 +237,7 @@ async def test_discovery_init_flow(manager):
     assert entry["source"] == config_entries.SOURCE_DISCOVERY
 
 
-async def test_finish_callback_change_result_type(hass):
+async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
     """Test finish callback can change result type."""
 
     class TestFlow(data_entry_flow.FlowHandler):
@@ -553,3 +554,102 @@ async def test_show_menu(hass, manager, menu_options):
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "target1"
+
+
+async def test_find_flows_by_init_data_type(
+    manager: data_entry_flow.FlowManager,
+) -> None:
+    """Test we can find flows by init data type."""
+
+    @dataclasses.dataclass
+    class BluetoothDiscoveryData:
+        """Bluetooth Discovery data."""
+
+        address: str
+
+    @dataclasses.dataclass
+    class WiFiDiscoveryData:
+        """WiFi Discovery data."""
+
+        address: str
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_first(self, user_input=None):
+            if user_input is not None:
+                return await self.async_step_second()
+            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+
+        async def async_step_second(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title="Test Entry",
+                    data={"init": self.init_data, "user": user_input},
+                )
+            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+
+    bluetooth_data = BluetoothDiscoveryData("aa:bb:cc:dd:ee:ff")
+    wifi_data = WiFiDiscoveryData("host")
+
+    bluetooth_form = await manager.async_init(
+        "test", context={"init_step": "first"}, data=bluetooth_data
+    )
+    await manager.async_init("test", context={"init_step": "first"}, data=wifi_data)
+
+    assert (
+        len(
+            manager.async_progress_by_init_data_type(
+                BluetoothDiscoveryData, lambda data: True
+            )
+        )
+    ) == 1
+    assert (
+        len(
+            manager.async_progress_by_init_data_type(
+                BluetoothDiscoveryData,
+                lambda data: bool(data.address == "aa:bb:cc:dd:ee:ff"),
+            )
+        )
+    ) == 1
+    assert (
+        len(
+            manager.async_progress_by_init_data_type(
+                BluetoothDiscoveryData, lambda data: bool(data.address == "not it")
+            )
+        )
+    ) == 0
+
+    wifi_flows = manager.async_progress_by_init_data_type(
+        WiFiDiscoveryData, lambda data: True
+    )
+    assert len(wifi_flows) == 1
+
+    bluetooth_result = await manager.async_configure(
+        bluetooth_form["flow_id"], ["SECOND-DATA"]
+    )
+    assert bluetooth_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert len(manager.async_progress()) == 1
+    assert len(manager.mock_created_entries) == 1
+    result = manager.mock_created_entries[0]
+    assert result["handler"] == "test"
+    assert result["data"] == {"init": bluetooth_data, "user": ["SECOND-DATA"]}
+
+    bluetooth_flows = manager.async_progress_by_init_data_type(
+        BluetoothDiscoveryData, lambda data: True
+    )
+    assert len(bluetooth_flows) == 0
+
+    wifi_flows = manager.async_progress_by_init_data_type(
+        WiFiDiscoveryData, lambda data: True
+    )
+    assert len(wifi_flows) == 1
+
+    manager.async_abort(wifi_flows[0]["flow_id"])
+
+    wifi_flows = manager.async_progress_by_init_data_type(
+        WiFiDiscoveryData, lambda data: True
+    )
+    assert len(wifi_flows) == 0
+    assert len(manager.async_progress()) == 0

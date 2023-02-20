@@ -296,7 +296,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         # not appear in the app or input lists in some cases
         elif not found_live_tv:
             app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
-            if LIVE_TV_APP_ID == self._client.current_app_id:
+            if self._client.current_app_id == LIVE_TV_APP_ID:
                 self._current_source = app["title"]
                 self._source_list["Live TV"] = app
             elif (

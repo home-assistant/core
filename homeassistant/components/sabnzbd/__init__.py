@@ -145,8 +145,7 @@ async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry):
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
-        """
-        Define a callback to migrate appropriate SabnzbdSensor entities to new unique IDs.
+        """Define a callback to migrate appropriate SabnzbdSensor entities to new unique IDs.
 
         Old: description.key
         New: {entry_id}_description.key
@@ -225,7 +224,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (SERVICE_RESUME, async_resume_queue, SERVICE_BASE_SCHEMA),
         (SERVICE_SET_SPEED, async_set_queue_speed, SERVICE_SPEED_SCHEMA),
     ):
-
         if hass.services.has_service(DOMAIN, service):
             continue
 

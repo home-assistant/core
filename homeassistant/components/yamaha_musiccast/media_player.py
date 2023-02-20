@@ -769,10 +769,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_client_join(self, group_id, server) -> bool:
         """Let the client join a group.
 
-        If this client is a server, the server will stop distributing. If the client is part of a different group,
-        it will leave that group first. Returns True, if the server has to add the client on his side.
+        If this client is a server, the server will stop distributing.
+        If the client is part of a different group,
+        it will leave that group first. Returns True, if the server has to
+        add the client on his side.
         """
-        # If we should join the group, which is served by the main zone, we can simply select main_sync as input.
+        # If we should join the group, which is served by the main zone,
+        # we can simply select main_sync as input.
         _LOGGER.debug("%s called service client join", self.entity_id)
         if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
