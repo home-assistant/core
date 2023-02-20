@@ -1813,6 +1813,7 @@ class Config:
 
         self.latitude: float = 0
         self.longitude: float = 0
+        # Elevation (always in meters regardless of the unit system)
         self.elevation: int = 0
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
