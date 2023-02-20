@@ -36,7 +36,7 @@ async def async_setup_entry(
 
 
 class SlidingDoorCoverEntity(CoordinatorEntity[ReisingerCoordinator], CoverEntity):
-    """Wrapper class to adapt the Meross Garage Opener into the Homeassistant platform."""
+    """Wrapper class to adapt the intellidrive device into the Homeassistant platform."""
 
     def __init__(
         self,
@@ -52,21 +52,15 @@ class SlidingDoorCoverEntity(CoordinatorEntity[ReisingerCoordinator], CoverEntit
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door async."""
-        await self._device.async_close(
-            host=self._host, token=self._token, skip_rate_limits=True
-        )
+        await self._device.async_close()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door async."""
-        await self._device.async_open(
-            host=self._host, token=self._token, skip_rate_limits=True
-        )
+        await self._device.async_open()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the door async."""
-        await self._device.async_stop_door(
-            host=self._host, token=self._token, skip_rate_limits=True
-        )
+        await self._device.async_stop_door()
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door."""
@@ -96,19 +90,20 @@ class SlidingDoorCoverEntity(CoordinatorEntity[ReisingerCoordinator], CoverEntit
     def is_closed(self) -> bool:
         """Get state if the door is closed."""
 
-        open_status = self._device.get_is_open(host=self._host, token=self._token)
+        open_status = self._device.get_is_open()
         return not open_status
 
     @property
     def is_closing(self) -> bool:
         """Get state if the door is closing now."""
-
+        closing_status = self._device.get_is_closing()
         # Not supported yet
-        return False
+        return closing_status
 
     @property
     def is_opening(self) -> bool:
         """Get state if the door is opening now."""
+        opening_status = self._device.get_is_opening()
 
         # Not supported yet
-        return False
+        return opening_status
