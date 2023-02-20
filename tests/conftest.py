@@ -921,11 +921,10 @@ async def _mqtt_mock_entry(
 
 @pytest.fixture
 def hass_config() -> ConfigType | None:
-    """Fixture to parameterize the content of configuration.yaml using mock_yaml_config.
+    """Fixture to parameterize the content of configuration.yaml using mock_hass_config.
 
     To set a configuration, tests can be marked with:
     @pytest.mark.parametrize("hass_config", [{integration: {...}}])
-    and the `mock_hass_config: None` fixture added to the test parameters.
     """
     return None
 
@@ -943,41 +942,39 @@ def mock_hass_config(
 
 
 @pytest.fixture
-def yaml_configuration() -> str | None:
+def hass_config_yaml() -> str | None:
     """Fixture to parameterize the content of a single yaml configuration file.
 
     To set yaml content, tests can be marked with:
-    @pytest.mark.parametrize("yaml_configuration", ["..."])
-    and the `mock_yaml_configuration: None` fixture added to the test parameters.
+    @pytest.mark.parametrize("hass_config_yaml", ["..."])
+    Add the `mock_hass_config_yaml: None` fixture to the test.
     """
     return None
 
 
 @pytest.fixture
-def yaml_configuration_files(yaml_configuration: str | None) -> dict[str, str] | None:
+def hass_config_yaml_files(hass_config_yaml: str | None) -> dict[str, str] | None:
     """Fixture to parameterize multiple yaml configuration files.
 
     To set the YAML files to patch, tests can be marked with:
     @pytest.mark.parametrize(
-        "yaml_configuration_files", [{"configuration.yaml": "..."}]
+        "hass_config_yaml_files", [{"configuration.yaml": "..."}]
     )
-    and the `mock_yaml_configuration: None` fixture added to the test parameters.
+    Add the `mock_hass_config_yaml: None` fixture to the test.
     """
-    return (
-        None if yaml_configuration is None else {YAML_CONFIG_FILE: yaml_configuration}
-    )
+    return None if hass_config_yaml is None else {YAML_CONFIG_FILE: hass_config_yaml}
 
 
 @pytest.fixture
-def mock_yaml_configuration(
-    hass: HomeAssistant, yaml_configuration_files: dict[str, str] | None
+def mock_hass_config_yaml(
+    hass: HomeAssistant, hass_config_yaml_files: dict[str, str] | None
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of the yaml configuration files.
 
-    Patches yaml configuration files using the `yaml_configuration`
-    and `yaml_configuration_files` fixtures.
+    Patches yaml configuration files using the `hass_config_yaml`
+    and `hass_config_yaml_files` fixtures.
     """
-    with patch_yaml_files(yaml_configuration_files):
+    with patch_yaml_files(hass_config_yaml_files):
         yield
 
 
