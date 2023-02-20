@@ -18,9 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Gather data for the energy device."""
 
-    inverter: Inverter
-    last_data: dict[str, Any]
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -35,13 +32,13 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL,
             update_method=self._async_update_data,
         )
-        self.inverter = inverter
-        self.last_data = {}
+        self.inverter: Inverter = inverter
+        self._last_data: dict[str, Any] = {}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the inverter."""
         try:
-            self.last_data = self.data if self.data else {}
+            self._last_data = self.data if self.data else {}
             return await self.inverter.read_runtime_data()
         except RequestFailedException as ex:
             # UDP communication with inverter is by definition unreliable.
@@ -54,7 +51,7 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "No response received (streak of %d)", ex.consecutive_failures_count
                 )
                 # return last known data
-                return self.last_data
+                return self._last_data
             # Inverter does not respond anymore (e.g. it went to sleep mode)
             _LOGGER.debug(
                 "Inverter not responding (streak of %d)", ex.consecutive_failures_count
@@ -66,14 +63,18 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def sensor_value(self, sensor: str) -> Any:
         """Answer current (or last known) value of the sensor."""
         val = self.data.get(sensor)
-        return val if val is not None else self.last_data.get(sensor)
+        return val if val is not None else self._last_data.get(sensor)
 
     def total_sensor_value(self, sensor: str) -> Any:
         """Answer current value of the 'total' (never 0) sensor."""
         val = self.data.get(sensor)
-        return val if val else self.last_data.get(sensor)
+        return val if val else self._last_data.get(sensor)
 
     def reset_sensor(self, sensor: str) -> None:
-        """Reset sensor value to 0."""
-        self.last_data[sensor] = 0
+        """Reset sensor value to 0.
+
+        Intended for "daily" cumulative sensors (e.g. PV energy produced today),
+        which should be explicitly reset to 0 at midnight if inverter is suspended.
+        """
+        self._last_data[sensor] = 0
         self.data[sensor] = 0
