@@ -488,6 +488,7 @@ class HomeAssistant:
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
             task = self.loop.create_task(hassjob.target(*args))
+            tasks = self._tasks
         elif hassjob.job_type == HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -497,9 +498,10 @@ class HomeAssistant:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
+            tasks = self._background_tasks
 
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+        tasks.add(task)
+        task.add_done_callback(tasks.remove)
 
         return task
 
@@ -549,8 +551,8 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
 
         return task
 
