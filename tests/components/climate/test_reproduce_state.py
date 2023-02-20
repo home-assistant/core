@@ -30,7 +30,7 @@ ENTITY_2 = "climate.test2"
 
 
 @pytest.mark.parametrize("state", [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF])
-async def test_with_hvac_mode(hass, state):
+async def test_with_hvac_mode(hass: HomeAssistant, state) -> None:
     """Test that state different hvac states."""
     calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
 
@@ -93,7 +93,7 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,attribute",
+    ("service", "attribute"),
     [
         (SERVICE_SET_AUX_HEAT, ATTR_AUX_HEAT),
         (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
@@ -105,7 +105,7 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
         (SERVICE_SET_TEMPERATURE, ATTR_TARGET_TEMP_LOW),
     ],
 )
-async def test_attribute(hass, service, attribute):
+async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     """Test that service call is made for each attribute."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
 

@@ -11,11 +11,9 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
-
-from tests.common import mock_device_registry, mock_registry
 
 REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
 
@@ -25,17 +23,19 @@ IR_PACKET = (
 )
 
 
-async def test_remote_setup_works(hass: HomeAssistant) -> None:
+async def test_remote_setup_works(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a successful setup with all remotes."""
     for device in map(get_device, REMOTE_DEVICES):
-        device_registry = mock_device_registry(hass)
-        entity_registry = mock_registry(hass)
         mock_setup = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
-        entries = async_entries_for_device(entity_registry, device_entry.id)
+        entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
         assert len(remotes) == 1
 
@@ -48,17 +48,19 @@ async def test_remote_setup_works(hass: HomeAssistant) -> None:
         assert mock_setup.api.auth.call_count == 1
 
 
-async def test_remote_send_command(hass: HomeAssistant) -> None:
+async def test_remote_send_command(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test sending a command with all remotes."""
     for device in map(get_device, REMOTE_DEVICES):
-        device_registry = mock_device_registry(hass)
-        entity_registry = mock_registry(hass)
         mock_setup = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
-        entries = async_entries_for_device(entity_registry, device_entry.id)
+        entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
         assert len(remotes) == 1
 
@@ -75,17 +77,19 @@ async def test_remote_send_command(hass: HomeAssistant) -> None:
         assert mock_setup.api.auth.call_count == 1
 
 
-async def test_remote_turn_off_turn_on(hass: HomeAssistant) -> None:
+async def test_remote_turn_off_turn_on(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we do not send commands if the remotes are off."""
     for device in map(get_device, REMOTE_DEVICES):
-        device_registry = mock_device_registry(hass)
-        entity_registry = mock_registry(hass)
         mock_setup = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
-        entries = async_entries_for_device(entity_registry, device_entry.id)
+        entries = er.async_entries_for_device(entity_registry, device_entry.id)
         remotes = [entry for entry in entries if entry.domain == Platform.REMOTE]
         assert len(remotes) == 1
 

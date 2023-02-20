@@ -4,7 +4,7 @@ https://github.com/home-assistant/core/issues/20957
 """
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.number import NumberMode
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,

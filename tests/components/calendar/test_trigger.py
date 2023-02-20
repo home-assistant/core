@@ -193,7 +193,7 @@ def mock_update_interval() -> Generator[None, None, None]:
         yield
 
 
-async def test_event_start_trigger(hass, calls, fake_schedule):
+async def test_event_start_trigger(hass: HomeAssistant, calls, fake_schedule) -> None:
     """Test the a calendar trigger based on start time."""
     event_data = fake_schedule.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
@@ -215,15 +215,15 @@ async def test_event_start_trigger(hass, calls, fake_schedule):
 
 
 @pytest.mark.parametrize(
-    "offset_str, offset_delta",
+    ("offset_str", "offset_delta"),
     [
         ("-01:00", datetime.timedelta(hours=-1)),
         ("+01:00", datetime.timedelta(hours=1)),
     ],
 )
 async def test_event_start_trigger_with_offset(
-    hass, calls, fake_schedule, offset_str, offset_delta
-):
+    hass: HomeAssistant, calls, fake_schedule, offset_str, offset_delta
+) -> None:
     """Test the a calendar trigger based on start time with an offset."""
     event_data = fake_schedule.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
@@ -250,7 +250,7 @@ async def test_event_start_trigger_with_offset(
     ]
 
 
-async def test_event_end_trigger(hass, calls, fake_schedule):
+async def test_event_end_trigger(hass: HomeAssistant, calls, fake_schedule) -> None:
     """Test the a calendar trigger based on end time."""
     event_data = fake_schedule.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
@@ -278,15 +278,15 @@ async def test_event_end_trigger(hass, calls, fake_schedule):
 
 
 @pytest.mark.parametrize(
-    "offset_str, offset_delta",
+    ("offset_str", "offset_delta"),
     [
         ("-01:00", datetime.timedelta(hours=-1)),
         ("+01:00", datetime.timedelta(hours=1)),
     ],
 )
 async def test_event_end_trigger_with_offset(
-    hass, calls, fake_schedule, offset_str, offset_delta
-):
+    hass: HomeAssistant, calls, fake_schedule, offset_str, offset_delta
+) -> None:
     """Test the a calendar trigger based on end time with an offset."""
     event_data = fake_schedule.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
@@ -313,7 +313,9 @@ async def test_event_end_trigger_with_offset(
     ]
 
 
-async def test_calendar_trigger_with_no_events(hass, calls, fake_schedule):
+async def test_calendar_trigger_with_no_events(
+    hass: HomeAssistant, calls, fake_schedule
+) -> None:
     """Test a calendar trigger setup  with no events."""
 
     await create_automation(hass, EVENT_START)
@@ -326,7 +328,7 @@ async def test_calendar_trigger_with_no_events(hass, calls, fake_schedule):
     assert len(calls()) == 0
 
 
-async def test_multiple_start_events(hass, calls, fake_schedule):
+async def test_multiple_start_events(hass: HomeAssistant, calls, fake_schedule) -> None:
     """Test that a trigger fires for multiple events."""
 
     event_data1 = fake_schedule.create_event(
@@ -356,7 +358,7 @@ async def test_multiple_start_events(hass, calls, fake_schedule):
     ]
 
 
-async def test_multiple_end_events(hass, calls, fake_schedule):
+async def test_multiple_end_events(hass: HomeAssistant, calls, fake_schedule) -> None:
     """Test that a trigger fires for multiple events."""
 
     event_data1 = fake_schedule.create_event(
@@ -386,7 +388,9 @@ async def test_multiple_end_events(hass, calls, fake_schedule):
     ]
 
 
-async def test_multiple_events_sharing_start_time(hass, calls, fake_schedule):
+async def test_multiple_events_sharing_start_time(
+    hass: HomeAssistant, calls, fake_schedule
+) -> None:
     """Test that a trigger fires for every event sharing a start time."""
 
     event_data1 = fake_schedule.create_event(
@@ -416,7 +420,7 @@ async def test_multiple_events_sharing_start_time(hass, calls, fake_schedule):
     ]
 
 
-async def test_overlap_events(hass, calls, fake_schedule):
+async def test_overlap_events(hass: HomeAssistant, calls, fake_schedule) -> None:
     """Test that a trigger fires for events that overlap."""
 
     event_data1 = fake_schedule.create_event(
@@ -488,7 +492,7 @@ async def test_legacy_entity_type(
     assert "is not a calendar entity" in caplog.text
 
 
-async def test_update_next_event(hass, calls, fake_schedule):
+async def test_update_next_event(hass: HomeAssistant, calls, fake_schedule) -> None:
     """Test detection of a new event after initial trigger is setup."""
 
     event_data1 = fake_schedule.create_event(
@@ -527,7 +531,7 @@ async def test_update_next_event(hass, calls, fake_schedule):
     ]
 
 
-async def test_update_missed(hass, calls, fake_schedule):
+async def test_update_missed(hass: HomeAssistant, calls, fake_schedule) -> None:
     """Test that new events are missed if they arrive outside the update interval."""
 
     event_data1 = fake_schedule.create_event(
@@ -562,7 +566,7 @@ async def test_update_missed(hass, calls, fake_schedule):
 
 
 @pytest.mark.parametrize(
-    "create_data,fire_time,payload_data",
+    ("create_data", "fire_time", "payload_data"),
     [
         (
             {
@@ -614,8 +618,14 @@ async def test_update_missed(hass, calls, fake_schedule):
     ids=["basic", "more-fields", "all-day"],
 )
 async def test_event_payload(
-    hass, calls, fake_schedule, set_time_zone, create_data, fire_time, payload_data
-):
+    hass: HomeAssistant,
+    calls,
+    fake_schedule,
+    set_time_zone,
+    create_data,
+    fire_time,
+    payload_data,
+) -> None:
     """Test the fields in the calendar event payload are set."""
     fake_schedule.create_event(**create_data)
     await create_automation(hass, EVENT_START)
@@ -631,7 +641,9 @@ async def test_event_payload(
     ]
 
 
-async def test_trigger_timestamp_window_edge(hass, calls, fake_schedule, freezer):
+async def test_trigger_timestamp_window_edge(
+    hass: HomeAssistant, calls, fake_schedule, freezer
+) -> None:
     """Test that events in the edge of a scan are included."""
     freezer.move_to("2022-04-19 11:00:00+00:00")
     # Exactly at a TEST_UPDATE_INTERVAL boundary the start time,

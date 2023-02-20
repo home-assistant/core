@@ -421,6 +421,7 @@ DEVICE_ENTITY: dict[
         subscribe_attributes=(
             clusters.OnOff.Attributes.OnOff,
             clusters.LevelControl.Attributes.CurrentLevel,
+            clusters.ColorControl.Attributes.ColorMode,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
         ),
     ),

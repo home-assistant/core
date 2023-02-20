@@ -22,7 +22,9 @@ async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
+async def test_hmip_weather_sensor(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipWeatherSensor."""
     entity_id = "weather.weather_sensor_plus"
     entity_name = "Weather Sensor – plus"
@@ -46,7 +48,9 @@ async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 12.1
 
 
-async def test_hmip_weather_sensor_pro(hass, default_mock_hap_factory):
+async def test_hmip_weather_sensor_pro(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipWeatherSensorPro."""
     entity_id = "weather.wettersensor_pro"
     entity_name = "Wettersensor - pro"
@@ -71,7 +75,7 @@ async def test_hmip_weather_sensor_pro(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 12.1
 
 
-async def test_hmip_home_weather(hass, default_mock_hap_factory):
+async def test_hmip_home_weather(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test HomematicipHomeWeather."""
     entity_id = "weather.weather_1010_wien_osterreich"
     entity_name = "Weather 1010  Wien, Österreich"

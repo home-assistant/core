@@ -1,4 +1,5 @@
 """The tests for the MQTT lock platform."""
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -57,6 +58,7 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClientGenerator
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {lock.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
@@ -71,7 +73,7 @@ def lock_platform_only():
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ("LOCKED", STATE_LOCKED),
         ("LOCKING", STATE_LOCKING),
@@ -80,7 +82,10 @@ def lock_platform_only():
     ],
 )
 async def test_controlling_state_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, payload, lock_state
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    payload,
+    lock_state,
 ) -> None:
     """Test the controlling state via topic."""
     assert await async_setup_component(
@@ -117,7 +122,7 @@ async def test_controlling_state_via_topic(
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ("closed", STATE_LOCKED),
         ("closing", STATE_LOCKING),
@@ -126,7 +131,10 @@ async def test_controlling_state_via_topic(
     ],
 )
 async def test_controlling_non_default_state_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, payload, lock_state
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    payload,
+    lock_state,
 ) -> None:
     """Test the controlling state via topic."""
     assert await async_setup_component(
@@ -162,7 +170,7 @@ async def test_controlling_non_default_state_via_topic(
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ('{"val":"LOCKED"}', STATE_LOCKED),
         ('{"val":"LOCKING"}', STATE_LOCKING),
@@ -171,7 +179,10 @@ async def test_controlling_non_default_state_via_topic(
     ],
 )
 async def test_controlling_state_via_topic_and_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, payload, lock_state
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    payload,
+    lock_state,
 ) -> None:
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
@@ -207,7 +218,7 @@ async def test_controlling_state_via_topic_and_json_message(
 
 
 @pytest.mark.parametrize(
-    "payload,lock_state",
+    ("payload", "lock_state"),
     [
         ('{"val":"closed"}', STATE_LOCKED),
         ('{"val":"closing"}', STATE_LOCKING),
@@ -216,7 +227,10 @@ async def test_controlling_state_via_topic_and_json_message(
     ],
 )
 async def test_controlling_non_default_state_via_topic_and_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, payload, lock_state
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    payload,
+    lock_state,
 ) -> None:
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
@@ -252,7 +266,7 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
 
 
 async def test_sending_mqtt_commands_and_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
@@ -300,7 +314,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
 
 async def test_sending_mqtt_commands_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test sending commands with template."""
     assert await async_setup_component(
@@ -361,7 +375,7 @@ async def test_sending_mqtt_commands_with_template(
 
 
 async def test_sending_mqtt_commands_and_explicit_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
@@ -411,7 +425,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
 
 async def test_sending_mqtt_commands_support_open_and_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test open function of the lock without state topic."""
     assert await async_setup_component(
@@ -471,7 +485,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
 
 
 async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test open function of the lock without state topic."""
     assert await async_setup_component(
@@ -533,7 +547,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
 
 
 async def test_sending_mqtt_commands_pessimistic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test function of the lock with state topics."""
     assert await async_setup_component(
@@ -639,7 +653,7 @@ async def test_sending_mqtt_commands_pessimistic(
 
 
 async def test_availability_when_connection_lost(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
@@ -648,7 +662,7 @@ async def test_availability_when_connection_lost(
 
 
 async def test_availability_without_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -657,7 +671,7 @@ async def test_availability_without_topic(
 
 
 async def test_default_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
@@ -666,7 +680,7 @@ async def test_default_availability_payload(
 
 
 async def test_custom_availability_payload(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
@@ -675,7 +689,7 @@ async def test_custom_availability_payload(
 
 
 async def test_setting_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
@@ -684,7 +698,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
@@ -697,7 +711,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 
 
 async def test_setting_attribute_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
@@ -706,7 +720,9 @@ async def test_setting_attribute_with_template(
 
 
 async def test_update_with_json_attrs_not_dict(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
@@ -719,7 +735,9 @@ async def test_update_with_json_attrs_not_dict(
 
 
 async def test_update_with_json_attrs_bad_json(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
@@ -732,7 +750,9 @@ async def test_update_with_json_attrs_bad_json(
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
@@ -740,7 +760,9 @@ async def test_discovery_update_attr(
     )
 
 
-async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test unique id option only creates one lock per unique_id."""
     config = {
         mqtt.DOMAIN: {
@@ -766,7 +788,9 @@ async def test_unique_id(hass: HomeAssistant, mqtt_mock_entry_with_yaml_config) 
 
 
 async def test_discovery_removal_lock(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered lock."""
     data = '{ "name": "test",' '  "command_topic": "test_topic" }'
@@ -776,7 +800,9 @@ async def test_discovery_removal_lock(
 
 
 async def test_discovery_update_lock(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered lock."""
     config1 = {
@@ -797,7 +823,9 @@ async def test_discovery_update_lock(
 
 
 async def test_discovery_update_unchanged_lock(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered lock."""
     data1 = (
@@ -820,7 +848,9 @@ async def test_discovery_update_unchanged_lock(
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -831,7 +861,7 @@ async def test_discovery_broken(
 
 
 async def test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT lock device registry integration."""
     await help_test_entity_device_info_with_connection(
@@ -840,7 +870,7 @@ async def test_entity_device_info_with_connection(
 
 
 async def test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT lock device registry integration."""
     await help_test_entity_device_info_with_identifier(
@@ -849,7 +879,7 @@ async def test_entity_device_info_with_identifier(
 
 
 async def test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry update."""
     await help_test_entity_device_info_update(
@@ -858,7 +888,7 @@ async def test_entity_device_info_update(
 
 
 async def test_entity_device_info_remove(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
@@ -867,7 +897,7 @@ async def test_entity_device_info_remove(
 
 
 async def test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
@@ -876,7 +906,7 @@ async def test_entity_id_update_subscriptions(
 
 
 async def test_entity_id_update_discovery_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
@@ -885,7 +915,7 @@ async def test_entity_id_update_discovery_update(
 
 
 async def test_entity_debug_info_message(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
@@ -899,7 +929,7 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             SERVICE_LOCK,
@@ -912,8 +942,8 @@ async def test_entity_debug_info_message(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
-    caplog,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     service,
     topic,
     parameters,
@@ -939,7 +969,10 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog, tmp_path
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = lock.DOMAIN
@@ -950,15 +983,15 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "LOCKED", None, "locked"),
     ],
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
-    caplog,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     topic,
     value,
     attribute,
@@ -979,7 +1012,7 @@ async def test_encoding_subscribable_topics(
 
 
 async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, caplog, tmp_path
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test setup manual configured MQTT entity."""
     platform = lock.DOMAIN
@@ -988,7 +1021,9 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, tmp_path
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    tmp_path: Path,
 ) -> None:
     """Test unloading the config entry."""
     domain = lock.DOMAIN

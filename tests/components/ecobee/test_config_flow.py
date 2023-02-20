@@ -135,8 +135,8 @@ async def test_import_flow_triggered_but_no_ecobee_conf(hass: HomeAssistant) -> 
 
 
 async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_tokens(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test expected result if import flow triggers and ecobee.conf exists with valid tokens."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
@@ -186,8 +186,8 @@ async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(
 
 
 async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_tokens(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test expected result if import flow triggers and ecobee.conf exists with stale tokens."""
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass

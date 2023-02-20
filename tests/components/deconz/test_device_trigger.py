@@ -283,8 +283,11 @@ async def test_get_triggers_manage_unsupported_remotes(
 
 
 async def test_functional_device_trigger(
-    hass, aioclient_mock, mock_deconz_websocket, automation_calls
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
+    automation_calls,
+) -> None:
     """Test proper matching and attachment of device trigger automation."""
 
     data = {

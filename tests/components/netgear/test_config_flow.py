@@ -111,7 +111,7 @@ def mock_controller_service_failed():
         yield service_mock
 
 
-async def test_user(hass, service):
+async def test_user(hass: HomeAssistant, service) -> None:
     """Test user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -138,7 +138,7 @@ async def test_user(hass, service):
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_user_connect_error(hass, service_failed):
+async def test_user_connect_error(hass: HomeAssistant, service_failed) -> None:
     """Test user step with connection failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -160,7 +160,7 @@ async def test_user_connect_error(hass, service_failed):
     assert result["errors"] == {"base": "config"}
 
 
-async def test_user_incomplete_info(hass, service_incomplete):
+async def test_user_incomplete_info(hass: HomeAssistant, service_incomplete) -> None:
     """Test user step with incomplete device info."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -187,7 +187,7 @@ async def test_user_incomplete_info(hass, service_incomplete):
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_abort_if_already_setup(hass, service):
+async def test_abort_if_already_setup(hass: HomeAssistant, service) -> None:
     """Test we abort if the router is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -236,6 +236,25 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_ssdp_no_serial(hass: HomeAssistant) -> None:
+    """Test ssdp abort when the ssdp info does not include a serial number."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URL,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "no_serial"
+
+
 async def test_ssdp_ipv6(hass: HomeAssistant) -> None:
     """Test ssdp abort when using a ipv6 address."""
     MockConfigEntry(
@@ -262,7 +281,7 @@ async def test_ssdp_ipv6(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_ipv4_address"
 
 
-async def test_ssdp(hass, service):
+async def test_ssdp(hass: HomeAssistant, service) -> None:
     """Test ssdp step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -294,7 +313,7 @@ async def test_ssdp(hass, service):
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_ssdp_port_5555(hass, service_5555):
+async def test_ssdp_port_5555(hass: HomeAssistant, service_5555) -> None:
     """Test ssdp step with port 5555."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -326,7 +345,7 @@ async def test_ssdp_port_5555(hass, service_5555):
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_options_flow(hass, service):
+async def test_options_flow(hass: HomeAssistant, service) -> None:
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

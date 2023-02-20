@@ -40,7 +40,7 @@ from . import (
 )
 
 
-async def test_user_form(hass, ezviz_config_flow):
+async def test_user_form(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -70,7 +70,7 @@ async def test_user_form(hass, ezviz_config_flow):
     assert result["reason"] == "already_configured_account"
 
 
-async def test_user_custom_url(hass, ezviz_config_flow):
+async def test_user_custom_url(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test custom url step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -128,8 +128,8 @@ async def test_step_discovery_abort_if_cloud_account_missing(
 
 
 async def test_async_step_integration_discovery(
-    hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
-):
+    hass: HomeAssistant, ezviz_config_flow, ezviz_test_rtsp_config_flow
+) -> None:
     """Test discovery and confirm step."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
@@ -187,7 +187,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_exception(hass, ezviz_config_flow):
+async def test_user_form_exception(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test we handle exception on user form."""
     ezviz_config_flow.side_effect = PyEzvizError
 
@@ -238,9 +238,9 @@ async def test_user_form_exception(hass, ezviz_config_flow):
 
 
 async def test_discover_exception_step1(
-    hass,
+    hass: HomeAssistant,
     ezviz_config_flow,
-):
+) -> None:
     """Test we handle unexpected exception on discovery."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
@@ -312,10 +312,10 @@ async def test_discover_exception_step1(
 
 
 async def test_discover_exception_step3(
-    hass,
+    hass: HomeAssistant,
     ezviz_config_flow,
     ezviz_test_rtsp_config_flow,
-):
+) -> None:
     """Test we handle unexpected exception on discovery."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
@@ -372,7 +372,9 @@ async def test_discover_exception_step3(
     assert result["reason"] == "unknown"
 
 
-async def test_user_custom_url_exception(hass, ezviz_config_flow):
+async def test_user_custom_url_exception(
+    hass: HomeAssistant, ezviz_config_flow
+) -> None:
     """Test we handle unexpected exception."""
     ezviz_config_flow.side_effect = PyEzvizError()
     result = await hass.config_entries.flow.async_init(

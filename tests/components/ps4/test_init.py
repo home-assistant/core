@@ -27,10 +27,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.common import MockConfigEntry, mock_registry
+from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.0.1"
 MOCK_NAME = "test_ps4"
@@ -133,22 +134,23 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_config_flow_entry_migrate(hass: HomeAssistant) -> None:
+async def test_config_flow_entry_migrate(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
     manager = hass.config_entries
     mock_entry = MOCK_ENTRY_VERSION_1
     mock_entry.add_to_manager(manager)
-    mock_e_registry = mock_registry(hass)
     mock_entity_id = f"media_player.ps4_{MOCK_UNIQUE_ID}"
-    mock_e_entry = mock_e_registry.async_get_or_create(
+    mock_e_entry = entity_registry.async_get_or_create(
         "media_player",
         "ps4",
         MOCK_UNIQUE_ID,
         config_entry=mock_entry,
         device_id=MOCK_DEVICE_ID,
     )
-    assert len(mock_e_registry.entities) == 1
+    assert len(entity_registry.entities) == 1
     assert mock_e_entry.entity_id == mock_entity_id
     assert mock_e_entry.unique_id == MOCK_UNIQUE_ID
 
@@ -157,14 +159,14 @@ async def test_config_flow_entry_migrate(hass: HomeAssistant) -> None:
         return_value=MOCK_LOCATION,
     ), patch(
         "homeassistant.helpers.entity_registry.async_get",
-        return_value=mock_e_registry,
+        return_value=entity_registry,
     ):
         await ps4.async_migrate_entry(hass, mock_entry)
 
     await hass.async_block_till_done()
 
-    assert len(mock_e_registry.entities) == 1
-    for entity in mock_e_registry.entities.values():
+    assert len(entity_registry.entities) == 1
+    for entity in entity_registry.entities.values():
         mock_entity = entity
 
     # Test that entity_id remains the same.
