@@ -37,6 +37,7 @@ async def async_set_dashboard_info(
         and cur_dashboard.addon_slug == addon_slug
         and cur_dashboard.url == url
     ):
+        await cur_dashboard.async_request_refresh()
         return
 
     dashboard = ESPHomeDashboard(hass, addon_slug, url, async_get_clientsession(hass))
