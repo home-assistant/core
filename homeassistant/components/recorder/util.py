@@ -454,9 +454,8 @@ def setup_connection_for_dialect(
 ) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
-    slow_range_in_select = True
+    slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
-        slow_range_in_select = False
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
             dbapi_connection.isolation_level = None
@@ -533,11 +532,6 @@ def setup_connection_for_dialect(
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
-        # Historically we have marked PostgreSQL as having slow range in select
-        # but this may not be true for all versions. We should investigate
-        # this further when we have more data and remove this if possible
-        # in the future so we can use the simpler purge SQL query for
-        # _select_unused_attributes_ids and _select_unused_events_ids
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
