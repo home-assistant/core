@@ -68,14 +68,14 @@ def test_simple_dict(try_both_loaders):
     assert doc["key"] == "value"
 
 
-@pytest.mark.parametrize("hass_config_yaml", ["message:\n  {{ states.state }}"])
+@pytest.mark.parametrize("yaml_configuration", ["message:\n  {{ states.state }}"])
 def test_unhashable_key(mock_yaml_configuration: None) -> None:
     """Test an unhashable key."""
     with pytest.raises(HomeAssistantError):
         load_yaml_config_file(YAML_CONFIG_FILE)
 
 
-@pytest.mark.parametrize("hass_config_yaml", ["a: a\nnokeyhere"])
+@pytest.mark.parametrize("yaml_configuration", ["a: a\nnokeyhere"])
 def test_no_key(try_both_loaders, mock_yaml_configuration: None) -> None:
     """Test item without a key."""
     with pytest.raises(HomeAssistantError):
@@ -481,7 +481,7 @@ class TestSecrets(unittest.TestCase):
             )
 
 
-@pytest.mark.parametrize("hass_config_yaml", ['key: [1, "2", 3]'])
+@pytest.mark.parametrize("yaml_configuration", ['key: [1, "2", 3]'])
 def test_representing_yaml_loaded_data(
     try_both_dumpers, mock_yaml_configuration: None
 ) -> None:
@@ -490,7 +490,7 @@ def test_representing_yaml_loaded_data(
     assert yaml.dump(data) == "key:\n- 1\n- '2'\n- 3\n"
 
 
-@pytest.mark.parametrize("hass_config_yaml", ["key: thing1\nkey: thing2"])
+@pytest.mark.parametrize("yaml_configuration", ["key: thing1\nkey: thing2"])
 def test_duplicate_key(caplog, try_both_loaders, mock_yaml_configuration: None) -> None:
     """Test duplicate dict keys."""
     load_yaml_config_file(YAML_CONFIG_FILE)

@@ -922,33 +922,51 @@ async def _mqtt_mock_entry(
 
 @pytest.fixture
 def hass_config() -> ConfigType | None:
-    """Fixture to override configuration.yaml using mock_yaml_config.
+    """Fixture to parameterize the content of configuration.yaml using mock_yaml_config.
 
-    Fixture to parameterize the content of configuration.yaml with the
-    yaml dump of a config dict.
+    To set a configuration, tests can be marked with:
+    @pytest.mark.parametrize("hass_config", [{integration: {}}])
+    and the `mock_hass_config: None` fixture to the test parameters.
     """
     return None
 
 
 @pytest.fixture
-def hass_config_yaml(hass_config: ConfigType | None) -> str | None:
-    """Fixture to override configuration.yaml using mock_yaml_config.
+def mock_hass_config(
+    hass: HomeAssistant, hass_config: ConfigType | None
+) -> Generator[None, None, None]:
+    """Fixture to mock the content of configuration.yaml.
 
-    Fixture to parameterize the content of configuration.yaml using
-    yaml string content. Defaults to a yaml dump of `hass_config`.
+    Patches configuration files with the yaml dump of `hass_config` as content.
     """
-    return None if hass_config is None else yaml.dump(hass_config)
+    with patch_yaml_files({YAML_CONFIG_FILE: yaml.dump(hass_config)}):
+        yield
 
 
 @pytest.fixture
-def yaml_configuration_files(hass_config_yaml: str | None) -> dict[str, str] | None:
-    """Fixture to override yaml configuration files using mock_yaml_config.
+def yaml_configuration() -> str | None:
+    """Fixture to parameterize the content of a single yaml configuration file.
 
-    Configures yaml files to patch, defaults to patching `configuration.yaml`
-    with the content of `hass_config_yaml`.
-    Format dict[{yaml_file_name},{yamlcontent}]
+    To set yaml content, tests can be marked with:
+    @pytest.mark.parametrize("yaml_configuration", ["{yaml_content}"])
+    and the `mock_yaml_configuration: None` fixture to the test parameters.
     """
-    return None if hass_config_yaml is None else {YAML_CONFIG_FILE: hass_config_yaml}
+    return None
+
+
+@pytest.fixture
+def yaml_configuration_files(yaml_configuration: str | None) -> dict[str, str] | None:
+    """Fixture to parameterize multiple yaml configuration files.
+
+    To set the YAML files to patch, tests can be marked with:
+    @pytest.mark.parametrize(
+        "yaml_configuration_files", [{"configuration.yaml": "{yaml_content}"}]
+    )
+    and the `mock_yaml_configuration: None` fixture to the test parameters.
+    """
+    return (
+        None if yaml_configuration is None else {YAML_CONFIG_FILE: yaml_configuration}
+    )
 
 
 @pytest.fixture
@@ -957,8 +975,8 @@ def mock_yaml_configuration(
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of the yaml configuration files.
 
-    Parameterize configuration files using the `hass_config`,
-    `hass_config_yaml` and `yaml_configuration_files` fixtures.
+    Patches yaml configuration files using the `yaml_configuration`
+    and `yaml_configuration_files` fixtures.
     """
     with patch_yaml_files(yaml_configuration_files):
         yield

@@ -27,7 +27,7 @@ from tests.common import async_mock_service
     ],
 )
 async def test_if_fires_on_hass_start(
-    hass: HomeAssistant, mock_yaml_configuration: None, hass_config: ConfigType | None
+    hass: HomeAssistant, mock_hass_config: None, hass_config: ConfigType | None
 ) -> None:
     """Test the firing when Home Assistant starts."""
     calls = async_mock_service(hass, "test", "automation")

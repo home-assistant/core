@@ -35,7 +35,7 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
-    mock_yaml_configuration: None,
+    mock_hass_config: None,
 ) -> None:
     """Test diagnostics."""
     await knx.setup_integration({})
@@ -62,7 +62,7 @@ async def test_diagnostics(
 @pytest.mark.parametrize("hass_config", [{"knx": {"wrong_key": {}}}])
 async def test_diagnostic_config_error(
     hass: HomeAssistant,
-    mock_yaml_configuration: None,
+    mock_hass_config: None,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
@@ -93,7 +93,7 @@ async def test_diagnostic_config_error(
 async def test_diagnostic_redact(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_yaml_configuration: None,
+    mock_hass_config: None,
 ) -> None:
     """Test diagnostics redacting data."""
     mock_config_entry: MockConfigEntry = MockConfigEntry(
