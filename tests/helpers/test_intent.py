@@ -1,5 +1,4 @@
 """Tests for the intent helpers."""
-
 import pytest
 import voluptuous as vol
 
