@@ -329,7 +329,9 @@ class ModbusHub:
             func = getattr(self._client, entry.func_name)
             self._pb_call[entry.call_type] = RunEntry(entry.attr, func)
 
-        self.hass.async_create_task(self.async_pymodbus_connect())
+        self.hass.async_create_background_task(
+            self.async_pymodbus_connect(), "modbus-connect"
+        )
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
