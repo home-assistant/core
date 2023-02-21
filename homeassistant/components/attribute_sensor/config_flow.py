@@ -28,8 +28,8 @@ OPTIONS_SCHEMA = vol.Schema(
             selector.EntitySelectorConfig(),
         ),
         vol.Required(CONF_ATTRIBUTE_NAME): str,
-        vol.Required(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Required(CONF_UNIT_OF_MEASUREMENT): str,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
     }
 )
 

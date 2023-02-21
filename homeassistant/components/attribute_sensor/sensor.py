@@ -44,8 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_SOURCE_ENTITY): cv.entity_id,
         vol.Required(CONF_ATTRIBUTE_NAME): cv.string,
-        vol.Required(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Required(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
@@ -61,8 +61,10 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_ENTITY]
     )
     attribute_name: str = config_entry.options[CONF_ATTRIBUTE_NAME]
-    device_class = SensorDeviceClass(config_entry.options[CONF_DEVICE_CLASS])
-    unit_of_measurement: str = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
+    device_class: SensorDeviceClass | None = None
+    if config_entry.options.get(CONF_DEVICE_CLASS) is not None:
+        device_class = SensorDeviceClass(config_entry.options[CONF_DEVICE_CLASS])
+    unit_of_measurement: str | None = config_entry.options.get(CONF_UNIT_OF_MEASUREMENT)
 
     async_add_entities(
         [
@@ -84,12 +86,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the min/max/mean sensor."""
+    """Set up the attribute sensor."""
     source: str = config[CONF_SOURCE_ENTITY]
     name: str | None = config.get(CONF_NAME)
     attribute_name: str = config[CONF_ATTRIBUTE_NAME]
-    device_class = SensorDeviceClass(config[CONF_DEVICE_CLASS])
-    unit_of_measurement: str = config[CONF_UNIT_OF_MEASUREMENT]
+    device_class: SensorDeviceClass | None = None
+    if config.get(CONF_DEVICE_CLASS) is not None:
+        device_class = SensorDeviceClass(config[CONF_DEVICE_CLASS])
+    unit_of_measurement: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
@@ -118,8 +122,8 @@ class AttributeSensor(RestoreEntity, SensorEntity):
         source: str,
         name: str | None,
         attribute_name: str,
-        device_class: SensorDeviceClass,
-        unit_of_measurement: str,
+        device_class: SensorDeviceClass | None,
+        unit_of_measurement: str | None,
         unique_id: str | None,
     ) -> None:
         """Initialize the attribute sensor."""

@@ -6,11 +6,11 @@
         "title": "Makes a sensor of a entity attribute",
         "description": "Create a sensor from a attribute value of another entity",
         "data": {
-          "entity_id": "Input entity",
+          "source": "Source entity",
           "name": "Name",
           "attribute": "Attribute",
           "device_class": "Device class",
-          "unit_of_measurement": "Unit of Measurement"
+          "unit_of_measurement": "Unit of measurement"
         }
       }
     }
@@ -19,7 +19,7 @@
     "step": {
       "init": {
         "data": {
-          "entity_id": "[%key:component::attribute_sensor::config::step::user::data::entity_id%]",
+          "source": "[%key:component::attribute_sensor::config::step::user::data::source%]",
           "attribute": "[%key:component::attribute_sensor::config::step::user::data::attribute%]",
           "device_class": "[%key:component::attribute_sensor::config::step::user::data::device_class%]",
           "unit_of_measurement": "[%key:component::attribute_sensor::config::step::user::data::unit_of_measurement%]"
