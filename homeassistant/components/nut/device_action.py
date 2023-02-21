@@ -30,8 +30,7 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Network UPS Tools (NUT) devices."""
-    entry_id = _get_entry_id_from_device_id(hass, device_id)
-    if entry_id is None:
+    if (entry_id := _get_entry_id_from_device_id(hass, device_id)) is None:
         return []
 
     actions = []
@@ -75,7 +74,6 @@ def _get_command_name(device_action_name: str) -> str:
 
 def _get_entry_id_from_device_id(hass: HomeAssistant, device_id: str) -> str | None:
     registry = device_registry.async_get(hass)
-    device = registry.async_get(device_id)
-    if device is None:
+    if (device := registry.async_get(device_id)) is None:
         return None
     return next(entry for entry in device.config_entries)
