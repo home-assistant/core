@@ -51,8 +51,6 @@ def async_remove_shelly_entity(
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     """Get number of channels for block type."""
-    assert isinstance(device.shelly, dict)
-
     channels = None
 
     if block.type == "input":
@@ -286,6 +284,7 @@ def get_model_name(info: dict[str, Any]) -> str:
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
+    key = key.replace("emdata", "em")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
     device_name = device.name

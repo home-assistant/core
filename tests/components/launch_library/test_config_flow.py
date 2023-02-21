@@ -4,11 +4,12 @@ from unittest.mock import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.launch_library.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -21,7 +22,6 @@ async def test_create_entry(hass):
     with patch(
         "homeassistant.components.launch_library.async_setup_entry", return_value=True
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -31,7 +31,7 @@ async def test_create_entry(hass):
         assert result.get("result").data == {}
 
 
-async def test_integration_already_exists(hass):
+async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
 
     MockConfigEntry(

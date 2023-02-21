@@ -5,6 +5,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import islamic_prayer_times
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from . import NOW, PRAYER_TIMES, PRAYER_TIMES_TIMESTAMPS
@@ -18,7 +19,7 @@ def set_utc(hass):
     hass.config.set_time_zone("UTC")
 
 
-async def test_islamic_prayer_times_sensors(hass):
+async def test_islamic_prayer_times_sensors(hass: HomeAssistant) -> None:
     """Test minimum Islamic prayer times configuration."""
     entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
     entry.add_to_hass(hass)

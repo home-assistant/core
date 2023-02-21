@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Any
 
 import metno
+from typing_extensions import Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -148,7 +149,7 @@ class MetWeatherData:
         self._coordinates: dict[str, str] | None = None
 
     def set_coordinates(self) -> bool:
-        """Weather data inialization - set the coordinates."""
+        """Weather data initialization - set the coordinates."""
         if self._config.get(CONF_TRACK_HOME, False):
             latitude = self.hass.config.latitude
             longitude = self.hass.config.longitude
@@ -157,15 +158,14 @@ class MetWeatherData:
             latitude = self._config[CONF_LATITUDE]
             longitude = self._config[CONF_LONGITUDE]
             elevation = self._config[CONF_ELEVATION]
-
-        if not self._is_metric:
-            elevation = int(
-                round(
-                    DistanceConverter.convert(
-                        elevation, UnitOfLength.FEET, UnitOfLength.METERS
+            if not self._is_metric:
+                elevation = int(
+                    round(
+                        DistanceConverter.convert(
+                            elevation, UnitOfLength.FEET, UnitOfLength.METERS
+                        )
                     )
                 )
-            )
 
         coordinates = {
             "lat": str(latitude),
@@ -181,7 +181,7 @@ class MetWeatherData:
         )
         return True
 
-    async def fetch_data(self) -> MetWeatherData:
+    async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         resp = await self._weather_data.fetching_data()
         if not resp:

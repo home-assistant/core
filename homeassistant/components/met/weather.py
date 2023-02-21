@@ -94,7 +94,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         self._hourly = hourly
 
     @property
-    def track_home(self) -> (Any | bool):
+    def track_home(self) -> Any | bool:
         """Return if we are tracking home."""
         return self._config.get(CONF_TRACK_HOME, False)
 

@@ -35,14 +35,14 @@ from zwave_js_server.model.controller import (
     QRProvisioningInformation,
 )
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import (
-    FirmwareUpdateData,
-    FirmwareUpdateProgress,
-    FirmwareUpdateResult,
-)
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node, NodeStatistics
+from zwave_js_server.model.node.firmware import (
+    NodeFirmwareUpdateData,
+    NodeFirmwareUpdateProgress,
+    NodeFirmwareUpdateResult,
+)
 from zwave_js_server.model.utils import async_parse_qr_code_string
 from zwave_js_server.util.node import async_set_config_parameter
 
@@ -374,6 +374,10 @@ def node_status(node: Node) -> dict[str, Any]:
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
         "is_controller_node": node.is_controller_node,
+        "has_firmware_update_cc": any(
+            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
+            for cc in node.command_classes
+        ),
     }
 
 
@@ -424,7 +428,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_firmware_update_status
     )
     websocket_api.async_register_command(
-        hass, websocket_get_firmware_update_capabilities
+        hass, websocket_get_node_firmware_update_capabilities
     )
     websocket_api.async_register_command(
         hass, websocket_is_any_ota_firmware_update_in_progress
@@ -484,7 +488,9 @@ async def websocket_network_status(
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
             "is_primary": controller.is_primary,
-            "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
+            "is_using_home_id_from_other_network": (
+                controller.is_using_home_id_from_other_network
+            ),
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
             "is_suc": controller.is_suc,
@@ -498,6 +504,7 @@ async def websocket_network_status(
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
+            "rf_region": controller.rf_region,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
@@ -1897,7 +1904,7 @@ async def websocket_is_node_firmware_update_in_progress(
 
 
 def _get_firmware_update_progress_dict(
-    progress: FirmwareUpdateProgress,
+    progress: NodeFirmwareUpdateProgress,
 ) -> dict[str, int | float]:
     """Get a dictionary of firmware update progress."""
     return {
@@ -1934,7 +1941,7 @@ async def websocket_subscribe_firmware_update_status(
 
     @callback
     def forward_progress(event: dict) -> None:
-        progress: FirmwareUpdateProgress = event["firmware_update_progress"]
+        progress: NodeFirmwareUpdateProgress = event["firmware_update_progress"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
@@ -1947,7 +1954,7 @@ async def websocket_subscribe_firmware_update_status(
 
     @callback
     def forward_finished(event: dict) -> None:
-        finished: FirmwareUpdateResult = event["firmware_update_finished"]
+        finished: NodeFirmwareUpdateResult = event["firmware_update_finished"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
@@ -1984,20 +1991,20 @@ async def websocket_subscribe_firmware_update_status(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_firmware_update_capabilities",
+        vol.Required(TYPE): "zwave_js/get_node_firmware_update_capabilities",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_node
-async def websocket_get_firmware_update_capabilities(
+async def websocket_get_node_firmware_update_capabilities(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
     node: Node,
 ) -> None:
-    """Abort a firmware update."""
+    """Get a node's firmware update capabilities."""
     capabilities = await node.async_get_firmware_update_capabilities()
     connection.send_result(msg[ID], capabilities.to_dict())
 
@@ -2065,7 +2072,7 @@ class FirmwareUploadView(HomeAssistantView):
                 node.client.ws_server_url,
                 node,
                 [
-                    FirmwareUpdateData(
+                    NodeFirmwareUpdateData(
                         uploaded_file.filename,
                         await hass.async_add_executor_job(uploaded_file.file.read),
                     )

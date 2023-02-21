@@ -1,4 +1,6 @@
 """Test the repairs websocket API."""
+from typing import Any
+
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -172,7 +174,9 @@ async def test_load_issues(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_loading_issues_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored issues on start."""
     hass_storage[issue_registry.STORAGE_KEY] = {
         "version": issue_registry.STORAGE_VERSION_MAJOR,
@@ -219,7 +223,7 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1(hass: HomeAssistant, hass_storage) -> None:
+async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test migration from version 1.1."""
     hass_storage[issue_registry.STORAGE_KEY] = {
         "version": 1,

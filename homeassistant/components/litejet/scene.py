@@ -37,7 +37,9 @@ async def async_setup_entry(
 class LiteJetScene(Scene):
     """Representation of a single LiteJet scene."""
 
-    def __init__(self, entry_id, lj: LiteJet, i, name):  # pylint: disable=invalid-name
+    def __init__(
+        self, entry_id, lj: LiteJet, i, name  # pylint: disable=invalid-name
+    ) -> None:
         """Initialize the scene."""
         self._lj = lj
         self._index = i
@@ -54,7 +56,7 @@ class LiteJetScene(Scene):
 
     def _on_connected_changed(self, connected: bool, reason: str) -> None:
         self._attr_available = connected
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def extra_state_attributes(self):
