@@ -31,6 +31,8 @@ class ThreadRouterDiscoveryData:
     network_name: str | None
     server: str | None
     vendor_name: str | None
+    addresses: list[str] | None
+    thread_version: str | None
 
 
 class ThreadRouterDiscovery:
@@ -104,6 +106,7 @@ class ThreadRouterDiscovery:
             model_name = try_decode(service.properties.get(b"mn"))
             server = service.server
             vendor_name = try_decode(service.properties.get(b"vn"))
+            thread_version = try_decode(service.properties.get(b"tv"))
             data = ThreadRouterDiscoveryData(
                 brand=KNOWN_BRANDS.get(vendor_name),
                 extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
@@ -111,6 +114,8 @@ class ThreadRouterDiscovery:
                 network_name=network_name,
                 server=server,
                 vendor_name=vendor_name,
+                addresses=service.parsed_addresses(),
+                thread_version=thread_version,
             )
             if name in self._known_routers and self._known_routers[name] == (
                 extended_mac_address,
