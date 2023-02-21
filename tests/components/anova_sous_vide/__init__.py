@@ -54,7 +54,9 @@ async def async_init_integration(
     error: str | None = None,
 ) -> ConfigEntry:
     """Set up the Anova Sous Vide integration in Home Assistant."""
-    with patch("anova_wifi.AnovaPrecisionCooker.update") as update_patch:
+    with patch(
+        "homeassistant.components.anova_sous_vide.AnovaPrecisionCooker.update"
+    ) as update_patch:
         update_patch.return_value = ONLINE_UPDATE
         entry = create_entry(hass)
 

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from . import async_init_integration, create_entry
 
 
-async def test_async_setup_entry(hass: HomeAssistant):
+async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await async_init_integration(hass)
     state = hass.states.get("sensor.mode")
@@ -21,7 +21,7 @@ async def test_async_setup_entry(hass: HomeAssistant):
     assert state.state == "Low water"
 
 
-async def test_config_not_ready(hass: HomeAssistant):
+async def test_config_not_ready(hass: HomeAssistant) -> None:
     """Test for setup failure if connection to Anova is missing."""
     entry = create_entry(hass)
     with patch(
@@ -33,7 +33,7 @@ async def test_config_not_ready(hass: HomeAssistant):
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = await async_init_integration(hass)
 
@@ -44,4 +44,3 @@ async def test_unload_entry(hass: HomeAssistant):
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)

@@ -8,7 +8,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import ANOVA_CLIENT, ANOVA_FIRMWARE_VERSION, DOMAIN
+from .const import DOMAIN
+from .coordinator import AnovaCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -22,12 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update = await apc.update(entry.data["device_id"])
     except AnovaOffline as ex:
         raise ConfigEntryNotReady("Can not connect to the sous vide") from ex
-    hass.data[DOMAIN][entry.entry_id] = {
-        ANOVA_CLIENT: AnovaPrecisionCooker(),
-        ANOVA_FIRMWARE_VERSION: update["sensors"][
-            AnovaPrecisionCookerSensor.FIRMWARE_VERSION
-        ],
-    }
+    hass.data[DOMAIN][entry.entry_id] = AnovaCoordinator(
+        hass,
+        AnovaPrecisionCooker(),
+        update["sensors"][AnovaPrecisionCookerSensor.FIRMWARE_VERSION],
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
