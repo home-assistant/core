@@ -99,28 +99,3 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert config_entry.options == {}
     assert config_entry.title == "Thread"
     assert config_entry.unique_id is None
-
-
-async def test_zeroconf_then_import(hass: HomeAssistant) -> None:
-    """Test the import flow."""
-    with patch(
-        "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
-        )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-
-    with patch(
-        "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            thread.DOMAIN, context={"source": "import"}
-        )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert len(mock_setup_entry.mock_calls) == 0

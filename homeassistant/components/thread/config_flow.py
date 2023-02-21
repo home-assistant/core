@@ -17,6 +17,7 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Set up because the user has border routers."""
+        self.async_set_unique_id(DOMAIN)
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
         return self.async_create_entry(title="Thread", data={})
@@ -25,6 +26,7 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_data: dict[str, str] | None = None
     ) -> FlowResult:
         """Set up by import from async_setup."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
+        self.async_set_unique_id(DOMAIN)
+        # We don't check for existing config entries here because the check
+        # already happened in async_setup
         return self.async_create_entry(title="Thread", data={})
