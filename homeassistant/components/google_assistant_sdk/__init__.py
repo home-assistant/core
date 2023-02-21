@@ -1,6 +1,8 @@
 """Support for Google Assistant SDK."""
 from __future__ import annotations
 
+import importlib
+
 import aiohttp
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
@@ -154,6 +156,12 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+        try:
+            google_assistant_sdk_extension = importlib.import_module(
+                "custom_components.google_assistant_sdk_extension"
+            )
+        except ModuleNotFoundError:
+            google_assistant_sdk_extension = None
         if self.session:
             session = self.session
         else:
@@ -167,10 +175,16 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             language_code = self.entry.options.get(
                 CONF_LANGUAGE_CODE, default_language_code(self.hass)
             )
-            self.assistant = TextAssistant(credentials, language_code)
+            self.assistant = TextAssistant(
+                credentials, language_code, display=bool(google_assistant_sdk_extension)
+            )
 
         resp = self.assistant.assist(user_input.text)
         text_response = resp[0] or "<empty response>"
+        if google_assistant_sdk_extension:
+            text_response = google_assistant_sdk_extension.parse_response(
+                self.hass, user_input.text, resp
+            )
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(text_response)

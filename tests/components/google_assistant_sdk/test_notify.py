@@ -45,7 +45,7 @@ async def test_broadcast_no_targets(
         )
         await hass.async_block_till_done()
     mock_text_assistant.assert_called_once_with(
-        ExpectedCredentials(), language_code, audio_out=False
+        ExpectedCredentials(), language_code, audio_out=False, display=False
     )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
 

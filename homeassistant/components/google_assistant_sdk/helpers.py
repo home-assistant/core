@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+import importlib
 import logging
 from typing import Any
 import uuid
@@ -65,12 +66,29 @@ async def async_send_text_commands(
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
+    try:
+        # Official integrations are not allowed to parse HTML.
+        # Allow users to manually install a custom integration that can do the parsing.
+        google_assistant_sdk_extension = importlib.import_module(
+            "custom_components.google_assistant_sdk_extension"
+        )
+    except ModuleNotFoundError:
+        # No logging. Expected for most users who won't install the custom integration.
+        google_assistant_sdk_extension = None
     with TextAssistant(
-        credentials, language_code, audio_out=bool(media_players)
+        credentials,
+        language_code,
+        audio_out=bool(media_players),
+        # Request HTML (display=True) only if the custom integration is found.
+        display=bool(google_assistant_sdk_extension),
     ) as assistant:
         for command in commands:
             resp = assistant.assist(command)
             text_response = resp[0]
+            if google_assistant_sdk_extension:
+                text_response = google_assistant_sdk_extension.parse_response(
+                    hass, command, resp
+                )
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
             audio_response = resp[2]
             if media_players and audio_response:

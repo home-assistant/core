@@ -152,7 +152,7 @@ async def test_send_text_command(
             blocking=True,
         )
     mock_text_assistant.assert_called_once_with(
-        ExpectedCredentials(), expected_language_code, audio_out=False
+        ExpectedCredentials(), expected_language_code, audio_out=False, display=False
     )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
 
@@ -180,7 +180,7 @@ async def test_send_text_commands(
             blocking=True,
         )
     mock_text_assistant.assert_called_once_with(
-        ExpectedCredentials(), "en-US", audio_out=False
+        ExpectedCredentials(), "en-US", audio_out=False, display=False
     )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command1)])
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command2)])
@@ -354,7 +354,9 @@ async def test_conversation_agent(
 
     # Assert constructor is called only once since it's reused across requests
     assert mock_text_assistant.call_count == 1
-    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), "en-US")
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), "en-US", display=False
+    )
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
 
@@ -412,9 +414,11 @@ async def test_conversation_agent_refresh_token(
 
     # Assert constructor is called twice since the token was expired
     assert mock_text_assistant.call_count == 2
-    mock_text_assistant.assert_has_calls([call(ExpectedCredentials(), "en-US")])
     mock_text_assistant.assert_has_calls(
-        [call(ExpectedCredentials(updated_access_token), "en-US")]
+        [call(ExpectedCredentials(), "en-US", display=False)]
+    )
+    mock_text_assistant.assert_has_calls(
+        [call(ExpectedCredentials(updated_access_token), "en-US", display=False)]
     )
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
