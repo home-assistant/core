@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING
 from zigpy.backups import NetworkBackup
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
-
 from .core.const import (
     CONF_RADIO_TYPE,
     DATA_ZHA,
@@ -22,6 +20,7 @@ from .core.gateway import ZHAGateway
 if TYPE_CHECKING:
     from zigpy.application import ControllerApplication
 
+    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 
@@ -43,12 +42,11 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
     # Otherwise, find one
     entries = hass.config_entries.async_entries(DOMAIN)
-    valid_entries = [e for e in entries if e.source != SOURCE_IGNORE]
 
-    if len(valid_entries) != 1:
-        raise ValueError(f"Invalid number of ZHA config entries: {valid_entries!r}")
+    if len(entries) != 1:
+        raise ValueError(f"Invalid number of ZHA config entries: {entries!r}")
 
-    return valid_entries[0]
+    return entries[0]
 
 
 def _wrap_network_settings(app: ControllerApplication) -> NetworkBackup:
