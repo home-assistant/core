@@ -45,6 +45,7 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
         domain=DOMAIN,
         title="Anova Sous Vide",
         data={"device_unique_id": DEVICE_UNIQUE_ID},
+        unique_id=DEVICE_UNIQUE_ID,
     )
     entry.add_to_hass(hass)
     return entry
