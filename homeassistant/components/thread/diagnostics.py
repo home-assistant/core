@@ -1,5 +1,4 @@
-"""
-Diagnostics support for Thread networks.
+"""Diagnostics support for Thread networks.
 
 When triaging Matter and HomeKit issues you often need to check for problems with the Thread network.
 
@@ -17,15 +16,18 @@ some of their thread accessories can't be pinged, but it's still a thread proble
 """
 
 from __future__ import annotations
+
 import asyncio
+from typing import Any
 
 import pyroute2
-from typing import Any
+from python_otbr_api.tlv_parser import MeshcopTLVType
+
+from homeassistant.components.thread.dataset_store import async_get_store
 from homeassistant.components.thread.discovery import (
     ThreadRouterDiscovery,
     ThreadRouterDiscoveryData,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -99,6 +101,16 @@ async def async_get_config_entry_diagnostics(
         for prefix in prefixes:
             if ghosts := reverse_routes[prefix] - routers:
                 network["unexpected-routers"] = ghosts
+
+    store = await async_get_store(hass)
+    for record in store.datasets.values():
+        network = networks.setdefault(
+            record.extended_pan_id, {"name": record.network_name, "routers": {}}
+        )
+        if mlp := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
+            network.setdefault("prefixes", set()).add(
+                f"{mlp[0:4]}:{mlp[4:8]}:{mlp[8:12]}:{mlp[12:16]}"
+            )
 
     return {
         "networks": networks,
