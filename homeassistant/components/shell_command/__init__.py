@@ -6,6 +6,7 @@ from contextlib import suppress
 import logging
 import shlex
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -82,9 +83,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         process = await create_process
         try:
-            stdout_data, stderr_data = await asyncio.wait_for(
-                process.communicate(), COMMAND_TIMEOUT
-            )
+            async with async_timeout.timeout(COMMAND_TIMEOUT):
+                stdout_data, stderr_data = await process.communicate()
         except asyncio.TimeoutError:
             _LOGGER.exception(
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
