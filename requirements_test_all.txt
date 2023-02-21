@@ -1384,6 +1384,9 @@ pyrisco==0.5.7
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
 
+# homeassistant.components.thread
+pyroute2==0.7.5
+
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.16
 
