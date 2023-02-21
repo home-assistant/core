@@ -101,6 +101,9 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
@@ -131,10 +134,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
     if config.getoption("verbose") > 0:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+        logging.getLogger().level = logging.DEBUG
 
 
 def pytest_runtest_setup() -> None:
