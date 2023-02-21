@@ -17,7 +17,7 @@ async def update_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
     mock_sensor_api_instance: MagicMock,
-) -> None:
+) -> State:
     """Simulate an update trigger from the API."""
 
     for call in mock_sensor_api_instance.register_attr_callback.call_args_list:
@@ -310,9 +310,6 @@ async def test_no_restore_state(
     await init_integration(hass)
     # restore from cache
     state = hass.states.get(entity_id)
-    assert state.state == "unknown"
-
-    state = await update_sensor_state(hass, entity_id, mock_sensor1_api)
     state.state = datetime.now().isoformat()
 
 

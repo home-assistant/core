@@ -256,6 +256,8 @@ class WasherDryerTimeClass(RestoreSensor):
         )
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{said}-{description.key}"
+        if self._attr_native_value is None:
+            self._attr_native_value = utcnow()
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
@@ -279,8 +281,6 @@ class WasherDryerTimeClass(RestoreSensor):
         """Calculate the time stamp for completion."""
         machine_state = self._wd.get_machine_state()
         now = utcnow()
-        if self._attr_native_value is None:
-            self._attr_native_value = now
         if (
             machine_state.value
             in {MachineState.Complete.value, MachineState.Standby.value}
