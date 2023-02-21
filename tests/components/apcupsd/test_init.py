@@ -66,7 +66,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_remove(hass):
+async def test_unload_remove(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     # Load two integrations from two mock hosts.
     entries = (
