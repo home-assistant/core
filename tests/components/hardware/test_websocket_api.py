@@ -71,6 +71,7 @@ async def test_system_status_subscription(
     ):
         freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     response = await client.receive_json()
     assert response["event"] == {

@@ -16,8 +16,8 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-from homeassistant.helpers.json import json_loads_object
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads_object
 
 from .const import SupportedDialect
 
@@ -44,21 +44,38 @@ class StatisticResult(TypedDict):
     stat: StatisticData
 
 
+class StatisticDataTimestampBase(TypedDict):
+    """Mandatory fields for statistic data class with a timestamp."""
+
+    start_ts: float
+
+
 class StatisticDataBase(TypedDict):
     """Mandatory fields for statistic data class."""
 
     start: datetime
 
 
-class StatisticData(StatisticDataBase, total=False):
-    """Statistic data class."""
+class StatisticMixIn(TypedDict, total=False):
+    """Mandatory fields for statistic data class."""
 
-    mean: float
-    min: float
-    max: float
-    last_reset: datetime | None
     state: float
     sum: float
+    min: float
+    max: float
+    mean: float
+
+
+class StatisticData(StatisticDataBase, StatisticMixIn, total=False):
+    """Statistic data class."""
+
+    last_reset: datetime | None
+
+
+class StatisticDataTimestamp(StatisticDataTimestampBase, StatisticMixIn, total=False):
+    """Statistic data class with a timestamp."""
+
+    last_reset_ts: float | None
 
 
 class StatisticMetaData(TypedDict):
@@ -463,7 +480,4 @@ class DatabaseOptimizer:
     #
     # https://jira.mariadb.org/browse/MDEV-25020
     #
-    # Historically, we have applied this logic to PostgreSQL as well, but
-    # it may not be necessary. We should revisit this in the future
-    # when we have more data.
     slow_range_in_select: bool

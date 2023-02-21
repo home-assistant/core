@@ -789,7 +789,7 @@ async def test_invalid_rrule(
 
 
 @pytest.mark.parametrize(
-    "time_zone,event_order",
+    ("time_zone", "event_order"),
     [
         ("America/Los_Angeles", ["One", "Two", "All Day Event"]),
         ("America/Regina", ["One", "Two", "All Day Event"]),

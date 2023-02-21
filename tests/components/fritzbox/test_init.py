@@ -46,7 +46,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -99,7 +99,7 @@ async def test_update_unique_id(
 
 
 @pytest.mark.parametrize(
-    "entitydata,unique_id",
+    ("entitydata", "unique_id"),
     [
         (
             {

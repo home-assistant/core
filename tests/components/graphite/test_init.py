@@ -1,5 +1,4 @@
 """The tests for the Graphite component."""
-import asyncio
 import socket
 from unittest import mock
 from unittest.mock import patch
@@ -91,9 +90,11 @@ async def test_start(hass: HomeAssistant, mock_socket, mock_time) -> None:
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_ON)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -114,9 +115,11 @@ async def test_shutdown(hass: HomeAssistant, mock_socket, mock_time) -> None:
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_ON)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -134,7 +137,7 @@ async def test_shutdown(hass: HomeAssistant, mock_socket, mock_time) -> None:
     await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_OFF)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
 
     assert mock_socket.return_value.connect.call_count == 0
     assert mock_socket.return_value.sendall.call_count == 0
@@ -156,9 +159,11 @@ async def test_report_attributes(hass: HomeAssistant, mock_socket, mock_time) ->
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", STATE_ON, attrs)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -186,9 +191,11 @@ async def test_report_with_string_state(
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", "above_horizon", {"foo": 1.0})
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -203,7 +210,8 @@ async def test_report_with_string_state(
     mock_socket.reset_mock()
 
     hass.states.async_set("test.entity", "not_float")
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 0
     assert mock_socket.return_value.sendall.call_count == 0
@@ -221,13 +229,15 @@ async def test_report_with_binary_state(
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     expected = [
         "ha.test.entity.foo 1.000000 12345",
         "ha.test.entity.state 1.000000 12345",
     ]
     hass.states.async_set("test.entity", STATE_ON, {"foo": 1.0})
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -246,7 +256,8 @@ async def test_report_with_binary_state(
         "ha.test.entity.state 0.000000 12345",
     ]
     hass.states.async_set("test.entity", STATE_OFF, {"foo": 1.0})
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert mock_socket.return_value.connect.call_count == 1
     assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
@@ -260,7 +271,7 @@ async def test_report_with_binary_state(
 
 
 @pytest.mark.parametrize(
-    "error, log_text",
+    ("error", "log_text"),
     [
         (OSError, "Failed to send data to graphite"),
         (socket.gaierror, "Unable to connect to host"),
@@ -282,10 +293,12 @@ async def test_send_to_graphite_errors(
     mock_socket.reset_mock()
 
     await hass.async_start()
+    await hass.async_block_till_done()
 
     mock_socket.return_value.connect.side_effect = error
 
     hass.states.async_set("test.entity", STATE_ON)
-    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    hass.data[graphite.DOMAIN]._queue.join()
 
     assert log_text in caplog.text

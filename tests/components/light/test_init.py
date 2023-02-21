@@ -433,7 +433,7 @@ async def test_services(
 
 
 @pytest.mark.parametrize(
-    "profile_name, last_call, expected_data",
+    ("profile_name", "last_call", "expected_data"),
     (
         (
             "test",
@@ -582,7 +582,11 @@ async def test_default_profiles_group(
 
 
 @pytest.mark.parametrize(
-    "extra_call_params, expected_params_state_was_off, expected_params_state_was_on",
+    (
+        "extra_call_params",
+        "expected_params_state_was_off",
+        "expected_params_state_was_on",
+    ),
     (
         (
             # No turn on params, should apply profile

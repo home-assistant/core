@@ -18,6 +18,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.2.3.4",
@@ -73,12 +75,12 @@ async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
 
 
 async def test_full_flow(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check a full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -139,12 +141,12 @@ async def test_full_flow(
 
 
 async def test_abort_if_spotify_error(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check Spotify errors causes flow to abort."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -181,12 +183,12 @@ async def test_abort_if_spotify_error(
 
 
 async def test_reauthentication(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test Spotify reauthentication."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -248,12 +250,12 @@ async def test_reauthentication(
 
 
 async def test_reauth_account_mismatch(
-    hass,
+    hass: HomeAssistant,
     component_setup,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-):
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test Spotify reauthentication with different account."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,

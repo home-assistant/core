@@ -116,7 +116,7 @@ def mock_controller_client_empty():
         yield service_mock
 
 
-async def test_user(hass, client_single):
+async def test_user(hass: HomeAssistant, client_single) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -137,7 +137,7 @@ async def test_user(hass, client_single):
     assert result["data"][CONF_LONGITUDE] == str(CITY_1_LON)
 
 
-async def test_user_list(hass, client_multiple):
+async def test_user_list(hass: HomeAssistant, client_multiple) -> None:
     """Test user config."""
 
     # test with all provided with search returning more than 1 place
@@ -160,7 +160,7 @@ async def test_user_list(hass, client_multiple):
     assert result["data"][CONF_LONGITUDE] == str(CITY_3_LON)
 
 
-async def test_import(hass, client_multiple):
+async def test_import(hass: HomeAssistant, client_multiple) -> None:
     """Test import step."""
     # import with all
     result = await hass.config_entries.flow.async_init(
@@ -175,7 +175,7 @@ async def test_import(hass, client_multiple):
     assert result["data"][CONF_LONGITUDE] == str(CITY_2_LON)
 
 
-async def test_search_failed(hass, client_empty):
+async def test_search_failed(hass: HomeAssistant, client_empty) -> None:
     """Test error displayed if no result in search."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -187,7 +187,7 @@ async def test_search_failed(hass, client_empty):
     assert result["errors"] == {CONF_CITY: "empty"}
 
 
-async def test_abort_if_already_setup(hass, client_single):
+async def test_abort_if_already_setup(hass: HomeAssistant, client_single) -> None:
     """Test we abort if already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -214,7 +214,7 @@ async def test_abort_if_already_setup(hass, client_single):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass: HomeAssistant):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

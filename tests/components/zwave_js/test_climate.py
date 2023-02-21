@@ -36,6 +36,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
@@ -48,8 +49,8 @@ from .common import (
 
 
 async def test_thermostat_v2(
-    hass, client, climate_radio_thermostat_ct100_plus, integration
-):
+    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+) -> None:
     """Test a thermostat v2 command class entity."""
     node = climate_radio_thermostat_ct100_plus
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
@@ -281,8 +282,11 @@ async def test_thermostat_v2(
 
 
 async def test_thermostat_different_endpoints(
-    hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
-):
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+) -> None:
     """Test an entity with values on a different endpoint from the primary value."""
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
@@ -292,7 +296,9 @@ async def test_thermostat_different_endpoints(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
 
 
-async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
+async def test_setpoint_thermostat(
+    hass: HomeAssistant, client, climate_danfoss_lc_13, integration
+) -> None:
     """Test a setpoint thermostat command class entity."""
     node = climate_danfoss_lc_13
     state = hass.states.get(CLIMATE_DANFOSS_LC13_ENTITY)
@@ -387,8 +393,8 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
 
 
 async def test_thermostat_heatit_z_trm3_no_value(
-    hass, client, climate_heatit_z_trm3_no_value, integration
-):
+    hass: HomeAssistant, client, climate_heatit_z_trm3_no_value, integration
+) -> None:
     """Test a heatit Z-TRM3 entity that is missing a value."""
     # When the config parameter that specifies what sensor to use has no value, we fall
     # back to the first temperature sensor found on the device
@@ -397,8 +403,8 @@ async def test_thermostat_heatit_z_trm3_no_value(
 
 
 async def test_thermostat_heatit_z_trm3(
-    hass, client, climate_heatit_z_trm3, integration
-):
+    hass: HomeAssistant, client, climate_heatit_z_trm3, integration
+) -> None:
     """Test a heatit Z-TRM3 entity."""
     node = climate_heatit_z_trm3
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
@@ -467,8 +473,8 @@ async def test_thermostat_heatit_z_trm3(
 
 
 async def test_thermostat_heatit_z_trm2fx(
-    hass, client, climate_heatit_z_trm2fx, integration
-):
+    hass: HomeAssistant, client, climate_heatit_z_trm2fx, integration
+) -> None:
     """Test a heatit Z-TRM2fx entity."""
     node = climate_heatit_z_trm2fx
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
@@ -513,7 +519,9 @@ async def test_thermostat_heatit_z_trm2fx(
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
 
 
-async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integration):
+async def test_thermostat_srt321_hrt4_zw(
+    hass: HomeAssistant, client, srt321_hrt4_zw, integration
+) -> None:
     """Test a climate entity from a HRT4-ZW / SRT321 thermostat device.
 
     This device currently has no setpoint values.
@@ -531,8 +539,8 @@ async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integrati
 
 
 async def test_preset_and_no_setpoint(
-    hass, client, climate_eurotronic_spirit_z, integration
-):
+    hass: HomeAssistant, client, climate_eurotronic_spirit_z, integration
+) -> None:
     """Test preset without setpoint value."""
     node = climate_eurotronic_spirit_z
 
@@ -630,12 +638,12 @@ async def test_preset_and_no_setpoint(
 
 
 async def test_temp_unit_fix(
-    hass,
+    hass: HomeAssistant,
     client,
     climate_radio_thermostat_ct101_multiple_temp_units,
     climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints,
     integration,
-):
+) -> None:
     """Test temperaturee unit fix."""
     state = hass.states.get("climate.thermostat")
     assert state
@@ -647,8 +655,8 @@ async def test_temp_unit_fix(
 
 
 async def test_thermostat_unknown_values(
-    hass, client, climate_radio_thermostat_ct100_plus_state, integration
-):
+    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus_state, integration
+) -> None:
     """Test a thermostat v2 with unknown values."""
     node_state = replace_value_of_zwave_value(
         climate_radio_thermostat_ct100_plus_state,

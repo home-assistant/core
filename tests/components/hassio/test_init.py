@@ -795,7 +795,7 @@ async def test_coordinator_updates(
 
 
 @pytest.mark.parametrize(
-    "extra_os_info, integration",
+    ("extra_os_info", "integration"),
     [
         ({"board": "odroid-c2"}, "hardkernel"),
         ({"board": "odroid-c4"}, "hardkernel"),

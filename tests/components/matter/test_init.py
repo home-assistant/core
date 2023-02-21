@@ -349,8 +349,14 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, backup_calls, "
-    "update_addon_side_effect, create_backup_side_effect",
+    (
+        "addon_version",
+        "update_available",
+        "update_calls",
+        "backup_calls",
+        "update_addon_side_effect",
+        "create_backup_side_effect",
+    ),
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
@@ -434,7 +440,7 @@ async def test_issue_registry_invalid_version(
 
 
 @pytest.mark.parametrize(
-    "stop_addon_side_effect, entry_state",
+    ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
         (HassioAPIError("Boom"), ConfigEntryState.LOADED),
