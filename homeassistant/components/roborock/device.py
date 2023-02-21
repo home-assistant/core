@@ -1,6 +1,5 @@
 """Support for Roborock device base class."""
 import datetime
-import logging
 
 from roborock.containers import Status
 from roborock.typing import RoborockCommand, RoborockDeviceInfo
@@ -10,8 +9,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def parse_datetime_time(initial_time: datetime.time) -> float:
