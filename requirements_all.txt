@@ -1467,7 +1467,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.0
+pyRFXtrx==0.30.1
 
 # homeassistant.components.switchmate
 pySwitchmate==0.5.1
