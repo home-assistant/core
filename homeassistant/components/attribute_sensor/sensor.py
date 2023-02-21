@@ -145,7 +145,7 @@ class AttributeSensor(RestoreEntity, SensorEntity):
 
         @callback
         def calc_attribute_sensor(event: Event) -> None:
-            """Handle the sensor state changes."""
+            """Handle the source entity state changes."""
             new_state: State | None = event.data.get("new_state")
 
             if new_state is None or new_state.state in (
