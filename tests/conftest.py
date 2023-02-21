@@ -920,19 +920,19 @@ async def _mqtt_mock_entry(
 
 
 @pytest.fixture
-def hass_config() -> ConfigType | None:
+def hass_config() -> ConfigType:
     """Fixture to parametrize the content of main configuration using mock_hass_config.
 
     To set a configuration, tests can be marked with:
     @pytest.mark.parametrize("hass_config", [{integration: {...}}])
     Add the `mock_hass_config: None` fixture to the test.
     """
-    return None
+    return {}
 
 
 @pytest.fixture
 def mock_hass_config(
-    hass: HomeAssistant, hass_config: ConfigType | None
+    hass: HomeAssistant, hass_config: ConfigType
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of main configuration.
 
