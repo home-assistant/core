@@ -315,6 +315,8 @@ class BluetoothManager:
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
                     tracker.async_remove_address(address)
+                    self._integration_matcher.async_clear_address(address)
+                    self._async_dismiss_discoveries(address)
 
                 service_info = history.pop(address)
 
@@ -326,6 +328,14 @@ class BluetoothManager:
                         callback(service_info)
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
+
+    def _async_dismiss_discoveries(self, address: str) -> None:
+        """Dismiss all discoveries for the given address."""
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            BluetoothServiceInfoBleak,
+            lambda service_info: bool(service_info.address == address),
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     def _prefer_previous_adv_from_different_source(
         self,

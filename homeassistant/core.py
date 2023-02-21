@@ -279,6 +279,7 @@ class HomeAssistant:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
+        self._background_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -513,14 +514,33 @@ class HomeAssistant:
     def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
 
         target: target to call.
         """
         task = self.loop.create_task(target)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
+        return task
 
+    @callback
+    def async_create_background_task(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the eventloop.
+
+        This is a background task which will not block startup and will be
+        automatically cancelled on shutdown. If you are using this in your
+        integration, use the create task methods on the config entry instead.
+
+        This method must be run in the event loop.
+        """
+        task = self.loop.create_task(target, name=name)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
     @callback
@@ -687,6 +707,14 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Cancel all background tasks
+        for task in self._background_tasks:
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.remove)
+            task.cancel()
+
+        self.exit_code = exit_code
+
         # stage 1
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -730,8 +758,6 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
-
-        self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:

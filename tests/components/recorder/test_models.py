@@ -24,6 +24,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt, dt as dt_util
 
@@ -59,8 +60,9 @@ def test_from_event_to_db_state_attributes() -> None:
     )
     db_attrs = StateAttributes()
     dialect = SupportedDialect.MYSQL
+
     db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
-        event, {}, dialect
+        event, {}, {}, dialect
     )
     assert db_attrs.to_native() == attrs
 
@@ -120,7 +122,9 @@ def test_events_repr_without_timestamp() -> None:
     assert "2016-07-09 11:00:00+00:00" in repr(events)
 
 
-def test_handling_broken_json_state_attributes(caplog):
+def test_handling_broken_json_state_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we handle broken json in state attributes."""
     state_attributes = StateAttributes(
         attributes_id=444, hash=1234, shared_attrs="{NOT_PARSE}"
@@ -312,7 +316,9 @@ async def test_event_to_db_model() -> None:
     assert native.as_dict() == event.as_dict()
 
 
-async def test_lazy_state_handles_include_json(caplog):
+async def test_lazy_state_handles_include_json(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState class handles invalid json."""
     row = PropertyMock(
         entity_id="sensor.invalid",
@@ -322,7 +328,9 @@ async def test_lazy_state_handles_include_json(caplog):
     assert "Error converting row to state attributes" in caplog.text
 
 
-async def test_lazy_state_prefers_shared_attrs_over_attrs(caplog):
+async def test_lazy_state_prefers_shared_attrs_over_attrs(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState prefers shared_attrs over attributes."""
     row = PropertyMock(
         entity_id="sensor.invalid",
@@ -332,7 +340,9 @@ async def test_lazy_state_prefers_shared_attrs_over_attrs(caplog):
     assert LazyState(row, {}, None).attributes == {"shared": True}
 
 
-async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog):
+async def test_lazy_state_handles_different_last_updated_and_last_changed(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState handles different last_updated and last_changed."""
     now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
     row = PropertyMock(
@@ -361,7 +371,9 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog
     }
 
 
-async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
+async def test_lazy_state_handles_same_last_updated_and_last_changed(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the LazyState handles same last_updated and last_changed."""
     now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
     row = PropertyMock(
@@ -409,7 +421,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp(time_zone, hass):
+def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
     """Test we can handle processing database datatimes to timestamps."""
     hass.config.set_time_zone(time_zone)
     utc_now = dt_util.utcnow()
@@ -421,7 +433,9 @@ def test_process_datetime_to_timestamp(time_zone, hass):
 @pytest.mark.parametrize(
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
-def test_process_datetime_to_timestamp_freeze_time(time_zone, hass):
+def test_process_datetime_to_timestamp_freeze_time(
+    time_zone, hass: HomeAssistant
+) -> None:
     """Test we can handle processing database datatimes to timestamps.
 
     This test freezes time to make sure everything matches.
@@ -439,8 +453,8 @@ def test_process_datetime_to_timestamp_freeze_time(time_zone, hass):
     "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
 )
 async def test_process_datetime_to_timestamp_mirrors_utc_isoformat_behavior(
-    time_zone, hass
-):
+    time_zone, hass: HomeAssistant
+) -> None:
     """Test process_datetime_to_timestamp mirrors process_timestamp_to_utc_isoformat."""
     hass.config.set_time_zone(time_zone)
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)

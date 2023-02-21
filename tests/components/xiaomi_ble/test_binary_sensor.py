@@ -262,7 +262,7 @@ async def test_smoke(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_unavailable(hass):
+async def test_unavailable(hass: HomeAssistant) -> None:
     """Test normal device goes to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 
@@ -314,7 +314,7 @@ async def test_unavailable(hass):
     await hass.async_block_till_done()
 
 
-async def test_sleepy_device(hass):
+async def test_sleepy_device(hass: HomeAssistant) -> None:
     """Test sleepy device does not go to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 

@@ -19,6 +19,7 @@ import yaml
 from homeassistant import core, setup
 from homeassistant.helpers import (
     area_registry,
+    device_registry,
     entity_registry,
     intent,
     template,
@@ -27,12 +28,17 @@ from homeassistant.helpers import (
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
-from .const import DOMAIN
+from .const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 
 REGEX_TYPE = type(re.compile(""))
+
+
+def is_entity_exposed(state: core.State) -> bool:
+    """Return true if entity belongs to exposed domain list."""
+    return state.domain in DEFAULT_EXPOSED_DOMAINS
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -77,8 +83,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
-        self._areas_list: TextSlotList | None = None
-        self._names_list: TextSlotList | None = None
+        self._slot_lists: dict[str, SlotList] | None = None
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""
@@ -128,10 +133,7 @@ class DefaultAgent(AbstractConversationAgent):
                 conversation_id,
             )
 
-        slot_lists: dict[str, SlotList] = {
-            "area": self._make_areas_list(),
-            "name": self._make_names_list(),
-        }
+        slot_lists = self._make_slot_lists()
 
         result = await self.hass.async_add_executor_job(
             self._recognize,
@@ -319,6 +321,9 @@ class DefaultAgent(AbstractConversationAgent):
             intents_dict = lang_intents.intents_dict
             loaded_components = lang_intents.loaded_components
 
+        # en-US, en_US, en, ...
+        language_variations = list(_get_language_variations(language))
+
         # Check if any new components have been loaded
         intents_changed = False
         for component in hass_components:
@@ -330,7 +335,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             # Check for intents for this component with the target language.
             # Try en-US, en, etc.
-            for language_variation in _get_language_variations(language):
+            for language_variation in language_variations:
                 component_intents = get_intents(
                     component, language_variation, json_load=json_load
                 )
@@ -341,7 +346,10 @@ class DefaultAgent(AbstractConversationAgent):
                     # Will need to recreate graph
                     intents_changed = True
                     _LOGGER.debug(
-                        "Loaded intents component=%s, language=%s", component, language
+                        "Loaded intents component=%s, language=%s (%s)",
+                        component,
+                        language,
+                        language_variation,
                     )
                     break
 
@@ -349,24 +357,31 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # Only load custom sentences once, otherwise they will be re-loaded
             # when components change.
-            custom_sentences_dir = Path(
-                self.hass.config.path("custom_sentences", language)
-            )
-            if custom_sentences_dir.is_dir():
-                for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
-                    with custom_sentences_path.open(
-                        encoding="utf-8"
-                    ) as custom_sentences_file:
-                        # Merge custom sentences
-                        merge_dict(intents_dict, yaml.safe_load(custom_sentences_file))
+            for language_variation in language_variations:
+                custom_sentences_dir = Path(
+                    self.hass.config.path("custom_sentences", language_variation)
+                )
+                if custom_sentences_dir.is_dir():
+                    for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
+                        with custom_sentences_path.open(
+                            encoding="utf-8"
+                        ) as custom_sentences_file:
+                            # Merge custom sentences
+                            merge_dict(
+                                intents_dict, yaml.safe_load(custom_sentences_file)
+                            )
 
-                    # Will need to recreate graph
-                    intents_changed = True
-                    _LOGGER.debug(
-                        "Loaded custom sentences language=%s, path=%s",
-                        language,
-                        custom_sentences_path,
-                    )
+                        # Will need to recreate graph
+                        intents_changed = True
+                        _LOGGER.debug(
+                            "Loaded custom sentences language=%s (%s), path=%s",
+                            language,
+                            language_variation,
+                            custom_sentences_path,
+                        )
+
+                    # Stop after first matched language variation
+                    break
 
             # Load sentences from HA config for default language only
             if self._config_intents and (language == self.hass.config.language):
@@ -419,45 +434,38 @@ class DefaultAgent(AbstractConversationAgent):
     @core.callback
     def _async_handle_area_registry_changed(self, event: core.Event) -> None:
         """Clear area area cache when the area registry has changed."""
-        self._areas_list = None
+        self._slot_lists = None
 
     @core.callback
     def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
         """Clear names list cache when an entity changes aliases."""
         if event.data["action"] == "update" and "aliases" not in event.data["changes"]:
             return
-        self._names_list = None
+        self._slot_lists = None
 
     @core.callback
     def _async_handle_state_changed(self, event: core.Event) -> None:
         """Clear names list cache when a state is added or removed from the state machine."""
         if event.data.get("old_state") and event.data.get("new_state"):
             return
-        self._names_list = None
+        self._slot_lists = None
 
-    def _make_areas_list(self) -> TextSlotList:
-        """Create slot list mapping area names/aliases to area ids."""
-        if self._areas_list is not None:
-            return self._areas_list
-        registry = area_registry.async_get(self.hass)
-        areas = []
-        for entry in registry.async_list_areas():
-            areas.append((entry.name, entry.id))
-            if entry.aliases:
-                for alias in entry.aliases:
-                    areas.append((alias, entry.id))
+    def _make_slot_lists(self) -> dict[str, SlotList]:
+        """Create slot lists with areas and entity names/aliases."""
+        if self._slot_lists is not None:
+            return self._slot_lists
 
-        self._areas_list = TextSlotList.from_tuples(areas, allow_template=False)
-        return self._areas_list
-
-    def _make_names_list(self) -> TextSlotList:
-        """Create slot list with entity names/aliases."""
-        if self._names_list is not None:
-            return self._names_list
-        states = self.hass.states.async_all()
+        area_ids_with_entities: set[str] = set()
+        states = [
+            state for state in self.hass.states.async_all() if is_entity_exposed(state)
+        ]
         entities = entity_registry.async_get(self.hass)
-        names = []
+        devices = device_registry.async_get(self.hass)
+
+        # Gather exposed entity names
+        entity_names = []
         for state in states:
+            # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
 
             entity = entities.async_get(state.entity_id)
@@ -468,17 +476,42 @@ class DefaultAgent(AbstractConversationAgent):
 
                 if entity.aliases:
                     for alias in entity.aliases:
-                        names.append((alias, alias, context))
+                        entity_names.append((alias, alias, context))
 
                 # Default name
-                names.append((state.name, state.name, context))
+                entity_names.append((state.name, state.name, context))
 
+                if entity.area_id:
+                    # Expose area too
+                    area_ids_with_entities.add(entity.area_id)
+                elif entity.device_id:
+                    # Check device for area as well
+                    device = devices.async_get(entity.device_id)
+                    if (device is not None) and device.area_id:
+                        area_ids_with_entities.add(device.area_id)
             else:
                 # Default name
-                names.append((state.name, state.name, context))
+                entity_names.append((state.name, state.name, context))
 
-        self._names_list = TextSlotList.from_tuples(names, allow_template=False)
-        return self._names_list
+        # Gather areas from exposed entities
+        areas = area_registry.async_get(self.hass)
+        area_names = []
+        for area_id in area_ids_with_entities:
+            area = areas.async_get_area(area_id)
+            if area is None:
+                continue
+
+            area_names.append((area.name, area.id))
+            if area.aliases:
+                for alias in area.aliases:
+                    area_names.append((alias, area.id))
+
+        self._slot_lists = {
+            "area": TextSlotList.from_tuples(area_names, allow_template=False),
+            "name": TextSlotList.from_tuples(entity_names, allow_template=False),
+        }
+
+        return self._slot_lists
 
     def _get_error_text(
         self, response_type: ResponseType, lang_intents: LanguageIntents

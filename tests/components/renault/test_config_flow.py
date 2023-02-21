@@ -33,7 +33,7 @@ def override_async_setup_entry() -> AsyncMock:
 
 async def test_config_flow_single_account(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
-):
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -92,7 +92,9 @@ async def test_config_flow_single_account(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_flow_no_account(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+async def test_config_flow_no_account(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -122,7 +124,7 @@ async def test_config_flow_no_account(hass: HomeAssistant, mock_setup_entry: Asy
 
 async def test_config_flow_multiple_accounts(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
-):
+) -> None:
     """Test what happens if multiple Kamereon accounts are available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -172,7 +174,9 @@ async def test_config_flow_multiple_accounts(
 
 
 @pytest.mark.usefixtures("config_entry")
-async def test_config_flow_duplicate(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+async def test_config_flow_duplicate(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test abort if unique_id configured."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -206,7 +210,7 @@ async def test_config_flow_duplicate(hass: HomeAssistant, mock_setup_entry: Asyn
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_reauth(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_reauth(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Test the start of the config flow."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
