@@ -35,11 +35,11 @@ from zwave_js_server.model.controller import (
     QRProvisioningInformation,
 )
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node, NodeStatistics
 from zwave_js_server.model.node.firmware import (
+    NodeFirmwareUpdateData,
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
@@ -2075,7 +2075,7 @@ class FirmwareUploadView(HomeAssistantView):
                 node.client.ws_server_url,
                 node,
                 [
-                    FirmwareUpdateData(
+                    NodeFirmwareUpdateData(
                         uploaded_file.filename,
                         await hass.async_add_executor_job(uploaded_file.file.read),
                     )
