@@ -87,6 +87,9 @@ async def async_get_config_entry_diagnostics(
             "routes": {},
         }
 
+        # For every address this border router hass, see if we have seen
+        # it in the route table as a via - these are the routes its
+        # announcing via RA
         for address in data.addresses:
             if address in routes:
                 router["routes"] = routes[address]
