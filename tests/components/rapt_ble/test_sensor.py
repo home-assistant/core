@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 from homeassistant.components.rapt_ble.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 
 from . import COMPLETE_SERVICE_INFO, RAPT_MAC
@@ -35,8 +40,8 @@ async def test_sensors(hass: HomeAssistant):
     temp_sensor_attributes = temp_sensor.attributes
     assert temp_sensor.state == "43"
     assert temp_sensor_attributes[ATTR_FRIENDLY_NAME] == "RAPT Pill 0666 Battery"
-    assert temp_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
-    assert temp_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
+    assert temp_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert temp_sensor_attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     temp_sensor = hass.states.get("sensor.rapt_pill_0666_temperature")
     assert temp_sensor is not None
@@ -44,8 +49,8 @@ async def test_sensors(hass: HomeAssistant):
     temp_sensor_attributes = temp_sensor.attributes
     assert temp_sensor.state == "23.81"
     assert temp_sensor_attributes[ATTR_FRIENDLY_NAME] == "RAPT Pill 0666 Temperature"
-    assert temp_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
-    assert temp_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
+    assert temp_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert temp_sensor_attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     temp_sensor = hass.states.get("sensor.rapt_pill_0666_specific_gravity")
     assert temp_sensor is not None
@@ -55,7 +60,7 @@ async def test_sensors(hass: HomeAssistant):
     assert (
         temp_sensor_attributes[ATTR_FRIENDLY_NAME] == "RAPT Pill 0666 Specific Gravity"
     )
-    assert temp_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
+    assert temp_sensor_attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
