@@ -9,6 +9,8 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
+from . import init_integration
+
 from tests.common import MockConfigEntry
 
 
@@ -130,3 +132,28 @@ async def test_onboarding_step_abort_no_home(
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_home"
+
+
+async def test_show_options_form(hass: HomeAssistant) -> None:
+    """Test show options form."""
+    entry = await init_integration(hass, track_home=True)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+
+async def test_options_update_config_entry(hass: HomeAssistant) -> None:
+    """Test options flow updating config entry."""
+    entry = await init_integration(hass, track_home=True)
+
+    update_data = {"name": "test", "latitude": 12, "longitude": 23, "elevation": 456}
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, data=update_data
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Mock Title"
+    assert result["data"] == update_data
