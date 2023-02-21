@@ -44,11 +44,10 @@ class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
-            configuration_url=self.coordinator.device.host,
+            configuration_url=f"http://{self.coordinator.device.host}",
             connections={(CONNECTION_NETWORK_MAC, self.coordinator.data["serial"])},
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Reisinger GmbH",
-            # name=self.coordinator.data["title"],
-            name="Reisinger Intellidrive 1",
+            name=self.coordinator.device.host,
             sw_version=self.coordinator.data["versionString"],
         )

@@ -1,13 +1,13 @@
 {
   "domain": "intellidrive",
   "name": "Intellidrive",
+  "codeowners": ["@sreisi"],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/intellidrive",
+  "homekit": {},
+  "iot_class": "local_polling",
   "requirements": ["reisinger-drive==0.2.0"],
   "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "codeowners": ["@sreisi"],
-  "iot_class": "local_polling"
+  "zeroconf": []
 }

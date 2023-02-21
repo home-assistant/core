@@ -70,7 +70,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if result is False:
         raise InvalidAuth
 
-    door_state_values = await hub.async_get_door_state()
+    door_state_values = await hub.async_get_device_state()
 
     # Return info that you want to store in the config entry.
     return {"title": "Intellidrive ", "serial": door_state_values["serial"]}

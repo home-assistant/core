@@ -86,7 +86,7 @@ class ReisingerSlidingDoorDeviceApi:
         """
         return False
 
-    async def async_get_door_state(self) -> dict[str, Any]:
+    async def async_get_device_state(self) -> dict[str, Any]:
         """Update the door: Retrieves the device values.
 
         :return: Datas from device.

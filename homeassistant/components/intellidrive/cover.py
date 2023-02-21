@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the OpenReisinger covers."""
+    """Set up the Intellidrive covers."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
@@ -56,20 +56,20 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         self._state_before_move: str | None = None
         self._host = host
         self._token = token
-        self._device = coordinator.device
+        self._device_api = coordinator.device
         # self._attr_device_class = CoverDeviceClass.GARAGE
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door async."""
-        await self._device.async_close()
+        await self._device_api.async_close()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door async."""
-        await self._device.async_open()
+        await self._device_api.async_open()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the door async."""
-        await self._device.async_stop_door()
+        await self._device_api.async_stop_door()
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door."""
@@ -100,7 +100,7 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         """Update the state and attributes."""
         status = self.coordinator.data
 
-        self._attr_name = status["serial"]
+        self._attr_name = f"Slidingdoor {status['serial']}"
         # self._attr_name = "Name des Gerätes"
 
         # state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
@@ -115,20 +115,20 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
     def is_closed(self) -> bool:
         """Get state if the door is closed."""
 
-        open_status = self._device.get_is_open()
+        open_status = self._device_api.get_is_open()
         return not open_status
 
     @property
     def is_closing(self) -> bool:
         """Get state if the door is closing now."""
-        closing_status = self._device.get_is_closing()
+        closing_status = self._device_api.get_is_closing()
         # Not supported yet
         return closing_status
 
     @property
     def is_opening(self) -> bool:
         """Get state if the door is opening now."""
-        opening_status = self._device.get_is_opening()
+        opening_status = self._device_api.get_is_opening()
 
         # Not supported yet
         return opening_status
