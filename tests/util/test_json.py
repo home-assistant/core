@@ -28,6 +28,14 @@ def test_load_bad_data(tmp_path: Path) -> None:
     assert isinstance(err.value.__cause__, ValueError)
 
 
+def test_load_json_os_error() -> None:
+    """Test trying to load JSON data from a directory."""
+    fname = "/"
+    with pytest.raises(HomeAssistantError) as err:
+        load_json(fname)
+    assert isinstance(err.value.__cause__, OSError)
+
+
 def test_load_json_file_not_found_error() -> None:
     """Test trying to load object data from inexistent JSON file."""
     fname = "invalid_file.json"
