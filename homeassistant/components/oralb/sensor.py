@@ -136,6 +136,8 @@ class OralBBluetoothSensorEntity(
 ):
     """Representation of a OralB sensor."""
 
+    entity_description: OralBSensorDescription
+
     @property
     def native_value(self) -> str | int | None:
         """Return the native value."""
@@ -143,7 +145,6 @@ class OralBBluetoothSensorEntity(
 
     async def async_added_to_hass(self) -> None:
         """Add subscription when added to hass."""
-        self.entity_description: OralBSensorDescription
         if self.entity_description.requires_active_connection:
             self.async_on_remove(
                 self.processor.coordinator.register_active(self.entity_key)

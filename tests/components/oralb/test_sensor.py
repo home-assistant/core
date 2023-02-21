@@ -95,7 +95,7 @@ async def test_sensors_battery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_no_battery_no_poll(hass: HomeAssistant):
+async def test_no_battery_no_poll(hass: HomeAssistant) -> None:
     """Test that when a user disables battery - we don't poll."""
     entry = MockConfigEntry(
         domain=DOMAIN,
