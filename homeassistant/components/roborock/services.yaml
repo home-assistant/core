@@ -216,21 +216,3 @@ vacuum_reset_consumables:
     entity:
       integration: roborock
       domain: vacuum
-
-camera_load_multi_map:
-  name: Vacuum camera map load multi map
-  description: Change vacuum camera map.
-  target:
-    entity:
-      integration: roborock
-      domain: camera
-  fields:
-    map_flag:
-      name: Map flag
-      description: The id of the map to be loaded
-      required: true
-      example: 0
-      selector:
-        number:
-          min: 0
-          max: 4

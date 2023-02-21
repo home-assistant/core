@@ -1,7 +1,4 @@
 """Constants for Roborock."""
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 
 DOMAIN = "roborock"
@@ -12,11 +9,8 @@ CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 DEFAULT_NAME = DOMAIN
 
-BINARY_SENSOR = BINARY_SENSOR_DOMAIN
-CAMERA = CAMERA_DOMAIN
-SENSOR = SENSOR_DOMAIN
 VACUUM = VACUUM_DOMAIN
-PLATFORMS = [VACUUM, CAMERA, SENSOR, BINARY_SENSOR]
+PLATFORMS = [VACUUM]
 
 ROCKROBO_V1 = "rockrobo.vacuum.v1"
 ROCKROBO_S4 = "roborock.vacuum.s4"

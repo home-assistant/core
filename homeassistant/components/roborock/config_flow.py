@@ -14,20 +14,11 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    CAMERA,
     CONF_BASE_URL,
-    CONF_BOTTOM,
     CONF_ENTRY_CODE,
     CONF_ENTRY_PASSWORD,
     CONF_ENTRY_USERNAME,
     CONF_INCLUDE_SHARED,
-    CONF_LEFT,
-    CONF_MAP_TRANSFORM,
-    CONF_RIGHT,
-    CONF_ROTATE,
-    CONF_SCALE,
-    CONF_TOP,
-    CONF_TRIM,
     CONF_USER_DATA,
     DOMAIN,
     VACUUM,
@@ -248,36 +239,16 @@ ROTATION_SCHEMA = vol.All(
 )
 PERCENT_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
-CAMERA_VALUES = {
-    f"{CONF_MAP_TRANSFORM}.{CONF_SCALE}": 1.0,
-    f"{CONF_MAP_TRANSFORM}.{CONF_ROTATE}": 0,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_LEFT}": 0.0,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_RIGHT}": 0.0,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_TOP}": 0.0,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_BOTTOM}": 0.0,
-}
-
-CAMERA_SCHEMA = {
-    f"{CONF_MAP_TRANSFORM}.{CONF_SCALE}": POSITIVE_FLOAT_SCHEMA,
-    f"{CONF_MAP_TRANSFORM}.{CONF_ROTATE}": ROTATION_SCHEMA,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_LEFT}": PERCENT_SCHEMA,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_RIGHT}": PERCENT_SCHEMA,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_TOP}": PERCENT_SCHEMA,
-    f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_BOTTOM}": PERCENT_SCHEMA,
-}
-
 VACUUM_VALUES = {CONF_INCLUDE_SHARED: True}
 
 VACUUM_SCHEMA = {CONF_INCLUDE_SHARED: vol.Coerce(bool)}
 
 OPTION_VALUES = {
     VACUUM: VACUUM_VALUES,
-    CAMERA: CAMERA_VALUES,
 }
 
 OPTION_SCHEMA = {
     **{f"{VACUUM}.{vs_key}": vs_value for vs_key, vs_value in VACUUM_SCHEMA.items()},
-    **{f"{CAMERA}.{cs_key}": cs_value for cs_key, cs_value in CAMERA_SCHEMA.items()},
 }
 
 
@@ -301,15 +272,7 @@ class RoborockOptionsFlowHandler(config_entries.OptionsFlow):
         """Handle a flow initialized by the user."""
         return self.async_show_menu(
             step_id="user",
-            menu_options=[CAMERA, VACUUM],
-        )
-
-    async def async_step_camera(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle setup of camera."""
-        return await self._async_step_platform(
-            CAMERA, CAMERA_SCHEMA, CAMERA_VALUES, user_input
+            menu_options=[VACUUM],
         )
 
     async def async_step_vacuum(

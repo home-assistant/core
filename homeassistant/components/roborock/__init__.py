@@ -14,7 +14,6 @@ from roborock.typing import RoborockDeviceInfo, RoborockDeviceProp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -24,10 +23,8 @@ from .const import (
     CONF_USER_DATA,
     DOMAIN,
     PLATFORMS,
-    SENSOR,
     VACUUM,
 )
-from .utils import get_nested_dict, set_nested_dict
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -38,18 +35,20 @@ async def get_translation_from_hass(
     hass: HomeAssistant, language: str
 ) -> dict[str, Any]:
     """Get translation from hass."""
-    entity_translations = await async_get_translations(
-        hass, language, "entity", (DOMAIN,)
-    )
-    if not entity_translations:
-        return {}
-    data: dict[str, Any] = {}
-    for key, value in entity_translations.items():
-        set_nested_dict(data, key, value)
-    states_translation = get_nested_dict(
-        data, f"component.{DOMAIN}.entity.{SENSOR}", {}
-    )
-    return states_translation
+    # Convert to new translation system/ replace need for sensor.
+    return "TODO"
+    # entity_translations = await async_get_translations(
+    #     hass, language, "entity", (DOMAIN,)
+    # )
+    # if not entity_translations:
+    #     return {}
+    # data: dict[str, Any] = {}
+    # for key, value in entity_translations.items():
+    #     set_nested_dict(data, key, value)
+    # states_translation = get_nested_dict(
+    #     data, f"component.{DOMAIN}.entity.{SENSOR}", {}
+    # )
+    # return states_translation
 
 
 async def get_translation(hass: HomeAssistant) -> dict[str, Any]:
