@@ -492,6 +492,7 @@ async def async_matching_config_entries(
         return [entry_json(entry) for entry in entries]
 
     integrations = {}
+    # Fetch all the integrations so we can check their type
     domains = {entry.domain for entry in entries}
     for domain_key, integration_or_exc in (
         await async_get_integrations(hass, domains)
