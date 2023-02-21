@@ -56,7 +56,7 @@ class ReisingerSlidingDoorDeviceApi:
 
         :return: None.
         """
-        await self._execute("door/close", *args, **kwargs)
+        await self._execute("door/open", *args, **kwargs)
 
     async def async_stop_door(self, *args, **kwargs) -> None:
         """Operate the door: sends the close command.

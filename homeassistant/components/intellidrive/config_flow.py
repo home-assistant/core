@@ -7,6 +7,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp import web
+import reisingerdrive
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,10 +17,9 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, STATUSDICT_SERIALNO
 
-# move to pypi
-from .device import ReisingerSlidingDoorDeviceApi
+# from .coordinator import ReisingerSlidingDoorDeviceApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,19 +37,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    #  validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
 
     api_token = "None"
     if data.get(CONF_TOKEN) is not None:
         api_token = data[CONF_TOKEN]
 
-    hub = ReisingerSlidingDoorDeviceApi(
+    hub = reisingerdrive.ReisingerSlidingDoorDeviceApi(
         data[CONF_HOST], api_token, async_get_clientsession(hass)
     )
 
@@ -72,8 +65,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     door_state_values = await hub.async_get_device_state()
 
+    hub.websession.close()
+
     # Return info that you want to store in the config entry.
-    return {"title": "Intellidrive ", "serial": door_state_values["serial"]}
+    return {
+        "title": "Intellidrive ",
+        STATUSDICT_SERIALNO: door_state_values[STATUSDICT_SERIALNO],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -102,9 +100,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(info["serial"])
+            await self.async_set_unique_id(info[STATUSDICT_SERIALNO])
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=info["serial"], data=user_input)
+            return self.async_create_entry(
+                title=info[STATUSDICT_SERIALNO], data=user_input
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

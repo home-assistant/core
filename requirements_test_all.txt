@@ -1576,7 +1576,7 @@ radiotherm==2.1.0
 regenmaschine==2022.11.0
 
 # homeassistant.components.intellidrive
-reisinger-drive==0.2.0
+reisinger-drive==0.2.3
 
 # homeassistant.components.renault
 renault-api==0.1.12

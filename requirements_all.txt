@@ -2231,7 +2231,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.11.0
 
 # homeassistant.components.intellidrive
-reisinger-drive==0.2.0
+reisinger-drive==0.2.3
 
 # homeassistant.components.renault
 renault-api==0.1.12

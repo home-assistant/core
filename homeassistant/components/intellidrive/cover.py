@@ -9,15 +9,24 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_TOKEN,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, STATUSDICT_OPENSTATE, STATUSDICT_SERIALNO
 from .coordinator import ReisingerCoordinator
 from .entity import IntelliDriveEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
 
 async def async_setup_entry(
@@ -51,20 +60,33 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         device_id: str,
     ) -> None:
         """Initialize slidingdoor cover."""
-        super().__init__(coordinator, device_id)
         self._state: str | None = None
         self._state_before_move: str | None = None
         self._host = host
         self._token = token
         self._device_api = coordinator.device
+        super().__init__(coordinator, device_id)
+
         # self._attr_device_class = CoverDeviceClass.GARAGE
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door async."""
+
+        if self._state in [STATE_CLOSED, STATE_CLOSING]:
+            return
+        self._state_before_move = self._state
+        self._state = STATE_CLOSING
+
         await self._device_api.async_close()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door async."""
+
+        if self._state in [STATE_OPEN, STATE_OPENING]:
+            return
+        self._state_before_move = self._state
+        self._state = STATE_OPENING
+
         await self._device_api.async_open()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -98,37 +120,36 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
     @callback
     def _update_attr(self) -> None:
         """Update the state and attributes."""
+
         status = self.coordinator.data
+        self._attr_name = f"Slidingdoor {status[STATUSDICT_SERIALNO]}"
 
-        self._attr_name = f"Slidingdoor {status['serial']}"
-        # self._attr_name = "Name des Gerätes"
-
-        # state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
-        # if self._state_before_move is not None:
-        #     if self._state_before_move != state:
-        #         self._state = state
-        #         self._state_before_move = None
-        # else:
-        #     self._state = state
+        state = STATES_MAP.get(status.get(STATUSDICT_OPENSTATE))
+        if self._state_before_move is not None:
+            if self._state_before_move != state:
+                self._state = state
+                self._state_before_move = None
+        else:
+            self._state = state
 
     @property
-    def is_closed(self) -> bool:
-        """Get state if the door is closed."""
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed."""
 
-        open_status = self._device_api.get_is_open()
-        return not open_status
+        if self._state is None:
+            return None
+        return self._state == STATE_CLOSED
 
     @property
-    def is_closing(self) -> bool:
+    def is_closing(self) -> bool | None:
         """Get state if the door is closing now."""
-        closing_status = self._device_api.get_is_closing()
-        # Not supported yet
-        return closing_status
+        if self._state is None:
+            return None
+        return self._state == STATE_CLOSING
 
     @property
-    def is_opening(self) -> bool:
+    def is_opening(self) -> bool | None:
         """Get state if the door is opening now."""
-        opening_status = self._device_api.get_is_opening()
-
-        # Not supported yet
-        return opening_status
+        if self._state is None:
+            return None
+        return self._state == STATE_OPENING

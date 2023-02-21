@@ -6,11 +6,12 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, ReisingerCoordinator
+from .const import DOMAIN, STATUSDICT_SERIALNO, STATUSDICT_VERSION
+from .coordinator import ReisingerCoordinator
 
 
 class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
-    """Representation of a IntelliDrive entity."""
+    """Representation of a IntelliDrive entity, which is used as a base entity for future entities."""
 
     def __init__(
         self,
@@ -45,9 +46,11 @@ class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
         """Return the device_info of the device."""
         return DeviceInfo(
             configuration_url=f"http://{self.coordinator.device.host}",
-            connections={(CONNECTION_NETWORK_MAC, self.coordinator.data["serial"])},
+            connections={
+                (CONNECTION_NETWORK_MAC, self.coordinator.data[STATUSDICT_SERIALNO])
+            },
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Reisinger GmbH",
             name=self.coordinator.device.host,
-            sw_version=self.coordinator.data["versionString"],
+            sw_version=self.coordinator.data[STATUSDICT_VERSION],
         )
