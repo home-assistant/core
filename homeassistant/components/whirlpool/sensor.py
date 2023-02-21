@@ -279,6 +279,8 @@ class WasherDryerTimeClass(RestoreSensor):
         """Calculate the time stamp for completion."""
         machine_state = self._wd.get_machine_state()
         now = utcnow()
+        if self._attr_native_value is None:
+            self._attr_native_value = now
         if (
             machine_state.value
             in {MachineState.Complete.value, MachineState.Standby.value}

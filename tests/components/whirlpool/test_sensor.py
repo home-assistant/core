@@ -299,6 +299,23 @@ async def test_restore_state(
     assert state.state == thetimestamp.isoformat()
 
 
+async def test_no_restore_state(
+    hass: HomeAssistant,
+    mock_sensor_api_instances: MagicMock,
+    mock_sensor1_api: MagicMock,
+) -> None:
+    """Test sensor restore state with no restore."""
+    # create and add entry
+    entity_id = "sensor.washer_end_time"
+    await init_integration(hass)
+    # restore from cache
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
+
+    state = await update_sensor_state(hass, entity_id, mock_sensor1_api)
+    state.state = datetime.now().isoformat()
+
+
 async def test_callback(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
