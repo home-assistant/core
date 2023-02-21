@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, cast
 
 import voluptuous as vol
 import zigpy.backups
-from zigpy.backups import NetworkBackup
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.security import IasAce
@@ -20,6 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 
+from .api import async_get_active_network_settings, async_get_radio_type
 from .core.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -46,7 +46,6 @@ from .core.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    CONF_RADIO_TYPE,
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
@@ -1126,19 +1125,12 @@ async def websocket_get_network_settings(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA network settings."""
+    backup = async_get_active_network_settings(hass)
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    application_controller = zha_gateway.application_controller
-
-    # Serialize the current network settings
-    backup = NetworkBackup(
-        node_info=application_controller.state.node_info,
-        network_info=application_controller.state.network_info,
-    )
-
     connection.send_result(
         msg[ID],
         {
-            "radio_type": zha_gateway.config_entry.data[CONF_RADIO_TYPE],
+            "radio_type": async_get_radio_type(hass, zha_gateway.config_entry),
             "settings": backup.as_dict(),
         },
     )
