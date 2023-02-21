@@ -61,7 +61,6 @@ from . import (
     platform_async_setup_entry,
 )
 
-# climate doesn't support (yet?) the quiet fan mode but esphome does
 FAN_QUIET = "quiet"
 
 
