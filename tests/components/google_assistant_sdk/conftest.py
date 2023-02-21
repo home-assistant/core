@@ -1,5 +1,7 @@
 """PyTest fixtures and test helpers."""
 from collections.abc import Awaitable, Callable, Coroutine
+import importlib
+import sys
 import time
 from typing import Any
 
@@ -83,6 +85,17 @@ async def mock_setup_integration(
         await hass.async_block_till_done()
 
     return func
+
+
+@pytest.fixture
+def ext_module():
+    """Fixture for setting up and tearing down the extension module."""
+    ext_module_name = "custom_components.google_assistant_sdk_extension"
+    ext_module_spec = importlib.machinery.ModuleSpec(ext_module_name, None)
+    ext_module = importlib.util.module_from_spec(ext_module_spec)
+    sys.modules[ext_module_name] = ext_module
+    yield ext_module
+    del sys.modules[ext_module_name]
 
 
 class ExpectedCredentials:

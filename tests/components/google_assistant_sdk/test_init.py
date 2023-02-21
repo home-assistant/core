@@ -422,3 +422,92 @@ async def test_conversation_agent_refresh_token(
     )
     mock_text_assistant.assert_has_calls([call().assist(text1)])
     mock_text_assistant.assert_has_calls([call().assist(text2)])
+
+
+async def test_conversation_agent_extension(
+    hass: HomeAssistant, setup_integration: ComponentSetup, ext_module
+) -> None:
+    """Test GoogleAssistantConversationAgent calls extension to parse HTML."""
+    await setup_integration()
+
+    assert await async_setup_component(hass, "conversation", {})
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+    hass.config_entries.async_update_entry(
+        entry, options={"enable_conversation_agent": True}
+    )
+    await hass.async_block_till_done()
+
+    text = "tell me a joke"
+
+    # Create an extension module and assert its parse_response function is called
+    parse_command_called = False
+
+    def parse_response(hass, cmd, resp):
+        assert cmd == text
+        nonlocal parse_command_called
+        parse_command_called = True
+        return f"parsed response for {cmd}"
+
+    setattr(ext_module, "parse_response", parse_response)
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": text},
+            blocking=True,
+        )
+
+    assert mock_text_assistant.call_count == 1
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), "en-US", display=True
+    )
+    mock_text_assistant.assert_has_calls([call().assist(text)])
+
+    assert parse_command_called
+
+
+async def test_send_text_command_extension(
+    hass: HomeAssistant, setup_integration: ComponentSetup, ext_module
+) -> None:
+    """Test service call send_text_command calls extension to parse HTML."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    command = "turn off family room lights"
+
+    # Create an extension module and assert its parse_response function is called
+    parse_command_called = False
+
+    def parse_response(hass, cmd, resp):
+        assert cmd == command
+        nonlocal parse_command_called
+        parse_command_called = True
+        return f"parsed response for {cmd}"
+
+    setattr(ext_module, "parse_response", parse_response)
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {"command": [command]},
+            blocking=True,
+        )
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), "en-US", audio_out=False, display=True
+    )
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
+
+    assert parse_command_called
