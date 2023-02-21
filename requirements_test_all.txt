@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.1
+PySwitchbot==0.37.3
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -143,7 +143,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.3.1
+aioesphomeapi==13.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -340,7 +340,7 @@ auroranoaa==0.0.2
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==46
+axis==47
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -1134,7 +1134,7 @@ pycoolmasternet-async==0.1.5
 pydaikin==2.9.0
 
 # homeassistant.components.deconz
-pydeconz==107
+pydeconz==108
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1621,7 +1621,7 @@ samsungtvws[async,encrypted]==2.5.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.7.1
+screenlogicpy==0.7.2
 
 # homeassistant.components.backup
 securetar==2022.2.0
@@ -1886,13 +1886,13 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.0.1
+yalexs-ble==2.0.2
 
 # homeassistant.components.august
 yalexs==1.2.7
 
 # homeassistant.components.august
-yalexs_ble==2.0.1
+yalexs_ble==2.0.2
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -1910,7 +1910,7 @@ zamg==0.2.2
 zeroconf==0.47.3
 
 # homeassistant.components.zeversolar
-zeversolar==0.3.0
+zeversolar==0.3.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.92

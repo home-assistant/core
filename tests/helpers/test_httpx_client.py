@@ -1,5 +1,4 @@
 """Test the httpx client helper."""
-
 from unittest.mock import Mock, patch
 
 import httpx
@@ -98,7 +97,9 @@ async def test_get_async_client_context_manager(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
-async def test_warning_close_session_integration(hass, caplog):
+async def test_warning_close_session_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test log warning message when closing the session from integration context."""
     with patch(
         "homeassistant.helpers.frame.extract_stack",
@@ -131,7 +132,9 @@ async def test_warning_close_session_integration(hass, caplog):
 
 
 @patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
-async def test_warning_close_session_custom(hass, caplog):
+async def test_warning_close_session_custom(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test log warning message when closing the session from custom context."""
     with patch(
         "homeassistant.helpers.frame.extract_stack",
