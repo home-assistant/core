@@ -1467,7 +1467,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.0
+pyRFXtrx==0.30.1
 
 # homeassistant.components.switchmate
 pySwitchmate==0.5.1
@@ -2593,6 +2593,9 @@ vsure==1.8.1
 
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
+
+# homeassistant.components.vulcan
+vulcan-api==2.3.0
 
 # homeassistant.components.vultr
 vultr==0.1.2

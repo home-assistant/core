@@ -1073,7 +1073,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.0
+pyRFXtrx==0.30.1
 
 # homeassistant.components.tibber
 pyTibber==0.26.13
@@ -1836,6 +1836,9 @@ volvooncall==0.10.2
 
 # homeassistant.components.verisure
 vsure==1.8.1
+
+# homeassistant.components.vulcan
+vulcan-api==2.3.0
 
 # homeassistant.components.vultr
 vultr==0.1.2

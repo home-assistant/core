@@ -1,41 +1,33 @@
 """Test the Uonet+ Vulcan config flow."""
-# flake8: noqa
 import json
 from unittest import mock
 from unittest.mock import patch
 
-import pytest
+from vulcan import (
+    Account,
+    ExpiredTokenException,
+    InvalidPINException,
+    InvalidSymbolException,
+    InvalidTokenException,
+    UnauthorizedCertificateException,
+)
+from vulcan.model import Student
 
 from homeassistant import config_entries, data_entry_flow
-
-# from homeassistant.components.vulcan import config_flow, const, register
-# from homeassistant.components.vulcan.config_flow import ClientConnectionError, Keystore
+from homeassistant.components.vulcan import config_flow, const, register
+from homeassistant.components.vulcan.config_flow import ClientConnectionError, Keystore
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
-# from vulcan import (
-#     Account,
-#     ExpiredTokenException,
-#     InvalidPINException,
-#     InvalidSymbolException,
-#     InvalidTokenException,
-#     UnauthorizedCertificateException,
-# )
-# from vulcan.model import Student
-
-
-pytestmark = pytest.mark.skip
-
-
-# fake_keystore = Keystore("", "", "", "", "")
-# fake_account = Account(
-#     login_id=1,
-#     user_login="example@example.com",
-#     user_name="example@example.com",
-#     rest_url="rest_url",
-# )
+fake_keystore = Keystore("", "", "", "", "")
+fake_account = Account(
+    login_id=1,
+    user_login="example@example.com",
+    user_name="example@example.com",
+    rest_url="rest_url",
+)
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
