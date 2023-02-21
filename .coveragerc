@@ -898,7 +898,6 @@ omit =
     homeassistant/components/ping/binary_sensor.py
     homeassistant/components/ping/device_tracker.py
     homeassistant/components/pioneer/media_player.py
-    homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/__init__.py
     homeassistant/components/plaato/binary_sensor.py
     homeassistant/components/plaato/entity.py
