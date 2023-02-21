@@ -1198,7 +1198,7 @@ nextcloudmonitor==1.1.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.2.2
+nextdns==1.3.0
 
 # homeassistant.components.nibe_heatpump
 nibe==1.6.0
@@ -1467,7 +1467,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.0
+pyRFXtrx==0.30.1
 
 # homeassistant.components.switchmate
 pySwitchmate==0.5.1
@@ -1494,7 +1494,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.1.0
+pyairnow==1.2.1
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
@@ -2594,6 +2594,9 @@ vsure==1.8.1
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
 
+# homeassistant.components.vulcan
+vulcan-api==2.3.0
+
 # homeassistant.components.vultr
 vultr==0.1.2
 
@@ -2727,7 +2730,7 @@ zigpy==0.53.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.45.2
+zwave-js-server-python==0.46.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.3.1
