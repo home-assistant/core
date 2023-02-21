@@ -23,20 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Intellidrive from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    #  1. Create API instance
-    #  2. Validate the API connection (and authentication)
-    #  3. Store an API object for your platforms to access
 
-    # device_api = ReisingerSlidingDoorDeviceApi(
-    #     str(entry.data.get(CONF_HOST)),
-    #     str(entry.data.get(CONF_TOKEN)),
-    #     async_get_clientsession(hass),
-    # )
-
-    # if not await device_api.authenticate():
-    #     return False
-
-    # coordinator = ReisingerCoordinator(hass, entry, device_api)
     coordinator = ReisingerCoordinator(hass, entry)
 
     if not await coordinator.device.authenticate():

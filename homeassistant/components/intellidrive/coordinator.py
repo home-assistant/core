@@ -14,8 +14,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
-# from .device import ReisingerSlidingDoorDeviceApi
-
 _LOGGER = logging.getLogger(__name__)
 
 

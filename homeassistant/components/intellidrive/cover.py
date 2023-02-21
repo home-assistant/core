@@ -67,8 +67,6 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         self._device_api = coordinator.device
         super().__init__(coordinator, device_id)
 
-        # self._attr_device_class = CoverDeviceClass.GARAGE
-
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door async."""
 
