@@ -387,9 +387,17 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
     def calculate_adjustment(
-        self, old_state: State | None, new_state_val: Decimal
+        self, old_state: State | None, new_state: State
     ) -> Decimal | None:
-        """Calculate the adjustment based on the old and (assumed valid) new state."""
+        """Calculate the adjustment based on the old and new state."""
+
+        # First check if the new_state is valid (see discussion in PR #88446)
+        try:
+            if (new_state_val := self._validate_state(new_state)) is None:
+                return None
+        except DecimalException as err:
+            _LOGGER.warning("Invalid state %s: %s", new_state.state, err)
+            return None
 
         if self._sensor_delta_values:
             return new_state_val
@@ -413,34 +421,32 @@ class UtilityMeterSensor(RestoreSensor):
     def async_reading(self, event: Event):
         """Handle the sensor state changes."""
         old_state: State | None = event.data.get("old_state")
-        new_state: State | None = event.data.get("new_state")
+        new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
 
-        if new_state and self._state is None:
+        try:
+            if (new_state_val := self._validate_state(new_state)) is None:
+                return
+        except DecimalException as err:
+            if self._sensor_delta_values:
+                _LOGGER.warning("Invalid adjustment of %s: %s", new_state.state, err)
+            else:
+                _LOGGER.warning("Invalid state %s: %s", new_state.state, err)
+            return
+
+        if self._state is None:
             # First state update initializes the utility_meter sensors
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
             ]:
                 sensor.start(new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
-        try:
-            if (new_state_state := self._validate_state(new_state)) is None:
-                return
-        except DecimalException as err:
-            if self._sensor_delta_values:
-                _LOGGER.warning("Invalid adjustment of %s: %s", new_state.state, err)  # type: ignore[union-attr] # because Exception only raised if new_state is not None
-            else:
-                _LOGGER.warning(
-                    "Invalid state %s: %s", new_state.state, err  # type: ignore[union-attr] # because Exception only raised if new_state is not None
-                )
-            return
-
         if (
-            adjustment := self.calculate_adjustment(old_state, new_state_state)
+            adjustment := self.calculate_adjustment(old_state, new_state)
         ) is not None and (self._sensor_net_consumption or adjustment >= 0):
-            # If net_consumption is off, the adjustment should be non-negative
-            self._state += adjustment
+            # If net_consumption is off, the adjustment must be non-negative
+            self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
-        self._last_valid_state = new_state_state
+        self._last_valid_state = new_state_val
         self.async_write_ha_state()
 
     @callback
