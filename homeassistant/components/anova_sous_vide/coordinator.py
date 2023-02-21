@@ -5,7 +5,7 @@ import logging
 from anova_wifi import AnovaOffline, AnovaPrecisionCooker
 import async_timeout
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,7 +21,6 @@ class AnovaCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         anova_api: AnovaPrecisionCooker,
-        firmware_version: str,
     ) -> None:
         """Set up Anova Coordinator."""
         super().__init__(
@@ -30,19 +29,21 @@ class AnovaCoordinator(DataUpdateCoordinator):
             logger=_LOGGER,
             update_interval=timedelta(seconds=30),
         )
-        if self.config_entry is not None:
-            self._device_id = self.config_entry.data["device_id"]
-            self.device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._device_id)},
-                name="Anova Precision Cooker",
-                manufacturer="Anova",
-                model="Precision Cooker",
-                sw_version=firmware_version,
-            )
-        else:
-            _LOGGER.error("Anova Coordinator was setup without config entry")
-
+        assert self.config_entry is not None
+        self._device_id = self.config_entry.data["device_id"]
         self.anova_api = anova_api
+        self.device_info: DeviceInfo | None = None
+
+    @callback
+    def async_setup(self, firmware_version: str) -> None:
+        """Set the firmware version info."""
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name="Anova Precision Cooker",
+            manufacturer="Anova",
+            model="Precision Cooker",
+            sw_version=firmware_version,
+        )
 
     async def _async_update_data(self):
         try:

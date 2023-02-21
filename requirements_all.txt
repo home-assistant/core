@@ -336,7 +336,7 @@ androidtv[async]==0.0.70
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova_sous_vide
-anova-wifi==0.2.7
+anova-wifi==0.3.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
