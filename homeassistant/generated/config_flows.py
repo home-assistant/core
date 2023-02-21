@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = {
     "helper": [
+        "attribute_sensor",
         "derivative",
         "group",
         "integration",
@@ -47,7 +48,6 @@ FLOWS = {
         "aseko_pool_live",
         "asuswrt",
         "atag",
-        "attribute_sensor",
         "august",
         "aurora",
         "aurora_abb_powerone",
