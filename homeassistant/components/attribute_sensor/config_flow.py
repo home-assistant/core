@@ -7,27 +7,27 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
-from homeassistant.const import (
-    CONF_ATTRIBUTE,
-    CONF_DEVICE_CLASS,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
 )
 
-from .const import DOMAIN
+from .const import (
+    CONF_ATTRIBUTE_NAME,
+    CONF_DEVICE_CLASS,
+    CONF_SOURCE_ENTITY,
+    CONF_UNIT_OF_MEASUREMENT,
+    DOMAIN,
+)
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+        vol.Required(CONF_SOURCE_ENTITY): selector.EntitySelector(
             selector.EntitySelectorConfig(),
         ),
-        vol.Required(CONF_ATTRIBUTE): str,
+        vol.Required(CONF_ATTRIBUTE_NAME): str,
         vol.Required(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Required(CONF_UNIT_OF_MEASUREMENT): str,
     }
@@ -56,4 +56,4 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, options["name"]) if "name" in options else ""
+        return cast(str, options["name"])
