@@ -9,7 +9,10 @@ from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE, SupportedDialect
+from homeassistant.components.recorder.const import (
+    SQLITE_MAX_BIND_VARS,
+    SupportedDialect,
+)
 from homeassistant.components.recorder.db_schema import (
     EventData,
     Events,
@@ -591,7 +594,7 @@ async def test_purge_cutoff_date(
     service_data = {"keep_days": 2}
 
     # Force multiple purge batches to be run
-    rows = MAX_ROWS_TO_PURGE + 1
+    rows = SQLITE_MAX_BIND_VARS + 1
     cutoff = dt_util.utcnow() - timedelta(days=service_data["keep_days"])
     await _add_db_entries(hass, cutoff, rows)
 
@@ -1548,11 +1551,11 @@ async def test_purge_many_old_events(
     """Test deleting old events."""
     instance = await async_setup_recorder_instance(hass)
 
-    await _add_test_events(hass, MAX_ROWS_TO_PURGE)
+    await _add_test_events(hass, SQLITE_MAX_BIND_VARS)
 
     with session_scope(hass=hass) as session:
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
-        assert events.count() == MAX_ROWS_TO_PURGE * 6
+        assert events.count() == SQLITE_MAX_BIND_VARS * 6
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
@@ -1565,7 +1568,7 @@ async def test_purge_many_old_events(
             events_batch_size=3,
         )
         assert not finished
-        assert events.count() == MAX_ROWS_TO_PURGE * 3
+        assert events.count() == SQLITE_MAX_BIND_VARS * 3
 
         # we should only have 2 groups of events left
         finished = purge_old_data(
@@ -1576,7 +1579,7 @@ async def test_purge_many_old_events(
             events_batch_size=3,
         )
         assert finished
-        assert events.count() == MAX_ROWS_TO_PURGE * 2
+        assert events.count() == SQLITE_MAX_BIND_VARS * 2
 
         # we should now purge everything
         finished = purge_old_data(

@@ -17,7 +17,7 @@ FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
         {"entity": None},
     ),
 )
-def test_valid_base_schema(schema):
+def test_valid_base_schema(schema) -> None:
     """Test base schema validation."""
     selector.validate_selector(schema)
 
@@ -33,7 +33,7 @@ def test_valid_base_schema(schema):
         {"device": {}, "entity": {}},
     ),
 )
-def test_invalid_base_schema(schema):
+def test_invalid_base_schema(schema) -> None:
     """Test base schema validation."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector(schema)
@@ -109,7 +109,7 @@ def _test_selector(
         ),
     ),
 )
-def test_device_selector_schema(schema, valid_selections, invalid_selections):
+def test_device_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test device selector."""
     _test_selector("device", schema, valid_selections, invalid_selections)
 
@@ -169,7 +169,7 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_entity_selector_schema(schema, valid_selections, invalid_selections):
+def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test entity selector."""
     _test_selector("entity", schema, valid_selections, invalid_selections)
 
@@ -216,7 +216,7 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_area_selector_schema(schema, valid_selections, invalid_selections):
+def test_area_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test area selector."""
     _test_selector("area", schema, valid_selections, invalid_selections)
 
@@ -244,7 +244,7 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
         ({"mode": "box", "step": "any"}, (), ()),
     ),
 )
-def test_number_selector_schema(schema, valid_selections, invalid_selections):
+def test_number_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test number selector."""
     _test_selector("number", schema, valid_selections, invalid_selections)
 
@@ -262,7 +262,7 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
         },
     ),
 )
-def test_number_selector_schema_error(schema):
+def test_number_selector_schema_error(schema) -> None:
     """Test number selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"number": schema})
@@ -272,7 +272,7 @@ def test_number_selector_schema_error(schema):
     ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123",), (None,)),),
 )
-def test_addon_selector_schema(schema, valid_selections, invalid_selections):
+def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test add-on selector."""
     _test_selector("addon", schema, valid_selections, invalid_selections)
 
@@ -281,7 +281,7 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections):
     ("schema", "valid_selections", "invalid_selections"),
     (({}, (1, "one", None), ()),),  # Everything can be coarced to bool
 )
-def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
+def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test boolean selector."""
     _test_selector(
         "boolean",
@@ -307,7 +307,9 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_config_entry_selector_schema(schema, valid_selections, invalid_selections):
+def test_config_entry_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
     """Test boolean selector."""
     _test_selector("config_entry", schema, valid_selections, invalid_selections)
 
@@ -316,7 +318,7 @@ def test_config_entry_selector_schema(schema, valid_selections, invalid_selectio
     ("schema", "valid_selections", "invalid_selections"),
     (({}, ("00:00:00",), ("blah", None)),),
 )
-def test_time_selector_schema(schema, valid_selections, invalid_selections):
+def test_time_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test time selector."""
     _test_selector("time", schema, valid_selections, invalid_selections)
 
@@ -331,7 +333,7 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_state_selector_schema(schema, valid_selections, invalid_selections):
+def test_state_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test state selector."""
     _test_selector("state", schema, valid_selections, invalid_selections)
 
@@ -365,7 +367,7 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_target_selector_schema(schema, valid_selections, invalid_selections):
+def test_target_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test target selector."""
     _test_selector("target", schema, valid_selections, invalid_selections)
 
@@ -374,7 +376,7 @@ def test_target_selector_schema(schema, valid_selections, invalid_selections):
     ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123",), ()),),
 )
-def test_action_selector_schema(schema, valid_selections, invalid_selections):
+def test_action_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test action sequence selector."""
     _test_selector("action", schema, valid_selections, invalid_selections)
 
@@ -383,7 +385,7 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections):
     ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123",), ()),),
 )
-def test_object_selector_schema(schema, valid_selections, invalid_selections):
+def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
     _test_selector("object", schema, valid_selections, invalid_selections)
 
@@ -396,7 +398,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections):
         ({"multiline": False, "type": "email"}, (), ()),
     ),
 )
-def test_text_selector_schema(schema, valid_selections, invalid_selections):
+def test_text_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test text selector."""
     _test_selector("text", schema, valid_selections, invalid_selections)
 
@@ -469,7 +471,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_select_selector_schema(schema, valid_selections, invalid_selections):
+def test_select_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test select selector."""
     _test_selector("select", schema, valid_selections, invalid_selections)
 
@@ -485,7 +487,7 @@ def test_select_selector_schema(schema, valid_selections, invalid_selections):
         {"options": ["red", {"value": "green", "label": "Emerald Green"}]},
     ),
 )
-def test_select_selector_schema_error(schema):
+def test_select_selector_schema_error(schema) -> None:
     """Test select selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"select": schema})
@@ -506,7 +508,9 @@ def test_select_selector_schema_error(schema):
         ),
     ),
 )
-def test_attribute_selector_schema(schema, valid_selections, invalid_selections):
+def test_attribute_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
     """Test attribute selector."""
     _test_selector("attribute", schema, valid_selections, invalid_selections)
 
@@ -529,7 +533,7 @@ def test_attribute_selector_schema(schema, valid_selections, invalid_selections)
         ),
     ),
 )
-def test_duration_selector_schema(schema, valid_selections, invalid_selections):
+def test_duration_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test duration selector."""
     _test_selector("duration", schema, valid_selections, invalid_selections)
 
@@ -544,7 +548,7 @@ def test_duration_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_icon_selector_schema(schema, valid_selections, invalid_selections):
+def test_icon_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test icon selector."""
     _test_selector("icon", schema, valid_selections, invalid_selections)
 
@@ -559,7 +563,7 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_theme_selector_schema(schema, valid_selections, invalid_selections):
+def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test theme selector."""
     _test_selector("theme", schema, valid_selections, invalid_selections)
 
@@ -586,7 +590,7 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_media_selector_schema(schema, valid_selections, invalid_selections):
+def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test media selector."""
 
     def drop_metadata(data):
@@ -630,7 +634,7 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_location_selector_schema(schema, valid_selections, invalid_selections):
+def test_location_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test location selector."""
 
     _test_selector("location", schema, valid_selections, invalid_selections)
@@ -646,7 +650,9 @@ def test_location_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_rgb_color_selector_schema(schema, valid_selections, invalid_selections):
+def test_rgb_color_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
     """Test color_rgb selector."""
 
     _test_selector("color_rgb", schema, valid_selections, invalid_selections)
@@ -667,7 +673,9 @@ def test_rgb_color_selector_schema(schema, valid_selections, invalid_selections)
         ),
     ),
 )
-def test_color_tempselector_schema(schema, valid_selections, invalid_selections):
+def test_color_tempselector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
     """Test color_temp selector."""
 
     _test_selector("color_temp", schema, valid_selections, invalid_selections)
@@ -683,7 +691,7 @@ def test_color_tempselector_schema(schema, valid_selections, invalid_selections)
         ),
     ),
 )
-def test_date_selector_schema(schema, valid_selections, invalid_selections):
+def test_date_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test date selector."""
 
     _test_selector("date", schema, valid_selections, invalid_selections)
@@ -699,7 +707,7 @@ def test_date_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
+def test_datetime_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test datetime selector."""
 
     _test_selector("datetime", schema, valid_selections, invalid_selections)
@@ -709,7 +717,7 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
     ("schema", "valid_selections", "invalid_selections"),
     (({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!")),),
 )
-def test_template_selector_schema(schema, valid_selections, invalid_selections):
+def test_template_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)
 
@@ -724,7 +732,7 @@ def test_template_selector_schema(schema, valid_selections, invalid_selections):
         ),
     ),
 )
-def test_file_selector_schema(schema, valid_selections, invalid_selections):
+def test_file_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test file selector."""
 
     _test_selector("file", schema, valid_selections, invalid_selections)

@@ -374,6 +374,8 @@ async def test_schema_migrate(
         "homeassistant.components.recorder.Recorder._process_state_changed_event_into_session",
     ), patch(
         "homeassistant.components.recorder.Recorder._process_non_state_changed_event_into_session",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._pre_process_startup_tasks",
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.async_create_task(

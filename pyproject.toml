@@ -241,6 +241,7 @@ target-version = "py310"
 
 select = [
     "B007", # Loop control variable {name} not used within loop body
+    "B014", # Exception handler with duplicate exception
     "C",  # complexity
     "D",  # docstrings
     "E",  # pycodestyle
@@ -257,6 +258,7 @@ select = [
     "SIM401", # Use get from dict with default instead of an if block
     "T20",  # flake8-print
     "TRY004", # Prefer TypeError exception for invalid type
+    "RUF006", # Store a reference to the return value of asyncio.create_task
     "UP",  # pyupgrade
     "W",  # pycodestyle
 ]

@@ -1,5 +1,4 @@
 """Make sure that Eve Degree (via Eve Extend) is enumerated properly."""
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
@@ -8,6 +7,7 @@ from homeassistant.const import (
     POWER_WATT,
     EntityCategory,
 )
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -19,7 +19,7 @@ from ..common import (
 )
 
 
-async def test_eve_energy_setup(hass):
+async def test_eve_energy_setup(hass: HomeAssistant) -> None:
     """Test that the accessory can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "eve_energy.json")
     await setup_test_accessories(hass, accessories)

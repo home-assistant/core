@@ -704,7 +704,7 @@ async def test_pymodbus_connect_fail(
     caplog.set_level(logging.WARNING)
     ExceptionMessage = "test connect exception"
     mock_pymodbus.connect.side_effect = ModbusException(ExceptionMessage)
-    assert await async_setup_component(hass, DOMAIN, config) is False
+    assert await async_setup_component(hass, DOMAIN, config) is True
     assert ExceptionMessage in caplog.text
 
 
