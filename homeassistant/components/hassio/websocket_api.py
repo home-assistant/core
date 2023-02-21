@@ -115,6 +115,8 @@ async def websocket_supervisor_api(
         payload = msg.get(ATTR_DATA, {})
 
         if command == "/ingress/session":
+            # Send username on session creation, so the supervisor can correlate session tokens with users
+            # for every request that is authenticated with the given ingress session token.
             payload["username"] = connection.user.name
 
         result = await supervisor.send_command(
