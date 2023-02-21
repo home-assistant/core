@@ -39,11 +39,3 @@ class InvalidAuth(HomeAssistantError):
 
 class ResponseError(HomeAssistantError):
     """Error to indicate there was a not ok response."""
-
-
-class ConfigEntryNotReady(HomeAssistantError):
-    """Error to indicate the entry is unreachable."""
-
-
-class ConfigEntryAuthFailed(HomeAssistantError):
-    """Error to indicate the auth to the entry failed."""
