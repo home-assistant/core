@@ -1,1 +1,1 @@
-"""Tests for the pjlink component."""
+"""Test the pjlink integration."""

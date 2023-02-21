@@ -1,4 +1,4 @@
-"""The test for the pjlink MediaEntity initialization."""
+"""Test the pjlink media player platform."""
 
 from datetime import timedelta
 import socket
