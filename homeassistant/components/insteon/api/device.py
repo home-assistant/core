@@ -1,8 +1,10 @@
 """API interface to get an Insteon device."""
 
+import logging
 from typing import Any
 
 from pyinsteon import devices
+from pyinsteon.address import Address
 from pyinsteon.constants import DeviceAction
 import voluptuous as vol
 
@@ -141,3 +143,43 @@ async def websocket_cancel_add_device(
     """Cancel the Insteon all-linking process."""
     await devices.async_cancel_all_linking()
     connection.send_result(msg[ID])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "insteon/device/get_logging",
+        vol.Required(DEVICE_ADDRESS): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_get_device_logging(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get Insteon device log level."""
+    addr = Address(msg[DEVICE_ADDRESS])
+    logger = logging.getLogger(f"pyinsteon.{addr.id}")
+
+    connection.send_result(msg[ID], {"debug": logger.level == logging.DEBUG})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "insteon/device/set_logging",
+        vol.Required(DEVICE_ADDRESS): str,
+        vol.Required("debug"): bool,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_set_device_logging(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Set Insteon device log level."""
+    addr = Address(msg[DEVICE_ADDRESS])
+    logger = logging.getLogger(f"pyinsteon.{addr.id}")
+    logger.level = logging.DEBUG if msg["debug"] else logging.WARNING

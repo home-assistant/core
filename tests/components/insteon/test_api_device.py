@@ -1,5 +1,6 @@
 """Test the device level APIs."""
 import asyncio
+import logging
 from unittest.mock import patch
 
 from pyinsteon.constants import DeviceAction
@@ -27,7 +28,7 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
-async def _async_setup(hass, hass_ws_client):
+async def _async_setup(hass: HomeAssistant, hass_ws_client):
     """Set up for tests."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -200,3 +201,57 @@ async def test_cancel_add_device(
         )
         msg = await ws_client.receive_json()
         assert msg["success"]
+
+
+async def _async_test_get_logging(ws_client, addr, logger, debug, ws_id):
+    """Call the web service to test the logging levels match."""
+    await ws_client.send_json(
+        {ID: ws_id, TYPE: "insteon/device/get_logging", "device_address": addr}
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["debug"] == debug
+
+
+async def test_get_device_logging(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the logging level of a device."""
+    addr = "1a2b3c"
+    logger = logging.getLogger(f"pyinsteon.{addr}")
+    ws_client, _, _, _ = await _async_setup(hass, hass_ws_client)
+
+    logger.level = logging.DEBUG
+    await _async_test_get_logging(ws_client, addr, logger, True, 4)
+
+    logger.level = logging.WARNING
+    await _async_test_get_logging(ws_client, addr, logger, False, 5)
+
+
+async def test_set_device_logging(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the logging level of a device."""
+    addr = "1a2b3c"
+    logger = logging.getLogger(f"pyinsteon.{addr}")
+    ws_client, _, _, _ = await _async_setup(hass, hass_ws_client)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "insteon/device/set_logging",
+            "device_address": addr,
+            "debug": True,
+        }
+    )
+    await _async_test_get_logging(ws_client, addr, logger, True, 2)
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "insteon/device/set_logging",
+            "device_address": addr,
+            "debug": False,
+        }
+    )
+    await _async_test_get_logging(ws_client, addr, logger, False, 4)

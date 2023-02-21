@@ -20,7 +20,10 @@ from .device import (
     websocket_add_device,
     websocket_cancel_add_device,
     websocket_get_device,
+    websocket_get_device_logging,
+    websocket_set_device_logging,
 )
+from .logging import websocket_get_logging, websocket_set_logging
 from .properties import (
     websocket_change_properties_record,
     websocket_get_properties,
@@ -39,11 +42,16 @@ URL_BASE = "/insteon_static"
 
 
 @callback
-def async_load_api(hass):
+def async_load_api(hass: HomeAssistant):
     """Set up the web socket API."""
+    websocket_api.async_register_command(hass, websocket_get_logging)
+    websocket_api.async_register_command(hass, websocket_set_logging)
+
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_add_device)
     websocket_api.async_register_command(hass, websocket_cancel_add_device)
+    websocket_api.async_register_command(hass, websocket_get_device_logging)
+    websocket_api.async_register_command(hass, websocket_set_device_logging)
 
     websocket_api.async_register_command(hass, websocket_get_scenes)
     websocket_api.async_register_command(hass, websocket_get_scene)
