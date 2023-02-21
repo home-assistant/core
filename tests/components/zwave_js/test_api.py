@@ -798,7 +798,7 @@ async def test_add_node(
         "command": "controller.begin_inclusion",
         "options": {
             "strategy": InclusionStrategy.SECURITY_S2,
-            "provisioning": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+            "dsk": "test_dsk",
         },
     }
 
@@ -904,7 +904,7 @@ async def test_add_node(
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 10, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 11, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
