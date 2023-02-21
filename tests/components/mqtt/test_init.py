@@ -920,6 +920,8 @@ async def test_subscribe_bad_topic(
         await mqtt.async_subscribe(hass, 55, record_calls)  # type: ignore[arg-type]
 
 
+# Support for a deprecated callback type was removed with HA core 2023.3.0
+# Test can be removed from HA core 2023.5.0
 async def test_subscribe_with_deprecated_callback_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
@@ -935,6 +937,8 @@ async def test_subscribe_with_deprecated_callback_fails(
         await mqtt.async_subscribe(hass, "test-topic", RecordCallsPartial(record_calls))
 
 
+# Support for a deprecated callback type was removed with HA core 2023.3.0
+# Test can be removed from HA core 2023.5.0
 async def test_subscribe_deprecated_async_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:

@@ -164,8 +164,8 @@ async def async_subscribe(
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
-    # Support for a deprecated callback type will be removed from HA core 2023.2.0
-    # Count callback parameters which don't have a default value
+    # Support for a deprecated callback type was removed with HA core 2023.3.0
+    # The signature validation code can be removed from HA core 2023.5.0
     non_default = 0
     if msg_callback:
         non_default = sum(
@@ -173,7 +173,8 @@ async def async_subscribe(
             for _, p in inspect.signature(msg_callback).parameters.items()
         )
 
-    # Bail out for not supported callback signatures
+    # Check for not supported callback signatures
+    # Can be removed from HA core 2023.5.0
     if non_default != 1:
         module = inspect.getmodule(msg_callback)
         raise HomeAssistantError(
