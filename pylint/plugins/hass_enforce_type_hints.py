@@ -109,7 +109,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "hass_admin_user": "MockUser",
     "hass_client": "ClientSessionGenerator",
     "hass_client_no_auth": "ClientSessionGenerator",
-    "hass_config": "ConfigType | None",
+    "hass_config": "ConfigType",
     "hass_config_yaml": "str | None",
     "hass_config_yaml_files": "dict[str, str] | None",
     "hass_owner_user": "MockUser",
