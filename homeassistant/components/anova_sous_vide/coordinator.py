@@ -30,7 +30,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         assert self.config_entry is not None
-        self._device_id = self.config_entry.data["device_id"]
+        self._device_unique_id = self.config_entry.data["device_unique_id"]
         self.anova_api = anova_api
         self.device_info: DeviceInfo | None = None
 
@@ -38,7 +38,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
     def async_setup(self, firmware_version: str) -> None:
         """Set the firmware version info."""
         self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, self._device_unique_id)},
             name="Anova Precision Cooker",
             manufacturer="Anova",
             model="Precision Cooker",
@@ -48,6 +48,6 @@ class AnovaCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             async with async_timeout.timeout(10):
-                return await self.anova_api.update(self._device_id)
+                return await self.anova_api.update(self._device_unique_id)
         except AnovaOffline as err:
             raise UpdateFailed(err) from err

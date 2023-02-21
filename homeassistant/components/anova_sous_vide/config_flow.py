@@ -19,12 +19,14 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is not None:
-            await self.async_set_unique_id(user_input["device_id"])
+            await self.async_set_unique_id(user_input["device_unique_id"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title="Anova Sous Vide", data={"device_id": user_input["device_id"]}
+                title="Anova Sous Vide",
+                data={"device_unique_id": user_input["device_unique_id"]},
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema({vol.Required("device_id"): str})
+            step_id="user",
+            data_schema=vol.Schema({vol.Required("device_unique_id"): str}),
         )

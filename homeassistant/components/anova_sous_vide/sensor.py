@@ -95,7 +95,9 @@ class AnovaEntity(CoordinatorEntity[AnovaCoordinator], SensorEntity):
         self.entity_description = description
         self._sensor_update_key = description.key
         self._sensor_data = None
-        self._attr_unique_id = f"{coordinator._device_id}_{description.key}".lower()
+        self._attr_unique_id = (
+            f"{coordinator._device_unique_id}_{description.key}".lower()
+        )
         self._attr_device_info = coordinator.device_info
 
     @property
