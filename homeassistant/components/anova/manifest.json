@@ -1,9 +1,9 @@
 {
-  "domain": "anova_sous_vide",
+  "domain": "anova",
   "name": "Anova Sous Vide",
   "codeowners": ["@Lash-L"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/anova_sous_vide",
+  "documentation": "https://www.home-assistant.io/integrations/anova",
   "iot_class": "cloud_polling",
   "requirements": ["anova-wifi==0.3.0"]
 }

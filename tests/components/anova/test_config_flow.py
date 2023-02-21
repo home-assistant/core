@@ -1,7 +1,7 @@
 """Test Anova config flow."""
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.anova_sous_vide.const import DOMAIN
+from homeassistant.components.anova.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import CONF_INPUT, create_entry
@@ -22,7 +22,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
-    """Test user initialized flow with duplicate server."""
+    """Test user initialized flow with duplicate device."""
     create_entry(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

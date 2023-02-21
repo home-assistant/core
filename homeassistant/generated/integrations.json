@@ -252,7 +252,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "anova_sous_vide": {
+    "anova": {
       "name": "Anova Sous Vide",
       "integration_type": "hub",
       "config_flow": true,

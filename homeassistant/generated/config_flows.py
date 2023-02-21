@@ -39,7 +39,7 @@ FLOWS = {
         "ambient_station",
         "android_ip_webcam",
         "androidtv",
-        "anova_sous_vide",
+        "anova",
         "anthemav",
         "apcupsd",
         "apple_tv",

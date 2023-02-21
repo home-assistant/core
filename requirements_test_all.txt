@@ -304,7 +304,7 @@ ambiclimate==0.2.1
 # homeassistant.components.androidtv
 androidtv[async]==0.0.70
 
-# homeassistant.components.anova_sous_vide
+# homeassistant.components.anova
 anova-wifi==0.3.0
 
 # homeassistant.components.anthemav

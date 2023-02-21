@@ -6,16 +6,16 @@ from unittest.mock import patch
 
 from anova_wifi import AnovaPrecisionCookerBinarySensor, AnovaPrecisionCookerSensor
 
-from homeassistant.components.anova_sous_vide.const import DOMAIN
+from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-DEVICE_ID = "abc123def"
+DEVICE_UNIQUE_ID = "abc123def"
 
-CONF_INPUT = {"device_id": DEVICE_ID}
+CONF_INPUT = {"device_unique_id": DEVICE_UNIQUE_ID}
 
 ONLINE_UPDATE = {
     "sensors": {
@@ -42,7 +42,9 @@ ONLINE_UPDATE = {
 def create_entry(hass: HomeAssistant) -> ConfigEntry:
     """Add config entry in Home Assistant."""
     entry = MockConfigEntry(
-        domain=DOMAIN, title="Anova Sous Vide", data={"device_id": DEVICE_ID}
+        domain=DOMAIN,
+        title="Anova Sous Vide",
+        data={"device_unique_id": DEVICE_UNIQUE_ID},
     )
     entry.add_to_hass(hass)
     return entry
@@ -55,7 +57,7 @@ async def async_init_integration(
 ) -> ConfigEntry:
     """Set up the Anova Sous Vide integration in Home Assistant."""
     with patch(
-        "homeassistant.components.anova_sous_vide.AnovaPrecisionCooker.update"
+        "homeassistant.components.anova.AnovaPrecisionCooker.update"
     ) as update_patch:
         update_patch.return_value = ONLINE_UPDATE
         entry = create_entry(hass)
