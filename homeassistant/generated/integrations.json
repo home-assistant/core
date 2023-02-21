@@ -433,6 +433,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "attribute_sensor": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "august": {
       "name": "August Home",
       "integrations": {
@@ -6544,6 +6549,7 @@
   },
   "translated_name": [
     "alert",
+    "attribute_sensor",
     "aurora",
     "cert_expiry",
     "cpuspeed",

@@ -1,0 +1,13 @@
+{
+  "domain": "attribute_sensor",
+  "name": "AttributeSensor",
+  "codeowners": ["@albinmedoc"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/attribute_sensor",
+  "homekit": {},
+  "iot_class": "calculated",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
