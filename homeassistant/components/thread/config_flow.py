@@ -25,6 +25,4 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Set up by import from async_setup."""
         await self._async_handle_discovery_without_unique_id()
-        # We don't check for existing config entries here because the check
-        # already happened in async_setup
         return self.async_create_entry(title="Thread", data={})
