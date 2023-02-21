@@ -38,13 +38,13 @@ async def async_get_actions(
     supported_commands: set[str] = hass.data[DOMAIN][entry_id][
         DEVICE_SUPPORTED_COMMANDS
     ]
+    base_action = {
+        CONF_DEVICE_ID: device_id,
+        CONF_DOMAIN: DOMAIN,
+    }
     for command_name in supported_commands:
         device_action_name = _get_device_action_name(command_name)
 
-        base_action = {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-        }
         actions.append({**base_action, CONF_TYPE: device_action_name})
 
     return actions
