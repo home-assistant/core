@@ -19,10 +19,6 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is not None:
-            entries = self._async_current_entries()
-            if any(x.data["device_id"] == user_input["device_id"] for x in entries):
-                return self.async_abort(reason="already_configured")
-
             await self.async_set_unique_id(user_input["device_id"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
