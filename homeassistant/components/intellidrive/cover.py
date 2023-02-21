@@ -1,7 +1,7 @@
 """The cover entity of reisinger intellidrive."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -10,13 +10,12 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ReisingerCoordinator
-from .device import ReisingerSlidingDoorDeviceApi
+from .entity import IntelliDriveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,28 +29,35 @@ async def async_setup_entry(
     async_add_entities(
         [
             SlidingDoorCoverEntity(
+                hass,
                 coordinator,
                 str(entry.data.get(CONF_HOST)),
                 str(entry.data.get(CONF_TOKEN)),
+                cast(str, entry.unique_id),
             )
         ]
     )
 
 
-class SlidingDoorCoverEntity(CoordinatorEntity[ReisingerCoordinator], CoverEntity):
+class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
     """Wrapper class to adapt the intellidrive device into the Homeassistant platform."""
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: ReisingerCoordinator,
         host: str,
         token: str,
+        device_id: str,
     ) -> None:
-        """Initialize slidingdoor entity."""
-        super().__init__(coordinator)
+        """Initialize slidingdoor cover."""
+        super().__init__(coordinator, device_id)
+        self._state: str | None = None
+        self._state_before_move: str | None = None
         self._host = host
         self._token = token
-        self._device = ReisingerSlidingDoorDeviceApi(host, token)
+        self._device = coordinator.device
+        # self._attr_device_class = CoverDeviceClass.GARAGE
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door async."""
@@ -88,6 +94,22 @@ class SlidingDoorCoverEntity(CoordinatorEntity[ReisingerCoordinator], CoverEntit
         return (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
+
+    @callback
+    def _update_attr(self) -> None:
+        """Update the state and attributes."""
+        status = self.coordinator.data
+
+        self._attr_name = status["serial"]
+        # self._attr_name = "Name des Gerätes"
+
+        # state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
+        # if self._state_before_move is not None:
+        #     if self._state_before_move != state:
+        #         self._state = state
+        #         self._state_before_move = None
+        # else:
+        #     self._state = state
 
     @property
     def is_closed(self) -> bool:

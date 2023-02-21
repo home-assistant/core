@@ -10,7 +10,7 @@ from . import DOMAIN, ReisingerCoordinator
 
 
 class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
-    """Representation of a OpenGarage entity."""
+    """Representation of a IntelliDrive entity."""
 
     def __init__(
         self,
@@ -45,9 +45,10 @@ class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
         """Return the device_info of the device."""
         return DeviceInfo(
             configuration_url=self.coordinator.device.host,
-            connections={(CONNECTION_NETWORK_MAC, self.coordinator.data["mac"])},
+            connections={(CONNECTION_NETWORK_MAC, self.coordinator.data["serial"])},
             identifiers={(DOMAIN, self._device_id)},
-            manufacturer="Reisinger",
-            name=self.coordinator.data["title"],
+            manufacturer="Reisinger GmbH",
+            # name=self.coordinator.data["title"],
+            name="Reisinger Intellidrive 1",
             sw_version=self.coordinator.data["versionString"],
         )
