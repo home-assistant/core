@@ -497,9 +497,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     ),
                 },
             ]
-        elif self._color_data_type and (
+        
+        if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
-            or (ATTR_BRIGHTNESS in kwargs and self.color_mode == ColorMode.HS)
+            or (ATTR_BRIGHTNESS in kwargs 
+            and self.color_mode == ColorMode.HS 
+            and ATTR_COLOR_TEMP not in kwargs)
         ):
             if self._color_mode_dpcode:
                 commands += [
@@ -540,9 +543,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        if (
+        elif (
             ATTR_BRIGHTNESS in kwargs
-            and ATTR_HS_COLOR not in kwargs
             and self._brightness
         ):
             brightness = kwargs[ATTR_BRIGHTNESS]
