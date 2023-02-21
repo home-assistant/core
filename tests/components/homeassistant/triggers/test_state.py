@@ -578,26 +578,22 @@ async def test_if_fails_setup_if_from_boolean_value(hass, calls):
 
 async def test_if_fails_setup_bad_for(hass, calls):
     """Test for setup failure for bad for."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "state",
-                    "entity_id": "test.entity",
-                    "to": "world",
-                    "for": {"invalid": 5},
-                },
-                "action": {"service": "homeassistant.turn_on"},
-            }
-        },
-    )
-
-    with patch.object(state_trigger, "_LOGGER") as mock_logger:
-        hass.states.async_set("test.entity", "world")
-        await hass.async_block_till_done()
-        assert mock_logger.error.called
+    with assert_setup_component(0, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "test.entity",
+                        "to": "world",
+                        "for": {"invalid": 5},
+                    },
+                    "action": {"service": "homeassistant.turn_on"},
+                }
+            },
+        )
 
 
 async def test_if_not_fires_on_entity_change_with_for(hass, calls):

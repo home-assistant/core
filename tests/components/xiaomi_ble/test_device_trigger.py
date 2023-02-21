@@ -179,7 +179,7 @@ async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_if_fires_on_motion_detected(hass, calls):
+async def test_if_fires_on_motion_detected(hass: HomeAssistant, calls) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)
@@ -332,7 +332,7 @@ async def test_automation_with_invalid_trigger_event_property(
     await hass.async_block_till_done()
 
 
-async def test_triggers_for_invalid__model(hass, calls):
+async def test_triggers_for_invalid__model(hass: HomeAssistant, calls) -> None:
     """Test invalid model doesn't return triggers."""
     mac = "DE:70:E8:B2:39:0C"
     entry = await _async_setup_xiaomi_device(hass, mac)

@@ -1,14 +1,15 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
-
-
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 from .const import FAKE_SCENE
 
 
-async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_scene(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test if (config) scenes get created."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -67,7 +68,9 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
         assert entity_entry.device_id is not None
 
 
-async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_scene_turn_on_service(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the turn on service on a scene."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -103,8 +106,8 @@ async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
 
 
 async def test_scene_advanced_turn_on_service(
-    hass, mock_bridge_v2, v2_resources_test_data
-):
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the advanced turn on service on a scene."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -139,7 +142,9 @@ async def test_scene_advanced_turn_on_service(
     }
 
 
-async def test_scene_updates(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_scene_updates(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test scene events from bridge."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 

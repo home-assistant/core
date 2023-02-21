@@ -232,7 +232,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if brightness is not None:
             await self.device.set_brightness(brightness, transition=transition)
             return
-        await self.device.turn_on(transition=transition)  # type: ignore[arg-type]
+        await self.device.turn_on(transition=transition)
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -337,7 +337,11 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
-        if ATTR_COLOR_TEMP in kwargs:
+        if ATTR_EFFECT in kwargs:
+            await self.device.set_effect(
+                kwargs[ATTR_EFFECT], brightness=brightness, transition=transition
+            )
+        elif ATTR_COLOR_TEMP in kwargs:
             if self.effect:
                 # If there is an effect in progress
                 # we have to set an HSV value to clear the effect
@@ -348,8 +352,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             )
         elif ATTR_HS_COLOR in kwargs:
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
-        elif ATTR_EFFECT in kwargs:
-            await self.device.set_effect(kwargs[ATTR_EFFECT])
         else:
             await self._async_turn_on_with_brightness(brightness, transition)
 

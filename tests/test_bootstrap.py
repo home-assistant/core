@@ -32,7 +32,7 @@ def apply_mock_storage(hass_storage):
 
 
 @pytest.fixture(autouse=True)
-async def apply_stop_hass(stop_hass):
+async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
@@ -454,7 +454,9 @@ def mock_ensure_config_exists():
         yield ensure_config_exists
 
 
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass(
+    mock_hass_config: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
@@ -462,17 +464,14 @@ async def test_setup_hass(
     mock_process_ha_config_upgrade,
     caplog,
     event_loop,
-):
+) -> None:
     """Test it works."""
     verbose = Mock()
     log_rotate_days = Mock()
     log_file = Mock()
     log_no_color = Mock()
 
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"browser": {}, "frontend": {}},
-    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
+    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
@@ -505,7 +504,9 @@ async def test_setup_hass(
     assert hass == async_get_hass()
 
 
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass_takes_longer_than_log_slow_startup(
+    mock_hass_config: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
@@ -513,7 +514,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_process_ha_config_upgrade,
     caplog,
     event_loop,
-):
+) -> None:
     """Test it works."""
     verbose = Mock()
     log_rotate_days = Mock()
@@ -524,10 +525,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         await asyncio.sleep(0.6)
         return True
 
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"browser": {}, "frontend": {}},
-    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch.object(
+    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch.object(
         bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05
     ), patch(
         "homeassistant.components.frontend.async_setup",
@@ -555,7 +553,7 @@ async def test_setup_hass_invalid_yaml(
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     event_loop,
-):
+) -> None:
     """Test it works."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
@@ -636,70 +634,71 @@ async def test_setup_hass_safe_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
+@pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 async def test_setup_hass_invalid_core_config(
+    mock_hass_config: None,
     mock_enable_logging,
     mock_is_virtual_env,
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     event_loop,
-):
+) -> None:
     """Test it works."""
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"homeassistant": {"non-existing": 1}},
-    ):
-        hass = await bootstrap.async_setup_hass(
-            runner.RuntimeConfig(
-                config_dir=get_test_config_dir(),
-                verbose=False,
-                log_rotate_days=10,
-                log_file="",
-                log_no_color=False,
-                skip_pip=True,
-                safe_mode=False,
-            ),
-        )
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=False,
+            log_rotate_days=10,
+            log_file="",
+            log_no_color=False,
+            skip_pip=True,
+            safe_mode=False,
+        ),
+    )
 
     assert "safe_mode" in hass.config.components
 
 
-async def test_setup_safe_mode_if_no_frontend(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    event_loop,
-):
-    """Test we setup safe mode if frontend didn't load."""
-    verbose = Mock()
-    log_rotate_days = Mock()
-    log_file = Mock()
-    log_no_color = Mock()
-
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
             "homeassistant": {
                 "internal_url": "http://192.168.1.100:8123",
                 "external_url": "https://abcdef.ui.nabu.casa",
             },
             "map": {},
             "person": {"invalid": True},
-        },
-    ):
-        hass = await bootstrap.async_setup_hass(
-            runner.RuntimeConfig(
-                config_dir=get_test_config_dir(),
-                verbose=verbose,
-                log_rotate_days=log_rotate_days,
-                log_file=log_file,
-                log_no_color=log_no_color,
-                skip_pip=True,
-                safe_mode=False,
-            ),
-        )
+        }
+    ],
+)
+async def test_setup_safe_mode_if_no_frontend(
+    mock_hass_config: None,
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+    event_loop,
+) -> None:
+    """Test we setup safe mode if frontend didn't load."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            safe_mode=False,
+        ),
+    )
 
     assert "safe_mode" in hass.config.components
     assert hass.config.config_dir == get_test_config_dir()
@@ -774,12 +773,10 @@ async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            await asyncio.sleep(0.1)
-
             async def _background_task():
                 await asyncio.sleep(0.2)
 
-            await hass.async_create_task(_background_task())
+            hass.async_create_task(_background_task())
             return True
 
         return async_setup

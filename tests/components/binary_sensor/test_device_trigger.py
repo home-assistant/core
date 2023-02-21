@@ -8,8 +8,8 @@ from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceCla
 from homeassistant.components.binary_sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_registry import RegistryEntryHider
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -31,8 +31,11 @@ def calls(hass):
 
 
 async def test_get_triggers(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected triggers from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -72,21 +75,21 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
-        (RegistryEntryHider.INTEGRATION, None),
-        (RegistryEntryHider.USER, None),
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
-    hidden_by,
-    entity_category,
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hidden_by: er.RegistryEntryHider | None,
+    entity_category: EntityCategory | None,
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -119,7 +122,11 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_no_state(hass, device_registry, entity_registry):
+async def test_get_triggers_no_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -160,7 +167,11 @@ async def test_get_triggers_no_state(hass, device_registry, entity_registry):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_trigger_capabilities(hass, device_registry, entity_registry):
+async def test_get_trigger_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected capabilities from a binary_sensor trigger."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -186,7 +197,9 @@ async def test_get_trigger_capabilities(hass, device_registry, entity_registry):
         assert capabilities == expected_capabilities
 
 
-async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_change(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for on and off triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -271,8 +284,8 @@ async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations)
 
 
 async def test_if_fires_on_state_change_with_for(
-    hass, calls, enable_custom_integrations
-):
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for triggers firing with delay."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

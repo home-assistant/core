@@ -28,7 +28,7 @@ async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_camera(hass, setup_config_entry):
+async def test_camera(hass: HomeAssistant, setup_config_entry) -> None:
     """Test that Axis camera platform is loaded properly."""
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
 
@@ -48,7 +48,9 @@ async def test_camera(hass, setup_config_entry):
 
 
 @pytest.mark.parametrize("options", [{CONF_STREAM_PROFILE: "profile_1"}])
-async def test_camera_with_stream_profile(hass, setup_config_entry):
+async def test_camera_with_stream_profile(
+    hass: HomeAssistant, setup_config_entry
+) -> None:
     """Test that Axis camera entity is using the correct path with stream profike."""
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
 
@@ -70,7 +72,7 @@ async def test_camera_with_stream_profile(hass, setup_config_entry):
     )
 
 
-async def test_camera_disabled(hass, prepare_config_entry):
+async def test_camera_disabled(hass: HomeAssistant, prepare_config_entry) -> None:
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
     with patch("axis.vapix.vapix.Params.image_format", new=None):
         await prepare_config_entry()

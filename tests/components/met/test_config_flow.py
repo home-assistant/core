@@ -109,8 +109,12 @@ async def test_onboarding_step(hass: HomeAssistant) -> None:
     assert result["data"] == {"track_home": True}
 
 
-@pytest.mark.parametrize("latitude,longitude", [(52.3731339, 4.8903147), (0.0, 0.0)])
-async def test_onboarding_step_abort_no_home(hass, latitude, longitude):
+@pytest.mark.parametrize(
+    ("latitude", "longitude"), [(52.3731339, 4.8903147), (0.0, 0.0)]
+)
+async def test_onboarding_step_abort_no_home(
+    hass: HomeAssistant, latitude, longitude
+) -> None:
     """Test entry not created when default step fails."""
     await async_process_ha_core_config(
         hass,

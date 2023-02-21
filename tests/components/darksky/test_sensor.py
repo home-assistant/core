@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import forecastio
 from requests.exceptions import ConnectionError as ConnectError
+import requests_mock
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -68,7 +69,9 @@ INVALID_CONFIG_LANG = {
 }
 
 
-async def test_setup_with_config(hass, requests_mock):
+async def test_setup_with_config(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test the platform setup with configuration."""
     with patch("homeassistant.components.darksky.sensor.forecastio.load_forecast"):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
@@ -106,7 +109,9 @@ async def test_setup_with_invalid_language_config(hass: HomeAssistant) -> None:
     assert state is None
 
 
-async def test_setup_bad_api_key(hass, requests_mock):
+async def test_setup_bad_api_key(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test for handling a bad API key."""
     # The Dark Sky API wrapper that we use raises an HTTP error
     # when you try to use a bad (or no) API key.
@@ -137,7 +142,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         assert state is None
 
 
-async def test_setup(hass, requests_mock):
+async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test for successfully setting up the forecast.io platform."""
     with patch(
         "forecastio.api.get_forecast", wraps=forecastio.api.get_forecast

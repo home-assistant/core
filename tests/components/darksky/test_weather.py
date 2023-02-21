@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import forecastio
 from requests.exceptions import ConnectionError as ConnectError
+import requests_mock
 
 from homeassistant.components import weather
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import load_fixture
 
 
-async def test_setup(hass, requests_mock):
+async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test for successfully setting up the forecast.io platform."""
     with patch(
         "forecastio.api.get_forecast", wraps=forecastio.api.get_forecast

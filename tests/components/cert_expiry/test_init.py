@@ -74,7 +74,7 @@ async def test_update_unique_id(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_unload_config_entry(mock_now, hass):
+async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     assert hass.state is CoreState.running
 

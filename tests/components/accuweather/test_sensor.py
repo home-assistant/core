@@ -1,6 +1,5 @@
 """Test sensor of AccuWeather integration."""
 from datetime import timedelta
-import json
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION, DOMAIN
@@ -35,7 +34,11 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import (
+    async_fire_time_changed,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 async def test_sensor_without_forecast(hass: HomeAssistant) -> None:
@@ -684,8 +687,8 @@ async def test_availability(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=120)
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=json.loads(
-            load_fixture("accuweather/current_conditions_data.json")
+        return_value=load_json_object_fixture(
+            "accuweather/current_conditions_data.json"
         ),
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",
@@ -707,8 +710,8 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
 
     await async_setup_component(hass, "homeassistant", {})
 
-    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
-    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
+    forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
@@ -755,8 +758,8 @@ async def test_state_update(hass: HomeAssistant) -> None:
 
     future = utcnow() + timedelta(minutes=60)
 
-    current_condition = json.loads(
-        load_fixture("accuweather/current_conditions_data.json")
+    current_condition = load_json_object_fixture(
+        "accuweather/current_conditions_data.json"
     )
     current_condition["Ceiling"]["Metric"]["Value"] = 3300
 

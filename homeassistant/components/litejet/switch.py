@@ -56,17 +56,17 @@ class LiteJetSwitch(SwitchEntity):
         self._lj.unsubscribe(self._on_switch_released)
         self._lj.unsubscribe(self._on_connected_changed)
 
-    def _on_switch_pressed(self):
+    def _on_switch_pressed(self) -> None:
         self._attr_is_on = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def _on_switch_released(self):
+    def _on_switch_released(self) -> None:
         self._attr_is_on = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _on_connected_changed(self, connected: bool, reason: str) -> None:
         self._attr_available = connected
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):

@@ -907,7 +907,7 @@ async def test_discovery_update_binary_sensor_template(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("json_attributes_topic", '{ "id": 123 }', "id", 123),
         (
@@ -1084,7 +1084,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "payload1, state1, payload2, state2",
+    ("payload1", "state1", "payload2", "state2"),
     [("ON", "on", "OFF", "off"), ("OFF", "off", "ON", "on")],
 )
 async def test_cleanup_triggers_and_restoring_state(

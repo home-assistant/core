@@ -8,27 +8,29 @@ import datetime
 import functools
 import gc
 import itertools
-from json import JSONDecoder
 import logging
 import sqlite3
 import ssl
+import sys
 import threading
-from typing import Any
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import ClientWebSocketResponse, client
+from aiohttp import client
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
     TestServer,
     make_mocked_request,
 )
+from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import freezegun
 import multidict
 import pytest
 import pytest_socket
-import requests_mock as _requests_mock
+import requests_mock
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -42,6 +44,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
@@ -54,19 +57,27 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
 )
-from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
+from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
     ClientSessionGenerator,
+    MockHAClientWebSocket,
     MqttMockHAClient,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
+    RecorderInstanceGenerator,
     WebSocketGenerator,
 )
+
+if TYPE_CHECKING:
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -75,12 +86,12 @@ from .common import (  # noqa: E402, isort:skip
     INSTANCES,
     MockConfigEntry,
     MockUser,
-    SetupRecorderInstanceT,
     async_fire_mqtt_message,
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
     mock_storage,
+    patch_yaml_files,
 )
 from .test_util.aiohttp import (  # noqa: E402, isort:skip
     AiohttpClientMocker,
@@ -94,14 +105,19 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
 
+if sys.version_info[:2] >= (3, 11):
+    from .asyncio_legacy import legacy_coroutine
 
-def _utcnow():
+    setattr(asyncio, "coroutine", legacy_coroutine)
+
+
+def _utcnow() -> datetime.datetime:
     """Make utcnow patchable by freezegun."""
     return datetime.datetime.now(datetime.timezone.utc)
 
 
-dt_util.utcnow = _utcnow
-event.time_tracker_utcnow = _utcnow
+dt_util.utcnow = _utcnow  # type: ignore[assignment]
+event.time_tracker_utcnow = _utcnow  # type: ignore[assignment]
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -137,8 +153,8 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
-    freezegun.api.FakeDatetime = HAFakeDatetime
+    freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
+    freezegun.api.FakeDatetime = HAFakeDatetime  # type: ignore[attr-defined]
 
     def adapt_datetime(val):
         return val.isoformat(" ")
@@ -148,6 +164,7 @@ def pytest_runtest_setup() -> None:
 
     # Setup HAFakeDatetime converter for pymysql
     try:
+        # pylint: disable-next=import-outside-toplevel
         import MySQLdb.converters as MySQLdb_converters
     except ImportError:
         pass
@@ -157,12 +174,12 @@ def pytest_runtest_setup() -> None:
         ] = MySQLdb_converters.DateTime2literal
 
 
-def ha_datetime_to_fakedatetime(datetime):
+def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]
     """Convert datetime to FakeDatetime.
 
     Modified to include https://github.com/spulec/freezegun/pull/424.
     """
-    return freezegun.api.FakeDatetime(
+    return freezegun.api.FakeDatetime(  # type: ignore[attr-defined]
         datetime.year,
         datetime.month,
         datetime.day,
@@ -175,7 +192,7 @@ def ha_datetime_to_fakedatetime(datetime):
     )
 
 
-class HAFakeDatetime(freezegun.api.FakeDatetime):
+class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
     """Modified to include https://github.com/spulec/freezegun/pull/424."""
 
     @classmethod
@@ -194,16 +211,20 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):
         return ha_datetime_to_fakedatetime(result)
 
 
-def check_real(func):
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
+
+def check_real(func: Callable[_P, Coroutine[Any, Any, _R]]):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
-    async def guard_func(*args, **kwargs):
+    async def guard_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         real = kwargs.pop("_test_real", None)
 
         if not real:
-            raise Exception(
-                'Forgot to mock or pass "_test_real=True" to %s', func.__name__
+            raise RuntimeError(
+                f'Forgot to mock or pass "_test_real=True" to {func.__name__}'
             )
 
         return await func(*args, **kwargs)
@@ -262,7 +283,7 @@ def verify_cleanup(
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:
+    for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
@@ -291,7 +312,7 @@ def bcrypt_cost() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def hass_storage():
+def hass_storage() -> Generator[dict[str, Any], None, None]:
     """Fixture to mock storage."""
     with mock_storage() as stored_data:
         yield stored_data
@@ -376,6 +397,7 @@ def aiohttp_client(
         else:
             assert not args, "args should be empty"
 
+        client: TestClient
         if isinstance(__param, Application):
             server_kwargs = server_kwargs or {}
             server = TestServer(__param, loop=loop, **server_kwargs)
@@ -435,7 +457,7 @@ def hass(
             )
         orig_exception_handler(loop, context)
 
-    exceptions = []
+    exceptions: list[Exception] = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
     ha._cv_hass.set(hass)
 
@@ -485,10 +507,10 @@ async def stop_hass(
             await event_loop.shutdown_default_executor()
 
 
-@pytest.fixture
-def requests_mock():
+@pytest.fixture(name="requests_mock")
+def requests_mock_fixture() -> Generator[requests_mock.Mocker, None, None]:
     """Fixture to provide a requests mocker."""
-    with _requests_mock.mock() as m:
+    with requests_mock.mock() as m:
         yield m
 
 
@@ -686,7 +708,7 @@ def hass_client_no_auth(
 
 
 @pytest.fixture
-def current_request():
+def current_request() -> Generator[MagicMock, None, None]:
     """Mock current request."""
     with patch("homeassistant.components.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
@@ -700,7 +722,7 @@ def current_request():
 
 
 @pytest.fixture
-def current_request_with_host(current_request):
+def current_request_with_host(current_request: MagicMock) -> None:
     """Mock current request with a host header."""
     new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
     new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
@@ -720,7 +742,7 @@ def hass_ws_client(
 
     async def create_client(
         hass: HomeAssistant = hass, access_token: str | None = hass_access_token
-    ) -> ClientWebSocketResponse:
+    ) -> MockHAClientWebSocket:
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
@@ -736,9 +758,22 @@ def hass_ws_client(
         auth_ok = await websocket.receive_json()
         assert auth_ok["type"] == TYPE_AUTH_OK
 
+        def _get_next_id() -> Generator[int, None, None]:
+            i = 0
+            while True:
+                yield (i := i + 1)
+
+        id_generator = _get_next_id()
+
+        def _send_json_auto_id(data: dict[str, Any]) -> Coroutine[Any, Any, None]:
+            data["id"] = next(id_generator)
+            return websocket.send_json(data)
+
         # wrap in client
-        websocket.client = client
-        return websocket
+        wrapped_websocket = cast(MockHAClientWebSocket, websocket)
+        wrapped_websocket.client = client
+        wrapped_websocket.send_json_auto_id = _send_json_auto_id
+        return wrapped_websocket
 
     return create_client
 
@@ -885,6 +920,66 @@ async def _mqtt_mock_entry(
 
 
 @pytest.fixture
+def hass_config() -> ConfigType | None:
+    """Fixture to parametrize the content of main configuration using mock_hass_config.
+
+    To set a configuration, tests can be marked with:
+    @pytest.mark.parametrize("hass_config", [{integration: {...}}])
+    Add the `mock_hass_config: None` fixture to the test.
+    """
+    return None
+
+
+@pytest.fixture
+def mock_hass_config(
+    hass: HomeAssistant, hass_config: ConfigType | None
+) -> Generator[None, None, None]:
+    """Fixture to mock the content of main configuration.
+
+    Patches homeassistant.config.load_yaml_config_file with `hass_config` parameterized as content.
+    """
+    with patch("homeassistant.config.load_yaml_config_file", return_value=hass_config):
+        yield
+
+
+@pytest.fixture
+def hass_config_yaml() -> str | None:
+    """Fixture to parametrize the content of configuration.yaml file.
+
+    To set yaml content, tests can be marked with:
+    @pytest.mark.parametrize("hass_config_yaml", ["..."])
+    Add the `mock_hass_config_yaml: None` fixture to the test.
+    """
+    return None
+
+
+@pytest.fixture
+def hass_config_yaml_files(hass_config_yaml: str | None) -> dict[str, str] | None:
+    """Fixture to parametrize multiple yaml configuration files.
+
+    To set the YAML files to patch, tests can be marked with:
+    @pytest.mark.parametrize(
+        "hass_config_yaml_files", [{"configuration.yaml": "..."}]
+    )
+    Add the `mock_hass_config_yaml: None` fixture to the test.
+    """
+    return None if hass_config_yaml is None else {YAML_CONFIG_FILE: hass_config_yaml}
+
+
+@pytest.fixture
+def mock_hass_config_yaml(
+    hass: HomeAssistant, hass_config_yaml_files: dict[str, str] | None
+) -> Generator[None, None, None]:
+    """Fixture to mock the content of the yaml configuration files.
+
+    Patches yaml configuration files using the `hass_config_yaml`
+    and `hass_config_yaml_files` fixtures.
+    """
+    with patch_yaml_files(hass_config_yaml_files):
+        yield
+
+
+@pytest.fixture
 async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -935,7 +1030,7 @@ async def mqtt_mock_entry_with_yaml_config(
 
 
 @pytest.fixture(autouse=True)
-def mock_network():
+def mock_network() -> Generator[None, None, None]:
     """Mock network."""
     mock_adapter = Adapter(
         name="eth0",
@@ -954,7 +1049,7 @@ def mock_network():
 
 
 @pytest.fixture(autouse=True)
-def mock_get_source_ip():
+def mock_get_source_ip() -> Generator[None, None, None]:
     """Mock network util's async_get_source_ip."""
     with patch(
         "homeassistant.components.network.util.async_get_source_ip",
@@ -964,7 +1059,7 @@ def mock_get_source_ip():
 
 
 @pytest.fixture
-def mock_zeroconf():
+def mock_zeroconf() -> Generator[None, None, None]:
     """Mock zeroconf."""
     with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
         "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
@@ -973,7 +1068,7 @@ def mock_zeroconf():
 
 
 @pytest.fixture
-def mock_async_zeroconf(mock_zeroconf):
+def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
     with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
         zc = mock_aiozc.return_value
@@ -988,13 +1083,13 @@ def mock_async_zeroconf(mock_zeroconf):
 
 
 @pytest.fixture
-def enable_custom_integrations(hass):
+def enable_custom_integrations(hass: HomeAssistant) -> None:
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
 
 @pytest.fixture
-def enable_statistics():
+def enable_statistics() -> bool:
     """Fixture to control enabling of recorder's statistics compilation.
 
     To enable statistics, tests can be marked with:
@@ -1004,7 +1099,7 @@ def enable_statistics():
 
 
 @pytest.fixture
-def enable_statistics_table_validation():
+def enable_statistics_table_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
     To enable statistics table validation, tests can be marked with:
@@ -1014,7 +1109,7 @@ def enable_statistics_table_validation():
 
 
 @pytest.fixture
-def enable_nightly_purge():
+def enable_nightly_purge() -> bool:
     """Fixture to control enabling of recorder's nightly purge job.
 
     To enable nightly purging, tests can be marked with:
@@ -1024,7 +1119,7 @@ def enable_nightly_purge():
 
 
 @pytest.fixture
-def recorder_config():
+def recorder_config() -> dict[str, Any] | None:
     """Fixture to override recorder config.
 
     To override the config, tests can be marked with:
@@ -1035,43 +1130,29 @@ def recorder_config():
 
 @pytest.fixture
 def recorder_db_url(
-    pytestconfig,
-    hass_fixture_setup,
-):
+    pytestconfig: pytest.Config,
+    hass_fixture_setup: list[bool],
+) -> Generator[str, None, None]:
     """Prepare a default database for tests and return a connection URL."""
     assert not hass_fixture_setup
 
-    db_url: str = pytestconfig.getoption("dburl")
-    if db_url.startswith(("postgresql://", "mysql://")):
-        import sqlalchemy_utils
-
-        def _ha_orm_quote(mixed, ident):
-            """Conditionally quote an identifier.
-
-            Modified to include https://github.com/kvesteri/sqlalchemy-utils/pull/677
-            """
-            if isinstance(mixed, sqlalchemy_utils.functions.orm.Dialect):
-                dialect = mixed
-            elif hasattr(mixed, "dialect"):
-                dialect = mixed.dialect
-            else:
-                dialect = sqlalchemy_utils.functions.orm.get_bind(mixed).dialect
-            return dialect.preparer(dialect).quote(ident)
-
-        sqlalchemy_utils.functions.database.quote = _ha_orm_quote
+    db_url = cast(str, pytestconfig.getoption("dburl"))
     if db_url.startswith("mysql://"):
+        # pylint: disable-next=import-outside-toplevel
         import sqlalchemy_utils
 
         charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding=charset)
     elif db_url.startswith("postgresql://"):
+        # pylint: disable-next=import-outside-toplevel
         import sqlalchemy_utils
 
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding="utf8")
     yield db_url
     if db_url.startswith("mysql://"):
+        # pylint: disable-next=import-outside-toplevel
         import sqlalchemy as sa
 
         made_url = sa.make_url(db_url)
@@ -1096,15 +1177,14 @@ def recorder_db_url(
 
 @pytest.fixture
 def hass_recorder(
-    recorder_db_url,
-    enable_nightly_purge,
-    enable_statistics,
-    enable_statistics_table_validation,
+    recorder_db_url: str,
+    enable_nightly_purge: bool,
+    enable_statistics: bool,
+    enable_statistics_table_validation: bool,
     hass_storage,
-):
+) -> Generator[Callable[..., HomeAssistant], None, None]:
     """Home Assistant fixture with in-memory recorder."""
-    # Local import to avoid processing recorder and SQLite modules when running a
-    # testcase which does not use the recorder.
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
@@ -1131,7 +1211,7 @@ def hass_recorder(
         autospec=True,
     ):
 
-        def setup_recorder(config=None):
+        def setup_recorder(config: dict[str, Any] | None = None) -> HomeAssistant:
             """Set up with params."""
             init_recorder_component(hass, config, recorder_db_url)
             hass.start()
@@ -1146,10 +1226,13 @@ def hass_recorder(
     dt_util.DEFAULT_TIME_ZONE = original_tz
 
 
-async def _async_init_recorder_component(hass, add_config=None, db_url=None):
+async def _async_init_recorder_component(
+    hass: HomeAssistant,
+    add_config: dict[str, Any] | None = None,
+    db_url: str | None = None,
+) -> None:
     """Initialize the recorder asynchronously."""
-    # Local import to avoid processing recorder and SQLite modules when running a
-    # testcase which does not use the recorder.
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
     config = dict(add_config) if add_config else {}
@@ -1173,16 +1256,16 @@ async def _async_init_recorder_component(hass, add_config=None, db_url=None):
 
 @pytest.fixture
 async def async_setup_recorder_instance(
-    recorder_db_url,
-    enable_nightly_purge,
-    enable_statistics,
-    enable_statistics_table_validation,
-) -> AsyncGenerator[SetupRecorderInstanceT, None]:
+    recorder_db_url: str,
+    enable_nightly_purge: bool,
+    enable_statistics: bool,
+    enable_statistics_table_validation: bool,
+) -> AsyncGenerator[RecorderInstanceGenerator, None]:
     """Yield callable to setup recorder instance."""
-    # Local import to avoid processing recorder and SQLite modules when running a
-    # testcase which does not use the recorder.
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
 
+    # pylint: disable-next=import-outside-toplevel
     from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
@@ -1222,7 +1305,11 @@ async def async_setup_recorder_instance(
 
 
 @pytest.fixture
-async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
+async def recorder_mock(
+    recorder_config: dict[str, Any] | None,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> recorder.Recorder:
     """Fixture with in-memory recorder."""
     return await async_setup_recorder_instance(hass, recorder_config)
 
@@ -1305,7 +1392,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()
+    bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
     with patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
     ) as mock_bleak_scanner_start:
@@ -1314,7 +1401,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 def mock_bluetooth(
-    mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters
+    mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters: None
 ) -> None:
     """Mock out bluetooth from starting."""
 
@@ -1341,3 +1428,9 @@ def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
     """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
+
+
+@pytest.fixture
+def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+    """Return snapshot assertion fixture with the Home Assistant extension."""
+    return snapshot.use_extension(HomeAssistantSnapshotExtension)

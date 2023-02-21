@@ -6,6 +6,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.cloud import const, tts
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -41,7 +42,9 @@ def test_schema() -> None:
     tts.PLATFORM_SCHEMA({"platform": "cloud"})
 
 
-async def test_prefs_default_voice(hass, cloud_with_prefs, cloud_prefs):
+async def test_prefs_default_voice(
+    hass: HomeAssistant, cloud_with_prefs, cloud_prefs
+) -> None:
     """Test cloud provider uses the preferences."""
     assert cloud_prefs.tts_default_voice == ("en-US", "female")
 
@@ -68,7 +71,7 @@ async def test_prefs_default_voice(hass, cloud_with_prefs, cloud_prefs):
     assert provider_conf.default_options == {"gender": "female"}
 
 
-async def test_provider_properties(cloud_with_prefs):
+async def test_provider_properties(cloud_with_prefs) -> None:
     """Test cloud provider."""
     provider = await tts.async_get_engine(
         Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
@@ -77,7 +80,7 @@ async def test_provider_properties(cloud_with_prefs):
     assert "nl-NL" in provider.supported_languages
 
 
-async def test_get_tts_audio(cloud_with_prefs):
+async def test_get_tts_audio(cloud_with_prefs) -> None:
     """Test cloud provider."""
     provider = await tts.async_get_engine(
         Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}

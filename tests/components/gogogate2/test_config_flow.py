@@ -200,7 +200,7 @@ async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
 @patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")
 async def test_discovered_dhcp(
-    ismartgateapi_mock, async_setup_entry_mock, hass
+    ismartgateapi_mock, async_setup_entry_mock, hass: HomeAssistant
 ) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
     api: ISmartGateApi = MagicMock(spec=ISmartGateApi)
