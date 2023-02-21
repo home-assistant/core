@@ -32,11 +32,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
-async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, Any]:
-    """Return diagnostics for a config entry."""
-
+def _get_possible_thread_routes() -> tuple[dict[str, Any], dict[str, Any]]:
     # Build a list of possible thread routes
     # Right now, this is ipv6 /64's that have a gateway
     # We cross reference with zerconf data to confirm which via's are known border routers
@@ -64,6 +60,17 @@ async def async_get_config_entry_diagnostics(
                 "is-nexthop": record.nh_gateway is not None,
             }
             reverse_routes.setdefault(record.dst, set()).add(gateway)
+    return routes, reverse_routes
+
+
+async def async_get_config_entry_diagnostics(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> dict[str, Any]:
+    """Return diagnostics for a config entry."""
+
+    routes, reverse_routes = await hass.async_add_executor_job(
+        _get_possible_thread_routes
+    )
 
     networks = {}
 
