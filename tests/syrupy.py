@@ -134,7 +134,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     def _serializable_area_registry_entry(cls, data: ar.AreaEntry) -> SerializableData:
         """Prepare a Home Assistant area registry entry for serialization."""
         serialized = AreaRegistryEntrySnapshot(attrs.asdict(data) | {"id": ANY})
-        serialized.pop("_json_repr", None)
+        serialized.pop("_json_repr")
         return serialized
 
     @classmethod
@@ -156,7 +156,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         )
         if serialized["via_device_id"] is not None:
             serialized["via_device_id"] = ANY
-        serialized.pop("_json_repr", None)
+        serialized.pop("_json_repr")
         return serialized
 
     @classmethod
@@ -172,7 +172,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "id": ANY,
             }
         )
-        serialized.pop("_json_repr", None)
+        serialized.pop("_partial_repr")
+        serialized.pop("_display_repr")
         return serialized
 
     @classmethod
