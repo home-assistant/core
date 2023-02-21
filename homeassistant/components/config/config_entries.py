@@ -491,7 +491,6 @@ async def async_matching_config_entries(
     if not type_filter:
         return [entry_json(entry) for entry in entries]
 
-    # Fetch all the integrations so we can check their type
     integrations = {}
     domains = {entry.domain for entry in entries}
     for domain_key, integration_or_exc in (
