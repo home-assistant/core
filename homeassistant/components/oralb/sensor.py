@@ -7,7 +7,6 @@ from oralb_ble import OralBSensor, SensorUpdate
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothProcessorEntity,
 )
@@ -28,7 +27,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .coordinator import OralbActiveBluetoothProcessorCoordinator
+from .coordinator import (
+    OralbActiveBluetoothProcessorCoordinator,
+    OralbPassiveBluetoothDataProcessor,
+)
 from .device import device_key_to_bluetooth_entity_key
 
 
@@ -121,7 +123,9 @@ async def async_setup_entry(
     coordinator: OralbActiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    processor = OralbPassiveBluetoothDataProcessor(
+        sensor_update_to_bluetooth_data_update
+    )
     entry.async_on_unload(
         processor.async_add_entities_listener(
             OralBBluetoothSensorEntity, async_add_entities
@@ -131,7 +135,7 @@ async def async_setup_entry(
 
 
 class OralBBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[str | int | None]],
+    PassiveBluetoothProcessorEntity[OralbPassiveBluetoothDataProcessor],
     SensorEntity,
 ):
     """Representation of a OralB sensor."""
