@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from sqlalchemy import Column, Text, and_, func, lambda_stmt, or_, select
 from sqlalchemy.engine.row import Row
+from sqlalchemy.orm.properties import MappedColumn
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
@@ -141,6 +142,14 @@ _QUERY_STATES_NO_LAST_CHANGED = (
     States.attributes,
     StateAttributes.shared_attrs,
 )
+_FIELD_MAP = {
+    cast(MappedColumn, field).name: idx
+    for idx, field in enumerate(_QUERY_STATE_NO_ATTR)
+}
+_FIELD_MAP_PRE_SCHEMA_31 = {
+    cast(MappedColumn, field).name: idx
+    for idx, field in enumerate(_QUERY_STATES_PRE_SCHEMA_31)
+}
 
 
 def _schema_version(hass: HomeAssistant) -> int:
@@ -856,7 +865,7 @@ def _sorted_states_to_dict(
     """
     schema_version = _schema_version(hass)
     _process_timestamp: Callable[[datetime], float | str]
-    field_map: dict[str, int] = {}
+    field_map = _FIELD_MAP if schema_version >= 31 else _FIELD_MAP_PRE_SCHEMA_31
     state_class: Callable[
         [Row, dict[str, dict[str, Any]], datetime | None], State | dict[str, Any]
     ]
@@ -919,8 +928,6 @@ def _sorted_states_to_dict(
         if row := initial_states.pop(ent_id, None):
             prev_state = row.state
             ent_results.append(state_class(row, attr_cache, start_time))
-            if not field_map:
-                field_map = {key: idx for idx, key in enumerate(row._fields)}
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
             ent_results.extend(
@@ -937,8 +944,6 @@ def _sorted_states_to_dict(
                 continue
             prev_state = first_state.state
             ent_results.append(state_class(first_state, attr_cache, None))
-            if not field_map:
-                field_map = {key: idx for idx, key in enumerate(first_state._fields)}
 
         state_idx = field_map["state"]
 
