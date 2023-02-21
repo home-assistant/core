@@ -34,13 +34,30 @@ def configured_instances(hass: HomeAssistant) -> set[str]:
     return set(entries)
 
 
-class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+def _get_data_schema(
+    name: str | None,
+    latitude: float | None,
+    longitude: float | None,
+    elevation: int | None,
+) -> vol.Schema:
+    """Get a schema with default values."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=name): str,
+            vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
+            vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
+            vol.Required(CONF_ELEVATION, default=elevation): int,
+        }
+    )
+
+
+class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Init MetFlowHandler."""
+        """Init MetConfigFlowHandler."""
         self._errors: dict[str, Any] = {}
 
     async def async_step_user(
@@ -59,30 +76,13 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             self._errors[CONF_NAME] = "already_configured"
 
-        return await self._show_config_form(
-            name=HOME_LOCATION_NAME,
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-            elevation=self.hass.config.elevation,
-        )
-
-    async def _show_config_form(
-        self,
-        name: str | None = None,
-        latitude: float | None = None,
-        longitude: float | None = None,
-        elevation: int | None = None,
-    ) -> FlowResult:
-        """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=name): str,
-                    vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
-                    vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
-                    vol.Required(CONF_ELEVATION, default=elevation): int,
-                }
+            data_schema=_get_data_schema(
+                name=HOME_LOCATION_NAME,
+                latitude=self.hass.config.latitude,
+                longitude=self.hass.config.longitude,
+                elevation=self.hass.config.elevation,
             ),
             errors=self._errors,
         )
@@ -101,4 +101,48 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=HOME_LOCATION_NAME, data={CONF_TRACK_HOME: True}
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Get the options flow for Met."""
+        return MetOptionsFlowHandler(config_entry)
+
+
+class MetOptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow for Met component."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize the Met OptionsFlow."""
+        self._config_entry = config_entry
+        self._errors: dict[str, Any] = {}
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure options for Met."""
+
+        if user_input is not None:
+            # Update config entry with data from user input
+            self.hass.config_entries.async_update_entry(
+                self._config_entry, data=user_input
+            )
+            return self.async_create_entry(
+                title=self._config_entry.title, data=user_input
+            )
+
+        config_data = self._config_entry.data
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_get_data_schema(
+                name=config_data.get(CONF_NAME),
+                latitude=config_data.get(CONF_LATITUDE),
+                longitude=config_data.get(CONF_LONGITUDE),
+                elevation=config_data.get(CONF_ELEVATION),
+            ),
+            errors=self._errors,
         )
