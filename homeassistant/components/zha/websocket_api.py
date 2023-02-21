@@ -1130,7 +1130,7 @@ async def websocket_get_network_settings(
     connection.send_result(
         msg[ID],
         {
-            "radio_type": async_get_radio_type(hass, zha_gateway.config_entry),
+            "radio_type": async_get_radio_type(hass, zha_gateway.config_entry).name,
             "settings": backup.as_dict(),
         },
     )
