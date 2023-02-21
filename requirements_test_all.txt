@@ -1134,7 +1134,7 @@ pycoolmasternet-async==0.1.5
 pydaikin==2.9.0
 
 # homeassistant.components.deconz
-pydeconz==107
+pydeconz==108
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1621,7 +1621,7 @@ samsungtvws[async,encrypted]==2.5.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.7.1
+screenlogicpy==0.7.2
 
 # homeassistant.components.backup
 securetar==2022.2.0
