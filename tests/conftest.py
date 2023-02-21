@@ -134,7 +134,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
     if config.getoption("verbose") > 0:
-        logging.getLogger().level = logging.DEBUG
+        logging.getLogger().setLevel(logging.DEBUG)
 
 
 def pytest_runtest_setup() -> None:
