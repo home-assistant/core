@@ -6,8 +6,8 @@ import ergast_py
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.formula_one import F1Data
 from homeassistant.components.formula_one.const import DOMAIN
+from homeassistant.components.formula_one.coordinator import F1UpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -111,7 +111,7 @@ async def test_setup_unload_integration(hass: HomeAssistant) -> None:
 async def test_f1data_update_failed_too_few_races(hass: HomeAssistant) -> None:
     """Test we handle a failed update."""
 
-    f1_data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -131,7 +131,7 @@ async def test_f1data_update_failed_too_few_races(hass: HomeAssistant) -> None:
 async def test_f1data_update_failed_constructor_standings(hass: HomeAssistant) -> None:
     """Test we throw an UpdateFailed if data fetch fails."""
 
-    f1_data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -151,7 +151,7 @@ async def test_f1data_update_failed_constructor_standings(hass: HomeAssistant) -
 async def test_f1data_update_failed_driver_standings(hass: HomeAssistant) -> None:
     """Test we throw an UpdateFailed if data fetch fails."""
 
-    f1_data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -171,7 +171,7 @@ async def test_f1data_update_failed_driver_standings(hass: HomeAssistant) -> Non
 async def test_f1data_update_failed_races(hass: HomeAssistant) -> None:
     """Test we throw an UpdateFailed if data fetch fails."""
 
-    f1_data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -191,7 +191,7 @@ async def test_f1data_update_failed_races(hass: HomeAssistant) -> None:
 async def test_f1data_test_connect_true(hass: HomeAssistant) -> None:
     """Test the behavior of test_connect."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -205,7 +205,7 @@ async def test_f1data_test_connect_true(hass: HomeAssistant) -> None:
 async def test_f1data_test_connect_false(hass: HomeAssistant) -> None:
     """Test the behavior of test_connect."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -216,90 +216,10 @@ async def test_f1data_test_connect_false(hass: HomeAssistant) -> None:
     assert test_result is False
 
 
-async def test_f1data_all_constructor_positions(hass: HomeAssistant) -> None:
-    """Test all_constructor_positions()."""
-
-    f1_data: F1Data = F1Data(hass)
-
-    with patch(
-        "ergast_py.Ergast.get_constructor_standings",
-        return_value=[MOCK_CONSTRUCTOR_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_driver_standings",
-        return_value=[MOCK_DRIVER_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_races",
-        return_value=[MOCK_RACE],
-    ):
-        await f1_data.update()
-
-    assert f1_data.all_constructor_positions() == {1}
-
-
-async def test_f1data_all_constructor_ids(hass: HomeAssistant) -> None:
-    """Test all_constructor_positions()."""
-
-    f1_data: F1Data = F1Data(hass)
-
-    with patch(
-        "ergast_py.Ergast.get_constructor_standings",
-        return_value=[MOCK_CONSTRUCTOR_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_driver_standings",
-        return_value=[MOCK_DRIVER_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_races",
-        return_value=[MOCK_RACE],
-    ):
-        await f1_data.update()
-
-    assert f1_data.all_constructor_ids() == {"mg"}
-
-
-async def test_f1data_all_driver_positions(hass: HomeAssistant) -> None:
-    """Test all_constructor_positions()."""
-
-    f1_data: F1Data = F1Data(hass)
-
-    with patch(
-        "ergast_py.Ergast.get_constructor_standings",
-        return_value=[MOCK_CONSTRUCTOR_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_driver_standings",
-        return_value=[MOCK_DRIVER_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_races",
-        return_value=[MOCK_RACE],
-    ):
-        await f1_data.update()
-
-    assert f1_data.all_driver_positions() == {1}
-
-
-async def test_f1data_all_driver_ids(hass: HomeAssistant) -> None:
-    """Test all_constructor_positions()."""
-
-    f1_data: F1Data = F1Data(hass)
-
-    with patch(
-        "ergast_py.Ergast.get_constructor_standings",
-        return_value=[MOCK_CONSTRUCTOR_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_driver_standings",
-        return_value=[MOCK_DRIVER_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_races",
-        return_value=[MOCK_RACE],
-    ):
-        await f1_data.update()
-
-    assert f1_data.all_driver_ids() == {"john_smith"}
-
-
 async def test_f1data_get_driver_name_none(hass: HomeAssistant) -> None:
     """Test all_constructor_positions()."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -316,76 +236,12 @@ async def test_f1data_get_driver_name_none(hass: HomeAssistant) -> None:
     assert f1_data.get_driver_name("nobody") is None
 
 
-async def test_f1data_get_constructor_standing_by_id_none(hass: HomeAssistant) -> None:
-    """Test all_constructor_positions()."""
-
-    f1_data: F1Data = F1Data(hass)
-
-    with patch(
-        "ergast_py.Ergast.get_constructor_standings",
-        return_value=[MOCK_CONSTRUCTOR_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_driver_standings",
-        return_value=[MOCK_DRIVER_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_races",
-        return_value=[MOCK_RACE],
-    ):
-        await f1_data.update()
-
-    assert f1_data.get_constructor_standing_by_id("nobody") is None
-
-
-async def test_f1data_get_constructor_standing_by_position_none(
-    hass: HomeAssistant,
-) -> None:
-    """Test all_constructor_positions()."""
-
-    f1_data: F1Data = F1Data(hass)
-
-    with patch(
-        "ergast_py.Ergast.get_constructor_standings",
-        return_value=[MOCK_CONSTRUCTOR_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_driver_standings",
-        return_value=[MOCK_DRIVER_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_races",
-        return_value=[MOCK_RACE],
-    ):
-        await f1_data.update()
-
-    assert f1_data.get_constructor_standing_by_position("999") is None
-
-
-async def test_f1data_get_driver_standing_by_position_none(
-    hass: HomeAssistant,
-) -> None:
-    """Test all_constructor_positions()."""
-
-    f1_data: F1Data = F1Data(hass)
-
-    with patch(
-        "ergast_py.Ergast.get_constructor_standings",
-        return_value=[MOCK_CONSTRUCTOR_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_driver_standings",
-        return_value=[MOCK_DRIVER_STANDING_LIST],
-    ), patch(
-        "ergast_py.Ergast.get_races",
-        return_value=[MOCK_RACE],
-    ):
-        await f1_data.update()
-
-    assert f1_data.get_driver_standing_by_position("999") is None
-
-
 async def test_f1data_get_race_by_round_none(
     hass: HomeAssistant,
 ) -> None:
     """Test all_constructor_positions()."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",
@@ -407,7 +263,7 @@ async def test_f1data_get_next_race_none(
 ) -> None:
     """Test all_constructor_positions()."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     mock_race = ergast_py.Race(
         season=2022,
@@ -450,7 +306,7 @@ async def test_f1data_get_next_race(
 ) -> None:
     """Test all_constructor_positions()."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     mock_race = ergast_py.Race(
         season=2022,
@@ -499,7 +355,7 @@ async def test_f1data_new_sensors_discovered_new_driver(
 ) -> None:
     """Test all_constructor_positions()."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     mock_driver_2 = ergast_py.Driver(
         driver_id="jane_doe",
@@ -548,7 +404,7 @@ async def test_f1data_new_sensors_discovered_new_race(
 ) -> None:
     """Test all_constructor_positions()."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     mock_race_2 = ergast_py.Race(
         season=2022,
@@ -596,7 +452,7 @@ async def test_f1data_new_sensors_discovered_false(
 ) -> None:
     """Test all_constructor_positions()."""
 
-    f1_data: F1Data = F1Data(hass)
+    f1_data = F1UpdateCoordinator(hass)
 
     with patch(
         "ergast_py.Ergast.get_constructor_standings",

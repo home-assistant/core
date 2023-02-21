@@ -1,7 +1,9 @@
 {
   "config": {
     "step": {
-      "user": { "description": "Click Submit to add Formula 1 Integration!" }
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

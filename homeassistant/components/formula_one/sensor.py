@@ -6,23 +6,14 @@ from typing import Any
 
 import ergast_py as ergast
 
-from homeassistant.components.sensor import RestoreSensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import F1Data, F1UpdateCoordinator
-from .const import (
-    DOMAIN,
-    F1_CONSTRUCTOR_ATTRIBS_UNAVAILABLE,
-    F1_DISCOVERY_NEW,
-    F1_DRIVER_ATTRIBS_UNAVAILABLE,
-    F1_RACE_ATTRIBS_UNAVAILABLE,
-    F1_STATE_MULTIPLE,
-    F1_STATE_UNAVAILABLE,
-)
+from .const import DOMAIN, F1_DISCOVERY_NEW, F1_STATE_MULTIPLE
+from .coordinator import F1UpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,15 +27,15 @@ async def async_setup_entry(
 
     @callback
     def async_setup_sensors() -> None:
-        _LOGGER.info("Handling new drivers/constructors/races")
+        _LOGGER.debug("Handling new drivers/constructors/races")
 
         coordinator: F1UpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
         entities: list[F1Sensor] = []
 
-        for standing in coordinator.f1_data.constructor_standings:
+        for standing in coordinator.constructor_standings:
             new_cp_sensor = F1ConstructorPositionSensor(coordinator, standing.position)
-            if new_cp_sensor.unique_id not in coordinator.f1_data.entity_ids:
+            if new_cp_sensor.unique_id not in coordinator.entity_ids:
                 entities.append(new_cp_sensor)
 
             new_cn_sensor = F1ConstructorNameSensor(
@@ -52,28 +43,28 @@ async def async_setup_entry(
                 standing.constructor.constructor_id,
                 standing.constructor.name,
             )
-            if new_cn_sensor.unique_id not in coordinator.f1_data.entity_ids:
+            if new_cn_sensor.unique_id not in coordinator.entity_ids:
                 entities.append(new_cn_sensor)
 
-        for standing in coordinator.f1_data.driver_standings:
+        for standing in coordinator.driver_standings:
             new_dp_sensor = F1DriverPositionSensor(coordinator, standing.position)
-            if new_dp_sensor.unique_id not in coordinator.f1_data.entity_ids:
+            if new_dp_sensor.unique_id not in coordinator.entity_ids:
                 entities.append(new_dp_sensor)
 
             new_dn_sensor = F1DriverNameSensor(
                 coordinator,
                 standing.driver.driver_id,
             )
-            if new_dn_sensor.unique_id not in coordinator.f1_data.entity_ids:
+            if new_dn_sensor.unique_id not in coordinator.entity_ids:
                 entities.append(new_dn_sensor)
 
-        for race in coordinator.f1_data.races:
+        for race in coordinator.races:
             new_race_sensor = F1RaceSensor(coordinator, race.round_no)
-            if new_race_sensor.unique_id not in coordinator.f1_data.entity_ids:
+            if new_race_sensor.unique_id not in coordinator.entity_ids:
                 entities.append(new_race_sensor)
 
         next_race_sensor = F1NextRaceSensor(coordinator)
-        if next_race_sensor.unique_id not in coordinator.f1_data.entity_ids:
+        if next_race_sensor.unique_id not in coordinator.entity_ids:
             entities.append(next_race_sensor)
 
         async_add_entities(entities)
@@ -85,7 +76,7 @@ async def async_setup_entry(
     )
 
 
-class F1Sensor(CoordinatorEntity, RestoreSensor):
+class F1Sensor(CoordinatorEntity):
     """Base class for a F1 sensor."""
 
     def _update_value(self) -> None:
@@ -100,18 +91,16 @@ class F1Sensor(CoordinatorEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Handle event when sensor is added."""
         await super().async_added_to_hass()
-        f1_data: F1Data = self.coordinator.f1_data
         if self.unique_id is not None:
             unique_id: str = self.unique_id
-            f1_data.entity_ids.append(unique_id)
+            self.coordinator.entity_ids.append(unique_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle event when entity is removed."""
         await super().async_will_remove_from_hass()
-        f1_data: F1Data = self.coordinator.f1_data
         if self.unique_id is not None:
             unique_id: str = self.unique_id
-            f1_data.entity_ids.remove(unique_id)
+            self.coordinator.entity_ids.remove(unique_id)
 
 
 class F1ConstructorPositionSensor(F1Sensor):
@@ -129,52 +118,39 @@ class F1ConstructorPositionSensor(F1Sensor):
         self._update_value()
 
     def _update_value(self) -> None:
-        standing_info = self.coordinator.f1_data.get_constructor_standing_by_position(
-            self.position
-        )
+        for standing in self.coordinator.constructor_standings:
+            if standing.position == self.position:
+                self._attr_state = standing.constructor.name
+                self._attr_available = True
+                return
 
-        if standing_info is None:
-            self._attr_native_value = F1_STATE_UNAVAILABLE
-            self._attr_available = False
-        else:
-            self._attr_native_value = standing_info.constructor.name
-            self._attr_available = False
+        self._attr_available = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        standing_info = self.coordinator.f1_data.get_constructor_standing_by_position(
-            self.position
-        )
+        for standing in self.coordinator.constructor_standings:
+            if standing.position == self.position:
+                return {
+                    "points": standing.points,
+                    "nationality": standing.constructor.nationality,
+                    "constructor_id": standing.constructor.constructor_id,
+                    "season": self.coordinator.season,
+                    "round": self.coordinator.round,
+                    "position": standing.position,
+                }
 
-        if standing_info is None:
-            return F1_CONSTRUCTOR_ATTRIBS_UNAVAILABLE
-
-        ret = {}
-        ret["points"] = standing_info.points
-        ret["nationality"] = standing_info.constructor.nationality
-        ret["constructor_id"] = standing_info.constructor.constructor_id
-        ret["season"] = self.coordinator.f1_data.season
-        ret["round"] = self.coordinator.f1_data.round
-        ret["position"] = standing_info.position
-
-        return ret
+        return None
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if self.position < 10:
-            return f"f1-constructor-0{self.position}"
-
         return f"f1-constructor-{self.position}"
 
     @property
     def name(self) -> str:
         """Return a friendly name."""
-        if self.position < 10:
-            return f"F1 Constructor 0{self.position}"
-
-        return f"F1 Constructor {self.position}"
+        return f"F1 Constructor {self.position:02}"
 
 
 class F1ConstructorNameSensor(F1Sensor):
@@ -194,37 +170,29 @@ class F1ConstructorNameSensor(F1Sensor):
         self._update_value()
 
     def _update_value(self) -> None:
-        standing_info = self.coordinator.f1_data.get_constructor_standing_by_id(
-            self.constructor_id
-        )
+        for standing in self.coordinator.constructor_standings:
+            if standing.constructor.constructor_id == self.constructor_id:
+                self._attr_state = standing.position
+                self._attr_available = True
+                return
 
-        if standing_info is None:
-            self._attr_native_value = F1_STATE_UNAVAILABLE
-            self._attr_available = False
-        else:
-            self._attr_native_value = standing_info.position
-            self._attr_available = True
+        self._attr_available = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        standing_info = self.coordinator.f1_data.get_constructor_standing_by_id(
-            self.constructor_id
-        )
+        for standing in self.coordinator.constructor_standings:
+            if standing.constructor.constructor_id == self.constructor_id:
+                return {
+                    "points": standing.points,
+                    "nationality": standing.constructor.nationality,
+                    "constructor_id": standing.constructor.constructor_id,
+                    "season": self.coordinator.season,
+                    "round": self.coordinator.round,
+                    "position": standing.position,
+                }
 
-        if standing_info is None:
-            return F1_CONSTRUCTOR_ATTRIBS_UNAVAILABLE
-
-        ret = {}
-
-        ret["points"] = standing_info.points
-        ret["nationality"] = standing_info.constructor.nationality
-        ret["constructor_id"] = standing_info.constructor.constructor_id
-        ret["season"] = self.coordinator.f1_data.season
-        ret["round"] = self.coordinator.f1_data.round
-        ret["position"] = standing_info.position
-
-        return ret
+        return None
 
     @property
     def unique_id(self) -> str:
@@ -252,59 +220,44 @@ class F1DriverPositionSensor(F1Sensor):
         self._update_value()
 
     def _update_value(self) -> None:
-        standing_info = self.coordinator.f1_data.get_driver_standing_by_position(
-            self.position
-        )
+        for standing in self.coordinator.driver_standings:
+            if standing.position == self.position:
+                self._attr_state = self.coordinator.get_driver_name(
+                    standing.driver.driver_id
+                )
+                self._attr_available = True
+                return
 
-        if standing_info is None:
-            self._attr_native_value = F1_STATE_UNAVAILABLE
-            self._attr_available = False
-        else:
-            self._attr_native_value = self.coordinator.f1_data.get_driver_name(
-                standing_info.driver.driver_id
-            )
-            self._attr_available = True
+        self._attr_available = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
+        for standing in self.coordinator.driver_standings:
+            if standing.position == self.position:
+                return {
+                    "points": standing.points,
+                    "nationality": standing.driver.nationality,
+                    "team": standing.constructors[0].name
+                    if len(standing.constructors) == 1
+                    else F1_STATE_MULTIPLE,
+                    "driver_id": standing.driver.driver_id,
+                    "season": self.coordinator.season,
+                    "round": self.coordinator.round,
+                    "position": standing.position,
+                }
 
-        standing_info = self.coordinator.f1_data.get_driver_standing_by_position(
-            self.position
-        )
-
-        if standing_info is None:
-            return F1_DRIVER_ATTRIBS_UNAVAILABLE
-
-        ret = {}
-        ret["points"] = standing_info.points
-        ret["nationality"] = standing_info.driver.nationality
-        if len(standing_info.constructors) > 1:
-            ret["team"] = F1_STATE_MULTIPLE
-        else:
-            ret["team"] = standing_info.constructors[0].name
-        ret["driver_id"] = standing_info.driver.driver_id
-        ret["season"] = self.coordinator.f1_data.season
-        ret["round"] = self.coordinator.f1_data.round
-        ret["position"] = standing_info.position
-
-        return ret
+        return None
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if self.position < 10:
-            return f"f1-driver-0{self.position}"
-
         return f"f1-driver-{self.position}"
 
     @property
     def name(self) -> str:
         """Return a friendly name."""
-        if self.position < 10:
-            return f"F1 Driver 0{self.position}"
-
-        return f"F1 Driver {self.position}"
+        return f"F1 Driver {self.position:02}"
 
 
 class F1DriverNameSensor(F1Sensor):
@@ -322,40 +275,32 @@ class F1DriverNameSensor(F1Sensor):
         self._update_value()
 
     def _update_value(self) -> None:
-        standing_info = self.coordinator.f1_data.get_driver_standing_by_id(
-            self.driver_id
-        )
+        for standing in self.coordinator.driver_standings:
+            if standing.driver.driver_id == self.driver_id:
+                self._attr_state = standing.position
+                self._attr_available = True
+                return
 
-        if standing_info is None:
-            self._attr_native_value = F1_STATE_UNAVAILABLE
-            self._attr_available = False
-        else:
-            self._attr_native_value = standing_info.position
-            self._attr_available = True
+        self._attr_available = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        standing_info = self.coordinator.f1_data.get_driver_standing_by_id(
-            self.driver_id
-        )
+        for standing in self.coordinator.driver_standings:
+            if standing.driver.driver_id == self.driver_id:
+                return {
+                    "points": standing.points,
+                    "nationality": standing.driver.nationality,
+                    "team": standing.constructors[0].name
+                    if len(standing.constructors) == 1
+                    else F1_STATE_MULTIPLE,
+                    "driver_id": standing.driver.driver_id,
+                    "season": self.coordinator.season,
+                    "round": self.coordinator.round,
+                    "position": standing.position,
+                }
 
-        if standing_info is None:
-            return F1_DRIVER_ATTRIBS_UNAVAILABLE
-
-        ret = {}
-        ret["points"] = standing_info.points
-        ret["nationality"] = standing_info.driver.nationality
-        if len(standing_info.constructors) > 1:
-            ret["team"] = F1_STATE_MULTIPLE
-        else:
-            ret["team"] = standing_info.constructors[0].name
-        ret["driver_id"] = standing_info.driver.driver_id
-        ret["season"] = self.coordinator.f1_data.season
-        ret["round"] = self.coordinator.f1_data.round
-        ret["position"] = standing_info.position
-
-        return ret
+        return None
 
     @property
     def unique_id(self) -> str:
@@ -365,11 +310,7 @@ class F1DriverNameSensor(F1Sensor):
     @property
     def name(self) -> str:
         """Return a friendly name."""
-        ret = "F1 Driver"
-        driver_name = self.coordinator.f1_data.get_driver_name(self.driver_id)
-        if driver_name is not None:
-            ret += " " + driver_name
-        return ret
+        return f"F1 Driver {self.coordinator.get_driver_name(self.driver_id)}"
 
 
 class F1RaceSensor(F1Sensor):
@@ -387,54 +328,43 @@ class F1RaceSensor(F1Sensor):
         self._update_value()
 
     def _update_value(self) -> None:
-        race_info = self.coordinator.f1_data.get_race_by_round(self.round_no)
+        race_info = self.coordinator.get_race_by_round(self.round_no)
 
         if race_info is None:
-            self._attr_native_value = F1_STATE_UNAVAILABLE
             self._attr_available = False
         else:
-            self._attr_native_value = race_info.race_name
+            self._attr_state = race_info.race_name
             self._attr_available = True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        race_info: ergast.Race = self.coordinator.f1_data.get_race_by_round(
-            self.round_no
+        race_info: ergast.Race = self.coordinator.get_race_by_round(self.round_no)
+
+        return (
+            {
+                "season": race_info.season,
+                "round": self.round_no,
+                "start": race_info.date,
+                "fp1_start": race_info.first_practice,
+                "fp2_start": race_info.second_practice,
+                "fp3_start": race_info.third_practice,
+                "sprint_start": race_info.sprint,
+                "quali_start": race_info.qualifying,
+            }
+            if race_info is not None
+            else None
         )
-
-        if race_info is None:
-            return F1_RACE_ATTRIBS_UNAVAILABLE
-
-        ret = {}
-        ret["season"] = race_info.season
-        ret["round"] = self.round_no
-        ret["start"] = race_info.date
-        ret["fp1_start"] = race_info.first_practice
-        ret["fp2_start"] = race_info.second_practice
-        if race_info.third_practice is not None:
-            ret["fp3_start"] = race_info.third_practice
-        ret["quali_start"] = race_info.qualifying
-        if race_info.sprint is not None:
-            ret["sprint_start"] = race_info.sprint
-
-        return ret
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if self.round_no < 10:
-            return f"f1-race-0{self.round_no}"
-
         return f"f1-race-{self.round_no}"
 
     @property
     def name(self) -> str:
         """Return a friendly name."""
-        if self.round_no < 10:
-            return f"F1 Race 0{self.round_no}"
-
-        return f"F1 Race {self.round_no}"
+        return f"F1 Race {self.round_no:02}"
 
 
 class F1NextRaceSensor(F1Sensor):
@@ -450,36 +380,33 @@ class F1NextRaceSensor(F1Sensor):
         self._update_value()
 
     def _update_value(self) -> None:
-        race_info = self.coordinator.f1_data.get_next_race()
+        race_info = self.coordinator.get_next_race()
 
         if race_info is None:
-            self._attr_native_value = F1_STATE_UNAVAILABLE
             self._attr_available = False
         else:
-            self._attr_native_value = race_info.race_name
+            self._attr_state = race_info.race_name
             self._attr_available = True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
-        race_info = self.coordinator.f1_data.get_next_race()
+        race_info = self.coordinator.get_next_race()
 
-        if race_info is None:
-            return F1_RACE_ATTRIBS_UNAVAILABLE
-
-        ret = {}
-        ret["season"] = race_info.season
-        ret["round"] = race_info.round_no
-        ret["start"] = race_info.date
-        ret["fp1_start"] = race_info.first_practice
-        ret["fp2_start"] = race_info.second_practice
-        if race_info.third_practice is not None:
-            ret["fp3_start"] = race_info.third_practice
-        ret["quali_start"] = race_info.qualifying
-        if race_info.sprint is not None:
-            ret["sprint_start"] = race_info.sprint
-
-        return ret
+        return (
+            {
+                "season": race_info.season,
+                "round": race_info.round_no,
+                "start": race_info.date,
+                "fp1_start": race_info.first_practice,
+                "fp2_start": race_info.second_practice,
+                "fp3_start": race_info.third_practice,
+                "quali_start": race_info.qualifying,
+                "sprint_start": race_info.sprint,
+            }
+            if race_info is not None
+            else None
+        )
 
     @property
     def unique_id(self) -> str:

@@ -13,13 +13,13 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.formula_one.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.formula_one.F1Data.test_connect",
+        "homeassistant.components.formula_one.coordinator.F1UpdateCoordinator.test_connect",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -41,7 +41,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.formula_one.F1Data.test_connect",
+        "homeassistant.components.formula_one.coordinator.F1UpdateCoordinator.test_connect",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -51,22 +51,3 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_unhandled_exception(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.formula_one.config_flow.validate_input",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}

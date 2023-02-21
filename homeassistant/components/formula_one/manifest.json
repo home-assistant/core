@@ -3,11 +3,7 @@
   "name": "Formula 1",
   "codeowners": ["@y34hbuddy"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/formula_one",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["ergast-py==0.7.0"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["ergast-py==0.7.0"]
 }

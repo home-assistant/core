@@ -5,12 +5,8 @@ from unittest.mock import patch
 import ergast_py
 
 from homeassistant import config_entries
-from homeassistant.components.formula_one import F1UpdateCoordinator
-from homeassistant.components.formula_one.const import (
-    DOMAIN,
-    F1_STATE_MULTIPLE,
-    F1_STATE_UNAVAILABLE,
-)
+from homeassistant.components.formula_one.const import DOMAIN, F1_STATE_MULTIPLE
+from homeassistant.components.formula_one.coordinator import F1UpdateCoordinator
 from homeassistant.core import HomeAssistant, State
 
 from tests.common import MockConfigEntry
@@ -204,12 +200,13 @@ async def test_sensors_unavailable(hass: HomeAssistant) -> None:
         await coordinator.async_refresh()
 
     # verify second sensors are unavailable
-    con_pos_2_state: State = hass.states.get("sensor.f1_constructor_02")
-    dri_pos_2_state: State = hass.states.get("sensor.f1_driver_02")
-    race_2_state: State = hass.states.get("sensor.f1_race_02")
-    assert con_pos_2_state.state == F1_STATE_UNAVAILABLE
-    assert dri_pos_2_state.state == F1_STATE_UNAVAILABLE
-    assert race_2_state.state == F1_STATE_UNAVAILABLE
+    con_pos_2_state: State = hass.states.get("sensor.f1_constructor_2")
+    dri_pos_2_state: State = hass.states.get("sensor.f1_driver_2")
+    race_2_state: State = hass.states.get("sensor.f1_race_2")
+
+    assert con_pos_2_state is None
+    assert dri_pos_2_state is None
+    assert race_2_state is None
 
 
 async def test_driver_multiple_constructors(hass: HomeAssistant) -> None:
