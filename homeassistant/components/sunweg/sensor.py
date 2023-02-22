@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import datetime
 import logging
+from types import MappingProxyType
+from typing import Any
 
 from sunweg.api import APIHelper
 from sunweg.plant import Plant
@@ -26,7 +28,7 @@ from .sensor_types.total import TOTAL_SENSOR_TYPES
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_device_list(api: APIHelper, config):
+def get_device_list(api: APIHelper, config: MappingProxyType[str, Any]):
     """Retrieve the device list for the selected plant."""
     plant_id = config[CONF_PLANT_ID]
 
@@ -45,13 +47,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SunWEG sensor."""
-    config = {**config_entry.data}
-    name = config[CONF_NAME]
+    name = config_entry.data[CONF_NAME]
 
     probe: SunWEGData = hass.data[DOMAIN][config_entry.entry_id]
 
     devices, plant_id = await hass.async_add_executor_job(
-        get_device_list, probe.api, config
+        get_device_list, probe.api, config_entry.data
     )
 
     entities = [
