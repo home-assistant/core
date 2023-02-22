@@ -175,13 +175,10 @@ def setup_platform(
     if "fitbit" in _CONFIGURING:
         configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
 
-    access_token = cast(str | None, config_file.get(ATTR_ACCESS_TOKEN))
-    refresh_token = cast(str | None, config_file.get(ATTR_REFRESH_TOKEN))
-    expires_at = cast(int | None, config_file.get(ATTR_LAST_SAVED_AT))
     if (
-        access_token is not None
-        and refresh_token is not None
-        and expires_at is not None
+        (access_token := config_file.get(ATTR_ACCESS_TOKEN)) is not None
+        and (refresh_token := config_file.get(ATTR_REFRESH_TOKEN)) is not None
+        and (expires_at := config_file.get(ATTR_LAST_SAVED_AT)) is not None
     ):
         authd_client = Fitbit(
             config_file.get(CONF_CLIENT_ID),
@@ -192,7 +189,7 @@ def setup_platform(
             refresh_cb=lambda x: None,
         )
 
-        if int(time.time()) - expires_at > 3600:
+        if int(time.time()) - cast(int, expires_at) > 3600:
             authd_client.client.refresh_token()
 
         user_profile = authd_client.user_profile_get()["user"]
