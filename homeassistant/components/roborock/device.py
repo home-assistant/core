@@ -66,22 +66,6 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
             sw_version=self._fw_version,
         )
 
-    def translate(self, attr: str, value) -> str:
-        """Translate value into new language."""
-        translation = self.coordinator.translation
-        if not translation:
-            return value
-        key = translation.get(self.translation_key)
-        if not key:
-            return value
-        attr_value = key.get(attr)
-        if not attr_value:
-            return value
-        translated_value = attr_value.get(str(value))
-        if not translated_value:
-            return value
-        return translated_value
-
     async def send(self, command: RoborockCommand, params=None):
         """Send a command to a vacuum cleaner."""
         return await self.coordinator.api.send_command(self._device_id, command, params)

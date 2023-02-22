@@ -2,10 +2,28 @@
   "config": {
     "step": {
       "user": {
+        "description": "Select an authentication method",
+        "menu_options": {
+          "code": "Login with email authentication code",
+          "password": "Login with password"
+        }
+      },
+      "email": {
+        "description": "Your app credentials",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "username": "Email"
+        }
+      },
+      "code": {
+        "description": "Type the verification code sent to your email",
+        "data": {
+          "code": "Verification code"
+        }
+      },
+      "password": {
+        "description": "Type your password",
+        "data": {
+          "password": "Password"
         }
       }
     },
@@ -15,7 +33,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "Account is already being configured"
     }
   }
 }

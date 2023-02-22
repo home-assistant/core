@@ -60,6 +60,36 @@ STATE_CODES_TO_STATUS = {
     101: "device_offline",
 }
 
+ERROR_CODE_TO_TEXT = {
+    0: "None",
+    1: "LiDAR turret or laser blocked. Check for obstruction and retry.",
+    2: "Bumper stuck. Clean it and lightly tap to release it.",
+    3: "Wheels suspended. Move robot and restart.",
+    4: "Cliff sensor error. Clean cliff sensors, move robot away from drops and restart.",
+    5: "Main brush jammed. Clean main brush and bearings.",
+    6: "Side brush jammed. Remove and clean side brush.",
+    7: "Wheels jammed. Move the robot and restart.",
+    8: "Robot trapped. Clear obstacles surrounding robot.",
+    9: "No dustbin. Install dustbin and filter.",
+    12: "Low battery. Recharge and retry.",
+    13: "Charging error. Clean charging contacts and retry.",
+    14: "Battery error.",
+    15: "Wall sensor dirty. Clean wall sensor.",
+    16: "Robot tilted. Move to level ground and restart.",
+    17: "Side brush error. Reset robot.",
+    18: "Fan error. Reset robot.",
+    21: "Vertical bumper pressed. Move robot and retry.",
+    22: "Dock locator error. Clean and retry.",
+    23: "Could not return to dock. Clean dock location beacon and retry.",
+    24: "No-go zone or invisible wall detected. Move the robot.",
+    27: "VibraRise system jammed. Check for obstructions.",
+    28: "Robot on carpet. Move robot to floor and retry.",
+    29: "Filter blocked or wet. Clean, dry, and retry.",
+    30: "No-go zone or Invisible Wall detected. Move robot from this area.",
+    31: "Cannot cross carpet. Move robot across carpet and restart.",
+    32: "Internal error. Reset the robot.",
+}
+
 STATE_CODE_TO_STATE = {
     1: STATE_IDLE,  # "Starting"
     2: STATE_IDLE,  # "Charger disconnected"
@@ -256,7 +286,7 @@ async def async_setup_entry(
 
 
 class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
-    """General Representation of a Roborock sensor."""
+    """General Representation of a Roborock vacuum."""
 
     def __init__(
         self,
@@ -264,7 +294,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         device: RoborockDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
-        """Initialize a sensor."""
+        """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntity.__init__(self, device, coordinator, unique_id)
         self.manual_seqnum = 0
@@ -296,11 +326,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
     def icon(self) -> str:
         """Return the icon of the vacuum cleaner."""
         return "mdi:robot-vacuum"
-
-    @property
-    def translation_key(self) -> str:
-        """Returns the translation key for vacuum."""
-        return "roborock_vacuum"
 
     @property
     def state(self) -> str | None:
@@ -389,11 +414,10 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
 
     @property
     def error(self) -> str | None:
-        """Get the error translated if one exist."""
+        """Get the error str if an error code exists."""
         if not self._device_status:
             return None
-        error_code = self._device_status.error_code
-        return self.translate("state", error_code)
+        return ERROR_CODE_TO_TEXT.get(self._device_status.error_code, "Unkown Error")
 
     @property
     def capability_attributes(self) -> dict[str, list[str]]:

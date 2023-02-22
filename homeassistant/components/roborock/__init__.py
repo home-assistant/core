@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from roborock.api import RoborockClient, RoborockMqttClient
-from roborock.containers import MultiMapsList, UserData
+from roborock.containers import UserData
 from roborock.exceptions import RoborockException, RoborockTimeout
 from roborock.typing import RoborockDeviceInfo, RoborockDeviceProp
 
@@ -29,40 +29,6 @@ from .const import (
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def get_translation_from_hass(
-    hass: HomeAssistant, language: str
-) -> dict[str, Any]:
-    """Get translation from hass."""
-    # Convert to new translation system/ replace need for sensor.
-    return "TODO"
-    # entity_translations = await async_get_translations(
-    #     hass, language, "entity", (DOMAIN,)
-    # )
-    # if not entity_translations:
-    #     return {}
-    # data: dict[str, Any] = {}
-    # for key, value in entity_translations.items():
-    #     set_nested_dict(data, key, value)
-    # states_translation = get_nested_dict(
-    #     data, f"component.{DOMAIN}.entity.{SENSOR}", {}
-    # )
-    # return states_translation
-
-
-async def get_translation(hass: HomeAssistant) -> dict[str, Any]:
-    """Get translation."""
-    if hasattr(hass.config, "language"):
-        language = hass.config.language
-        translation = await get_translation_from_hass(hass, language)
-        if translation:
-            return translation
-        wide_language = language.split("-")[0]
-        wide_translation = await get_translation_from_hass(hass, wide_language)
-        if wide_translation:
-            return wide_translation
-    return await get_translation_from_hass(hass, "en")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -99,11 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         device_map[device.duid] = RoborockDeviceInfo(device, product)
 
-    translation = await get_translation(hass)
-    _LOGGER.debug("Using translation %s", translation)
-
     client = RoborockMqttClient(user_data, device_map)
-    coordinator = RoborockDataUpdateCoordinator(hass, client, translation)
+    coordinator = RoborockDataUpdateCoordinator(hass, client)
 
     await coordinator.async_refresh()
 
@@ -130,27 +93,17 @@ class RoborockDataUpdateCoordinator(
 
     ACCEPTABLE_NUMBER_OF_TIMEOUTS = 3
 
-    def __init__(
-        self, hass: HomeAssistant, client: RoborockMqttClient, translation: dict
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: RoborockMqttClient) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self.api = client
         self.platforms: list[str] = []
         self._devices_prop: dict[str, RoborockDeviceProp] = {}
-        self.translation = translation
-        self.devices_maps: dict[str, MultiMapsList] = {}
         self._timeout_countdown = int(self.ACCEPTABLE_NUMBER_OF_TIMEOUTS)
 
     async def release(self) -> None:
         """Disconnect from API."""
         await self.api.async_disconnect()
-
-    async def _get_device_multi_maps_list(self, device_id: str) -> None:
-        """Get multi maps list."""
-        multi_maps_list = await self.api.get_multi_maps_list(device_id)
-        if multi_maps_list:
-            self.devices_maps[device_id] = multi_maps_list
 
     async def _get_device_prop(self, device_id: str) -> None:
         """Get device properties."""
@@ -166,8 +119,6 @@ class RoborockDataUpdateCoordinator(
         self._timeout_countdown = int(self.ACCEPTABLE_NUMBER_OF_TIMEOUTS)
         try:
             for device_id, _ in self.api.device_map.items():
-                if not self.devices_maps.get(device_id):
-                    await self._get_device_multi_maps_list(device_id)
                 await self._get_device_prop(device_id)
         except RoborockTimeout as ex:
             if self._devices_prop and self._timeout_countdown > 0:

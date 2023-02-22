@@ -237,7 +237,6 @@ ROTATION_SCHEMA = vol.All(
     vol.In(["0", "90", "180", "270"]),
     discriminant=discriminant,
 )
-PERCENT_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 VACUUM_VALUES = {CONF_INCLUDE_SHARED: True}
 
@@ -256,13 +255,13 @@ class RoborockOptionsFlowHandler(config_entries.OptionsFlow):
     """Roborock config flow options handler."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize HACS options flow."""
+        """Initialize options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, _user_input: dict[str, Any] | None = None
-    ) -> FlowResult:  # pylint: disable=unused-argument
+    ) -> FlowResult:
         """Manage the options."""
         return await self.async_step_user()
 
