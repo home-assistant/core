@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
-import typing
+from typing import cast
 
 from pylitejet import LiteJet
 import voluptuous as vol
@@ -44,7 +44,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
     trigger_data = trigger_info["trigger_data"]
-    number = typing.cast(int, config.get(CONF_NUMBER))
+    number = cast(int, config.get(CONF_NUMBER))
     held_more_than = config.get(CONF_HELD_MORE_THAN)
     held_less_than = config.get(CONF_HELD_LESS_THAN)
     pressed_time = None
