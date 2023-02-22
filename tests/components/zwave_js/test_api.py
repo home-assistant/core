@@ -2916,8 +2916,7 @@ async def test_firmware_upload_view(
         {"HomeAssistant": "0.0.0"},
     ):
         data = {"file": firmware_file}
-        if include_target:
-            data["target"] = "1"
+        data.update(firmware_data)
 
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{device.id}", data=data
