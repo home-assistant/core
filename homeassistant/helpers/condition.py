@@ -13,8 +13,6 @@ from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
-import voluptuous as vol
-
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
