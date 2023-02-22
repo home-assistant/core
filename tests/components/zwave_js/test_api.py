@@ -2923,8 +2923,8 @@ async def test_firmware_upload_view(
         )
 
         update_data = NodeFirmwareUpdateData("file", bytes(10))
-        if include_target:
-            update_data.firmware_target = 1
+        for attr, value in expected_data.items():
+            setattr(update_data, attr, value)
 
         assert mock_cmd.call_args[0][1:3] == (multisensor_6, [update_data])
         assert mock_cmd.call_args[1] == {
