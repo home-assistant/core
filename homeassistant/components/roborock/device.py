@@ -1,5 +1,4 @@
 """Support for Roborock device base class."""
-import datetime
 
 from roborock.containers import Status
 from roborock.typing import RoborockCommand, RoborockDeviceInfo
@@ -9,18 +8,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
 from .const import DOMAIN
-
-
-def parse_datetime_time(initial_time: datetime.time) -> float:
-    """Help to handle time data."""
-    time = datetime.datetime.now().replace(
-        hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
-    )
-
-    if time < datetime.datetime.now():
-        time += datetime.timedelta(days=1)
-
-    return time.timestamp()
 
 
 class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]):
@@ -44,16 +31,15 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
 
     @property
     def _device_status(self) -> Status:
+        """Return the status of the device."""
         data = self.coordinator.data
-        if not data:
-            return Status({})
-        device_data = data.get(self._device_id)
-        if not device_data:
-            return Status({})
-        status = device_data.status
-        if not status:
-            return Status({})
-        return status
+        if data:
+            device_data = data.get(self._device_id)
+            if device_data:
+                status = device_data.status
+                if status:
+                    return status
+        return Status({})
 
     @property
     def device_info(self) -> DeviceInfo:
