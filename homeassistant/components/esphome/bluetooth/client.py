@@ -43,6 +43,7 @@ CCCD_NOTIFY_BYTES = b"\x01\x00"
 CCCD_INDICATE_BYTES = b"\x02\x00"
 
 MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE = 3
+MIN_BLUETOOTH_PROXY_HAS_PAIRING = 4
 
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
@@ -385,13 +386,18 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def pair(self, *args: Any, **kwargs: Any) -> bool:
         """Attempt to pair."""
-        raise NotImplementedError("Pairing is not available in ESPHome.")
+        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+            raise NotImplementedError(
+                "Pairing is not available in ESPHome with version {self._connection_version}."
+            )
+        await self._client.bluetooth_device_pair(self._address_as_int)
+        return True
 
     @verify_connected
     @api_error_as_bleak_error
     async def unpair(self) -> bool:
         """Attempt to unpair."""
-        raise NotImplementedError("Pairing is not available in ESPHome.")
+        raise NotImplementedError("Unpairing is not available in ESPHome.")
 
     @api_error_as_bleak_error
     async def get_services(
