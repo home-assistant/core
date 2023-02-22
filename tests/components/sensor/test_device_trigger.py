@@ -10,13 +10,17 @@ from homeassistant.components.sensor import (
     DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
+    device_trigger,
 )
+from homeassistant.components.sensor.const import NON_NUMERIC_DEVICE_CLASSES
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN, EntityCategory
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import load_json
 
 from tests.common import (
     MockConfigEntry,
@@ -31,14 +35,51 @@ from tests.testing_config.custom_components.test.sensor import UNITS_OF_MEASUREM
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
+@pytest.mark.parametrize(
+    "device_class",
+    [
+        device_class
+        for device_class in SensorDeviceClass
+        if device_class not in NON_NUMERIC_DEVICE_CLASSES
+    ],
+)
+def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
+    """Ensure device class constants are declared in device_trigger module."""
+    # Ensure it has corresponding CONF_*** constant
+    constant_name = {
+        SensorDeviceClass.BATTERY: "CONF_BATTERY_LEVEL",
+        SensorDeviceClass.CO: "CONF_CO",
+        SensorDeviceClass.CO2: "CONF_CO2",
+    }.get(device_class, f"CONF_{device_class.value.upper()}")
+    assert hasattr(device_trigger, constant_name), f"Missing constant {constant_name}"
+
+    # Ensure it has correct value
+    constant_value = {
+        SensorDeviceClass.BATTERY: "battery_level",
+    }.get(device_class, device_class.value)
+    assert getattr(device_trigger, constant_name) == constant_value
+
+    # Ensure it is present in ENTITY_TRIGGERS
+    assert device_class in ENTITY_TRIGGERS
+    # Ensure it is present in TRIGGER_SCHEMA
+    schema_types = device_trigger.TRIGGER_SCHEMA.validators[0].schema["type"].container
+    assert constant_value in schema_types
+    # Ensure it is present in string.json
+    strings = load_json("homeassistant/components/sensor/strings.json")
+    assert constant_value in strings["device_automation"]["trigger_type"]
+
+
 async def test_get_triggers(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected triggers from a sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -81,7 +122,7 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -90,12 +131,12 @@ async def test_get_triggers(
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -130,7 +171,7 @@ async def test_get_triggers_hidden_auxiliary(
 
 
 @pytest.mark.parametrize(
-    "state_class,unit,trigger_types",
+    ("state_class", "unit", "trigger_types"),
     (
         (SensorStateClass.MEASUREMENT, None, ["value"]),
         (SensorStateClass.TOTAL, None, ["value"]),
@@ -140,13 +181,13 @@ async def test_get_triggers_hidden_auxiliary(
     ),
 )
 async def test_get_triggers_no_unit_or_stateclass(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     state_class,
     unit,
     trigger_types,
-):
+) -> None:
     """Test we get the expected triggers from an entity with no unit or state class."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -180,22 +221,22 @@ async def test_get_triggers_no_unit_or_stateclass(
 
 
 @pytest.mark.parametrize(
-    "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
+    ("set_state", "device_class_reg", "device_class_state", "unit_reg", "unit_state"),
     [
         (False, SensorDeviceClass.BATTERY, None, PERCENTAGE, None),
         (True, None, SensorDeviceClass.BATTERY, None, PERCENTAGE),
     ],
 )
 async def test_get_trigger_capabilities(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     device_class_reg,
     device_class_state,
     unit_reg,
     unit_state,
-):
+) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -249,7 +290,9 @@ async def test_get_trigger_capabilities(
         assert capabilities == expected_capabilities
 
 
-async def test_get_trigger_capabilities_none(hass, enable_custom_integrations):
+async def test_get_trigger_capabilities_none(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -286,8 +329,11 @@ async def test_get_trigger_capabilities_none(hass, enable_custom_integrations):
 
 
 async def test_if_fires_not_on_above_below(
-    hass, calls, caplog, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -317,7 +363,9 @@ async def test_if_fires_not_on_above_below(
     assert "must contain at least one of below, above" in caplog.text
 
 
-async def test_if_fires_on_state_above(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_above(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -375,7 +423,9 @@ async def test_if_fires_on_state_above(hass, calls, enable_custom_integrations):
     )
 
 
-async def test_if_fires_on_state_below(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_below(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -433,7 +483,9 @@ async def test_if_fires_on_state_below(hass, calls, enable_custom_integrations):
     )
 
 
-async def test_if_fires_on_state_between(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_state_between(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -504,8 +556,8 @@ async def test_if_fires_on_state_between(hass, calls, enable_custom_integrations
 
 
 async def test_if_fires_on_state_change_with_for(
-    hass, calls, enable_custom_integrations
-):
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for triggers firing with delay."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

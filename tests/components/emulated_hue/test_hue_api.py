@@ -439,7 +439,7 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client) -
 
 
 @pytest.mark.parametrize(
-    "state,is_reachable",
+    ("state", "is_reachable"),
     [
         (const.STATE_UNAVAILABLE, False),
         (const.STATE_OK, True),

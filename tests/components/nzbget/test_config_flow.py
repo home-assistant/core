@@ -124,7 +124,7 @@ async def test_user_form_single_instance_allowed(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass, nzbget_api):
+async def test_options_flow(hass: HomeAssistant, nzbget_api) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,

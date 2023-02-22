@@ -16,8 +16,8 @@ from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DOMAIN,
+    legacy,
 )
-from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -66,7 +66,9 @@ class MockBleakClientBattery5(MockBleakClient):
 
 
 async def test_preserve_new_tracked_device_name(
-    hass: HomeAssistant, mock_bluetooth: None, mock_device_tracker_conf: list[Device]
+    hass: HomeAssistant,
+    mock_bluetooth: None,
+    mock_device_tracker_conf: list[legacy.Device],
 ) -> None:
     """Test preserving tracked device name across new seens."""
 
@@ -134,7 +136,9 @@ async def test_preserve_new_tracked_device_name(
 
 
 async def test_tracking_battery_times_out(
-    hass: HomeAssistant, mock_bluetooth: None, mock_device_tracker_conf: list[Device]
+    hass: HomeAssistant,
+    mock_bluetooth: None,
+    mock_device_tracker_conf: list[legacy.Device],
 ) -> None:
     """Test tracking the battery times out."""
 
@@ -201,7 +205,9 @@ async def test_tracking_battery_times_out(
 
 
 async def test_tracking_battery_fails(
-    hass: HomeAssistant, mock_bluetooth: None, mock_device_tracker_conf: list[Device]
+    hass: HomeAssistant,
+    mock_bluetooth: None,
+    mock_device_tracker_conf: list[legacy.Device],
 ) -> None:
     """Test tracking the battery fails."""
 
@@ -268,7 +274,9 @@ async def test_tracking_battery_fails(
 
 
 async def test_tracking_battery_successful(
-    hass: HomeAssistant, mock_bluetooth: None, mock_device_tracker_conf: list[Device]
+    hass: HomeAssistant,
+    mock_bluetooth: None,
+    mock_device_tracker_conf: list[legacy.Device],
 ) -> None:
     """Test tracking the battery gets a value."""
 

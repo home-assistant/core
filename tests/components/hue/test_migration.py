@@ -111,7 +111,7 @@ async def test_sensor_entity_migration(
     }
 
     # create entities with V1 schema in registry for Hue motion sensor
-    for dev_class, platform, new_id in sensor_mappings:
+    for dev_class, platform, _ in sensor_mappings:
         ent_reg.async_get_or_create(
             platform,
             hue.DOMAIN,

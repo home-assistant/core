@@ -86,7 +86,7 @@ async def test_outlet_set_state(hass: HomeAssistant, hk_driver, events) -> None:
 
 
 @pytest.mark.parametrize(
-    "entity_id, attrs",
+    ("entity_id", "attrs"),
     [
         ("automation.test", {}),
         ("input_boolean.test", {}),

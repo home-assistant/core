@@ -441,7 +441,8 @@ async def test_query_message(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "report_state,on,brightness,value", [(False, True, 20, 0.2), (True, ANY, ANY, ANY)]
+    ("report_state", "on", "brightness", "value"),
+    [(False, True, 20, 0.2), (True, ANY, ANY, ANY)],
 )
 async def test_execute(
     hass: HomeAssistant, report_state, on, brightness, value
@@ -621,7 +622,9 @@ async def test_execute(
     assert service_events[3].context == events[0].context
 
 
-@pytest.mark.parametrize("report_state,on,brightness,value", [(False, False, ANY, ANY)])
+@pytest.mark.parametrize(
+    ("report_state", "on", "brightness", "value"), [(False, False, ANY, ANY)]
+)
 async def test_execute_times_out(
     hass: HomeAssistant, report_state, on, brightness, value
 ) -> None:
@@ -998,7 +1001,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.SWITCH"),
         ("switch", "action.devices.types.SWITCH"),
@@ -1048,7 +1051,7 @@ async def test_device_class_switch(
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("door", "action.devices.types.DOOR"),
         ("garage_door", "action.devices.types.GARAGE"),
@@ -1098,7 +1101,7 @@ async def test_device_class_binary_sensor(
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
@@ -1148,7 +1151,7 @@ async def test_device_class_cover(
 
 
 @pytest.mark.parametrize(
-    "device_class,google_type",
+    ("device_class", "google_type"),
     [
         ("non_existing_class", "action.devices.types.SETTOP"),
         ("tv", "action.devices.types.TV"),

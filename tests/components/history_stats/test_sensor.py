@@ -1,140 +1,107 @@
 """The test for the History Statistics sensor platform."""
 from datetime import timedelta
-import unittest
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.history_stats import DOMAIN
+from homeassistant.components.history_stats.sensor import (
+    PLATFORM_SCHEMA as SENSOR_SCHEMA,
+)
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_DEVICE_CLASS, SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    async_fire_time_changed,
-    get_fixture_path,
-    get_test_home_assistant,
-    init_recorder_component,
+from tests.common import async_fire_time_changed, get_fixture_path
+
+
+async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test the history statistics sensor setup."""
+
+    config = {
+        "sensor": {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "state": "on",
+            "start": "{{ now().replace(hour=0)"
+            ".replace(minute=0).replace(second=0) }}",
+            "duration": "02:00",
+            "name": "Test",
+        },
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "0.0"
+
+
+async def test_setup_multiple_states(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the history statistics sensor setup for multiple states."""
+
+    config = {
+        "sensor": {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "state": ["on", "true"],
+            "start": "{{ now().replace(hour=0)"
+            ".replace(minute=0).replace(second=0) }}",
+            "duration": "02:00",
+            "name": "Test",
+        },
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "0.0"
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "name": "Test",
+            "state": "on",
+            "start": "{{ now() }}",
+            "duration": "TEST",
+        },
+        {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "name": "Test",
+            "state": "on",
+            "start": "{{ now() }}",
+        },
+        {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "name": "Test",
+            "state": "on",
+            "start": "{{ as_timestamp(now()) - 3600 }}",
+            "end": "{{ now() }}",
+            "duration": "01:00",
+        },
+    ],
 )
+def test_setup_invalid_config(config) -> None:
+    """Test the history statistics sensor setup with invalid config."""
 
-
-class TestHistoryStatsSensor(unittest.TestCase):
-    """Test the History Statistics sensor."""
-
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.hass.stop)
-
-    def test_setup(self):
-        """Test the history statistics sensor setup."""
-        self.init_recorder()
-        config = {
-            "sensor": {
-                "platform": "history_stats",
-                "entity_id": "binary_sensor.test_id",
-                "state": "on",
-                "start": "{{ now().replace(hour=0)"
-                ".replace(minute=0).replace(second=0) }}",
-                "duration": "02:00",
-                "name": "Test",
-            },
-        }
-
-        assert setup_component(self.hass, "sensor", config)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test")
-        assert state.state == "0.0"
-
-    def test_setup_multiple_states(self):
-        """Test the history statistics sensor setup for multiple states."""
-        self.init_recorder()
-        config = {
-            "sensor": {
-                "platform": "history_stats",
-                "entity_id": "binary_sensor.test_id",
-                "state": ["on", "true"],
-                "start": "{{ now().replace(hour=0)"
-                ".replace(minute=0).replace(second=0) }}",
-                "duration": "02:00",
-                "name": "Test",
-            },
-        }
-
-        assert setup_component(self.hass, "sensor", config)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test")
-        assert state.state == "0.0"
-
-    def test_wrong_duration(self):
-        """Test when duration value is not a timedelta."""
-        self.init_recorder()
-        config = {
-            "sensor": {
-                "platform": "history_stats",
-                "entity_id": "binary_sensor.test_id",
-                "name": "Test",
-                "state": "on",
-                "start": "{{ now() }}",
-                "duration": "TEST",
-            },
-        }
-
-        setup_component(self.hass, "sensor", config)
-        assert self.hass.states.get("sensor.test") is None
-        with pytest.raises(TypeError):
-            setup_component(self.hass, "sensor", config)()
-
-    def test_not_enough_arguments(self):
-        """Test config when not enough arguments provided."""
-        self.init_recorder()
-        config = {
-            "sensor": {
-                "platform": "history_stats",
-                "entity_id": "binary_sensor.test_id",
-                "name": "Test",
-                "state": "on",
-                "start": "{{ now() }}",
-            },
-        }
-
-        setup_component(self.hass, "sensor", config)
-        assert self.hass.states.get("sensor.test") is None
-        with pytest.raises(TypeError):
-            setup_component(self.hass, "sensor", config)()
-
-    def test_too_many_arguments(self):
-        """Test config when too many arguments provided."""
-        self.init_recorder()
-        config = {
-            "sensor": {
-                "platform": "history_stats",
-                "entity_id": "binary_sensor.test_id",
-                "name": "Test",
-                "state": "on",
-                "start": "{{ as_timestamp(now()) - 3600 }}",
-                "end": "{{ now() }}",
-                "duration": "01:00",
-            },
-        }
-
-        setup_component(self.hass, "sensor", config)
-        assert self.hass.states.get("sensor.test") is None
-        with pytest.raises(TypeError):
-            setup_component(self.hass, "sensor", config)()
-
-    def init_recorder(self):
-        """Initialize the recorder."""
-        init_recorder_component(self.hass)
-        self.hass.start()
+    with pytest.raises(vol.Invalid):
+        SENSOR_SCHEMA(config)
 
 
 async def test_invalid_date_for_start(
