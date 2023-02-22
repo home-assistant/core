@@ -2082,6 +2082,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.do")
         self.add_extension("jinja2.ext.loopcontrols")
+        if hass is not None:
+            self.loader = jinja2.FileSystemLoader(hass.config.path("custom_jinja"))
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
@@ -2250,8 +2252,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
             return
-
-        self.loader = jinja2.FileSystemLoader(hass.config.path("custom_jinja"))
 
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = pass_context(self.globals["expand"])
