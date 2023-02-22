@@ -825,7 +825,7 @@ meater-python==0.0.8
 melnor-bluetooth==0.0.20
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.1.0
+meteofrance-api==1.2.0
 
 # homeassistant.components.mfi
 mficlient==0.3.0
