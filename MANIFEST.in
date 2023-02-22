@@ -1,3 +1,0 @@
-include README.rst
-graft homeassistant
-recursive-exclude * *.py[co]
