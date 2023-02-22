@@ -58,7 +58,7 @@ class MatterOccupancySensor(MatterBinarySensor):
             self.entity_description.subscribe_attributes[0],
         )
         # The first bit = if occupied
-        self._attr_is_on = value & 1 == 1 if value else None
+        self._attr_is_on = (value & 1 == 1) if value is not None else None
 
 
 @dataclass
