@@ -23,10 +23,11 @@ import pyroute2
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components import zeroconf
-from homeassistant.components.thread.dataset_store import async_get_store
-from homeassistant.components.thread.discovery import async_read_zeroconf_cache
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from .dataset_store import async_get_store
+from .discovery import async_read_zeroconf_cache
 
 
 class Neighbour(TypedDict):
