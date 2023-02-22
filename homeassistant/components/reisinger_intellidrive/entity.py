@@ -1,5 +1,7 @@
-"""Entity for the opengarage.io component."""
+"""Entity for the reisinger intellidrive component."""
 from __future__ import annotations
+
+from abc import abstractmethod
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -13,6 +15,8 @@ from .coordinator import ReisingerCoordinator
 class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
     """Representation of a IntelliDrive entity, which is used as a base entity for future entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: ReisingerCoordinator,
@@ -20,7 +24,6 @@ class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
 
         if description is not None:
             self.entity_description = description
@@ -29,8 +32,11 @@ class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
             self._attr_unique_id = device_id
 
         self._device_id = device_id
+
+        super().__init__(coordinator)
         self._update_attr()
 
+    @abstractmethod
     @callback
     def _update_attr(self) -> None:
         """Update the state and attributes."""

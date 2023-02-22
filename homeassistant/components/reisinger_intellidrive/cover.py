@@ -72,7 +72,6 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
 
         if self._state in [STATE_CLOSED, STATE_CLOSING]:
             return
-        self._state_before_move = self._state
         self._state = STATE_CLOSING
 
         await self._device_api.async_close()
@@ -82,7 +81,6 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
 
         if self._state in [STATE_OPEN, STATE_OPENING]:
             return
-        self._state_before_move = self._state
         self._state = STATE_OPENING
 
         await self._device_api.async_open()
@@ -123,12 +121,7 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         self._attr_name = f"Slidingdoor {status[STATUSDICT_SERIALNO]}"
 
         state = STATES_MAP.get(status.get(STATUSDICT_OPENSTATE))
-        if self._state_before_move is not None:
-            if self._state_before_move != state:
-                self._state = state
-                self._state_before_move = None
-        else:
-            self._state = state
+        self._state = state
 
     @property
     def is_closed(self) -> bool | None:
