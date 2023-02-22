@@ -2475,7 +2475,9 @@ async def test_subscribe_all_entities_have_uom_multiple(
     await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
-    assert hass.bus.async_listeners() == init_listeners
+    assert listeners_without_writes(
+        hass.bus.async_listeners()
+    ) == listeners_without_writes(init_listeners)
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
