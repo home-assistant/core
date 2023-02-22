@@ -88,7 +88,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
         pass
     else:
         yellow_radio = next(p for p in ports if p.device == "/dev/ttyAMA1")
-        yellow_radio.description = "Yellow Radio"
+        yellow_radio.description = "Yellow Zigbee module"
         yellow_radio.manufacturer = "Nabu Casa"
 
     # Present the multi-PAN addon as a setup option, if it's available
@@ -105,7 +105,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
             skip_link_detection=True,
         )
 
-        addon_port.description = "Multi-PAN Addon"
+        addon_port.description = "Multiprotocol add-on"
         addon_port.manufacturer = "Nabu Casa"
         ports.append(addon_port)
 
