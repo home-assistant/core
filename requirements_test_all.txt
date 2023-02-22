@@ -1322,6 +1322,9 @@ pynx584==0.5
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
 
+# homeassistant.components.obihai
+pyobihai==1.3.2
+
 # homeassistant.components.octoprint
 pyoctoprintapi==0.1.11
 
