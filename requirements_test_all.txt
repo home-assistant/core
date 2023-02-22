@@ -669,7 +669,7 @@ hass-nabucasa==0.61.0
 hassil==0.2.6
 
 # homeassistant.components.tasmota
-hatasmota==0.6.3
+hatasmota==0.6.4
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -879,7 +879,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.0.0
+nettigo-air-monitor==2.1.0
 
 # homeassistant.components.nexia
 nexia==2.0.6
@@ -888,7 +888,7 @@ nexia==2.0.6
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.2.2
+nextdns==1.3.0
 
 # homeassistant.components.nibe_heatpump
 nibe==1.6.0
@@ -1073,7 +1073,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.0
+pyRFXtrx==0.30.1
 
 # homeassistant.components.tibber
 pyTibber==0.26.13
@@ -1088,7 +1088,7 @@ py_nextbusnext==0.1.5
 pyaehw4a1==0.3.9
 
 # homeassistant.components.airnow
-pyairnow==1.1.0
+pyairnow==1.2.1
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
@@ -1350,6 +1350,9 @@ pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
 pypck==0.7.16
+
+# homeassistant.components.pjlink
+pypjlink2==1.2.1
 
 # homeassistant.components.plaato
 pyplaato==0.0.18
@@ -1692,7 +1695,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.3
+sqlalchemy==2.0.4
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -1833,6 +1836,9 @@ volvooncall==0.10.2
 
 # homeassistant.components.verisure
 vsure==1.8.1
+
+# homeassistant.components.vulcan
+vulcan-api==2.3.0
 
 # homeassistant.components.vultr
 vultr==0.1.2
