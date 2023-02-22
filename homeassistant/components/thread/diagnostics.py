@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any, TypedDict
 
-import pyroute2
+from pyroute2 import NDB  # pylint: disable=no-name-in-module
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components import zeroconf
@@ -76,7 +76,7 @@ def _get_possible_thread_routes() -> (
     routes: dict[str, dict[str, Route]] = {}
     reverse_routes: dict[str, set[str]] = {}
 
-    with pyroute2.NDB() as ndb:
+    with NDB() as ndb:
         for record in ndb.routes:
             # Limit to IPV6 routes
             if record.family != 10:
@@ -103,7 +103,7 @@ def _get_possible_thread_routes() -> (
 def _get_neighbours() -> dict[str, Neighbour]:
     neighbours: dict[str, Neighbour] = {}
 
-    with pyroute2.NDB() as ndb:
+    with NDB() as ndb:
         for record in ndb.neighbours:
             neighbours[record.dst] = {
                 "lladdr": record.lladdr,

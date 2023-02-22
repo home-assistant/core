@@ -88,7 +88,9 @@ class MockNeighbour:
 @pytest.fixture
 def ndb() -> Mock:
     """Prevent NDB poking the OS route tables."""
-    with patch("pyroute2.NDB") as ndb, ndb() as instance:
+    with patch(
+        "homeassistant.components.thread.diagnostics.NDB"
+    ) as ndb, ndb() as instance:
         instance.neighbours = []
         instance.routes = []
         yield instance
