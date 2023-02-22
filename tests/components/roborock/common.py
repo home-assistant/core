@@ -2,21 +2,10 @@
 from unittest.mock import patch
 
 from homeassistant.components.roborock.const import (
-    CAMERA,
     CONF_BASE_URL,
-    CONF_BOTTOM,
     CONF_ENTRY_USERNAME,
-    CONF_INCLUDE_SHARED,
-    CONF_LEFT,
-    CONF_MAP_TRANSFORM,
-    CONF_RIGHT,
-    CONF_ROTATE,
-    CONF_SCALE,
-    CONF_TOP,
-    CONF_TRIM,
     CONF_USER_DATA,
     DOMAIN,
-    VACUUM,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -37,19 +26,6 @@ async def setup_platform(
             CONF_ENTRY_USERNAME: USER_EMAIL,
             CONF_USER_DATA: USER_DATA,
             CONF_BASE_URL: BASE_URL,
-        },
-        options={
-            CAMERA: {
-                f"{CONF_MAP_TRANSFORM}.{CONF_SCALE}": 1.0,
-                f"{CONF_MAP_TRANSFORM}.{CONF_ROTATE}": "90",
-                f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_LEFT}": 5.0,
-                f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_RIGHT}": 5.0,
-                f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_TOP}": 5.0,
-                f"{CONF_MAP_TRANSFORM}.{CONF_TRIM}.{CONF_BOTTOM}": 5.0,
-            },
-            VACUUM: {
-                CONF_INCLUDE_SHARED: include_shared,
-            },
         },
     )
     mock_entry.add_to_hass(hass)

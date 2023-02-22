@@ -10,7 +10,6 @@ from roborock.containers import UserData
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
@@ -18,12 +17,9 @@ from .const import (
     CONF_ENTRY_CODE,
     CONF_ENTRY_PASSWORD,
     CONF_ENTRY_USERNAME,
-    CONF_INCLUDE_SHARED,
     CONF_USER_DATA,
     DOMAIN,
-    VACUUM,
 )
-from .utils import get_nested_dict, set_nested_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,14 +113,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors["base"] = "no_device"
 
         return self._show_password_form(user_input)
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> RoborockOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return RoborockOptionsFlowHandler(config_entry)
 
     def _show_user_form(self) -> FlowResult:
         """Show the configuration form to choose authentication method."""
@@ -223,98 +211,3 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(ex)
             self._errors["base"] = "auth"
             return None
-
-
-def discriminant(_: Any, validators: tuple):
-    """Handle discriminant function fo rotation schema."""
-    return reversed(list(validators))
-
-
-POSITIVE_FLOAT_SCHEMA = vol.All(vol.Coerce(float), vol.Range(min=0))
-ROTATION_SCHEMA = vol.All(
-    vol.Coerce(int),
-    vol.Coerce(str),
-    vol.In(["0", "90", "180", "270"]),
-    discriminant=discriminant,
-)
-
-VACUUM_VALUES = {CONF_INCLUDE_SHARED: True}
-
-VACUUM_SCHEMA = {CONF_INCLUDE_SHARED: vol.Coerce(bool)}
-
-OPTION_VALUES = {
-    VACUUM: VACUUM_VALUES,
-}
-
-OPTION_SCHEMA = {
-    **{f"{VACUUM}.{vs_key}": vs_value for vs_key, vs_value in VACUUM_SCHEMA.items()},
-}
-
-
-class RoborockOptionsFlowHandler(config_entries.OptionsFlow):
-    """Roborock config flow options handler."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
-    async def async_step_init(
-        self, _user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, _user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initialized by the user."""
-        return self.async_show_menu(
-            step_id="user",
-            menu_options=[VACUUM],
-        )
-
-    async def async_step_vacuum(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle setup of vacuum."""
-        return await self._async_step_platform(
-            VACUUM, VACUUM_SCHEMA, VACUUM_VALUES, user_input
-        )
-
-    async def _async_step_platform(
-        self,
-        platform: str,
-        schema: dict[str, Any],
-        values: dict[str, Any],
-        user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
-        """Handle setup of various platforms."""
-        if user_input:
-            data: dict = {}
-            for key, value in user_input.items():
-                set_nested_dict(data, key, value)
-            if self.options:
-                self.options[platform] = data
-            else:
-                self.options = {platform: data}
-            return await self._update_options()
-        options = self.options.get(platform) if self.options else None
-        return self.async_show_form(
-            step_id=platform,
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        key,
-                        default=schema.get(key)(
-                            get_nested_dict(options or {}, key, value)
-                        ),
-                    ): schema.get(key)
-                    for key, value in values.items()
-                }
-            ),
-        )
-
-    async def _update_options(self) -> FlowResult:
-        """Update config entry options."""
-        return self.async_create_entry(title="", data=self.options)
