@@ -9,7 +9,9 @@ from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import re
 import sys
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, Protocol, cast
+
+import voluptuous as vol
 
 import voluptuous as vol
 
@@ -72,11 +74,6 @@ from .trace import (
 )
 from .typing import ConfigType, TemplateVarsType
 
-if TYPE_CHECKING:
-    from homeassistant.components.device_automation.condition import (
-        DeviceAutomationConditionProtocol,
-    )
-
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
@@ -98,6 +95,26 @@ _PLATFORM_ALIASES = {
 INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
 )
+
+
+class ConditionProtocol(Protocol):
+    """Define the format of device_condition modules.
+
+    Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
+    """
+
+    CONDITION_SCHEMA: vol.Schema
+
+    async def async_validate_condition_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+
+    def async_condition_from_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConditionCheckerType:
+        """Evaluate state based on configuration."""
+
 
 ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
@@ -170,7 +187,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
 
 async def _async_get_condition_platform(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceAutomationConditionProtocol | None:
+) -> ConditionProtocol | None:
     platform = config[CONF_CONDITION]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     if platform is None:
