@@ -522,6 +522,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_meshcop._udp.local.": [
+        {
+            "domain": "thread",
+        },
+    ],
     "_miio._udp.local.": [
         {
             "domain": "xiaomi_aqara",

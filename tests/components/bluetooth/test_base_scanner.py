@@ -25,9 +25,9 @@ from homeassistant.components.bluetooth.const import (
     UNAVAILABLE_TRACK_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads
 
 from . import MockBleakClient, _get_manager, generate_advertisement_data
 

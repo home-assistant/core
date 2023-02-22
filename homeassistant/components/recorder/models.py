@@ -480,7 +480,4 @@ class DatabaseOptimizer:
     #
     # https://jira.mariadb.org/browse/MDEV-25020
     #
-    # Historically, we have applied this logic to PostgreSQL as well, but
-    # it may not be necessary. We should revisit this in the future
-    # when we have more data.
     slow_range_in_select: bool
