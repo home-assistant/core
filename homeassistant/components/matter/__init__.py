@@ -209,7 +209,9 @@ def _async_init_services(hass: HomeAssistant) -> None:
         device = dev_reg.async_get(ha_device_id)
         if device is None:
             return None
-        return await get_node_from_device_entry(hass, device)
+        if node := await get_node_from_device_entry(hass, device):
+            return node.node_id
+        return None
 
     async def open_commissioning_window(call: ServiceCall) -> None:
         """Open commissioning window on specific node."""
