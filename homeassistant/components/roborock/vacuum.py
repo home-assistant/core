@@ -1,8 +1,6 @@
 """Support for Roborock vacuum class."""
 from abc import ABC
 import logging
-import math
-import time
 from typing import Any
 
 from roborock.typing import RoborockCommand, RoborockDeviceInfo, Status
@@ -152,50 +150,6 @@ ATTR_ERROR = "error"
 def add_services() -> None:
     """Add the vacuum services to hass."""
     platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "vacuum_remote_control_start",
-        cv.make_entity_service_schema({}),
-        RoborockVacuum.async_remote_control_start.__name__,
-    )
-
-    platform.async_register_entity_service(
-        "vacuum_remote_control_stop",
-        cv.make_entity_service_schema({}),
-        RoborockVacuum.async_remote_control_stop.__name__,
-    )
-
-    platform.async_register_entity_service(
-        "vacuum_remote_control_move",
-        cv.make_entity_service_schema(
-            {
-                vol.Optional("velocity"): vol.All(
-                    vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
-                ),
-                vol.Optional("rotation"): vol.All(
-                    vol.Coerce(int), vol.Clamp(min=-179, max=179)
-                ),
-                vol.Optional("duration"): cv.positive_int,
-            }
-        ),
-        RoborockVacuum.async_remote_control_move.__name__,
-    )
-
-    platform.async_register_entity_service(
-        "vacuum_remote_control_move_step",
-        cv.make_entity_service_schema(
-            {
-                vol.Optional("velocity"): vol.All(
-                    vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
-                ),
-                vol.Optional("rotation"): vol.All(
-                    vol.Coerce(int), vol.Clamp(min=-179, max=179)
-                ),
-                vol.Optional("duration"): cv.positive_int,
-            }
-        ),
-        RoborockVacuum.async_remote_control_move_step.__name__,
-    )
 
     platform.async_register_entity_service(
         "vacuum_clean_zone",
@@ -480,86 +434,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
             [k for k, v in MOP_INTENSITY_CODES.items() if v == mop_intensity],
         )
         await self.coordinator.async_request_refresh()
-
-    async def async_manual_start(self):
-        """Start manual control mode."""
-        self.manual_seqnum = 0
-        return await self.send(RoborockCommand.APP_RC_START)
-
-    async def async_manual_stop(self):
-        """Stop manual control mode."""
-        self.manual_seqnum = 0
-        return await self.send(RoborockCommand.APP_RC_END)
-
-    MANUAL_ROTATION_MAX = 180
-    MANUAL_ROTATION_MIN = -MANUAL_ROTATION_MAX
-    MANUAL_VELOCITY_MAX = 0.3
-    MANUAL_VELOCITY_MIN = -MANUAL_VELOCITY_MAX
-    MANUAL_DURATION_DEFAULT = 1500
-
-    async def async_manual_control(
-        self, rotation: int, velocity: float, duration: int = MANUAL_DURATION_DEFAULT
-    ):
-        """Give a command over manual control interface."""
-        if rotation < self.MANUAL_ROTATION_MIN or rotation > self.MANUAL_ROTATION_MAX:
-            raise ValueError(
-                "Given rotation is invalid, should be ]%s, %s[, was %s"
-                % (self.MANUAL_ROTATION_MIN, self.MANUAL_ROTATION_MAX, rotation)
-            )
-        if velocity < self.MANUAL_VELOCITY_MIN or velocity > self.MANUAL_VELOCITY_MAX:
-            raise ValueError(
-                "Given velocity is invalid, should be ]%s, %s[, was: %s"
-                % (self.MANUAL_VELOCITY_MIN, self.MANUAL_VELOCITY_MAX, velocity)
-            )
-
-        self.manual_seqnum += 1
-        params = {
-            "omega": round(math.radians(rotation), 1),
-            "velocity": velocity,
-            "duration": duration,
-            "seqnum": self.manual_seqnum,
-        }
-
-        await self.send(RoborockCommand.APP_RC_MOVE, [params])
-
-    async def async_manual_control_once(
-        self, rotation: int, velocity: float, duration: int = MANUAL_DURATION_DEFAULT
-    ):
-        """Start the remote control mode and executes the action once before deactivating the mode."""
-        number_of_tries = 3
-        await self.async_manual_start()
-        while number_of_tries > 0:
-            if self.status.state_code == 7:
-                time.sleep(5)
-                await self.async_manual_control(rotation, velocity, duration)
-                time.sleep(5)
-                return await self.async_manual_stop()
-
-            time.sleep(2)
-            number_of_tries -= 1
-
-    async def async_remote_control_start(self):
-        """Start remote control mode."""
-        await self.async_manual_start()
-
-    async def async_remote_control_stop(self):
-        """Stop remote control mode."""
-        await self.async_manual_stop()
-
-    async def async_remote_control_move(
-        self, rotation: int = 0, velocity: float = 0.3, duration: int = 1500
-    ):
-        """Move vacuum with remote control mode."""
-        await self.async_manual_control(rotation, velocity, duration)
-
-    async def async_remote_control_move_step(
-        self,
-        rotation: int = 0,
-        velocity: float = 0.2,
-        duration: int = MANUAL_DURATION_DEFAULT,
-    ):
-        """Move vacuum one step with remote control mode."""
-        await self.async_manual_control_once(rotation, velocity, duration)
 
     async def async_goto(self, x_coord: int, y_coord: int):
         """Send vacuum to x,y location."""
