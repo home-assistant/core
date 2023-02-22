@@ -394,11 +394,11 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="window_shutter",
-        manufacturer_id={0x007a},
+        manufacturer_id={0x007A},
         product_id={0x0001},
         product_type={0x8003},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-	),
+    ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,

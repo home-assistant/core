@@ -94,3 +94,15 @@ async def test_dynamic_climate_data_discovery_template_failure(hass, multisensor
         DynamicCurrentTempClimateDataTemplate().resolve_data(
             node.values[f"{node.node_id}-49-0-Ultraviolet"]
         )
+
+
+async def test_merten_507801(hass, client, merten_507801, integration):
+    """Test that Merten 507801 multilevel switch value is discovered as a cover."""
+    node = merten_507801
+    assert node.device_class.specific.label == "Unused"
+
+    state = hass.states.get("light.connect_roller_shutter")
+    assert not state
+
+    state = hass.states.get("cover.connect_roller_shutter")
+    assert state
