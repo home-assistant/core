@@ -1013,7 +1013,7 @@ jobs:
           python --version
 
           python3 -X dev -m pytest \
-            -vv \
+            -qq \
             --timeout=20 \
             -n 1 \
             --cov="homeassistant.components.recorder" \
