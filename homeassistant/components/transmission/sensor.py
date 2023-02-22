@@ -128,14 +128,14 @@ class TransmissionStatusSensor(TransmissionSensor):
         if data := self._tm_client.api.data:
             upload = data.uploadSpeed
             download = data.downloadSpeed
+            state = STATE_IDLE
             if upload > 0 and download > 0:
-                self._state = "Up/Down"
+                state = "Up/Down"
             elif upload > 0 and download == 0:
-                self._state = "Seeding"
+                state = "Seeding"
             elif upload == 0 and download > 0:
-                self._state = "Downloading"
-            else:
-                self._state = STATE_IDLE
+                state = "Downloading"
+            self._state = state.title()
         else:
             self._state = None
 
