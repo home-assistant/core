@@ -141,9 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             auth_token = cast(
                 str | None, cast(JsonObjectType, device_conf).get("token")
             )
-        if auth_token is None and (
-            host_conf := self.discovery_conf.get(host)
-        ):  # < 2021.4
+        if not auth_token and (host_conf := self.discovery_conf.get(host)):  # < 2021.4
             auth_token = cast(str | None, cast(JsonObjectType, host_conf).get("token"))
 
         if auth_token is not None:
