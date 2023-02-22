@@ -8,6 +8,7 @@ from typing import Any
 
 from pyfibaro.fibaro_client import FibaroClient
 from pyfibaro.fibaro_device import DeviceModel
+from pyfibaro.fibaro_room import RoomModel
 from pyfibaro.fibaro_scene import SceneModel
 from requests.exceptions import HTTPError
 
@@ -87,9 +88,10 @@ class FibaroController:
 
         # Whether to import devices from plugins
         self._import_plugins = config[CONF_IMPORT_PLUGINS]
-        self._room_map = None  # Mapping roomId to room object
+        self._room_map: dict[int, RoomModel] = {}  # Mapping roomId to room object
         self._device_map = None  # Mapping deviceId to device object
-        self.fibaro_devices: dict[Platform, list] = defaultdict(
+        self._scenes: list[SceneModel] = []
+        self.fibaro_devices: dict[Platform, list[DeviceModel]] = defaultdict(
             list
         )  # List of devices by entity platform
         self._callbacks: dict[Any, Any] = {}  # Update value callbacks by deviceId
@@ -117,7 +119,7 @@ class FibaroController:
 
         self._room_map = {room.fibaro_id: room for room in self._client.read_rooms()}
         self._read_devices()
-        self._read_scenes()
+        self._scenes = self._client.read_scenes()
         return True
 
     def connect_with_error_handling(self) -> None:
@@ -278,24 +280,16 @@ class FibaroController:
             return self._device_infos[device.parent_fibaro_id]
         return DeviceInfo(identifiers={(DOMAIN, self.hub_serial)})
 
-    def _read_scenes(self):
-        scenes = self._client.read_scenes()
-        for device in scenes:
-            device.fibaro_controller = self
-            if device.room_id == 0:
-                room_name = "Unknown"
-            else:
-                room_name = self._room_map[device.room_id].name
-            device.room_name = room_name
-            device.friendly_name = f"{room_name} {device.name}"
-            device.ha_id = (
-                f"scene_{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
-            )
-            device.unique_id_str = (
-                f"{slugify(self.hub_serial)}.scene.{device.fibaro_id}"
-            )
-            self.fibaro_devices[Platform.SCENE].append(device)
-            _LOGGER.debug("%s scene -> %s", device.ha_id, device)
+    def get_room_name(self, room_id: int) -> str | None:
+        """Get the room name by room id."""
+        room = self._room_map.get(room_id)
+        if room:
+            return room.name
+        return None
+
+    def get_scenes(self) -> list[SceneModel]:
+        """Get list with all scenes."""
+        return self._scenes
 
     def _read_devices(self):
         """Read and process the device list."""
@@ -306,10 +300,9 @@ class FibaroController:
         for device in devices:
             try:
                 device.fibaro_controller = self
-                if device.room_id == 0:
+                room_name = self.get_room_name(device.room_id)
+                if not room_name:
                     room_name = "Unknown"
-                else:
-                    room_name = self._room_map[device.room_id].name
                 device.room_name = room_name
                 device.friendly_name = f"{room_name} {device.name}"
                 device.ha_id = (
@@ -425,19 +418,16 @@ class FibaroDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, fibaro_device: DeviceModel | SceneModel) -> None:
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the device."""
         self.fibaro_device = fibaro_device
         self.controller = fibaro_device.fibaro_controller
         self.ha_id = fibaro_device.ha_id
         self._attr_name = fibaro_device.friendly_name
         self._attr_unique_id = fibaro_device.unique_id_str
-
-        if isinstance(fibaro_device, DeviceModel):
-            self._attr_device_info = self.controller.get_device_info(fibaro_device)
+        self._attr_device_info = self.controller.get_device_info(fibaro_device)
         # propagate hidden attribute set in fibaro home center to HA
-        if not fibaro_device.visible:
-            self._attr_entity_registry_visible_default = False
+        self._attr_entity_registry_visible_default = fibaro_device.visible
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -519,11 +509,10 @@ class FibaroDevice(Entity):
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.fibaro_id}
 
-        if isinstance(self.fibaro_device, DeviceModel):
-            if self.fibaro_device.has_battery_level:
-                attr[ATTR_BATTERY_LEVEL] = self.fibaro_device.battery_level
-            if self.fibaro_device.has_armed:
-                attr[ATTR_ARMED] = self.fibaro_device.armed
+        if self.fibaro_device.has_battery_level:
+            attr[ATTR_BATTERY_LEVEL] = self.fibaro_device.battery_level
+        if self.fibaro_device.has_armed:
+            attr[ATTR_ARMED] = self.fibaro_device.armed
 
         return attr
 
