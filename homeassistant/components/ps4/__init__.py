@@ -28,7 +28,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
-from homeassistant.util.json import load_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
 from .const import (
@@ -165,18 +165,14 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistant, unique_id: str) -> dict:
+def load_games(hass: HomeAssistant, unique_id: str) -> JsonObjectType:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
-        games = load_json(g_file)
+        games = load_json_object(g_file)
     except HomeAssistantError as error:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
-
-    if not isinstance(games, dict):
-        _LOGGER.error("Games file was not parsed correctly")
-        games = {}
 
     # If file exists
     if os.path.isfile(g_file):
