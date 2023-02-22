@@ -10,9 +10,11 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
 from .const import CONF_PLANT_ID, DOMAIN, PLATFORMS
+from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
@@ -23,14 +25,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Load the saved entities."""
-    config = {**entry.data}
-    api = APIHelper(config[CONF_USERNAME], config[CONF_PASSWORD])
+    api = APIHelper(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     if not await hass.async_add_executor_job(api.authenticate):
         _LOGGER.error("Username or Password may be incorrect!")
         return False
     if DOMAIN not in hass.data.keys():
         hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = SunWEGData(api, config[CONF_PLANT_ID])
+    hass.data[DOMAIN][entry.entry_id] = SunWEGData(api, entry.data[CONF_PLANT_ID])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -96,17 +97,17 @@ class SunWEGData:
 
     def get_data(
         self,
-        entity_description,
+        entity_description: SunWEGSensorEntityDescription,
         device_type: str,
         inverter_id: int = 0,
         deep_name: str | None = None,
-    ):
+    ) -> StateType | datetime.datetime:
         """Get the data."""
         _LOGGER.debug(
             "Data request for: %s",
             entity_description.name,
         )
-        variable = entity_description.api_key
+        variable = entity_description.api_variable_key
         api_value = self.get_api_value(variable, device_type, inverter_id, deep_name)
         previous_value = self.previous_values.get(variable)
         return_value = api_value

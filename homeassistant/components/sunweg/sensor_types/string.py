@@ -10,17 +10,17 @@ STRING_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
     SunWEGSensorEntityDescription(
         key="voltage",
         name="Voltage",
-        api_key="voltage",
+        api_variable_key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
-        precision=2,
+        suggested_display_precision=2,
     ),
     SunWEGSensorEntityDescription(
         key="amperage",
         name="Amperage",
-        api_key="amperage",
+        api_variable_key="amperage",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        precision=1,
+        suggested_display_precision=1,
     ),
 )

@@ -10,14 +10,13 @@ from homeassistant.components.sensor import SensorEntityDescription
 class SunWEGRequiredKeysMixin:
     """Mixin for required keys."""
 
-    api_key: str
+    api_variable_key: str
 
 
 @dataclass
 class SunWEGSensorEntityDescription(SensorEntityDescription, SunWEGRequiredKeysMixin):
     """Describes SunWEG sensor entity."""
 
-    precision: int | None = None
     previous_value_drop_threshold: float | None = None
     never_resets: bool = False
     icon: str | None = None

@@ -13,6 +13,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import SunWEGData
 from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN
@@ -153,17 +154,14 @@ class SunWEGInverter(SensorEntity):
     @property
     def native_value(
         self,
-    ) -> str | int | float | None | datetime.datetime:
+    ) -> StateType | datetime.datetime:
         """Return the state of the sensor."""
-        result = self.probe.get_data(
+        return self.probe.get_data(
             self.entity_description,
             device_type=self.device_type,
             inverter_id=self.inverter_id,
             deep_name=self.deep_name,
         )
-        if self.entity_description.precision is not None:
-            result = round(result, self.entity_description.precision)
-        return result
 
     def update(self) -> None:
         """Get the latest data from the Sun WEG API and updates the state."""
