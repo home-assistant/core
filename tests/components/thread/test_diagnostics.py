@@ -62,6 +62,51 @@ TEST_ZEROCONF_RECORD_2 = ServiceInfo(
 )
 
 
+TEST_ZEROCONF_RECORD_3 = ServiceInfo(
+    type_="_meshcop._udp.local.",
+    name="office._meshcop._udp.local.",
+    addresses=["127.0.0.1", "fe80::10ed:6406:4ee9:85e0"],
+    port=8080,
+    properties={
+        "rv": "1",
+        "vn": "Apple",
+        "nn": "OpenThread HC",
+        "xp": "\xe6\x0f\xc7\xc1\x86!,\xe5",
+        "tv": "1.2.0",
+        "xa": "\xae\xeb/YKW\x0b\xbf",
+        "sb": "\x00\x00\x01\xb1",
+        "at": "\x00\x00\x00\x00\x00\x01\x00\x00",
+        "pt": "\x8f\x06Q~",
+        "sq": "3",
+        "bb": "\xf0\xbf",
+        "dn": "DefaultDomain",
+    },
+)
+
+TEST_ZEROCONF_RECORD_4 = ServiceInfo(
+    type_="_meshcop._udp.local.",
+    name="office._meshcop._udp.local.",
+    addresses=["127.0.0.1", "fe80::10ed:6406:4ee9:85e0"],
+    port=8080,
+    properties={
+        "rv": "1",
+        "vn": "Apple",
+        "nn": "OpenThread HC",
+        "xp": "\xe6\x0f\xc7\xc1\x86!,\xe5",
+        "tv": "1.2.0",
+        "xa": "\xae\xeb/YKW\x0b\xbf",
+        "sb": "\x00\x00\x01\xb1",
+        "at": "\x00\x00\x00\x00\x00\x01\x00\x00",
+        "pt": "\x8f\x06Q~",
+        "sq": "3",
+        "bb": "\xf0\xbf",
+        "dn": "DefaultDomain",
+    },
+)
+# Make sure this generates an invalid DNSPointer
+TEST_ZEROCONF_RECORD_4.name = "office._meshcop._udp.lo\x00cal."
+
+
 @dataclasses.dataclass
 class MockRoute:
     """A mock iproute2 route table entry."""
@@ -123,7 +168,17 @@ async def test_diagnostics(
             TEST_ZEROCONF_RECORD_2.dns_pointer(created=now),
         ]
     )
-
+    # Test for invalid cache
+    cache.async_add_records([TEST_ZEROCONF_RECORD_3.dns_pointer(created=now)])
+    # Test for invalid record
+    cache.async_add_records(
+        [
+            *TEST_ZEROCONF_RECORD_4.dns_addresses(created=now),
+            TEST_ZEROCONF_RECORD_4.dns_service(created=now),
+            TEST_ZEROCONF_RECORD_4.dns_text(created=now),
+            TEST_ZEROCONF_RECORD_4.dns_pointer(created=now),
+        ]
+    )
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
