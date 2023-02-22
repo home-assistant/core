@@ -42,3 +42,34 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_update_available.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp8266',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'WLED',
+    'model': 'DIY light',
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '0.8.5',
+    'via_device_id': None,
+  })
+# ---
