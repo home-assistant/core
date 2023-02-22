@@ -173,12 +173,10 @@ class RegistryEntry:
         This version only includes what's needed for display.
         Returns None if there's no data needed for display.
         """
-        display_dict: dict[str, Any] = {}
+        display_dict: dict[str, Any] = {"ei": self.entity_id, "pl": self.platform}
         for key, attr_name in DISLAY_DICT_OPTIONAL:
             if (attr_val := getattr(self, attr_name)) is not None:
                 display_dict[key] = attr_val
-        if "tk" in display_dict:
-            display_dict["pl"] = self.platform
         if (category := self.entity_category) is not None:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
@@ -192,10 +190,6 @@ class RegistryEntry:
                 precision := sensor_options.get("suggested_display_precision")
             ) is not None:
                 display_dict["dp"] = precision
-        if not display_dict:
-            # We didn't gather any data needed for display
-            return None
-        display_dict["ei"] = self.entity_id
         return display_dict
 
     @property
