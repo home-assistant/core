@@ -971,6 +971,7 @@ omit =
     homeassistant/components/reolink/camera.py
     homeassistant/components/reolink/entity.py
     homeassistant/components/reolink/host.py
+    homeassistant/components/reolink/light.py
     homeassistant/components/reolink/number.py
     homeassistant/components/reolink/update.py
     homeassistant/components/repetier/__init__.py
