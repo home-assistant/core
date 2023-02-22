@@ -12,7 +12,8 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.components.netatmo.device_trigger import SUBTYPES
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -31,7 +32,7 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "platform,device_type,event_types",
+    ("platform", "device_type", "event_types"),
     [
         ("camera", "Smart Outdoor Camera", OUTDOOR_CAMERA_TRIGGERS),
         ("camera", "Smart Indoor Camera", INDOOR_CAMERA_TRIGGERS),
@@ -40,8 +41,13 @@ def calls(hass):
     ],
 )
 async def test_get_triggers(
-    hass, device_registry, entity_registry, platform, device_type, event_types
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    platform,
+    device_type,
+    event_types,
+) -> None:
     """Test we get the expected triggers from a netatmo devices."""
     config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
     config_entry.add_to_hass(hass)
@@ -90,7 +96,7 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "platform,camera_type,event_type",
+    ("platform", "camera_type", "event_type"),
     [("camera", "Smart Outdoor Camera", trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
     + [("camera", "Smart Indoor Camera", trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
     + [
@@ -105,8 +111,14 @@ async def test_get_triggers(
     ],
 )
 async def test_if_fires_on_event(
-    hass, calls, device_registry, entity_registry, platform, camera_type, event_type
-):
+    hass: HomeAssistant,
+    calls,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    platform,
+    camera_type,
+    event_type,
+) -> None:
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
@@ -167,7 +179,7 @@ async def test_if_fires_on_event(
 
 
 @pytest.mark.parametrize(
-    "platform,camera_type,event_type,sub_type",
+    ("platform", "camera_type", "event_type", "sub_type"),
     [
         ("climate", "Smart Valve", trigger, subtype)
         for trigger in SUBTYPES
@@ -180,15 +192,15 @@ async def test_if_fires_on_event(
     ],
 )
 async def test_if_fires_on_event_with_subtype(
-    hass,
+    hass: HomeAssistant,
     calls,
-    device_registry,
-    entity_registry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     platform,
     camera_type,
     event_type,
     sub_type,
-):
+) -> None:
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
@@ -254,12 +266,17 @@ async def test_if_fires_on_event_with_subtype(
 
 
 @pytest.mark.parametrize(
-    "platform,device_type,event_type",
+    ("platform", "device_type", "event_type"),
     [("climate", "NAPlug", trigger) for trigger in CLIMATE_TRIGGERS],
 )
 async def test_if_invalid_device(
-    hass, device_registry, entity_registry, platform, device_type, event_type
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    platform,
+    device_type,
+    event_type,
+) -> None:
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (dr.CONNECTION_NETWORK_MAC, mac_address)

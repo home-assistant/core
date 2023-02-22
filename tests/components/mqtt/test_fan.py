@@ -1357,7 +1357,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "ON", None, "on"),
         (CONF_PRESET_MODE_STATE_TOPIC, "auto", ATTR_PRESET_MODE, "auto"),
@@ -1455,7 +1455,7 @@ async def test_attributes(
 
 
 @pytest.mark.parametrize(
-    "name,config,success,features",
+    ("name", "config", "success", "features"),
     [
         (
             "test1",
@@ -1933,7 +1933,7 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             fan.SERVICE_TURN_ON,

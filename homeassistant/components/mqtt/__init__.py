@@ -369,7 +369,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if mqtt_data.subscriptions_to_restore:
-        mqtt_data.client.subscriptions = mqtt_data.subscriptions_to_restore
+        mqtt_data.client.async_restore_tracked_subscriptions(
+            mqtt_data.subscriptions_to_restore
+        )
         mqtt_data.subscriptions_to_restore = []
     mqtt_data.reload_dispatchers.append(
         entry.add_update_listener(_async_config_entry_updated)
@@ -596,7 +598,8 @@ async def websocket_subscribe(
     if not connection.user.is_admin:
         raise Unauthorized
 
-    async def forward_messages(mqttmsg: ReceiveMessage) -> None:
+    @callback
+    def forward_messages(mqttmsg: ReceiveMessage) -> None:
         """Forward events to websocket."""
         try:
             payload = cast(bytes, mqttmsg.payload).decode(
@@ -729,7 +732,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await mqtt_client.async_disconnect()
     # Store remaining subscriptions to be able to restore or reload them
     # when the entry is set up again
-    if mqtt_client.subscriptions:
-        mqtt_data.subscriptions_to_restore = mqtt_client.subscriptions
+    if subscriptions := mqtt_client.subscriptions:
+        mqtt_data.subscriptions_to_restore = subscriptions
 
     return True

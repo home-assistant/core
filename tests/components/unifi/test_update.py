@@ -69,7 +69,9 @@ async def test_no_entities(
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 0
 
 
-async def test_device_updates(hass, aioclient_mock, mock_unifi_websocket):
+async def test_device_updates(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some devices."""
     device_1 = deepcopy(DEVICE_1)
     await setup_unifi_integration(
@@ -185,7 +187,9 @@ async def test_install(
     )
 
 
-async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocket):
+async def test_controller_state_change(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Verify entities state reflect on controller becoming unavailable."""
     await setup_unifi_integration(
         hass,

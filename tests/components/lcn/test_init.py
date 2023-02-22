@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import MockPchkConnectionManager, setup_component
 
 
-async def test_async_setup_entry(hass, entry, lcn_connection):
+async def test_async_setup_entry(hass: HomeAssistant, entry, lcn_connection) -> None:
     """Test a successful setup entry and unload of entry."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ConfigEntryState.LOADED
@@ -28,7 +28,7 @@ async def test_async_setup_entry(hass, entry, lcn_connection):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_multiple_entries(hass, entry, entry2):
+async def test_async_setup_multiple_entries(hass: HomeAssistant, entry, entry2) -> None:
     """Test a successful setup and unload of multiple entries."""
     with patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager):
         for config_entry in (entry, entry2):
@@ -48,7 +48,7 @@ async def test_async_setup_multiple_entries(hass, entry, entry2):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_update(hass, entry):
+async def test_async_setup_entry_update(hass: HomeAssistant, entry) -> None:
     """Test a successful setup entry if entry with same id already exists."""
     # setup first entry
     entry.source = config_entries.SOURCE_IMPORT
@@ -81,7 +81,9 @@ async def test_async_setup_entry_update(hass, entry):
     assert dummy_entity not in entity_registry.entities.values()
 
 
-async def test_async_setup_entry_raises_authentication_error(hass, entry):
+async def test_async_setup_entry_raises_authentication_error(
+    hass: HomeAssistant, entry
+) -> None:
     """Test that an authentication error is handled properly."""
     with patch.object(
         PchkConnectionManager, "async_connect", side_effect=PchkAuthenticationError
@@ -93,7 +95,9 @@ async def test_async_setup_entry_raises_authentication_error(hass, entry):
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_entry_raises_license_error(hass, entry):
+async def test_async_setup_entry_raises_license_error(
+    hass: HomeAssistant, entry
+) -> None:
     """Test that an authentication error is handled properly."""
     with patch.object(
         PchkConnectionManager, "async_connect", side_effect=PchkLicenseError
@@ -105,7 +109,9 @@ async def test_async_setup_entry_raises_license_error(hass, entry):
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_entry_raises_timeout_error(hass, entry):
+async def test_async_setup_entry_raises_timeout_error(
+    hass: HomeAssistant, entry
+) -> None:
     """Test that an authentication error is handled properly."""
     with patch.object(PchkConnectionManager, "async_connect", side_effect=TimeoutError):
         entry.add_to_hass(hass)

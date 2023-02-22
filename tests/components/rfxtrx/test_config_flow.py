@@ -47,7 +47,7 @@ async def start_options_flow(hass, entry):
 
 
 @patch("homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
-async def test_setup_network(transport_mock, hass):
+async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -91,7 +91,7 @@ async def test_setup_network(transport_mock, hass):
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
     return_value=None,
 )
-async def test_setup_serial(com_mock, connect_mock, hass):
+async def test_setup_serial(com_mock, connect_mock, hass: HomeAssistant) -> None:
     """Test we can setup serial."""
     port = com_port()
 
@@ -137,7 +137,7 @@ async def test_setup_serial(com_mock, connect_mock, hass):
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
     return_value=None,
 )
-async def test_setup_serial_manual(com_mock, connect_mock, hass):
+async def test_setup_serial_manual(com_mock, connect_mock, hass: HomeAssistant) -> None:
     """Test we can setup serial with manual entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -185,7 +185,7 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass):
     autospec=True,
     side_effect=OSError,
 )
-async def test_setup_network_fail(transport_mock, hass):
+async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -218,7 +218,7 @@ async def test_setup_network_fail(transport_mock, hass):
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     side_effect=serial.serialutil.SerialException,
 )
-async def test_setup_serial_fail(com_mock, connect_mock, hass):
+async def test_setup_serial_fail(com_mock, connect_mock, hass: HomeAssistant) -> None:
     """Test setup serial failed connection."""
     port = com_port()
 
@@ -253,7 +253,7 @@ async def test_setup_serial_fail(com_mock, connect_mock, hass):
     "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
     serial_connect_fail,
 )
-async def test_setup_serial_manual_fail(com_mock, hass):
+async def test_setup_serial_manual_fail(com_mock, hass: HomeAssistant) -> None:
     """Test setup serial failed connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

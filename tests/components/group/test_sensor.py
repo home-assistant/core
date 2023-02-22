@@ -48,7 +48,7 @@ SUM_VALUE = sum(VALUES)
 
 
 @pytest.mark.parametrize(
-    "sensor_type, result, attributes",
+    ("sensor_type", "result", "attributes"),
     [
         ("min", MIN_VALUE, {ATTR_MIN_ENTITY_ID: "sensor.test_3"}),
         ("max", MAX_VALUE, {ATTR_MAX_ENTITY_ID: "sensor.test_2"}),
