@@ -83,21 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     status = coordinator.data
 
-    all_device_supported_commands = data.list_commands() or {}
-    supported_commands: set[str] = set()
-
-    for (
-        device_supported_command,
-        command_description,
-    ) in all_device_supported_commands.items():
-        if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS:
-            supported_commands.add(device_supported_command)
-        else:
-            _LOGGER.debug(
-                "Skipping unsupported NUT command %s (%s)",
-                device_supported_command,
-                command_description,
-            )
+    supported_commands = {
+        device_supported_command
+        for device_supported_command in data.list_commands() or {}
+        if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
+    }
 
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
