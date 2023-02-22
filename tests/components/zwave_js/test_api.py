@@ -2894,8 +2894,8 @@ async def test_get_config_parameters(
 
 
 @pytest.mark.parametrize(
-    ("include_target"),
-    [(True), (False)],
+    ("firmware_data", "expected_data"),
+    [({"target": "1"}, {"firmware_target": 1}), ({}, {})],
 )
 async def test_firmware_upload_view(
     hass: HomeAssistant,
