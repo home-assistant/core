@@ -3243,7 +3243,6 @@ async def test_unload_config_entry(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     mqtt_client_mock: MqttMockPahoClient,
-    tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unloading the MQTT entry."""
@@ -3257,15 +3256,11 @@ async def test_unload_config_entry(
     mqtt_client_mock.reset_mock()
     mqtt.publish(hass, "just_in_time", "published", qos=0, retain=False)
 
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump({})
-    new_yaml_config_file.write_text(new_yaml_config)
-    with patch.object(module_hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
-        assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-        new_mqtt_config_entry = mqtt_config_entry
-        mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
-        assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+    new_mqtt_config_entry = mqtt_config_entry
+    mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
+    assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+    await hass.async_block_till_done()
     assert not hass.services.has_service(mqtt.DOMAIN, "dump")
     assert not hass.services.has_service(mqtt.DOMAIN, "publish")
     assert "No ACK from MQTT server" not in caplog.text
