@@ -42,7 +42,8 @@ DATA_PLUGGABLE_ACTIONS = "pluggable_actions"
 class TriggerProtocol(Protocol):
     """Define the format of trigger modules.
 
-    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
+    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config
+    from TriggerProtocol.
     """
 
     TRIGGER_SCHEMA: vol.Schema
