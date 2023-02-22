@@ -2903,7 +2903,8 @@ async def test_firmware_upload_view(
     integration,
     hass_client: ClientSessionGenerator,
     firmware_file,
-    include_target,
+    firmware_data: dict[str, Any],
+    expected_data: dict[str, Any],
 ) -> None:
     """Test the HTTP firmware upload view."""
     client = await hass_client()
