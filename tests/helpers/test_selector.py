@@ -137,6 +137,15 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
             (None, "sensor.abc123"),
         ),
         (
+            {
+                "integration": "zha",
+                "domain": "binary_sensor",
+                "device_class": ["motion", "door"],
+            },
+            ("binary_sensor.abc123", FAKE_UUID),
+            (None, "sensor.abc123"),
+        ),
+        (
             {"multiple": True, "domain": "sensor"},
             (["sensor.abc123", "sensor.def456"], ["sensor.abc123", FAKE_UUID]),
             (
