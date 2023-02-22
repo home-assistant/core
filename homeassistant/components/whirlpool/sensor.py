@@ -256,8 +256,6 @@ class WasherDryerTimeClass(RestoreSensor):
         )
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{said}-{description.key}"
-        if self._attr_native_value is None:
-            self._attr_native_value = utcnow()
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
@@ -292,12 +290,15 @@ class WasherDryerTimeClass(RestoreSensor):
 
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
+
             new_timestamp = now + timedelta(
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
 
-            if isinstance(self._attr_native_value, datetime) and abs(
-                new_timestamp - self._attr_native_value
-            ) > timedelta(seconds=60):
+            if (
+                isinstance(self._attr_native_value, datetime)
+                and abs(new_timestamp - self._attr_native_value) > timedelta(seconds=60)
+                or self._attr_native_value is None
+            ):
                 self._attr_native_value = new_timestamp
                 self._async_write_ha_state()

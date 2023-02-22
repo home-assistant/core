@@ -310,6 +310,9 @@ async def test_no_restore_state(
     await init_integration(hass)
     # restore from cache
     state = hass.states.get(entity_id)
+    state.state = "unknown"
+
+    state = await update_sensor_state(hass, entity_id, mock_sensor1_api)
     state.state = datetime.now().isoformat()
 
 
