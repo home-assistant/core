@@ -89,8 +89,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             # using an options flow.
             return self.async_create_entry(
                 title=user_input.get(CONF_NAME, user_input[CONF_OBIHAI_HOST]),
-                data={},
-                options={
+                data={
                     CONF_OBIHAI_HOST: user_input[CONF_OBIHAI_HOST],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
@@ -109,8 +108,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_OBIHAI_HOST: config[CONF_OBIHAI_HOST]})
         return self.async_create_entry(
             title=config.get(CONF_NAME, config[CONF_OBIHAI_HOST]),
-            data={},
-            options={
+            data={
                 CONF_OBIHAI_HOST: config[CONF_OBIHAI_HOST],
                 CONF_PASSWORD: config[CONF_PASSWORD],
                 CONF_USERNAME: config.get(CONF_USERNAME),

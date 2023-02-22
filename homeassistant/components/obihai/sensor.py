@@ -13,11 +13,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, LOGGER, OBIHAI
+from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, OBIHAI
 from .obihai_api import ObihaiConnection
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -39,11 +40,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Obihai sensor platform."""
-    LOGGER.warning(
-        "Configuration of the Obihai platform in YAML is deprecated "
-        "and will be removed in Home Assistant 2023.6; Your existing "
-        "configuration has been imported into the UI automatically and can be "
-        "safely removed from your configuration.yaml file"
+    issue_registry.async_create_issue(
+        hass,
+        DOMAIN,
+        "manual_migration",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=issue_registry.IssueSeverity.ERROR,
+        translation_key="manual_migration",
     )
 
     if discovery_info:

@@ -12,9 +12,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
@@ -28,9 +25,14 @@
       }
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "issues": {
+    "manual_migration": {
+      "title": "Manual migration required for Obihai",
+      "description": "Configuration of the Obihai platform in YAML is deprecated and will be removed in Home Assistant 2023.6; Your existing configuration has been imported into the UI automatically and can be safely removed from your configuration.yaml file."
     }
   }
 }
