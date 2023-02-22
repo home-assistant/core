@@ -318,24 +318,15 @@ class Entity(ABC):
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
-            _LOGGER.debug("%s Return _attr_name", self.entity_id)
             return self._attr_name
         if hasattr(self, "entity_description"):
             if (name := self.entity_description.name) is not UNDEFINED:
-                _LOGGER.debug("%s Return entity_description.name", self.entity_id)
                 return name
         if self.translation_key is not None:
-            _LOGGER.debug("%s Get name from translations", self.entity_id)
             assert self.platform
             name_translation_key = (
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
                 f".{self.translation_key}.name"
-            )
-            _LOGGER.debug(
-                "%s: %s @ %s",
-                self.entity_id,
-                f"component.{self.platform.platform_name}.entity.{self.platform.domain}",
-                f".{self.translation_key}.name",
             )
             return self.platform.entity_translations.get(name_translation_key)
         return None

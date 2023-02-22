@@ -282,11 +282,6 @@ class EntityPlatform:
             self.entity_translations = await translation.async_get_translations(
                 hass, hass.config.language, "entity", {self.platform_name}
             )
-            _LOGGER.debug(
-                "Loaded translations for %s: %s",
-                self.platform_name,
-                self.entity_translations,
-            )
         except Exception as err:  # pylint: disable=broad-exception-caught
             _LOGGER.debug(
                 "Could not load translations for %s", self.platform_name, exc_info=err
