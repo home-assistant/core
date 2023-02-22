@@ -1907,8 +1907,7 @@ async def help_test_unload_config_entry(hass: HomeAssistant) -> None:
 
 async def help_test_unload_config_entry_with_platform(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path: Path,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
     config: dict[str, dict[str, Any]],
 ) -> None:
@@ -1917,9 +1916,9 @@ async def help_test_unload_config_entry_with_platform(
     config_setup: dict[str, dict[str, Any]] = copy.deepcopy(config)
     config_setup[mqtt.DOMAIN][domain]["name"] = "config_setup"
     config_name = config_setup
+    # To be replaced with entry setup when `async_setup` is removed.
     assert await async_setup_component(hass, mqtt.DOMAIN, config_setup)
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     # prepare setup through discovery
     discovery_setup = copy.deepcopy(config[mqtt.DOMAIN][domain])

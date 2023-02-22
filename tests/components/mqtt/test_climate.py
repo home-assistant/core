@@ -1,7 +1,6 @@
 """The tests for the mqtt climate component."""
 import copy
 import json
-from pathlib import Path
 from unittest.mock import call, patch
 
 import pytest
@@ -2024,12 +2023,11 @@ async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    tmp_path: Path,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test unloading the config entry."""
     domain = climate.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
-        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+        hass, mqtt_mock_entry_no_yaml_config, domain, config
     )
