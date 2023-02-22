@@ -65,6 +65,9 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         self._host = host
         self._token = token
         self._device_api = coordinator.device
+        status = coordinator.data
+        self._attr_name = f"Slidingdoor {status[STATUSDICT_SERIALNO]}"
+
         super().__init__(coordinator, device_id)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -89,18 +92,6 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         """Stop the door async."""
         await self._device_api.async_stop_door()
 
-    def stop_cover(self, **kwargs: Any) -> None:
-        """Stop the door."""
-        self.hass.async_add_executor_job(self.async_stop_cover, **kwargs)
-
-    def open_cover(self, **kwargs: Any) -> None:
-        """Open the door."""
-        self.hass.async_add_executor_job(self.async_open_cover, **kwargs)
-
-    def close_cover(self, **kwargs: Any) -> None:
-        """Close the door."""
-        self.hass.async_add_executor_job(self.async_close_cover, **kwargs)
-
     @property
     def device_class(self) -> CoverDeviceClass:
         """Return the class of this device."""
@@ -118,7 +109,6 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
         """Update the state and attributes."""
 
         status = self.coordinator.data
-        self._attr_name = f"Slidingdoor {status[STATUSDICT_SERIALNO]}"
 
         state = STATES_MAP.get(status.get(STATUSDICT_OPENSTATE))
         self._state = state
