@@ -874,7 +874,7 @@ hass-nabucasa==0.61.0
 hass_splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==0.2.6
+hassil==1.0.5
 
 # homeassistant.components.tasmota
 hatasmota==0.6.4
@@ -910,7 +910,7 @@ holidays==0.18.0
 home-assistant-frontend==20230202.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.1.31
+home-assistant-intents==2023.2.22
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
