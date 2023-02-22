@@ -1,0 +1,37 @@
+{    
+	"title": "Pax",
+    "config": {         
+        "step": {                    
+            "add_device": { 
+				"title": "Pax: Add device",
+                "description": "Enter your device details.", 
+                "data": {                     
+                    "name": "Name of device",                     
+                    "mac": "MAC Address",                                
+                    "pin": "PIN Code",    
+                    "scan_interval": "Scan Interval in seconds"  					
+                }                                                            
+            }
+        },
+		"error": {
+			"cannot_connect": "Failed to connect"
+		},
+		"abort": {
+			"already_configured": "Device is already configured"
+		}		
+    },   
+    "options": {         
+        "step": {                    
+            "configure_device": { 
+				"title": "Pax: Configure device",
+                "description": "Enter your device details.", 
+                "data": {                     
+                    "name": "Name of device",                     
+                    "mac": "MAC Address",                                
+                    "pin": "PIN Code",    
+                    "scan_interval": "Scan Interval in seconds"                                      
+                }                                     
+            }             
+        }     
+    } 	
+}
