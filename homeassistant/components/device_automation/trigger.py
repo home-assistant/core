@@ -27,7 +27,8 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 class DeviceAutomationTriggerProtocol(TriggerProtocol, Protocol):
     """Define the format of device_trigger modules.
 
-    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
+    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config
+    from TriggerProtocol.
     """
 
     async def async_get_trigger_capabilities(
