@@ -162,7 +162,7 @@ class ArestSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data from aREST API."""
         self.arest.update()
-        self._attr_available = self.arest.available
+        self._attr_available = self.arest._attr_available
         values = self.arest.data
         if "error" in values:
             self._attr_native_value = values["error"]
