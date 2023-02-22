@@ -1817,7 +1817,10 @@ class Config:
 
         self.latitude: float = 0
         self.longitude: float = 0
+
         self.elevation: int = 0
+        """Elevation (always in meters regardless of the unit system)."""
+
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
