@@ -98,7 +98,7 @@ async def test_user_flow_router_not_setup(
 
     assert aioclient_mock.mock_calls[-1][0] == "POST"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
-    assert aioclient_mock.mock_calls[-1][2] == "enabled"
+    assert aioclient_mock.mock_calls[-1][2] == "enable"
 
     expected_data = {
         "url": "http://custom_url:1234",
@@ -230,7 +230,7 @@ async def test_hassio_discovery_flow_router_not_setup(
 
     assert aioclient_mock.mock_calls[-1][0] == "POST"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
-    assert aioclient_mock.mock_calls[-1][2] == "enabled"
+    assert aioclient_mock.mock_calls[-1][2] == "enable"
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
@@ -279,7 +279,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
 
     assert aioclient_mock.mock_calls[-1][0] == "POST"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
-    assert aioclient_mock.mock_calls[-1][2] == "enabled"
+    assert aioclient_mock.mock_calls[-1][2] == "enable"
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
