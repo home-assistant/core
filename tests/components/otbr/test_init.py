@@ -1,9 +1,11 @@
 """Test the Open Thread Border Router integration."""
-
+import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
+import aiohttp
 import pytest
+import python_otbr_api
 
 from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
@@ -35,9 +37,15 @@ async def test_import_dataset(hass: HomeAssistant) -> None:
     mock_add.assert_called_once_with(config_entry.title, DATASET.hex())
 
 
-async def test_config_entry_not_ready(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+@pytest.mark.parametrize(
+    "error",
+    [
+        asyncio.TimeoutError,
+        python_otbr_api.OTBRError,
+        aiohttp.ClientError,
+    ],
+)
+async def test_config_entry_not_ready(hass: HomeAssistant, error) -> None:
     """Test raising ConfigEntryNotReady ."""
 
     config_entry = MockConfigEntry(
@@ -47,8 +55,8 @@ async def test_config_entry_not_ready(
         title="My OTBR",
     )
     config_entry.add_to_hass(hass)
-    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch("python_otbr_api.OTBR.get_active_dataset_tlvs", side_effect=error):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 async def test_remove_entry(
