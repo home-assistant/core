@@ -1,4 +1,4 @@
-"""Constants for the Anova Sous Vide integration."""
+"""Constants for the Anova integration."""
 
 DOMAIN = "anova"
 

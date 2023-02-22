@@ -22,7 +22,7 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input["device_unique_id"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title="Anova Sous Vide",
+                title="Anova",
                 data={"device_unique_id": user_input["device_unique_id"]},
             )
 

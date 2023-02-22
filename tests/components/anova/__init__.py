@@ -1,4 +1,4 @@
-"""Tests for the Anova Sous Vide integration."""
+"""Tests for the Anova integration."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -43,7 +43,7 @@ def create_entry(hass: HomeAssistant) -> ConfigEntry:
     """Add config entry in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Anova Sous Vide",
+        title="Anova",
         data={"device_unique_id": DEVICE_UNIQUE_ID},
         unique_id=DEVICE_UNIQUE_ID,
     )
@@ -56,7 +56,7 @@ async def async_init_integration(
     skip_setup: bool = False,
     error: str | None = None,
 ) -> ConfigEntry:
-    """Set up the Anova Sous Vide integration in Home Assistant."""
+    """Set up the Anova integration in Home Assistant."""
     with patch(
         "homeassistant.components.anova.AnovaPrecisionCooker.update"
     ) as update_patch:

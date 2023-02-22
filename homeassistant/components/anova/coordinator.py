@@ -1,4 +1,4 @@
-"""Support for Anova Sous Vide Coordinators."""
+"""Support for Anova Coordinators."""
 from datetime import timedelta
 import logging
 

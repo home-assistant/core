@@ -1,4 +1,4 @@
-"""Test init for Anova Sous Vide."""
+"""Test init for Anova."""
 
 from unittest.mock import patch
 

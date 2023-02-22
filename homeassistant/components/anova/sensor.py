@@ -1,4 +1,4 @@
-"""Support for Anova Sous Vide Sensors."""
+"""Support for Anova Sensors."""
 from __future__ import annotations
 
 from anova_wifi import AnovaPrecisionCookerSensor
@@ -75,7 +75,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Anova Sous Vide device."""
+    """Set up Anova device."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     await coordinator.async_config_entry_first_refresh()
     sensors = [
