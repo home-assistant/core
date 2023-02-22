@@ -280,10 +280,10 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         return STATE_CODE_TO_STATE.get(state)
 
     @property
-    def status(self) -> Status:
+    def status(self) -> Status | None:
         """Return the status of the vacuum cleaner."""
         if not self._device_status:
-            return
+            return None
         status = self._device_status.state
         return STATE_CODES_TO_STATUS.get(status)
 
@@ -454,7 +454,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
 
     async def async_send_command(
         self,
-        command: RoborockCommand,
+        command: str,
         params: dict[str, Any] | list[Any] | None = None,
         **kwargs: Any,
     ):
