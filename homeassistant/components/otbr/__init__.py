@@ -65,7 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     otbrdata = OTBRData(entry.data["url"], api)
     try:
         dataset = await otbrdata.get_active_dataset_tlvs()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+    except (
+        HomeAssistantError,
+        aiohttp.ClientError,
+        asyncio.TimeoutError,
+    ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
     if dataset:
         await async_add_dataset(hass, entry.title, dataset.hex())

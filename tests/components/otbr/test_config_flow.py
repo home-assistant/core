@@ -1,8 +1,11 @@
 """Test the Open Thread Border Router config flow."""
+import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
+import aiohttp
 import pytest
+import python_otbr_api
 
 from homeassistant.components import hassio, otbr
 from homeassistant.core import HomeAssistant
@@ -133,6 +136,34 @@ async def test_user_flow_404(
             "url": url,
         },
     )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        asyncio.TimeoutError,
+        python_otbr_api.OTBRError,
+        aiohttp.ClientError,
+    ],
+)
+async def test_user_flow_connect_error(hass: HomeAssistant, error) -> None:
+    """Test the user flow."""
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch("python_otbr_api.OTBR.get_active_dataset_tlvs", side_effect=error):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "http://custom_url:1234",
+            },
+        )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
