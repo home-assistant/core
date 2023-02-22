@@ -1,5 +1,4 @@
 """Test the Insteon Scenes APIs."""
-
 import json
 import os
 from unittest.mock import AsyncMock, patch
@@ -10,10 +9,12 @@ import pytest
 
 from homeassistant.components.insteon.api import async_load_api, scenes
 from homeassistant.components.insteon.const import ID, TYPE
+from homeassistant.core import HomeAssistant
 
 from .mock_devices import MockDevices
 
 from tests.common import load_fixture
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="scene_data", scope="session")
@@ -58,7 +59,9 @@ async def _setup(hass, hass_ws_client, scene_data):
     return ws_client, devices
 
 
-async def test_get_scenes(hass, hass_ws_client, scene_data):
+async def test_get_scenes(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data
+) -> None:
     """Test getting all Insteon scenes."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -70,7 +73,9 @@ async def test_get_scenes(hass, hass_ws_client, scene_data):
         assert len(result["20"]) == 3
 
 
-async def test_get_scene(hass, hass_ws_client, scene_data):
+async def test_get_scene(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data
+) -> None:
     """Test getting an Insteon scene."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -81,7 +86,9 @@ async def test_get_scene(hass, hass_ws_client, scene_data):
         assert len(result["devices"]) == 3
 
 
-async def test_save_scene(hass, hass_ws_client, scene_data, remove_json):
+async def test_save_scene(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
+) -> None:
     """Test saving an Insteon scene."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -108,7 +115,9 @@ async def test_save_scene(hass, hass_ws_client, scene_data, remove_json):
         assert result["scene_id"] == 20
 
 
-async def test_save_new_scene(hass, hass_ws_client, scene_data, remove_json):
+async def test_save_new_scene(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
+) -> None:
     """Test saving a new Insteon scene."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -135,7 +144,9 @@ async def test_save_new_scene(hass, hass_ws_client, scene_data, remove_json):
         assert result["scene_id"] == 21
 
 
-async def test_save_scene_error(hass, hass_ws_client, scene_data, remove_json):
+async def test_save_scene_error(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
+) -> None:
     """Test saving an Insteon scene with error."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -162,7 +173,9 @@ async def test_save_scene_error(hass, hass_ws_client, scene_data, remove_json):
         assert result["scene_id"] == 20
 
 
-async def test_delete_scene(hass, hass_ws_client, scene_data, remove_json):
+async def test_delete_scene(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
+) -> None:
     """Test delete an Insteon scene."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 

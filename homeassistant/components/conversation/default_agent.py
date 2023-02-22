@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -83,7 +83,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
-        self._slot_lists: dict[str, TextSlotList] | None = None
+        self._slot_lists: dict[str, SlotList] | None = None
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""
@@ -133,7 +133,7 @@ class DefaultAgent(AbstractConversationAgent):
                 conversation_id,
             )
 
-        slot_lists: Mapping[str, SlotList] = self._make_slot_lists()
+        slot_lists = self._make_slot_lists()
 
         result = await self.hass.async_add_executor_job(
             self._recognize,
@@ -321,6 +321,9 @@ class DefaultAgent(AbstractConversationAgent):
             intents_dict = lang_intents.intents_dict
             loaded_components = lang_intents.loaded_components
 
+        # en-US, en_US, en, ...
+        language_variations = list(_get_language_variations(language))
+
         # Check if any new components have been loaded
         intents_changed = False
         for component in hass_components:
@@ -332,7 +335,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             # Check for intents for this component with the target language.
             # Try en-US, en, etc.
-            for language_variation in _get_language_variations(language):
+            for language_variation in language_variations:
                 component_intents = get_intents(
                     component, language_variation, json_load=json_load
                 )
@@ -343,7 +346,10 @@ class DefaultAgent(AbstractConversationAgent):
                     # Will need to recreate graph
                     intents_changed = True
                     _LOGGER.debug(
-                        "Loaded intents component=%s, language=%s", component, language
+                        "Loaded intents component=%s, language=%s (%s)",
+                        component,
+                        language,
+                        language_variation,
                     )
                     break
 
@@ -351,24 +357,31 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # Only load custom sentences once, otherwise they will be re-loaded
             # when components change.
-            custom_sentences_dir = Path(
-                self.hass.config.path("custom_sentences", language)
-            )
-            if custom_sentences_dir.is_dir():
-                for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
-                    with custom_sentences_path.open(
-                        encoding="utf-8"
-                    ) as custom_sentences_file:
-                        # Merge custom sentences
-                        merge_dict(intents_dict, yaml.safe_load(custom_sentences_file))
+            for language_variation in language_variations:
+                custom_sentences_dir = Path(
+                    self.hass.config.path("custom_sentences", language_variation)
+                )
+                if custom_sentences_dir.is_dir():
+                    for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
+                        with custom_sentences_path.open(
+                            encoding="utf-8"
+                        ) as custom_sentences_file:
+                            # Merge custom sentences
+                            merge_dict(
+                                intents_dict, yaml.safe_load(custom_sentences_file)
+                            )
 
-                    # Will need to recreate graph
-                    intents_changed = True
-                    _LOGGER.debug(
-                        "Loaded custom sentences language=%s, path=%s",
-                        language,
-                        custom_sentences_path,
-                    )
+                        # Will need to recreate graph
+                        intents_changed = True
+                        _LOGGER.debug(
+                            "Loaded custom sentences language=%s (%s), path=%s",
+                            language,
+                            language_variation,
+                            custom_sentences_path,
+                        )
+
+                    # Stop after first matched language variation
+                    break
 
             # Load sentences from HA config for default language only
             if self._config_intents and (language == self.hass.config.language):
@@ -437,7 +450,7 @@ class DefaultAgent(AbstractConversationAgent):
             return
         self._slot_lists = None
 
-    def _make_slot_lists(self) -> Mapping[str, SlotList]:
+    def _make_slot_lists(self) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
         if self._slot_lists is not None:
             return self._slot_lists

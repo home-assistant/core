@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, get_fixture_path
 
 
-async def test_setup(recorder_mock, hass):
+async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the history statistics sensor setup."""
 
     config = {
@@ -44,7 +44,9 @@ async def test_setup(recorder_mock, hass):
     assert state.state == "0.0"
 
 
-async def test_setup_multiple_states(recorder_mock, hass):
+async def test_setup_multiple_states(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Test the history statistics sensor setup for multiple states."""
 
     config = {
@@ -95,7 +97,7 @@ async def test_setup_multiple_states(recorder_mock, hass):
         },
     ],
 )
-def test_setup_invalid_config(config):
+def test_setup_invalid_config(config) -> None:
     """Test the history statistics sensor setup with invalid config."""
 
     with pytest.raises(vol.Invalid):

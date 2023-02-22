@@ -37,8 +37,12 @@ if TYPE_CHECKING:
     )
 
 _PLATFORM_ALIASES = {
-    "device_automation": ("device",),
-    "homeassistant": ("event", "numeric_state", "state", "time_pattern", "time"),
+    "device": "device_automation",
+    "event": "homeassistant",
+    "numeric_state": "homeassistant",
+    "state": "homeassistant",
+    "time_pattern": "homeassistant",
+    "time": "homeassistant",
 }
 
 DATA_PLUGGABLE_ACTIONS = "pluggable_actions"
@@ -194,10 +198,7 @@ async def _async_get_trigger_platform(
 ) -> DeviceAutomationTriggerProtocol:
     platform_and_sub_type = config[CONF_PLATFORM].split(".")
     platform = platform_and_sub_type[0]
-    for alias, triggers in _PLATFORM_ALIASES.items():
-        if platform in triggers:
-            platform = alias
-            break
+    platform = _PLATFORM_ALIASES.get(platform, platform)
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:

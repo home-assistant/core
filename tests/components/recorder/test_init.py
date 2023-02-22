@@ -2087,6 +2087,6 @@ async def test_lru_increases_with_many_entities(
         hass.states, "async_entity_ids_count", return_value=mock_entity_count
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
 
     assert recorder_mock._state_attributes_ids.get_size() == mock_entity_count * 2

@@ -31,6 +31,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 DEVICE_CLASS_NONE = "none"
 
 CONF_APPARENT_POWER = "apparent_power"
+CONF_AQI = "aqi"
 CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
@@ -39,6 +40,7 @@ CONF_CURRENT = "current"
 CONF_DATA_RATE = "data_rate"
 CONF_DATA_SIZE = "data_size"
 CONF_DISTANCE = "distance"
+CONF_DURATION = "duration"
 CONF_ENERGY = "energy"
 CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
@@ -46,6 +48,7 @@ CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
 CONF_IRRADIANCE = "irradiance"
 CONF_MOISTURE = "moisture"
+CONF_MONETARY = "monetary"
 CONF_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 CONF_NITROGEN_MONOXIDE = "nitrogen_monoxide"
 CONF_NITROUS_OXIDE = "nitrous_oxide"
@@ -74,6 +77,7 @@ CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
+    SensorDeviceClass.AQI: [{CONF_TYPE: CONF_AQI}],
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
@@ -82,6 +86,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.DATA_RATE: [{CONF_TYPE: CONF_DATA_RATE}],
     SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_DATA_SIZE}],
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
+    SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
@@ -89,6 +94,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
     SensorDeviceClass.IRRADIANCE: [{CONF_TYPE: CONF_IRRADIANCE}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_MOISTURE}],
+    SensorDeviceClass.MONETARY: [{CONF_TYPE: CONF_MONETARY}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
     SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
@@ -128,6 +134,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_APPARENT_POWER,
+                    CONF_AQI,
                     CONF_ATMOSPHERIC_PRESSURE,
                     CONF_BATTERY_LEVEL,
                     CONF_CO,
@@ -136,6 +143,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_DATA_RATE,
                     CONF_DATA_SIZE,
                     CONF_DISTANCE,
+                    CONF_DURATION,
                     CONF_ENERGY,
                     CONF_FREQUENCY,
                     CONF_GAS,
@@ -143,6 +151,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_ILLUMINANCE,
                     CONF_IRRADIANCE,
                     CONF_MOISTURE,
+                    CONF_MONETARY,
                     CONF_NITROGEN_DIOXIDE,
                     CONF_NITROGEN_MONOXIDE,
                     CONF_NITROUS_OXIDE,

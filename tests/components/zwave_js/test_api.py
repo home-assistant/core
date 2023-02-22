@@ -28,8 +28,8 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
-from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.node.firmware import NodeFirmwareUpdateData
 
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
@@ -2915,7 +2915,7 @@ async def test_firmware_upload_view(
         )
         assert mock_cmd.call_args[0][1:3] == (
             multisensor_6,
-            [FirmwareUpdateData("file", bytes(10))],
+            [NodeFirmwareUpdateData("file", bytes(10))],
         )
         assert mock_cmd.call_args[1] == {
             "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
