@@ -54,6 +54,7 @@ class LiteJetSwitch(SwitchEntity):
             identifiers={(DOMAIN, f"{entry_id}_keypad_{keypad_number}")},
             name=f"Keypad #{keypad_number}",
             manufacturer="Centralite",
+            via_device=(DOMAIN, f"{entry_id}_mcp"),
         )
 
     async def async_added_to_hass(self) -> None:

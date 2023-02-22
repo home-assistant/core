@@ -62,7 +62,9 @@ class LiteJetLight(LightEntity):
         self._attr_unique_id = f"{config_entry.entry_id}_{index}"
         self._attr_extra_state_attributes = {ATTR_NUMBER: self._index}
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{config_entry.entry_id}_light_{index}")}, name=name
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_light_{index}")},
+            name=name,
+            via_device=(DOMAIN, f"{config_entry.entry_id}_mcp"),
         )
 
     async def async_added_to_hass(self) -> None:
