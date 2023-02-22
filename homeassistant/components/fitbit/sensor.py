@@ -27,7 +27,7 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.json import load_json
+from homeassistant.util.json import load_json_object
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -85,7 +85,7 @@ def request_app_setup(
         """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
         if os.path.isfile(config_path):
-            config_file = load_json(config_path)
+            config_file = load_json_object(config_path)
             if config_file == DEFAULT_CONFIG:
                 error_msg = (
                     f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try"
@@ -161,7 +161,7 @@ def setup_platform(
     """Set up the Fitbit sensor."""
     config_path = hass.config.path(FITBIT_CONFIG_FILE)
     if os.path.isfile(config_path):
-        config_file: ConfigType = cast(ConfigType, load_json(config_path))
+        config_file = load_json_object(config_path)
         if config_file == DEFAULT_CONFIG:
             request_app_setup(
                 hass, config, add_entities, config_path, discovery_info=None
@@ -175,9 +175,9 @@ def setup_platform(
     if "fitbit" in _CONFIGURING:
         configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
 
-    access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
-    refresh_token: str | None = config_file.get(ATTR_REFRESH_TOKEN)
-    expires_at: int | None = config_file.get(ATTR_LAST_SAVED_AT)
+    access_token = cast(str | None, config_file.get(ATTR_ACCESS_TOKEN))
+    refresh_token = cast(str | None, config_file.get(ATTR_REFRESH_TOKEN))
+    expires_at = cast(int | None, config_file.get(ATTR_LAST_SAVED_AT))
     if (
         access_token is not None
         and refresh_token is not None
