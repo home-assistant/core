@@ -993,6 +993,54 @@ def test_from_json(hass: HomeAssistant) -> None:
     assert actual_result == expected_result
 
 
+def test_mutables(hass: HomeAssistant) -> None:
+    """Test as_mutable and mutability of those objects."""
+    assert (
+        template.Template(
+            """
+            {% set d = {} | as_mutable %}
+            {% do d.update({'foo': 'bar'}) %}
+            {{ d.foo }}
+            """,
+            hass,
+        ).async_render()
+        == "bar"
+    )
+
+    assert (
+        template.Template(
+            """
+            {% set l = [] | as_mutable %}
+            {% do l.append('bar') %}
+            {{ l[0] }}
+            """,
+            hass,
+        ).async_render()
+        == "bar"
+    )
+
+    # Ensure that without as_mutable, updates still don't work.
+    with pytest.raises(TemplateError):
+        template.Template(
+            """
+            {% set d = {} %}
+            {% do d.update({'foo': 'bar'}) %}
+            {{ d.foo }}
+            """,
+            hass,
+        ).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            """
+            {% set l = [] %}
+            {% do l.append('bar') %}
+            {{ l[0] }}
+            """,
+            hass,
+        ).async_render()
+
+
 def test_average(hass: HomeAssistant) -> None:
     """Test the average filter."""
     assert template.Template("{{ [1, 2, 3] | average }}", hass).async_render() == 2

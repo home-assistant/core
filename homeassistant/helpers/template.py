@@ -1917,6 +1917,23 @@ def to_json(value, ensure_ascii=True):
     return json.dumps(value, ensure_ascii=ensure_ascii)
 
 
+class _MutableDict(dict):
+    pass
+
+
+class _MutableList(list):
+    pass
+
+
+def as_mutable(value):
+    """Create a mutable copy of a dict or list."""
+    if isinstance(value, dict):
+        return _MutableDict(value)
+    if isinstance(value, list):
+        return _MutableList(value)
+    raise ValueError("Can only create mutable lists or dicts.")
+
+
 @pass_context
 def random_every_time(context, values):
     """Choose a random value.
@@ -2063,6 +2080,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | str | None
         ] = weakref.WeakValueDictionary()
+        self.add_extension("jinja2.ext.do")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
@@ -2084,6 +2102,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_utc"] = timestamp_utc
         self.filters["to_json"] = to_json
         self.filters["from_json"] = from_json
+        self.filters["as_mutable"] = as_mutable
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
         self.filters["random"] = random_every_time
@@ -2253,6 +2272,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
+
+        if isinstance(obj, (_MutableDict, _MutableList)):
+            return True
+
         if isinstance(
             obj, (AllStates, DomainStates, TemplateState, LoopContext, AsyncLoopContext)
         ):
