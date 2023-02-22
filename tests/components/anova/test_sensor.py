@@ -20,14 +20,29 @@ async def test_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
     await async_init_integration(hass)
     assert len(hass.states.async_all("sensor")) == 8
-    assert hass.states.get("sensor.cook_time_remaining").state == "0"
-    assert hass.states.get("sensor.cook_time").state == "0"
-    assert hass.states.get("sensor.heater_temperature").state == "20.87"
-    assert hass.states.get("sensor.mode").state == "Low water"
-    assert hass.states.get("sensor.state").state == "No state"
-    assert hass.states.get("sensor.target_temperature").state == "23.33"
-    assert hass.states.get("sensor.water_temperature").state == "21.33"
-    assert hass.states.get("sensor.triac_temperature").state == "21.79"
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_cook_time_remaining").state
+        == "0"
+    )
+    assert hass.states.get("sensor.anova_precision_cooker_cook_time").state == "0"
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_heater_temperature").state
+        == "20.87"
+    )
+    assert hass.states.get("sensor.anova_precision_cooker_mode").state == "Low water"
+    assert hass.states.get("sensor.anova_precision_cooker_state").state == "No state"
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_target_temperature").state
+        == "23.33"
+    )
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_water_temperature").state
+        == "21.33"
+    )
+    assert (
+        hass.states.get("sensor.anova_precision_cooker_triac_temperature").state
+        == "21.79"
+    )
 
 
 async def test_no_config_entry_coordinator(hass: HomeAssistant) -> None:

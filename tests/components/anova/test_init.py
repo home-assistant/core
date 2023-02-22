@@ -15,7 +15,7 @@ from . import async_init_integration, create_entry
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await async_init_integration(hass)
-    state = hass.states.get("sensor.mode")
+    state = hass.states.get("sensor.anova_precision_cooker_mode")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "Low water"
