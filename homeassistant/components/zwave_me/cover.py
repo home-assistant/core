@@ -51,6 +51,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
     )
 
     def close_cover(self, **kwargs: Any) -> None:
@@ -67,6 +68,10 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         self.controller.zwave_api.send_command(
             self.device.id, f"exact?level={str(min(value, 99))}"
         )
+
+    def stop_cover(self, **kwargs: Any) -> None:
+        """Stop cover."""
+        self.controller.zwave_api.send_command(self.device.id, "stop")
 
     @property
     def current_cover_position(self) -> int | None:

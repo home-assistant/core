@@ -1,27 +1,33 @@
 {
   "domain": "lutron_caseta",
   "name": "Lutron Cas\u00e9ta",
-  "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
-  "requirements": ["pylutron-caseta==0.18.1"],
+  "codeowners": ["@swails", "@bdraco", "@danaues"],
   "config_flow": true,
-  "zeroconf": [
-    {
-      "type": "_lutron._tcp.local.",
-      "properties": { "SYSTYPE": "radiora3*" }
-    },
-    {
-      "type": "_lutron._tcp.local.",
-      "properties": { "SYSTYPE": "smartbridge*" }
-    },
-    {
-      "type": "_lutron._tcp.local.",
-      "properties": { "SYSTYPE": "ra2select*" }
-    }
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
   "homekit": {
     "models": ["Smart Bridge"]
   },
-  "codeowners": ["@swails", "@bdraco", "@danaues"],
   "iot_class": "local_push",
-  "loggers": ["pylutron_caseta"]
+  "loggers": ["pylutron_caseta"],
+  "requirements": ["pylutron-caseta==0.18.1"],
+  "zeroconf": [
+    {
+      "type": "_lutron._tcp.local.",
+      "properties": {
+        "SYSTYPE": "radiora3*"
+      }
+    },
+    {
+      "type": "_lutron._tcp.local.",
+      "properties": {
+        "SYSTYPE": "smartbridge*"
+      }
+    },
+    {
+      "type": "_lutron._tcp.local.",
+      "properties": {
+        "SYSTYPE": "ra2select*"
+      }
+    }
+  ]
 }

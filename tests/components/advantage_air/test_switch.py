@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -21,8 +22,12 @@ from . import (
     add_mock_config,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_cover_async_setup_entry(hass, aioclient_mock):
+
+async def test_cover_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test switch platform."""
 
     aioclient_mock.get(

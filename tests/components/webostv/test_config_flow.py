@@ -10,6 +10,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME, CONF_SOURCE
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_webostv
@@ -31,7 +32,7 @@ MOCK_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
 )
 
 
-async def test_form(hass, client):
+async def test_form(hass: HomeAssistant, client) -> None:
     """Test we get the form."""
     assert client
 
@@ -76,7 +77,7 @@ async def test_form(hass, client):
 
 
 @pytest.mark.parametrize(
-    "apps, inputs",
+    ("apps", "inputs"),
     [
         # Live TV in apps (default)
         (MOCK_APPS, MOCK_INPUTS),
@@ -92,7 +93,9 @@ async def test_form(hass, client):
         ({}, MOCK_INPUTS),
     ],
 )
-async def test_options_flow_live_tv_in_apps(hass, client, apps, inputs):
+async def test_options_flow_live_tv_in_apps(
+    hass: HomeAssistant, client, apps, inputs
+) -> None:
     """Test options config flow Live TV found in apps."""
     client.apps = apps
     client.inputs = inputs
@@ -114,7 +117,7 @@ async def test_options_flow_live_tv_in_apps(hass, client, apps, inputs):
     assert result2["data"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
 
 
-async def test_options_flow_cannot_retrieve(hass, client):
+async def test_options_flow_cannot_retrieve(hass: HomeAssistant, client) -> None:
     """Test options config flow cannot retrieve sources."""
     entry = await setup_webostv(hass)
 
@@ -126,7 +129,7 @@ async def test_options_flow_cannot_retrieve(hass, client):
     assert result["errors"] == {"base": "cannot_retrieve"}
 
 
-async def test_form_cannot_connect(hass, client):
+async def test_form_cannot_connect(hass: HomeAssistant, client) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -144,7 +147,7 @@ async def test_form_cannot_connect(hass, client):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_pairexception(hass, client):
+async def test_form_pairexception(hass: HomeAssistant, client) -> None:
     """Test pairing exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -162,7 +165,7 @@ async def test_form_pairexception(hass, client):
     assert result2["reason"] == "error_pairing"
 
 
-async def test_entry_already_configured(hass, client):
+async def test_entry_already_configured(hass: HomeAssistant, client) -> None:
     """Test entry already configured."""
     await setup_webostv(hass)
     assert client
@@ -177,7 +180,7 @@ async def test_entry_already_configured(hass, client):
     assert result["reason"] == "already_configured"
 
 
-async def test_form_ssdp(hass, client):
+async def test_form_ssdp(hass: HomeAssistant, client) -> None:
     """Test that the ssdp confirmation form is served."""
     assert client
 
@@ -191,7 +194,7 @@ async def test_form_ssdp(hass, client):
     assert result["step_id"] == "pairing"
 
 
-async def test_ssdp_in_progress(hass, client):
+async def test_ssdp_in_progress(hass: HomeAssistant, client) -> None:
     """Test abort if ssdp paring is already in progress."""
     assert client
 
@@ -214,7 +217,7 @@ async def test_ssdp_in_progress(hass, client):
     assert result2["reason"] == "already_in_progress"
 
 
-async def test_ssdp_update_uuid(hass, client):
+async def test_ssdp_update_uuid(hass: HomeAssistant, client) -> None:
     """Test that ssdp updates existing host entry uuid."""
     entry = await setup_webostv(hass, None)
     assert client
@@ -230,7 +233,7 @@ async def test_ssdp_update_uuid(hass, client):
     assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
 
 
-async def test_ssdp_not_update_uuid(hass, client):
+async def test_ssdp_not_update_uuid(hass: HomeAssistant, client) -> None:
     """Test that ssdp not updates different host."""
     entry = await setup_webostv(hass, None)
     assert client
@@ -249,7 +252,7 @@ async def test_ssdp_not_update_uuid(hass, client):
     assert entry.unique_id is None
 
 
-async def test_form_abort_uuid_configured(hass, client):
+async def test_form_abort_uuid_configured(hass: HomeAssistant, client) -> None:
     """Test abort if uuid is already configured, verify host update."""
     entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:])
     assert client
@@ -291,7 +294,7 @@ async def test_form_abort_uuid_configured(hass, client):
     assert entry.data[CONF_HOST] == "new_host"
 
 
-async def test_reauth_successful(hass, client, monkeypatch):
+async def test_reauth_successful(hass: HomeAssistant, client, monkeypatch) -> None:
     """Test that the reauthorization is successful."""
     entry = await setup_webostv(hass)
     assert client
@@ -320,13 +323,15 @@ async def test_reauth_successful(hass, client, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (WebOsTvPairError, "error_pairing"),
         (ConnectionRefusedError, "reauth_unsuccessful"),
     ],
 )
-async def test_reauth_errors(hass, client, monkeypatch, side_effect, reason):
+async def test_reauth_errors(
+    hass: HomeAssistant, client, monkeypatch, side_effect, reason
+) -> None:
     """Test reauthorization errors."""
     entry = await setup_webostv(hass)
     assert client

@@ -1,5 +1,4 @@
 """deCONZ cover platform tests."""
-
 from unittest.mock import patch
 
 from homeassistant.components.cover import (
@@ -23,6 +22,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -30,14 +30,20 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_covers(hass, aioclient_mock):
+
+async def test_no_covers(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no cover entities are created."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_cover(hass, aioclient_mock, mock_deconz_websocket):
+async def test_cover(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported cover entities are created."""
     data = {
         "lights": {
@@ -137,7 +143,9 @@ async def test_cover(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_tilt_cover(hass, aioclient_mock):
+async def test_tilt_cover(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that tilting a cover works."""
     data = {
         "lights": {
@@ -215,7 +223,9 @@ async def test_tilt_cover(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
 
-async def test_level_controllable_output_cover(hass, aioclient_mock):
+async def test_level_controllable_output_cover(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that tilting a cover works."""
     data = {
         "lights": {

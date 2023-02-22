@@ -39,11 +39,11 @@ from zwave_js_server.model.controller.firmware import (
     ControllerFirmwareUpdateResult,
 )
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node, NodeStatistics
 from zwave_js_server.model.node.firmware import (
+    NodeFirmwareUpdateData,
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
@@ -378,6 +378,10 @@ def node_status(node: Node) -> dict[str, Any]:
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
         "is_controller_node": node.is_controller_node,
+        "has_firmware_update_cc": any(
+            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
+            for cc in node.command_classes
+        ),
     }
 
 
@@ -504,6 +508,7 @@ async def websocket_network_status(
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
+            "rf_region": controller.rf_region,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
@@ -2134,7 +2139,7 @@ class FirmwareUploadView(HomeAssistantView):
                 node.client.ws_server_url,
                 node,
                 [
-                    FirmwareUpdateData(
+                    NodeFirmwareUpdateData(
                         uploaded_file.filename,
                         await hass.async_add_executor_job(uploaded_file.file.read),
                     )

@@ -91,7 +91,9 @@ class EcobeeData:
     Also handle refreshing tokens and updating config entry with refreshed tokens.
     """
 
-    def __init__(self, hass, entry, api_key, refresh_token):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, api_key: str, refresh_token: str
+    ) -> None:
         """Initialize the Ecobee data object."""
         self._hass = hass
         self._entry = entry
