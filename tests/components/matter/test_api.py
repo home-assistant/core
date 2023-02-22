@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, call
 
 from aiohttp import ClientWebSocketResponse
-from matter_server.client.exceptions import FailedCommand
+from matter_server.common.errors import InvalidCommand, NodeCommissionFailed
 
 from homeassistant.components.matter.api import ID, TYPE
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ async def test_commission(
     matter_client.commission_with_code.assert_called_once_with("12345678")
 
     matter_client.commission_with_code.reset_mock()
-    matter_client.commission_with_code.side_effect = FailedCommand(
+    matter_client.commission_with_code.side_effect = InvalidCommand(
         "test_id", "test_code", "Failed to commission"
     )
 
@@ -73,7 +73,7 @@ async def test_commission_on_network(
     matter_client.commission_on_network.assert_called_once_with(1234)
 
     matter_client.commission_on_network.reset_mock()
-    matter_client.commission_on_network.side_effect = FailedCommand(
+    matter_client.commission_on_network.side_effect = NodeCommissionFailed(
         "test_id", "test_code", "Failed to commission on network"
     )
 
@@ -113,7 +113,7 @@ async def test_set_thread_dataset(
     matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
 
     matter_client.set_thread_operational_dataset.reset_mock()
-    matter_client.set_thread_operational_dataset.side_effect = FailedCommand(
+    matter_client.set_thread_operational_dataset.side_effect = NodeCommissionFailed(
         "test_id", "test_code", "Failed to commission"
     )
 
@@ -157,7 +157,7 @@ async def test_set_wifi_credentials(
     )
 
     matter_client.set_wifi_credentials.reset_mock()
-    matter_client.set_wifi_credentials.side_effect = FailedCommand(
+    matter_client.set_wifi_credentials.side_effect = NodeCommissionFailed(
         "test_id", "test_code", "Failed to commission on network"
     )
 

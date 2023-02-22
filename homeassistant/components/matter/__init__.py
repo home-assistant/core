@@ -5,12 +5,8 @@ import asyncio
 
 import async_timeout
 from matter_server.client import MatterClient
-from matter_server.client.exceptions import (
-    CannotConnect,
-    FailedCommand,
-    InvalidServerVersion,
-)
-from matter_server.common.models.error import MatterError
+from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.common.errors import MatterError, NodeCommissionFailed
 import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
@@ -211,32 +207,9 @@ def _async_init_services(hass: HomeAssistant) -> None:
         """Get node id from ha device id."""
         dev_reg = dr.async_get(hass)
         device = dev_reg.async_get(ha_device_id)
-
         if device is None:
             return None
-
-        matter_id = next(
-            (
-                identifier
-                for identifier in device.identifiers
-                if identifier[0] == DOMAIN
-            ),
-            None,
-        )
-
-        if not matter_id:
-            return None
-
-        unique_id = matter_id[1]
-
-        matter_client = get_matter(hass).matter_client
-
-        # This could be more efficient
-        for node in await matter_client.get_nodes():
-            if node.unique_id == unique_id:
-                return node.node_id
-
-        return None
+        return await get_node_from_device_entry(hass, device)
 
     async def open_commissioning_window(call: ServiceCall) -> None:
         """Open commissioning window on specific node."""
@@ -251,7 +224,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
         try:
             await matter_client.open_commissioning_window(node_id)
-        except FailedCommand as err:
+        except NodeCommissionFailed as err:
             raise HomeAssistantError(str(err)) from err
 
     async_register_admin_service(

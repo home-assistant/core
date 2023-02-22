@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.server_information import ServerDiagnostics
+from matter_server.common.models import ServerDiagnostics
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN

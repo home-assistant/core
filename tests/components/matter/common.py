@@ -6,9 +6,9 @@ import json
 from typing import Any
 from unittest.mock import MagicMock
 
+from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.events import EventType
-from matter_server.common.models.node import MatterNode
+from matter_server.common.models import EventType
 
 from homeassistant.core import HomeAssistant
 

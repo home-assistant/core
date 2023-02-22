@@ -1,7 +1,7 @@
 """Test Matter binary sensors."""
 from unittest.mock import MagicMock
 
-from matter_server.common.models.node import MatterNode
+from matter_server.client.models.node import MatterNode
 import pytest
 
 from homeassistant.core import HomeAssistant

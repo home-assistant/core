@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohttp import ClientWebSocketResponse
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.error import MatterError
-from matter_server.common.models.node import MatterNode
 import pytest
 
 from homeassistant.components.hassio import HassioAPIError

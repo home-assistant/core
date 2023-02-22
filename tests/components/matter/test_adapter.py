@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.events import EventType
-from matter_server.common.models.node import MatterNode
+from matter_server.common.models import EventType
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN
