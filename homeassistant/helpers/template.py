@@ -1926,7 +1926,7 @@ class _MutableList(list):
 
 
 def as_mutable(value):
-    """Create a mutable copy of a dict, set, or list."""
+    """Create a mutable copy of a dict or list."""
     if isinstance(value, dict):
         return _MutableDict(value)
     if isinstance(value, list):
