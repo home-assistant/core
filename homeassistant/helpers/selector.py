@@ -86,7 +86,7 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Domain the entity belongs to
         vol.Optional("domain"): vol.Any(str, [str]),
         # Device class of the entity
-        vol.Optional("device_class"): str,
+        vol.Optional("device_class"): vol.Any(str, [str]),
     }
 )
 
@@ -96,7 +96,7 @@ class SingleEntitySelectorConfig(TypedDict, total=False):
 
     integration: str
     domain: str | list[str]
-    device_class: str
+    device_class: str | list[str]
 
 
 SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
