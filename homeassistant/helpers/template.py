@@ -1865,24 +1865,20 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return None
 
 
-def base64_encode(value):
+def base64_encode(value: str, raw: bool = False) -> str | bytes:
     """Perform base64 encode."""
+    if raw:
+        return base64.b64encode(value.encode("utf-8"))
+
     return base64.b64encode(value.encode("utf-8")).decode("utf-8")
 
 
-def base64_decode(value):
-    """Perform base64 denode."""
+def base64_decode(value: str, raw: bool = False) -> str | bytes:
+    """Perform base64 decode."""
+    if raw:
+        return base64.b64decode(value)
+
     return base64.b64decode(value).decode("utf-8")
-
-
-def base64_encode_bytes(value):
-    """Perform base64 decode to bytes."""
-    return base64.b64encode(value.encode("utf-8"))
-
-
-def base64_decode_bytes(value):
-    """Perform base64 decode to bytes."""
-    return base64.b64decode(value)
 
 
 def ordinal(value):
@@ -2076,8 +2072,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
-        self.filters["base64_encode_bytes"] = base64_encode_bytes
-        self.filters["base64_decode_bytes"] = base64_decode_bytes
         self.filters["ordinal"] = ordinal
         self.filters["regex_match"] = regex_match
         self.filters["regex_replace"] = regex_replace
