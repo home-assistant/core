@@ -64,7 +64,7 @@ LIGHT_ENTITIES = (
     ),
     ReolinkLightEntityDescription(
         key="status_led",
-        name="Status led",
+        name="Status LED",
         icon="mdi:lightning-bolt-circle",
         supported=lambda api, ch: api.supported(ch, "status_led"),
         is_on=lambda api, ch: api.status_led_enabled(ch),
