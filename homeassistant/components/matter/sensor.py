@@ -56,7 +56,7 @@ class MatterSensor(MatterEntity, SensorEntity):
             self.entity_description.subscribe_attributes[0],
         )
 
-        if measurement is NullValue or measurement is None:
+        if measurement == NullValue or measurement is None:
             measurement = None
         else:
             measurement = self.entity_description.measurement_to_ha(measurement)
