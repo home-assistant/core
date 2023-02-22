@@ -46,7 +46,7 @@ async def test_turn_on(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=switch_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.On(),
     )
 
@@ -80,6 +80,6 @@ async def test_turn_off(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=switch_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.Off(),
     )
