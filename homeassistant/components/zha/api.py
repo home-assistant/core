@@ -77,9 +77,13 @@ async def async_get_last_network_settings(
     app_controller_cls, app_config = zha_gateway.get_application_controller_data()
     app = app_controller_cls(app_config)
     await app._load_db()  # pylint: disable=protected-access
+    settings = _wrap_network_settings(app)
     await app.shutdown()
 
-    return _wrap_network_settings(app)
+    if settings.network_info.channel == 0:
+        return None
+
+    return settings
 
 
 async def async_get_network_settings(
