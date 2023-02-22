@@ -4,7 +4,6 @@ from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 DOMAIN = "roborock"
 CONF_ENTRY_USERNAME = "username"
 CONF_ENTRY_CODE = "code"
-CONF_ENTRY_PASSWORD = "password"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 DEFAULT_NAME = DOMAIN

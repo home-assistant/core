@@ -15,7 +15,7 @@ from .mock_data import MOCK_CONFIG, USER_EMAIL
 
 
 @pytest.mark.asyncio
-async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture):
+async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a successful config flow."""
     # Initialize a config flow
     result = await hass.config_entries.flow.async_init(

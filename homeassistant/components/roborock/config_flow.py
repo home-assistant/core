@@ -15,7 +15,6 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
-    CONF_ENTRY_PASSWORD,
     CONF_ENTRY_USERNAME,
     CONF_USER_DATA,
     DOMAIN,
@@ -34,7 +33,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._username = None
         self._errors: dict[str, str] = {}
-        self._username = None
         self._client: RoborockClient = None
         self._auth_method: str | None = None
 
@@ -66,12 +64,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self._client = client
                     return self._show_code_form(user_input)
                 self._errors["base"] = "auth"
-            elif self._auth_method == CONF_ENTRY_PASSWORD:
-                client = RoborockClient(username)
-                if client:
-                    self._client = client
-                    return self._show_password_form(user_input)
-                self._errors["base"] = "auth"
             return self._show_email_form(user_input)
 
         return self._show_email_form(user_input)
@@ -95,30 +87,9 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_code_form(user_input)
 
-    async def async_step_password(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initialized by the user."""
-        self._errors.clear()
-
-        if not user_input:
-            self._auth_method = CONF_ENTRY_PASSWORD
-            return self._show_email_form()
-
-        username = self._username
-        code = user_input[CONF_ENTRY_PASSWORD]
-        user_data = await self._pass_login(code)
-        if user_data and username:
-            return self._create_entry(username, user_data)
-        self._errors["base"] = "no_device"
-
-        return self._show_password_form(user_input)
-
     def _show_user_form(self) -> FlowResult:
         """Show the configuration form to choose authentication method."""
-        return self.async_show_menu(
-            step_id="user", menu_options=[CONF_ENTRY_CODE, CONF_ENTRY_PASSWORD]
-        )
+        return self.async_show_menu(step_id="user", menu_options=[CONF_ENTRY_CODE])
 
     def _show_email_form(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Show the configuration form to provide user email."""
@@ -145,22 +116,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_ENTRY_CODE, default=user_input.get(CONF_ENTRY_CODE)
-                    ): str
-                }
-            ),
-            errors=self._errors,
-        )
-
-    def _show_password_form(
-        self, user_input: dict[str, Any]
-    ) -> FlowResult:  # pylint: disable=unused-argument
-        """Show the configuration form to provide authentication code."""
-        return self.async_show_form(
-            step_id="password",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_ENTRY_PASSWORD, default=user_input.get(CONF_ENTRY_PASSWORD)
                     ): str
                 }
             ),
@@ -195,17 +150,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             _LOGGER.debug("Logging into Roborock account using email provided code")
             login_data = await self._client.code_login(code)
-            return login_data
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception(ex)
-            self._errors["base"] = "auth"
-            return None
-
-    async def _pass_login(self, password: str) -> UserData | None:
-        """Return UserData if login code is valid."""
-        try:
-            _LOGGER.debug("Logging into Roborock account using email provided code")
-            login_data = await self._client.pass_login(password)
             return login_data
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception(ex)
