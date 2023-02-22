@@ -2,6 +2,7 @@
   "config": {
     "step": {
       "user": {
+        "description": "The device key can be found in the web interface of the Intellidrive device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "token": "Device key"

@@ -13,7 +13,8 @@
                 "data": {
                     "host": "Host",
                     "token": "Device key"
-                }
+                },
+                "description": "The device key can be found in the web interface of the Intellidrive device"
             }
         }
     }

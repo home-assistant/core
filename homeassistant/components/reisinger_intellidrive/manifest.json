@@ -1,6 +1,6 @@
 {
-  "domain": "intellidrive",
-  "name": "Intellidrive",
+  "domain": "reisinger_intellidrive",
+  "name": "Reisinger Intellidrive",
   "codeowners": ["@sreisi"],
   "config_flow": true,
   "dependencies": [],

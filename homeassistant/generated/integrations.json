@@ -2512,12 +2512,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "intellidrive": {
-      "name": "Intellidrive",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "intellifire": {
       "name": "IntelliFire",
       "integration_type": "hub",
@@ -4471,6 +4465,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "reisinger_intellidrive": {
+      "name": "Reisinger Intellidrive",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "rejseplanen": {
       "name": "Rejseplanen",
