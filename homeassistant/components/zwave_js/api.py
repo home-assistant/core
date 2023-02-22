@@ -27,7 +27,7 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
-from zwave_js_server.firmware import update_firmware
+from zwave_js_server.firmware import controller_firmware_update_otw, update_firmware
 from zwave_js_server.model.controller import (
     ControllerStatistics,
     InclusionGrant,
@@ -35,6 +35,7 @@ from zwave_js_server.model.controller import (
     QRProvisioningInformation,
 )
 from zwave_js_server.model.controller.firmware import (
+    ControllerFirmwareUpdateData,
     ControllerFirmwareUpdateProgress,
     ControllerFirmwareUpdateResult,
 )
@@ -47,7 +48,10 @@ from zwave_js_server.model.node.firmware import (
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
-from zwave_js_server.model.utils import async_parse_qr_code_string
+from zwave_js_server.model.utils import (
+    async_parse_qr_code_string,
+    async_try_parse_dsk_from_qr_code_string,
+)
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -400,6 +404,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_unprovision_smart_start_node)
     websocket_api.async_register_command(hass, websocket_get_provisioning_entries)
     websocket_api.async_register_command(hass, websocket_parse_qr_code_string)
+    websocket_api.async_register_command(
+        hass, websocket_try_parse_dsk_from_qr_code_string
+    )
     websocket_api.async_register_command(hass, websocket_supports_feature)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
@@ -443,7 +450,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
-    hass.http.register_view(FirmwareUploadView())
+    hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
 @websocket_api.require_admin
@@ -982,6 +989,32 @@ async def websocket_parse_qr_code_string(
         client, msg[QR_CODE_STRING]
     )
     connection.send_result(msg[ID], dataclasses.asdict(qr_provisioning_information))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/try_parse_dsk_from_qr_code_string",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(QR_CODE_STRING): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_try_parse_dsk_from_qr_code_string(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Try to parse a DSK string from a QR code."""
+    connection.send_result(
+        msg[ID],
+        await async_try_parse_dsk_from_qr_code_string(client, msg[QR_CODE_STRING]),
+    )
 
 
 @websocket_api.require_admin
@@ -2106,10 +2139,10 @@ class FirmwareUploadView(HomeAssistantView):
     url = r"/api/zwave_js/firmware/upload/{device_id}"
     name = "api:zwave_js:firmware:upload"
 
-    def __init__(self) -> None:
+    def __init__(self, dev_reg: dr.DeviceRegistry) -> None:
         """Initialize view."""
         super().__init__()
-        self._dev_reg: dr.DeviceRegistry | None = None
+        self._dev_reg = dev_reg
 
     async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
@@ -2118,11 +2151,15 @@ class FirmwareUploadView(HomeAssistantView):
         hass = request.app["hass"]
 
         try:
-            node = async_get_node_from_device_id(hass, device_id)
+            node = async_get_node_from_device_id(hass, device_id, self._dev_reg)
         except ValueError as err:
             if "not loaded" in err.args[0]:
                 raise web_exceptions.HTTPBadRequest
             raise web_exceptions.HTTPNotFound
+
+        # If this was not true, we wouldn't have been able to get the node from the
+        # device ID above
+        assert node.client.driver
 
         # Increase max payload
         request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
@@ -2135,18 +2172,29 @@ class FirmwareUploadView(HomeAssistantView):
         uploaded_file: web_request.FileField = data["file"]
 
         try:
-            await update_firmware(
-                node.client.ws_server_url,
-                node,
-                [
-                    NodeFirmwareUpdateData(
+            if node.client.driver.controller.own_node == node:
+                await controller_firmware_update_otw(
+                    node.client.ws_server_url,
+                    ControllerFirmwareUpdateData(
                         uploaded_file.filename,
                         await hass.async_add_executor_job(uploaded_file.file.read),
-                    )
-                ],
-                async_get_clientsession(hass),
-                additional_user_agent_components=USER_AGENT,
-            )
+                    ),
+                    async_get_clientsession(hass),
+                    additional_user_agent_components=USER_AGENT,
+                )
+            else:
+                await update_firmware(
+                    node.client.ws_server_url,
+                    node,
+                    [
+                        NodeFirmwareUpdateData(
+                            uploaded_file.filename,
+                            await hass.async_add_executor_job(uploaded_file.file.read),
+                        )
+                    ],
+                    async_get_clientsession(hass),
+                    additional_user_agent_components=USER_AGENT,
+                )
         except BaseZwaveJSServerError as err:
             raise web_exceptions.HTTPBadRequest(reason=str(err)) from err
 
