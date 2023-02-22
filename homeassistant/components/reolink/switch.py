@@ -36,22 +36,6 @@ class ReolinkSwitchEntityDescription(
 
 SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
-        key="floodlight",
-        name="Floodlight",
-        icon="mdi:spotlight-beam",
-        supported=lambda api, ch: api.supported(ch, "floodLight"),
-        value=lambda api, ch: api.whiteled_state(ch),
-        method=lambda api, ch, value: api.set_whiteled(ch, state=value),
-    ),
-    ReolinkSwitchEntityDescription(
-        key="ir_lights",
-        name="Infra red lights",
-        icon="mdi:led-off",
-        supported=lambda api, ch: api.supported(ch, "ir_lights"),
-        value=lambda api, ch: api.ir_enabled(ch),
-        method=lambda api, ch, value: api.set_ir_lights(ch, value),
-    ),
-    ReolinkSwitchEntityDescription(
         key="record_audio",
         name="Record audio",
         icon="mdi:microphone",
