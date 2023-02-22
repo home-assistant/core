@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models import EventType
+from matter_server.common.models import EventType, MatterNodeData
 
 from homeassistant.core import HomeAssistant
 
@@ -33,9 +33,11 @@ async def setup_integration_with_node_fixture(
 ) -> MatterNode:
     """Set up Matter integration with fixture as node."""
     node_data = load_and_parse_node_fixture(node_fixture)
-    node = dataclass_from_dict(
-        MatterNode,
-        node_data,
+    node = MatterNode(
+        dataclass_from_dict(
+            MatterNodeData,
+            node_data,
+        )
     )
     client.get_nodes.return_value = [node]
     client.get_node.return_value = node
@@ -58,8 +60,8 @@ def set_node_attribute(
     value: Any,
 ) -> None:
     """Set a node attribute."""
-    attribute = node.attributes[f"{endpoint}/{cluster_id}/{attribute_id}"]
-    attribute.value = value
+    attribute_path = f"{endpoint}/{cluster_id}/{attribute_id}"
+    node.endpoints[endpoint].set_attribute_value(attribute_path, value)
 
 
 async def trigger_subscription_callback(

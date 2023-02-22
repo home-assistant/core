@@ -125,7 +125,7 @@
     "0/49/0": 1,
     "0/49/1": [
       {
-        "networkID": "b'wifi-sm'",
+        "networkID": "",
         "connected": true
       }
     ],
@@ -133,7 +133,7 @@
     "0/49/3": 30,
     "0/49/4": true,
     "0/49/5": 0,
-    "0/49/6": "b'wifi-sm'",
+    "0/49/6": "",
     "0/49/7": null,
     "0/49/65532": 1,
     "0/49/65533": 1,
@@ -151,13 +151,9 @@
         "isOperational": true,
         "offPremiseServicesReachableIPv4": null,
         "offPremiseServicesReachableIPv6": null,
-        "hardwareAddress": "b\"\\x84\\xf7\\x03'\\xb5,\"",
-        "IPv4Addresses": ["b'\\xc0\\xa8\\x01\\x84'"],
-        "IPv6Addresses": [
-          "b\"\\xfe\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x86\\xf7\\x03\\xff\\xfe'\\xb5,\"",
-          "b\"*\\x00\\xbb\\xa0\\x12\\x12\\x8f\\x00\\x86\\xf7\\x03\\xff\\xfe'\\xb5,\"",
-          "b\"\\xfd\\xf5\\nn\\xf0cO\\xed\\x86\\xf7\\x03\\xff\\xfe'\\xb5,\""
-        ],
+        "hardwareAddress": "",
+        "IPv4Addresses": [],
+        "IPv6Addresses": [],
         "type": 1
       }
     ],
@@ -185,258 +181,6 @@
     "0/52/65528": [],
     "0/52/65529": [],
     "0/52/65531": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533],
-    "0/53/0": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/1": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/2": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/3": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/4": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/5": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/6": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/7": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/8": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/9": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/10": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/11": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/12": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/13": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/14": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/15": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/16": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/17": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/18": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/19": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/20": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/21": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/22": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/23": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/24": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/25": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/26": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/27": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/28": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/29": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/30": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/31": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/32": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/33": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/34": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/35": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/36": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/37": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/38": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/39": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/40": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/41": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/42": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/43": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/44": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/45": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/46": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/47": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/48": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/49": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/50": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/51": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/52": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/53": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/54": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/55": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/56": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/57": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/58": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/59": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/60": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/61": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
-    "0/53/62": {
-      "TLVValue": null,
-      "Reason": "InteractionModelError: Failure (0x1)"
-    },
     "0/53/65532": 15,
     "0/53/65533": 1,
     "0/53/65528": [],
@@ -447,7 +191,7 @@
       39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
       57, 58, 59, 60, 61, 62, 65528, 65529, 65531, 65532, 65533
     ],
-    "0/54/0": "b'r\\xa7A\\x91\\xf1!'",
+    "0/54/0": "",
     "0/54/1": 4,
     "0/54/2": 3,
     "0/54/3": 6,
@@ -499,14 +243,14 @@
     "0/60/65531": [0, 1, 2, 65528, 65529, 65531, 65532, 65533],
     "0/62/0": [
       {
-        "noc": "b'\\x150\\x01\\x01\\x01$\\x02\\x017\\x03$\\x13\\x02\\x18&\\x04\\x80\"\\x81\\'&\\x05\\x80%M:7\\x06$\\x15\\x01$\\x11\\x01\\x18$\\x07\\x01$\\x08\\x010\\tA\\x04Z\\xec\\xd9\\x11h\\'J[%&\\xe1\\xd8\\xa0\\xb15\\x01\\x9c\\x83\\xf8\\x1a\\x9bg\\xbb\\x81e\\x18\\x8b\\xc8\\x9dr\\xed\\xe7\\xc3\\\\\\xd21\\x99\\xc1\\xdb\\xfe\\xd0}\\xf5)\\xaeMq\\xd5\\xeeRg\\x16\\xd5%\\x9c\\xfcD\\t\\xcbQ\\xc8\\x83*\\x997\\n5\\x01(\\x01\\x18$\\x02\\x016\\x03\\x04\\x02\\x04\\x01\\x180\\x04\\x14\\xca\\xe2\\x07\\xdb\\x89<J\\xf8;Ng\\x93H\\xe39Y\\x080\\x88\\x150\\x05\\x14\\xde\\xad\\xb2\\xcc6\\x82\\xb6\\xbd\\xe6\\xd3\\x8b\\x0c\\xf4g\\xd8\\xb0\\r\\x8b\\x16R\\x180\\x0b@A\\xe4O\\x8a\\xf5C\\x93\\xacU\\x14\\x07S<\\xc7\\x81\\x18\\xab\\x07\\xc9m\\x13\\xbb\\xb99\\xe2\\xc9\\x84\\xee\\xc2\\xe40l\\x7f\\x0f\\xdc\\xb0\\xe6\\xd8\\x91\\xab\\xa9\\xe2\\xe8\\xbd\\x85\\xc3\"\\x1a\\\\.Y\\t\\xf6\\x11W%L\\xbc\\x06\\xd6\\x905\\xf1\\xf3\\x18'",
-        "icac": "b'\\x150\\x01\\x01\\x01$\\x02\\x017\\x03$\\x14\\x01\\x18&\\x04\\x80\"\\x81\\'&\\x05\\x80%M:7\\x06$\\x13\\x02\\x18$\\x07\\x01$\\x08\\x010\\tA\\x04=\\xc9\\x8233\\xc1\\x03\\x85\\x12Bw\\x17\\xd3\\xb6m\\xe8\\n\\xc5\\xdaJ4I\\x92v\\x07\\xb1\\xb6\\xe9\\xe5oy\\x80\\xf9\\x03.\\xa4\\xf0\\x8c\\xaf4\\xab\\xb4?\\xadS\\x11\\'\\xa3.\\xd5d\\x1f\\xf0\\x8aq\\xe3\\xacNx]!\\xbd\\xe5\\xcb7\\n5\\x01)\\x01\\x18$\\x02`0\\x04\\x14\\xde\\xad\\xb2\\xcc6\\x82\\xb6\\xbd\\xe6\\xd3\\x8b\\x0c\\xf4g\\xd8\\xb0\\r\\x8b\\x16R0\\x05\\x14\\xf6\\xc0@}p\\x9d\\x9c\\xb1\\x03\\xe3(W\\x15\\x9b\\x11\\nA\\x1f&\\xba\\x180\\x0b@@\\x1a\\x9d\\xb7\\x04\\xb1\\n\\xcfpl\\xdb\\xcf\\xf2+\\\\~\\x01w\\xd1|\\x92\\xe4(8._\\x95FO9\\x7fM\\tb\\x05\\xed@\\x86y%\\xf3\\xa9p\\xfd\\x92G\\x92X7\\xb8\\x86\\xd1\\r\\x1eXC&?\\xb9\\xcc\\xc3\\xac\\xd9?\\x18'",
+        "noc": "",
+        "icac": "",
         "fabricIndex": 1
       }
     ],
     "0/62/1": [
       {
-        "rootPublicKey": "b'\\x04^\\x05\\xf82\\xfbL[?\\xc1@\\xa6\\xb0\\xa4\\xcet\\xc4\\x9fa\\xc7\\xd9\\xc7\\xd2,\\xec\\x9db\\x8dr\\xdb\\x1e\\xfb\\xa0\\xe2n\\x97\\x14U2q\\x87\\x85\\x04\\x86\\xa0;\\xe9\\xb9m\\x18D^\\x17\\xc66\\\\F\\x82e\\x10\\x96\\x83U\\xce9'",
+        "rootPublicKey": "",
         "vendorId": 65521,
         "fabricId": 1,
         "nodeId": 1,
@@ -516,9 +260,7 @@
     ],
     "0/62/2": 5,
     "0/62/3": 1,
-    "0/62/4": [
-      "b'\\x150\\x01\\x01\\x01$\\x02\\x017\\x03$\\x14\\x01\\x18&\\x04\\x80\"\\x81\\'&\\x05\\x80%M:7\\x06$\\x14\\x01\\x18$\\x07\\x01$\\x08\\x010\\tA\\x04^\\x05\\xf82\\xfbL[?\\xc1@\\xa6\\xb0\\xa4\\xcet\\xc4\\x9fa\\xc7\\xd9\\xc7\\xd2,\\xec\\x9db\\x8dr\\xdb\\x1e\\xfb\\xa0\\xe2n\\x97\\x14U2q\\x87\\x85\\x04\\x86\\xa0;\\xe9\\xb9m\\x18D^\\x17\\xc66\\\\F\\x82e\\x10\\x96\\x83U\\xce97\\n5\\x01)\\x01\\x18$\\x02`0\\x04\\x14\\xf6\\xc0@}p\\x9d\\x9c\\xb1\\x03\\xe3(W\\x15\\x9b\\x11\\nA\\x1f&\\xba0\\x05\\x14\\xf6\\xc0@}p\\x9d\\x9c\\xb1\\x03\\xe3(W\\x15\\x9b\\x11\\nA\\x1f&\\xba\\x180\\x0b@\\xc0\\xbep\\xb1C1i\\x94\\x85\\xa4\\xc5hk\\xdc\\x98\\xfa\\xd1\\xdd\\xd7{T\\x81J\\x15X\\xc4\\x96\\x1b.\\xb7\\xae\\xcf3\\xc2\\xec\\xa9N\\xe2\\xee\\xab\\xb3\\x82-\\xa0\\x8d\\xc4\\x96+\\xc5\\xc9\\x1d\\xf3!\\xbc\\xd8\\xe8,\\xa9N\\x02B|\\xeb;\\x18'"
-    ],
+    "0/62/4": [""],
     "0/62/5": 1,
     "0/62/65532": 0,
     "0/62/65533": 1,
