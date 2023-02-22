@@ -5,8 +5,8 @@ from collections.abc import Callable
 import dataclasses
 import logging
 
-from zeroconf import ServiceListener, Zeroconf, BadTypeInNameException
-from zeroconf.asyncio import AsyncZeroconf, AsyncServiceInfo
+from zeroconf import BadTypeInNameException, ServiceListener, Zeroconf
+from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
 from homeassistant.components import zeroconf
 from homeassistant.core import HomeAssistant
