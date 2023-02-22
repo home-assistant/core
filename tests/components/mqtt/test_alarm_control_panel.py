@@ -68,7 +68,7 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 CODE_NUMBER = "1234"
 CODE_TEXT = "HELLO_CODE"
@@ -1057,16 +1057,12 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = alarm_control_panel.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:

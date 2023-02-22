@@ -14,7 +14,7 @@ import pytest
 import voluptuous as vol
 import yaml
 
-from homeassistant import config as hass_config
+from homeassistant import config as module_hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONFIG_SCHEMA, debug_info
 from homeassistant.components.mqtt.client import EnsureJobAfterCooldown
@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
     UnitOfTemperature,
 )
@@ -41,7 +42,6 @@ from homeassistant.util.dt import utcnow
 
 from .test_common import (
     help_test_entry_reload_with_new_config,
-    help_test_reload_with_config,
     help_test_setup_manual_entity_from_yaml,
 )
 
@@ -119,20 +119,6 @@ def record_calls(calls: list[ReceiveMessage]) -> MessageCallbackType:
         calls.append(msg)
 
     return record_calls
-
-
-@pytest.fixture
-def empty_mqtt_config(
-    hass: HomeAssistant, tmp_path: Path
-) -> Generator[Path, None, None]:
-    """Fixture to provide an empty config from yaml."""
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config_file.write_text("")
-
-    with patch.object(
-        hass_config, "YAML_CONFIG_FILE", new_yaml_config_file
-    ) as empty_config:
-        yield empty_config
 
 
 async def test_mqtt_connects_on_home_assistant_mqtt_setup(
@@ -1694,7 +1680,6 @@ async def test_initial_setup_logs_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mqtt_client_mock: MqttMockPahoClient,
-    empty_mqtt_config: Path,
 ) -> None:
     """Test for setup failure if initial client connection fails."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
@@ -1838,7 +1823,7 @@ async def test_setup_override_configuration(
     new_yaml_config_file.write_text(new_yaml_config)
     assert new_yaml_config_file.read_text() == new_yaml_config
 
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+    with patch.object(module_hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
         # Mock config entry
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
@@ -3275,7 +3260,7 @@ async def test_unload_config_entry(
     new_yaml_config_file = tmp_path / "configuration.yaml"
     new_yaml_config = yaml.dump({})
     new_yaml_config_file.write_text(new_yaml_config)
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+    with patch.object(module_hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
         assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
         new_mqtt_config_entry = mqtt_config_entry
         mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
@@ -3318,116 +3303,92 @@ async def test_publish_or_subscribe_without_valid_config_entry(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
-async def test_reload_entry_with_new_config(
-    hass: HomeAssistant, tmp_path: Path
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": {
+                "light": [
+                    {"name": "test_new_modern", "command_topic": "test-topic_new"}
+                ]
+            }
+        }
+    ],
+)
+async def test_disabling_and_enabling_entry(
+    hass: HomeAssistant,
+    mock_hass_config: None,
+    mqtt_mock: MqttMockHAClient,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test reloading the config entry with a new yaml config."""
-    config_old = {
-        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
-    }
-    config_yaml_new = {
-        "mqtt": {
-            "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
-        },
-    }
-    await help_test_setup_manual_entity_from_yaml(hass, config_old)
-    assert hass.states.get("light.test_old1") is not None
+    """Test disabling and enabling the config entry."""
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+    # Late discovery of a light
+    config = '{"name": "abc", "command_topic": "test-topic"}'
+    async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config)
 
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
-    assert hass.states.get("light.test_old1") is None
+    # Disable MQTT config entry
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    new_mqtt_config_entry = entry
+    assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    # Enable the entry again
+    await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    new_mqtt_config_entry = entry
+    assert new_mqtt_config_entry.state is ConfigEntryState.LOADED
+
     assert hass.states.get("light.test_new_modern") is not None
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
-async def test_disabling_and_enabling_entry(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Test disabling and enabling the config entry."""
-    config_old = {
-        "mqtt": {"light": [{"name": "test_old1", "command_topic": "test-topic_old"}]}
-    }
-    config_yaml_new = {
-        "mqtt": {
-            "light": [{"name": "test_new_modern", "command_topic": "test-topic_new"}]
-        },
-    }
-    await help_test_setup_manual_entity_from_yaml(hass, config_old)
-    assert hass.states.get("light.test_old1") is not None
-
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-
-    assert mqtt_config_entry.state is ConfigEntryState.LOADED
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump(config_yaml_new)
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
-
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file), patch(
-        "paho.mqtt.client.Client"
-    ) as mock_client:
-        mock_client().connect = lambda *args: 0
-
-        # Late discovery of a light
-        config = '{"name": "abc", "command_topic": "test-topic"}'
-        async_fire_mqtt_message(hass, "homeassistant/light/abc/config", config)
-
-        # Disable MQTT config entry
-        await hass.config_entries.async_set_disabled_by(
-            mqtt_config_entry.entry_id, ConfigEntryDisabler.USER
-        )
-
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-
-        new_mqtt_config_entry = mqtt_config_entry
-        assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
-        assert hass.states.get("light.test_old1") is None
-
-        # Enable the entry again
-        await hass.config_entries.async_set_disabled_by(
-            mqtt_config_entry.entry_id, None
-        )
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        new_mqtt_config_entry = mqtt_config_entry
-        assert new_mqtt_config_entry.state is ConfigEntryState.LOADED
-
-        assert hass.states.get("light.test_old1") is None
-        assert hass.states.get("light.test_new_modern") is not None
-
-
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 @pytest.mark.parametrize(
-    ("config", "unique"),
+    ("hass_config", "unique"),
     [
         (
-            [
-                {
-                    "name": "test1",
-                    "unique_id": "very_not_unique_deadbeef",
-                    "command_topic": "test-topic_unique",
-                },
-                {
-                    "name": "test2",
-                    "unique_id": "very_not_unique_deadbeef",
-                    "command_topic": "test-topic_unique",
-                },
-            ],
+            {
+                mqtt.DOMAIN: {
+                    "light": [
+                        {
+                            "name": "test1",
+                            "unique_id": "very_not_unique_deadbeef",
+                            "command_topic": "test-topic_unique",
+                        },
+                        {
+                            "name": "test2",
+                            "unique_id": "very_not_unique_deadbeef",
+                            "command_topic": "test-topic_unique",
+                        },
+                    ]
+                }
+            },
             False,
         ),
         (
-            [
-                {
-                    "name": "test1",
-                    "unique_id": "very_unique_deadbeef1",
-                    "command_topic": "test-topic_unique",
-                },
-                {
-                    "name": "test2",
-                    "unique_id": "very_unique_deadbeef2",
-                    "command_topic": "test-topic_unique",
-                },
-            ],
+            {
+                mqtt.DOMAIN: {
+                    "light": [
+                        {
+                            "name": "test1",
+                            "unique_id": "very_unique_deadbeef1",
+                            "command_topic": "test-topic_unique",
+                        },
+                        {
+                            "name": "test2",
+                            "unique_id": "very_unique_deadbeef2",
+                            "command_topic": "test-topic_unique",
+                        },
+                    ]
+                }
+            },
             True,
         ),
     ],
@@ -3436,13 +3397,11 @@ async def test_setup_manual_items_with_unique_ids(
     hass: HomeAssistant,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
-    config: ConfigType,
+    hass_config: ConfigType,
     unique: bool,
 ) -> None:
     """Test setup manual items is generating unique id's."""
-    await help_test_setup_manual_entity_from_yaml(
-        hass, {mqtt.DOMAIN: {"light": config}}
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, hass_config)
 
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique
@@ -3450,9 +3409,13 @@ async def test_setup_manual_items_with_unique_ids(
 
     # reload and assert again
     caplog.clear()
-    await help_test_entry_reload_with_new_config(
-        hass, tmp_path, {"mqtt": {"light": config}}
+    await hass.services.async_call(
+        "mqtt",
+        SERVICE_RELOAD,
+        {},
+        blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique
@@ -3489,21 +3452,26 @@ async def test_remove_unknown_conf_entry_options(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": {
+                "light": [
+                    {
+                        "name": "test_manual",
+                        "unique_id": "test_manual_unique_id123",
+                        "command_topic": "test-topic_manual",
+                    }
+                ]
+            }
+        }
+    ],
+)
 async def test_link_config_entry(
-    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hass_config: ConfigType, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test manual and dynamically setup entities are linked to the config entry."""
-    config_manual = {
-        "mqtt": {
-            "light": [
-                {
-                    "name": "test_manual",
-                    "unique_id": "test_manual_unique_id123",
-                    "command_topic": "test-topic_manual",
-                }
-            ]
-        }
-    }
     config_discovery = {
         "name": "test_discovery",
         "unique_id": "test_discovery_unique456",
@@ -3511,7 +3479,7 @@ async def test_link_config_entry(
     }
 
     # set up manual item
-    await help_test_setup_manual_entity_from_yaml(hass, config_manual)
+    await help_test_setup_manual_entity_from_yaml(hass, hass_config)
 
     # set up item through discovery
     async_fire_mqtt_message(
@@ -3540,7 +3508,10 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload entry and assert again
-    await help_test_entry_reload_with_new_config(hass, tmp_path, config_manual)
+    with patch("paho.mqtt.client.Client"):
+        await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     # manual set up item should remain
     assert _check_entities() == 1
     # set up item through discovery
@@ -3551,7 +3522,13 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload manual configured items and assert again
-    await help_test_reload_with_config(hass, caplog, tmp_path, config_manual)
+    await hass.services.async_call(
+        "mqtt",
+        SERVICE_RELOAD,
+        {},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
     assert _check_entities() == 2
 
 

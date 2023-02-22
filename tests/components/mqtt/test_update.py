@@ -43,7 +43,7 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -691,13 +691,9 @@ async def test_unload_entry(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = update.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)

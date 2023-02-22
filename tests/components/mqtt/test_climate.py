@@ -64,7 +64,7 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message
 from tests.components.climate import common
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ENTITY_CLIMATE = "climate.test"
 
@@ -2007,16 +2007,12 @@ async def test_humidity_configuration_validity(
 
 async def test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = climate.DOMAIN
     config = DEFAULT_CONFIG
-    await help_test_reloadable(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-    )
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
 async def test_setup_manual_entity_from_yaml(hass: HomeAssistant) -> None:
