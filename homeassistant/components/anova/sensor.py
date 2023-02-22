@@ -99,6 +99,7 @@ class AnovaEntity(CoordinatorEntity[AnovaCoordinator], SensorEntity):
             f"{coordinator._device_unique_id}_{description.key}".lower()
         )
         self._attr_device_info = coordinator.device_info
+        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> StateType:
