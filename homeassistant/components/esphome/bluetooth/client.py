@@ -61,7 +61,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw BleakError if not connected."""
 
     async def _async_wrap_bluetooth_connected_operation(
-        self: "ESPHomeClient", *args: Any, **kwargs: Any
+        self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
         disconnected_event = (
             self._disconnected_event  # pylint: disable=protected-access
@@ -94,7 +94,7 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw esphome api errors as BleakErrors."""
 
     async def _async_wrap_bluetooth_operation(
-        self: "ESPHomeClient", *args: Any, **kwargs: Any
+        self: ESPHomeClient, *args: Any, **kwargs: Any
     ) -> Any:
         try:
             return await func(self, *args, **kwargs)

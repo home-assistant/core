@@ -429,7 +429,15 @@ def test_compile_hourly_statistics_wrong_unit(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "units, device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "units",
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         (US_CUSTOMARY_SYSTEM, "distance", "m", "m", "m", "distance", 1),
         (US_CUSTOMARY_SYSTEM, "distance", "mi", "mi", "mi", "distance", 1),
@@ -622,7 +630,14 @@ async def test_compile_hourly_sum_statistics_amount(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
         ("energy", "Wh", "Wh", "Wh", "energy", 1),
@@ -741,7 +756,14 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
     ],
@@ -831,7 +853,14 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
     ],
@@ -3249,7 +3278,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
 
     # Generate 5-minute statistics for two hours
     start = zero
-    for i in range(24):
+    for _ in range(24):
         do_adhoc_statistics(hass, start=start)
         wait_recording_done(hass)
         start += timedelta(minutes=5)
@@ -4706,7 +4735,11 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
-            for db_state, db_state_attributes in session.query(States, StateAttributes):
+            for db_state, db_state_attributes in session.query(
+                States, StateAttributes
+            ).outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            ):
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)

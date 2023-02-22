@@ -2202,7 +2202,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
     ),
 )
 @pytest.mark.parametrize(
-    "script_mode,script_warning_msg",
+    ("script_mode", "script_warning_msg"),
     (
         (SCRIPT_MODE_PARALLEL, "script1: Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "script1: Disallowed recursion detected"),

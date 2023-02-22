@@ -15,5 +15,5 @@
   "documentation": "https://www.home-assistant.io/integrations/keymitt_ble",
   "iot_class": "assumed_state",
   "loggers": ["keymitt_ble"],
-  "requirements": ["PyMicroBot==0.0.8"]
+  "requirements": ["PyMicroBot==0.0.9"]
 }

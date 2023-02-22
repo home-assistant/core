@@ -13,7 +13,8 @@ from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads
 
 RETYPE = type(re.compile(""))
 

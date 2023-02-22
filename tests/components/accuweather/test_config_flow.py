@@ -1,5 +1,4 @@
 """Define tests for the AccuWeather config flow."""
-import json
 from unittest.mock import PropertyMock, patch
 
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
@@ -10,7 +9,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 VALID_CONFIG = {
     CONF_NAME: "abcd",
@@ -99,7 +98,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     with patch(
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
-        return_value=json.loads(load_fixture("accuweather/location_data.json")),
+        return_value=load_json_object_fixture("accuweather/location_data.json"),
     ):
         MockConfigEntry(
             domain=DOMAIN,
@@ -121,7 +120,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     with patch(
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
-        return_value=json.loads(load_fixture("accuweather/location_data.json")),
+        return_value=load_json_object_fixture("accuweather/location_data.json"),
     ), patch(
         "homeassistant.components.accuweather.async_setup_entry", return_value=True
     ):
@@ -150,11 +149,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
-        return_value=json.loads(load_fixture("accuweather/location_data.json")),
+        return_value=load_json_object_fixture("accuweather/location_data.json"),
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=json.loads(
-            load_fixture("accuweather/current_conditions_data.json")
+        return_value=load_json_object_fixture(
+            "accuweather/current_conditions_data.json"
         ),
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_forecast"
