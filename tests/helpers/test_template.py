@@ -243,6 +243,20 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
     )
 
 
+def test_import(hass: HomeAssistant) -> None:
+    """Test that imports work from the config/custom_jinja folder."""
+    assert (
+        template.Template(
+            """
+            {% import 'test.jinja' as t %}
+            {{ t.test_macro() }} {{ t.test_variable }}
+            """,
+            hass,
+        ).async_render()
+        == "macro variable"
+    )
+
+
 def test_float_function(hass: HomeAssistant) -> None:
     """Test float function."""
     hass.states.async_set("sensor.temperature", "12")
