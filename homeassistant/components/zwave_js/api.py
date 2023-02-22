@@ -2058,8 +2058,9 @@ class FirmwareUploadView(HomeAssistantView):
                 raise web_exceptions.HTTPBadRequest
             raise web_exceptions.HTTPNotFound
 
-        if not node.client.driver:
-            raise web_exceptions.HTTPNotFound
+        # If this was not true, we wouldn't have been able to get the node from the
+        # device ID above
+        assert node.client.driver
 
         # Increase max payload
         request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
