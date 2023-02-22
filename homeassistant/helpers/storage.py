@@ -17,6 +17,8 @@ from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
 from homeassistant.util.file import WriteError
 
+from . import json as json_helper
+
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
 
@@ -290,7 +292,7 @@ class Store(Generic[_T]):
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
-        json_util.save_json(
+        json_helper.save_json(
             path,
             data,
             self._private,

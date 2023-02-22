@@ -12,6 +12,8 @@ import re
 import sys
 from typing import Any, cast
 
+import voluptuous as vol
+
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
@@ -29,6 +31,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_ID,
     CONF_MATCH,
     CONF_STATE,
@@ -57,7 +60,7 @@ import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
-from .template import Template
+from .template import Template, attach as template_attach, render_complex
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -481,6 +484,7 @@ def state(
     req_state: Any,
     for_period: timedelta | None = None,
     attribute: str | None = None,
+    variables: TemplateVarsType = None,
 ) -> bool:
     """Test if state matches requirements.
 
@@ -534,7 +538,14 @@ def state(
         condition_trace_set_result(is_state, state=value, wanted_state=state_value)
         return is_state
 
-    duration = dt_util.utcnow() - for_period
+    try:
+        for_period = cv.positive_time_period(render_complex(for_period, variables))
+    except TemplateError as ex:
+        raise ConditionErrorMessage("state", f"template error: {ex}") from ex
+    except vol.Invalid as ex:
+        raise ConditionErrorMessage("state", f"schema error: {ex}") from ex
+
+    duration = dt_util.utcnow() - cast(timedelta, for_period)
     duration_ok = duration > entity.last_changed
     condition_trace_set_result(duration_ok, state=value, duration=duration)
     return duration_ok
@@ -544,7 +555,7 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     entity_ids = config.get(CONF_ENTITY_ID, [])
     req_states: str | list[str] = config.get(CONF_STATE, [])
-    for_period = config.get("for")
+    for_period = config.get(CONF_FOR)
     attribute = config.get(CONF_ATTRIBUTE)
     match = config.get(CONF_MATCH, ENTITY_MATCH_ALL)
 
@@ -554,12 +565,15 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
+        template_attach(hass, for_period)
         errors = []
         result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
             try:
                 with trace_path(["entity_id", str(index)]), trace_condition(variables):
-                    if state(hass, entity_id, req_states, for_period, attribute):
+                    if state(
+                        hass, entity_id, req_states, for_period, attribute, variables
+                    ):
                         result = True
                     elif match == ENTITY_MATCH_ALL:
                         return False

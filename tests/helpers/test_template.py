@@ -371,7 +371,7 @@ def test_bool_filter(hass: HomeAssistant) -> None:
         ("inf", False),
     ],
 )
-def test_isnumber(hass, value, expected):
+def test_isnumber(hass: HomeAssistant, value, expected) -> None:
     """Test is_number."""
     assert (
         template.Template("{{ is_number(value) }}", hass).async_render({"value": value})
@@ -895,7 +895,7 @@ def test_timestamp_local(hass: HomeAssistant) -> None:
         "invalid",
     ),
 )
-def test_as_datetime(hass, input):
+def test_as_datetime(hass: HomeAssistant, input) -> None:
     """Test converting a timestamp string to a date object."""
     expected = dt_util.parse_datetime(input)
     if expected is not None:
@@ -1061,7 +1061,7 @@ def test_max(hass: HomeAssistant) -> None:
         "c",
     ),
 )
-def test_min_max_attribute(hass, attribute):
+def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
     """Test the min and max filters with attribute."""
     hass.states.async_set(
         "test.object",
@@ -1234,7 +1234,7 @@ def test_as_timestamp(hass: HomeAssistant) -> None:
 
 
 @patch.object(random, "choice")
-def test_random_every_time(test_choice, hass):
+def test_random_every_time(test_choice, hass: HomeAssistant) -> None:
     """Ensure the random filter runs every time, not just once."""
     tpl = template.Template("{{ [1,2] | random }}", hass)
     test_choice.return_value = "foo"
@@ -1510,7 +1510,7 @@ def test_states_function(hass: HomeAssistant) -> None:
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_now(mock_is_safe, hass):
+def test_now(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     now = dt_util.now()
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -1524,7 +1524,7 @@ def test_now(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_utcnow(mock_is_safe, hass):
+def test_utcnow(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
@@ -1559,7 +1559,9 @@ def test_utcnow(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone_str):
+def test_today_at(
+    mock_is_safe, hass: HomeAssistant, now, expected, expected_midnight, timezone_str
+) -> None:
     """Test today_at method."""
     freezer = freeze_time(now)
     freezer.start()
@@ -1600,7 +1602,7 @@ def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_relative_time(mock_is_safe, hass):
+def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     hass.config.set_time_zone("UTC")
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
@@ -1670,7 +1672,7 @@ def test_relative_time(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_timedelta(mock_is_safe, hass):
+def test_timedelta(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -1954,7 +1956,7 @@ def test_bitwise_or(hass: HomeAssistant) -> None:
     assert tpl.async_render() == 8 | 2
 
 
-def test_pack(hass, caplog):
+def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test struct pack method."""
 
     # render as filter
@@ -2019,7 +2021,7 @@ def test_pack(hass, caplog):
     )
 
 
-def test_unpack(hass, caplog):
+def test_unpack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test struct unpack method."""
 
     # render as filter
@@ -4263,7 +4265,9 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         assert template.Template(tpl, hass).async_render() == result
 
 
-async def test_undefined_variable(hass, caplog):
+async def test_undefined_variable(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a warning is logged on undefined variables."""
     tpl = template.Template("{{ no_such_variable }}", hass)
     assert tpl.async_render() == ""
@@ -4305,7 +4309,7 @@ async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
         ([], None, False),
     ],
 )
-def test_contains(hass, seq, value, expected):
+def test_contains(hass: HomeAssistant, seq, value, expected) -> None:
     """Test contains."""
     assert (
         template.Template("{{ seq | contains(value) }}", hass).async_render(

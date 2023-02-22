@@ -291,7 +291,7 @@ async def test_events_during_migration_queue_exhausted(
 )
 async def test_schema_migrate(
     recorder_db_url: str, hass: HomeAssistant, start_version, live
-):
+) -> None:
     """Test the full schema migration logic.
 
     We're just testing that the logic can execute successfully here without
@@ -374,6 +374,8 @@ async def test_schema_migrate(
         "homeassistant.components.recorder.Recorder._process_state_changed_event_into_session",
     ), patch(
         "homeassistant.components.recorder.Recorder._process_non_state_changed_event_into_session",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._pre_process_startup_tasks",
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.async_create_task(
@@ -409,7 +411,7 @@ def test_invalid_update(hass: HomeAssistant) -> None:
         ("sqlite", None),
     ],
 )
-def test_modify_column(engine_type, substr):
+def test_modify_column(engine_type, substr) -> None:
     """Test that modify column generates the expected query."""
     connection = Mock()
     session = Mock()
@@ -457,7 +459,9 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
 @pytest.mark.parametrize(
     "exception_type", [OperationalError, ProgrammingError, InternalError]
 )
-def test_forgiving_add_index_with_other_db_types(caplog, exception_type):
+def test_forgiving_add_index_with_other_db_types(
+    caplog: pytest.LogCaptureFixture, exception_type
+) -> None:
     """Test that add index will continue if index exists on mysql and postgres."""
     mocked_index = Mock()
     type(mocked_index).name = "ix_states_context_id"

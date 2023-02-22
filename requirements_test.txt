@@ -12,12 +12,12 @@ codecov==2.1.12
 coverage==7.1.0
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==1.0.0
+mypy==1.0.1
 pre-commit==3.0.0
-pydantic==1.10.4
+pydantic==1.10.5
 pylint==2.16.0
 pylint-per-file-ignores==1.1.0
-pipdeptree==2.3.1
+pipdeptree==2.5.0
 pytest-asyncio==0.20.3
 pytest-aiohttp==1.0.4
 pytest-cov==3.0.0
@@ -32,6 +32,7 @@ pytest-xdist==2.5.0
 pytest==7.2.1
 requests_mock==1.10.0
 respx==0.20.1
+syrupy==4.0.0
 tomli==2.0.1;python_version<"3.11"
 tqdm==4.64.0
 types-atomicwrites==1.4.1

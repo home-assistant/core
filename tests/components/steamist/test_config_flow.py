@@ -339,8 +339,8 @@ async def test_discovered_by_dhcp_discovery_finds_non_steamist_device(
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we can setup when discovered from dhcp or discovery and add a missing unique id."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: DEVICE_IP_ADDRESS})
     config_entry.add_to_hass(hass)
@@ -371,8 +371,8 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_existing_unique_id_does_not_reload(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we can setup when discovered from dhcp or discovery and it does not reload."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=DEFAULT_ENTRY_DATA, unique_id=FORMATTED_MAC_ADDRESS
