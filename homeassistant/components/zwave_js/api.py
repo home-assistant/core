@@ -34,7 +34,11 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
-from zwave_js_server.model.controller.firmware import ControllerFirmwareUpdateData
+from zwave_js_server.model.controller.firmware import (
+    ControllerFirmwareUpdateData,
+    ControllerFirmwareUpdateProgress,
+    ControllerFirmwareUpdateResult,
+)
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
@@ -1939,13 +1943,26 @@ async def websocket_is_node_firmware_update_in_progress(
     connection.send_result(msg[ID], await node.async_is_firmware_update_in_progress())
 
 
-def _get_firmware_update_progress_dict(
+def _get_node_firmware_update_progress_dict(
     progress: NodeFirmwareUpdateProgress,
 ) -> dict[str, int | float]:
-    """Get a dictionary of firmware update progress."""
+    """Get a dictionary of a node's firmware update progress."""
     return {
         "current_file": progress.current_file,
         "total_files": progress.total_files,
+        "sent_fragments": progress.sent_fragments,
+        "total_fragments": progress.total_fragments,
+        "progress": progress.progress,
+    }
+
+
+def _get_controller_firmware_update_progress_dict(
+    progress: ControllerFirmwareUpdateProgress,
+) -> dict[str, int | float]:
+    """Get a dictionary of a controller's firmware update progress."""
+    return {
+        "current_file": 1,
+        "total_files": 1,
         "sent_fragments": progress.sent_fragments,
         "total_fragments": progress.total_fragments,
         "progress": progress.progress,
@@ -1968,6 +1985,8 @@ async def websocket_subscribe_firmware_update_status(
     node: Node,
 ) -> None:
     """Subscribe to the status of a firmware update."""
+    assert node.client.driver
+    controller = node.client.driver.controller
 
     @callback
     def async_cleanup() -> None:
@@ -1976,20 +1995,20 @@ async def websocket_subscribe_firmware_update_status(
             unsub()
 
     @callback
-    def forward_progress(event: dict) -> None:
+    def forward_node_progress(event: dict) -> None:
         progress: NodeFirmwareUpdateProgress = event["firmware_update_progress"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
                 {
                     "event": event["event"],
-                    **_get_firmware_update_progress_dict(progress),
+                    **_get_node_firmware_update_progress_dict(progress),
                 },
             )
         )
 
     @callback
-    def forward_finished(event: dict) -> None:
+    def forward_node_finished(event: dict) -> None:
         finished: NodeFirmwareUpdateResult = event["firmware_update_finished"]
         connection.send_message(
             websocket_api.event_message(
@@ -2004,21 +2023,69 @@ async def websocket_subscribe_firmware_update_status(
             )
         )
 
-    msg[DATA_UNSUBSCRIBE] = unsubs = [
-        node.on("firmware update progress", forward_progress),
-        node.on("firmware update finished", forward_finished),
-    ]
+    @callback
+    def forward_controller_progress(event: dict) -> None:
+        progress: ControllerFirmwareUpdateProgress = event["firmware_update_progress"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    **_get_controller_firmware_update_progress_dict(progress),
+                },
+            )
+        )
+
+    @callback
+    def forward_controller_finished(event: dict) -> None:
+        finished: ControllerFirmwareUpdateResult = event["firmware_update_finished"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "status": finished.status,
+                    "success": finished.success,
+                },
+            )
+        )
+
+    if controller.own_node == node:
+        msg[DATA_UNSUBSCRIBE] = unsubs = [
+            controller.on("firmware update progress", forward_controller_progress),
+            controller.on("firmware update finished", forward_controller_finished),
+        ]
+    else:
+        msg[DATA_UNSUBSCRIBE] = unsubs = [
+            node.on("firmware update progress", forward_node_progress),
+            node.on("firmware update finished", forward_node_finished),
+        ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    progress = node.firmware_update_progress
     connection.send_result(msg[ID])
-    if progress:
+    if node.is_controller_node and (
+        controller_progress := controller.firmware_update_progress
+    ):
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
                 {
                     "event": "firmware update progress",
-                    **_get_firmware_update_progress_dict(progress),
+                    **_get_controller_firmware_update_progress_dict(
+                        controller_progress
+                    ),
+                },
+            )
+        )
+    elif controller.own_node != node and (
+        node_progress := node.firmware_update_progress
+    ):
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "firmware update progress",
+                    **_get_node_firmware_update_progress_dict(node_progress),
                 },
             )
         )
