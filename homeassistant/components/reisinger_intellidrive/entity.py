@@ -9,17 +9,17 @@ from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, STATUSDICT_SERIALNO, STATUSDICT_VERSION
-from .coordinator import ReisingerCoordinator
+from .coordinator import IntellidriveCoordinator
 
 
-class IntelliDriveEntity(CoordinatorEntity[ReisingerCoordinator]):
+class IntelliDriveEntity(CoordinatorEntity[IntellidriveCoordinator]):
     """Representation of a IntelliDrive entity, which is used as a base entity for future entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: ReisingerCoordinator,
+        coordinator: IntellidriveCoordinator,
         device_id: str,
         description: EntityDescription | None = None,
     ) -> None:

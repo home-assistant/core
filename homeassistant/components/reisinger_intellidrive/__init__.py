@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import ReisingerCoordinator
+from .coordinator import IntellidriveCoordinator
 
 PLATFORMS: list[Platform] = [Platform.COVER]
 
@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = ReisingerCoordinator(hass, entry)
+    coordinator = IntellidriveCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator

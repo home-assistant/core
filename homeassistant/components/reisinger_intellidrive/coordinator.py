@@ -17,7 +17,7 @@ from .const import DOMAIN, UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class ReisingerCoordinator(DataUpdateCoordinator):
+class IntellidriveCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from intellidrive device."""
 
     config_entry: ConfigEntry

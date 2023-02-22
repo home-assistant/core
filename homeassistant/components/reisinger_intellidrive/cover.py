@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, STATUSDICT_OPENSTATE, STATUSDICT_SERIALNO
-from .coordinator import ReisingerCoordinator
+from .coordinator import IntellidriveCoordinator
 from .entity import IntelliDriveEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class SlidingDoorCoverEntity(IntelliDriveEntity, CoverEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: ReisingerCoordinator,
+        coordinator: IntellidriveCoordinator,
         host: str,
         token: str,
         device_id: str,
