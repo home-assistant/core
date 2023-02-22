@@ -48,7 +48,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     )
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
     with patch("brother.Brother.initialize"), patch(
-        "brother.datetime", utcnow=Mock(return_value=test_time)
+        "brother.datetime", now=Mock(return_value=test_time)
     ), patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
