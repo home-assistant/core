@@ -459,7 +459,7 @@ class ConfigEntry:
 
             await self._async_process_on_unload()
             return
-        except Exception:  # pylint: disable=broad-except
+        except BaseException:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )

@@ -264,7 +264,7 @@ async def _async_setup_component(
                 SLOW_SETUP_MAX_WAIT,
             )
             return False
-        except Exception:  # pylint: disable=broad-except
+        except BaseException:  # pylint: disable=broad-except
             _LOGGER.exception("Error during setup of component %s", domain)
             async_notify_setup_error(hass, domain, integration.documentation)
             return False
