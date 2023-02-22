@@ -10,12 +10,8 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import ReisingerCoordinator
 
-# import ReisingerSlidingDoorDeviceApi
-
 _LOGGER = logging.getLogger(__name__)
 
-#  List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.COVER]
 
 

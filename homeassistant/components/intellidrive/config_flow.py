@@ -19,11 +19,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, STATUSDICT_SERIALNO
 
-# from .coordinator import ReisingerSlidingDoorDeviceApi
-
 _LOGGER = logging.getLogger(__name__)
 
-# adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -45,11 +42,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     hub = reisingerdrive.ReisingerSlidingDoorDeviceApi(
         data[CONF_HOST], api_token, async_get_clientsession(hass)
     )
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
 
     try:
         result = await hub.authenticate()

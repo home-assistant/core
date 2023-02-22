@@ -26,8 +26,8 @@ class ReisingerCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize ReisingerCoordinator."""
         self.device = reisingerdrive.ReisingerSlidingDoorDeviceApi(
-            str(config_entry.data.get(CONF_HOST)),
-            str(config_entry.data.get(CONF_TOKEN)),
+            config_entry.data.get(CONF_HOST),
+            config_entry.data.get(CONF_TOKEN),
             async_get_clientsession(hass),
         )
         self.config_entry = config_entry
@@ -40,7 +40,7 @@ class ReisingerCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch devicedatas from intellidrive device."""
+        """Fetch data from intellidrive device."""
 
         data = await self.device.async_get_device_state()
         if data is None:
