@@ -21,7 +21,6 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkSelectEntityDescriptionMixin:
     """Mixin values for Reolink select entities."""
 
-    value: Callable[[Host, int | None], str]
     method: Callable[[Host, int | None, str], Any]
 
 
@@ -32,6 +31,8 @@ class ReolinkSelectEntityDescription(
     """A class that describes select entities."""
 
     supported: Callable[[Host, int | None], bool] = lambda api, ch: True
+    value: Callable[[Host, int | None], str] | None = None
+    get_options: Callable[[Host, int | None], Any] | None = None
 
 
 SELECT_ENTITIES = (
@@ -54,6 +55,14 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "dayNight"),
         value=lambda api, ch: DayNightEnum(api.daynight_state(ch)).name,
         method=lambda api, ch, name: api.set_daynight(ch, DayNightEnum[name].value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="ptz_preset",
+        name="PTZ preset",
+        icon="mdi:pan",
+        get_options=lambda api, ch: list(api.ptz_presets(ch).keys()),
+        supported=lambda api, ch: api.supported(ch, "ptz_presets"),
+        method=lambda api, ch, name: api.set_ptz_command(ch, preset=name),
     ),
 )
 
@@ -94,9 +103,17 @@ class ReolinkSelectEntity(ReolinkCoordinatorEntity, SelectEntity):
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
 
+        if entity_description.get_options is not None:
+            self._attr_options = entity_description.get_options(
+                self._host.api, self._channel
+            )
+
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the current option."""
+        if self.entity_description.value is None:
+            return None
+
         return self.entity_description.value(self._host.api, self._channel)
 
     async def async_select_option(self, option: str) -> None:
