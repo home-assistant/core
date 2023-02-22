@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
-from homeassistant.util.json import JsonObjectType, load_json_object
+from homeassistant.util.json import JsonObjectType, JsonValueType, load_json_object
 
 from .const import DOMAIN
 
@@ -136,17 +136,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             load_json_object, self.hass.config.path(CONFIG_FILE)
         )
 
-        auth_token: str | None = None
+        auth_token: JsonValueType = None
         if device_conf := self.discovery_conf.get(self.device_id):  # >= 2021.4
-            auth_token = cast(
-                str | None, cast(JsonObjectType, device_conf).get("token")
-            )
+            auth_token = cast(JsonObjectType, device_conf).get("token")
         if not auth_token and (host_conf := self.discovery_conf.get(host)):  # < 2021.4
-            auth_token = cast(str | None, cast(JsonObjectType, host_conf).get("token"))
+            auth_token = cast(JsonObjectType, host_conf).get("token")
 
         if auth_token is not None:
             self.nanoleaf = Nanoleaf(
-                async_get_clientsession(self.hass), host, auth_token
+                async_get_clientsession(self.hass), host, cast(str, auth_token)
             )
             _LOGGER.warning(
                 "Importing Nanoleaf %s from the discovery integration", name
