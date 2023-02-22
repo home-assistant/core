@@ -110,6 +110,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/aten_pe/ @mtdcr
 /homeassistant/components/atome/ @baqs
 /homeassistant/components/attribute_sensor/ @albinmedoc
+/tests/components/attribute_sensor/ @albinmedoc
 /homeassistant/components/august/ @bdraco
 /tests/components/august/ @bdraco
 /homeassistant/components/aurora/ @djtimca
