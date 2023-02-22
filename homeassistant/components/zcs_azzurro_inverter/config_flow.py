@@ -10,8 +10,9 @@ from zcs_azzurro_api import DeviceOfflineError, HttpRequestError, Inverter
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from . import CannotConnect, ConfigEntryAuthFailed, ConfigEntryNotReady, InvalidAuth
+from . import CannotConnect, InvalidAuth
 from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             SCHEMA_FRIENDLY_NAME: "Friendly name",
         }
 
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)

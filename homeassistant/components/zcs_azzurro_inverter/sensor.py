@@ -46,9 +46,6 @@ from .const import (
     REALTIME_POWER_EXPORTING_KEY,
     REALTIME_POWER_GENERATING_KEY,
     REALTIME_POWER_IMPORTING_KEY,
-    SCHEMA_CLIENT_KEY,
-    SCHEMA_FRIENDLY_NAME,
-    SCHEMA_THINGS_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,13 +255,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Azzurro sensor."""
     _LOGGER.debug("Received data during setup is %s", entry.data)
-    data = entry.data
 
-    zcs_api = Inverter(
-        data[SCHEMA_CLIENT_KEY],
-        data[SCHEMA_THINGS_KEY],
-        name=data[SCHEMA_FRIENDLY_NAME],
-    )
+    zcs_api = hass.data[DOMAIN][entry.entry_id]
 
     realtime_sensors_available = await hass.async_add_executor_job(
         zcs_api.realtime_data_request
@@ -272,11 +264,6 @@ async def async_setup_entry(
     available_realtime_keys = list(realtime_sensors_available.keys())
     _LOGGER.debug("available realtime keys are %s", ", ".join(available_realtime_keys))
 
-    hass.data[DOMAIN][entry.entry_id] = Inverter(
-        client=entry.data[SCHEMA_CLIENT_KEY],
-        thing_serial=entry.data[SCHEMA_THINGS_KEY],
-        name=entry.data[SCHEMA_FRIENDLY_NAME],
-    )
     async_add_entities(
         ZcsAzzurroSensor(
             description=description,

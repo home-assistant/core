@@ -1,12 +1,14 @@
 """The zcs_azzurro integration."""
 from __future__ import annotations
 
+from zcs_azzurro_api import DeviceOfflineError, HttpRequestError, Inverter
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -16,9 +18,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
+    inverter = Inverter(
+        client=entry.data[SCHEMA_CLIENT_KEY],
+        thing_serial=entry.data[SCHEMA_THINGS_KEY],
+        name=entry.data[SCHEMA_FRIENDLY_NAME],
+    )
+    try:
+        if await hass.async_add_executor_job(inverter.check_connection):
+            hass.data[DOMAIN][entry.entry_id] = inverter
+            await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+            return True
+        return False
+    except (DeviceOfflineError, HttpRequestError):
+        return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
