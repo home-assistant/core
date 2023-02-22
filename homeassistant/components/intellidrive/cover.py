@@ -40,7 +40,7 @@ async def async_setup_entry(
             SlidingDoorCoverEntity(
                 hass,
                 coordinator,
-                str(entry.data.get(CONF_HOST)),
+                entry.data[CONF_HOST],
                 str(entry.data.get(CONF_TOKEN)),
                 cast(str, entry.unique_id),
             )
