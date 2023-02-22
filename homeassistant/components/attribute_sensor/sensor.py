@@ -36,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:database-arrow-up"
+ICON = "mdi:table"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
