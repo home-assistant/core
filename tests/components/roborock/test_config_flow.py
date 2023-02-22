@@ -33,7 +33,7 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
 
     # Provide email address to config flow
     with patch(
-        "custom_components.roborock.config_flow.RoborockClient.request_code",
+        "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -45,7 +45,7 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
 
     # Provide code from email to config flow
     with patch(
-        "custom_components.roborock.config_flow.RoborockClient.code_login",
+        "homeassistant.components.roborock.config_flow.RoborockClient.code_login",
         return_value=MOCK_CONFIG.get("user_data"),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -59,7 +59,7 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
 
 
 @pytest.mark.asyncio
-async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture):
+async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a failed config flow due to incorrect code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,7 +74,7 @@ async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture):
     assert result["step_id"] == "email"
 
     with patch(
-        "custom_components.roborock.config_flow.RoborockClient.request_code",
+        "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -85,7 +85,7 @@ async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture):
         assert result["step_id"] == "code"
     # Raise exception for invalid code
     with patch(
-        "custom_components.roborock.config_flow.RoborockClient.code_login",
+        "homeassistant.components.roborock.config_flow.RoborockClient.code_login",
         side_effect=Exception("invalid code"),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -97,7 +97,7 @@ async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture):
 
 
 @pytest.mark.asyncio
-async def test_no_devices(hass: HomeAssistant, bypass_api_fixture):
+async def test_no_devices(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a failed config flow due to no devices on Roborock account."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -112,7 +112,7 @@ async def test_no_devices(hass: HomeAssistant, bypass_api_fixture):
     assert result["step_id"] == "email"
 
     with patch(
-        "custom_components.roborock.config_flow.RoborockClient.request_code",
+        "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -123,7 +123,7 @@ async def test_no_devices(hass: HomeAssistant, bypass_api_fixture):
         assert result["step_id"] == "code"
     # Return None from code_login (no devices)
     with patch(
-        "custom_components.roborock.config_flow.RoborockClient.code_login",
+        "homeassistant.components.roborock.config_flow.RoborockClient.code_login",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -135,7 +135,7 @@ async def test_no_devices(hass: HomeAssistant, bypass_api_fixture):
 
 
 @pytest.mark.asyncio
-async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture):
+async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a failed config flow due to credential validation failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -150,7 +150,7 @@ async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture):
     assert result["step_id"] == "email"
 
     with patch(
-        "custom_components.roborock.config_flow.RoborockClient.request_code",
+        "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
         side_effect=Exception("unknown user"),
     ):
         result = await hass.config_entries.flow.async_configure(

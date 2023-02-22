@@ -113,7 +113,9 @@ async def test_vacuum_fan_speeds(hass: HomeAssistant, bypass_api_fixture) -> Non
     for speed in ["off", "silent", "balanced", "turbo", "max", "max_plus", "custom"]:
         assert speed in fanspeeds
     # Test setting fan speed to "Turbo"
-    with patch("custom_components.roborock.vacuum.RoborockVacuum.send") as mock_send:
+    with patch(
+        "homeassistant.components.roborock.vacuum.RoborockVacuum.send"
+    ) as mock_send:
         await hass.services.async_call(
             VACUUM_DOMAIN,
             SERVICE_SET_FAN_SPEED,
@@ -138,7 +140,9 @@ async def test_mop_modes(hass: HomeAssistant, bypass_api_fixture) -> None:
     for mode in ["standard", "deep", "deep_plus", "custom"]:
         assert mode in mop_modes
     # Test setting mop mode to "deep"
-    with patch("custom_components.roborock.vacuum.RoborockVacuum.send") as mock_send:
+    with patch(
+        "homeassistant.components.roborock.vacuum.RoborockVacuum.send"
+    ) as mock_send:
         await hass.services.async_call(
             "Roborock",
             "vacuum_set_mop_mode",
@@ -164,7 +168,9 @@ async def test_mop_intensity(hass: HomeAssistant, bypass_api_fixture) -> None:
         assert intensity in mop_intensities
 
     # Test setting intensity to "mild"
-    with patch("custom_components.roborock.vacuum.RoborockVacuum.send") as mock_send:
+    with patch(
+        "homeassistant.components.roborock.vacuum.RoborockVacuum.send"
+    ) as mock_send:
         await hass.services.async_call(
             "Roborock",
             "vacuum_set_mop_intensity",

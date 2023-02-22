@@ -32,8 +32,8 @@ async def setup_platform(
 
     home_data = HOME_DATA_SHARED if include_shared else HOME_DATA
 
-    with patch("custom_components.roborock.PLATFORMS", [platform]), patch(
-        "roborock.RoborockClient.get_home_data",
+    with patch("homeassistant.components.roborock.PLATFORMS", [platform]), patch(
+        "homeassistant.components.roborock.RoborockClient.get_home_data",
         return_value=home_data,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

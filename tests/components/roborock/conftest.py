@@ -9,9 +9,12 @@ from .mock_data import PROP
 @pytest.fixture(name="bypass_api_fixture")
 def bypass_api_fixture():
     """Skip calls to the API."""
-    with patch("roborock.RoborockMqttClient.connect"), patch(
-        "roborock.RoborockMqttClient.send_command"
-    ), patch("roborock.api.mqtt"), patch(
-        "roborock.RoborockMqttClient.get_prop", return_value=PROP
+    with patch("homeassistant.components.roborock.RoborockMqttClient.connect"), patch(
+        "homeassistant.components.roborock.RoborockMqttClient.send_command"
+    ), patch(
+        "roborock.api.mqtt"  # Convert to not be directly on roborock.api
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient.get_prop",
+        return_value=PROP,
     ):
         yield
