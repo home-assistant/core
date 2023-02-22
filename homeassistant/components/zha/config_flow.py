@@ -17,7 +17,7 @@ from homeassistant.components import onboarding, usb, zeroconf
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.homeassistant_yellow import hardware
+from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowHandler, FlowResult
@@ -83,7 +83,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
 
     # Add useful info to the Yellow's serial port selection screen
     try:
-        hardware.async_info(hass)
+        yellow_hardware.async_info(hass)
     except HomeAssistantError:
         pass
     else:
@@ -96,7 +96,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
 
     try:
         addon_info = await addon_manager.async_get_addon_info()
-    except AddonError:
+    except (AddonError, KeyError):
         addon_info = None
 
     if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
