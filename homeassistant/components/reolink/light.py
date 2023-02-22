@@ -7,7 +7,12 @@ from typing import Any
 
 from reolink_aio.api import Host
 
-from homeassistant.components.light import LightEntity, LightEntityDescription
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ColorMode,
+    LightEntity,
+    LightEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,7 +50,9 @@ LIGHT_ENTITIES = (
         is_on=lambda api, ch: api.whiteled_state(ch),
         turn_on_off=lambda api, ch, value: api.set_whiteled(ch, state=value),
         get_brightness=lambda api, ch: api.whiteled_brightness(ch),
-        set_brightness=lambda api, ch, value: api.set_whiteled(ch, brightness=int(value)),
+        set_brightness=lambda api, ch, value: api.set_whiteled(
+            ch, brightness=int(value)
+        ),
     ),
     ReolinkLightEntityDescription(
         key="ir_lights",
@@ -64,6 +71,7 @@ LIGHT_ENTITIES = (
         turn_on_off=lambda api, ch, value: api.set_status_led(ch, value),
     ),
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -114,12 +122,18 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
         return self.entity_description.is_on(self._host.api, self._channel)
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0.255."""
         if self.entity_description.get_brightness is None:
             return None
 
-        return round(255 * (self.entity_description.get_brightness(self._host.api, self._channel) / 100))
+        return round(
+            255
+            * (
+                self.entity_description.get_brightness(self._host.api, self._channel)
+                / 100
+            )
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
@@ -129,8 +143,13 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
     async def async_turn_on(self, **kwargs):
         """Turn light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None and self.entity_description.set_brightness is not None:
-            await self.entity_description.set_brightness(self._host.api, self._channel, brightness)
+        if (
+            brightness is not None
+            and self.entity_description.set_brightness is not None
+        ):
+            await self.entity_description.set_brightness(
+                self._host.api, self._channel, brightness
+            )
 
         await self.entity_description.turn_on_off(self._host.api, self._channel, True)
         self.async_write_ha_state()
