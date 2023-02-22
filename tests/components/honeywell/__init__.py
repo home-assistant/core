@@ -1,4 +1,6 @@
 """Tests for honeywell component."""
+from unittest.mock import MagicMock
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -23,7 +25,7 @@ async def init_integration_with_entry(
     return entry
 
 
-def reset_mock(device) -> None:
+def reset_mock(device: MagicMock) -> None:
     """Reset the mocks for test."""
     device.set_setpoint_cool.reset_mock()
     device.set_setpoint_heat.reset_mock()

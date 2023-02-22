@@ -53,7 +53,7 @@ PRESET_HOLD = "Hold"
 
 async def test_no_thermostats(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test the setup of the climate entities when there are no appliances available."""
     device._data = {}
     await init_integration(hass, config_entry)
@@ -62,7 +62,7 @@ async def test_no_thermostats(
 
 async def test_static_attributes(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test static climate attributes."""
     await init_integration(hass, config_entry)
 
@@ -109,7 +109,7 @@ async def test_static_attributes(
 
 async def test_dynamic_attributes(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test dynamic attributes."""
 
     await init_integration(hass, config_entry)
@@ -170,7 +170,7 @@ async def test_dynamic_attributes(
 
 async def test_mode_service_calls(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test controlling the entity mode through service calls."""
     await init_integration(hass, config_entry)
     entity_id = f"climate.{device.name}"
@@ -222,7 +222,7 @@ async def test_mode_service_calls(
 
 async def test_auxheat_service_calls(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test controlling the auxheat through service calls."""
     await init_integration(hass, config_entry)
     entity_id = f"climate.{device.name}"
@@ -247,7 +247,7 @@ async def test_auxheat_service_calls(
 
 async def test_fan_modes_service_calls(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test controlling the fan modes through service calls."""
     await init_integration(hass, config_entry)
     entity_id = f"climate.{device.name}"
@@ -284,7 +284,7 @@ async def test_fan_modes_service_calls(
 
 async def test_service_calls_off_mode(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test controlling the entity through service calls."""
 
     device.system_mode = "off"
@@ -446,7 +446,7 @@ async def test_service_calls_off_mode(
 
 async def test_service_calls_cool_mode(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test controlling the entity through service calls."""
 
     device.system_mode = "cool"
@@ -612,7 +612,7 @@ async def test_service_calls_cool_mode(
 
 async def test_service_calls_heat_mode(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test controlling the entity through service calls."""
 
     device.system_mode = "heat"
@@ -788,7 +788,7 @@ async def test_service_calls_heat_mode(
 
 async def test_service_calls_auto_mode(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test controlling the entity through service calls."""
 
     device.system_mode = "auto"
@@ -960,7 +960,7 @@ async def test_async_update_errors(
     device: MagicMock,
     config_entry: MagicMock,
     client: MagicMock,
-):
+) -> None:
     """Test update with errors."""
 
     await init_integration(hass, config_entry)
@@ -978,7 +978,7 @@ async def test_async_update_errors(
 
 async def test_aux_heat_off_service_call(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
-):
+) -> None:
     """Test aux heat off turns of system when no heat configured."""
     device.raw_ui_data["SwitchHeatAllowed"] = False
     device.raw_ui_data["SwitchAutoAllowed"] = False
