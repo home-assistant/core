@@ -13,6 +13,9 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "invalid_id": "Invalid device_id. You can find your device id in your Anova app."
     }
   }
 }
