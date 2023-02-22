@@ -177,16 +177,6 @@ def add_services() -> None:
     )
 
     platform.async_register_entity_service(
-        "vacuum_goto",
-        cv.make_entity_service_schema(
-            {
-                vol.Required("x_coord"): vol.Coerce(int),
-                vol.Required("y_coord"): vol.Coerce(int),
-            }
-        ),
-        RoborockVacuum.async_goto.__name__,
-    )
-    platform.async_register_entity_service(
         "vacuum_clean_segment",
         cv.make_entity_service_schema(
             {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])}
@@ -371,7 +361,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         """Get the error str if an error code exists."""
         if not self._device_status:
             return None
-        return ERROR_CODE_TO_TEXT.get(self._device_status.error_code, "Unkown Error")
+        return ERROR_CODE_TO_TEXT.get(self._device_status.error_code, "Unknown Error")
 
     @property
     def capability_attributes(self) -> dict[str, list[str]]:
@@ -434,10 +424,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
             [k for k, v in MOP_INTENSITY_CODES.items() if v == mop_intensity],
         )
         await self.coordinator.async_request_refresh()
-
-    async def async_goto(self, x_coord: int, y_coord: int):
-        """Send vacuum to x,y location."""
-        await self.send(RoborockCommand.APP_GOTO_TARGET, [x_coord, y_coord])
 
     async def async_clean_segment(self, segments):
         """Clean the specified segments(s)."""
