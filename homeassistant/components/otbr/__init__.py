@@ -1,11 +1,13 @@
 """The Open Thread Border Router integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
+import aiohttp
 import python_otbr_api
 
 from homeassistant.components.thread import async_add_dataset
@@ -63,8 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     otbrdata = OTBRData(entry.data["url"], api)
     try:
         dataset = await otbrdata.get_active_dataset_tlvs()
-    except HomeAssistantError as err:
-        raise ConfigEntryNotReady from err
+    except (
+        HomeAssistantError,
+        aiohttp.ClientError,
+        asyncio.TimeoutError,
+    ) as err:
+        raise ConfigEntryNotReady("Unable to connect") from err
     if dataset:
         await async_add_dataset(hass, entry.title, dataset.hex())
 
