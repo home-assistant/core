@@ -11,9 +11,9 @@ from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 
-ENTITY_SCENE = "scene.mock_scene_1"
+ENTITY_SCENE = "scene.litejet_mock_scene_1"
 ENTITY_SCENE_NUMBER = 1
-ENTITY_OTHER_SCENE = "scene.mock_scene_2"
+ENTITY_OTHER_SCENE = "scene.litejet_mock_scene_2"
 ENTITY_OTHER_SCENE_NUMBER = 2
 
 
