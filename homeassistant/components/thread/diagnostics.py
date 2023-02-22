@@ -17,7 +17,6 @@ some of their thread accessories can't be pinged, but it's still a thread proble
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import pyroute2
@@ -25,11 +24,11 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.thread.dataset_store import async_get_store
 from homeassistant.components.thread.discovery import (
-    ThreadRouterDiscovery,
-    ThreadRouterDiscoveryData,
+    async_read_zeroconf_cache,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.components import zeroconf
 
 
 def _get_possible_thread_routes() -> tuple[dict[str, Any], dict[str, Any]]:
@@ -66,17 +65,33 @@ def _get_possible_thread_routes() -> tuple[dict[str, Any], dict[str, Any]]:
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for a config entry."""
+    """Return diagnostics for all known thread networks."""
 
+    networks = {}
+
+    # Start with all networks that HA knows about
+    store = await async_get_store(hass)
+    for record in store.datasets.values():
+        network = networks.setdefault(
+            record.extended_pan_id,
+            {"name": record.network_name, "routers": {}, "prefixes": set()},
+        )
+        if mlp := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
+            network.setdefault("prefixes", set()).add(
+                f"{mlp[0:4]}:{mlp[4:8]}:{mlp[8:12]}:{mlp[12:16]}"
+            )
+
+    # Find all routes currently act that might be thread related, so we can match them to
+    # border routers as we process the zeroconf data.
     routes, reverse_routes = await hass.async_add_executor_job(
         _get_possible_thread_routes
     )
 
-    networks = {}
-
-    def router_discovered(name: str, data: ThreadRouterDiscoveryData):
+    aiozc = await zeroconf.async_get_async_instance(hass)
+    for data in async_read_zeroconf_cache(aiozc):
         network = networks.setdefault(
-            data.extended_pan_id, {"name": data.network_name, "routers": {}}
+            data.extended_pan_id,
+            {"name": data.network_name, "routers": {}, "prefixes": set()},
         )
         router = network["routers"][data.server] = {
             "server": data.server,
@@ -92,35 +107,24 @@ async def async_get_config_entry_diagnostics(
         # announcing via RA
         for address in data.addresses:
             if address in routes:
-                router["routes"] = routes[address]
+                router["routes"].update(routes[address])
 
-    discovery = ThreadRouterDiscovery(hass, router_discovered, lambda str: None)
-    await discovery.async_start()
-    await asyncio.sleep(5)
-    await discovery.async_stop()
+        network["prefixes"].update(router["routes"].keys())
 
+    # Find unexpected via's.
+    # Collect all router addresses and then for each prefix, find via's that aren't
+    # a known router for that prefix.
     for network in networks.values():
-        network["prefixes"] = prefixes = set()
         routers = set()
 
         for router in network["routers"].values():
-            prefixes.update(router["routes"].keys())
             routers.update(router["addresses"])
 
-        # Find any stale routes that we can't map to a meshcop record.
-        for prefix in prefixes:
+        for prefix in network["prefixes"]:
+            if prefix not in reverse_routes:
+                continue
             if ghosts := reverse_routes[prefix] - routers:
                 network["unexpected-routers"] = ghosts
-
-    store = await async_get_store(hass)
-    for record in store.datasets.values():
-        network = networks.setdefault(
-            record.extended_pan_id, {"name": record.network_name, "routers": {}}
-        )
-        if mlp := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
-            network.setdefault("prefixes", set()).add(
-                f"{mlp[0:4]}:{mlp[4:8]}:{mlp[8:12]}:{mlp[12:16]}"
-            )
 
     return {
         "networks": networks,
