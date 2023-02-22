@@ -38,7 +38,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, _user_input: Mapping[str, Any]) -> FlowResult:
         """Handle a reauth flow."""
-        await self.hass.config_entries.async_remove(self.context["entry_id"])
         return self._show_user_form()
 
     async def async_step_user(

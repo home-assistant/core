@@ -263,8 +263,6 @@ HOME_DATA = HomeData(HOME_DATA_RAW)
 
 HOME_DATA_SHARED_RAW = HOME_DATA_RAW.copy()
 
-# Not sure if this is what receivedDevices list looks like.
-# I just copied the devices and product list for now.
 HOME_DATA_SHARED_RAW["receivedDevices"].append(
     {
         "duid": "abc123_shared",

@@ -1,8 +1,6 @@
 """Test Roborock config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.roborock.const import (
     CONF_ENTRY_CODE,
@@ -14,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from .mock_data import MOCK_CONFIG, USER_EMAIL
 
 
-@pytest.mark.asyncio
 async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a successful config flow."""
     # Initialize a config flow
@@ -58,7 +55,6 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
     assert result["result"]
 
 
-@pytest.mark.asyncio
 async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a failed config flow due to incorrect code."""
     result = await hass.config_entries.flow.async_init(
@@ -96,7 +92,6 @@ async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
     assert result["errors"] == {"base": "no_device"}
 
 
-@pytest.mark.asyncio
 async def test_no_devices(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a failed config flow due to no devices on Roborock account."""
     result = await hass.config_entries.flow.async_init(
@@ -134,7 +129,6 @@ async def test_no_devices(hass: HomeAssistant, bypass_api_fixture) -> None:
     assert result["errors"] == {"base": "no_device"}
 
 
-@pytest.mark.asyncio
 async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a failed config flow due to credential validation failure."""
     result = await hass.config_entries.flow.async_init(
@@ -159,3 +153,13 @@ async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture) -> None:
     # Check the user form is presented with the error
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "auth"}
+
+
+async def test_reauth(hass: HomeAssistant, bypass_api_fixture) -> None:
+    """Test reauth flow handles correctly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert result["step_id"] == "user"
+    # Confirm best way to do this test

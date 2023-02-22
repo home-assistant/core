@@ -1,6 +1,5 @@
 """Test Roborock platform."""
 
-import pytest
 
 from homeassistant.components.roborock import VACUUM
 from homeassistant.core import HomeAssistant
@@ -10,7 +9,6 @@ from .common import setup_platform
 from .mock_data import HOME_DATA
 
 
-@pytest.mark.asyncio
 async def test_disable_include_shared(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Tests devices are registered in the entity registry."""
     await setup_platform(hass, VACUUM, include_shared=False)

@@ -1,7 +1,6 @@
 """Tests for Roborock vacuums."""
 from unittest.mock import patch
 
-import pytest
 from roborock.typing import RoborockCommand
 
 from homeassistant.components.roborock.vacuum import (
@@ -30,7 +29,6 @@ ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = HOME_DATA.devices[0].duid
 
 
-@pytest.mark.asyncio
 async def test_registry_entries(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Tests devices are registered in the entity registry."""
     await setup_platform(hass, VACUUM_DOMAIN)
@@ -39,12 +37,9 @@ async def test_registry_entries(hass: HomeAssistant, bypass_api_fixture) -> None
     assert entry.unique_id == DEVICE_ID
 
 
-@pytest.mark.asyncio
 async def test_vacuum_services(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test vacuum services."""
     await setup_platform(hass, VACUUM_DOMAIN)
-    entity_registry = er.async_get(hass)
-    entity_registry.async_get(ENTITY_ID)
     # Test starting
     with patch("roborock.RoborockMqttClient.send_command") as mock_api_command:
         await hass.services.async_call(
@@ -98,12 +93,9 @@ async def test_vacuum_services(hass: HomeAssistant, bypass_api_fixture) -> None:
         )
 
 
-@pytest.mark.asyncio
 async def test_vacuum_fan_speeds(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test vacuum fan speeds."""
     await setup_platform(hass, VACUUM_DOMAIN)
-    entity_registry = er.async_get(hass)
-    entity_registry.async_get(ENTITY_ID)
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes.get(ATTR_FAN_SPEED) == "balanced"
@@ -125,12 +117,9 @@ async def test_vacuum_fan_speeds(hass: HomeAssistant, bypass_api_fixture) -> Non
         mock_send.assert_called_once_with(RoborockCommand.SET_CUSTOM_MODE, [])
 
 
-@pytest.mark.asyncio
 async def test_mop_modes(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test mop modes."""
     await setup_platform(hass, VACUUM_DOMAIN)
-    entity_registry = er.async_get(hass)
-    entity_registry.async_get(ENTITY_ID)
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes.get("mop_mode") == "standard"
@@ -152,12 +141,9 @@ async def test_mop_modes(hass: HomeAssistant, bypass_api_fixture) -> None:
         mock_send.assert_called_once_with(RoborockCommand.SET_MOP_MODE, [301])
 
 
-@pytest.mark.asyncio
 async def test_mop_intensity(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test mop intensity."""
     await setup_platform(hass, VACUUM_DOMAIN)
-    entity_registry = er.async_get(hass)
-    entity_registry.async_get(ENTITY_ID)
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes.get("mop_intensity") == "intense"
