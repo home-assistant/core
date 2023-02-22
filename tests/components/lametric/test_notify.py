@@ -20,14 +20,13 @@ from homeassistant.components.notify import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
-
 NOTIFY_SERVICE = "frenck_s_lametric"
+
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_notification_defaults(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric notification defaults."""
@@ -64,7 +63,6 @@ async def test_notification_defaults(
 
 async def test_notification_options(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric notification options."""
@@ -107,7 +105,6 @@ async def test_notification_options(
 
 async def test_notification_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric notification error."""

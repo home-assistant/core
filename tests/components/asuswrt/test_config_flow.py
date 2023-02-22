@@ -102,7 +102,7 @@ async def test_user(hass: HomeAssistant, mock_unique_id, unique_id) -> None:
 
 
 @pytest.mark.parametrize(
-    ["config", "error"],
+    ("config", "error"),
     [
         ({CONF_PASSWORD: None}, "pwd_or_ssh"),
         ({CONF_SSH_KEY: SSH_KEY}, "pwd_and_ssh"),
@@ -221,7 +221,7 @@ async def test_abort_invalid_unique_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["side_effect", "error"],
+    ("side_effect", "error"),
     [
         (OSError, "cannot_connect"),
         (TypeError, "unknown"),

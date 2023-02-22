@@ -411,7 +411,7 @@ async def test_auth_access_signed_path_with_query_param_safe_param(
 
 
 @pytest.mark.parametrize(
-    "base_url,test_url",
+    ("base_url", "test_url"),
     [
         ("/?test=test", "/?test=test&foo=bar"),
         ("/", "/?test=test"),
