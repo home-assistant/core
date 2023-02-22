@@ -128,7 +128,7 @@ async def test_lights_turn_off_when_everyone_leaves(
     )
 
 
-async def _test_lights_turn_on_when_coming_home_after_sun_set(
+async def test_lights_turn_on_when_coming_home_after_sun_set(
     hass: HomeAssistant, scanner
 ) -> None:
     """Test lights turn on when coming home after sun set."""
@@ -152,7 +152,7 @@ async def _test_lights_turn_on_when_coming_home_after_sun_set(
     )
 
 
-async def _test_lights_turn_on_when_coming_home_after_sun_set_person(
+async def test_lights_turn_on_when_coming_home_after_sun_set_person(
     hass: HomeAssistant, scanner
 ) -> None:
     """Test lights turn on when coming home after sun set."""
