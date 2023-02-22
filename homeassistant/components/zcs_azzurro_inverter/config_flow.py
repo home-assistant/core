@@ -10,7 +10,6 @@ from zcs_azzurro_api import DeviceOfflineError, HttpRequestError, Inverter
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from . import CannotConnect, InvalidAuth
 from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
@@ -59,17 +58,8 @@ class ZcsAzzurroHub:
             conn = await self.hass.async_add_executor_job(self.zcs_api.check_connection)
             if conn:
                 return self.zcs_api
-        except HttpRequestError as excp:
-            _LOGGER.debug("test call failed with code %s", excp.status_code)
-            if excp.status_code == 401:
-                raise ConfigEntryAuthFailed from excp
-            if excp.status_code == 404:
-                raise CannotConnect from excp
-            if excp.status_code == 403:
-                raise InvalidAuth from excp
-            raise CannotConnect from excp
-        except DeviceOfflineError as excp:
-            raise ConfigEntryNotReady from excp
+        except (HttpRequestError, DeviceOfflineError):
+            return None
         return None
 
 

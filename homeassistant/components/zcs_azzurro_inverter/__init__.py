@@ -6,7 +6,11 @@ from zcs_azzurro_api import DeviceOfflineError, HttpRequestError, Inverter
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import DOMAIN, SCHEMA_CLIENT_KEY, SCHEMA_FRIENDLY_NAME, SCHEMA_THINGS_KEY
 
@@ -29,8 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
             return True
         return False
-    except (DeviceOfflineError, HttpRequestError):
-        return False
+    except HttpRequestError as excp:
+        if excp.status_code in (401, 403):
+            raise ConfigEntryAuthFailed(f"Not authorized: {excp}") from excp
+        raise ConfigEntryNotReady(f"Connection error: {excp}") from excp
+    except DeviceOfflineError as excp:
+        raise ConfigEntryNotReady(f"No response: {excp}") from excp
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
