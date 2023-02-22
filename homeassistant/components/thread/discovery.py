@@ -4,8 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 import logging
+from typing import cast
 
-from zeroconf import BadTypeInNameException, ServiceListener, Zeroconf
+from zeroconf import BadTypeInNameException, DNSPointer, ServiceListener, Zeroconf
 from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
 from homeassistant.components import zeroconf
@@ -75,6 +76,8 @@ def async_read_zeroconf_cache(aiozc: AsyncZeroconf) -> list[ThreadRouterDiscover
 
     records = aiozc.zeroconf.cache.async_all_by_details(THREAD_TYPE, TYPE_PTR, CLASS_IN)
     for record in records:
+        record = cast(DNSPointer, record)
+
         try:
             info = AsyncServiceInfo(THREAD_TYPE, record.alias)
         except BadTypeInNameException as ex:

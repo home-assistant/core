@@ -17,7 +17,7 @@ some of their thread accessories can't be pinged, but it's still a thread proble
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypedDict
 
 import pyroute2
 from python_otbr_api.tlv_parser import MeshcopTLVType
@@ -29,12 +29,51 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
-def _get_possible_thread_routes() -> tuple[dict[str, Any], dict[str, Any]]:
+class Neighbour(TypedDict):
+    """A neighbour cache entry (ip neigh)."""
+
+    lladdr: str
+    state: int
+    probes: int
+
+
+class Route(TypedDict):
+    """A route table entry (ip -6 route)."""
+
+    metrics: int
+    priority: int
+    is_nexthop: bool
+
+
+class Router(TypedDict):
+    """A border router."""
+
+    server: str | None
+    addresses: list[str]
+    neighbours: dict[str, Neighbour]
+    thread_version: str | None
+    model: str | None
+    vendor: str | None
+    routes: dict[str, Route]
+
+
+class Network(TypedDict):
+    """A thread network."""
+
+    name: str | None
+    routers: dict[str, Router]
+    prefixes: set[str]
+    unexpected_routers: set[str]
+
+
+def _get_possible_thread_routes() -> (
+    tuple[dict[str, dict[str, Route]], dict[str, set[str]]]
+):
     # Build a list of possible thread routes
     # Right now, this is ipv6 /64's that have a gateway
     # We cross reference with zerconf data to confirm which via's are known border routers
-    routes = {}
-    reverse_routes = {}
+    routes: dict[str, dict[str, Route]] = {}
+    reverse_routes: dict[str, set[str]] = {}
 
     with pyroute2.NDB() as ndb:
         for record in ndb.routes:
@@ -54,14 +93,15 @@ def _get_possible_thread_routes() -> tuple[dict[str, Any], dict[str, Any]]:
                 "priority": record.priority,
                 # NM creates "nexthop" routes - a single route with many via's
                 # Kernel creates many routes with a single via
-                "is-nexthop": record.nh_gateway is not None,
+                "is_nexthop": record.nh_gateway is not None,
             }
             reverse_routes.setdefault(record.dst, set()).add(gateway)
     return routes, reverse_routes
 
 
-def _get_neighbours() -> dict[str, Any]:
-    neighbours = {}
+def _get_neighbours() -> dict[str, Neighbour]:
+    neighbours: dict[str, Neighbour] = {}
+
     with pyroute2.NDB() as ndb:
         for record in ndb.neighbours:
             neighbours[record.dst] = {
@@ -78,19 +118,24 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for all known thread networks."""
 
-    networks = {}
+    networks: dict[str, Network] = {}
 
     # Start with all networks that HA knows about
     store = await async_get_store(hass)
     for record in store.datasets.values():
+        if not record.extended_pan_id:
+            continue
         network = networks.setdefault(
             record.extended_pan_id,
-            {"name": record.network_name, "routers": {}, "prefixes": set()},
+            {
+                "name": record.network_name,
+                "routers": {},
+                "prefixes": set(),
+                "unexpected_routers": set(),
+            },
         )
         if mlp := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
-            network.setdefault("prefixes", set()).add(
-                f"{mlp[0:4]}:{mlp[4:8]}:{mlp[8:12]}:{mlp[12:16]}"
-            )
+            network["prefixes"].add(f"{mlp[0:4]}:{mlp[4:8]}:{mlp[8:12]}:{mlp[12:16]}")
 
     # Find all routes currently act that might be thread related, so we can match them to
     # border routers as we process the zeroconf data.
@@ -103,13 +148,25 @@ async def async_get_config_entry_diagnostics(
 
     aiozc = await zeroconf.async_get_async_instance(hass)
     for data in async_read_zeroconf_cache(aiozc):
+        if not data.extended_pan_id:
+            continue
+
         network = networks.setdefault(
             data.extended_pan_id,
-            {"name": data.network_name, "routers": {}, "prefixes": set()},
+            {
+                "name": data.network_name,
+                "routers": {},
+                "prefixes": set(),
+                "unexpected_routers": set(),
+            },
         )
+
+        if not data.server:
+            continue
+
         router = network["routers"][data.server] = {
             "server": data.server,
-            "addresses": data.addresses,
+            "addresses": data.addresses or [],
             "neighbours": {},
             "thread_version": data.thread_version,
             "model": data.model_name,
@@ -120,12 +177,13 @@ async def async_get_config_entry_diagnostics(
         # For every address this border router hass, see if we have seen
         # it in the route table as a via - these are the routes its
         # announcing via RA
-        for address in data.addresses:
-            if address in routes:
-                router["routes"].update(routes[address])
+        if data.addresses:
+            for address in data.addresses:
+                if address in routes:
+                    router["routes"].update(routes[address])
 
-            if address in neighbours:
-                router["neighbours"][address] = neighbours[address]
+                if address in neighbours:
+                    router["neighbours"][address] = neighbours[address]
 
         network["prefixes"].update(router["routes"].keys())
 
@@ -142,7 +200,7 @@ async def async_get_config_entry_diagnostics(
             if prefix not in reverse_routes:
                 continue
             if ghosts := reverse_routes[prefix] - routers:
-                network["unexpected-routers"] = ghosts
+                network["unexpected_routers"] = ghosts
 
     return {
         "networks": networks,
