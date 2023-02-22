@@ -386,6 +386,8 @@ def icon(value: Any) -> str:
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
+_TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
+
 time_period_dict = vol.All(
     dict,
     vol.Schema(
@@ -397,7 +399,7 @@ time_period_dict = vol.All(
             "milliseconds": vol.Coerce(float),
         }
     ),
-    has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
+    has_at_least_one_key(*_TIME_PERIOD_DICT_KEYS),
     lambda value: timedelta(**value),
 )
 
@@ -639,8 +641,24 @@ def template_complex(value: Any) -> Any:
     return value
 
 
+def _positive_time_period_template_complex(value: Any) -> Any:
+    """Do basic validation of a positive time period expressed as a templated dict."""
+    if not isinstance(value, dict) or not value:
+        raise vol.Invalid("template should be a dict")
+    for key, element in value.items():
+        if not isinstance(key, str):
+            raise vol.Invalid("key should be a string")
+        if not template_helper.is_template_string(key):
+            vol.In(_TIME_PERIOD_DICT_KEYS)(key)
+        if not isinstance(element, str) or (
+            isinstance(element, str) and not template_helper.is_template_string(element)
+        ):
+            vol.All(vol.Coerce(float), vol.Range(min=0))(element)
+    return template_complex(value)
+
+
 positive_time_period_template = vol.Any(
-    positive_time_period, template, template_complex
+    positive_time_period, dynamic_template, _positive_time_period_template_complex
 )
 
 
@@ -1166,7 +1184,7 @@ STATE_CONDITION_BASE_SCHEMA = {
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
-    vol.Optional(CONF_FOR): positive_time_period,
+    vol.Optional(CONF_FOR): positive_time_period_template,
     # To support use_trigger_value in automation
     # Deprecated 2016/04/25
     vol.Optional("from"): str,

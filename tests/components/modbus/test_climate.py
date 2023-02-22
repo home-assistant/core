@@ -185,7 +185,7 @@ async def test_config_hvac_onoff_register(hass: HomeAssistant, mock_modbus) -> N
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,expected",
+    ("register_words", "expected"),
     [
         (
             [0x00, 0x00],
@@ -485,7 +485,7 @@ async def test_restore_state_climate(
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,start_expect,end_expect",
+    ("register_words", "do_exception", "start_expect", "end_expect"),
     [
         (
             [0x8000],
@@ -525,7 +525,7 @@ async def test_lazy_error_climate(
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words",
+    ("config_addon", "register_words"),
     [
         (
             {

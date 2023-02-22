@@ -1508,7 +1508,7 @@ async def test_setup_and_remove_config_entry(
     ),
 )
 @pytest.mark.parametrize(
-    "group_type,extra_options",
+    ("group_type", "extra_options"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),

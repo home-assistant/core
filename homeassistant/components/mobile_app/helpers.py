@@ -14,7 +14,8 @@ from nacl.secret import SecretBox
 from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.json import JSONEncoder, JsonValueType, json_loads
+from homeassistant.helpers.json import JSONEncoder
+from homeassistant.util.json import JsonValueType, json_loads
 
 from .const import (
     ATTR_APP_DATA,
@@ -91,7 +92,7 @@ def _decrypt_payload_helper(
     return message
 
 
-def _decrypt_payload(key: str | None, ciphertext: str) -> JsonValueType | None:
+def decrypt_payload(key: str | None, ciphertext: str) -> JsonValueType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> str:
@@ -100,7 +101,7 @@ def _decrypt_payload(key: str | None, ciphertext: str) -> JsonValueType | None:
     return _decrypt_payload_helper(key, ciphertext, get_key_bytes, HexEncoder)
 
 
-def _decrypt_payload_legacy(key: str | None, ciphertext: str) -> JsonValueType | None:
+def decrypt_payload_legacy(key: str | None, ciphertext: str) -> JsonValueType | None:
     """Decrypt encrypted payload."""
 
     def get_key_bytes(key: str, keylen: int) -> bytes:

@@ -83,6 +83,9 @@ libcst==0.3.23
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 
+# This is a old unmaintained library and is replaced with faust-cchardet
+cchardet==1000000000.0.0
+
 # To remove reliance on typing
 btlewrap>=0.0.10
 
@@ -154,6 +157,10 @@ pyOpenSSL>=23.0.0
 # uamqp newer versions we currently can't build for armv7/armhf
 # Limit this to Python 3.10, to not block Python 3.11 dev for now
 uamqp==1.6.0;python_version<'3.11'
+
+# faust-cchardet: Ensure we have a version we can build wheels
+# 2.1.18 is the first version that works with our wheel builder
+faust-cchardet>=2.1.18
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

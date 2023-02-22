@@ -66,7 +66,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         "select.energy_bill",
     ),
 )
-async def test_services(hass, meter):
+async def test_services(hass: HomeAssistant, meter) -> None:
     """Test energy sensor reset service."""
     config = {
         "utility_meter": {

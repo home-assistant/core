@@ -83,7 +83,7 @@ def set_utc(hass):
         ),
     ),
 )
-async def test_state(hass, yaml_config, config_entry_config):
+async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
     """Test utility sensor state."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -245,7 +245,7 @@ async def test_state(hass, yaml_config, config_entry_config):
         ),
     ),
 )
-async def test_not_unique_tariffs(hass, yaml_config):
+async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
     """Test utility sensor state initializtion."""
     assert not await async_setup_component(hass, DOMAIN, yaml_config)
 
@@ -278,7 +278,7 @@ async def test_not_unique_tariffs(hass, yaml_config):
         ),
     ),
 )
-async def test_init(hass, yaml_config, config_entry_config):
+async def test_init(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
     """Test utility sensor state initializtion."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -389,7 +389,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
         ),
     ),
 )
-async def test_entity_name(hass, yaml_config, entity_id, name):
+async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) -> None:
     """Test utility sensor state initializtion."""
     assert await async_setup_component(hass, DOMAIN, yaml_config)
     await hass.async_block_till_done()
@@ -445,7 +445,9 @@ async def test_entity_name(hass, yaml_config, entity_id, name):
         ),
     ),
 )
-async def test_device_class(hass, yaml_config, config_entry_configs):
+async def test_device_class(
+    hass: HomeAssistant, yaml_config, config_entry_configs
+) -> None:
     """Test utility device_class."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -519,7 +521,9 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
         ),
     ),
 )
-async def test_restore_state(hass, yaml_config, config_entry_config):
+async def test_restore_state(
+    hass: HomeAssistant, yaml_config, config_entry_config
+) -> None:
     """Test utility sensor restore state."""
     # Home assistant is not runnit yet
     hass.state = CoreState.not_running
@@ -676,7 +680,9 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
         ),
     ),
 )
-async def test_net_consumption(hass, yaml_config, config_entry_config):
+async def test_net_consumption(
+    hass: HomeAssistant, yaml_config, config_entry_config
+) -> None:
     """Test utility sensor state."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -744,7 +750,12 @@ async def test_net_consumption(hass, yaml_config, config_entry_config):
         ),
     ),
 )
-async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplog):
+async def test_non_net_consumption(
+    hass: HomeAssistant,
+    yaml_config,
+    config_entry_config,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test utility sensor state."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -823,7 +834,12 @@ async def test_non_net_consumption(hass, yaml_config, config_entry_config, caplo
         ),
     ),
 )
-async def test_delta_values(hass, yaml_config, config_entry_config, caplog):
+async def test_delta_values(
+    hass: HomeAssistant,
+    yaml_config,
+    config_entry_config,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test utility meter "delta_values" mode."""
     # Home assistant is not runnit yet
     hass.state = CoreState.not_running

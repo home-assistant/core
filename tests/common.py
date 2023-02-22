@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable, Generator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
@@ -67,6 +67,14 @@ from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
+from homeassistant.util.json import (
+    JsonArrayType,
+    JsonObjectType,
+    JsonValueType,
+    json_loads,
+    json_loads_array,
+    json_loads_object,
+)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
@@ -239,6 +247,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     )
 
     # Load the registries
+    entity.async_setup(hass)
     if load_registries:
         with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
             await asyncio.gather(
@@ -426,6 +435,27 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text()
+
+
+def load_json_value_fixture(
+    filename: str, integration: str | None = None
+) -> JsonValueType:
+    """Load a JSON value from a fixture."""
+    return json_loads(load_fixture(filename, integration))
+
+
+def load_json_array_fixture(
+    filename: str, integration: str | None = None
+) -> JsonArrayType:
+    """Load a JSON array from a fixture."""
+    return json_loads_array(load_fixture(filename, integration))
+
+
+def load_json_object_fixture(
+    filename: str, integration: str | None = None
+) -> JsonObjectType:
+    """Load a JSON object from a fixture."""
+    return json_loads_object(load_fixture(filename, integration))
 
 
 def mock_state_change_event(
@@ -948,9 +978,6 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
-SetupRecorderInstanceT = Callable[..., Awaitable[Any]]
-
-
 def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     # Local import to avoid processing recorder and SQLite modules when running a
@@ -1060,6 +1087,11 @@ class MockEntity(entity.Entity):
     def entity_category(self) -> entity.EntityCategory | None:
         """Return the entity category."""
         return self._handle("entity_category")
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return self._handle("extra_state_attributes")
 
     @property
     def has_entity_name(self) -> bool:
