@@ -18,7 +18,6 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialise sun weg server flow."""
         self.api: APIHelper = None
-        self.user_id = None
         self.data: dict = {}
 
     @callback
@@ -40,13 +39,14 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self._async_show_user_form()
 
-        # Initialise the library with the username & a random id each time it is started
+        # Initialise the library with the username & password
         self.api = APIHelper(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         login_response = await self.hass.async_add_executor_job(self.api.authenticate)
 
         if not login_response:
             return self._async_show_user_form({"base": "invalid_auth"})
 
+        # Store authentication info
         self.data = user_input
         return await self.async_step_plant()
 
