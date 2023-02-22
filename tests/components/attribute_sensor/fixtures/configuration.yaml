@@ -1,0 +1,4 @@
+sensor:
+  - platform: attribute_sensor
+    source: sensor.sensor_one
+    attribute: attribute1
