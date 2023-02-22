@@ -10,6 +10,9 @@ from homeassistant.core import HomeAssistant
 
 from ..const import ID, TYPE
 
+MSG_LOGGER = logging.getLogger("pyinsteon.messages")
+TOPIC_LOGGER = logging.getLogger("pyinsteon.topics")
+
 
 @websocket_api.websocket_command({vol.Required(TYPE): "insteon/logging/get"})
 @websocket_api.require_admin
@@ -20,11 +23,9 @@ async def websocket_get_logging(
     msg: dict[str, Any],
 ) -> None:
     """Get Insteon log levels."""
-    messages = logging.getLogger("pyinsteon.messages")
-    topics = logging.getLogger("pyinsteon.topics")
 
-    msg_logging = messages.level == logging.DEBUG
-    tpc_logging = topics.level == logging.DEBUG
+    msg_logging = MSG_LOGGER.level == logging.DEBUG
+    tpc_logging = TOPIC_LOGGER.level == logging.DEBUG
 
     connection.send_result(msg[ID], {"messages": msg_logging, "topics": tpc_logging})
 
@@ -41,8 +42,6 @@ async def websocket_set_logging(
 ) -> None:
     """Set Insteon log levels."""
     loggers = msg["loggers"]
-    messages = logging.getLogger("pyinsteon.messages")
-    topics = logging.getLogger("pyinsteon.topics")
 
-    messages.level = logging.DEBUG if "messages" in loggers else logging.WARNING
-    topics.level = logging.DEBUG if "topics" in loggers else logging.WARNING
+    MSG_LOGGER.setLevel(logging.DEBUG if "messages" in loggers else logging.WARNING)
+    TOPIC_LOGGER.setLevel(logging.DEBUG if "topics" in loggers else logging.WARNING)

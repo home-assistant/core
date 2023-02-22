@@ -45,20 +45,20 @@ async def test_get_logging(
     topics = logging.getLogger("pyinsteon.topics")
     ws_client = await _async_setup(hass, hass_ws_client)
 
-    messages.level = logging.DEBUG
-    topics.level = logging.WARNING
+    messages.setLevel(logging.DEBUG)
+    topics.setLevel(logging.WARNING)
     await _async_get_logging_test(ws_client, True, False, 1)
 
-    messages.level = logging.WARNING
-    topics.level = logging.DEBUG
+    messages.setLevel(logging.WARNING)
+    topics.setLevel(logging.DEBUG)
     await _async_get_logging_test(ws_client, False, True, 2)
 
-    messages.level = logging.WARNING
-    topics.level = logging.WARNING
+    messages.setLevel(logging.WARNING)
+    topics.setLevel(logging.WARNING)
     await _async_get_logging_test(ws_client, False, False, 3)
 
-    messages.level = logging.DEBUG
-    topics.level = logging.DEBUG
+    messages.setLevel(logging.DEBUG)
+    topics.setLevel(logging.DEBUG)
     await _async_get_logging_test(ws_client, True, True, 4)
 
 

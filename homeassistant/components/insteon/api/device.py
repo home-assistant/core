@@ -181,5 +181,6 @@ async def websocket_set_device_logging(
 ) -> None:
     """Set Insteon device log level."""
     addr = Address(msg[DEVICE_ADDRESS])
-    logger = logging.getLogger(f"pyinsteon.{addr.id}")
-    logger.level = logging.DEBUG if msg["debug"] else logging.WARNING
+    device_logger = logging.getLogger(f"pyinsteon.{addr.id}")
+    device_logger.setLevel(logging.DEBUG if msg["debug"] else logging.WARNING)
+    connection.send_result(msg[ID])

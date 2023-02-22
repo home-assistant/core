@@ -221,10 +221,10 @@ async def test_get_device_logging(
     logger = logging.getLogger(f"pyinsteon.{addr}")
     ws_client, _, _, _ = await _async_setup(hass, hass_ws_client)
 
-    logger.level = logging.DEBUG
+    logger.setLevel(logging.DEBUG)
     await _async_test_get_logging(ws_client, addr, logger, True, 4)
 
-    logger.level = logging.WARNING
+    logger.setLevel(logging.WARNING)
     await _async_test_get_logging(ws_client, addr, logger, False, 5)
 
 
