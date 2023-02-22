@@ -244,6 +244,7 @@ async def test_set_device_logging(
             "debug": True,
         }
     )
+    await ws_client.receive_json()
     await _async_test_get_logging(ws_client, addr, logger, True, 2)
 
     await ws_client.send_json(
@@ -254,4 +255,5 @@ async def test_set_device_logging(
             "debug": False,
         }
     )
+    await ws_client.receive_json()
     await _async_test_get_logging(ws_client, addr, logger, False, 4)
