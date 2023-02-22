@@ -780,10 +780,36 @@ async def test_add_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
-    # Test Smart Start QR provisioning information with S2 inclusion strategy fails
+    # Test S2 DSK string string
     await ws_client.send_json(
         {
             ID: 6,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            DSK: "test_dsk",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {
+            "strategy": InclusionStrategy.SECURITY_S2,
+            "dsk": "test_dsk",
+        },
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test Smart Start QR provisioning information with S2 inclusion strategy fails
+    await ws_client.send_json(
+        {
+            ID: 7,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
@@ -813,7 +839,7 @@ async def test_add_node(
     # Test QR provisioning information with S0 inclusion strategy fails
     await ws_client.send_json(
         {
-            ID: 7,
+            ID: 8,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S0,
@@ -843,7 +869,7 @@ async def test_add_node(
     # Test ValueError is caught as failure
     await ws_client.send_json(
         {
-            ID: 8,
+            ID: 9,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
@@ -863,7 +889,7 @@ async def test_add_node(
     ):
         await ws_client.send_json(
             {
-                ID: 9,
+                ID: 10,
                 TYPE: "zwave_js/add_node",
                 ENTRY_ID: entry.entry_id,
             }
@@ -879,7 +905,7 @@ async def test_add_node(
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 10, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 11, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
