@@ -62,6 +62,19 @@ def _get_possible_thread_routes() -> tuple[dict[str, Any], dict[str, Any]]:
     return routes, reverse_routes
 
 
+def _get_neighbours() -> dict[str, Any]:
+    neighbours = {}
+    with pyroute2.NDB() as ndb:
+        for record in ndb.neighbours:
+            neighbours[record.dst] = {
+                "lladdr": record.lladdr,
+                "state": record.state,
+                "probes": record.probes,
+            }
+
+    return neighbours
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
@@ -87,6 +100,9 @@ async def async_get_config_entry_diagnostics(
         _get_possible_thread_routes
     )
 
+    # Find all neighbours
+    neighbours = await hass.async_add_executor_job(_get_neighbours)
+
     aiozc = await zeroconf.async_get_async_instance(hass)
     for data in async_read_zeroconf_cache(aiozc):
         network = networks.setdefault(
@@ -96,6 +112,7 @@ async def async_get_config_entry_diagnostics(
         router = network["routers"][data.server] = {
             "server": data.server,
             "addresses": data.addresses,
+            "neighbours": {},
             "thread_version": data.thread_version,
             "model": data.model_name,
             "vendor": data.vendor_name,
@@ -108,6 +125,9 @@ async def async_get_config_entry_diagnostics(
         for address in data.addresses:
             if address in routes:
                 router["routes"].update(routes[address])
+
+            if address in neighbours:
+                router["neighbours"][address] = neighbours[address]
 
         network["prefixes"].update(router["routes"].keys())
 
