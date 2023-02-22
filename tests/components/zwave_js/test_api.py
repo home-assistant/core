@@ -2989,6 +2989,24 @@ async def test_firmware_upload_view_invalid_payload(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+async def test_firmware_upload_view_no_driver(
+    hass: HomeAssistant,
+    client,
+    multisensor_6,
+    integration,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the HTTP firmware upload view when the driver doesn't exist."""
+    device = get_device(hass, multisensor_6)
+    client.driver = None
+    aiohttp_client = await hass_client()
+    resp = await aiohttp_client.post(
+        f"/api/zwave_js/firmware/upload/{device.id}",
+        data={"wrong_key": bytes(10)},
+    )
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
 @pytest.mark.parametrize(
     ("method", "url"),
     [("post", "/api/zwave_js/firmware/upload/{}")],
