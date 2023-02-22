@@ -11,6 +11,7 @@ import pytest
 import yaml as pyyaml
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
@@ -52,7 +53,7 @@ def try_both_dumpers(request):
     importlib.reload(yaml_loader)
 
 
-def test_simple_list(try_both_loaders):
+def test_simple_list(try_both_loaders) -> None:
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"
     with io.StringIO(conf) as file:
@@ -60,7 +61,7 @@ def test_simple_list(try_both_loaders):
     assert doc["config"] == ["simple", "list"]
 
 
-def test_simple_dict(try_both_loaders):
+def test_simple_dict(try_both_loaders) -> None:
     """Test simple dict."""
     conf = "key: value"
     with io.StringIO(conf) as file:
@@ -82,7 +83,7 @@ def test_no_key(try_both_loaders, mock_hass_config_yaml: None) -> None:
         yaml.load_yaml(YAML_CONFIG_FILE)
 
 
-def test_environment_variable(try_both_loaders):
+def test_environment_variable(try_both_loaders) -> None:
     """Test config file with environment variable."""
     os.environ["PASSWORD"] = "secret_password"
     conf = "password: !env_var PASSWORD"
@@ -92,7 +93,7 @@ def test_environment_variable(try_both_loaders):
     del os.environ["PASSWORD"]
 
 
-def test_environment_variable_default(try_both_loaders):
+def test_environment_variable_default(try_both_loaders) -> None:
     """Test config file with default value for environment variable."""
     conf = "password: !env_var PASSWORD secret_password"
     with io.StringIO(conf) as file:
@@ -100,7 +101,7 @@ def test_environment_variable_default(try_both_loaders):
     assert doc["password"] == "secret_password"
 
 
-def test_invalid_environment_variable(try_both_loaders):
+def test_invalid_environment_variable(try_both_loaders) -> None:
     """Test config file with no environment variable sat."""
     conf = "password: !env_var PASSWORD"
     with pytest.raises(HomeAssistantError), io.StringIO(conf) as file:
@@ -323,19 +324,19 @@ def test_include_dir_merge_named_recursive(
 
 
 @patch("homeassistant.util.yaml.loader.open", create=True)
-def test_load_yaml_encoding_error(mock_open, try_both_loaders):
+def test_load_yaml_encoding_error(mock_open, try_both_loaders) -> None:
     """Test raising a UnicodeDecodeError."""
     mock_open.side_effect = UnicodeDecodeError("", b"", 1, 0, "")
     with pytest.raises(HomeAssistantError):
         yaml_loader.load_yaml("test")
 
 
-def test_dump(try_both_dumpers):
+def test_dump(try_both_dumpers) -> None:
     """The that the dump method returns empty None values."""
     assert yaml.dump({"a": None, "b": "b"}) == "a:\nb: b\n"
 
 
-def test_dump_unicode(try_both_dumpers):
+def test_dump_unicode(try_both_dumpers) -> None:
     """The that the dump method returns empty None values."""
     assert yaml.dump({"a": None, "b": "привет"}) == "a:\nb: привет\n"
 
@@ -522,7 +523,7 @@ def test_input_class() -> None:
     assert len({input, input2}) == 1
 
 
-def test_input(try_both_loaders, try_both_dumpers):
+def test_input(try_both_loaders, try_both_dumpers) -> None:
     """Test loading inputs."""
     data = {"hello": yaml.Input("test_name")}
     assert yaml.parse_yaml(yaml.dump(data)) == data
@@ -537,7 +538,9 @@ def test_c_loader_is_available_in_ci() -> None:
     assert yaml.loader.HAS_C_LOADER is True
 
 
-async def test_loading_actual_file_with_syntax(hass, try_both_loaders):
+async def test_loading_actual_file_with_syntax(
+    hass: HomeAssistant, try_both_loaders
+) -> None:
     """Test loading a real file with syntax errors."""
     with pytest.raises(HomeAssistantError):
         fixture_path = pathlib.Path(__file__).parent.joinpath(

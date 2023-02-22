@@ -164,20 +164,6 @@ async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
     assert entry.data["host"] == "new-host"
 
 
-async def test_import_duplicate_aborted(hass: HomeAssistant) -> None:
-    """Test a duplicate import host is ignored."""
-    MockConfigEntry(domain="tradfri", data={"host": "some-host"}).add_to_hass(hass)
-
-    flow = await hass.config_entries.flow.async_init(
-        "tradfri",
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={"host": "some-host"},
-    )
-
-    assert flow["type"] == data_entry_flow.FlowResultType.ABORT
-    assert flow["reason"] == "already_configured"
-
-
 async def test_duplicate_discovery(
     hass: HomeAssistant, mock_auth, mock_entry_setup
 ) -> None:

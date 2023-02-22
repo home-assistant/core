@@ -741,7 +741,7 @@ forecast_solar==2.2.0
 fortiosapi==1.0.5
 
 # homeassistant.components.freebox
-freebox-api==1.0.1
+freebox-api==1.1.0
 
 # homeassistant.components.free_mobile
 freesms==0.2.0
@@ -874,10 +874,10 @@ hass-nabucasa==0.61.0
 hass_splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==0.2.6
+hassil==1.0.5
 
 # homeassistant.components.tasmota
-hatasmota==0.6.3
+hatasmota==0.6.4
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -907,10 +907,10 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230202.0
+home-assistant-frontend==20230222.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.1.31
+home-assistant-intents==2023.2.22
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -979,7 +979,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.3.1
+insteon-frontend-home-assistant==0.3.2
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -1183,7 +1183,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==2.0.0
+nettigo-air-monitor==2.1.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1198,7 +1198,7 @@ nextcloudmonitor==1.1.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.2.2
+nextdns==1.3.0
 
 # homeassistant.components.nibe_heatpump
 nibe==1.6.0
@@ -1467,7 +1467,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.0
+pyRFXtrx==0.30.1
 
 # homeassistant.components.switchmate
 pySwitchmate==0.5.1
@@ -1494,7 +1494,7 @@ pyaehw4a1==0.3.9
 pyaftership==21.11.0
 
 # homeassistant.components.airnow
-pyairnow==1.1.0
+pyairnow==1.2.1
 
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
@@ -1687,7 +1687,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.3.1
+pyinsteon==1.3.2
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -1915,6 +1915,9 @@ pyrisco==0.5.7
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
+
+# homeassistant.components.thread
+pyroute2==0.7.5
 
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.16
@@ -2234,7 +2237,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.4.2
+reolink-aio==0.5.0
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2395,7 +2398,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.3
+sqlalchemy==2.0.4
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2593,6 +2596,9 @@ vsure==1.8.1
 
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
+
+# homeassistant.components.vulcan
+vulcan-api==2.3.0
 
 # homeassistant.components.vultr
 vultr==0.1.2
