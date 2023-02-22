@@ -1,0 +1,131 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "resource_error": "Could not update rest data. Verify your configuration"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "resource": "Resource",
+          "authentication": "Select authentication method",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "headers": "Headers",
+          "method": "Method",
+          "timeout": "Timeout"
+        },
+        "data_description": {
+          "resource": "The URL to the website that contains the value",
+          "authentication": "Type of the HTTP authentication. Either basic or digest",
+          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed",
+          "headers": "Headers to use for the web request",
+          "timeout": "Timeout for connection to website"
+        }
+      },
+      "sensor": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "attribute": "Attribute",
+          "index": "Index",
+          "select": "Select",
+          "value_template": "Value Template",
+          "device_class": "Device Class",
+          "state_class": "State Class",
+          "unit_of_measurement": "Unit of Measurement"
+        },
+        "data_description": {
+          "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
+          "attribute": "Get value of an attribute on the selected tag",
+          "index": "Defines which of the elements returned by the CSS selector to use",
+          "value_template": "Defines a template to get the state of the sensor",
+          "device_class": "The type/class of the sensor to set the icon in the frontend",
+          "state_class": "The state_class of the sensor",
+          "unit_of_measurement": "Choose temperature measurement or create your own"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "menu_options": {
+          "add_sensor": "Add sensor",
+          "select_edit_sensor": "Configure sensor",
+          "remove_sensor": "Remove sensor",
+          "resource": "Configure resource"
+        }
+      },
+      "add_sensor": {
+        "data": {
+          "name": "[%key:component::scrape::config::step::sensor::data::name%]",
+          "attribute": "[%key:component::scrape::config::step::sensor::data::attribute%]",
+          "index": "[%key:component::scrape::config::step::sensor::data::index%]",
+          "select": "[%key:component::scrape::config::step::sensor::data::select%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
+          "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
+          "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
+        },
+        "data_description": {
+          "select": "[%key:component::scrape::config::step::sensor::data_description::select%]",
+          "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
+          "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
+          "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
+          "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
+        }
+      },
+      "edit_sensor": {
+        "data": {
+          "name": "[%key:component::scrape::config::step::sensor::data::name%]",
+          "attribute": "[%key:component::scrape::config::step::sensor::data::attribute%]",
+          "index": "[%key:component::scrape::config::step::sensor::data::index%]",
+          "select": "[%key:component::scrape::config::step::sensor::data::select%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
+          "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
+          "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
+        },
+        "data_description": {
+          "select": "[%key:component::scrape::config::step::sensor::data_description::select%]",
+          "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
+          "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
+          "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
+          "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
+        }
+      },
+      "resource": {
+        "data": {
+          "resource": "[%key:component::scrape::config::step::user::data::resource%]",
+          "method": "[%key:component::scrape::config::step::user::data::method%]",
+          "authentication": "[%key:component::scrape::config::step::user::data::authentication%]",
+          "username": "[%key:component::scrape::config::step::user::data::username%]",
+          "password": "[%key:component::scrape::config::step::user::data::password%]",
+          "headers": "[%key:component::scrape::config::step::user::data::headers%]",
+          "verify_ssl": "[%key:component::scrape::config::step::user::data::verify_ssl%]",
+          "timeout": "[%key:component::scrape::config::step::user::data::timeout%]"
+        },
+        "data_description": {
+          "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
+          "authentication": "[%key:component::scrape::config::step::user::data_description::authentication%]",
+          "headers": "[%key:component::scrape::config::step::user::data_description::headers%]",
+          "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
+          "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "moved_yaml": {
+      "title": "The Scrape YAML configuration has been moved",
+      "description": "Configuring Scrape using YAML has been moved to integration key.\n\nYour existing YAML configuration will be working for 2 more versions.\n\nMigrate your YAML configuration to the integration key according to the documentation."
+    }
+  }
+}

@@ -1,14 +1,17 @@
 """Support for Home Assistant iOS app sensors."""
 from __future__ import annotations
 
-from homeassistant.components import ios
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .. import ios
 from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -27,12 +30,21 @@ DEFAULT_ICON_LEVEL = "mdi:battery"
 DEFAULT_ICON_STATE = "mdi:power-plug"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the iOS sensor."""
     # Leave here for if someone accidentally adds platform: ios to config
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up iOS from a config entry."""
     entities = [
         IOSSensor(device_name, device, description)
@@ -48,7 +60,9 @@ class IOSSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, device_name, device, description: SensorEntityDescription):
+    def __init__(
+        self, device_name, device, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._device = device

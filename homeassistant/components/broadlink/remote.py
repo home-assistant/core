@@ -2,9 +2,11 @@
 import asyncio
 from base64 import b64encode
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import timedelta
 from itertools import product
 import logging
+from typing import Any
 
 from broadlink.exceptions import (
     AuthorizationError,
@@ -15,33 +17,33 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_DELAY_SECS,
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
-    PLATFORM_SCHEMA,
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
-    SUPPORT_DELETE_COMMAND,
-    SUPPORT_LEARN_COMMAND,
     RemoteEntity,
+    RemoteEntityFeature,
 )
-from homeassistant.const import CONF_HOST, STATE_OFF
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_COMMAND, STATE_OFF
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
-from .helpers import data_packet, import_device
+from .helpers import data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,24 +87,12 @@ SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
     {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the device and discontinue platform.
-
-    This is for backward compatibility.
-    Do not use this method.
-    """
-    import_device(hass, config[CONF_HOST])
-    _LOGGER.warning(
-        "The remote platform is deprecated, please remove it from your configuration"
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Broadlink remote."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     remote = BroadlinkRemote(
@@ -116,6 +106,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     """Representation of a Broadlink remote."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
         super().__init__(device)
@@ -126,9 +118,10 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags = defaultdict(int)
         self._lock = asyncio.Lock()
 
-        self._attr_name = f"{device.name} Remote"
         self._attr_is_on = True
-        self._attr_supported_features = SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
+        self._attr_supported_features = (
+            RemoteEntityFeature.LEARN_COMMAND | RemoteEntityFeature.DELETE_COMMAND
+        )
         self._attr_unique_id = device.unique_id
 
     def _extract_codes(self, commands, device=None):
@@ -184,18 +177,18 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         """
         return self._flags
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is None or state.state != STATE_OFF
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the remote."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the remote."""
         self._attr_is_on = False
         self.async_write_ha_state()
@@ -208,7 +201,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags.update(await self._flag_storage.async_load() or {})
         self._storage_loaded = True
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to a device."""
         kwargs[ATTR_COMMAND] = command
         kwargs = SERVICE_SEND_SCHEMA(kwargs)
@@ -265,7 +258,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         if at_least_one_sent:
             self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
-    async def async_learn_command(self, **kwargs):
+    async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a list of commands from a remote."""
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
@@ -329,7 +322,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press the '{command}' button.",
             title="Learn command",
             notification_id="learn_command",
@@ -351,8 +345,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="learn_command"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="learn_command"
             )
 
     async def _async_learn_rf_command(self, command):
@@ -366,7 +360,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             _LOGGER.debug("Failed to sweep frequency: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press and hold the '{command}' button.",
             title="Sweep frequency",
             notification_id="sweep_frequency",
@@ -387,8 +382,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="sweep_frequency"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="sweep_frequency"
             )
 
         await asyncio.sleep(1)
@@ -400,7 +395,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
-        self.hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            self.hass,
             f"Press the '{command}' button again.",
             title="Learn command",
             notification_id="learn_command",
@@ -422,11 +418,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
 
         finally:
-            self.hass.components.persistent_notification.async_dismiss(
-                notification_id="learn_command"
+            persistent_notification.async_dismiss(
+                self.hass, notification_id="learn_command"
             )
 
-    async def async_delete_command(self, **kwargs):
+    async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete a list of commands from a remote."""
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]

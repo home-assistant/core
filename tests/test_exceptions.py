@@ -1,12 +1,17 @@
 """Test to verify that Home Assistant exceptions work."""
+from __future__ import annotations
+
+import pytest
+
 from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     ConditionErrorMessage,
+    TemplateError,
 )
 
 
-def test_conditionerror_format():
+def test_conditionerror_format() -> None:
     """Test ConditionError stringifiers."""
     error1 = ConditionErrorMessage("test", "A test error")
     assert str(error1) == "In 'test' condition: A test error"
@@ -43,3 +48,16 @@ In 'box' (item 2 of 2):
         == """In 'box':
   In 'test' condition: A test error"""
     )
+
+
+@pytest.mark.parametrize(
+    ("arg", "expected"),
+    [
+        ("message", "message"),
+        (Exception("message"), "Exception: message"),
+    ],
+)
+def test_template_message(arg: str | Exception, expected: str) -> None:
+    """Ensure we can create TemplateError."""
+    template_error = TemplateError(arg)
+    assert str(template_error) == expected

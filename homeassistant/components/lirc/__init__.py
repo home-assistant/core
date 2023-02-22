@@ -7,6 +7,8 @@ import time
 import lirc
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ EVENT_IR_COMMAND_RECEIVED = "ir_command_received"
 ICON = "mdi:remote"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIRC capability."""
     # blocking=True gives unexpected behavior (multiple responses for 1 press)
     # also by not blocking, we allow hass to shut down the thread gracefully
@@ -40,8 +42,7 @@ def setup(hass, config):
 
 
 class LircInterface(threading.Thread):
-    """
-    This interfaces with the lirc daemon to read IR commands.
+    """This interfaces with the lirc daemon to read IR commands.
 
     When using lirc in blocking mode, sometimes repeated commands get produced
     in the next read of a command so we use a thread here to just wait
@@ -58,7 +59,7 @@ class LircInterface(threading.Thread):
     def run(self):
         """Run the loop of the LIRC interface thread."""
         _LOGGER.debug("LIRC interface thread started")
-        while not self.stopped.isSet():
+        while not self.stopped.is_set():
             try:
                 code = lirc.nextcode()  # list; empty if no buttons pressed
             except lirc.NextCodeError:

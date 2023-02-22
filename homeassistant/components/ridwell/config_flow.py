@@ -1,6 +1,7 @@
 """Config flow for Ridwell integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from aioridwell import async_get_client
@@ -11,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 
@@ -32,7 +32,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WattTime."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
@@ -81,9 +81,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_USERNAME: self._username, CONF_PASSWORD: self._password},
         )
 
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

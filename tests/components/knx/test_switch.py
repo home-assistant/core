@@ -1,6 +1,4 @@
 """Test KNX switch."""
-from unittest.mock import patch
-
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -12,8 +10,10 @@ from homeassistant.core import HomeAssistant, State
 
 from .conftest import KNXTestKit
 
+from tests.common import mock_restore_cache
 
-async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
+
+async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX switch."""
     await knx.setup_integration(
         {
@@ -52,7 +52,7 @@ async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
+async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX switch with state_address."""
     _ADDRESS = "1/1/1"
     _STATE_ADDRESS = "2/2/2"
@@ -111,24 +111,21 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_restore_and_respond(hass, knx):
+async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
     """Test restoring KNX switch state and respond to read."""
     _ADDRESS = "1/1/1"
     fake_state = State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await knx.setup_integration(
-            {
-                SwitchSchema.PLATFORM: {
-                    CONF_NAME: "test",
-                    KNX_ADDRESS: _ADDRESS,
-                    CONF_RESPOND_TO_READ: True,
-                },
-            }
-        )
+    await knx.setup_integration(
+        {
+            SwitchSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: _ADDRESS,
+                CONF_RESPOND_TO_READ: True,
+            },
+        }
+    )
 
     # restored state - doesn't send telegram
     state = hass.states.get("switch.test")

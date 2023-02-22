@@ -23,11 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = SolarlogData(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -64,7 +64,10 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
             )
 
         self.logger.debug(
-            "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
+            (
+                "Connection to Solarlog successful. Retrieving latest Solarlog update"
+                " of %s"
+            ),
             data.time,
         )
 

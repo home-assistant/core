@@ -9,24 +9,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from . import vicare_login
 from .const import (
-    CONF_CIRCUIT,
     CONF_HEATING_TYPE,
     DEFAULT_HEATING_TYPE,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    VICARE_NAME,
     HeatingType,
 )
 
@@ -38,7 +31,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -50,10 +45,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
                 [e.value for e in HeatingType]
             ),
-            vol.Optional(CONF_NAME, default="ViCare"): cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-                vol.Coerce(int), vol.Range(min=30)
-            ),
         }
         errors: dict[str, str] = {}
 
@@ -62,12 +53,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     vicare_login, self.hass, user_input
                 )
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
-            except PyViCareInvalidCredentialsError as ex:
-                _LOGGER.debug("Could not log in to ViCare, %s", ex)
+            except PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
+            else:
+                return self.async_create_entry(title=VICARE_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -87,25 +76,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user()
-
-    async def async_step_import(self, import_info):
-        """Handle a flow initiated by a YAML config import."""
-
-        await self.async_set_unique_id("Configuration.yaml")
-        self._abort_if_unique_id_configured()
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        # Remove now unsupported config parameters
-        if import_info.get(CONF_CIRCUIT):
-            import_info.pop(CONF_CIRCUIT)
-
-        # Add former optional config if missing
-        if import_info.get(CONF_HEATING_TYPE) is None:
-            import_info[CONF_HEATING_TYPE] = DEFAULT_HEATING_TYPE.value
-
-        return self.async_create_entry(
-            title="Configuration.yaml",
-            data=import_info,
-        )

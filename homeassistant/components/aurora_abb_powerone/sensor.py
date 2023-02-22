@@ -1,34 +1,30 @@
-"""Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
+"""Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aurorapy.client import AuroraError, AuroraSerialClient
-import voluptuous as vol
+from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_DEVICE,
-    CONF_NAME,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .aurora_device import AuroraEntity
-from .const import DEFAULT_ADDRESS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +32,7 @@ SENSOR_TYPES = [
     SensorEntityDescription(
         key="instantaneouspower",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         name="Power Output",
     ),
@@ -44,42 +40,25 @@ SENSOR_TYPES = [
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         name="Temperature",
     ),
     SensorEntityDescription(
         key="totalenergy",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         name="Total Energy",
     ),
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_ADDRESS, default=DEFAULT_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_NAME, default="Solar PV"): cv.string,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up based on configuration.yaml (DEPRECATED)."""
-    _LOGGER.warning(
-        "Loading aurora_abb_powerone via platform config is deprecated; The configuration"
-        " has been migrated to a config entry and can be safely removed from configuration.yaml"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
@@ -107,7 +86,7 @@ class AuroraSensor(AuroraEntity, SensorEntity):
         self.entity_description = entity_description
         self.available_prev = True
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.
@@ -127,22 +106,16 @@ class AuroraSensor(AuroraEntity, SensorEntity):
                 self._attr_native_value = round(energy_wh / 1000, 2)
             self._attr_available = True
 
+        except AuroraTimeoutError:
+            self._attr_state = None
+            self._attr_native_value = None
+            self._attr_available = False
+            _LOGGER.debug("No response from inverter (could be dark)")
         except AuroraError as error:
             self._attr_state = None
             self._attr_native_value = None
             self._attr_available = False
-            # aurorapy does not have different exceptions (yet) for dealing
-            # with timeout vs other comms errors.
-            # This means the (normal) situation of no response during darkness
-            # raises an exception.
-            # aurorapy (gitlab) pull request merged 29/5/2019. When >0.2.6 is
-            # released, this could be modified to :
-            # except AuroraTimeoutError as e:
-            # Workaround: look at the text of the exception
-            if "No response after" in str(error):
-                _LOGGER.debug("No response from inverter (could be dark)")
-            else:
-                raise error
+            raise error
         finally:
             if self._attr_available != self.available_prev:
                 if self._attr_available:

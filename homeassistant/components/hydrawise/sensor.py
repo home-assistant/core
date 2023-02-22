@@ -11,8 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS, TIME_MINUTES
+from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 from . import DATA_HYDRAWISE, HydrawiseEntity
@@ -29,7 +32,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="watering_time",
         name="Watering Time",
         icon="mdi:water-pump",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
 )
 
@@ -47,7 +50,12 @@ TWO_YEAR_SECONDS = 60 * 60 * 24 * 365 * 2
 WATERING_TIME_ICON = "mdi:water-pump"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a sensor for a Hydrawise device."""
     hydrawise = hass.data[DATA_HYDRAWISE].data
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -65,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise sensor: %s", self.name)

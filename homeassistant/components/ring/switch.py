@@ -1,11 +1,14 @@
 """This component provides HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import requests
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -24,7 +27,11 @@ SIREN_ICON = "mdi:alarm-bell"
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Create the switches for the Ring devices."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
     switches = []
@@ -91,11 +98,11 @@ class SirenSwitch(BaseRingSwitch):
         """If the switch is currently on or off."""
         return self._siren_on
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on for 30 seconds."""
         self._set_switch(1)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         self._set_switch(0)
 

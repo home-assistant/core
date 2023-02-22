@@ -13,9 +13,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +120,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the numato integration.
 
     Discovers available Numato devices and loads the binary_sensor, sensor and
@@ -159,13 +162,12 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
-    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
-    load_platform(hass, "sensor", DOMAIN, {}, config)
-    load_platform(hass, "switch", DOMAIN, {}, config)
+    load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+    load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    load_platform(hass, Platform.SWITCH, DOMAIN, {}, config)
     return True
 
 
-# pylint: disable=no-self-use
 class NumatoAPI:
     """Home-Assistant specific API for numato device access."""
 
@@ -207,8 +209,12 @@ class NumatoAPI:
                 f"Port {port} is not set up for numato device {device_id}."
             )
         msg = {
-            gpio.OUT: f"Trying to write to device {device_id} port {port} set up as input.",
-            gpio.IN: f"Trying to read from device {device_id} port {port} set up as output.",
+            gpio.OUT: (
+                f"Trying to write to device {device_id} port {port} set up as input."
+            ),
+            gpio.IN: (
+                f"Trying to read from device {device_id} port {port} set up as output."
+            ),
         }
         if self.ports_registered[(device_id, port)] != direction:
             raise gpio.NumatoGpioError(msg[direction])

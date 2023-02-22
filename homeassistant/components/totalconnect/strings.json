@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Total Connect",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -28,6 +27,17 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "no_locations": "No locations are available for this user, check TotalConnect settings"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TotalConnect Options",
+        "description": "Automatically bypass zones the moment they report a low battery.",
+        "data": {
+          "auto_bypass_low_battery": "Auto bypass low battery"
+        }
+      }
     }
   }
 }

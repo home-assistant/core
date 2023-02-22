@@ -7,18 +7,26 @@ import logging
 from typing import Generic, TypeVar
 
 from yalexs.activity import ActivityType
+from yalexs.doorbell import Doorbell
 from yalexs.keypad import KeypadDetail
-from yalexs.lock import LockDetail
+from yalexs.lock import Lock, LockDetail
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
-from homeassistant.core import callback
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import AugustData
@@ -27,7 +35,6 @@ from .const import (
     ATTR_OPERATION_KEYPAD,
     ATTR_OPERATION_METHOD,
     ATTR_OPERATION_REMOTE,
-    DATA_AUGUST,
     DOMAIN,
     OPERATION_METHOD_AUTORELOCK,
     OPERATION_METHOD_KEYPAD,
@@ -49,19 +56,19 @@ def _retrieve_linked_keypad_battery_state(detail: KeypadDetail) -> int | None:
     return detail.battery_percentage
 
 
-T = TypeVar("T", LockDetail, KeypadDetail)
+_T = TypeVar("_T", LockDetail, KeypadDetail)
 
 
 @dataclass
-class AugustRequiredKeysMixin(Generic[T]):
+class AugustRequiredKeysMixin(Generic[_T]):
     """Mixin for required keys."""
 
-    value_fn: Callable[[T], int | None]
+    value_fn: Callable[[_T], int | None]
 
 
 @dataclass
 class AugustSensorEntityDescription(
-    SensorEntityDescription, AugustRequiredKeysMixin[T]
+    SensorEntityDescription, AugustRequiredKeysMixin[_T]
 ):
     """Describes August sensor entity."""
 
@@ -70,6 +77,7 @@ SENSOR_TYPE_DEVICE_BATTERY = AugustSensorEntityDescription[LockDetail](
     key="device_battery",
     name="Battery",
     entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
     value_fn=_retrieve_device_battery_state,
 )
 
@@ -77,17 +85,22 @@ SENSOR_TYPE_KEYPAD_BATTERY = AugustSensorEntityDescription[KeypadDetail](
     key="linked_keypad_battery",
     name="Battery",
     entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
     value_fn=_retrieve_linked_keypad_battery_state,
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the August sensors."""
-    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    entities = []
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[SensorEntity] = []
     migrate_unique_id_devices = []
     operation_sensors = []
-    batteries = {
+    batteries: dict[str, list[Doorbell | Lock]] = {
         "device_battery": [],
         "linked_keypad_battery": [],
     }
@@ -145,7 +158,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def _async_migrate_old_unique_ids(hass, devices):
     """Keypads now have their own serial number."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
     for device in devices:
         old_entity_id = registry.async_get_entity_id(
             "sensor", DOMAIN, device.old_unique_id
@@ -217,7 +230,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
 
         return attributes
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
         await super().async_added_to_hass()
 
@@ -225,7 +238,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         if not last_state or last_state.state == STATE_UNAVAILABLE:
             return
 
-        self._attr_state = last_state.state
+        self._attr_native_value = last_state.state
         if ATTR_ENTITY_PICTURE in last_state.attributes:
             self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_state.attributes:
@@ -246,10 +259,10 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         return f"{self._device_id}_lock_operator"
 
 
-class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
+class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[_T]):
     """Representation of an August sensor."""
 
-    entity_description: AugustSensorEntityDescription[T]
+    entity_description: AugustSensorEntityDescription[_T]
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -258,8 +271,8 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
         data: AugustData,
         device,
         old_device,
-        description: AugustSensorEntityDescription[T],
-    ):
+        description: AugustSensorEntityDescription[_T],
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description

@@ -41,6 +41,7 @@ def thermostat():
     t.max_temperature = None
     t.min_temperature = None
     t.valve_position = 25  # 25%
+    t.battery = 1
     return t
 
 
@@ -62,6 +63,7 @@ def wallthermostat():
     t.actual_temperature = 19.0
     t.max_temperature = 29.0
     t.min_temperature = 4.5
+    t.battery = 1
     return t
 
 
@@ -77,6 +79,7 @@ def windowshutter():
     shutter.is_thermostat.return_value = False
     shutter.is_wallthermostat.return_value = False
     shutter.is_windowshutter.return_value = True
+    shutter.battery = 1
     return shutter
 
 

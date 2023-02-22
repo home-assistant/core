@@ -1,5 +1,4 @@
 """The tests device sun light trigger component."""
-# pylint: disable=protected-access
 from datetime import datetime
 from unittest.mock import patch
 
@@ -11,7 +10,7 @@ from homeassistant.components import (
     group,
     light,
 )
-from homeassistant.components.device_tracker.const import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -21,7 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -74,7 +73,7 @@ def scanner(hass, enable_custom_integrations):
     return scanner
 
 
-async def test_lights_on_when_sun_sets(hass, scanner):
+async def test_lights_on_when_sun_sets(hass: HomeAssistant, scanner) -> None:
     """Test lights go on when there is someone home and the sun sets."""
     test_time = datetime(2017, 4, 5, 1, 2, 3, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=test_time):
@@ -100,7 +99,9 @@ async def test_lights_on_when_sun_sets(hass, scanner):
     )
 
 
-async def test_lights_turn_off_when_everyone_leaves(hass, enable_custom_integrations):
+async def test_lights_turn_off_when_everyone_leaves(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test lights turn off when everyone leaves the house."""
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -127,7 +128,9 @@ async def test_lights_turn_off_when_everyone_leaves(hass, enable_custom_integrat
     )
 
 
-async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
+async def test_lights_turn_on_when_coming_home_after_sun_set(
+    hass: HomeAssistant, scanner
+) -> None:
     """Test lights turn on when coming home after sun set."""
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=test_time):
@@ -149,7 +152,9 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
     )
 
 
-async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanner):
+async def test_lights_turn_on_when_coming_home_after_sun_set_person(
+    hass: HomeAssistant, scanner
+) -> None:
     """Test lights turn on when coming home after sun set."""
     device_1 = f"{DOMAIN}.device_1"
     device_2 = f"{DOMAIN}.device_2"
@@ -220,7 +225,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
         assert hass.states.get("person.me").state == "home"
 
 
-async def test_initialize_start(hass):
+async def test_initialize_start(hass: HomeAssistant) -> None:
     """Test we initialize when HA starts."""
     hass.state = CoreState.not_running
     assert await async_setup_component(
@@ -233,6 +238,7 @@ async def test_initialize_start(hass):
         "homeassistant.components.device_sun_light_trigger.activate_automation"
     ) as mock_activate:
         hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     assert len(mock_activate.mock_calls) == 1

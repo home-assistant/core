@@ -4,27 +4,29 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import time
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
+from xml.parsers.expat import ExpatError
 
-import attr
-from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
+from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
+    LoginErrorInvalidCredentialsException,
     ResponseErrorException,
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
 from requests.exceptions import Timeout
-from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
     CONF_MAC,
@@ -37,7 +39,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,15 +49,18 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
-    ATTR_UNIQUE_ID,
+    ATTR_CONFIG_ENTRY_ID,
+    CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_MANUFACTURER,
     DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
@@ -72,6 +77,7 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
+    KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
@@ -126,26 +132,28 @@ PLATFORMS = [
 ]
 
 
-@attr.s
+@dataclass
 class Router:
     """Class for router state."""
 
-    hass: HomeAssistant = attr.ib()
-    config_entry: ConfigEntry = attr.ib()
-    connection: Connection = attr.ib()
-    url: str = attr.ib()
+    hass: HomeAssistant
+    config_entry: ConfigEntry
+    connection: Connection
+    url: str
 
-    data: dict[str, Any] = attr.ib(init=False, factory=dict)
-    subscriptions: dict[str, set[str]] = attr.ib(
+    data: dict[str, Any] = field(default_factory=dict, init=False)
+    subscriptions: dict[str, set[str]] = field(
+        default_factory=lambda: defaultdict(
+            set, ((x, {"initial_scan"}) for x in ALL_KEYS)
+        ),
         init=False,
-        factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
-    inflight_gets: set[str] = attr.ib(init=False, factory=set)
-    client: Client
-    suspended = attr.ib(init=False, default=False)
-    notify_last_attempt: float = attr.ib(init=False, default=-1)
+    inflight_gets: set[str] = field(default_factory=set, init=False)
+    client: Client = field(init=False)
+    suspended: bool = field(default=False, init=False)
+    notify_last_attempt: float = field(default=-1, init=False)
 
-    def __attrs_post_init__(self) -> None:
+    def __post_init__(self) -> None:
         """Set up internal state on init."""
         self.client = Client(self.connection)
 
@@ -177,16 +185,19 @@ class Router:
         if not self.subscriptions.get(key):
             return
         if key in self.inflight_gets:
-            _LOGGER.debug("Skipping already inflight get for %s", key)
+            _LOGGER.debug("Skipping already in-flight get for %s", key)
             return
         self.inflight_gets.add(key)
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
         try:
             self.data[key] = func()
         except ResponseErrorLoginRequiredException:
-            if isinstance(self.connection, AuthorizedConnection):
+            if not self.config_entry.options.get(CONF_UNAUTHENTICATED_MODE):
                 _LOGGER.debug("Trying to authorize again")
-                if self.connection.enforce_authorized_connection():
+                if self.client.user.login(
+                    self.config_entry.data.get(CONF_USERNAME, ""),
+                    self.config_entry.data.get(CONF_PASSWORD, ""),
+                ):
                     _LOGGER.debug(
                         "success, %s will be updated by a future periodic run",
                         key,
@@ -198,14 +209,13 @@ class Router:
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
-        except ResponseErrorException as exc:
+        except (ResponseErrorException, ExpatError) as exc:
+            # Take ResponseErrorNotSupportedException, ExpatError, and generic
+            # ResponseErrorException with a few select codes to mean the endpoint is
+            # not supported.
             if not isinstance(
-                exc, ResponseErrorNotSupportedException
-            ) and exc.code not in (
-                # additional codes treated as unusupported
-                -1,
-                100006,
-            ):
+                exc, (ResponseErrorNotSupportedException, ExpatError)
+            ) and exc.code not in (-1, 100006):
                 raise
             _LOGGER.info(
                 "%s apparently not supported by device, excluding from future updates",
@@ -269,13 +279,24 @@ class Router:
         self._get_data(
             KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch
         )
+        self._get_data(
+            KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
+            lambda: next(
+                (
+                    ssid
+                    for ssid in self.client.wlan.multi_basic_settings()
+                    .get("Ssids", {})
+                    .get("Ssid", [])
+                    if isinstance(ssid, dict) and ssid.get("wifiisguestnetwork") == "1"
+                ),
+                {},
+            ),
+        )
 
         dispatcher_send(self.hass, UPDATE_SIGNAL, self.config_entry.unique_id)
 
     def logout(self) -> None:
         """Log out router session."""
-        if not isinstance(self.connection, AuthorizedConnection):
-            return
         try:
             self.client.user.logout()
         except ResponseErrorNotSupportedException:
@@ -291,56 +312,19 @@ class Router:
         self.subscriptions.clear()
 
         self.logout()
+        self.connection.requests_session.close()
 
 
-@attr.s
-class HuaweiLteData:
+class HuaweiLteData(NamedTuple):
     """Shared state."""
 
-    hass_config: ConfigType = attr.ib()
-    # Our YAML config, keyed by router URL
-    config: dict[str, dict[str, Any]] = attr.ib()
-    routers: dict[str, Router] = attr.ib(init=False, factory=dict)
+    hass_config: ConfigType
+    routers: dict[str, Router]
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
-
-    # Override settings from YAML config, but only if they're changed in it
-    # Old values are stored as *_from_yaml in the config entry
-    if yaml_config := hass.data[DOMAIN].config.get(url):
-        # Config values
-        new_data = {}
-        for key in CONF_USERNAME, CONF_PASSWORD:
-            if key in yaml_config:
-                value = yaml_config[key]
-                if value != entry.data.get(f"{key}_from_yaml"):
-                    new_data[f"{key}_from_yaml"] = value
-                    new_data[key] = value
-        # Options
-        new_options = {}
-        yaml_recipient = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_RECIPIENT)
-        if yaml_recipient is not None and yaml_recipient != entry.options.get(
-            f"{CONF_RECIPIENT}_from_yaml"
-        ):
-            new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
-            new_options[CONF_RECIPIENT] = yaml_recipient
-        yaml_notify_name = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_NAME)
-        if yaml_notify_name is not None and yaml_notify_name != entry.options.get(
-            f"{CONF_NAME}_from_yaml"
-        ):
-            new_options[f"{CONF_NAME}_from_yaml"] = yaml_notify_name
-            new_options[CONF_NAME] = yaml_notify_name
-        # Update entry if overrides were found
-        if new_data or new_options:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={**entry.data, **new_data},
-                options={**entry.options, **new_options},
-            )
 
     def get_connection() -> Connection:
         """Set up a connection."""
@@ -351,13 +335,15 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.debug("Connecting in authenticated mode, full feature set")
             username = entry.data.get(CONF_USERNAME) or ""
             password = entry.data.get(CONF_PASSWORD) or ""
-            connection = AuthorizedConnection(
+            connection = Connection(
                 url, username=username, password=password, timeout=CONNECTION_TIMEOUT
             )
         return connection
 
     try:
         connection = await hass.async_add_executor_job(get_connection)
+    except LoginErrorInvalidCredentialsException as ex:
+        raise ConfigEntryAuthFailed from ex
     except Timeout as ex:
         raise ConfigEntryNotReady from ex
 
@@ -379,9 +365,8 @@ async def async_setup_entry(  # noqa: C901
             ):
                 if not entity_entry.unique_id.startswith("None-"):
                     continue
-                new_unique_id = (
-                    f"{serial_number}-{entity_entry.unique_id.split('-', 1)[1]}"
-                )
+                new_unique_id = entity_entry.unique_id.removeprefix("None-")
+                new_unique_id = f"{serial_number}-{new_unique_id}"
                 ent_reg.async_update_entity(
                     entity_entry.entity_id, new_unique_id=new_unique_id
                 )
@@ -401,7 +386,7 @@ async def async_setup_entry(  # noqa: C901
             return False
 
     # Store reference to router
-    hass.data[DOMAIN].routers[entry.unique_id] = router
+    hass.data[DOMAIN].routers[entry.entry_id] = router
 
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
@@ -428,12 +413,15 @@ async def async_setup_entry(  # noqa: C901
         device_info = DeviceInfo(
             configuration_url=router.url,
             connections=router.device_connections,
+            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers=router.device_identifiers,
+            manufacturer=entry.data.get(CONF_MANUFACTURER),
             name=router.device_name,
-            manufacturer="Huawei",
         )
+        hw_version = None
         sw_version = None
         if router_info:
+            hw_version = router_info.get("HardwareVersion")
             sw_version = router_info.get("SoftwareVersion")
             if router_info.get("DeviceName"):
                 device_info[ATTR_MODEL] = router_info["DeviceName"]
@@ -441,6 +429,8 @@ async def async_setup_entry(  # noqa: C901
             sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
                 "SoftwareVersion"
             )
+        if hw_version:
+            device_info[ATTR_HW_VERSION] = hw_version
         if sw_version:
             device_info[ATTR_SW_VERSION] = sw_version
         device_registry = dr.async_get(hass)
@@ -450,15 +440,15 @@ async def async_setup_entry(  # noqa: C901
         )
 
     # Forward config entry setup to platforms
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
         hass,
-        NOTIFY_DOMAIN,
+        Platform.NOTIFY,
         DOMAIN,
         {
-            ATTR_UNIQUE_ID: entry.unique_id,
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             CONF_NAME: entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
             CONF_RECIPIENT: entry.options.get(CONF_RECIPIENT),
         },
@@ -466,8 +456,7 @@ async def async_setup_entry(  # noqa: C901
     )
 
     def _update_router(*_: Any) -> None:
-        """
-        Update router data.
+        """Update router data.
 
         Separate passthrough function because lambdas don't work with track_time_interval.
         """
@@ -493,7 +482,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     # Forget about the router and invoke its cleanup
-    router = hass.data[DOMAIN].routers.pop(config_entry.unique_id)
+    router = hass.data[DOMAIN].routers.pop(config_entry.entry_id)
     await hass.async_add_executor_job(router.cleanup)
 
     return True
@@ -502,20 +491,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
 
-    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-    # https://github.com/quandyfactory/dicttoxml/issues/60
-    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
-
-    # Arrange our YAML config to dict with normalized URLs as keys
-    domain_config: dict[str, dict[str, Any]] = {}
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
-    for router_config in config.get(DOMAIN, []):
-        domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
+        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
     def service_handler(service: ServiceCall) -> None:
-        """
-        Apply a service.
+        """Apply a service.
 
         We key this using the router URL instead of its unique id / serial number,
         because the latter is not available anywhere in the UI.
@@ -551,7 +531,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
-            result = router.client.device.reboot()
+            result = router.client.device.set_control(ControlModeEnum.REBOOT)
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
@@ -565,24 +545,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("%s: unsupported service", service.service)
 
     for service in ADMIN_SERVICES:
-        hass.helpers.service.async_register_admin_service(
+        async_register_admin_service(
+            hass,
             DOMAIN,
             service,
             service_handler,
             schema=SERVICE_SCHEMA,
-        )
-
-    for url, router_config in domain_config.items():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_URL: url,
-                    CONF_USERNAME: router_config.get(CONF_USERNAME),
-                    CONF_PASSWORD: router_config.get(CONF_PASSWORD),
-                },
-            )
         )
 
     return True
@@ -604,21 +572,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         data[CONF_MAC] = []
         hass.config_entries.async_update_entry(config_entry, data=data)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    # There can be no longer needed *_from_yaml data and options things left behind
+    # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and
+    # migrate to version > 3 for some other reason.
     return True
 
 
-@attr.s
+@dataclass
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
 
-    router: Router = attr.ib()
+    router: Router
 
-    _available: bool = attr.ib(init=False, default=True)
-    _unsub_handlers: list[Callable] = attr.ib(init=False, factory=list)
-
-    @property
-    def _entity_name(self) -> str:
-        raise NotImplementedError
+    _available: bool = field(default=True, init=False)
+    _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
+    _attr_has_entity_name: bool = field(default=True, init=False)
+    _attr_should_poll = False
 
     @property
     def _device_unique_id(self) -> str:
@@ -631,27 +600,9 @@ class HuaweiLteBaseEntity(Entity):
         return f"{self.router.config_entry.unique_id}-{self._device_unique_id}"
 
     @property
-    def name(self) -> str:
-        """Return entity name."""
-        return f"Huawei {self.router.device_name} {self._entity_name}"
-
-    @property
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._available
-
-    @property
-    def should_poll(self) -> bool:
-        """Huawei LTE entities report their state without polling."""
-        return False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get info for matching with parent router."""
-        return DeviceInfo(
-            connections=self.router.device_connections,
-            identifiers=self.router.device_identifiers,
-        )
 
     async def async_update(self) -> None:
         """Update state."""
@@ -673,3 +624,15 @@ class HuaweiLteBaseEntity(Entity):
         for unsub in self._unsub_handlers:
             unsub()
         self._unsub_handlers.clear()
+
+
+class HuaweiLteBaseEntityWithDevice(HuaweiLteBaseEntity):
+    """Base entity with device info."""
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Get info for matching with parent router."""
+        return DeviceInfo(
+            connections=self.router.device_connections,
+            identifiers=self.router.device_identifiers,
+        )

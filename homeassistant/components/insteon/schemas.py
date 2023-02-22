@@ -22,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CAT,
+    CONF_DEV_PATH,
     CONF_DIM_STEPS,
     CONF_FIRMWARE,
     CONF_HOUSECODE,
@@ -121,6 +122,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_X10): vol.All(
                         cv.ensure_list_csv, [CONF_X10_SCHEMA]
                     ),
+                    vol.Optional(CONF_DEV_PATH): cv.string,
                 },
                 extra=vol.ALLOW_EXTRA,
                 required=True,
@@ -166,6 +168,18 @@ TRIGGER_SCENE_SCHEMA = vol.Schema(
 
 
 ADD_DEFAULT_LINKS_SCHEMA = vol.Schema({vol.Required(CONF_ENTITY_ID): cv.entity_id})
+
+
+SCENE_ENTITY_SCHEMA = vol.Schema(
+    [
+        {
+            vol.Required(CONF_ADDRESS): str,
+            vol.Required("data1"): int,
+            vol.Required("data2"): int,
+            vol.Required("data3"): int,
+        }
+    ]
+)
 
 
 def normalize_byte_entry_to_int(entry: int | bytes | str):

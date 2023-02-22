@@ -20,26 +20,33 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_ICON, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ICON,
+    CONF_API_KEY,
+    CONF_ICON,
+    CONF_PATH,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    ATTR_BLOCKS,
+    ATTR_BLOCKS_TEMPLATE,
+    ATTR_FILE,
+    ATTR_PASSWORD,
+    ATTR_PATH,
+    ATTR_URL,
+    ATTR_USERNAME,
+    CONF_DEFAULT_CHANNEL,
+    DATA_CLIENT,
+    SLACK_DATA,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BLOCKS = "blocks"
-ATTR_BLOCKS_TEMPLATE = "blocks_template"
-ATTR_FILE = "file"
-ATTR_PASSWORD = "password"
-ATTR_PATH = "path"
-ATTR_URL = "url"
-ATTR_USERNAME = "username"
-
-CONF_DEFAULT_CHANNEL = "default_channel"
-
-DEFAULT_TIMEOUT_SECONDS = 15
-
-FILE_PATH_SCHEMA = vol.Schema({vol.Required(ATTR_PATH): cv.isfile})
+FILE_PATH_SCHEMA = vol.Schema({vol.Required(CONF_PATH): cv.isfile})
 
 FILE_URL_SCHEMA = vol.Schema(
     {
@@ -66,6 +73,7 @@ DATA_SCHEMA = vol.All(
     cv.ensure_list, [vol.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
 )
 
+# Deprecated in Home Assistant 2022.5
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -109,27 +117,13 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> SlackNotificationService | None:
     """Set up the Slack notification service."""
-    session = aiohttp_client.async_get_clientsession(hass)
-    client = WebClient(token=config[CONF_API_KEY], run_async=True, session=session)
-
-    try:
-        await client.auth_test()
-    except SlackApiError as err:
-        _LOGGER.error("Error while setting up integration: %r", err)
+    if discovery_info is None:
         return None
-    except ClientError as err:
-        _LOGGER.warning(
-            "Error testing connection to slack: %r "
-            "Continuing setup anyway, but notify service might not work",
-            err,
-        )
 
     return SlackNotificationService(
         hass,
-        client,
-        config[CONF_DEFAULT_CHANNEL],
-        username=config.get(CONF_USERNAME),
-        icon=config.get(CONF_ICON),
+        discovery_info[SLACK_DATA][DATA_CLIENT],
+        discovery_info,
     )
 
 
@@ -153,16 +147,12 @@ class SlackNotificationService(BaseNotificationService):
         self,
         hass: HomeAssistant,
         client: WebClient,
-        default_channel: str,
-        username: str | None,
-        icon: str | None,
+        config: dict[str, str],
     ) -> None:
         """Initialize."""
-        self._client = client
-        self._default_channel = default_channel
         self._hass = hass
-        self._icon = icon
-        self._username = username
+        self._client = client
+        self._config = config
 
     async def _async_send_local_file_message(
         self,
@@ -294,7 +284,7 @@ class SlackNotificationService(BaseNotificationService):
 
         title = kwargs.get(ATTR_TITLE)
         targets = _async_sanitize_channel_names(
-            kwargs.get(ATTR_TARGET, [self._default_channel])
+            kwargs.get(ATTR_TARGET, [self._config[CONF_DEFAULT_CHANNEL]])
         )
 
         # Message Type 1: A text-only message
@@ -312,8 +302,8 @@ class SlackNotificationService(BaseNotificationService):
                 targets,
                 message,
                 title,
-                username=data.get(ATTR_USERNAME, self._username),
-                icon=data.get(ATTR_ICON, self._icon),
+                username=data.get(ATTR_USERNAME, self._config.get(ATTR_USERNAME)),
+                icon=data.get(ATTR_ICON, self._config.get(ATTR_ICON)),
                 blocks=blocks,
             )
 

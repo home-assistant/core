@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from urllib.parse import urlparse
+from typing import Any
 
+import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
 from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupnp
 from aiohue.util import normalize_bridge_id
@@ -13,17 +14,19 @@ import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import aiohttp_client, device_registry
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util.network import is_ipv6_address
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
     CONF_API_VERSION,
+    CONF_IGNORE_AVAILABILITY,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
@@ -46,24 +49,20 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> HueOptionsFlowHandler:
+    ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return HueOptionsFlowHandler(config_entry)
-
-    @classmethod
-    @callback
-    def async_supports_options_flow(
-        cls, config_entry: config_entries.ConfigEntry
-    ) -> bool:
-        """Return options flow support for this handler."""
-        return config_entry.data.get(CONF_API_VERSION, 1) == 1
+        if config_entry.data.get(CONF_API_VERSION, 1) == 1:
+            return HueV1OptionsFlowHandler(config_entry)
+        return HueV2OptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the Hue flow."""
         self.bridge: DiscoveredHueBridge | None = None
         self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
         return await self.async_step_init(user_input)
@@ -72,15 +71,20 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, bridge_id: str | None = None
     ) -> DiscoveredHueBridge:
         """Return a DiscoveredHueBridge object."""
-        bridge = await discover_bridge(
-            host, websession=aiohttp_client.async_get_clientsession(self.hass)
-        )
+        try:
+            bridge = await discover_bridge(
+                host, websession=aiohttp_client.async_get_clientsession(self.hass)
+            )
+        except aiohttp.ClientError:
+            return None
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
             assert bridge_id == bridge.id
         return bridge
 
-    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow start."""
         # Check if user chooses manual entry
         if user_input is not None and user_input["id"] == HUE_MANUAL_BRIDGE_ID:
@@ -130,7 +134,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle manual bridge setup."""
         if user_input is None:
@@ -143,7 +147,9 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = await self._get_bridge(user_input[CONF_HOST])
         return await self.async_step_link()
 
-    async def async_step_link(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Attempt to link with the Hue bridge.
 
         Given a configured host, will ask the user to press the link button
@@ -194,49 +200,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
-        """Handle a discovered Hue bridge.
-
-        This flow is triggered by the SSDP component. It will check if the
-        host is already configured and delegate to the import step if not.
-        """
-        # Filter out non-Hue bridges #1
-        if (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
-            not in HUE_MANUFACTURERURL
-        ):
-            return self.async_abort(reason="not_hue_bridge")
-
-        # Filter out non-Hue bridges #2
-        if any(
-            name in discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
-            for name in HUE_IGNORED_BRIDGE_NAMES
-        ):
-            return self.async_abort(reason="not_hue_bridge")
-
-        if (
-            not discovery_info.ssdp_location
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
-        ):
-            return self.async_abort(reason="not_hue_bridge")
-
-        url = urlparse(discovery_info.ssdp_location)
-        if not url.hostname:
-            return self.async_abort(reason="not_hue_bridge")
-
-        # abort if we already have exactly this bridge id/host
-        # reload the integration if the host got updated
-        bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
-        await self.async_set_unique_id(bridge_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: url.hostname}, reload_on_update=True
-        )
-
-        self.bridge = await self._get_bridge(
-            url.hostname, discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
-        )
-        return await self.async_step_link()
-
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
@@ -245,6 +208,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
+        # Ignore if host is IPv6
+        if is_ipv6_address(discovery_info.host):
+            return self.async_abort(reason="invalid_host")
+
         # abort if we already have exactly this bridge id/host
         # reload the integration if the host got updated
         bridge_id = normalize_bridge_id(discovery_info.properties["bridgeid"])
@@ -272,7 +239,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
-    async def async_step_import(self, import_info: ConfigType) -> FlowResult:
+    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Import a new bridge as a config entry.
 
         This flow is triggered by `async_setup` for both configured and
@@ -288,14 +255,16 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
 
-class HueOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Hue options."""
+class HueV1OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Hue options for V1 implementation."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Hue options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -316,6 +285,52 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
                         ),
                     ): bool,
+                }
+            ),
+        )
+
+
+class HueV2OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Hue options for V2 implementation."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize Hue options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage Hue options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        # create a list of Hue device ID's that the user can select
+        # to ignore availability status
+        dev_reg = device_registry.async_get(self.hass)
+        entries = device_registry.async_entries_for_config_entry(
+            dev_reg, self.config_entry.entry_id
+        )
+        dev_ids = {
+            identifier[1]: entry.name
+            for entry in entries
+            for identifier in entry.identifiers
+            if identifier[0] == DOMAIN
+        }
+        # filter any non existing device id's from the list
+        cur_ids = [
+            item
+            for item in self.config_entry.options.get(CONF_IGNORE_AVAILABILITY, [])
+            if item in dev_ids
+        ]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_IGNORE_AVAILABILITY,
+                        default=cur_ids,
+                    ): cv.multi_select(dev_ids),
                 }
             ),
         )

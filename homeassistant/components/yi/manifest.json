@@ -1,9 +1,11 @@
 {
   "domain": "yi",
   "name": "Yi Home Cameras",
-  "documentation": "https://www.home-assistant.io/integrations/yi",
-  "requirements": ["aioftp==0.12.0"],
-  "dependencies": ["ffmpeg"],
   "codeowners": ["@bachya"],
-  "iot_class": "local_polling"
+  "dependencies": ["ffmpeg"],
+  "documentation": "https://www.home-assistant.io/integrations/yi",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["aioftp"],
+  "requirements": ["aioftp==0.21.3"]
 }

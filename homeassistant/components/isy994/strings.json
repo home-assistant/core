@@ -10,10 +10,19 @@
           "tls": "The TLS version of the ISY controller."
         },
         "description": "The host entry must be in full URL format, e.g., http://192.168.10.100:80",
-        "title": "Connect to your ISY994"
+        "title": "Connect to your ISY"
+      },
+      "reauth_confirm": {
+        "description": "The credentials for {host} are no longer valid.",
+        "title": "Reauthenticate your ISY",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -26,7 +35,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "ISY994 Options",
+        "title": "ISY Options",
         "description": "Set the options for the ISY Integration: \n • Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n • Ignore String: Any device with 'Ignore String' in the name will be ignored. \n • Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n • Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
         "data": {
           "sensor_string": "Node Sensor String",
@@ -43,6 +52,23 @@
       "device_connected": "ISY Connected",
       "last_heartbeat": "Last Heartbeat Time",
       "websocket_status": "Event Socket Status"
+    }
+  },
+  "issues": {
+    "deprecated_service": {
+      "title": "The {deprecated_service} service will be removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The {deprecated_service} service will be removed",
+            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
+          },
+          "deprecated_yaml": {
+            "title": "The ISY/IoX YAML configuration is being removed",
+            "description": "Configuring Universal Devices ISY/IoX using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `isy994` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+          }
+        }
+      }
     }
   }
 }

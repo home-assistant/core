@@ -13,9 +13,10 @@ from homeassistant.components.emulated_roku.binding import (
     ROKU_COMMAND_LAUNCH,
     EmulatedRoku,
 )
+from homeassistant.core import HomeAssistant
 
 
-async def test_events_fired_properly(hass):
+async def test_events_fired_properly(hass: HomeAssistant) -> None:
     """Test that events are fired correctly."""
     binding = EmulatedRoku(
         hass, "Test Emulated Roku", "1.2.3.4", 8060, None, None, None
@@ -25,7 +26,7 @@ async def test_events_fired_properly(hass):
     roku_event_handler = None
 
     def instantiate(
-        loop,
+        event_loop,
         handler,
         roku_usn,
         host_ip,

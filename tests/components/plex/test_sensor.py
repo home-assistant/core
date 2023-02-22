@@ -3,11 +3,14 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 import requests.exceptions
+import requests_mock
 
 from homeassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt
@@ -33,6 +36,7 @@ class MockPlexMedia:
 class MockPlexClip(MockPlexMedia):
     """Minimal mock of plexapi clip object."""
 
+    TAG = "Video"
     type = "clip"
     title = "Clip 1"
 
@@ -40,6 +44,7 @@ class MockPlexClip(MockPlexMedia):
 class MockPlexMovie(MockPlexMedia):
     """Minimal mock of plexapi movie object."""
 
+    TAG = "Video"
     type = "movie"
     title = "Movie 1"
 
@@ -47,6 +52,7 @@ class MockPlexMovie(MockPlexMedia):
 class MockPlexMusic(MockPlexMedia):
     """Minimal mock of plexapi album object."""
 
+    TAG = "Directory"
     listType = "audio"
     type = "album"
     title = "Album"
@@ -56,6 +62,7 @@ class MockPlexMusic(MockPlexMedia):
 class MockPlexTVEpisode(MockPlexMedia):
     """Minimal mock of plexapi episode object."""
 
+    TAG = "Video"
     type = "episode"
     title = "Episode 5"
     grandparentTitle = "TV Show"
@@ -65,17 +72,17 @@ class MockPlexTVEpisode(MockPlexMedia):
 
 
 async def test_library_sensor_values(
-    hass,
-    caplog,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     setup_plex_server,
     mock_websocket,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     library_movies_size,
     library_music_size,
     library_tvshows_size,
     library_tvshows_size_episodes,
     library_tvshows_size_seasons,
-):
+) -> None:
     """Test the library sensors."""
     requests_mock.get(
         "/library/sections/1/all?includeCollections=0",
@@ -179,7 +186,8 @@ async def test_library_sensor_values(
 
     # Test movie library sensor
     entity_registry.async_update_entity(
-        entity_id="sensor.plex_server_1_library_tv_shows", disabled_by="user"
+        entity_id="sensor.plex_server_1_library_tv_shows",
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_movies", disabled_by=None
@@ -214,7 +222,8 @@ async def test_library_sensor_values(
 
     # Test music library sensor
     entity_registry.async_update_entity(
-        entity_id="sensor.plex_server_1_library_movies", disabled_by="user"
+        entity_id="sensor.plex_server_1_library_movies",
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_music", disabled_by=None

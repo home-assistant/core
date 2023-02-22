@@ -1,0 +1,363 @@
+{
+  "mac": "A1E00C826924",
+  "host": "192.168.216.198",
+  "name": "UnifiProtect",
+  "canAutoUpdate": true,
+  "isStatsGatheringEnabled": true,
+  "timezone": "America/New_York",
+  "version": "1.21.0-beta.2",
+  "ucoreVersion": "2.3.26",
+  "firmwareVersion": "2.3.10",
+  "uiVersion": null,
+  "hardwarePlatform": "al324",
+  "ports": {
+    "ump": 7449,
+    "http": 7080,
+    "https": 7443,
+    "rtsp": 7447,
+    "rtsps": 7441,
+    "rtmp": 1935,
+    "devicesWss": 7442,
+    "cameraHttps": 7444,
+    "cameraTcp": 7877,
+    "liveWs": 7445,
+    "liveWss": 7446,
+    "tcpStreams": 7448,
+    "playback": 7450,
+    "emsCLI": 7440,
+    "emsLiveFLV": 7550,
+    "cameraEvents": 7551,
+    "tcpBridge": 7888,
+    "ucore": 11081,
+    "discoveryClient": 0
+  },
+  "uptime": 1191516000,
+  "lastSeen": 1641269019283,
+  "isUpdating": false,
+  "lastUpdateAt": null,
+  "isStation": false,
+  "enableAutomaticBackups": true,
+  "enableStatsReporting": false,
+  "isSshEnabled": false,
+  "errorCode": null,
+  "releaseChannel": "beta",
+  "ssoChannel": null,
+  "hosts": ["192.168.216.198"],
+  "enableBridgeAutoAdoption": true,
+  "hardwareId": "baf4878d-df21-4427-9fbe-c2ef15301412",
+  "hardwareRevision": "113-03137-22",
+  "hostType": 59936,
+  "hostShortname": "UNVRPRO",
+  "isHardware": true,
+  "isWirelessUplinkEnabled": false,
+  "timeFormat": "24h",
+  "temperatureUnit": "C",
+  "recordingRetentionDurationMs": null,
+  "enableCrashReporting": true,
+  "disableAudio": false,
+  "analyticsData": "anonymous",
+  "isInsightsEnabled": true,
+  "anonymousDeviceId": "65257f7d-874c-498a-8f1b-00b2dd0a7ae1",
+  "cameraUtilization": 30,
+  "isRecycling": false,
+  "avgMotions": [
+    21.29, 14, 5.43, 2.29, 6.43, 7.43, 16.86, 17, 24.71, 36.86, 46.43, 47.57,
+    51.57, 52.71, 63.86, 80.86, 86.71, 91.71, 96.57, 71.14, 57, 53.71, 39.57,
+    21.29
+  ],
+  "disableAutoLink": false,
+  "skipFirmwareUpdate": false,
+  "wifiSettings": {
+    "useThirdPartyWifi": false,
+    "ssid": null,
+    "password": null
+  },
+  "locationSettings": {
+    "isAway": true,
+    "isGeofencingEnabled": false,
+    "latitude": 41.4519,
+    "longitude": -81.921,
+    "radius": 200
+  },
+  "featureFlags": {
+    "beta": false,
+    "dev": false,
+    "notificationsV2": true
+  },
+  "systemInfo": {
+    "cpu": {
+      "averageLoad": 5,
+      "temperature": 70
+    },
+    "memory": {
+      "available": 6481504,
+      "free": 87080,
+      "total": 8163024
+    },
+    "storage": {
+      "available": 21796939214848,
+      "isRecycling": false,
+      "size": 31855989432320,
+      "type": "raid",
+      "used": 8459815895040,
+      "devices": [
+        {
+          "model": "ST16000VE000-2L2103",
+          "size": 16000900661248,
+          "healthy": true
+        },
+        {
+          "model": "ST16000VE000-2L2103",
+          "size": 16000900661248,
+          "healthy": true
+        },
+        {
+          "model": "ST16000VE000-2L2103",
+          "size": 16000900661248,
+          "healthy": true
+        }
+      ]
+    },
+    "ustorage": {
+      "disks": [
+        {
+          "slot": 1,
+          "type": "HDD",
+          "model": "ST16000VE000-2L2103",
+          "serial": "ABCD1234",
+          "firmware": "EV02",
+          "rpm": 7200,
+          "ata": "ACS-4",
+          "sata": "SATA 3.3",
+          "action": "expanding",
+          "healthy": "good",
+          "state": "expanding",
+          "reason": null,
+          "temperature": 52,
+          "poweronhrs": 4242,
+          "life_span": null,
+          "bad_sector": 0,
+          "threshold": 10,
+          "progress": 21.390607518939174,
+          "estimate": 234395.73300748435
+        },
+        {
+          "slot": 2,
+          "type": "HDD",
+          "model": "ST16000VE000-2L2103",
+          "serial": "ABCD1234",
+          "firmware": "EV02",
+          "rpm": 7200,
+          "ata": "ACS-4",
+          "sata": "SATA 3.3",
+          "action": "expanding",
+          "healthy": "good",
+          "state": "expanding",
+          "reason": null,
+          "temperature": 52,
+          "poweronhrs": 4242,
+          "life_span": null,
+          "bad_sector": 0,
+          "threshold": 10,
+          "progress": 21.390607518939174,
+          "estimate": 234395.73300748435
+        },
+        {
+          "slot": 3,
+          "type": "HDD",
+          "model": "ST16000VE000-2L2103",
+          "serial": "ABCD1234",
+          "firmware": "EV02",
+          "rpm": 7200,
+          "ata": "ACS-4",
+          "sata": "SATA 3.3",
+          "action": "expanding",
+          "healthy": "good",
+          "state": "expanding",
+          "reason": null,
+          "temperature": 51,
+          "poweronhrs": 4242,
+          "life_span": null,
+          "bad_sector": 0,
+          "threshold": 10,
+          "progress": 21.390607518939174,
+          "estimate": 234395.73300748435
+        },
+        {
+          "slot": 4,
+          "type": "HDD",
+          "model": "ST16000VE000-2L2103",
+          "serial": "ABCD1234",
+          "firmware": "EV02",
+          "rpm": 7200,
+          "ata": "ACS-4",
+          "sata": "SATA 3.3",
+          "action": "expanding",
+          "healthy": "good",
+          "state": "expanding",
+          "reason": null,
+          "temperature": 50,
+          "poweronhrs": 2443,
+          "life_span": null,
+          "bad_sector": 0,
+          "threshold": 10,
+          "progress": 21.390607518939174,
+          "estimate": 234395.73300748435
+        },
+        {
+          "slot": 5,
+          "type": "HDD",
+          "model": "ST16000VE000-2L2103",
+          "serial": "ABCD1234",
+          "firmware": "EV02",
+          "rpm": 7200,
+          "ata": "ACS-4",
+          "sata": "SATA 3.3",
+          "action": "expanding",
+          "healthy": "good",
+          "state": "expanding",
+          "reason": null,
+          "temperature": 50,
+          "poweronhrs": 783,
+          "life_span": null,
+          "bad_sector": 0,
+          "threshold": 10,
+          "progress": 21.390607518939174,
+          "estimate": 234395.73300748435
+        },
+        {
+          "slot": 6,
+          "state": "nodisk"
+        },
+        {
+          "slot": 7,
+          "type": "HDD",
+          "model": "ST16000VE002-3BR101",
+          "serial": "ABCD1234",
+          "firmware": "EV01",
+          "rpm": 7200,
+          "ata": "ACS-4",
+          "sata": "SATA 3.3",
+          "action": "expanding",
+          "healthy": "good",
+          "state": "expanding",
+          "reason": null,
+          "temperature": 45,
+          "poweronhrs": 18,
+          "life_span": null,
+          "bad_sector": 0,
+          "threshold": 10,
+          "progress": 21.390607518939174,
+          "estimate": 234395.73300748435
+        }
+      ],
+      "space": [
+        {
+          "device": "md3",
+          "total_bytes": 63713403555840,
+          "used_bytes": 57006577086464,
+          "action": "expanding",
+          "progress": 21.390607518939174,
+          "estimate": 234395.73300748435
+        },
+        {
+          "device": "md0",
+          "total_bytes": 0,
+          "used_bytes": 0,
+          "action": "syncing",
+          "progress": 0,
+          "estimate": null
+        }
+      ]
+    },
+    "tmpfs": {
+      "available": 934204,
+      "total": 1048576,
+      "used": 114372,
+      "path": "/var/opt/unifi-protect/tmp"
+    }
+  },
+  "doorbellSettings": {
+    "defaultMessageText": "Welcome",
+    "defaultMessageResetTimeoutMs": 60000,
+    "customMessages": ["Come In!", "Use Other Door"],
+    "allMessages": [
+      {
+        "type": "LEAVE_PACKAGE_AT_DOOR",
+        "text": "LEAVE PACKAGE AT DOOR"
+      },
+      {
+        "type": "DO_NOT_DISTURB",
+        "text": "DO NOT DISTURB"
+      },
+      {
+        "type": "CUSTOM_MESSAGE",
+        "text": "Test"
+      }
+    ]
+  },
+  "smartDetectAgreement": {
+    "status": "agreed",
+    "lastUpdateAt": 1606964227734
+  },
+  "storageStats": {
+    "utilization": 26.61384533704469,
+    "capacity": 5706909122,
+    "remainingCapacity": 4188081155,
+    "recordingSpace": {
+      "total": 31787269955584,
+      "used": 8459814862848,
+      "available": 23327455092736
+    },
+    "storageDistribution": {
+      "recordingTypeDistributions": [
+        {
+          "recordingType": "rotating",
+          "size": 7736989099040,
+          "percentage": 91.47686438351941
+        },
+        {
+          "recordingType": "timelapse",
+          "size": 21474836480,
+          "percentage": 0.2539037704709915
+        },
+        {
+          "recordingType": "detections",
+          "size": 699400412128,
+          "percentage": 8.269231846009593
+        }
+      ],
+      "resolutionDistributions": [
+        {
+          "resolution": "HD",
+          "size": 2896955441152,
+          "percentage": 9.113571077981481
+        },
+        {
+          "resolution": "4K",
+          "size": 5560908906496,
+          "percentage": 17.494138107066746
+        },
+        {
+          "resolution": "free",
+          "size": 23329405607936,
+          "percentage": 73.39229081495176
+        }
+      ]
+    }
+  },
+  "id": "test_id",
+  "isAway": true,
+  "isSetup": true,
+  "network": "Ethernet",
+  "type": "UNVR-PRO",
+  "upSince": 1640077503063,
+  "isRecordingDisabled": false,
+  "isRecordingMotionOnly": false,
+  "maxCameraCapacity": {
+    "4K": 20,
+    "2K": 30,
+    "HD": 60
+  },
+  "modelKey": "nvr"
+}

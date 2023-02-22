@@ -41,10 +41,12 @@ class ButtonDeviceClass(StrEnum):
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ButtonDeviceClass))
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Button entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[ButtonEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -60,13 +62,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -113,8 +115,9 @@ class ButtonEntity(RestoreEntity):
         self.async_write_ha_state()
         await self.async_press()
 
-    async def async_added_to_hass(self) -> None:
+    async def async_internal_added_to_hass(self) -> None:
         """Call when the button is added to hass."""
+        await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
         if state is not None and state.state is not None:
             self.__last_pressed = dt_util.parse_datetime(state.state)

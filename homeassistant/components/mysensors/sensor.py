@@ -5,59 +5,51 @@ from typing import Any
 
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components import mysensors
 from homeassistant.components.sensor import (
-    DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    LENGTH_METERS,
     LIGHT_LUX,
-    MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
-    SOUND_PRESSURE_DB,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_CUBIC_METERS,
+    Platform,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "V_TEMP": SensorEntityDescription(
         key="V_TEMP",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_HUM": SensorEntityDescription(
         key="V_HUM",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_DIMMER": SensorEntityDescription(
         key="V_DIMMER",
@@ -100,13 +92,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
-        native_unit_of_measurement=MASS_KILOGRAMS,
-        icon="mdi:weight-kilogram",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
     ),
     "V_DISTANCE": SensorEntityDescription(
         key="V_DISTANCE",
-        native_unit_of_measurement=LENGTH_METERS,
-        icon="mdi:ruler",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     "V_IMPEDANCE": SensorEntityDescription(
         key="V_IMPEDANCE",
@@ -114,15 +106,15 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_WATT": SensorEntityDescription(
         key="V_WATT",
-        native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_KWH": SensorEntityDescription(
         key="V_KWH",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "V_LIGHT_LEVEL": SensorEntityDescription(
         key="V_LIGHT_LEVEL",
@@ -130,28 +122,31 @@ SENSORS: dict[str, SensorEntityDescription] = {
         icon="mdi:white-balance-sunny",
     ),
     "V_FLOW": SensorEntityDescription(
+        # The documentation on this measurement is inconsistent.
+        # Better not to set a device class here yet.
         key="V_FLOW",
-        native_unit_of_measurement=LENGTH_METERS,
+        native_unit_of_measurement=UnitOfLength.METERS,
         icon="mdi:gauge",
     ),
     "V_VOLUME": SensorEntityDescription(
         key="V_VOLUME",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.VOLUME,
     ),
     "V_LEVEL_S_SOUND": SensorEntityDescription(
         key="V_LEVEL_S_SOUND",
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
-        icon="mdi:volume-high",
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
     "V_LEVEL_S_VIBRATION": SensorEntityDescription(
         key="V_LEVEL_S_VIBRATION",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
     "V_LEVEL_S_LIGHT_LEVEL": SensorEntityDescription(
         key="V_LEVEL_S_LIGHT_LEVEL",
         native_unit_of_measurement=LIGHT_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_LEVEL_S_MOISTURE": SensorEntityDescription(
         key="V_LEVEL_S_MOISTURE",
@@ -160,15 +155,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_VOLTAGE": SensorEntityDescription(
         key="V_VOLTAGE",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_CURRENT": SensorEntityDescription(
         key="V_CURRENT",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "V_IR_RECORD": SensorEntityDescription(
+        key="V_IR_RECORD",
+        icon="mdi:remote",
     ),
     "V_PH": SensorEntityDescription(
         key="V_PH",
@@ -176,7 +175,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_ORP": SensorEntityDescription(
         key="V_ORP",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
@@ -188,7 +188,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_VA": SensorEntityDescription(
         key="V_VA",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
     ),
 }
 
@@ -204,7 +205,7 @@ async def async_setup_entry(
         """Discover and add a MySensors sensor."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.SENSOR,
             discovery_info,
             MySensorsSensor,
             async_add_entities=async_add_entities,
@@ -215,7 +216,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.SENSOR),
             async_discover,
         ),
     )
@@ -249,9 +250,9 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
             return custom_unit
 
         if set_req(self.value_type) == set_req.V_TEMP:
-            if self.hass.config.units.is_metric:
-                return TEMP_CELSIUS
-            return TEMP_FAHRENHEIT
+            if self.hass.config.units is METRIC_SYSTEM:
+                return UnitOfTemperature.CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
 
         if hasattr(self, "entity_description"):
             return self.entity_description.native_unit_of_measurement

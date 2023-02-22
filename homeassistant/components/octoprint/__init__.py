@@ -1,9 +1,12 @@
 """Support for monitoring OctoPrint 3D printers."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import cast
 
 from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
+from pyoctoprintapi.exceptions import UnauthorizedException
 import voluptuous as vol
 from yarl import URL
 
@@ -18,12 +21,15 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
@@ -50,7 +56,7 @@ def ensure_valid_path(value):
     return value
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"
@@ -100,8 +106,8 @@ CONFIG_SCHEMA = vol.Schema(
                             vol.Optional(CONF_SSL, default=False): cv.boolean,
                             vol.Optional(CONF_PORT, default=80): cv.port,
                             vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
-                            # Following values are not longer used in the configuration of the integration
-                            # and are here for historical purposes
+                            # Following values are not longer used in the configuration
+                            # of the integration and are here for historical purposes
                             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                             vol.Optional(
                                 CONF_NUMBER_OF_TOOLS, default=0
@@ -122,7 +128,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
     if DOMAIN not in config:
         return True
@@ -147,13 +153,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OctoPrint from a config entry."""
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    websession = async_get_clientsession(hass)
+    if CONF_VERIFY_SSL not in entry.data:
+        data = {**entry.data, CONF_VERIFY_SSL: True}
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    verify_ssl = entry.data[CONF_VERIFY_SSL]
+    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = OctoprintClient(
         entry.data[CONF_HOST],
         websession,
@@ -168,14 +179,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {"coordinator": coordinator, "client": client}
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "client": client,
+    }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -214,6 +228,8 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         printer = None
         try:
             job = await self._octoprint.get_job_info()
+        except UnauthorizedException as err:
+            raise ConfigEntryAuthFailed from err
         except ApiError as err:
             raise UpdateFailed(err) from err
 
@@ -224,8 +240,10 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             printer = await self._octoprint.get_printer_info()
         except PrinterOffline:
             if not self._printer_offline:
-                _LOGGER.error("Unable to retrieve printer information: Printer offline")
+                _LOGGER.debug("Unable to retrieve printer information: Printer offline")
                 self._printer_offline = True
+        except UnauthorizedException as err:
+            raise ConfigEntryAuthFailed from err
         except ApiError as err:
             raise UpdateFailed(err) from err
         else:

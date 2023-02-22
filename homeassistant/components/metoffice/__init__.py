@@ -1,7 +1,10 @@
 """The Met Office integration."""
+from __future__ import annotations
 
 import asyncio
 import logging
+import re
+from typing import Any
 
 import datapoint
 
@@ -13,8 +16,9 @@ from homeassistant.const import (
     CONF_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -44,6 +48,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     longitude = entry.data[CONF_LONGITUDE]
     api_key = entry.data[CONF_API_KEY]
     site_name = entry.data[CONF_NAME]
+
+    coordinates = f"{latitude}_{longitude}"
+
+    @callback
+    def update_unique_id(
+        entity_entry: entity_registry.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        """Update unique ID of entity entry."""
+
+        if entity_entry.domain != Platform.SENSOR:
+            return None
+
+        name_to_key = {
+            "Station Name": "name",
+            "Weather": "weather",
+            "Temperature": "temperature",
+            "Feels Like Temperature": "feels_like_temperature",
+            "Wind Speed": "wind_speed",
+            "Wind Direction": "wind_direction",
+            "Wind Gust": "wind_gust",
+            "Visibility": "visibility",
+            "Visibility Distance": "visibility_distance",
+            "UV Index": "uv",
+            "Probability of Precipitation": "precipitation",
+            "Humidity": "humidity",
+        }
+
+        match = re.search(f"(?P<name>.*)_{coordinates}.*", entity_entry.unique_id)
+
+        if match is None:
+            return None
+
+        if (name := match.group("name")) in name_to_key:
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(name, name_to_key[name])
+            }
+        return None
+
+    await entity_registry.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     connection = datapoint.connection(api_key=api_key)
 
@@ -84,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
         METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
         METOFFICE_NAME: site_name,
-        METOFFICE_COORDINATES: f"{latitude}_{longitude}",
+        METOFFICE_COORDINATES: coordinates,
     }
 
     # Fetch initial data so we have data when entities subscribe
@@ -93,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         metoffice_daily_coordinator.async_config_entry_first_refresh(),
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

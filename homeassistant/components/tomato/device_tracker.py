@@ -1,4 +1,6 @@
 """Support for Tomato routers."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
@@ -20,7 +22,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 CONF_HTTP_ID = "http_id"
 
@@ -39,7 +43,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
     """Validate the configuration and returns a Tomato scanner."""
     return TomatoDeviceScanner(config[DOMAIN])
 
@@ -104,9 +108,7 @@ class TomatoDeviceScanner(DeviceScanner):
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
             if response.status_code == HTTPStatus.OK:
-
                 for param, value in self.parse_api_pattern.findall(response.text):
-
                     if param in ("wldev", "dhcpd_lease"):
                         self.last_results[param] = json.loads(value.replace("'", '"'))
                 return True

@@ -25,7 +25,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_configuring_tplink_causes_discovery(hass):
+async def test_configuring_tplink_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
     with patch("homeassistant.components.tplink.Discover.discover") as discover:
         discover.return_value = {MagicMock(): MagicMock()}
@@ -47,7 +47,7 @@ async def test_configuring_tplink_causes_discovery(hass):
         assert len(discover.mock_calls) == call_count * 4
 
 
-async def test_config_entry_reload(hass):
+async def test_config_entry_reload(hass: HomeAssistant) -> None:
     """Test that a config entry can be reloaded."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -62,7 +62,7 @@ async def test_config_entry_reload(hass):
         assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_retry(hass):
+async def test_config_entry_retry(hass: HomeAssistant) -> None:
     """Test that a config entry can be retried."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
@@ -74,40 +74,9 @@ async def test_config_entry_retry(hass):
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_dimmer_switch_unique_id_fix_original_entity_was_deleted(
-    hass: HomeAssistant, entity_reg: EntityRegistry
-):
-    """Test that roll out unique id entity id changed to the original unique id."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
-    config_entry.add_to_hass(hass)
-    dimmer = _mocked_dimmer()
-    rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
-    original_unique_id = tplink.legacy_device_id(dimmer)
-    rollout_dimmer_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="light",
-        unique_id=rollout_unique_id,
-        original_name="Rollout dimmer",
-    )
-
-    with _patch_discovery(device=dimmer), _patch_single_discovery(device=dimmer):
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-
-    migrated_dimmer_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="light",
-        unique_id=original_unique_id,
-        original_name="Migrated dimmer",
-    )
-    assert migrated_dimmer_entity_reg.entity_id == rollout_dimmer_entity_reg.entity_id
-
-
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_reg: EntityRegistry
-):
+) -> None:
     """Test no migration happens if the original entity id still exists."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
     config_entry.add_to_hass(hass)

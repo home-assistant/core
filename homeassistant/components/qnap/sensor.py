@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -22,14 +23,16 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    DATA_GIBIBYTES,
-    DATA_RATE_MEBIBYTES_PER_SECOND,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,16 +74,16 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="system_temp",
         name="System Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="cpu_temp",
         name="CPU Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="cpu_usage",
@@ -93,13 +96,15 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_free",
         name="Memory Available",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
     ),
     SensorEntityDescription(
         key="memory_used",
         name="Memory Used",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
     ),
     SensorEntityDescription(
@@ -118,13 +123,15 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_tx",
         name="Network Up",
-        native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="network_rx",
         name="Network Down",
-        native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
     ),
 )
@@ -137,21 +144,23 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="drive_temp",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="volume_size_used",
         name="Used Space",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
     ),
     SensorEntityDescription(
         key="volume_size_free",
         name="Free Space",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
     ),
     SensorEntityDescription(
@@ -193,7 +202,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the QNAP NAS sensor."""
     api = QNAPStatsAPI(config)
     api.update()
@@ -203,7 +217,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    sensors = []
+    sensors: list[QNAPSensor] = []
 
     # Basic sensors
     sensors.extend(
@@ -298,14 +312,16 @@ class QNAPStatsAPI:
             self.data["smart_drive_health"] = self._api.get_smart_disk_health()
             self.data["volumes"] = self._api.get_volumes()
             self.data["bandwidth"] = self._api.get_bandwidth()
-        except:  # noqa: E722 pylint: disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
 
 class QNAPSensor(SensorEntity):
     """Base class for a QNAP sensor."""
 
-    def __init__(self, api, description: SensorEntityDescription, monitor_device=None):
+    def __init__(
+        self, api, description: SensorEntityDescription, monitor_device=None
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.monitor_device = monitor_device
@@ -322,7 +338,7 @@ class QNAPSensor(SensorEntity):
             )
         return f"{server_name} {self.entity_description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data for the states."""
         self._api.update()
 
@@ -364,7 +380,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self._api.data:
             data = self._api.data["system_stats"]["memory"]
             size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
+            return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
 
 
 class QNAPNetworkSensor(QNAPSensor):
@@ -448,7 +464,10 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the name of the sensor, if any."""
         server_name = self._api.data["system_stats"]["system"]["name"]
 
-        return f"{server_name} {self.entity_description.name} (Drive {self.monitor_device})"
+        return (
+            f"{server_name} {self.entity_description.name} (Drive"
+            f" {self.monitor_device})"
+        )
 
     @property
     def extra_state_attributes(self):
@@ -491,4 +510,8 @@ class QNAPVolumeSensor(QNAPSensor):
             data = self._api.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}"}
+            return {
+                ATTR_VOLUME_SIZE: (
+                    f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
+                )
+            }

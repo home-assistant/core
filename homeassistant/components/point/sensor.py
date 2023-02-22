@@ -6,25 +6,21 @@ import logging
 
 from homeassistant.components.sensor import (
     DOMAIN,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    SOUND_PRESSURE_WEIGHTED_DBA,
-    TEMP_CELSIUS,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfSoundPressure, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
 from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
-
-DEVICE_CLASS_SOUND = "sound_level"
 
 
 @dataclass
@@ -45,26 +41,29 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
     MinutPointSensorEntityDescription(
         key="temperature",
         precision=1,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     MinutPointSensorEntityDescription(
         key="humidity",
         precision=1,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     MinutPointSensorEntityDescription(
         key="sound",
         precision=1,
-        device_class=DEVICE_CLASS_SOUND,
-        icon="mdi:ear-hearing",
-        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Point's sensors based on a config entry."""
 
     async def async_discover_sensor(device_id):
@@ -90,7 +89,7 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
 
     def __init__(
         self, point_client, device_id, description: MinutPointSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(point_client, device_id, description.device_class)
         self.entity_description = description

@@ -153,9 +153,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         with suppress(ValueError):
             if AwesomeVersion(version) < AwesomeVersion(HYPERION_VERSION_WARN_CUTOFF):
                 _LOGGER.warning(
-                    "Using a Hyperion server version < %s is not recommended -- "
-                    "some features may be unavailable or may not function correctly. "
-                    "Please consider upgrading: %s",
+                    (
+                        "Using a Hyperion server version < %s is not recommended --"
+                        " some features may be unavailable or may not function"
+                        " correctly. Please consider upgrading: %s"
+                    ),
                     HYPERION_VERSION_WARN_CUTOFF,
                     HYPERION_RELEASES_URL,
                 )
@@ -241,7 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 instance_name,
             )
 
-        # Remove entities that are are not running instances on Hyperion.
+        # Remove entities that are not running instances on Hyperion.
         for instance_num in set(existing_instances) - running_instances:
             del existing_instances[instance_num]
             async_dispatcher_send(
@@ -257,7 +259,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
-            for (kind, key) in device_entry.identifiers:
+            for kind, key in device_entry.identifiers:
                 if kind == DOMAIN and key in known_devices:
                     break
             else:
@@ -269,21 +271,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
     )
 
-    async def setup_then_listen() -> None:
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        assert hyperion_client
-        if hyperion_client.instances is not None:
-            await async_instances_to_clients_raw(hyperion_client.instances)
-        hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
-            entry.add_update_listener(_async_entry_updated)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    assert hyperion_client
+    if hyperion_client.instances is not None:
+        await async_instances_to_clients_raw(hyperion_client.instances)
+    hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
+        entry.add_update_listener(_async_entry_updated)
+    )
 
-    hass.async_create_task(setup_then_listen())
     return True
 
 

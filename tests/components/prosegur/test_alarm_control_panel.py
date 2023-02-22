@@ -1,9 +1,8 @@
 """Tests for the Prosegur alarm control panel device."""
-
 from unittest.mock import AsyncMock, patch
 
 from pyprosegur.installation import Status
-from pytest import fixture, mark
+import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
@@ -18,14 +17,15 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import entity_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_component, entity_registry as er
 
 from .common import CONTRACT, setup_platform
 
 PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{CONTRACT}"
 
 
-@fixture
+@pytest.fixture
 def mock_auth():
     """Setups authentication."""
 
@@ -33,7 +33,7 @@ def mock_auth():
         yield
 
 
-@fixture(params=list(Status))
+@pytest.fixture(params=list(Status))
 def mock_status(request):
     """Mock the status of the alarm."""
 
@@ -46,10 +46,10 @@ def mock_status(request):
         yield
 
 
-async def test_entity_registry(hass, mock_auth, mock_status):
+async def test_entity_registry(hass: HomeAssistant, mock_auth, mock_status) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(PROSEGUR_ALARM_ENTITY)
     # Prosegur alarm device unique_id is the contract id associated to the alarm account
@@ -63,7 +63,7 @@ async def test_entity_registry(hass, mock_auth, mock_status):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
 
 
-async def test_connection_error(hass, mock_auth):
+async def test_connection_error(hass: HomeAssistant, mock_auth) -> None:
     """Test the alarm control panel when connection can't be made to the cloud service."""
 
     install = AsyncMock()
@@ -73,7 +73,6 @@ async def test_connection_error(hass, mock_auth):
     install.status = Status.ARMED
 
     with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
-
         await setup_platform(hass)
 
         await hass.async_block_till_done()
@@ -81,22 +80,23 @@ async def test_connection_error(hass, mock_auth):
     with patch(
         "pyprosegur.installation.Installation.retrieve", side_effect=ConnectionError
     ):
-
         await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
 
         state = hass.states.get(PROSEGUR_ALARM_ENTITY)
         assert state.state == STATE_UNAVAILABLE
 
 
-@mark.parametrize(
-    "code, alarm_service, alarm_state",
+@pytest.mark.parametrize(
+    ("code", "alarm_service", "alarm_state"),
     [
         (Status.ARMED, SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (Status.PARTIALLY, SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
         (Status.DISARMED, SERVICE_ALARM_DISARM, STATE_ALARM_DISARMED),
     ],
 )
-async def test_arm(hass, mock_auth, code, alarm_service, alarm_state):
+async def test_arm(
+    hass: HomeAssistant, mock_auth, code, alarm_service, alarm_state
+) -> None:
     """Test the alarm control panel can be set to away."""
 
     install = AsyncMock()

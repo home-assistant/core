@@ -2,11 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}",
+        "description": "Default host: {host}\nDefault username: {username}",
         "data": {
           "host": "[%key:common::config_flow::data::host%] (Optional)",
-          "port": "[%key:common::config_flow::data::port%] (Optional)",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%] (Optional)",
           "password": "[%key:common::config_flow::data::password%]"
         }
@@ -16,7 +14,9 @@
       "config": "Connection or login error: please check your configuration"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_ipv4_address": "No IPv4 address in ssdp discovery information",
+      "no_serial": "No serial number in ssdp discovery information"
     }
   },
   "options": {

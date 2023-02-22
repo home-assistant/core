@@ -6,16 +6,18 @@ import sys
 from typing import Any
 
 import httpx
+from typing_extensions import Self
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
+from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import warn_use
 from homeassistant.loader import bind_hass
+
+from .frame import warn_use
 
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
-SERVER_SOFTWARE = "HomeAssistant/{0} httpx/{1} Python/{2[0]}.{2[1]}".format(
-    __version__, httpx.__version__, sys.version_info
+SERVER_SOFTWARE = "{0}/{1} httpx/{2} Python/{3[0]}.{3[1]}".format(
+    APPLICATION_NAME, __version__, httpx.__version__, sys.version_info
 )
 USER_AGENT = "User-Agent"
 
@@ -40,7 +42,7 @@ def get_async_client(hass: HomeAssistant, verify_ssl: bool = True) -> httpx.Asyn
 class HassHttpXAsyncClient(httpx.AsyncClient):
     """httpx AsyncClient that suppresses context management."""
 
-    async def __aenter__(self: HassHttpXAsyncClient) -> HassHttpXAsyncClient:
+    async def __aenter__(self) -> Self:
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
@@ -70,7 +72,7 @@ def create_async_httpx_client(
 
     original_aclose = client.aclose
 
-    client.aclose = warn_use(  # type: ignore
+    client.aclose = warn_use(  # type: ignore[assignment]
         client.aclose, "closes the Home Assistant httpx client"
     )
 

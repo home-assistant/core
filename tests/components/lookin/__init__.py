@@ -19,6 +19,7 @@ ZC_NAME = f"LOOKin_{DEVICE_ID}"
 ZC_TYPE = "_lookin._tcp."
 ZEROCONF_DATA = ZeroconfServiceInfo(
     host=IP_ADDRESS,
+    addresses=[IP_ADDRESS],
     hostname=f"{ZC_NAME.lower()}.local.",
     port=80,
     type=ZC_TYPE,

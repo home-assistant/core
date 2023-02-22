@@ -1,261 +1,263 @@
 """Platform for Mazda sensor integration."""
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_PSI,
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+@dataclass
+class MazdaSensorRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    # Function to determine the value for this sensor, given the coordinator data
+    # and the configured unit system
+    value: Callable[[dict[str, Any]], StateType]
+
+
+@dataclass
+class MazdaSensorEntityDescription(
+    SensorEntityDescription, MazdaSensorRequiredKeysMixin
+):
+    """Describes a Mazda sensor entity."""
+
+    # Function to determine whether the vehicle supports this sensor,
+    # given the coordinator data
+    is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
+
+
+def _fuel_remaining_percentage_supported(data):
+    """Determine if fuel remaining percentage is supported."""
+    return (not data["isElectric"]) and (
+        data["status"]["fuelRemainingPercent"] is not None
+    )
+
+
+def _fuel_distance_remaining_supported(data):
+    """Determine if fuel distance remaining is supported."""
+    return (not data["isElectric"]) and (
+        data["status"]["fuelDistanceRemainingKm"] is not None
+    )
+
+
+def _front_left_tire_pressure_supported(data):
+    """Determine if front left tire pressure is supported."""
+    return data["status"]["tirePressure"]["frontLeftTirePressurePsi"] is not None
+
+
+def _front_right_tire_pressure_supported(data):
+    """Determine if front right tire pressure is supported."""
+    return data["status"]["tirePressure"]["frontRightTirePressurePsi"] is not None
+
+
+def _rear_left_tire_pressure_supported(data):
+    """Determine if rear left tire pressure is supported."""
+    return data["status"]["tirePressure"]["rearLeftTirePressurePsi"] is not None
+
+
+def _rear_right_tire_pressure_supported(data):
+    """Determine if rear right tire pressure is supported."""
+    return data["status"]["tirePressure"]["rearRightTirePressurePsi"] is not None
+
+
+def _ev_charge_level_supported(data):
+    """Determine if charge level is supported."""
+    return (
+        data["isElectric"]
+        and data["evStatus"]["chargeInfo"]["batteryLevelPercentage"] is not None
+    )
+
+
+def _ev_remaining_range_supported(data):
+    """Determine if remaining range is supported."""
+    return (
+        data["isElectric"]
+        and data["evStatus"]["chargeInfo"]["drivingRangeKm"] is not None
+    )
+
+
+def _fuel_distance_remaining_value(data):
+    """Get the fuel distance remaining value."""
+    return round(data["status"]["fuelDistanceRemainingKm"])
+
+
+def _odometer_value(data):
+    """Get the odometer value."""
+    # In order to match the behavior of the Mazda mobile app, we always round down
+    return int(data["status"]["odometerKm"])
+
+
+def _front_left_tire_pressure_value(data):
+    """Get the front left tire pressure value."""
+    return round(data["status"]["tirePressure"]["frontLeftTirePressurePsi"])
+
+
+def _front_right_tire_pressure_value(data):
+    """Get the front right tire pressure value."""
+    return round(data["status"]["tirePressure"]["frontRightTirePressurePsi"])
+
+
+def _rear_left_tire_pressure_value(data):
+    """Get the rear left tire pressure value."""
+    return round(data["status"]["tirePressure"]["rearLeftTirePressurePsi"])
+
+
+def _rear_right_tire_pressure_value(data):
+    """Get the rear right tire pressure value."""
+    return round(data["status"]["tirePressure"]["rearRightTirePressurePsi"])
+
+
+def _ev_charge_level_value(data):
+    """Get the charge level value."""
+    return round(data["evStatus"]["chargeInfo"]["batteryLevelPercentage"])
+
+
+def _ev_remaining_range_value(data):
+    """Get the remaining range value."""
+    return round(data["evStatus"]["chargeInfo"]["drivingRangeKm"])
+
+
+SENSOR_ENTITIES = [
+    MazdaSensorEntityDescription(
+        key="fuel_remaining_percentage",
+        name="Fuel remaining percentage",
+        icon="mdi:gas-station",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_fuel_remaining_percentage_supported,
+        value=lambda data: data["status"]["fuelRemainingPercent"],
+    ),
+    MazdaSensorEntityDescription(
+        key="fuel_distance_remaining",
+        name="Fuel distance remaining",
+        icon="mdi:gas-station",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_fuel_distance_remaining_supported,
+        value=_fuel_distance_remaining_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="odometer",
+        name="Odometer",
+        icon="mdi:speedometer",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        is_supported=lambda data: data["status"]["odometerKm"] is not None,
+        value=_odometer_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="front_left_tire_pressure",
+        name="Front left tire pressure",
+        icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_front_left_tire_pressure_supported,
+        value=_front_left_tire_pressure_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="front_right_tire_pressure",
+        name="Front right tire pressure",
+        icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_front_right_tire_pressure_supported,
+        value=_front_right_tire_pressure_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="rear_left_tire_pressure",
+        name="Rear left tire pressure",
+        icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_rear_left_tire_pressure_supported,
+        value=_rear_left_tire_pressure_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="rear_right_tire_pressure",
+        name="Rear right tire pressure",
+        icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.PSI,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_rear_right_tire_pressure_supported,
+        value=_rear_right_tire_pressure_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="ev_charge_level",
+        name="Charge level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_ev_charge_level_supported,
+        value=_ev_charge_level_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="ev_remaining_range",
+        name="Remaining range",
+        icon="mdi:ev-station",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_ev_remaining_range_supported,
+        value=_ev_remaining_range_value,
+    ),
+]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
-    entities = []
+    entities: list[SensorEntity] = []
 
-    for index, _ in enumerate(coordinator.data):
-        entities.append(MazdaFuelRemainingSensor(client, coordinator, index))
-        entities.append(MazdaFuelDistanceSensor(client, coordinator, index))
-        entities.append(MazdaOdometerSensor(client, coordinator, index))
-        entities.append(MazdaFrontLeftTirePressureSensor(client, coordinator, index))
-        entities.append(MazdaFrontRightTirePressureSensor(client, coordinator, index))
-        entities.append(MazdaRearLeftTirePressureSensor(client, coordinator, index))
-        entities.append(MazdaRearRightTirePressureSensor(client, coordinator, index))
+    for index, data in enumerate(coordinator.data):
+        for description in SENSOR_ENTITIES:
+            if description.is_supported(data):
+                entities.append(
+                    MazdaSensorEntity(client, coordinator, index, description)
+                )
 
     async_add_entities(entities)
 
 
-class MazdaFuelRemainingSensor(MazdaEntity, SensorEntity):
-    """Class for the fuel remaining sensor."""
+class MazdaSensorEntity(MazdaEntity, SensorEntity):
+    """Representation of a Mazda vehicle sensor."""
+
+    entity_description: MazdaSensorEntityDescription
+
+    def __init__(self, client, coordinator, index, description):
+        """Initialize Mazda sensor."""
+        super().__init__(client, coordinator, index)
+        self.entity_description = description
+
+        self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Fuel Remaining Percentage"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_fuel_remaining_percentage"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:gas-station"
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.data["status"]["fuelRemainingPercent"]
-
-
-class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
-    """Class for the fuel distance sensor."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Fuel Distance Remaining"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_fuel_distance_remaining"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            return LENGTH_MILES
-        return LENGTH_KILOMETERS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:gas-station"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        fuel_distance_km = self.data["status"]["fuelDistanceRemainingKm"]
-        return (
-            None
-            if fuel_distance_km is None
-            else round(
-                self.hass.config.units.length(fuel_distance_km, LENGTH_KILOMETERS)
-            )
-        )
-
-
-class MazdaOdometerSensor(MazdaEntity, SensorEntity):
-    """Class for the odometer sensor."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Odometer"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_odometer"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            return LENGTH_MILES
-        return LENGTH_KILOMETERS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:speedometer"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        odometer_km = self.data["status"]["odometerKm"]
-        return (
-            None
-            if odometer_km is None
-            else round(self.hass.config.units.length(odometer_km, LENGTH_KILOMETERS))
-        )
-
-
-class MazdaFrontLeftTirePressureSensor(MazdaEntity, SensorEntity):
-    """Class for the front left tire pressure sensor."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Front Left Tire Pressure"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_front_left_tire_pressure"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        tire_pressure = self.data["status"]["tirePressure"]["frontLeftTirePressurePsi"]
-        return None if tire_pressure is None else round(tire_pressure)
-
-
-class MazdaFrontRightTirePressureSensor(MazdaEntity, SensorEntity):
-    """Class for the front right tire pressure sensor."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Front Right Tire Pressure"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_front_right_tire_pressure"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        tire_pressure = self.data["status"]["tirePressure"]["frontRightTirePressurePsi"]
-        return None if tire_pressure is None else round(tire_pressure)
-
-
-class MazdaRearLeftTirePressureSensor(MazdaEntity, SensorEntity):
-    """Class for the rear left tire pressure sensor."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Rear Left Tire Pressure"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_rear_left_tire_pressure"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        tire_pressure = self.data["status"]["tirePressure"]["rearLeftTirePressurePsi"]
-        return None if tire_pressure is None else round(tire_pressure)
-
-
-class MazdaRearRightTirePressureSensor(MazdaEntity, SensorEntity):
-    """Class for the rear right tire pressure sensor."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Rear Right Tire Pressure"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_rear_right_tire_pressure"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        tire_pressure = self.data["status"]["tirePressure"]["rearRightTirePressurePsi"]
-        return None if tire_pressure is None else round(tire_pressure)
+        return self.entity_description.value(self.data)

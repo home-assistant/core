@@ -1,24 +1,30 @@
 """Support for switch platform for Hue resources (V2 only)."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.sensors import LightLevelController, MotionController
-from aiohue.v2.models.resource import SensingService
+from aiohue.v2.controllers.sensors import (
+    LightLevel,
+    LightLevelController,
+    Motion,
+    MotionController,
+)
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 
-ControllerType = Union[LightLevelController, MotionController]
+ControllerType: TypeAlias = LightLevelController | MotionController
+
+SensingService: TypeAlias = LightLevel | Motion
 
 
 async def async_setup_entry(

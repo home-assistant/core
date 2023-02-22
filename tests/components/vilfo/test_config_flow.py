@@ -6,16 +6,17 @@ import vilfo
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.vilfo.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
+from homeassistant.core import HomeAssistant
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     mock_mac = "FF-00-00-00-00-00"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch("vilfo.Client.ping", return_value=None), patch(
@@ -29,7 +30,7 @@ async def test_form(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "testadmin.vilfo.com"
     assert result2["data"] == {
         "host": "testadmin.vilfo.com",
@@ -39,7 +40,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -56,11 +57,11 @@ async def test_form_invalid_auth(hass):
             {"host": "testadmin.vilfo.com", "access_token": "test-token"},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,7 +75,7 @@ async def test_form_cannot_connect(hass):
             {"host": "testadmin.vilfo.com", "access_token": "test-token"},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch("vilfo.Client.ping", side_effect=vilfo.exceptions.VilfoException), patch(
@@ -85,11 +86,11 @@ async def test_form_cannot_connect(hass):
             {"host": "testadmin.vilfo.com", "access_token": "test-token"},
         )
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_wrong_host(hass):
+async def test_form_wrong_host(hass: HomeAssistant) -> None:
     """Test we handle wrong host errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -100,7 +101,7 @@ async def test_form_wrong_host(hass):
     assert result["errors"] == {"host": "wrong_host"}
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test that we handle already configured exceptions appropriately."""
     first_flow_result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -128,12 +129,12 @@ async def test_form_already_configured(hass):
             {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
         )
 
-    assert first_flow_result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert second_flow_result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert first_flow_result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert second_flow_result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert second_flow_result2["reason"] == "already_configured"
 
 
-async def test_form_unexpected_exception(hass):
+async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test that we handle unexpected exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -151,7 +152,7 @@ async def test_form_unexpected_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_validate_input_returns_data(hass):
+async def test_validate_input_returns_data(hass: HomeAssistant) -> None:
     """Test we handle the MAC address being resolved or not."""
     mock_data = {"host": "testadmin.vilfo.com", "access_token": "test-token"}
     mock_data_with_ip = {"host": "192.168.0.1", "access_token": "test-token"}

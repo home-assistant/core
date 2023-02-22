@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Literal, final
 
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,9 @@ class BinarySensorDeviceClass(StrEnum):
 
     # On means charging, Off means not charging
     BATTERY_CHARGING = "battery_charging"
+
+    # On means carbon monoxide detected, Off means no carbon monoxide (clear)
+    CO = "carbon_monoxide"
 
     # On means cold, Off means normal
     COLD = "cold"
@@ -120,6 +123,7 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
 DEVICE_CLASS_BATTERY = BinarySensorDeviceClass.BATTERY.value
 DEVICE_CLASS_BATTERY_CHARGING = BinarySensorDeviceClass.BATTERY_CHARGING.value
+DEVICE_CLASS_CO = BinarySensorDeviceClass.CO.value
 DEVICE_CLASS_COLD = BinarySensorDeviceClass.COLD.value
 DEVICE_CLASS_CONNECTIVITY = BinarySensorDeviceClass.CONNECTIVITY.value
 DEVICE_CLASS_DOOR = BinarySensorDeviceClass.DOOR.value
@@ -146,10 +150,12 @@ DEVICE_CLASS_UPDATE = BinarySensorDeviceClass.UPDATE.value
 DEVICE_CLASS_VIBRATION = BinarySensorDeviceClass.VIBRATION.value
 DEVICE_CLASS_WINDOW = BinarySensorDeviceClass.WINDOW.value
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[BinarySensorEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -159,13 +165,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -173,19 +179,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BinarySensorEntityDescription(EntityDescription):
     """A class that describes binary sensor entities."""
 
-    device_class: BinarySensorDeviceClass | str | None = None
+    device_class: BinarySensorDeviceClass | None = None
 
 
 class BinarySensorEntity(Entity):
     """Represent a binary sensor."""
 
     entity_description: BinarySensorEntityDescription
-    _attr_device_class: BinarySensorDeviceClass | str | None
+    _attr_device_class: BinarySensorDeviceClass | None
     _attr_is_on: bool | None = None
     _attr_state: None = None
 
     @property
-    def device_class(self) -> BinarySensorDeviceClass | str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -200,6 +206,8 @@ class BinarySensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> StateType:
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
+        if (is_on := self.is_on) is None:
+            return None
+        return STATE_ON if is_on else STATE_OFF

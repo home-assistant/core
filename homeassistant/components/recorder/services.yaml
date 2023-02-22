@@ -44,7 +44,7 @@ purge_entities:
 
     entity_globs:
       name: Entity Globs to remove
-      description: List the regular expressions to select entities for removal from the recorder database.
+      description: List the glob patterns to select entities for removal from the recorder database.
       example: "domain*.object_id*"
       required: false
       default: []

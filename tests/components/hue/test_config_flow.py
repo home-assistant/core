@@ -8,11 +8,14 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.components.hue import config_flow, const
 from homeassistant.components.hue.errors import CannotConnect
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="hue_setup", autouse=True)
@@ -33,7 +36,7 @@ def create_mock_api_discovery(aioclient_mock, bridges):
         URL_NUPNP,
         json=[{"internalipaddress": host, "id": id} for (host, id) in bridges],
     )
-    for (host, bridge_id) in bridges:
+    for host, bridge_id in bridges:
         aioclient_mock.get(
             f"http://{host}/api/config",
             json={"bridgeid": bridge_id},
@@ -45,7 +48,7 @@ def create_mock_api_discovery(aioclient_mock, bridges):
         )
 
 
-async def test_flow_works(hass):
+async def test_flow_works(hass: HomeAssistant) -> None:
     """Test config flow ."""
     disc_bridge = get_discovered_bridge(supports_v2=True)
 
@@ -88,7 +91,7 @@ async def test_flow_works(hass):
     }
 
 
-async def test_manual_flow_works(hass):
+async def test_manual_flow_works(hass: HomeAssistant) -> None:
     """Test config flow discovers only already configured bridges."""
     disc_bridge = get_discovered_bridge(bridge_id="id-1234", host="2.2.2.2")
 
@@ -140,7 +143,7 @@ async def test_manual_flow_works(hass):
     assert entry.unique_id == "id-1234"
 
 
-async def test_manual_flow_bridge_exist(hass):
+async def test_manual_flow_bridge_exist(hass: HomeAssistant) -> None:
     """Test config flow aborts on already configured bridges."""
     MockConfigEntry(
         domain="hue", unique_id="id-1234", data={"host": "2.2.2.2"}
@@ -165,7 +168,9 @@ async def test_manual_flow_bridge_exist(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual_flow_no_discovered_bridges(hass, aioclient_mock):
+async def test_manual_flow_no_discovered_bridges(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow discovers no bridges."""
     create_mock_api_discovery(aioclient_mock, [])
 
@@ -176,7 +181,9 @@ async def test_manual_flow_no_discovered_bridges(hass, aioclient_mock):
     assert result["step_id"] == "manual"
 
 
-async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
+async def test_flow_all_discovered_bridges_exist(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow discovers only already configured bridges."""
     mock_host = "1.2.3.4"
     mock_id = "bla"
@@ -194,7 +201,9 @@ async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
     assert result["step_id"] == "manual"
 
 
-async def test_flow_bridges_discovered(hass, aioclient_mock):
+async def test_flow_bridges_discovered(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow discovers two bridges."""
     # Add ignored config entry. Should still show up as option.
     MockConfigEntry(
@@ -219,7 +228,9 @@ async def test_flow_bridges_discovered(hass, aioclient_mock):
     result["data_schema"]({"id": "manual"})
 
 
-async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
+async def test_flow_two_bridges_discovered_one_new(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow discovers two bridges."""
     create_mock_api_discovery(aioclient_mock, [("1.2.3.4", "bla"), ("5.6.7.8", "beer")])
     MockConfigEntry(
@@ -238,7 +249,7 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
         assert not result["data_schema"]({"id": "bla"})
 
 
-async def test_flow_timeout_discovery(hass):
+async def test_flow_timeout_discovery(hass: HomeAssistant) -> None:
     """Test config flow ."""
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
@@ -252,7 +263,7 @@ async def test_flow_timeout_discovery(hass):
     assert result["reason"] == "discover_timeout"
 
 
-async def test_flow_link_unknown_error(hass):
+async def test_flow_link_unknown_error(hass: HomeAssistant) -> None:
     """Test if a unknown error happened during the linking processes."""
     disc_bridge = get_discovered_bridge()
     with patch(
@@ -277,7 +288,7 @@ async def test_flow_link_unknown_error(hass):
     assert result["errors"] == {"base": "linking"}
 
 
-async def test_flow_link_button_not_pressed(hass):
+async def test_flow_link_button_not_pressed(hass: HomeAssistant) -> None:
     """Test config flow ."""
     disc_bridge = get_discovered_bridge()
     with patch(
@@ -302,7 +313,7 @@ async def test_flow_link_button_not_pressed(hass):
     assert result["errors"] == {"base": "register_failed"}
 
 
-async def test_flow_link_cannot_connect(hass):
+async def test_flow_link_cannot_connect(hass: HomeAssistant) -> None:
     """Test config flow ."""
     disc_bridge = get_discovered_bridge()
     with patch(
@@ -326,170 +337,9 @@ async def test_flow_link_cannot_connect(hass):
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.parametrize("mf_url", config_flow.HUE_MANUFACTURERURL)
-async def test_bridge_ssdp(hass, mf_url, aioclient_mock):
-    """Test a bridge being discovered."""
-    create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "1234")])
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://0.0.0.0/",
-            upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: mf_url,
-                ssdp.ATTR_UPNP_SERIAL: "1234",
-            },
-        ),
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "link"
-
-
-async def test_bridge_ssdp_discover_other_bridge(hass):
-    """Test that discovery ignores other bridges."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            upnp={ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"},
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "not_hue_bridge"
-
-
-async def test_bridge_ssdp_emulated_hue(hass):
-    """Test if discovery info is from an emulated hue instance."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://0.0.0.0/",
-            upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-                ssdp.ATTR_UPNP_SERIAL: "1234",
-            },
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "not_hue_bridge"
-
-
-async def test_bridge_ssdp_missing_location(hass):
-    """Test if discovery info is missing a location attribute."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-                ssdp.ATTR_UPNP_SERIAL: "1234",
-            },
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "not_hue_bridge"
-
-
-async def test_bridge_ssdp_missing_serial(hass):
-    """Test if discovery info is a serial attribute."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://0.0.0.0/",
-            upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-            },
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "not_hue_bridge"
-
-
-async def test_bridge_ssdp_invalid_location(hass):
-    """Test if discovery info is a serial attribute."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http:///",
-            upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-                ssdp.ATTR_UPNP_SERIAL: "1234",
-            },
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "not_hue_bridge"
-
-
-async def test_bridge_ssdp_espalexa(hass):
-    """Test if discovery info is from an Espalexa based device."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://0.0.0.0/",
-            upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Espalexa (0.0.0.0)",
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-                ssdp.ATTR_UPNP_SERIAL: "1234",
-            },
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "not_hue_bridge"
-
-
-async def test_bridge_ssdp_already_configured(hass, aioclient_mock):
-    """Test if a discovered bridge has already been configured."""
-    create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "1234")])
-    MockConfigEntry(
-        domain="hue", unique_id="1234", data={"host": "0.0.0.0"}
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://0.0.0.0/",
-            upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-                ssdp.ATTR_UPNP_SERIAL: "1234",
-            },
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_with_no_config(hass, aioclient_mock):
+async def test_import_with_no_config(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test importing a host without an existing config file."""
     create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "1234")])
     result = await hass.config_entries.flow.async_init(
@@ -503,8 +353,8 @@ async def test_import_with_no_config(hass, aioclient_mock):
 
 
 async def test_creating_entry_removes_entries_for_same_host_or_bridge(
-    hass, aioclient_mock
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that we clean up entries for same host and bridge.
 
     An IP can only hold a single bridge and a single bridge can only be
@@ -556,7 +406,9 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
     assert new_entry.unique_id == "id-1234"
 
 
-async def test_bridge_homekit(hass, aioclient_mock):
+async def test_bridge_homekit(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test a bridge being discovered via HomeKit."""
     create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "bla")])
 
@@ -565,6 +417,7 @@ async def test_bridge_homekit(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
+            addresses=["0.0.0.0"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -584,7 +437,7 @@ async def test_bridge_homekit(hass, aioclient_mock):
     assert flow["context"]["unique_id"] == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
 
 
-async def test_bridge_import_already_configured(hass):
+async def test_bridge_import_already_configured(hass: HomeAssistant) -> None:
     """Test if a import flow aborts if host is already configured."""
     MockConfigEntry(
         domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
@@ -600,7 +453,9 @@ async def test_bridge_import_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_bridge_homekit_already_configured(hass, aioclient_mock):
+async def test_bridge_homekit_already_configured(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test if a HomeKit discovered bridge has already been configured."""
     create_mock_api_discovery(aioclient_mock, [("0.0.0.0", "aabbccddeeff")])
     MockConfigEntry(
@@ -612,6 +467,7 @@ async def test_bridge_homekit_already_configured(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
+            addresses=["0.0.0.0"],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -624,34 +480,7 @@ async def test_bridge_homekit_already_configured(hass, aioclient_mock):
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_discovery_update_configuration(hass, aioclient_mock):
-    """Test if a discovered bridge is configured and updated with new host."""
-    create_mock_api_discovery(aioclient_mock, [("1.1.1.1", "aabbccddeeff")])
-    entry = MockConfigEntry(
-        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.1.1.1/",
-            upnp={
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-                ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
-            },
-        ),
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-    assert entry.data["host"] == "1.1.1.1"
-
-
-async def test_options_flow_v1(hass):
+async def test_options_flow_v1(hass: HomeAssistant) -> None:
     """Test options config flow for a V1 bridge."""
     entry = MockConfigEntry(
         domain="hue",
@@ -697,19 +526,42 @@ def _get_schema_default(schema, key_name):
     raise KeyError(f"{key_name} not found in schema")
 
 
-async def test_options_flow_v2(hass):
+async def test_options_flow_v2(hass: HomeAssistant) -> None:
     """Test options config flow for a V2 bridge."""
     entry = MockConfigEntry(
         domain="hue",
-        unique_id="v2bridge",
+        unique_id="aabbccddeeff",
         data={"host": "0.0.0.0", "api_version": 2},
     )
     entry.add_to_hass(hass)
 
-    assert config_flow.HueFlowHandler.async_supports_options_flow(entry) is False
+    dev_reg = dr.async_get(hass)
+    mock_dev_id = "aabbccddee"
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(const.DOMAIN, mock_dev_id)}
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert _get_schema_default(schema, const.CONF_IGNORE_AVAILABILITY) == []
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={const.CONF_IGNORE_AVAILABILITY: [mock_dev_id]},
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        const.CONF_IGNORE_AVAILABILITY: [mock_dev_id],
+    }
 
 
-async def test_bridge_zeroconf(hass, aioclient_mock):
+async def test_bridge_zeroconf(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test a bridge being discovered."""
     create_mock_api_discovery(aioclient_mock, [("192.168.1.217", "ecb5fafffeabcabc")])
     result = await hass.config_entries.flow.async_init(
@@ -717,6 +569,7 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
+            addresses=["192.168.1.217"],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -733,14 +586,16 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
     assert result["step_id"] == "link"
 
 
-async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
+async def test_bridge_zeroconf_already_exists(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test a bridge being discovered by zeroconf already exists."""
     create_mock_api_discovery(
         aioclient_mock, [("0.0.0.0", "ecb5faabcabc"), ("192.168.1.217", "ecb5faabcabc")]
     )
     entry = MockConfigEntry(
         domain="hue",
-        source=config_entries.SOURCE_SSDP,
+        source=config_entries.SOURCE_HOMEKIT,
         data={"host": "0.0.0.0"},
         unique_id="ecb5faabcabc",
     )
@@ -750,6 +605,7 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
+            addresses=["192.168.1.217"],
             port=443,
             hostname="Philips-hue.local",
             type="_hue._tcp.local.",
@@ -765,3 +621,27 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "192.168.1.217"
+
+
+async def test_bridge_zeroconf_ipv6(hass: HomeAssistant) -> None:
+    """Test a bridge being discovered by zeroconf and ipv6 address."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="fd00::eeb5:faff:fe84:b17d",
+            addresses=["fd00::eeb5:faff:fe84:b17d"],
+            port=443,
+            hostname="Philips-hue.local",
+            type="_hue._tcp.local.",
+            name="Philips Hue - ABCABC._hue._tcp.local.",
+            properties={
+                "_raw": {"bridgeid": b"ecb5faabcabc", "modelid": b"BSB002"},
+                "bridgeid": "ecb5faabcabc",
+                "modelid": "BSB002",
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_host"

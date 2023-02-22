@@ -14,10 +14,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NINADataUpdateCoordinator
 from .const import (
+    ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
     ATTR_ID,
+    ATTR_RECOMMENDED_ACTIONS,
+    ATTR_SENDER,
     ATTR_SENT,
+    ATTR_SEVERITY,
     ATTR_START,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
@@ -46,49 +50,52 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NINAMessage(CoordinatorEntity, BinarySensorEntity):
+class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEntity):
     """Representation of an NINA warning."""
 
     def __init__(
         self,
         coordinator: NINADataUpdateCoordinator,
         region: str,
-        regionName: str,
-        slotID: int,
+        region_name: str,
+        slot_id: int,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
-        self._region: str = region
-        self._region_name: str = regionName
-        self._slot_id: int = slotID
-        self._warning_index: int = slotID - 1
+        self._region = region
+        self._warning_index = slot_id - 1
 
-        self._coordinator: NINADataUpdateCoordinator = coordinator
-
-        self._attr_name: str = f"Warning: {self._region_name} {self._slot_id}"
-        self._attr_unique_id: str = f"{self._region}-{self._slot_id}"
-        self._attr_device_class: str = BinarySensorDeviceClass.SAFETY
+        self._attr_name = f"Warning: {region_name} {slot_id}"
+        self._attr_unique_id = f"{region}-{slot_id}"
+        self._attr_device_class = BinarySensorDeviceClass.SAFETY
 
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return len(self._coordinator.data[self._region]) > self._warning_index
+        if not len(self.coordinator.data[self._region]) > self._warning_index:
+            return False
+
+        data = self.coordinator.data[self._region][self._warning_index]
+
+        return data.is_valid
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
-        if (
-            not len(self._coordinator.data[self._region]) > self._warning_index
-        ) or not self.is_on:
+        if not self.is_on:
             return {}
 
-        data: dict[str, Any] = self._coordinator.data[self._region][self._warning_index]
+        data = self.coordinator.data[self._region][self._warning_index]
 
         return {
-            ATTR_HEADLINE: data[ATTR_HEADLINE],
-            ATTR_ID: data[ATTR_ID],
-            ATTR_SENT: data[ATTR_SENT],
-            ATTR_START: data[ATTR_START],
-            ATTR_EXPIRES: data[ATTR_EXPIRES],
+            ATTR_HEADLINE: data.headline,
+            ATTR_DESCRIPTION: data.description,
+            ATTR_SENDER: data.sender,
+            ATTR_SEVERITY: data.severity,
+            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
+            ATTR_ID: data.id,
+            ATTR_SENT: data.sent,
+            ATTR_START: data.start,
+            ATTR_EXPIRES: data.expires,
         }

@@ -3,17 +3,20 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from soco import SoCo
 from soco.alarms import Alarm, Alarms
-from soco.exceptions import SoCoException
+from soco.events_base import Event as SonosEvent
 
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DATA_SONOS, SONOS_ALARMS_UPDATED, SONOS_CREATE_ALARM
+from .helpers import soco_error
 from .household_coordinator import SonosHouseholdCoordinator
+
+if TYPE_CHECKING:
+    from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,28 +58,23 @@ class SonosAlarms(SonosHouseholdCoordinator):
                 )
         async_dispatcher_send(self.hass, f"{SONOS_ALARMS_UPDATED}-{self.household_id}")
 
-    @callback
-    def async_handle_event(self, event_id: str, soco: SoCo) -> None:
-        """Create a task to update from an event callback."""
-        _, event_id = event_id.split(":")
-        event_id = int(event_id)
-        self.hass.async_create_task(self.async_process_event(event_id, soco))
-
-    async def async_process_event(self, event_id: str, soco: SoCo) -> None:
+    async def async_process_event(
+        self, event: SonosEvent, speaker: SonosSpeaker
+    ) -> None:
         """Process the event payload in an async lock and update entities."""
+        event_id = event.variables["alarm_list_version"].split(":")[-1]
+        event_id = int(event_id)
         async with self.cache_update_lock:
             if event_id <= self.last_processed_event_id:
                 # Skip updates if this event_id has already been seen
                 return
-            await self.async_update_entities(soco, event_id)
+            speaker.event_stats.process(event)
+            await self.async_update_entities(speaker.soco, event_id)
 
+    @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
-        try:
-            self.alarms.update(soco)
-        except (OSError, SoCoException) as err:
-            _LOGGER.error("Could not update alarms using %s: %s", soco, err)
-            return False
+        self.alarms.update(soco)
 
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging

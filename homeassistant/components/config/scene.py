@@ -15,12 +15,11 @@ async def async_setup(hass):
 
     async def hook(action, config_key):
         """post_write_hook for Config View that reloads scenes."""
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
-
         if action != ACTION_DELETE:
+            await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
             return
 
-        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg = entity_registry.async_get(hass)
 
         entity_id = ent_reg.async_get_entity_id(DOMAIN, HA_DOMAIN, config_key)
 
@@ -47,8 +46,8 @@ class EditSceneConfigView(EditIdBasedConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        # Iterate through some keys that we want to have ordered in the output
         updated_value = {CONF_ID: config_key}
+        # Iterate through some keys that we want to have ordered in the output
         for key in ("name", "entities"):
             if key in new_value:
                 updated_value[key] = new_value[key]

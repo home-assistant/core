@@ -1,4 +1,6 @@
 """Support for transport.opendata.ch."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,9 +9,12 @@ from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +29,6 @@ ATTR_TARGET = "destination"
 ATTR_TRAIN_NUMBER = "train_number"
 ATTR_TRANSFERS = "transfers"
 ATTR_DELAY = "delay"
-
-ATTRIBUTION = "Data provided by transport.opendata.ch"
 
 CONF_DESTINATION = "to"
 CONF_START = "from"
@@ -45,7 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Swiss public transport sensor."""
 
     name = config.get(CONF_NAME)
@@ -53,7 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     destination = config.get(CONF_DESTINATION)
 
     session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, hass.loop, session)
+    opendata = OpendataTransport(start, destination, session)
 
     try:
         await opendata.async_get_data()
@@ -69,6 +77,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class SwissPublicTransportSensor(SensorEntity):
     """Implementation of an Swiss public transport sensor."""
+
+    _attr_attribution = "Data provided by transport.opendata.ch"
 
     def __init__(self, opendata, start, destination, name):
         """Initialize the sensor."""
@@ -112,7 +122,6 @@ class SwissPublicTransportSensor(SensorEntity):
             ATTR_START: self._opendata.from_name,
             ATTR_TARGET: self._opendata.to_name,
             ATTR_REMAINING_TIME: f"{self._remaining_time}",
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DELAY: self._opendata.connections[0]["delay"],
         }
 
@@ -121,7 +130,7 @@ class SwissPublicTransportSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from opendata.ch and update the states."""
 
         try:

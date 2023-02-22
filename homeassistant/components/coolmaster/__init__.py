@@ -4,22 +4,26 @@ import logging
 from pycoolmasternet_async import CoolMasterNet
 
 from homeassistant.components.climate import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .const import CONF_SWING_SUPPORT, DATA_COORDINATOR, DATA_INFO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Coolmaster from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    coolmaster = CoolMasterNet(host, port)
+    coolmaster = CoolMasterNet(
+        host, port, swing_support=entry.data.get(CONF_SWING_SUPPORT, False)
+    )
     try:
         info = await coolmaster.info()
         if not info:
@@ -33,12 +37,12 @@ async def async_setup_entry(hass, entry):
         DATA_INFO: info,
         DATA_COORDINATOR: coordinator,
     }
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Coolmaster config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

@@ -15,14 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         authenticated = await client.authenticate(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_ACCOUNT],
         )
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
@@ -50,7 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(10):
             try:
                 authenticated = await client.authenticate(
-                    entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+                    entry.data[CONF_USERNAME],
+                    entry.data[CONF_PASSWORD],
+                    entry.data[CONF_ACCOUNT],
                 )
             except aiohttp.ClientError as exception:
                 raise UpdateFailed(exception) from exception
@@ -58,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
             return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[OVODailyUsage](
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
@@ -78,12 +81,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OVO Energy config entry."""
     # Unload sensors
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -93,12 +96,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     return unload_ok
 
 
-class OVOEnergyEntity(CoordinatorEntity):
+class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
     """Defines a base OVO Energy entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[OVODailyUsage],
         client: OVOEnergy,
     ) -> None:
         """Initialize the OVO Energy entity."""

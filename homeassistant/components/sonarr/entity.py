@@ -1,44 +1,38 @@
 """Base Entity for Sonarr."""
 from __future__ import annotations
 
-from sonarr import Sonarr
-
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
 
 
-class SonarrEntity(Entity):
+class SonarrEntity(CoordinatorEntity[SonarrDataUpdateCoordinator[SonarrDataT]]):
     """Defines a base Sonarr entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        *,
-        sonarr: Sonarr,
-        entry_id: str,
-        device_id: str,
+        coordinator: SonarrDataUpdateCoordinator[SonarrDataT],
+        description: EntityDescription,
     ) -> None:
         """Initialize the Sonarr entity."""
-        self._entry_id = entry_id
-        self._device_id = device_id
-        self.sonarr = sonarr
+        super().__init__(coordinator)
+        self.coordinator = coordinator
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information about the application."""
-        if self._device_id is None:
-            return None
-
-        configuration_url = "https://" if self.sonarr.tls else "http://"
-        configuration_url += f"{self.sonarr.host}:{self.sonarr.port}"
-        configuration_url += self.sonarr.base_path.replace("/api", "")
-
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name="Activity Sensor",
-            manufacturer="Sonarr",
-            sw_version=self.sonarr.app.info.version,
+            configuration_url=self.coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url=configuration_url,
+            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            manufacturer=DEFAULT_NAME,
+            name=DEFAULT_NAME,
+            sw_version=self.coordinator.system_version,
         )

@@ -26,6 +26,7 @@ from hyperion.const import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -86,7 +87,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up a Hyperion platform from config entry."""
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
     server_id = config_entry.unique_id
@@ -121,11 +122,13 @@ async def async_setup_entry(
             )
 
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
-    return True
 
 
 class HyperionComponentSwitch(SwitchEntity):
     """ComponentBinarySwitch switch class."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -147,11 +150,6 @@ class HyperionComponentSwitch(SwitchEntity):
         self._client_callbacks = {
             f"{KEY_COMPONENTS}-{KEY_UPDATE}": self._update_components
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """Return whether or not this entity should be polled."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -190,6 +188,7 @@ class HyperionComponentSwitch(SwitchEntity):
             manufacturer=HYPERION_MANUFACTURER_NAME,
             model=HYPERION_MODEL_NAME,
             name=self._instance_name,
+            configuration_url=self._client.remote_url,
         )
 
     async def _async_send_set_component(self, value: bool) -> None:

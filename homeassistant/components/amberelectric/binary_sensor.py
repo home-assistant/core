@@ -24,7 +24,9 @@ PRICE_SPIKE_ICONS = {
 }
 
 
-class AmberPriceGridSensor(CoordinatorEntity, BinarySensorEntity):
+class AmberPriceGridSensor(
+    CoordinatorEntity[AmberUpdateCoordinator], BinarySensorEntity
+):
     """Sensor to show single grid binary values."""
 
     _attr_attribution = ATTRIBUTION

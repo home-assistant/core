@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
+import pytest
 
 from homeassistant.components.hyperion import (
     get_hyperion_device_id,
@@ -23,6 +24,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import (
     RELOAD_AFTER_UPDATE_DELAY,
@@ -77,7 +80,7 @@ def _get_config_entry_from_unique_id(
     hass: HomeAssistant, unique_id: str
 ) -> ConfigEntry | None:
     for entry in hass.config_entries.async_entries(domain=DOMAIN):
-        if TEST_SYSINFO_ID == entry.unique_id:
+        if entry.unique_id == TEST_SYSINFO_ID:
             return entry
     return None
 
@@ -257,9 +260,9 @@ async def test_light_basic_properties(hass: HomeAssistant) -> None:
     # By default the effect list is the 3 external sources + 'Solid'.
     assert len(entity_state.attributes["effect_list"]) == 4
 
-    assert (
-        entity_state.attributes["supported_features"] == hyperion_light.SUPPORT_HYPERION
-    )
+    assert entity_state.attributes["color_mode"] == ColorMode.HS
+    assert entity_state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert entity_state.attributes["supported_features"] == LightEntityFeature.EFFECT
 
 
 async def test_light_async_turn_on(hass: HomeAssistant) -> None:
@@ -862,7 +865,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert client.async_client_disconnect.call_count == 2
 
 
-async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:
+async def test_version_log_warning(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test warning on old version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.7")
@@ -871,7 +876,9 @@ async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:
     assert "Please consider upgrading" in caplog.text
 
 
-async def test_version_no_log_warning(caplog, hass: HomeAssistant) -> None:
+async def test_version_no_log_warning(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test no warning on acceptable version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.9")
@@ -897,6 +904,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
                 CONF_SOURCE: SOURCE_REAUTH,
                 "entry_id": config_entry.entry_id,
                 "unique_id": config_entry.unique_id,
+                "title_placeholders": {"name": config_entry.title},
             },
             data=config_entry.data,
         )
@@ -925,6 +933,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
                 CONF_SOURCE: SOURCE_REAUTH,
                 "entry_id": config_entry.entry_id,
                 "unique_id": config_entry.unique_id,
+                "title_placeholders": {"name": config_entry.title},
             },
             data=config_entry.data,
         )
@@ -1327,7 +1336,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == HYPERION_MODEL_NAME
     assert device.name == TEST_INSTANCE_1["friendly_name"]
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)
@@ -1345,7 +1354,7 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
     entry = entity_registry.async_get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert not entity_state
 
@@ -1369,7 +1378,9 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
     assert entity_state
 
 
-async def test_deprecated_effect_names(caplog, hass: HomeAssistant) -> None:
+async def test_deprecated_effect_names(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test deprecated effects function and issue a warning."""
     client = create_mock_client()
     client.async_send_clear = AsyncMock(return_value=True)

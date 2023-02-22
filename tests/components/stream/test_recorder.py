@@ -1,4 +1,5 @@
-"""The tests for hls streams."""
+"""The tests for recording streams."""
+import asyncio
 from datetime import timedelta
 from io import BytesIO
 import os
@@ -7,115 +8,97 @@ from unittest.mock import patch
 import av
 import pytest
 
-from homeassistant.components.stream import create_stream
-from homeassistant.components.stream.const import HLS_PROVIDER, RECORDER_PROVIDER
-from homeassistant.components.stream.core import Part
+from homeassistant.components.stream import Stream, create_stream
+from homeassistant.components.stream.const import (
+    HLS_PROVIDER,
+    OUTPUT_IDLE_TIMEOUT,
+    RECORDER_PROVIDER,
+)
+from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
-from homeassistant.components.stream.recorder import recorder_save_worker
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.stream.common import (
+from .common import (
     DefaultSegment as Segment,
+    assert_mp4_has_transform_matrix,
+    dynamic_stream_settings,
     generate_h264_video,
     remux_with_audio,
 )
 
-MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
+from tests.common import async_fire_time_changed
 
 
-async def test_record_stream(hass, hass_client, record_worker_sync):
-    """
-    Test record stream.
-
-    Tests full integration with the stream component, and captures the
-    stream worker and save worker to allow for clean shutdown of background
-    threads.  The actual save logic is tested in test_recorder_save below.
-    """
+@pytest.fixture(autouse=True)
+async def stream_component(hass):
+    """Set up the component before each test."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    # Setup demo track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+
+@pytest.fixture
+def filename(tmpdir):
+    """Use this filename for the tests."""
+    return f"{tmpdir}/test.mp4"
+
+
+async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:
+    """Test record stream."""
+
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    with patch("homeassistant.components.stream.Stream", wraps=MockStream):
+        stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+        make_recording = hass.async_create_task(stream.async_record(filename))
 
-    # After stream decoding finishes, the record worker thread starts
-    segments = await record_worker_sync.get_segments()
-    assert len(segments) >= 1
+        # In general usage the recorder will only include what has already been
+        # processed by the worker. To guarantee we have some output for the test,
+        # wait until the worker has finished before firing
+        await worker_finished.wait()
 
-    # Verify that the save worker was invoked, then block until its
-    # thread completes and is shutdown completely to avoid thread leaks.
-    await record_worker_sync.join()
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
 
-    stream.stop()
+        await make_recording
+
+    # Assert
+    assert os.path.exists(filename)
 
 
-async def test_record_lookback(
-    hass, hass_client, stream_worker_sync, record_worker_sync
-):
-    """Exercise record with loopback."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:
+    """Exercise record with lookback."""
 
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
 
     # Start an HLS feed to enable lookback
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path", lookback=4)
+        await stream.async_record(filename, lookback=4)
 
     # This test does not need recorder cleanup since it is not fully exercised
 
-    stream.stop()
+    await stream.stop()
 
 
-async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
-    """
-    Test recorder timeout.
-
-    Mocks out the cleanup to assert that it is invoked after a timeout.
-    This test does not start the recorder save thread.
-    """
-    await async_setup_component(hass, "stream", {"stream": {}})
-
-    stream_worker_sync.pause()
-
-    with patch("homeassistant.components.stream.IdleTimer.fire") as mock_timeout:
-        # Setup demo track
-        source = generate_h264_video()
-
-        stream = create_stream(hass, source, {})
-        with patch.object(hass.config, "is_allowed_path", return_value=True):
-            await stream.async_record("/example/path")
-        recorder = stream.add_provider(RECORDER_PROVIDER)
-
-        await recorder.recv()
-
-        # Wait a minute
-        future = dt_util.utcnow() + timedelta(minutes=1)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-        assert mock_timeout.called
-
-        stream_worker_sync.resume()
-        stream.stop()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-
-
-async def test_record_path_not_allowed(hass, hass_client):
+async def test_record_path_not_allowed(hass: HomeAssistant, h264_video) -> None:
     """Test where the output path is not allowed by home assistant configuration."""
-    await async_setup_component(hass, "stream", {"stream": {}})
 
-    # Setup demo track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
@@ -136,111 +119,187 @@ def add_parts_to_segment(segment, source):
     ]
 
 
-async def test_recorder_save(tmpdir):
-    """Test recorder save."""
-    # Setup
-    source = generate_h264_video()
-    filename = f"{tmpdir}/test.mp4"
-
-    # Run
-    segment = Segment(sequence=1)
-    add_parts_to_segment(segment, source)
-    segment.duration = 4
-    recorder_save_worker(filename, [segment])
-
-    # Assert
-    assert os.path.exists(filename)
-
-
-async def test_recorder_discontinuity(tmpdir):
+async def test_recorder_discontinuity(
+    hass: HomeAssistant, filename, h264_video
+) -> None:
     """Test recorder save across a discontinuity."""
-    # Setup
-    source = generate_h264_video()
-    filename = f"{tmpdir}/test.mp4"
 
     # Run
     segment_1 = Segment(sequence=1, stream_id=0)
-    add_parts_to_segment(segment_1, source)
+    add_parts_to_segment(segment_1, h264_video)
     segment_1.duration = 4
     segment_2 = Segment(sequence=2, stream_id=1)
-    add_parts_to_segment(segment_2, source)
+    add_parts_to_segment(segment_2, h264_video)
     segment_2.duration = 4
-    recorder_save_worker(filename, [segment_1, segment_2])
+
+    provider_ready = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch add_provider."""
+
+        async def start(self):
+            """Make Stream.start a noop that gives up async context."""
+            await asyncio.sleep(0)
+
+        def add_provider(self, fmt, timeout=OUTPUT_IDLE_TIMEOUT):
+            """Add a finished event to Stream.add_provider."""
+            provider = Stream.add_provider(self, fmt, timeout)
+            provider_ready.set()
+            return provider
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
+        "homeassistant.components.stream.Stream", wraps=MockStream
+    ), patch("homeassistant.components.stream.recorder.RecorderOutput.recv"):
+        stream = create_stream(hass, "blank", {}, dynamic_stream_settings())
+        make_recording = hass.async_create_task(stream.async_record(filename))
+        await provider_ready.wait()
+
+        recorder_output = stream.outputs()[RECORDER_PROVIDER]
+        recorder_output.idle_timer.start()
+        recorder_output._segments.extend([segment_1, segment_2])
+
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+
+        await make_recording
     # Assert
     assert os.path.exists(filename)
 
 
-async def test_recorder_no_segments(tmpdir):
+async def test_recorder_no_segments(hass: HomeAssistant, filename) -> None:
     """Test recorder behavior with a stream failure which causes no segments."""
-    # Setup
-    filename = f"{tmpdir}/test.mp4"
+
+    stream = create_stream(hass, BytesIO(), {}, dynamic_stream_settings())
 
     # Run
-    recorder_save_worker("unused-file", [])
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record(filename)
 
     # Assert
     assert not os.path.exists(filename)
 
 
-async def test_record_stream_audio(
-    hass, hass_client, stream_worker_sync, record_worker_sync
-):
-    """
-    Test treatment of different audio inputs.
+@pytest.fixture(scope="module")
+def h264_mov_video():
+    """Generate a source video with no audio."""
+    return generate_h264_video(container_format="mov")
 
-    Record stream output should have an audio channel when input has
-    a valid codec and audio packets and no audio channel otherwise.
-    """
-    await async_setup_component(hass, "stream", {"stream": {}})
 
-    # Generate source video with no audio
-    orig_source = generate_h264_video(container_format="mov")
-
-    for a_codec, expected_audio_streams in (
+@pytest.mark.parametrize(
+    ("audio_codec", "expected_audio_streams"),
+    [
         ("aac", 1),  # aac is a valid mp4 codec
         ("pcm_mulaw", 0),  # G.711 is not a valid mp4 codec
         ("empty", 0),  # audio stream with no packets
         (None, 0),  # no audio stream
-    ):
-        # Remux source video with new audio
-        source = remux_with_audio(orig_source, "mov", a_codec)  # mov can store PCM
+    ],
+)
+async def test_record_stream_audio(
+    hass: HomeAssistant,
+    filename,
+    audio_codec,
+    expected_audio_streams,
+    h264_mov_video,
+) -> None:
+    """Test treatment of different audio inputs.
 
-        record_worker_sync.reset()
-        stream_worker_sync.pause()
+    Record stream output should have an audio channel when input has
+    a valid codec and audio packets and no audio channel otherwise.
+    """
 
-        stream = create_stream(hass, source, {})
-        with patch.object(hass.config, "is_allowed_path", return_value=True):
-            await stream.async_record("/example/path")
-        recorder = stream.add_provider(RECORDER_PROVIDER)
+    # Remux source video with new audio
+    source = remux_with_audio(h264_mov_video, "mov", audio_codec)  # mov can store PCM
 
-        while True:
-            await recorder.recv()
-            if not (segment := recorder.last_segment):
-                break
-            last_segment = segment
-            stream_worker_sync.resume()
+    worker_finished = asyncio.Event()
 
-        result = av.open(
-            BytesIO(last_segment.init + last_segment.get_data()),
-            "r",
-            format="mp4",
-        )
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
 
-        assert len(result.streams.audio) == expected_audio_streams
-        result.close()
-        stream.stop()
-        await hass.async_block_till_done()
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
 
-        # Verify that the save worker was invoked, then block until its
-        # thread completes and is shutdown completely to avoid thread leaks.
-        await record_worker_sync.join()
+    with patch("homeassistant.components.stream.Stream", wraps=MockStream):
+        stream = create_stream(hass, source, {}, dynamic_stream_settings())
 
-
-async def test_recorder_log(hass, caplog):
-    """Test starting a stream to record logs the url without username and password."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-    stream = create_stream(hass, "https://abcd:efgh@foo.bar", {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+        make_recording = hass.async_create_task(stream.async_record(filename))
+
+        # In general usage the recorder will only include what has already been
+        # processed by the worker. To guarantee we have some output for the test,
+        # wait until the worker has finished before firing
+        await worker_finished.wait()
+
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+
+        await make_recording
+
+    # Assert
+    assert os.path.exists(filename)
+
+    result = av.open(
+        filename,
+        "r",
+        format="mp4",
+    )
+
+    assert len(result.streams.audio) == expected_audio_streams
+    result.close()
+    await stream.stop()
+    await hass.async_block_till_done()
+
+
+async def test_recorder_log(
+    hass: HomeAssistant, filename, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test starting a stream to record logs the url without username and password."""
+    stream = create_stream(
+        hass, "https://abcd:efgh@foo.bar", {}, dynamic_stream_settings()
+    )
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record(filename)
     assert "https://abcd:efgh@foo.bar" not in caplog.text
     assert "https://****:****@foo.bar" in caplog.text
+
+
+async def test_record_stream_rotate(hass: HomeAssistant, filename, h264_video) -> None:
+    """Test record stream with rotation."""
+
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    with patch("homeassistant.components.stream.Stream", wraps=MockStream):
+        stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+        stream.dynamic_stream_settings.orientation = Orientation.ROTATE_RIGHT
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        make_recording = hass.async_create_task(stream.async_record(filename))
+
+        # In general usage the recorder will only include what has already been
+        # processed by the worker. To guarantee we have some output for the test,
+        # wait until the worker has finished before firing
+        await worker_finished.wait()
+
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+
+        await make_recording
+
+    # Assert
+    assert os.path.exists(filename)
+    with open(filename, "rb") as rotated_mp4:
+        assert_mp4_has_transform_matrix(
+            rotated_mp4.read(), stream.dynamic_stream_settings.orientation
+        )

@@ -5,6 +5,10 @@ from unittest.mock import MagicMock, patch
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 import pytest
 
+from homeassistant.components.hassio.const import X_AUTH_TOKEN
+
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 
 @pytest.mark.parametrize(
     "build_type",
@@ -16,7 +20,9 @@ import pytest
         ("fsadjf10312", ""),
     ],
 )
-async def test_ingress_request_get(hassio_client, build_type, aioclient_mock):
+async def test_ingress_request_get(
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
@@ -35,7 +41,7 @@ async def test_ingress_request_get(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -56,7 +62,9 @@ async def test_ingress_request_get(hassio_client, build_type, aioclient_mock):
         ("fsadjf10312", ""),
     ],
 )
-async def test_ingress_request_post(hassio_client, build_type, aioclient_mock):
+async def test_ingress_request_post(
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.post(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
@@ -75,7 +83,7 @@ async def test_ingress_request_post(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -96,7 +104,9 @@ async def test_ingress_request_post(hassio_client, build_type, aioclient_mock):
         ("fsadjf10312", ""),
     ],
 )
-async def test_ingress_request_put(hassio_client, build_type, aioclient_mock):
+async def test_ingress_request_put(
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.put(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
@@ -115,7 +125,7 @@ async def test_ingress_request_put(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -136,7 +146,9 @@ async def test_ingress_request_put(hassio_client, build_type, aioclient_mock):
         ("fsadjf10312", ""),
     ],
 )
-async def test_ingress_request_delete(hassio_client, build_type, aioclient_mock):
+async def test_ingress_request_delete(
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.delete(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
@@ -155,7 +167,7 @@ async def test_ingress_request_delete(hassio_client, build_type, aioclient_mock)
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -176,7 +188,9 @@ async def test_ingress_request_delete(hassio_client, build_type, aioclient_mock)
         ("fsadjf10312", ""),
     ],
 )
-async def test_ingress_request_patch(hassio_client, build_type, aioclient_mock):
+async def test_ingress_request_patch(
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.patch(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
@@ -195,7 +209,7 @@ async def test_ingress_request_patch(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -216,7 +230,9 @@ async def test_ingress_request_patch(hassio_client, build_type, aioclient_mock):
         ("fsadjf10312", ""),
     ],
 )
-async def test_ingress_request_options(hassio_client, build_type, aioclient_mock):
+async def test_ingress_request_options(
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.options(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
@@ -235,7 +251,7 @@ async def test_ingress_request_options(hassio_client, build_type, aioclient_mock
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -256,7 +272,9 @@ async def test_ingress_request_options(hassio_client, build_type, aioclient_mock
         ("demo", "ws/connection?id=9&token=SJAKWS283"),
     ],
 )
-async def test_ingress_websocket(hassio_client, build_type, aioclient_mock):
+async def test_ingress_websocket(
+    hassio_client, build_type, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test no auth needed for ."""
     aioclient_mock.get(f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}")
 
@@ -268,7 +286,7 @@ async def test_ingress_websocket(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -279,7 +297,9 @@ async def test_ingress_websocket(hassio_client, build_type, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
 
 
-async def test_ingress_missing_peername(hassio_client, aioclient_mock, caplog):
+async def test_ingress_missing_peername(
+    hassio_client, aioclient_mock: AiohttpClientMocker, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test hadnling of missing peername."""
     aioclient_mock.get(
         "http://127.0.0.1/ingress/lorem/ipsum",

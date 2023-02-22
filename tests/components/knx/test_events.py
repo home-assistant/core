@@ -1,11 +1,6 @@
 """Test KNX events."""
 
-from homeassistant.components.knx import (
-    CONF_EVENT,
-    CONF_KNX_EVENT_FILTER,
-    CONF_TYPE,
-    KNX_ADDRESS,
-)
+from homeassistant.components.knx import CONF_EVENT, CONF_TYPE, KNX_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -13,7 +8,7 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
+async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test the `knx_event` event."""
     test_group_a = "0/4/*"
     test_address_a_1 = "0/4/0"
@@ -25,7 +20,6 @@ async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
     test_address_c_1 = "2/6/4"
     test_address_c_2 = "2/6/5"
     test_address_d = "5/4/3"
-    test_address_e = "6/4/3"
     events = async_capture_events(hass, "knx_event")
 
     async def test_event_data(address, payload, value=None):
@@ -63,8 +57,6 @@ async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
                     KNX_ADDRESS: [test_address_d],
                 },
             ],
-            # test legacy `event_filter` config
-            CONF_KNX_EVENT_FILTER: [test_address_e],
         }
     )
 
@@ -96,10 +88,6 @@ async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
 
     await knx.receive_write(test_address_d, True)
     await test_event_data(test_address_d, True)
-
-    # test legacy `event_filter` config
-    await knx.receive_write(test_address_e, (89, 43, 34, 11))
-    await test_event_data(test_address_e, (89, 43, 34, 11))
 
     # receive telegrams for group addresses not matching any filter
     await knx.receive_write("0/5/0", True)

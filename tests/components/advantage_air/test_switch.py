@@ -11,9 +11,10 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.advantage_air import (
+from . import (
     TEST_SET_RESPONSE,
     TEST_SET_URL,
     TEST_SYSTEM_DATA,
@@ -21,9 +22,13 @@ from tests.components.advantage_air import (
     add_mock_config,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_cover_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup without sensors."""
+
+async def test_cover_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test switch platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,

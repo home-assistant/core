@@ -20,13 +20,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_DOLLAR, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
-from .coordinator import AmberUpdateCoordinator
+from .coordinator import AmberUpdateCoordinator, normalize_descriptor
 
 ICONS = {
     "general": "mdi:transmission-tower",
@@ -34,7 +34,7 @@ ICONS = {
     "feed_in": "mdi:solar-power",
 }
 
-UNIT = f"{CURRENCY_DOLLAR}/{ENERGY_KILO_WATT_HOUR}"
+UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
 
 
 def format_cents_to_dollars(cents: float) -> float:
@@ -51,7 +51,7 @@ def friendly_channel_type(channel_type: str) -> str:
     return "General"
 
 
-class AmberSensor(CoordinatorEntity, SensorEntity):
+class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     """Amber Base Sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -160,6 +160,7 @@ class AmberForecastSensor(AmberSensor):
             datum["end_time"] = interval.end_time.isoformat()
             datum["renewables"] = round(interval.renewables)
             datum["spike_status"] = interval.spike_status.value
+            datum["descriptor"] = normalize_descriptor(interval.descriptor)
 
             if interval.range is not None:
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
@@ -170,7 +171,16 @@ class AmberForecastSensor(AmberSensor):
         return data
 
 
-class AmberGridSensor(CoordinatorEntity, SensorEntity):
+class AmberPriceDescriptorSensor(AmberSensor):
+    """Amber Price Descriptor Sensor."""
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the current price descriptor."""
+        return self.coordinator.data[self.entity_description.key][self.channel_type]
+
+
+class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     """Sensor to show single grid specific values."""
 
     _attr_attribution = ATTRIBUTION
@@ -214,6 +224,19 @@ async def async_setup_entry(
         )
         entities.append(AmberPriceSensor(coordinator, description, channel_type))
 
+    for channel_type in current:
+        description = SensorEntityDescription(
+            key="descriptors",
+            name=(
+                f"{entry.title} - {friendly_channel_type(channel_type)} Price"
+                " Descriptor"
+            ),
+            icon=ICONS[channel_type],
+        )
+        entities.append(
+            AmberPriceDescriptorSensor(coordinator, description, channel_type)
+        )
+
     for channel_type in forecasts:
         description = SensorEntityDescription(
             key="forecasts",
@@ -227,7 +250,7 @@ async def async_setup_entry(
     renewables_description = SensorEntityDescription(
         key="renewables",
         name=f"{entry.title} - Renewables",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:solar-power",
     )

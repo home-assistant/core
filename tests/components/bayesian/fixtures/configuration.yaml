@@ -2,9 +2,9 @@ binary_sensor:
   - platform: bayesian
     prior: 0.1
     observations:
-      - entity_id: 'switch.kitchen_lights'
+      - entity_id: "switch.kitchen_lights"
         prob_given_true: 0.6
         prob_given_false: 0.2
-        platform: 'state'
-        to_state: 'on'
+        platform: "state"
+        to_state: "on"
     name: test2

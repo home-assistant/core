@@ -6,13 +6,12 @@ from dataclasses import dataclass
 from aioswitcher.device import DeviceCategory
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_POWER,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRIC_CURRENT_AMPERE, POWER_WATT
+from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,23 +30,23 @@ class AttributeDescription:
     name: str
     icon: str | None = None
     unit: str | None = None
-    device_class: str | None = None
-    state_class: str | None = None
+    device_class: SensorDeviceClass | None = None
+    state_class: SensorStateClass | None = None
     default_enabled: bool = True
 
 
 POWER_SENSORS = {
     "power_consumption": AttributeDescription(
         name="Power Consumption",
-        unit=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        unit=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "electric_current": AttributeDescription(
         name="Electric Current",
-        unit=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        unit=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -93,7 +92,9 @@ async def async_setup_entry(
     )
 
 
-class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
+class SwitcherSensorEntity(
+    CoordinatorEntity[SwitcherDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Switcher sensor entity."""
 
     def __init__(

@@ -1,0 +1,47 @@
+{
+  "config": {
+    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "confirm_slow": {
+        "description": "There hasn't been a broadcast from this device in the last minute so we aren't sure if this device uses encryption or not. This may be because the device uses a slow broadcast interval. Confirm to add this device anyway, then the next time a broadcast is received you will be prompted to enter its bindkey if it's needed."
+      },
+      "get_encryption_key_legacy": {
+        "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 24 character hexadecimal bindkey.",
+        "data": {
+          "bindkey": "Bindkey"
+        }
+      },
+      "get_encryption_key_4_5": {
+        "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 32 character hexadecimal bindkey.",
+        "data": {
+          "bindkey": "Bindkey"
+        }
+      }
+    },
+    "error": {
+      "decryption_failed": "The provided bindkey did not work, sensor data could not be decrypted. Please check it and try again.",
+      "expected_24_characters": "Expected a 24 character hexadecimal bindkey.",
+      "expected_32_characters": "Expected a 32 character hexadecimal bindkey."
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "motion_detected": "Motion detected"
+    }
+  }
+}

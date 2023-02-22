@@ -1,6 +1,6 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
-
 from homeassistant.components import hue
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -8,7 +8,9 @@ from .conftest import setup_bridge, setup_platform
 from .const import FAKE_DEVICE, FAKE_SENSOR, FAKE_ZIGBEE_CONNECTIVITY
 
 
-async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_sensors(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test if all v2 sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -56,12 +58,12 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_enable_sensor(
-    hass, mock_bridge_v2, v2_resources_test_data, mock_config_entry_v2
-):
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data, mock_config_entry_v2
+) -> None:
     """Test enabling of the by default disabled zigbee_connectivity sensor."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_bridge(hass, mock_bridge_v2, mock_config_entry_v2)
@@ -76,7 +78,7 @@ async def test_enable_sensor(
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # enable the entity
     updated_entry = ent_reg.async_update_entity(
@@ -95,7 +97,7 @@ async def test_enable_sensor(
     assert state.attributes["mac_address"] == "00:17:88:01:0b:aa:bb:99"
 
 
-async def test_sensor_add_update(hass, mock_bridge_v2):
+async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2) -> None:
     """Test if sensors get added/updated from events."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
     await setup_platform(hass, mock_bridge_v2, "sensor")

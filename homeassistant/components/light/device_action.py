@@ -12,7 +12,8 @@ from homeassistant.const import (
     CONF_TYPE,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -23,9 +24,9 @@ from . import (
     ATTR_FLASH,
     DOMAIN,
     FLASH_SHORT,
-    SUPPORT_FLASH,
     VALID_BRIGHTNESS_PCT,
     VALID_FLASH,
+    LightEntityFeature,
     brightness_supported,
     get_supported_color_modes,
 )
@@ -54,7 +55,7 @@ async def async_call_action_from_config(
     hass: HomeAssistant,
     config: ConfigType,
     variables: TemplateVarsType,
-    context: Context,
+    context: Context | None,
 ) -> None:
     """Change state based on configuration."""
     if (
@@ -76,10 +77,7 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
     if config[CONF_TYPE] == TYPE_FLASH:
-        if ATTR_FLASH in config:
-            data[ATTR_FLASH] = config[ATTR_FLASH]
-        else:
-            data[ATTR_FLASH] = FLASH_SHORT
+        data[ATTR_FLASH] = config.get(ATTR_FLASH, FLASH_SHORT)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
@@ -115,7 +113,7 @@ async def async_get_actions(
                 )
             )
 
-        if supported_features & SUPPORT_FLASH:
+        if supported_features & LightEntityFeature.FLASH:
             actions.append({**base_action, CONF_TYPE: TYPE_FLASH})
 
     return actions
@@ -143,7 +141,7 @@ async def async_get_action_capabilities(
     if brightness_supported(supported_color_modes):
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
-    if supported_features & SUPPORT_FLASH:
+    if supported_features & LightEntityFeature.FLASH:
         extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
 
     return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}

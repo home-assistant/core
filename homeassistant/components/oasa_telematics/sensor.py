@@ -1,4 +1,6 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from operator import itemgetter
@@ -6,9 +8,16 @@ from operator import itemgetter
 import oasatelematics
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,8 +29,6 @@ ATTR_ROUTE_NAME = "route_name"
 ATTR_NEXT_ARRIVAL = "next_arrival"
 ATTR_SECOND_NEXT_ARRIVAL = "second_next_arrival"
 ATTR_NEXT_DEPARTURE = "next_departure"
-
-ATTRIBUTION = "Data retrieved from telematics.oasa.gr"
 
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE_ID = "route_id"
@@ -40,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the OASA Telematics sensor."""
     name = config[CONF_NAME]
     stop_id = config[CONF_STOP_ID]
@@ -53,6 +65,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class OASATelematicsSensor(SensorEntity):
     """Implementation of the OASA Telematics sensor."""
+
+    _attr_attribution = "Data retrieved from telematics.oasa.gr"
 
     def __init__(self, data, stop_id, route_id, name):
         """Initialize the sensor."""
@@ -70,7 +84,7 @@ class OASATelematicsSensor(SensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
+        return SensorDeviceClass.TIMESTAMP
 
     @property
     def native_value(self):
@@ -97,7 +111,6 @@ class OASATelematicsSensor(SensorEntity):
                 {
                     ATTR_ROUTE_ID: self._times[0][ATTR_ROUTE_ID],
                     ATTR_STOP_ID: self._stop_id,
-                    ATTR_ATTRIBUTION: ATTRIBUTION,
                 }
             )
         params.update(
@@ -113,7 +126,7 @@ class OASATelematicsSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from OASA API and update the states."""
         self.data.update()
         self._times = self.data.info

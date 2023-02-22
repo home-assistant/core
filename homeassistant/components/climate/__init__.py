@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -31,9 +31,9 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -55,11 +55,29 @@ from .const import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN,
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_MIDDLE,
+    FAN_OFF,
+    FAN_ON,
+    FAN_TOP,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     HVAC_MODES,
+    PRESET_ACTIVITY,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_HOME,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -74,6 +92,14 @@ from .const import (
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_ON,
+    SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 
 DEFAULT_MIN_TEMP = 7
@@ -98,15 +124,17 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
-            vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
+            vol.Optional(ATTR_HVAC_MODE): vol.Coerce(HVACMode),
         }
     ),
 )
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up climate entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[ClimateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -115,44 +143,47 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
-        {vol.Required(ATTR_HVAC_MODE): vol.In(HVAC_MODES)},
+        {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
         "async_set_hvac_mode",
     )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
         "async_set_preset_mode",
-        [SUPPORT_PRESET_MODE],
+        [ClimateEntityFeature.PRESET_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_AUX_HEAT,
         {vol.Required(ATTR_AUX_HEAT): cv.boolean},
         async_service_aux_heat,
-        [SUPPORT_AUX_HEAT],
+        [ClimateEntityFeature.AUX_HEAT],
     )
     component.async_register_entity_service(
         SERVICE_SET_TEMPERATURE,
         SET_TEMPERATURE_SCHEMA,
         async_service_temperature_set,
-        [SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_RANGE],
+        [
+            ClimateEntityFeature.TARGET_TEMPERATURE,
+            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
-        {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)},
+        {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)},
         "async_set_humidity",
-        [SUPPORT_TARGET_HUMIDITY],
+        [ClimateEntityFeature.TARGET_HUMIDITY],
     )
     component.async_register_entity_service(
         SERVICE_SET_FAN_MODE,
         {vol.Required(ATTR_FAN_MODE): cv.string},
         "async_set_fan_mode",
-        [SUPPORT_FAN_MODE],
+        [ClimateEntityFeature.FAN_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_SWING_MODE,
         {vol.Required(ATTR_SWING_MODE): cv.string},
         "async_set_swing_mode",
-        [SUPPORT_SWING_MODE],
+        [ClimateEntityFeature.SWING_MODE],
     )
 
     return True
@@ -160,13 +191,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -183,9 +214,9 @@ class ClimateEntity(Entity):
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
-    _attr_hvac_action: str | None = None
-    _attr_hvac_mode: str
-    _attr_hvac_modes: list[str]
+    _attr_hvac_action: HVACAction | str | None = None
+    _attr_hvac_mode: HVACMode | str | None
+    _attr_hvac_modes: list[HVACMode] | list[str]
     _attr_is_aux_heat: bool | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
@@ -194,7 +225,7 @@ class ClimateEntity(Entity):
     _attr_precision: float
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
-    _attr_supported_features: int
+    _attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     _attr_swing_mode: str | None
     _attr_swing_modes: list[str] | None
     _attr_target_humidity: int | None = None
@@ -204,17 +235,22 @@ class ClimateEntity(Entity):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
+    @final
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the current state."""
-        return self.hvac_mode
+        if self.hvac_mode is None:
+            return None
+        if not isinstance(self.hvac_mode, HVACMode):
+            return HVACMode(self.hvac_mode).value
+        return self.hvac_mode.value
 
     @property
     def precision(self) -> float:
         """Return the precision of the system."""
         if hasattr(self, "_attr_precision"):
             return self._attr_precision
-        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 
@@ -222,7 +258,7 @@ class ClimateEntity(Entity):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         supported_features = self.supported_features
-        data = {
+        data: dict[str, Any] = {
             ATTR_HVAC_MODES: self.hvac_modes,
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit, self.precision
@@ -235,17 +271,17 @@ class ClimateEntity(Entity):
         if self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
 
-        if supported_features & SUPPORT_TARGET_HUMIDITY:
+        if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
             data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
-        if supported_features & SUPPORT_FAN_MODE:
+        if supported_features & ClimateEntityFeature.FAN_MODE:
             data[ATTR_FAN_MODES] = self.fan_modes
 
-        if supported_features & SUPPORT_PRESET_MODE:
+        if supported_features & ClimateEntityFeature.PRESET_MODE:
             data[ATTR_PRESET_MODES] = self.preset_modes
 
-        if supported_features & SUPPORT_SWING_MODE:
+        if supported_features & ClimateEntityFeature.SWING_MODE:
             data[ATTR_SWING_MODES] = self.swing_modes
 
         return data
@@ -264,7 +300,7 @@ class ClimateEntity(Entity):
             ),
         }
 
-        if supported_features & SUPPORT_TARGET_TEMPERATURE:
+        if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             data[ATTR_TEMPERATURE] = show_temp(
                 self.hass,
                 self.target_temperature,
@@ -272,7 +308,7 @@ class ClimateEntity(Entity):
                 self.precision,
             )
 
-        if supported_features & SUPPORT_TARGET_TEMPERATURE_RANGE:
+        if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
                 self.hass,
                 self.target_temperature_high,
@@ -289,22 +325,22 @@ class ClimateEntity(Entity):
         if self.current_humidity is not None:
             data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
 
-        if supported_features & SUPPORT_TARGET_HUMIDITY:
+        if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & SUPPORT_FAN_MODE:
+        if supported_features & ClimateEntityFeature.FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
 
         if self.hvac_action:
             data[ATTR_HVAC_ACTION] = self.hvac_action
 
-        if supported_features & SUPPORT_PRESET_MODE:
+        if supported_features & ClimateEntityFeature.PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
-        if supported_features & SUPPORT_SWING_MODE:
+        if supported_features & ClimateEntityFeature.SWING_MODE:
             data[ATTR_SWING_MODE] = self.swing_mode
 
-        if supported_features & SUPPORT_AUX_HEAT:
+        if supported_features & ClimateEntityFeature.AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
 
         return data
@@ -325,27 +361,18 @@ class ClimateEntity(Entity):
         return self._attr_target_humidity
 
     @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+    def hvac_mode(self) -> HVACMode | str | None:
+        """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
 
     @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
+    def hvac_modes(self) -> list[HVACMode] | list[str]:
+        """Return the list of available hvac operation modes."""
         return self._attr_hvac_modes
 
     @property
-    def hvac_action(self) -> str | None:
-        """Return the current running hvac operation if supported.
-
-        Need to be one of CURRENT_HVAC_*.
-        """
+    def hvac_action(self) -> HVACAction | str | None:
+        """Return the current running hvac operation if supported."""
         return self._attr_hvac_action
 
     @property
@@ -367,7 +394,7 @@ class ClimateEntity(Entity):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach.
 
-        Requires SUPPORT_TARGET_TEMPERATURE_RANGE.
+        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
         """
         return self._attr_target_temperature_high
 
@@ -375,7 +402,7 @@ class ClimateEntity(Entity):
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach.
 
-        Requires SUPPORT_TARGET_TEMPERATURE_RANGE.
+        Requires ClimateEntityFeature.TARGET_TEMPERATURE_RANGE.
         """
         return self._attr_target_temperature_low
 
@@ -383,7 +410,7 @@ class ClimateEntity(Entity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         return self._attr_preset_mode
 
@@ -391,7 +418,7 @@ class ClimateEntity(Entity):
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         return self._attr_preset_modes
 
@@ -399,7 +426,7 @@ class ClimateEntity(Entity):
     def is_aux_heat(self) -> bool | None:
         """Return true if aux heater.
 
-        Requires SUPPORT_AUX_HEAT.
+        Requires ClimateEntityFeature.AUX_HEAT.
         """
         return self._attr_is_aux_heat
 
@@ -407,7 +434,7 @@ class ClimateEntity(Entity):
     def fan_mode(self) -> str | None:
         """Return the fan setting.
 
-        Requires SUPPORT_FAN_MODE.
+        Requires ClimateEntityFeature.FAN_MODE.
         """
         return self._attr_fan_mode
 
@@ -415,7 +442,7 @@ class ClimateEntity(Entity):
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes.
 
-        Requires SUPPORT_FAN_MODE.
+        Requires ClimateEntityFeature.FAN_MODE.
         """
         return self._attr_fan_modes
 
@@ -423,7 +450,7 @@ class ClimateEntity(Entity):
     def swing_mode(self) -> str | None:
         """Return the swing setting.
 
-        Requires SUPPORT_SWING_MODE.
+        Requires ClimateEntityFeature.SWING_MODE.
         """
         return self._attr_swing_mode
 
@@ -431,7 +458,7 @@ class ClimateEntity(Entity):
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes.
 
-        Requires SUPPORT_SWING_MODE.
+        Requires ClimateEntityFeature.SWING_MODE.
         """
         return self._attr_swing_modes
 
@@ -461,11 +488,11 @@ class ClimateEntity(Entity):
         """Set new target fan mode."""
         await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         raise NotImplementedError()
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.hass.async_add_executor_job(self.set_hvac_mode, hvac_mode)
 
@@ -504,11 +531,11 @@ class ClimateEntity(Entity):
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         if hasattr(self, "turn_on"):
-            await self.hass.async_add_executor_job(self.turn_on)  # type: ignore[attr-defined]
+            await self.hass.async_add_executor_job(self.turn_on)
             return
 
         # Fake turn on
-        for mode in (HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL):
+        for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
             if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
@@ -517,15 +544,15 @@ class ClimateEntity(Entity):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if hasattr(self, "turn_off"):
-            await self.hass.async_add_executor_job(self.turn_off)  # type: ignore[attr-defined]
+            await self.hass.async_add_executor_job(self.turn_off)
             return
 
         # Fake turn off
-        if HVAC_MODE_OFF in self.hvac_modes:
-            await self.async_set_hvac_mode(HVAC_MODE_OFF)
+        if HVACMode.OFF in self.hvac_modes:
+            await self.async_set_hvac_mode(HVACMode.OFF)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
@@ -533,8 +560,8 @@ class ClimateEntity(Entity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if not hasattr(self, "_attr_min_temp"):
-            return convert_temperature(
-                DEFAULT_MIN_TEMP, TEMP_CELSIUS, self.temperature_unit
+            return TemperatureConverter.convert(
+                DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
             )
         return self._attr_min_temp
 
@@ -542,8 +569,8 @@ class ClimateEntity(Entity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if not hasattr(self, "_attr_max_temp"):
-            return convert_temperature(
-                DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
+            return TemperatureConverter.convert(
+                DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
             )
         return self._attr_max_temp
 
@@ -577,7 +604,7 @@ async def async_service_temperature_set(
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = convert_temperature(
+            kwargs[value] = TemperatureConverter.convert(
                 temp, hass.config.units.temperature_unit, entity.temperature_unit
             )
         else:

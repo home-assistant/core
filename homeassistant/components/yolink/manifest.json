@@ -1,0 +1,10 @@
+{
+  "domain": "yolink",
+  "name": "YoLink",
+  "codeowners": ["@matrixd2"],
+  "config_flow": true,
+  "dependencies": ["auth", "application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/yolink",
+  "iot_class": "cloud_push",
+  "requirements": ["yolink-api==0.2.8"]
+}

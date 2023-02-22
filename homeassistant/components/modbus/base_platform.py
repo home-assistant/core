@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_UNIQUE_ID,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -43,6 +44,8 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STATE_OFF,
@@ -53,6 +56,7 @@ from .const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    CONF_ZERO_SUPPRESS,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
@@ -82,6 +86,7 @@ class BasePlatform(Entity):
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
 
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_should_poll = False
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -89,6 +94,18 @@ class BasePlatform(Entity):
         self._attr_unit_of_measurement = None
         self._lazy_error_count = entry[CONF_LAZY_ERROR]
         self._lazy_errors = self._lazy_error_count
+
+        def get_optional_numeric_config(config_name: str) -> int | float | None:
+            if (val := entry.get(config_name)) is None:
+                return None
+            assert isinstance(
+                val, (float, int)
+            ), f"Expected float or int but {config_name} was {type(val)}"
+            return val
+
+        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
+        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
     async def async_update(self, now: datetime | None = None) -> None:
@@ -160,6 +177,17 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
+    def __process_raw_value(self, entry: float | int) -> float | int:
+        """Process value from sensor with scaling, offset, min/max etc."""
+        val: float | int = self._scale * entry + self._offset
+        if self._min_value is not None and val < self._min_value:
+            return self._min_value
+        if self._max_value is not None and val > self._max_value:
+            return self._max_value
+        if self._zero_suppress is not None and abs(val) <= self._zero_suppress:
+            return 0
+        return val
+
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
 
@@ -179,10 +207,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # If unpack() returns a tuple greater than 1, don't try to process the value.
         # Instead, return the values of unpack(...) separated by commas.
         if len(val) > 1:
-            # Apply scale and precision to floats and ints
+            # Apply scale, precision, limits to floats and ints
             v_result = []
             for entry in val:
-                v_temp = self._scale * entry + self._offset
+                v_temp = self.__process_raw_value(entry)
 
                 # We could convert int to float, and the code would still work; however
                 # we lose some precision, and unit tests will fail. Therefore, we do
@@ -193,8 +221,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
 
-        # Apply scale and precision to floats and ints
-        val_result: float | int = self._scale * val[0] + self._offset
+        # Apply scale, precision, limits to floats and ints
+        val_result = self.__process_raw_value(val[0])
 
         # We could convert int to float, and the code would still work; however
         # we lose some precision, and unit tests will fail. Therefore, we do
@@ -310,7 +338,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
         self._lazy_errors = self._lazy_error_count
         self._attr_available = True
-        if self._verify_type == CALL_TYPE_COIL:
+        if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
             self._attr_is_on = bool(result.bits[0] & 1)
         else:
             value = int(result.registers[0])
@@ -320,7 +348,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                 self._attr_is_on = False
             elif value is not None:
                 _LOGGER.error(
-                    "Unexpected response from modbus device slave %s register %s, got 0x%2x",
+                    (
+                        "Unexpected response from modbus device slave %s register %s,"
+                        " got 0x%2x"
+                    ),
                     self._slave,
                     self._verify_address,
                     value,

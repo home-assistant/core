@@ -7,10 +7,13 @@ from tellduslive import DIM, TURNON, UP, Session
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
@@ -49,7 +52,7 @@ NEW_CLIENT_TASK = "telldus_new_client_task"
 INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create a tellduslive session."""
     conf = entry.data[KEY_SESSION]
 
@@ -81,7 +84,7 @@ async def async_new_client(hass, session, entry):
     _LOGGER.debug("Update interval %s seconds", interval)
     client = TelldusLiveClient(hass, entry, session, interval)
     hass.data[DOMAIN] = client
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub["name"])
         dev_reg.async_get_or_create(
@@ -95,7 +98,7 @@ async def async_new_client(hass, session, entry):
     await client.update()
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telldus Live component."""
     if DOMAIN not in config:
         return True
@@ -113,7 +116,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if not hass.data[NEW_CLIENT_TASK].done():
         hass.data[NEW_CLIENT_TASK].cancel()

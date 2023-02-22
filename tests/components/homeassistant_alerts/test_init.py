@@ -1,0 +1,448 @@
+"""Test creating repairs from alerts."""
+from __future__ import annotations
+
+from datetime import timedelta
+import json
+from unittest.mock import ANY, patch
+
+import pytest
+
+from homeassistant.components.homeassistant_alerts import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import assert_lists_same, async_fire_time_changed, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
+
+
+def stub_alert(aioclient_mock, alert_id):
+    """Stub an alert."""
+    aioclient_mock.get(
+        f"https://alerts.home-assistant.io/alerts/{alert_id}.json",
+        json={"title": f"Title for {alert_id}", "content": f"Content for {alert_id}"},
+    )
+
+
+@pytest.fixture(autouse=True)
+async def setup_repairs(hass):
+    """Set up the repairs integration."""
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+
+
+@pytest.mark.parametrize(
+    ("ha_version", "supervisor_info", "expected_alerts"),
+    (
+        (
+            "2022.7.0",
+            {"version": "2022.11.0"},
+            [
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hassio", "hassio"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
+            ],
+        ),
+        (
+            "2022.8.0",
+            {"version": "2022.11.1"},
+            [
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
+            ],
+        ),
+        (
+            "2021.10.0",
+            None,
+            [
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
+            ],
+        ),
+    ),
+)
+async def test_alerts(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    ha_version,
+    supervisor_info,
+    expected_alerts,
+) -> None:
+    """Test creating issues based on alerts."""
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://alerts.home-assistant.io/alerts.json",
+        text=load_fixture("alerts_1.json", "homeassistant_alerts"),
+    )
+    for alert in expected_alerts:
+        stub_alert(aioclient_mock, alert[0])
+
+    activated_components = (
+        "aladdin_connect",
+        "darksky",
+        "hikvision",
+        "hikvisioncam",
+        "hive",
+        "homematicip_cloud",
+        "logi_circle",
+        "neato",
+        "nest",
+        "senseme",
+        "sochain",
+    )
+    for domain in activated_components:
+        hass.config.components.add(domain)
+
+    if supervisor_info is not None:
+        hass.config.components.add("hassio")
+
+    with patch(
+        "homeassistant.components.homeassistant_alerts.__version__",
+        ha_version,
+    ), patch(
+        "homeassistant.components.homeassistant_alerts.is_hassio",
+        return_value=supervisor_info is not None,
+    ), patch(
+        "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+        return_value=supervisor_info,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "homeassistant_alerts",
+                "ignored": False,
+                "is_fixable": False,
+                "issue_id": f"{alert_id}.markdown_{integration}",
+                "issue_domain": integration,
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "alert",
+                "translation_placeholders": {
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
+                },
+            }
+            for alert_id, integration in expected_alerts
+        ]
+    }
+
+
+@pytest.mark.parametrize(
+    ("ha_version", "fixture", "expected_alerts"),
+    (
+        (
+            "2022.7.0",
+            "alerts_no_integrations.json",
+            [
+                ("dark_sky", "darksky"),
+            ],
+        ),
+        (
+            "2022.7.0",
+            "alerts_no_package.json",
+            [
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+            ],
+        ),
+    ),
+)
+async def test_bad_alerts(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    ha_version,
+    fixture,
+    expected_alerts,
+) -> None:
+    """Test creating issues based on alerts."""
+    fixture_content = load_fixture(fixture, "homeassistant_alerts")
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://alerts.home-assistant.io/alerts.json",
+        text=fixture_content,
+    )
+    for alert in json.loads(fixture_content):
+        stub_alert(aioclient_mock, alert["id"])
+
+    activated_components = (
+        "darksky",
+        "hikvision",
+        "hikvisioncam",
+    )
+    for domain in activated_components:
+        hass.config.components.add(domain)
+
+    with patch(
+        "homeassistant.components.homeassistant_alerts.__version__",
+        ha_version,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "homeassistant_alerts",
+                "ignored": False,
+                "is_fixable": False,
+                "issue_id": f"{alert_id}.markdown_{integration}",
+                "issue_domain": integration,
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "alert",
+                "translation_placeholders": {
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
+                },
+            }
+            for alert_id, integration in expected_alerts
+        ]
+    }
+
+
+async def test_no_alerts(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test creating issues based on alerts."""
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://alerts.home-assistant.io/alerts.json",
+        text="",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"issues": []}
+
+
+@pytest.mark.parametrize(
+    ("ha_version", "fixture_1", "expected_alerts_1", "fixture_2", "expected_alerts_2"),
+    (
+        (
+            "2022.7.0",
+            "alerts_1.json",
+            [
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
+            ],
+            "alerts_2.json",
+            [
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
+            ],
+        ),
+        (
+            "2022.7.0",
+            "alerts_2.json",
+            [
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
+            ],
+            "alerts_1.json",
+            [
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
+            ],
+        ),
+    ),
+)
+async def test_alerts_change(
+    hass: HomeAssistant,
+    hass_ws_client,
+    aioclient_mock: AiohttpClientMocker,
+    ha_version: str,
+    fixture_1: str,
+    expected_alerts_1: list[tuple(str, str)],
+    fixture_2: str,
+    expected_alerts_2: list[tuple(str, str)],
+) -> None:
+    """Test creating issues based on alerts."""
+    fixture_1_content = load_fixture(fixture_1, "homeassistant_alerts")
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://alerts.home-assistant.io/alerts.json",
+        text=fixture_1_content,
+    )
+    for alert in json.loads(fixture_1_content):
+        stub_alert(aioclient_mock, alert["id"])
+
+    activated_components = (
+        "aladdin_connect",
+        "darksky",
+        "hikvision",
+        "hikvisioncam",
+        "hive",
+        "homematicip_cloud",
+        "logi_circle",
+        "neato",
+        "nest",
+        "senseme",
+        "sochain",
+    )
+    for domain in activated_components:
+        hass.config.components.add(domain)
+
+    with patch(
+        "homeassistant.components.homeassistant_alerts.__version__",
+        ha_version,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    now = dt_util.utcnow()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert_lists_same(
+        msg["result"]["issues"],
+        [
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "homeassistant_alerts",
+                "ignored": False,
+                "is_fixable": False,
+                "issue_id": f"{alert_id}.markdown_{integration}",
+                "issue_domain": integration,
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "alert",
+                "translation_placeholders": {
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
+                },
+            }
+            for alert_id, integration in expected_alerts_1
+        ],
+    )
+
+    fixture_2_content = load_fixture(fixture_2, "homeassistant_alerts")
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://alerts.home-assistant.io/alerts.json",
+        text=fixture_2_content,
+    )
+    for alert in json.loads(fixture_2_content):
+        stub_alert(aioclient_mock, alert["id"])
+
+    future = now + UPDATE_INTERVAL + timedelta(seconds=1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert_lists_same(
+        msg["result"]["issues"],
+        [
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "homeassistant_alerts",
+                "ignored": False,
+                "is_fixable": False,
+                "issue_id": f"{alert_id}.markdown_{integration}",
+                "issue_domain": integration,
+                "learn_more_url": None,
+                "severity": "warning",
+                "translation_key": "alert",
+                "translation_placeholders": {
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
+                },
+            }
+            for alert_id, integration in expected_alerts_2
+        ],
+    )

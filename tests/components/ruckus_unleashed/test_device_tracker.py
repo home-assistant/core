@@ -3,14 +3,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
-from homeassistant.components.ruckus_unleashed.const import API_AP, API_ID, API_NAME
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import utcnow
 
-from tests.common import async_fire_time_changed
-from tests.components.ruckus_unleashed import (
+from . import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
     DEFAULT_TITLE,
@@ -21,8 +20,10 @@ from tests.components.ruckus_unleashed import (
     mock_config_entry,
 )
 
+from tests.common import async_fire_time_changed
 
-async def test_client_connected(hass):
+
+async def test_client_connected(hass: HomeAssistant) -> None:
     """Test client connected."""
     await init_integration(hass)
 
@@ -35,13 +36,13 @@ async def test_client_connected(hass):
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(TEST_CLIENT_ENTITY_ID)
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
 
     test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
     assert test_client.state == STATE_HOME
 
 
-async def test_client_disconnected(hass):
+async def test_client_disconnected(hass: HomeAssistant) -> None:
     """Test client disconnected."""
     await init_integration(hass)
 
@@ -53,12 +54,12 @@ async def test_client_disconnected(hass):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(TEST_CLIENT_ENTITY_ID)
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
         test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
         assert test_client.state == STATE_NOT_HOME
 
 
-async def test_clients_update_failed(hass):
+async def test_clients_update_failed(hass: HomeAssistant) -> None:
     """Test failed update."""
     await init_integration(hass)
 
@@ -70,12 +71,12 @@ async def test_clients_update_failed(hass):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(TEST_CLIENT_ENTITY_ID)
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
         test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
         assert test_client.state == STATE_UNAVAILABLE
 
 
-async def test_restoring_clients(hass):
+async def test_restoring_clients(hass: HomeAssistant) -> None:
     """Test restoring existing device_tracker entities if not detected on startup."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
@@ -112,24 +113,3 @@ async def test_restoring_clients(hass):
     device = hass.states.get(TEST_CLIENT_ENTITY_ID)
     assert device is not None
     assert device.state == STATE_NOT_HOME
-
-
-async def test_client_device_setup(hass):
-    """Test a client device is created."""
-    await init_integration(hass)
-
-    router_info = DEFAULT_AP_INFO[API_AP][API_ID]["1"]
-
-    device_registry = dr.async_get(hass)
-    client_device = device_registry.async_get_device(
-        identifiers={},
-        connections={(CONNECTION_NETWORK_MAC, TEST_CLIENT[API_MAC])},
-    )
-    router_device = device_registry.async_get_device(
-        identifiers={(CONNECTION_NETWORK_MAC, router_info[API_MAC])},
-        connections={(CONNECTION_NETWORK_MAC, router_info[API_MAC])},
-    )
-
-    assert client_device
-    assert client_device.name == TEST_CLIENT[API_NAME]
-    assert client_device.via_device_id == router_device.id

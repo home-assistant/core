@@ -2,6 +2,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 import re
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,11 +18,13 @@ from homeassistant.components.frontend import (
     THEMES_STORAGE_KEY,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import MockUser, async_capture_events, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -80,7 +83,7 @@ async def frontend_themes(hass):
 
 
 @pytest.fixture
-def aiohttp_client(loop, aiohttp_client, socket_enabled):
+def aiohttp_client(event_loop, aiohttp_client, socket_enabled):
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
@@ -129,7 +132,7 @@ def mock_onboarded():
         yield
 
 
-async def test_frontend_and_static(mock_http_client, mock_onboarded):
+async def test_frontend_and_static(mock_http_client, mock_onboarded) -> None:
     """Test if we can get the frontend."""
     resp = await mock_http_client.get("")
     assert resp.status == 200
@@ -146,26 +149,26 @@ async def test_frontend_and_static(mock_http_client, mock_onboarded):
     assert "public" in resp.headers.get("cache-control")
 
 
-async def test_dont_cache_service_worker(mock_http_client):
+async def test_dont_cache_service_worker(mock_http_client) -> None:
     """Test that we don't cache the service worker."""
     resp = await mock_http_client.get("/service_worker.js")
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 
 
-async def test_404(mock_http_client):
+async def test_404(mock_http_client) -> None:
     """Test for HTTP 404 error."""
     resp = await mock_http_client.get("/not-existing")
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_we_cannot_POST_to_root(mock_http_client):
+async def test_we_cannot_POST_to_root(mock_http_client) -> None:
     """Test that POST is not allow to root."""
     resp = await mock_http_client.post("/")
     assert resp.status == 405
 
 
-async def test_themes_api(hass, themes_ws_client):
+async def test_themes_api(hass: HomeAssistant, themes_ws_client) -> None:
     """Test that /api/themes returns correct data."""
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
     msg = await themes_ws_client.receive_json()
@@ -185,7 +188,12 @@ async def test_themes_api(hass, themes_ws_client):
     }
 
 
-async def test_themes_persist(hass, hass_storage, hass_ws_client, ignore_frontend_deps):
+async def test_themes_persist(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    ignore_frontend_deps,
+) -> None:
     """Test that theme settings are restores after restart."""
     hass_storage[THEMES_STORAGE_KEY] = {
         "key": THEMES_STORAGE_KEY,
@@ -206,7 +214,9 @@ async def test_themes_persist(hass, hass_storage, hass_ws_client, ignore_fronten
     assert msg["result"]["default_dark_theme"] == "dark"
 
 
-async def test_themes_save_storage(hass, hass_storage, frontend_themes):
+async def test_themes_save_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any], frontend_themes
+) -> None:
     """Test that theme settings are restores after restart."""
 
     await hass.services.async_call(
@@ -228,7 +238,7 @@ async def test_themes_save_storage(hass, hass_storage, frontend_themes):
     }
 
 
-async def test_themes_set_theme(hass, themes_ws_client):
+async def test_themes_set_theme(hass: HomeAssistant, themes_ws_client) -> None:
     """Test frontend.set_theme service."""
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "happy"}, blocking=True
@@ -260,7 +270,9 @@ async def test_themes_set_theme(hass, themes_ws_client):
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_themes_set_theme_wrong_name(hass, themes_ws_client):
+async def test_themes_set_theme_wrong_name(
+    hass: HomeAssistant, themes_ws_client
+) -> None:
     """Test frontend.set_theme service called with wrong name."""
 
     await hass.services.async_call(
@@ -274,7 +286,7 @@ async def test_themes_set_theme_wrong_name(hass, themes_ws_client):
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_themes_set_dark_theme(hass, themes_ws_client):
+async def test_themes_set_dark_theme(hass: HomeAssistant, themes_ws_client) -> None:
     """Test frontend.set_theme service called with dark mode."""
 
     await hass.services.async_call(
@@ -314,7 +326,9 @@ async def test_themes_set_dark_theme(hass, themes_ws_client):
     assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
-async def test_themes_set_dark_theme_wrong_name(hass, frontend, themes_ws_client):
+async def test_themes_set_dark_theme_wrong_name(
+    hass: HomeAssistant, frontend, themes_ws_client
+) -> None:
     """Test frontend.set_theme service called with mode dark and wrong name."""
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "wrong", "mode": "dark"}, blocking=True
@@ -327,7 +341,9 @@ async def test_themes_set_dark_theme_wrong_name(hass, frontend, themes_ws_client
     assert msg["result"]["default_dark_theme"] is None
 
 
-async def test_themes_reload_themes(hass, frontend, themes_ws_client):
+async def test_themes_reload_themes(
+    hass: HomeAssistant, frontend, themes_ws_client
+) -> None:
     """Test frontend.reload_themes service."""
 
     with patch(
@@ -347,7 +363,7 @@ async def test_themes_reload_themes(hass, frontend, themes_ws_client):
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_missing_themes(hass, ws_client):
+async def test_missing_themes(hass: HomeAssistant, ws_client) -> None:
     """Test that themes API works when themes are not defined."""
     await ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -360,7 +376,9 @@ async def test_missing_themes(hass, ws_client):
     assert msg["result"]["themes"] == {}
 
 
-async def test_get_panels(hass, hass_ws_client, mock_http_client):
+async def test_get_panels(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_http_client
+) -> None:
     """Test get_panels command."""
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
 
@@ -398,7 +416,9 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     assert len(events) == 2
 
 
-async def test_get_panels_non_admin(hass, ws_client, hass_admin_user):
+async def test_get_panels_non_admin(
+    hass: HomeAssistant, ws_client, hass_admin_user: MockUser
+) -> None:
     """Test get_panels command."""
     hass_admin_user.groups = []
 
@@ -420,11 +440,11 @@ async def test_get_panels_non_admin(hass, ws_client, hass_admin_user):
     assert "map" not in msg["result"]
 
 
-async def test_get_translations(hass, ws_client):
+async def test_get_translations(hass: HomeAssistant, ws_client) -> None:
     """Test get_translations command."""
     with patch(
         "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang, category, integration, config_flow: {
+        side_effect=lambda hass, lang, category, integrations, config_flow: {
             "lang": lang
         },
     ):
@@ -444,19 +464,75 @@ async def test_get_translations(hass, ws_client):
     assert msg["result"] == {"resources": {"lang": "nl"}}
 
 
-async def test_auth_load(hass):
+async def test_get_translations_for_integrations(
+    hass: HomeAssistant, ws_client
+) -> None:
+    """Test get_translations for integrations command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_translations",
+        side_effect=lambda hass, lang, category, integration, config_flow: {
+            "lang": lang,
+            "integration": integration,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "integration": ["frontend", "http"],
+                "language": "nl",
+                "category": "lang",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert set(msg["result"]["resources"]["integration"]) == {"frontend", "http"}
+
+
+async def test_get_translations_for_single_integration(
+    hass: HomeAssistant, ws_client
+) -> None:
+    """Test get_translations for integration command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_translations",
+        side_effect=lambda hass, lang, category, integrations, config_flow: {
+            "lang": lang,
+            "integration": integrations,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "integration": "http",
+                "language": "nl",
+                "category": "lang",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {"lang": "nl", "integration": ["http"]}}
+
+
+async def test_auth_load(hass: HomeAssistant) -> None:
     """Test auth component loaded by default."""
     frontend = await async_get_integration(hass, "frontend")
     assert "auth" in frontend.dependencies
 
 
-async def test_onboarding_load(hass):
+async def test_onboarding_load(hass: HomeAssistant) -> None:
     """Test onboarding component loaded by default."""
     frontend = await async_get_integration(hass, "frontend")
     assert "onboarding" in frontend.dependencies
 
 
-async def test_auth_authorize(mock_http_client):
+async def test_auth_authorize(mock_http_client) -> None:
     """Test the authorize endpoint works."""
     resp = await mock_http_client.get(
         "/auth/authorize?response_type=code&client_id=https://localhost/&"
@@ -479,7 +555,7 @@ async def test_auth_authorize(mock_http_client):
     assert "public" in resp.headers.get("cache-control")
 
 
-async def test_get_version(hass, ws_client):
+async def test_get_version(hass: HomeAssistant, ws_client) -> None:
     """Test get_version command."""
     frontend = await async_get_integration(hass, "frontend")
     cur_version = next(
@@ -497,7 +573,7 @@ async def test_get_version(hass, ws_client):
     assert msg["result"] == {"version": cur_version}
 
 
-async def test_static_paths(hass, mock_http_client):
+async def test_static_paths(hass: HomeAssistant, mock_http_client) -> None:
     """Test static paths."""
     resp = await mock_http_client.get(
         "/.well-known/change-password", allow_redirects=False
@@ -506,7 +582,9 @@ async def test_static_paths(hass, mock_http_client):
     assert resp.headers["location"] == "/profile"
 
 
-async def test_manifest_json(hass, frontend_themes, mock_http_client):
+async def test_manifest_json(
+    hass: HomeAssistant, frontend_themes, mock_http_client
+) -> None:
     """Test for fetching manifest.json."""
     resp = await mock_http_client.get("/manifest.json")
     assert resp.status == HTTPStatus.OK
@@ -526,3 +604,35 @@ async def test_manifest_json(hass, frontend_themes, mock_http_client):
 
     json = await resp.json()
     assert json["theme_color"] != DEFAULT_THEME_COLOR
+
+
+async def test_static_path_cache(hass: HomeAssistant, mock_http_client) -> None:
+    """Test static paths cache."""
+    resp = await mock_http_client.get("/lovelace/default_view", allow_redirects=False)
+    assert resp.status == 404
+
+    resp = await mock_http_client.get("/frontend_latest/", allow_redirects=False)
+    assert resp.status == 403
+
+    resp = await mock_http_client.get(
+        "/static/icons/favicon.ico", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    # and again to make sure the cache works
+    resp = await mock_http_client.get(
+        "/static/icons/favicon.ico", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    resp = await mock_http_client.get(
+        "/static/fonts/roboto/Roboto-Bold.woff2", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
+    assert resp.status == 404
+
+    # and again to make sure the cache works
+    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
+    assert resp.status == 404

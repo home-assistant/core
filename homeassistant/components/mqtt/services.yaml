@@ -19,8 +19,7 @@ publish:
         text:
     payload_template:
       name: Payload Template
-      description:
-        Template to render as payload value. Ignored if payload given.
+      description: Template to render as payload value. Ignored if payload given.
       advanced: true
       example: "{{ states('sensor.temperature') }}"
       selector:

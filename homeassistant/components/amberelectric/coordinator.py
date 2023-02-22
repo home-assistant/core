@@ -10,6 +10,7 @@ from amberelectric.model.actual_interval import ActualInterval
 from amberelectric.model.channel import ChannelType
 from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.forecast_interval import ForecastInterval
+from amberelectric.model.interval import Descriptor
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -44,6 +45,27 @@ def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) ->
     return interval.channel_type == ChannelType.FEED_IN
 
 
+def normalize_descriptor(descriptor: Descriptor) -> str | None:
+    """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
+    if descriptor is None:
+        return None
+    if descriptor.value == "spike":
+        return "spike"
+    if descriptor.value == "high":
+        return "high"
+    if descriptor.value == "neutral":
+        return "neutral"
+    if descriptor.value == "low":
+        return "low"
+    if descriptor.value == "veryLow":
+        return "very_low"
+    if descriptor.value == "extremelyLow":
+        return "extremely_low"
+    if descriptor.value == "negative":
+        return "negative"
+    return None
+
+
 class AmberUpdateCoordinator(DataUpdateCoordinator):
     """AmberUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
 
@@ -65,6 +87,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
         result: dict[str, dict[str, Any]] = {
             "current": {},
+            "descriptors": {},
             "forecasts": {},
             "grid": {},
         }
@@ -81,6 +104,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("No general channel configured")
 
         result["current"]["general"] = general[0]
+        result["descriptors"]["general"] = normalize_descriptor(general[0].descriptor)
         result["forecasts"]["general"] = [
             interval for interval in forecasts if is_general(interval)
         ]
@@ -92,6 +116,9 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         ]
         if controlled_load:
             result["current"]["controlled_load"] = controlled_load[0]
+            result["descriptors"]["controlled_load"] = normalize_descriptor(
+                controlled_load[0].descriptor
+            )
             result["forecasts"]["controlled_load"] = [
                 interval for interval in forecasts if is_controlled_load(interval)
             ]
@@ -99,6 +126,9 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         feed_in = [interval for interval in current if is_feed_in(interval)]
         if feed_in:
             result["current"]["feed_in"] = feed_in[0]
+            result["descriptors"]["feed_in"] = normalize_descriptor(
+                feed_in[0].descriptor
+            )
             result["forecasts"]["feed_in"] = [
                 interval for interval in forecasts if is_feed_in(interval)
             ]

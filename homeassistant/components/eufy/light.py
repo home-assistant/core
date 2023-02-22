@@ -1,34 +1,44 @@
-"""Support for Eufy lights."""
+"""Support for EufyHome lights."""
+from __future__ import annotations
+
+from typing import Any
+
 import lakeside
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-EUFY_MAX_KELVIN = 6500
-EUFY_MIN_KELVIN = 2700
+EUFYHOME_MAX_KELVIN = 6500
+EUFYHOME_MIN_KELVIN = 2700
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Eufy bulbs."""
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up EufyHome bulbs."""
     if discovery_info is None:
         return
-    add_entities([EufyLight(discovery_info)], True)
+    add_entities([EufyHomeLight(discovery_info)], True)
 
 
-class EufyLight(LightEntity):
-    """Representation of a Eufy light."""
+class EufyHomeLight(LightEntity):
+    """Representation of a EufyHome light."""
 
     def __init__(self, device):
         """Initialize the light."""
@@ -44,14 +54,14 @@ class EufyLight(LightEntity):
         self._bulb = lakeside.bulb(self._address, self._code, self._type)
         self._colormode = False
         if self._type == "T1011":
-            self._features = SUPPORT_BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         elif self._type == "T1012":
-            self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
-        elif self._type == "T1013":
-            self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+        else:  # T1013
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
         self._bulb.connect()
 
-    def update(self):
+    def update(self) -> None:
         """Synchronise state from the bulb."""
         self._bulb.update()
         if self._bulb.power:
@@ -85,40 +95,46 @@ class EufyLight(LightEntity):
         return int(self._brightness * 255 / 100)
 
     @property
-    def min_mireds(self):
+    def min_mireds(self) -> int:
         """Return minimum supported color temperature."""
-        return kelvin_to_mired(EUFY_MAX_KELVIN)
+        return kelvin_to_mired(EUFYHOME_MAX_KELVIN)
 
     @property
-    def max_mireds(self):
-        """Return maximu supported color temperature."""
-        return kelvin_to_mired(EUFY_MIN_KELVIN)
+    def max_mireds(self) -> int:
+        """Return maximum supported color temperature."""
+        return kelvin_to_mired(EUFYHOME_MIN_KELVIN)
 
     @property
     def color_temp(self):
         """Return the color temperature of this light."""
         temp_in_k = int(
-            EUFY_MIN_KELVIN + (self._temp * (EUFY_MAX_KELVIN - EUFY_MIN_KELVIN) / 100)
+            EUFYHOME_MIN_KELVIN
+            + (self._temp * (EUFYHOME_MAX_KELVIN - EUFYHOME_MIN_KELVIN) / 100)
         )
         return kelvin_to_mired(temp_in_k)
 
     @property
     def hs_color(self):
         """Return the color of this light."""
-        if not self._colormode:
-            return None
         return self._hs
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._type == "T1011":
+            return ColorMode.BRIGHTNESS
+        if self._type == "T1012":
+            return ColorMode.COLOR_TEMP
+        # T1013
+        if not self._colormode:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.HS
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
-        # pylint: disable=invalid-name
+        # pylint: disable-next=invalid-name
         hs = kwargs.get(ATTR_HS_COLOR)
 
         if brightness is not None:
@@ -131,8 +147,10 @@ class EufyLight(LightEntity):
         if colortemp is not None:
             self._colormode = False
             temp_in_k = mired_to_kelvin(colortemp)
-            relative_temp = temp_in_k - EUFY_MIN_KELVIN
-            temp = int(relative_temp * 100 / (EUFY_MAX_KELVIN - EUFY_MIN_KELVIN))
+            relative_temp = temp_in_k - EUFYHOME_MIN_KELVIN
+            temp = int(
+                relative_temp * 100 / (EUFYHOME_MAX_KELVIN - EUFYHOME_MIN_KELVIN)
+            )
         else:
             temp = None
 
@@ -156,7 +174,7 @@ class EufyLight(LightEntity):
                 power=True, brightness=brightness, temperature=temp, colors=rgb
             )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified light off."""
         try:
             self._bulb.set_state(power=False)

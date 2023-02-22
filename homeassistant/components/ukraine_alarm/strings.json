@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "max_regions": "Max 5 regions can be configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "rate_limit": "Too much requests",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "region": "Region"
+        },
+        "description": "Choose state to monitor"
+      },
+      "district": {
+        "data": {
+          "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
+        },
+        "description": "If you want to monitor not only state, choose its specific district"
+      },
+      "community": {
+        "data": {
+          "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
+        },
+        "description": "If you want to monitor not only state and district, choose its specific community"
+      }
+    }
+  }
+}

@@ -2,8 +2,10 @@
 from aiohue.v2.models.button import ButtonEvent
 
 from homeassistant.components import hue
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
+from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform
 
@@ -14,7 +16,9 @@ from tests.common import (
 )
 
 
-async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_hue_event(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test hue button events."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])
@@ -25,7 +29,7 @@ async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
 
     # Emit button update event
     btn_event = {
-        "button": {"last_event": "short_release"},
+        "button": {"last_event": "initial_press"},
         "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
         "metadata": {"control_id": 1},
         "type": "button",
@@ -42,7 +46,9 @@ async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
     assert events[0].data["subtype"] == btn_event["metadata"]["control_id"]
 
 
-async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device_reg):
+async def test_get_triggers(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data, device_reg
+) -> None:
     """Test we get the expected triggers from a hue remote."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])
@@ -52,7 +58,7 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
         {(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
     )
     triggers = await async_get_device_automations(
-        hass, "trigger", hue_wall_switch_device.id
+        hass, DeviceAutomationType.TRIGGER, hue_wall_switch_device.id
     )
 
     trigger_batt = {
@@ -61,6 +67,7 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
         "device_id": hue_wall_switch_device.id,
         "type": "battery_level",
         "entity_id": "sensor.wall_switch_with_2_controls_battery",
+        "metadata": {"secondary": True},
     }
 
     expected_triggers = [
@@ -73,6 +80,7 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
                 "unique_id": resource_id,
                 "type": event_type.value,
                 "subtype": control_id,
+                "metadata": {},
             }
             for event_type in (
                 ButtonEvent.INITIAL_PRESS,

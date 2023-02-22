@@ -10,10 +10,13 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +30,6 @@ DEFAULT_NAME = "ComfoAirQ"
 DEFAULT_PIN = 0
 DEFAULT_TOKEN = "00000000000000000000000000000001"
 DEFAULT_USER_AGENT = "Home Assistant"
-
-DEVICE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -48,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ComfoConnect bridge."""
 
     conf = config[DOMAIN]
@@ -80,7 +81,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     # Load platforms
-    discovery.load_platform(hass, "fan", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
 
     return True
 

@@ -1,5 +1,8 @@
 """Support for Vilfo Router sensors."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -11,7 +14,11 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add Vilfo Router entities from a config_entry."""
     vilfo = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -25,7 +32,7 @@ class VilfoRouterSensor(SensorEntity):
 
     entity_description: VilfoSensorEntityDescription
 
-    def __init__(self, api, description: VilfoSensorEntityDescription):
+    def __init__(self, api, description: VilfoSensorEntityDescription) -> None:
         """Initialize."""
         self.entity_description = description
         self.api = api
@@ -39,7 +46,7 @@ class VilfoRouterSensor(SensorEntity):
         self._attr_unique_id = f"{api.unique_id}_{description.key}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the sensor is available or not."""
         return self.api.available
 
@@ -54,7 +61,7 @@ class VilfoRouterSensor(SensorEntity):
         parent_device_name = self._device_info["name"]
         return f"{parent_device_name} {self.entity_description.name}"
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the router data."""
         await self.api.async_update()
         self._attr_native_value = self.api.data.get(self.entity_description.api_key)

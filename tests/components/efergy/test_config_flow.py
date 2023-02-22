@@ -4,110 +4,75 @@ from unittest.mock import patch
 from pyefergy import exceptions
 
 from homeassistant.components.efergy.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    CONF_DATA,
-    HID,
-    IMPORT_DATA,
-    _patch_efergy,
-    _patch_efergy_status,
-    create_entry,
-)
+from . import CONF_DATA, HID, _patch_efergy, _patch_efergy_status, create_entry
 
 
 def _patch_setup():
     return patch("homeassistant.components.efergy.async_setup_entry")
 
 
-async def test_flow_user(hass: HomeAssistant):
+async def test_flow_user(hass: HomeAssistant) -> None:
     """Test user initialized flow."""
     with _patch_efergy(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
         )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA
         assert result["result"].unique_id == HID
 
 
-async def test_flow_user_cannot_connect(hass: HomeAssistant):
+async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable service."""
     with _patch_efergy_status() as efergymock:
         efergymock.side_effect = exceptions.ConnectError
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_flow_user_invalid_auth(hass: HomeAssistant):
+async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid authentication."""
     with _patch_efergy_status() as efergymock:
         efergymock.side_effect = exceptions.InvalidAuth
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "invalid_auth"
 
 
-async def test_flow_user_unknown(hass: HomeAssistant):
+async def test_flow_user_unknown(hass: HomeAssistant) -> None:
     """Test user initialized flow with unknown error."""
     with _patch_efergy_status() as efergymock:
         efergymock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
 
 
-async def test_flow_import(hass: HomeAssistant):
-    """Test import step."""
-    with _patch_efergy(), _patch_setup():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
-        )
-
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == DEFAULT_NAME
-        assert result["data"] == CONF_DATA
-        assert result["result"].unique_id == HID
-
-
-async def test_flow_import_already_configured(hass: HomeAssistant):
-    """Test import step already configured."""
-    create_entry(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_flow_reauth(hass: HomeAssistant):
+async def test_flow_reauth(hass: HomeAssistant) -> None:
     """Test reauth step."""
     entry = create_entry(hass)
     with _patch_efergy(), _patch_setup():
@@ -121,7 +86,7 @@ async def test_flow_reauth(hass: HomeAssistant):
             data=CONF_DATA,
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
 
         new_conf = {CONF_API_KEY: "1234567890"}
@@ -129,6 +94,6 @@ async def test_flow_reauth(hass: HomeAssistant):
             result["flow_id"],
             user_input=new_conf,
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert entry.data == new_conf

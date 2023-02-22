@@ -14,14 +14,16 @@ from hatasmota.utils import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import sensor
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from .test_common import (
     DEFAULT_CONFIG,
+    DEFAULT_SENSOR_CONFIG,
     help_test_availability,
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
@@ -34,14 +36,7 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
-
-DEFAULT_SENSOR_CONFIG = {
-    "sn": {
-        "Time": "2020-09-25T12:47:15",
-        "DHT11": {"Temperature": None},
-        "TempUnit": "C",
-    }
-}
+from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 BAD_INDEXED_SENSOR_CONFIG_3 = {
     "sn": {
@@ -125,7 +120,9 @@ NESTED_SENSOR_CONFIG = {
 }
 
 
-async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_controlling_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
@@ -177,7 +174,9 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == "20.0"
 
 
-async def test_nested_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_nested_sensor_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(NESTED_SENSOR_CONFIG)
@@ -223,7 +222,9 @@ async def test_nested_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == "23.4"
 
 
-async def test_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_indexed_sensor_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG)
@@ -269,7 +270,9 @@ async def test_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == "7.8"
 
 
-async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
+async def test_indexed_sensor_state_via_mqtt2(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT for sensor with last_reset property."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG)
@@ -291,9 +294,7 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_energy_total")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert (
-        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_TOTAL_INCREASING
-    )
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
@@ -320,7 +321,9 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     assert state.state == "5.6"
 
 
-async def test_indexed_sensor_state_via_mqtt3(hass, mqtt_mock, setup_tasmota):
+async def test_indexed_sensor_state_via_mqtt3(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT for indexed sensor with last_reset property."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG_2)
@@ -342,9 +345,7 @@ async def test_indexed_sensor_state_via_mqtt3(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_energy_total_1")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert (
-        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_TOTAL_INCREASING
-    )
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
@@ -371,7 +372,9 @@ async def test_indexed_sensor_state_via_mqtt3(hass, mqtt_mock, setup_tasmota):
     assert state.state == "7.8"
 
 
-async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_bad_indexed_sensor_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT where sensor is not matching configuration."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(BAD_INDEXED_SENSOR_CONFIG_3)
@@ -484,13 +487,15 @@ async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
-async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_status_sensor_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT."""
     entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
-        sensor.DOMAIN,
+        Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_status_signal",
         suggested_object_id="tasmota_status",
@@ -544,13 +549,15 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
-async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_single_shot_status_sensor_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT."""
     entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
-        sensor.DOMAIN,
+        Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_status_restart_reason",
         suggested_object_id="tasmota_status",
@@ -628,14 +635,14 @@ async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_t
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 @patch.object(hatasmota.status_sensor, "datetime", Mock(wraps=datetime.datetime))
 async def test_restart_time_status_sensor_state_via_mqtt(
-    hass, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT."""
     entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
-        sensor.DOMAIN,
+        Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_last_restart_time",
         suggested_object_id="tasmota_status",
@@ -676,7 +683,9 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     assert state.state == "2020-11-11T07:00:00+00:00"
 
 
-async def test_attributes(hass, mqtt_mock, setup_tasmota):
+async def test_attributes(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test correct attributes for sensors."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = {
@@ -714,7 +723,9 @@ async def test_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("unit_of_measurement") == "ppm"
 
 
-async def test_nested_sensor_attributes(hass, mqtt_mock, setup_tasmota):
+async def test_nested_sensor_attributes(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test correct attributes for sensors."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(NESTED_SENSOR_CONFIG)
@@ -746,7 +757,9 @@ async def test_nested_sensor_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("unit_of_measurement") == " "
 
 
-async def test_indexed_sensor_attributes(hass, mqtt_mock, setup_tasmota):
+async def test_indexed_sensor_attributes(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test correct attributes for sensors."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = {
@@ -786,21 +799,26 @@ async def test_indexed_sensor_attributes(hass, mqtt_mock, setup_tasmota):
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 @pytest.mark.parametrize(
-    "sensor_name, disabled, disabled_by",
+    ("sensor_name", "disabled", "disabled_by"),
     [
-        ("tasmota_firmware_version", True, er.DISABLED_INTEGRATION),
-        ("tasmota_ip", True, er.DISABLED_INTEGRATION),
+        ("tasmota_firmware_version", True, er.RegistryEntryDisabler.INTEGRATION),
+        ("tasmota_ip", True, er.RegistryEntryDisabler.INTEGRATION),
         ("tasmota_last_restart_time", False, None),
         ("tasmota_mqtt_connect_count", False, None),
-        ("tasmota_rssi", True, er.DISABLED_INTEGRATION),
-        ("tasmota_signal", True, er.DISABLED_INTEGRATION),
+        ("tasmota_rssi", True, er.RegistryEntryDisabler.INTEGRATION),
+        ("tasmota_signal", True, er.RegistryEntryDisabler.INTEGRATION),
         ("tasmota_ssid", False, None),
         ("tasmota_wifi_connect_count", False, None),
     ],
 )
 async def test_diagnostic_sensors(
-    hass, mqtt_mock, setup_tasmota, sensor_name, disabled, disabled_by
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+    sensor_name,
+    disabled,
+    disabled_by,
+) -> None:
     """Test properties of diagnostic sensors."""
     entity_reg = er.async_get(hass)
 
@@ -819,12 +837,14 @@ async def test_diagnostic_sensors(
     assert bool(state) != disabled
     entry = entity_reg.async_get(f"sensor.{sensor_name}")
     assert entry.disabled == disabled
-    assert entry.disabled_by == disabled_by
+    assert entry.disabled_by is disabled_by
     assert entry.entity_category == "diagnostic"
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
-async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
+async def test_enable_status_sensor(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test enabling status sensor."""
     entity_reg = er.async_get(hass)
 
@@ -843,7 +863,7 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     assert state is None
     entry = entity_reg.async_get("sensor.tasmota_signal")
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Enable the signal level status sensor
     updated_entry = entity_reg.async_update_entity(
@@ -879,8 +899,11 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
 
 
 async def test_availability_when_connection_lost(
-    hass, mqtt_client_mock, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test availability after MQTT disconnection."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
@@ -888,35 +911,39 @@ async def test_availability_when_connection_lost(
         hass,
         mqtt_client_mock,
         mqtt_mock,
-        sensor.DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",
     )
 
 
-async def test_availability(hass, mqtt_mock, setup_tasmota):
+async def test_availability(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test availability."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
     await help_test_availability(
         hass,
         mqtt_mock,
-        sensor.DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",
     )
 
 
-async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
+async def test_availability_discovery_update(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test availability discovery update."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
     await help_test_availability_discovery_update(
         hass,
         mqtt_mock,
-        sensor.DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",
@@ -924,8 +951,11 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
 
 
 async def test_availability_poll_state(
-    hass, mqtt_client_mock, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test polling after MQTT connection (re)established."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
@@ -934,7 +964,7 @@ async def test_availability_poll_state(
         hass,
         mqtt_client_mock,
         mqtt_mock,
-        sensor.DOMAIN,
+        Platform.SENSOR,
         config,
         poll_topic,
         "10",
@@ -942,7 +972,12 @@ async def test_availability_poll_state(
     )
 
 
-async def test_discovery_removal_sensor(hass, mqtt_mock, caplog, setup_tasmota):
+async def test_discovery_removal_sensor(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,
+    setup_tasmota,
+) -> None:
     """Test removal of discovered sensor."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config1 = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
@@ -951,7 +986,7 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog, setup_tasmota):
         hass,
         mqtt_mock,
         caplog,
-        sensor.DOMAIN,
+        Platform.SENSOR,
         config,
         config,
         sensor_config1,
@@ -962,8 +997,11 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog, setup_tasmota):
 
 
 async def test_discovery_update_unchanged_sensor(
-    hass, mqtt_mock, caplog, setup_tasmota
-):
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,
+    setup_tasmota,
+) -> None:
     """Test update of discovered sensor."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
@@ -974,7 +1012,7 @@ async def test_discovery_update_unchanged_sensor(
             hass,
             mqtt_mock,
             caplog,
-            sensor.DOMAIN,
+            Platform.SENSOR,
             config,
             discovery_update,
             sensor_config,
@@ -983,17 +1021,21 @@ async def test_discovery_update_unchanged_sensor(
         )
 
 
-async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
+async def test_discovery_device_remove(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test device registry remove."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
     unique_id = f"{DEFAULT_CONFIG['mac']}_sensor_sensor_DHT11_Temperature"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, sensor.DOMAIN, unique_id, config, sensor_config
+        hass, mqtt_mock, Platform.SENSOR, unique_id, config, sensor_config
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
+async def test_entity_id_update_subscriptions(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
@@ -1005,7 +1047,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     await help_test_entity_id_update_subscriptions(
         hass,
         mqtt_mock,
-        sensor.DOMAIN,
+        Platform.SENSOR,
         config,
         topics,
         sensor_config,
@@ -1013,14 +1055,16 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota):
+async def test_entity_id_update_discovery_update(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
     await help_test_entity_id_update_discovery_update(
         hass,
         mqtt_mock,
-        sensor.DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",

@@ -1,78 +1,87 @@
 """Tests for iAqualink config flow."""
 from unittest.mock import patch
 
-import iaqualink
-import pytest
+from iaqualink.exception import (
+    AqualinkServiceException,
+    AqualinkServiceUnauthorizedException,
+)
 
 from homeassistant.components.iaqualink import config_flow
-
-from tests.common import MockConfigEntry, mock_coro
-
-DATA = {"username": "test@example.com", "password": "pass"}
+from homeassistant.core import HomeAssistant
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_already_configured(hass, step):
+async def test_already_configured(
+    hass: HomeAssistant, config_entry, config_data
+) -> None:
     """Test config flow when iaqualink component is already setup."""
-    MockConfigEntry(domain="iaqualink", data=DATA).add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
     flow.context = {}
 
-    fname = f"async_step_{step}"
-    func = getattr(flow, fname)
-    result = await func(DATA)
+    result = await flow.async_step_user(config_data)
 
     assert result["type"] == "abort"
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_without_config(hass, step):
-    """Test with no configuration."""
+async def test_without_config(hass: HomeAssistant) -> None:
+    """Test config flow with no configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
     flow.context = {}
 
-    fname = f"async_step_{step}"
-    func = getattr(flow, fname)
-    result = await func()
+    result = await flow.async_step_user()
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_with_invalid_credentials(hass, step):
+async def test_with_invalid_credentials(hass: HomeAssistant, config_data) -> None:
     """Test config flow with invalid username and/or password."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
-    fname = f"async_step_{step}"
-    func = getattr(flow, fname)
     with patch(
-        "iaqualink.AqualinkClient.login", side_effect=iaqualink.AqualinkLoginException
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        side_effect=AqualinkServiceUnauthorizedException,
     ):
-        result = await func(DATA)
+        result = await flow.async_step_user(config_data)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_service_exception(hass: HomeAssistant, config_data) -> None:
+    """Test config flow encountering service exception."""
+    flow = config_flow.AqualinkFlowHandler()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        side_effect=AqualinkServiceException,
+    ):
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_with_existing_config(hass, step):
-    """Test with existing configuration."""
+async def test_with_existing_config(hass: HomeAssistant, config_data) -> None:
+    """Test config flow with existing configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
     flow.context = {}
 
-    fname = f"async_step_{step}"
-    func = getattr(flow, fname)
-    with patch("iaqualink.AqualinkClient.login", return_value=mock_coro(None)):
-        result = await func(DATA)
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        return_value=None,
+    ):
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DATA["username"]
-    assert result["data"] == DATA
+    assert result["title"] == config_data["username"]
+    assert result["data"] == config_data

@@ -7,22 +7,19 @@ from pyeconet.errors import InvalidCredentialsError, PyeconetError
 from homeassistant.components.econet import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_bad_credentials(hass):
+async def test_bad_credentials(hass: HomeAssistant) -> None:
     """Test when provided credentials are rejected."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
@@ -39,20 +36,20 @@ async def test_bad_credentials(hass):
             },
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {
             "base": "invalid_auth",
         }
 
 
-async def test_generic_error_from_library(hass):
+async def test_generic_error_from_library(hass: HomeAssistant) -> None:
     """Test when connection fails."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
@@ -69,20 +66,20 @@ async def test_generic_error_from_library(hass):
             },
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {
             "base": "cannot_connect",
         }
 
 
-async def test_auth_worked(hass):
+async def test_auth_worked(hass: HomeAssistant) -> None:
     """Test when provided credentials are accepted."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
@@ -99,14 +96,14 @@ async def test_auth_worked(hass):
             },
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"] == {
             CONF_EMAIL: "admin@localhost.com",
             CONF_PASSWORD: "password0",
         }
 
 
-async def test_already_configured(hass):
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test when provided credentials are already configured."""
     config = {
         CONF_EMAIL: "admin@localhost.com",
@@ -119,7 +116,7 @@ async def test_already_configured(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
@@ -136,5 +133,5 @@ async def test_already_configured(hass):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"

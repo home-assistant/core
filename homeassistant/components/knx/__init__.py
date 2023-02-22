@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+from pathlib import Path
 from typing import Final
 
 import voluptuous as vol
@@ -11,7 +13,7 @@ from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError, XKNXException
-from xknx.io import ConnectionConfig, ConnectionType
+from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import (
     DeviceGroupAddress,
@@ -21,7 +23,6 @@ from xknx.telegram.address import (
 )
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -36,14 +38,32 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_KNX_CONNECTION_TYPE,
     CONF_KNX_EXPOSE,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_KNXKEY_FILENAME,
+    CONF_KNX_KNXKEY_PASSWORD,
+    CONF_KNX_LOCAL_IP,
+    CONF_KNX_MCAST_GRP,
+    CONF_KNX_MCAST_PORT,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
+    CONF_KNX_ROUTING_SECURE,
+    CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
+    CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
+    CONF_KNX_SECURE_USER_ID,
+    CONF_KNX_SECURE_USER_PASSWORD,
+    CONF_KNX_STATE_UPDATER,
     CONF_KNX_TUNNELING,
+    CONF_KNX_TUNNELING_TCP,
+    CONF_KNX_TUNNELING_TCP_SECURE,
+    DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -54,7 +74,6 @@ from .schema import (
     BinarySensorSchema,
     ButtonSchema,
     ClimateSchema,
-    ConnectionSchema,
     CoverSchema,
     EventSchema,
     ExposeSchema,
@@ -66,6 +85,7 @@ from .schema import (
     SelectSchema,
     SensorSchema,
     SwitchSchema,
+    TextSchema,
     WeatherSchema,
     ga_validator,
     sensor_type_validator,
@@ -74,12 +94,10 @@ from .schema import (
 _LOGGER = logging.getLogger(__name__)
 
 
-CONF_KNX_FIRE_EVENT: Final = "fire_event"
-CONF_KNX_EVENT_FILTER: Final = "event_filter"
-
 SERVICE_KNX_SEND: Final = "send"
 SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
 SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_RESPONSE: Final = "response"
 SERVICE_KNX_ATTR_REMOVE: Final = "remove"
 SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
 SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
@@ -89,26 +107,21 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             # deprecated since 2021.12
-            cv.deprecated(ConnectionSchema.CONF_KNX_STATE_UPDATER),
-            cv.deprecated(ConnectionSchema.CONF_KNX_RATE_LIMIT),
+            cv.deprecated(CONF_KNX_STATE_UPDATER),
+            cv.deprecated(CONF_KNX_RATE_LIMIT),
             cv.deprecated(CONF_KNX_ROUTING),
             cv.deprecated(CONF_KNX_TUNNELING),
             cv.deprecated(CONF_KNX_INDIVIDUAL_ADDRESS),
-            cv.deprecated(ConnectionSchema.CONF_KNX_MCAST_GRP),
-            cv.deprecated(ConnectionSchema.CONF_KNX_MCAST_PORT),
-            cv.deprecated(CONF_KNX_EVENT_FILTER),
+            cv.deprecated(CONF_KNX_MCAST_GRP),
+            cv.deprecated(CONF_KNX_MCAST_PORT),
+            cv.deprecated("event_filter"),
             # deprecated since 2021.4
             cv.deprecated("config_file"),
             # deprecated since 2021.2
-            cv.deprecated(CONF_KNX_FIRE_EVENT),
-            cv.deprecated("fire_event_filter", replacement_key=CONF_KNX_EVENT_FILTER),
+            cv.deprecated("fire_event"),
+            cv.deprecated("fire_event_filter"),
             vol.Schema(
                 {
-                    **ConnectionSchema.SCHEMA,
-                    vol.Optional(CONF_KNX_FIRE_EVENT): cv.boolean,
-                    vol.Optional(CONF_KNX_EVENT_FILTER, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
                     **EventSchema.SCHEMA,
                     **ExposeSchema.platform_node(),
                     **BinarySensorSchema.platform_node(),
@@ -123,6 +136,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **SelectSchema.platform_node(),
                     **SensorSchema.platform_node(),
                     **SwitchSchema.platform_node(),
+                    **TextSchema.platform_node(),
                     **WeatherSchema.platform_node(),
                 }
             ),
@@ -140,6 +154,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
     vol.Schema(
@@ -152,6 +167,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
+            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
 )
@@ -195,6 +211,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
+    hass.data[DATA_HASS_CONFIG] = config
     conf: ConfigType | None = config.get(DOMAIN)
 
     if conf is None:
@@ -203,45 +220,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return bool(hass.config_entries.async_entries(DOMAIN))
 
     conf = dict(conf)
-
     hass.data[DATA_KNX_CONFIG] = conf
-
-    # Only import if we haven't before.
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
-            )
-        )
-
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = hass.data.get(DATA_KNX_CONFIG)
-
-    #  When reloading
-    if conf is None:
-        conf = await async_integration_yaml_config(hass, DOMAIN)
-        if not conf or DOMAIN not in conf:
-            return False
-
-        conf = conf[DOMAIN]
-
-    # If user didn't have configuration.yaml config, generate defaults
-    if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
-
-    config = {**conf, **entry.data}
-
+    # `config` is None when reloading the integration
+    # or no `knx` key in configuration.yaml
+    if (config := hass.data.get(DATA_KNX_CONFIG)) is None:
+        _conf = await async_integration_yaml_config(hass, DOMAIN)
+        if not _conf or DOMAIN not in _conf:
+            _LOGGER.warning(
+                "No `knx:` key found in configuration.yaml. See "
+                "https://www.home-assistant.io/integrations/knx/ "
+                "for KNX entity configuration documentation"
+            )
+            # generate defaults
+            config = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
+        else:
+            config = _conf[DOMAIN]
     try:
         knx_module = KNXModule(hass, config, entry)
         await knx_module.start()
     except XKNXException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DATA_KNX_CONFIG] = conf
+    hass.data[DATA_KNX_CONFIG] = config
     hass.data[DOMAIN] = knx_module
 
     if CONF_KNX_EXPOSE in config:
@@ -250,16 +255,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
 
-    hass.config_entries.async_setup_platforms(
-        entry, [platform for platform in SUPPORTED_PLATFORMS if platform in config]
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            platform
+            for platform in SUPPORTED_PLATFORMS
+            if platform in config and platform is not Platform.NOTIFY
+        ],
     )
 
-    # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform.
-    if NotifySchema.PLATFORM in conf:
+    # set up notify platform, no entry support for notify component yet
+    if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, conf[NotifySchema.PLATFORM], config
+                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
 
@@ -312,6 +321,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             platform
             for platform in SUPPORTED_PLATFORMS
             if platform in hass.data[DATA_KNX_CONFIG]
+            and platform is not Platform.NOTIFY
         ],
     )
     if unload_ok:
@@ -325,6 +335,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update a given config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+
+    def remove_keyring_files(file_path: Path) -> None:
+        """Remove keyring files."""
+        with contextlib.suppress(FileNotFoundError):
+            file_path.unlink()
+        with contextlib.suppress(FileNotFoundError, OSError):
+            file_path.parent.rmdir()
+
+    if (_knxkeys_file := entry.data.get(CONF_KNX_KNXKEY_FILENAME)) is not None:
+        file_path = Path(hass.config.path(STORAGE_DIR)) / _knxkeys_file
+        await hass.async_add_executor_job(remove_keyring_files, file_path)
 
 
 class KNXModule:
@@ -355,18 +380,14 @@ class KNXModule:
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
-
         self.entry.async_on_unload(self.entry.add_update_listener(async_update_entry))
 
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
         self.xknx = XKNX(
-            own_address=self.config[CONF_KNX_INDIVIDUAL_ADDRESS],
-            rate_limit=self.config[ConnectionSchema.CONF_KNX_RATE_LIMIT],
-            multicast_group=self.config[ConnectionSchema.CONF_KNX_MCAST_GRP],
-            multicast_port=self.config[ConnectionSchema.CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
-            state_updater=self.config[ConnectionSchema.CONF_KNX_STATE_UPDATER],
+            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
+            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
         )
 
     async def start(self) -> None:
@@ -379,23 +400,98 @@ class KNXModule:
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
-        _conn_type: str = self.config[CONF_KNX_CONNECTION_TYPE]
+        _conn_type: str = self.entry.data[CONF_KNX_CONNECTION_TYPE]
+        _knxkeys_file: str | None = (
+            self.hass.config.path(
+                STORAGE_DIR,
+                self.entry.data[CONF_KNX_KNXKEY_FILENAME],
+            )
+            if self.entry.data.get(CONF_KNX_KNXKEY_FILENAME) is not None
+            else None
+        )
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
+                individual_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
+                multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
+                multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
+                local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
+                threaded=True,
             )
         if _conn_type == CONF_KNX_TUNNELING:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING,
-                gateway_ip=self.config[CONF_HOST],
-                gateway_port=self.config[CONF_PORT],
-                local_ip=self.config.get(ConnectionSchema.CONF_KNX_LOCAL_IP),
-                route_back=self.config.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False),
+                gateway_ip=self.entry.data[CONF_HOST],
+                gateway_port=self.entry.data[CONF_PORT],
+                local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
+                route_back=self.entry.data.get(CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
+                threaded=True,
             )
-
-        return ConnectionConfig(auto_reconnect=True)
+        if _conn_type == CONF_KNX_TUNNELING_TCP:
+            return ConnectionConfig(
+                connection_type=ConnectionType.TUNNELING_TCP,
+                gateway_ip=self.entry.data[CONF_HOST],
+                gateway_port=self.entry.data[CONF_PORT],
+                auto_reconnect=True,
+                secure_config=SecureConfig(
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
+                threaded=True,
+            )
+        if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
+            return ConnectionConfig(
+                connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                gateway_ip=self.entry.data[CONF_HOST],
+                gateway_port=self.entry.data[CONF_PORT],
+                secure_config=SecureConfig(
+                    user_id=self.entry.data.get(CONF_KNX_SECURE_USER_ID),
+                    user_password=self.entry.data.get(CONF_KNX_SECURE_USER_PASSWORD),
+                    device_authentication_password=self.entry.data.get(
+                        CONF_KNX_SECURE_DEVICE_AUTHENTICATION
+                    ),
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
+                auto_reconnect=True,
+                threaded=True,
+            )
+        if _conn_type == CONF_KNX_ROUTING_SECURE:
+            return ConnectionConfig(
+                connection_type=ConnectionType.ROUTING_SECURE,
+                individual_address=self.entry.data[CONF_KNX_INDIVIDUAL_ADDRESS],
+                multicast_group=self.entry.data[CONF_KNX_MCAST_GRP],
+                multicast_port=self.entry.data[CONF_KNX_MCAST_PORT],
+                local_ip=self.entry.data.get(CONF_KNX_LOCAL_IP),
+                secure_config=SecureConfig(
+                    backbone_key=self.entry.data.get(CONF_KNX_ROUTING_BACKBONE_KEY),
+                    latency_ms=self.entry.data.get(
+                        CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
+                    ),
+                    knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                    knxkeys_file_path=_knxkeys_file,
+                ),
+                auto_reconnect=True,
+                threaded=True,
+            )
+        return ConnectionConfig(
+            auto_reconnect=True,
+            secure_config=SecureConfig(
+                knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
+                knxkeys_file_path=_knxkeys_file,
+            ),
+            threaded=True,
+        )
 
     async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
@@ -433,7 +529,10 @@ class KNXModule:
                         value = transcoder.from_knx(data)
                     except ConversionError as err:
                         _LOGGER.warning(
-                            "Error in `knx_event` at decoding type '%s' from telegram %s\n%s",
+                            (
+                                "Error in `knx_event` at decoding type '%s' from"
+                                " telegram %s\n%s"
+                            ),
                             transcoder.__name__,
                             telegram,
                             err,
@@ -453,9 +552,7 @@ class KNXModule:
 
     def register_event_callback(self) -> TelegramQueue.Callback:
         """Register callback for knx_event within XKNX TelegramQueue."""
-        # backwards compatibility for deprecated CONF_KNX_EVENT_FILTER
-        # use `address_filters = []` when this is not needed anymore
-        address_filters = list(map(AddressFilter, self.config[CONF_KNX_EVENT_FILTER]))
+        address_filters = []
         for filter_set in self.config[CONF_EVENT]:
             _filters = list(map(AddressFilter, filter_set[KNX_ADDRESS]))
             address_filters.extend(_filters)
@@ -463,7 +560,10 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {_filter: transcoder for _filter in _filters}  # type: ignore[misc]
+                    {
+                        _filter: transcoder  # type: ignore[type-abstract]
+                        for _filter in _filters
+                    }
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(
@@ -495,7 +595,10 @@ class KNXModule:
             transcoder := DPTBase.parse_transcoder(dpt)
         ):
             self._group_address_transcoder.update(
-                {_address: transcoder for _address in group_addresses}  # type: ignore[misc]
+                {
+                    _address: transcoder  # type: ignore[type-abstract]
+                    for _address in group_addresses
+                }
             )
         for group_address in group_addresses:
             if group_address in self._knx_event_callback.group_addresses:
@@ -517,19 +620,22 @@ class KNXModule:
                 raise HomeAssistantError(
                     f"Could not find exposure for '{group_address}' to remove."
                 ) from err
-            else:
-                removed_exposure.shutdown()
+
+            removed_exposure.shutdown()
             return
 
         if group_address in self.service_exposures:
             replaced_exposure = self.service_exposures.pop(group_address)
             _LOGGER.warning(
-                "Service exposure_register replacing already registered exposure for '%s' - %s",
+                (
+                    "Service exposure_register replacing already registered exposure"
+                    " for '%s' - %s"
+                ),
                 group_address,
                 replaced_exposure.device.name,
             )
             replaced_exposure.shutdown()
-        exposure = create_knx_exposure(self.hass, self.xknx, call.data)  # type: ignore[arg-type]
+        exposure = create_knx_exposure(self.hass, self.xknx, call.data)
         self.service_exposures[group_address] = exposure
         _LOGGER.debug(
             "Service exposure_register registered exposure for '%s' - %s",
@@ -542,6 +648,7 @@ class KNXModule:
         attr_address = call.data[KNX_ADDRESS]
         attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
+        attr_response = call.data[SERVICE_KNX_ATTR_RESPONSE]
 
         payload: DPTBinary | DPTArray
         if attr_type is not None:
@@ -557,7 +664,9 @@ class KNXModule:
         for address in attr_address:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
-                payload=GroupValueWrite(payload),
+                payload=GroupValueResponse(payload)
+                if attr_response
+                else GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
 

@@ -27,7 +27,6 @@ from .utils import get_event_data_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DEFAULT_TIMEBAND = (80, 40)
 IGNORED_TIMEBAND = (3600, 1800)
 
@@ -69,7 +68,7 @@ class SIAHub:
             self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
         )
 
-    async def async_shutdown(self, _: Event = None) -> None:
+    async def async_shutdown(self, _: Event | None = None) -> None:
         """Shutdown the SIA server."""
         await self.sia_client.stop()
 
@@ -142,4 +141,4 @@ class SIAHub:
             return
         hub.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-        hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

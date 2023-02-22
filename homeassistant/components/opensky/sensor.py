@@ -1,4 +1,6 @@
 """Sensor for the Open Sky Network."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import requests
@@ -6,21 +8,24 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
+    UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import distance as util_distance, location as util_location
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import location as util_location
+from homeassistant.util.unit_conversion import DistanceConverter
 
 CONF_ALTITUDE = "altitude"
 
+ATTR_ICAO24 = "icao24"
 ATTR_CALLSIGN = "callsign"
 ATTR_ALTITUDE = "altitude"
 ATTR_ON_GROUND = "on_ground"
@@ -35,12 +40,9 @@ EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
 
-OPENSKY_ATTRIBUTION = (
-    "Information provided by the OpenSky Network (https://opensky-network.org)"
-)
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
-    "icao24",
+    ATTR_ICAO24,
     ATTR_CALLSIGN,
     "origin_country",
     "time_position",
@@ -67,7 +69,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Open Sky platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -89,12 +96,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OpenSkySensor(SensorEntity):
     """Open Sky Network Sensor."""
 
+    _attr_attribution = (
+        "Information provided by the OpenSky Network (https://opensky-network.org)"
+    )
+
     def __init__(self, hass, name, latitude, longitude, radius, altitude):
         """Initialize the sensor."""
         self._session = requests.Session()
         self._latitude = latitude
         self._longitude = longitude
-        self._radius = util_distance.convert(radius, LENGTH_KILOMETERS, LENGTH_METERS)
+        self._radius = DistanceConverter.convert(
+            radius, UnitOfLength.KILOMETERS, UnitOfLength.METERS
+        )
         self._altitude = altitude
         self._state = 0
         self._hass = hass
@@ -118,11 +131,13 @@ class OpenSkySensor(SensorEntity):
                 altitude = metadata[flight].get(ATTR_ALTITUDE)
                 longitude = metadata[flight].get(ATTR_LONGITUDE)
                 latitude = metadata[flight].get(ATTR_LATITUDE)
+                icao24 = metadata[flight].get(ATTR_ICAO24)
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
                 longitude = None
                 latitude = None
+                icao24 = None
 
             data = {
                 ATTR_CALLSIGN: flight,
@@ -130,10 +145,11 @@ class OpenSkySensor(SensorEntity):
                 ATTR_SENSOR: self._name,
                 ATTR_LONGITUDE: longitude,
                 ATTR_LATITUDE: latitude,
+                ATTR_ICAO24: icao24,
             }
             self._hass.bus.fire(event, data)
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
@@ -145,18 +161,17 @@ class OpenSkySensor(SensorEntity):
                 flight_metadata[callsign] = flight
             else:
                 continue
-            missing_location = (
-                flight.get(ATTR_LONGITUDE) is None or flight.get(ATTR_LATITUDE) is None
-            )
-            if missing_location:
-                continue
-            if flight.get(ATTR_ON_GROUND):
+            if (
+                (longitude := flight.get(ATTR_LONGITUDE)) is None
+                or (latitude := flight.get(ATTR_LATITUDE)) is None
+                or flight.get(ATTR_ON_GROUND)
+            ):
                 continue
             distance = util_location.distance(
                 self._latitude,
                 self._longitude,
-                flight.get(ATTR_LATITUDE),
-                flight.get(ATTR_LONGITUDE),
+                latitude,
+                longitude,
             )
             if distance is None or distance > self._radius:
                 continue
@@ -171,11 +186,6 @@ class OpenSkySensor(SensorEntity):
             self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
         self._state = len(currently_tracked)
         self._previously_tracked = currently_tracked
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: OPENSKY_ATTRIBUTION}
 
     @property
     def native_unit_of_measurement(self):

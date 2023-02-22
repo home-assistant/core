@@ -8,9 +8,39 @@ from pysiaalarm import SIAEvent
 
 from homeassistant.util.dt import utcnow
 
-from .const import ATTR_CODE, ATTR_ID, ATTR_MESSAGE, ATTR_TIMESTAMP, ATTR_ZONE
+from .const import (
+    ATTR_CODE,
+    ATTR_ID,
+    ATTR_MESSAGE,
+    ATTR_TIMESTAMP,
+    ATTR_ZONE,
+    KEY_ALARM,
+    SIA_HUB_ZONE,
+)
 
 PING_INTERVAL_MARGIN = 30
+
+
+def get_unique_id_and_name(
+    entry_id: str,
+    port: int,
+    account: str,
+    zone: int,
+    entity_key: str,
+) -> tuple[str, str]:
+    """Return the unique_id and name for an entity."""
+    return (
+        (
+            f"{entry_id}_{account}_{zone}"
+            if entity_key == KEY_ALARM
+            else f"{entry_id}_{account}_{zone}_{entity_key}"
+        ),
+        (
+            f"{port} - {account} - {entity_key}"
+            if zone == SIA_HUB_ZONE
+            else f"{port} - {account} - zone {zone} - {entity_key}"
+        ),
+    )
 
 
 def get_unavailability_interval(ping: int) -> float:

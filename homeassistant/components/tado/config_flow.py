@@ -1,4 +1,6 @@
 """Config flow for Tado integration."""
+from __future__ import annotations
+
 import logging
 
 from PyTado.interface import Tado
@@ -11,12 +13,21 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_FALLBACK, DOMAIN, UNIQUE_ID
+from .const import (
+    CONF_FALLBACK,
+    CONST_OVERLAY_TADO_DEFAULT,
+    CONST_OVERLAY_TADO_OPTIONS,
+    DOMAIN,
+    UNIQUE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
 )
 
 
@@ -103,7 +114,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -122,9 +135,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_FALLBACK, default=self.config_entry.options.get(CONF_FALLBACK)
-                ): bool,
+                vol.Optional(
+                    CONF_FALLBACK,
+                    default=self.config_entry.options.get(
+                        CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+                    ),
+                ): vol.In(CONST_OVERLAY_TADO_OPTIONS),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

@@ -9,30 +9,31 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import mock_device, mock_location, mock_reading
 
-from tests.common import async_fire_time_changed, mock_device_registry, mock_registry
+from tests.common import async_fire_time_changed
 
 
-async def test_sensors_pro(hass, canary) -> None:
+async def test_sensors_pro(
+    hass: HomeAssistant,
+    canary,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the creation and values of the sensors for Canary Pro."""
-
-    registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
     instance = canary.return_value
@@ -55,15 +56,15 @@ async def test_sensors_pro(hass, canary) -> None:
         "home_dining_room_temperature": (
             "20_temperature",
             "21.12",
-            TEMP_CELSIUS,
-            DEVICE_CLASS_TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            SensorDeviceClass.TEMPERATURE,
             None,
         ),
         "home_dining_room_humidity": (
             "20_humidity",
             "50.46",
             PERCENTAGE,
-            DEVICE_CLASS_HUMIDITY,
+            SensorDeviceClass.HUMIDITY,
             None,
         ),
         "home_dining_room_air_quality": (
@@ -75,8 +76,8 @@ async def test_sensors_pro(hass, canary) -> None:
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
-        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+    for sensor_id, data in sensors.items():
+        entity_entry = entity_registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]
         assert entity_entry.unique_id == data[0]
@@ -94,7 +95,7 @@ async def test_sensors_pro(hass, canary) -> None:
     assert device.model == "Canary Pro"
 
 
-async def test_sensors_attributes_pro(hass, canary) -> None:
+async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
     """Test the creation and values of the sensors attributes for Canary Pro."""
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
@@ -129,7 +130,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
     future = utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state2 = hass.states.get(entity_id)
@@ -145,7 +146,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
     future += timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state3 = hass.states.get(entity_id)
@@ -154,12 +155,13 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
     assert state3.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_NORMAL
 
 
-async def test_sensors_flex(hass, canary) -> None:
+async def test_sensors_flex(
+    hass: HomeAssistant,
+    canary,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the creation and values of the sensors for Canary Flex."""
-
-    registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Flex")
 
     instance = canary.return_value
@@ -182,20 +184,20 @@ async def test_sensors_flex(hass, canary) -> None:
             "20_battery",
             "70.46",
             PERCENTAGE,
-            DEVICE_CLASS_BATTERY,
+            SensorDeviceClass.BATTERY,
             None,
         ),
         "home_dining_room_wifi": (
             "20_wifi",
             "-57.0",
             SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-            DEVICE_CLASS_SIGNAL_STRENGTH,
+            SensorDeviceClass.SIGNAL_STRENGTH,
             None,
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
-        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+    for sensor_id, data in sensors.items():
+        entity_entry = entity_registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]
         assert entity_entry.unique_id == data[0]

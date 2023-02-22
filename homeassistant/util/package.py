@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import cache
 from importlib.metadata import PackageNotFoundError, version
 import logging
 import os
@@ -23,6 +24,7 @@ def is_virtual_env() -> bool:
     )
 
 
+@cache
 def is_docker_env() -> bool:
     """Return True if we run in a docker env."""
     return Path("/.dockerenv").exists()
@@ -50,7 +52,9 @@ def is_installed(package: str) -> bool:
         # was aborted while in progress see
         # https://github.com/home-assistant/core/issues/47699
         if installed_version is None:
-            _LOGGER.error("Installed version for %s resolved to None", req.project_name)  # type: ignore
+            _LOGGER.error(  # type: ignore[unreachable]
+                "Installed version for %s resolved to None", req.project_name
+            )
             return False
         return installed_version in req
     except PackageNotFoundError:
@@ -89,12 +93,15 @@ def install_package(
         # This only works if not running in venv
         args += ["--user"]
         env["PYTHONUSERBASE"] = os.path.abspath(target)
-        if sys.platform != "win32":
-            # Workaround for incompatible prefix setting
-            # See http://stackoverflow.com/a/4495175
-            args += ["--prefix="]
     _LOGGER.debug("Running pip command: args=%s", args)
-    with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
+    with Popen(
+        args,
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        close_fds=False,  # required for posix_spawn
+    ) as process:
         _, stderr = process.communicate()
         if process.returncode != 0:
             _LOGGER.error(
@@ -121,6 +128,7 @@ async def async_get_user_site(deps_dir: str) -> str:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
         env=env,
+        close_fds=False,  # required for posix_spawn
     )
     stdout, _ = await process.communicate()
     lib_dir = stdout.decode().strip()

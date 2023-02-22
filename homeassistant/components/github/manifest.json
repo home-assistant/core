@@ -1,13 +1,10 @@
 {
   "domain": "github",
   "name": "GitHub",
+  "codeowners": ["@timmo001", "@ludeeus"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/github",
-  "requirements": [
-    "aiogithubapi==21.11.0"
-  ],
-  "codeowners": [
-    "@timmo001",
-    "@ludeeus"
-  ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["aiogithubapi"],
+  "requirements": ["aiogithubapi==22.10.1"]
 }

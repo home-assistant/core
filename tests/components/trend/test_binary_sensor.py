@@ -3,8 +3,9 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant import config as hass_config, setup
-from homeassistant.components.trend import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.components.trend.const import DOMAIN
+from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -307,7 +308,7 @@ class TestTrendBinarySensor:
         self.hass.states.set("sensor.test_state", "Numeric")
         self.hass.block_till_done()
         state = self.hass.states.get("binary_sensor.test_trend_sensor")
-        assert state.state == "off"
+        assert state.state == STATE_UNKNOWN
 
     def test_missing_attribute(self):
         """Test attribute down trend."""
@@ -333,7 +334,7 @@ class TestTrendBinarySensor:
         self.hass.states.set("sensor.test_state", "State", {"attr": "1"})
         self.hass.block_till_done()
         state = self.hass.states.get("binary_sensor.test_trend_sensor")
-        assert state.state == "off"
+        assert state.state == STATE_UNKNOWN
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
@@ -378,7 +379,7 @@ class TestTrendBinarySensor:
         assert self.hass.states.all("binary_sensor") == []
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload trend sensors."""
     hass.states.async_set("sensor.test_state", 1234)
 

@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -54,7 +58,9 @@ SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the StarLine switch."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = [
@@ -83,7 +89,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         self.entity_description = description
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
@@ -115,11 +121,11 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
             return False
         return self._device.car_state.get(self._key)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._account.api.set_car_state(self._device.device_id, self._key, True)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self._key == "poke":
             return

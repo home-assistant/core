@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+import homeassistant.util.dt as dt_util
+
 PRAYER_TIMES = {
     "Fajr": "06:10",
     "Sunrise": "07:25",
@@ -42,4 +44,4 @@ NEW_PRAYER_TIMES_TIMESTAMPS = {
     "Midnight": datetime(2020, 1, 1, 00, 43, 0),
 }
 
-NOW = datetime(2020, 1, 1, 00, 00, 0).astimezone()
+NOW = datetime(2020, 1, 1, 00, 00, 0, tzinfo=dt_util.UTC)

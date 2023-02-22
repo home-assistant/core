@@ -18,7 +18,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cct_unsupported": "This WLED device uses CCT channels, which is not supported by this integration"
     }
   },
   "options": {
@@ -26,6 +27,17 @@
       "init": {
         "data": {
           "keep_master_light": "Keep master light, even with 1 LED segment."
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "live_override": {
+        "state": {
+          "0": "[%key:common::state::off%]",
+          "1": "[%key:common::state::on%]",
+          "2": "Until device restarts"
         }
       }
     }

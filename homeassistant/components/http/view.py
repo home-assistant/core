@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-import json
 import logging
 from typing import Any
 
@@ -21,7 +20,12 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import (
+    find_paths_unserializable_data,
+    json_bytes,
+    json_dumps,
+)
+from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, format_unserializable_data
 
 from .const import KEY_AUTHENTICATED, KEY_HASS
 
@@ -53,9 +57,14 @@ class HomeAssistantView:
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
-        except (ValueError, TypeError) as err:
-            _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
+            msg = json_bytes(result)
+        except JSON_ENCODE_EXCEPTIONS as err:
+            _LOGGER.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(result, dump=json_dumps)
+                ),
+            )
             raise HTTPInternalServerError from err
         response = web.Response(
             body=msg,
@@ -158,9 +167,9 @@ def request_handler_factory(
         elif result is None:
             bresult = b""
         else:
-            assert (
-                False
-            ), f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+            raise TypeError(
+                f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+            )
 
         return web.Response(body=bresult, status=status_code)
 

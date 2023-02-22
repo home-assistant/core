@@ -28,16 +28,25 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -111,7 +120,11 @@ async def async_setup_entry(
 class BrWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.METERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
     def __init__(self, data, config, coordinates):
         """Initialize the platform with a data instance and station name."""
@@ -142,12 +155,12 @@ class BrWeather(WeatherEntity):
             return conditions.get(ccode)
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the current temperature."""
         return self._data.temperature
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the current pressure."""
         return self._data.pressure
 
@@ -157,18 +170,14 @@ class BrWeather(WeatherEntity):
         return self._data.humidity
 
     @property
-    def visibility(self):
-        """Return the current visibility in km."""
-        if self._data.visibility is None:
-            return None
-        return round(self._data.visibility / 1000, 1)
+    def native_visibility(self):
+        """Return the current visibility in m."""
+        return self._data.visibility
 
     @property
-    def wind_speed(self):
-        """Return the current windspeed in km/h."""
-        if self._data.wind_speed is None:
-            return None
-        return round(self._data.wind_speed * 3.6, 1)
+    def native_wind_speed(self):
+        """Return the current windspeed in m/s."""
+        return self._data.wind_speed
 
     @property
     def wind_bearing(self):
@@ -191,11 +200,11 @@ class BrWeather(WeatherEntity):
             data_out = {
                 ATTR_FORECAST_TIME: data_in.get(DATETIME).isoformat(),
                 ATTR_FORECAST_CONDITION: cond[condcode],
-                ATTR_FORECAST_TEMP_LOW: data_in.get(MIN_TEMP),
-                ATTR_FORECAST_TEMP: data_in.get(MAX_TEMP),
-                ATTR_FORECAST_PRECIPITATION: data_in.get(RAIN),
+                ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.get(MIN_TEMP),
+                ATTR_FORECAST_NATIVE_TEMP: data_in.get(MAX_TEMP),
+                ATTR_FORECAST_NATIVE_PRECIPITATION: data_in.get(RAIN),
                 ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
-                ATTR_FORECAST_WIND_SPEED: round(data_in.get(WINDSPEED) * 3.6, 1),
+                ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.get(WINDSPEED),
             }
 
             fcdata_out.append(data_out)

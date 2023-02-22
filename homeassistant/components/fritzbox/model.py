@@ -8,14 +8,8 @@ from typing import TypedDict
 from pyfritzhome import FritzhomeDevice
 
 
-class FritzExtraAttributes(TypedDict):
-    """TypedDict for sensors extra attributes."""
-
-    device_locked: bool
-    locked: bool
-
-
-class ClimateExtraAttributes(FritzExtraAttributes, total=False):
+@dataclass
+class ClimateExtraAttributes(TypedDict, total=False):
     """TypedDict for climates extra attributes."""
 
     battery_level: int

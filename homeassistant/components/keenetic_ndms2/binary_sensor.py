@@ -6,14 +6,17 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KeeneticRouter
 from .const import DOMAIN, ROUTER
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up device tracker for Keenetic NDMS2 component."""
     router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
 
@@ -50,7 +53,7 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
         """Return a client description for device registry."""
         return self._router.device_info
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Client entity created."""
         self.async_on_remove(
             async_dispatcher_connect(

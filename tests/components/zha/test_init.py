@@ -1,5 +1,4 @@
 """Tests for ZHA integration init."""
-
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -12,12 +11,20 @@ from homeassistant.components.zha.core.const import (
     DOMAIN,
 )
 from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 DATA_RADIO_TYPE = "deconz"
 DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port0"
+
+
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
 
 
 @pytest.fixture
@@ -32,7 +39,9 @@ def config_entry_v1(hass):
 
 @pytest.mark.parametrize("config", ({}, {DOMAIN: {}}))
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
+async def test_migration_from_v1_no_baudrate(
+    hass: HomeAssistant, config_entry_v1, config
+) -> None:
     """Test migration of config entry from v1."""
     config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
@@ -46,7 +55,9 @@ async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
+async def test_migration_from_v1_with_baudrate(
+    hass: HomeAssistant, config_entry_v1
+) -> None:
     """Test migration of config entry from v1 with baudrate in config."""
     config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115200}})
@@ -61,7 +72,9 @@ async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
+async def test_migration_from_v1_wrong_baudrate(
+    hass: HomeAssistant, config_entry_v1
+) -> None:
     """Test migration of config entry from v1 with wrong baudrate."""
     config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115222}})
@@ -87,7 +100,7 @@ async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
         {CONF_RADIO_TYPE: "ezsp", CONF_USB_PATH: "str"},
     ),
 )
-async def test_config_depreciation(hass, zha_config):
+async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     """Test config option depreciation."""
 
     with patch(

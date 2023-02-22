@@ -345,3 +345,28 @@ async def setup_platform(hass, platform):
     await hass.async_block_till_done()
 
     return mock_entry
+
+
+async def init_integration(hass):
+    """Set up the TotalConnect integration."""
+    # first set up a config entry and add it to hass
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)
+    mock_entry.add_to_hass(hass)
+
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
+        RESPONSE_DISARMED,
+    ]
+
+    with patch(
+        TOTALCONNECT_REQUEST,
+        side_effect=responses,
+    ) as mock_request:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        assert mock_request.call_count == 5
+    await hass.async_block_till_done()
+
+    return mock_entry

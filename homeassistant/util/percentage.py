@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
-def ordered_list_item_to_percentage(ordered_list: list[T], item: T) -> int:
+def ordered_list_item_to_percentage(ordered_list: list[_T], item: _T) -> int:
     """Determine the percentage of an item in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
@@ -22,14 +22,14 @@ def ordered_list_item_to_percentage(ordered_list: list[T], item: T) -> int:
 
     """
     if item not in ordered_list:
-        raise ValueError(f'The item "{item}"" is not in "{ordered_list}"')
+        raise ValueError(f'The item "{item}" is not in "{ordered_list}"')
 
     list_len = len(ordered_list)
     list_position = ordered_list.index(item) + 1
     return (list_position * 100) // list_len
 
 
-def percentage_to_ordered_list_item(ordered_list: list[T], percentage: int) -> T:
+def percentage_to_ordered_list_item(ordered_list: list[_T], percentage: int) -> _T:
     """Find the item that most closely matches the percentage in an ordered list.
 
     When using this utility for fan speeds, do not include "off"

@@ -1,9 +1,11 @@
 """Mocks for the august component."""
+from __future__ import annotations
+
+from collections.abc import Iterable
 import json
 import os
 import time
-
-# from unittest.mock import AsyncMock
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from yalexs.activity import (
@@ -28,7 +30,9 @@ from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.august.const import CONF_LOGIN_METHOD, DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -77,7 +81,20 @@ async def _mock_setup_august(
     return entry
 
 
-async def _create_august_with_devices(  # noqa: C901
+async def _create_august_with_devices(
+    hass: HomeAssistant,
+    devices: Iterable[LockDetail | DoorbellDetail],
+    api_call_side_effects: dict[str, Any] | None = None,
+    activities: list[Any] | None = None,
+    pubnub: AugustPubNub | None = None,
+) -> ConfigEntry:
+    entry, _ = await _create_august_api_with_devices(
+        hass, devices, api_call_side_effects, activities, pubnub
+    )
+    return entry
+
+
+async def _create_august_api_with_devices(  # noqa: C901
     hass, devices, api_call_side_effects=None, activities=None, pubnub=None
 ):
     if api_call_side_effects is None:
@@ -96,7 +113,7 @@ async def _create_august_with_devices(  # noqa: C901
                 {"base": _mock_august_doorbell(device.device_id), "detail": device}
             )
         else:
-            raise ValueError
+            raise ValueError  # noqa: TRY004
 
     def _get_device_detail(device_type, device_id):
         for device in device_data[device_type]:
@@ -164,9 +181,16 @@ async def _create_august_with_devices(  # noqa: C901
             "unlock_return_activities"
         ] = unlock_return_activities_side_effect
 
-    return await _mock_setup_august_with_api_side_effects(
+    api_instance, entry = await _mock_setup_august_with_api_side_effects(
         hass, api_call_side_effects, pubnub
     )
+
+    if device_data["locks"]:
+        # Ensure we sync status when the integration is loaded if there
+        # are any locks
+        assert api_instance.async_status_async.mock_calls
+
+    return entry, api_instance
 
 
 async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, pubnub):
@@ -207,9 +231,12 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, 
             side_effect=api_call_side_effects["unlock_return_activities"]
         )
 
+    api_instance.async_unlock_async = AsyncMock()
+    api_instance.async_lock_async = AsyncMock()
+    api_instance.async_status_async = AsyncMock()
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
 
-    return await _mock_setup_august(hass, api_instance, pubnub)
+    return api_instance, await _mock_setup_august(hass, api_instance, pubnub)
 
 
 def _mock_august_authentication(token_text, token_timestamp, state):
@@ -273,6 +300,10 @@ def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
 
 async def _mock_operative_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.online.json")
+
+
+async def _mock_lock_with_offline_key(hass):
+    return await _mock_lock_from_fixture(hass, "get_lock.online_with_keys.json")
 
 
 async def _mock_inoperative_august_lock_detail(hass):

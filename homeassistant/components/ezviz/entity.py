@@ -1,8 +1,9 @@
-"""An abstract class common to all Ezviz entities."""
+"""An abstract class common to all EZVIZ entities."""
 from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -10,8 +11,8 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import EzvizDataUpdateCoordinator
 
 
-class EzvizEntity(CoordinatorEntity, Entity):
-    """Generic entity encapsulating common features of Ezviz device."""
+class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
+    """Generic entity encapsulating common features of EZVIZ device."""
 
     def __init__(
         self,
@@ -24,6 +25,9 @@ class EzvizEntity(CoordinatorEntity, Entity):
         self._camera_name = self.data["name"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
+            connections={
+                (CONNECTION_NETWORK_MAC, self.data["mac_address"]),
+            },
             manufacturer=MANUFACTURER,
             model=self.data["device_sub_category"],
             name=self.data["name"],

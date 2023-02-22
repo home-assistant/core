@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -47,7 +48,7 @@ SERVICE_CONFIGURE = "configure"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-CREATE_FIELDS = {
+STORAGE_FIELDS = {
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
     vol.Required(CONF_NAME): vol.All(cv.string, vol.Length(min=1)),
@@ -55,16 +56,6 @@ CREATE_FIELDS = {
     vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
     vol.Optional(CONF_RESTORE, default=True): cv.boolean,
     vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
-}
-
-UPDATE_FIELDS = {
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL): cv.positive_int,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_MAXIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_MINIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_RESTORE): cv.boolean,
-    vol.Optional(CONF_STEP): cv.positive_int,
 }
 
 
@@ -103,14 +94,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the counters."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Counter](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Counter.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Counter
     )
 
     storage_collection = CounterStorageCollection(
@@ -128,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
@@ -152,12 +143,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class CounterStorageCollection(collection.StorageCollection):
     """Input storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -166,31 +156,35 @@ class CounterStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: data[CONF_ID]} | update_data
 
 
-class Counter(RestoreEntity):
+class Counter(collection.CollectionEntity, RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, config: dict) -> None:
+    _attr_should_poll: bool = False
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a counter."""
-        self._config: dict = config
+        self._config: ConfigType = config
         self._state: int | None = config[CONF_INITIAL]
-        self.editable: bool = True
 
     @classmethod
-    def from_yaml(cls, config: dict) -> Counter:
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Create counter instance from storage."""
+        counter = cls(config)
+        counter.editable = True
+        return counter
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Create counter instance from yaml config."""
         counter = cls(config)
         counter.editable = False
         counter.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
         return counter
-
-    @property
-    def should_poll(self) -> bool:
-        """If entity should be polled."""
-        return False
 
     @property
     def name(self) -> str | None:
@@ -276,7 +270,7 @@ class Counter(RestoreEntity):
         self._state = self.compute_next_state(new_state)
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Change the counter's settings WS CRUD."""
         self._config = config
         self._state = self.compute_next_state(self._state)

@@ -9,6 +9,7 @@ from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -21,13 +22,16 @@ _LOGGER = logging.getLogger(__name__)
 class HarmonyData(HarmonySubscriberMixin):
     """HarmonyData registers for Harmony hub updates."""
 
-    def __init__(self, hass, address: str, name: str, unique_id: str):
+    _client: HarmonyClient
+
+    def __init__(
+        self, hass: HomeAssistant, address: str, name: str, unique_id: str | None
+    ) -> None:
         """Initialize a data object."""
         super().__init__(hass)
         self._name = name
         self._unique_id = unique_id
         self._available = False
-        self._client = None
         self._address = address
 
     @property
@@ -99,7 +103,7 @@ class HarmonyData(HarmonySubscriberMixin):
             configuration_url="https://www.logitech.com/en-us/my-account",
         )
 
-    async def connect(self) -> bool:
+    async def connect(self) -> None:
         """Connect to the Harmony Hub."""
         _LOGGER.debug("%s: Connecting", self._name)
 
@@ -125,7 +129,8 @@ class HarmonyData(HarmonySubscriberMixin):
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self._name}: Error {err} while connected HUB at: {self._address}:8088"
+                f"{self._name}: Error {err} while connected HUB at:"
+                f" {self._address}:8088"
             ) from err
         if not connected:
             await self._client.close()
@@ -218,8 +223,10 @@ class HarmonyData(HarmonySubscriberMixin):
             return
 
         _LOGGER.debug(
-            "Sending commands to device %s holding for %s seconds "
-            "with a delay of %s seconds",
+            (
+                "Sending commands to device %s holding for %s seconds "
+                "with a delay of %s seconds"
+            ),
             device,
             hold_secs,
             delay_secs,
@@ -271,5 +278,5 @@ class HarmonyData(HarmonySubscriberMixin):
         except aioexc.TimeOut:
             _LOGGER.error("%s: Syncing hub with Harmony cloud timed-out", self.name)
             return False
-        else:
-            return True
+
+        return True

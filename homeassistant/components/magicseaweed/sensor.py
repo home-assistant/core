@@ -12,15 +12,15 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,6 @@ CONF_UNITS = "units"
 
 DEFAULT_UNIT = "us"
 DEFAULT_NAME = "MSW"
-DEFAULT_ATTRIBUTION = "Data provided by magicseaweed.com"
 
 ICON = "mdi:waves"
 
@@ -75,8 +74,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Magicseaweed sensor."""
+    create_issue(
+        hass,
+        "magicseaweed",
+        "pending_removal",
+        breaks_in_ha_version="2023.3.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The Magicseaweed integration is deprecated"
+        " and will be removed in Home Assistant 2023.3"
+    )
+
     name = config.get(CONF_NAME)
     spot_id = config[CONF_SPOT_ID]
     api_key = config[CONF_API_KEY]
@@ -84,7 +102,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if CONF_UNITS in config:
         units = config.get(CONF_UNITS)
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         units = UNITS[0]
     else:
         units = UNITS[2]
@@ -102,22 +120,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for description in SENSOR_TYPES
         if description.key in monitored_conditions
     ]
-    sensors.extend(
-        [
-            MagicSeaweedSensor(forecast_data, name, units, description, hour)
-            for description in SENSOR_TYPES
-            if description.key in monitored_conditions
-            and "forecast" not in description.key
-            for hour in hours
-            if hour is not None
-        ]
-    )
+    if hours is not None:
+        sensors.extend(
+            [
+                MagicSeaweedSensor(forecast_data, name, units, description, hour)
+                for description in SENSOR_TYPES
+                if description.key in monitored_conditions
+                and "forecast" not in description.key
+                for hour in hours
+            ]
+        )
     add_entities(sensors, True)
 
 
 class MagicSeaweedSensor(SensorEntity):
     """Implementation of a MagicSeaweed sensor."""
 
+    _attr_attribution = "Data provided by magicseaweed.com"
     _attr_icon = ICON
 
     def __init__(
@@ -127,7 +146,7 @@ class MagicSeaweedSensor(SensorEntity):
         unit_system,
         description: SensorEntityDescription,
         hour=None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.client_name = name
@@ -142,14 +161,14 @@ class MagicSeaweedSensor(SensorEntity):
         else:
             self._attr_name = f"{hour} {name} {description.name}"
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
 
     @property
     def unit_system(self):
         """Return the unit system of this entity."""
         return self._unit_system
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Magicseaweed and updates the states."""
         self.data.update()
         if self.hour is None:
@@ -164,12 +183,18 @@ class MagicSeaweedSensor(SensorEntity):
         elif sensor_type == "max_breaking_swell":
             self._attr_native_value = forecast.swell_maxBreakingHeight
         elif sensor_type == "swell_forecast":
-            summary = f"{forecast.swell_minBreakingHeight} - {forecast.swell_maxBreakingHeight}"
+            summary = (
+                f"{forecast.swell_minBreakingHeight} -"
+                f" {forecast.swell_maxBreakingHeight}"
+            )
             self._attr_native_value = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
                     occurs = hour
-                    hr_summary = f"{data.swell_minBreakingHeight} - {data.swell_maxBreakingHeight} {data.swell_unit}"
+                    hr_summary = (
+                        f"{data.swell_minBreakingHeight} -"
+                        f" {data.swell_maxBreakingHeight} {data.swell_unit}"
+                    )
                     self._attr_extra_state_attributes[occurs] = hr_summary
 
         if sensor_type != "swell_forecast":

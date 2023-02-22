@@ -14,7 +14,7 @@ from getmac import get_mac_address
 from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     CONF_SCAN_INTERVAL,
     DEFAULT_CONSIDER_HOME,
@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -343,7 +343,10 @@ class NmapDeviceScanner:
             return
         if device.first_offline + self.consider_home > now:
             _LOGGER.debug(
-                "Device %s (%s) has NOT been offline (first offline at: %s) long enough to be considered not home: %s",
+                (
+                    "Device %s (%s) has NOT been offline (first offline at: %s) long"
+                    " enough to be considered not home: %s"
+                ),
                 ipv4,
                 formatted_mac,
                 device.first_offline,
@@ -351,7 +354,10 @@ class NmapDeviceScanner:
             )
             return
         _LOGGER.debug(
-            "Device %s (%s) has been offline (first offline at: %s) long enough to be considered not home: %s",
+            (
+                "Device %s (%s) has been offline (first offline at: %s) long enough to"
+                " be considered not home: %s"
+            ),
             ipv4,
             formatted_mac,
             device.first_offline,

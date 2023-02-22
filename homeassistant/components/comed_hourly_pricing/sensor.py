@@ -15,16 +15,17 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET
+from homeassistant.const import CONF_NAME, CONF_OFFSET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://hourlypricing.comed.com/api"
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
 
 CONF_CURRENT_HOUR_AVERAGE = "current_hour_average"
 CONF_FIVE_MINUTE = "five_minute"
@@ -61,7 +62,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ComEd Hourly Pricing sensor."""
     websession = async_get_clientsession(hass)
 
@@ -83,9 +89,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ComedHourlyPricingSensor(SensorEntity):
     """Implementation of a ComEd Hourly Pricing sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = "Data provided by ComEd Hourly Pricing service"
 
-    def __init__(self, websession, offset, name, description: SensorEntityDescription):
+    def __init__(
+        self, websession, offset, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.websession = websession
@@ -93,7 +101,7 @@ class ComedHourlyPricingSensor(SensorEntity):
             self._attr_name = name
         self.offset = offset
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
             sensor_type = self.entity_description.key

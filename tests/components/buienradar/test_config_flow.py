@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -11,7 +12,7 @@ TEST_LATITUDE = 51.5288504
 TEST_LONGITUDE = 5.4002156
 
 
-async def test_config_flow_setup_(hass):
+async def test_config_flow_setup_(hass: HomeAssistant) -> None:
     """Test setup of camera."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -37,7 +38,7 @@ async def test_config_flow_setup_(hass):
     }
 
 
-async def test_config_flow_already_configured_weather(hass):
+async def test_config_flow_already_configured_weather(hass: HomeAssistant) -> None:
     """Test already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -66,7 +67,7 @@ async def test_config_flow_already_configured_weather(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -96,7 +97,7 @@ async def test_options_flow(hass):
     ), patch(
         "homeassistant.components.buienradar.async_unload_entry", return_value=True
     ):
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

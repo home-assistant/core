@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, List, cast
+from typing import Any, cast
 
 import aiotractive
 
@@ -30,6 +30,7 @@ from .const import (
     ATTR_MINUTES_ACTIVE,
     ATTR_TRACKER_STATE,
     CLIENT,
+    CLIENT_ID,
     DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
@@ -68,7 +69,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
     client = aiotractive.Tractive(
-        data[CONF_EMAIL], data[CONF_PASSWORD], session=async_get_clientsession(hass)
+        data[CONF_EMAIL],
+        data[CONF_PASSWORD],
+        session=async_get_clientsession(hass),
+        client_id=CLIENT_ID,
     )
     try:
         creds = await client.authenticate()
@@ -79,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.close()
         raise ConfigEntryNotReady from error
 
-    tractive = TractiveClient(hass, client, creds["user_id"])
+    tractive = TractiveClient(hass, client, creds["user_id"], entry)
     tractive.subscribe()
 
     try:
@@ -98,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][CLIENT] = tractive
     hass.data[DOMAIN][entry.entry_id][TRACKABLES] = trackables
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def cancel_listen_task(_: Event) -> None:
         await tractive.unsubscribe()
@@ -144,7 +148,11 @@ class TractiveClient:
     """A Tractive client."""
 
     def __init__(
-        self, hass: HomeAssistant, client: aiotractive.Tractive, user_id: str
+        self,
+        hass: HomeAssistant,
+        client: aiotractive.Tractive,
+        user_id: str,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the client."""
         self._hass = hass
@@ -153,6 +161,7 @@ class TractiveClient:
         self._last_hw_time = 0
         self._last_pos_time = 0
         self._listen_task: asyncio.Task | None = None
+        self._config_entry = config_entry
 
     @property
     def user_id(self) -> str:
@@ -164,7 +173,7 @@ class TractiveClient:
     ) -> list[aiotractive.trackable_object.TrackableObject]:
         """Get list of trackable objects."""
         return cast(
-            List[aiotractive.trackable_object.TrackableObject],
+            list[aiotractive.trackable_object.TrackableObject],
             await self._client.trackable_objects(),
         )
 
@@ -206,9 +215,21 @@ class TractiveClient:
                     ):
                         self._last_pos_time = event["position"]["time"]
                         self._send_position_update(event)
+            except aiotractive.exceptions.UnauthorizedError:
+                self._config_entry.async_start_reauth(self._hass)
+                await self.unsubscribe()
+                _LOGGER.error(
+                    "Authentication failed for %s, try reconfiguring device",
+                    self._config_entry.data[CONF_EMAIL],
+                )
+                return
+
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
-                    "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
+                    (
+                        "Tractive is not available. Internet connection is down?"
+                        " Sleeping %i seconds and retrying"
+                    ),
                     RECONNECT_INTERVAL.total_seconds(),
                 )
                 self._last_hw_time = 0

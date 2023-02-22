@@ -17,16 +17,18 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
@@ -118,8 +120,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             except SSLError:
                 _LOGGER.error(
-                    "Unable to verify proxmox server SSL. "
-                    'Try using "verify_ssl: false" for proxmox instance %s:%d',
+                    (
+                        "Unable to verify proxmox server SSL. "
+                        'Try using "verify_ssl: false" for proxmox instance %s:%d'
+                    ),
                     host,
                     port,
                 )
@@ -177,9 +181,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for component in PLATFORMS:
         await hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                component, DOMAIN, {"config": config}, config
-            )
+            async_load_platform(hass, component, DOMAIN, {"config": config}, config)
         )
 
     return True
@@ -254,7 +256,7 @@ class ProxmoxEntity(CoordinatorEntity):
         host_name,
         node_name,
         vm_id=None,
-    ):
+    ) -> None:
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
 
@@ -307,7 +309,10 @@ class ProxmoxClient:
         self._connection_start_time = None
 
     def build_client(self):
-        """Construct the ProxmoxAPI client. Allows inserting the realm within the `user` value."""
+        """Construct the ProxmoxAPI client.
+
+        Allows inserting the realm within the `user` value.
+        """
 
         if "@" in self._user:
             user_id = self._user

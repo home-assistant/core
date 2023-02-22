@@ -3,12 +3,13 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .common import FakeDiscovery
 
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_creating_entry_sets_up_climate(hass):
+async def test_creating_entry_sets_up_climate(hass: HomeAssistant) -> None:
     """Test setting up Gree creates the climate components."""
     with patch(
         "homeassistant.components.gree.climate.async_setup_entry", return_value=True
@@ -23,10 +24,10 @@ async def test_creating_entry_sets_up_climate(hass):
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -34,7 +35,7 @@ async def test_creating_entry_sets_up_climate(hass):
 
 
 @patch("homeassistant.components.gree.config_flow.DISCOVERY_TIMEOUT", 0)
-async def test_creating_entry_has_no_devices(hass):
+async def test_creating_entry_has_no_devices(hass: HomeAssistant) -> None:
     """Test setting up Gree creates the climate components."""
     with patch(
         "homeassistant.components.gree.climate.async_setup_entry", return_value=True
@@ -52,10 +53,10 @@ async def test_creating_entry_has_no_devices(hass):
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
         await hass.async_block_till_done()
 

@@ -50,9 +50,9 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             device_instance=device_instance,
             element_uid=element_uid,
         )
-        self._binary_switch_property = self._device_instance.binary_switch_property.get(
-            self._attr_unique_id
-        )
+        self._binary_switch_property = self._device_instance.binary_switch_property[
+            self._attr_unique_id  # type: ignore[index]
+        ]
         self._attr_is_on = self._binary_switch_property.state
 
     def turn_on(self, **kwargs: Any) -> None:

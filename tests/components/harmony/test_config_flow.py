@@ -8,6 +8,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +21,7 @@ def _get_mock_harmonyapi(connect=None, close=None):
     return harmonyapi_mock
 
 
-async def test_user_form(hass):
+async def test_user_form(hass: HomeAssistant) -> None:
     """Test we get the user form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -49,7 +50,7 @@ async def test_user_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_ssdp(hass):
+async def test_form_ssdp(hass: HomeAssistant) -> None:
     """Test we get the form with ssdp source."""
 
     with patch(
@@ -101,7 +102,7 @@ async def test_form_ssdp(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_ssdp_fails_to_get_remote_id(hass):
+async def test_form_ssdp_fails_to_get_remote_id(hass: HomeAssistant) -> None:
     """Test we abort if we cannot get the remote id."""
 
     with patch(
@@ -124,7 +125,9 @@ async def test_form_ssdp_fails_to_get_remote_id(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
+async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(
+    hass: HomeAssistant,
+) -> None:
     """Test we abort without connecting if the host is already known."""
 
     config_entry = MockConfigEntry(
@@ -160,7 +163,7 @@ async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
     assert result["type"] == "abort"
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -184,7 +187,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass, mock_hc, mock_write_config):
+async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -201,7 +204,7 @@ async def test_options_flow(hass, mock_hc, mock_write_config):
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -209,7 +212,7 @@ async def test_options_flow(hass, mock_hc, mock_write_config):
         user_input={"activity": PREVIOUS_ACTIVE_ACTIVITY, "delay_secs": 0.4},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         "activity": PREVIOUS_ACTIVE_ACTIVITY,
         "delay_secs": 0.4,

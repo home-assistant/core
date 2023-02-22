@@ -165,7 +165,7 @@ class HyperionCamera(Camera):
         async with self._image_cond:
             try:
                 self._image = base64.b64decode(
-                    img_data[len(IMAGE_STREAM_JPG_SENTINEL) :]
+                    img_data.removeprefix(IMAGE_STREAM_JPG_SENTINEL)
                 )
             except binascii.Error:
                 return
@@ -254,6 +254,7 @@ class HyperionCamera(Camera):
             manufacturer=HYPERION_MANUFACTURER_NAME,
             model=HYPERION_MODEL_NAME,
             name=self._instance_name,
+            configuration_url=self._client.remote_url,
         )
 
 

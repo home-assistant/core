@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import time
+from typing import Any
 
 from pythinkingcleaner import Discovery, ThinkingCleaner
 import voluptuous as vol
@@ -14,7 +15,10 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -40,7 +44,12 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ThinkingCleaner platform."""
     if host := config.get(CONF_HOST):
         devices = [ThinkingCleaner(host, "unknown")]
@@ -66,7 +75,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ThinkingCleanerSwitch(SwitchEntity):
     """ThinkingCleaner Switch (dock, clean, find me)."""
 
-    def __init__(self, tc_object, update_devices, description: SwitchEntityDescription):
+    def __init__(
+        self, tc_object, update_devices, description: SwitchEntityDescription
+    ) -> None:
         """Initialize the ThinkingCleaner."""
         self.entity_description = description
 
@@ -122,7 +133,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
 
         return False
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         sensor_type = self.entity_description.key
         if sensor_type == "clean":
@@ -133,13 +144,13 @@ class ThinkingCleanerSwitch(SwitchEntity):
         elif sensor_type == "find":
             self._tc_object.find_me()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.entity_description.key == "clean":
             self.set_graceful_lock(False)
             self._tc_object.stop_cleaning()
 
-    def update(self):
+    def update(self) -> None:
         """Update the switch state (Only for clean)."""
         if self.entity_description.key == "clean" and not self.is_update_locked():
             self._tc_object.update()

@@ -99,9 +99,9 @@ set_color_bw:
       selector:
         select:
           options:
-            - 'auto'
-            - 'bw'
-            - 'color'
+            - "auto"
+            - "bw"
+            - "color"
 
 start_tour:
   name: Start tour
@@ -142,16 +142,16 @@ ptz_control:
       selector:
         select:
           options:
-            - 'down'
-            - 'left'
-            - 'left_down'
-            - 'left_up'
-            - 'right'
-            - 'right_down'
-            - 'right_up'
-            - 'up'
-            - 'zoom_in'
-            - 'zoom_out'
+            - "down"
+            - "left"
+            - "left_down"
+            - "left_up"
+            - "right"
+            - "right_down"
+            - "right_up"
+            - "up"
+            - "zoom_in"
+            - "zoom_out"
     travel_time:
       name: Travel time
       description: "Travel time in fractional seconds: from 0 to 1."

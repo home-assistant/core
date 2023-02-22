@@ -1,10 +1,15 @@
 """Sensor platform integration for ADC ports of Numato USB GPIO expanders."""
+from __future__ import annotations
+
 import logging
 
 from numato_gpio import NumatoGpioError
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_SENSORS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_DEVICES,
@@ -21,7 +26,12 @@ _LOGGER = logging.getLogger(__name__)
 ICON = "mdi:gauge"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the configured Numato USB GPIO ADC sensor ports."""
     if discovery_info is None:
         return
@@ -92,7 +102,7 @@ class NumatoGpioAdc(SensorEntity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         try:
             adc_val = self._api.read_adc_input(self._device_id, self._port)

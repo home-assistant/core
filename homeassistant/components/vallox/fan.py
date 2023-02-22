@@ -2,23 +2,27 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any, NamedTuple
 
-from vallox_websocket_api import Vallox
-from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api import (
+    PROFILE_TO_SET_FAN_SPEED_METRIC_MAP,
+    Vallox,
+    ValloxApiException,
+    ValloxInvalidInputException,
+)
 
 from homeassistant.components.fan import (
-    SUPPORT_PRESET_MODE,
     FanEntity,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.typing import StateType
 
-from . import ValloxDataUpdateCoordinator
+from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -27,11 +31,9 @@ from .const import (
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
     MODE_OFF,
     MODE_ON,
-    STR_TO_VALLOX_PROFILE_SETTABLE,
-    VALLOX_PROFILE_TO_STR_SETTABLE,
+    PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE,
+    VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ExtraStateAttributeDetails(NamedTuple):
@@ -54,37 +56,35 @@ EXTRA_STATE_ATTRIBUTES = (
 )
 
 
-def _convert_fan_speed_value(value: StateType) -> int | None:
+def _convert_to_int(value: StateType) -> int | None:
     if isinstance(value, (int, float)):
         return int(value)
 
     return None
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the fan device."""
-    if discovery_info is None:
-        return
+    data = hass.data[DOMAIN][entry.entry_id]
 
-    client = hass.data[DOMAIN]["client"]
-    client.set_settable_address(METRIC_KEY_MODE, int)
+    client = data["client"]
 
-    device = ValloxFan(
-        hass.data[DOMAIN]["name"], client, hass.data[DOMAIN]["coordinator"]
+    device = ValloxFanEntity(
+        data["name"],
+        client,
+        data["coordinator"],
     )
 
     async_add_entities([device])
 
 
-class ValloxFan(CoordinatorEntity, FanEntity):
+class ValloxFanEntity(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
-    coordinator: ValloxDataUpdateCoordinator
+    _attr_has_entity_name = True
+    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
 
     def __init__(
         self,
@@ -93,24 +93,12 @@ class ValloxFan(CoordinatorEntity, FanEntity):
         coordinator: ValloxDataUpdateCoordinator,
     ) -> None:
         """Initialize the fan."""
-        super().__init__(coordinator)
+        super().__init__(name, coordinator)
 
         self._client = client
 
-        self._attr_name = name
-
-        self._attr_unique_id = str(self.coordinator.data.get_uuid())
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_PRESET_MODE
-
-    @property
-    def preset_modes(self) -> list[str]:
-        """Return a list of available preset modes."""
-        # Use the Vallox profile names for the preset names.
-        return list(STR_TO_VALLOX_PROFILE_SETTABLE.keys())
+        self._attr_unique_id = str(self._device_uuid)
+        self._attr_preset_modes = list(PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE)
 
     @property
     def is_on(self) -> bool:
@@ -121,7 +109,18 @@ class ValloxFan(CoordinatorEntity, FanEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_STR_SETTABLE.get(vallox_profile)
+        return VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE.get(vallox_profile)
+
+    @property
+    def percentage(self) -> int | None:
+        """Return the current speed as a percentage."""
+
+        vallox_profile = self.coordinator.data.profile
+        metric_key = PROFILE_TO_SET_FAN_SPEED_METRIC_MAP.get(vallox_profile)
+        if not metric_key:
+            return None
+
+        return _convert_to_int(self.coordinator.data.get_metric(metric_key))
 
     @property
     def extra_state_attributes(self) -> Mapping[str, int | None]:
@@ -129,34 +128,9 @@ class ValloxFan(CoordinatorEntity, FanEntity):
         data = self.coordinator.data
 
         return {
-            attr.description: _convert_fan_speed_value(data.get_metric(attr.metric_key))
+            attr.description: _convert_to_int(data.get_metric(attr.metric_key))
             for attr in EXTRA_STATE_ATTRIBUTES
         }
-
-    async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
-        """
-        Set new preset mode.
-
-        Returns true if the mode has been changed, false otherwise.
-        """
-        try:
-            self._valid_preset_mode_or_raise(preset_mode)  # type: ignore[no-untyped-call]
-
-        except NotValidPresetModeError as err:
-            _LOGGER.error(err)
-            return False
-
-        if preset_mode == self.preset_mode:
-            return False
-
-        try:
-            await self._client.set_profile(STR_TO_VALLOX_PROFILE_SETTABLE[preset_mode])
-
-        except (OSError, ValloxApiException) as err:
-            _LOGGER.error("Error setting preset: %s", err)
-            return False
-
-        return True
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -169,28 +143,21 @@ class ValloxFan(CoordinatorEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        _LOGGER.debug("Turn on")
-
         update_needed = False
 
-        if preset_mode:
-            update_needed = await self._async_set_preset_mode_internal(preset_mode)
-
         if not self.is_on:
-            try:
-                await self._client.set_values({METRIC_KEY_MODE: MODE_ON})
+            update_needed |= await self._async_set_power(True)
 
-            except OSError as err:
-                _LOGGER.error("Error turning on: %s", err)
+        if preset_mode:
+            update_needed |= await self._async_set_preset_mode_internal(preset_mode)
 
-            else:
-                update_needed = True
+        if percentage is not None:
+            update_needed |= await self._async_set_percentage_internal(percentage)
 
         if update_needed:
             # This state change affects other entities like sensors. Force an immediate update that
@@ -202,12 +169,71 @@ class ValloxFan(CoordinatorEntity, FanEntity):
         if not self.is_on:
             return
 
-        try:
-            await self._client.set_values({METRIC_KEY_MODE: MODE_OFF})
+        update_needed = await self._async_set_power(False)
 
-        except OSError as err:
-            _LOGGER.error("Error turning off: %s", err)
+        if update_needed:
+            await self.coordinator.async_request_refresh()
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan, as a percentage."""
+        if percentage == 0:
+            await self.async_turn_off()
             return
 
-        # Same as for turn_on method.
-        await self.coordinator.async_request_refresh()
+        update_needed = await self._async_set_percentage_internal(percentage)
+
+        if update_needed:
+            await self.coordinator.async_request_refresh()
+
+    async def _async_set_power(self, mode: bool) -> bool:
+        try:
+            await self._client.set_values(
+                {METRIC_KEY_MODE: MODE_ON if mode else MODE_OFF}
+            )
+        except ValloxApiException as err:
+            raise HomeAssistantError("Failed to set power mode") from err
+
+        return True
+
+    async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
+        """Set new preset mode.
+
+        Returns true if the mode has been changed, false otherwise.
+        """
+        try:
+            self._valid_preset_mode_or_raise(preset_mode)
+
+        except NotValidPresetModeError as err:
+            raise ValueError(f"Not valid preset mode: {preset_mode}") from err
+
+        if preset_mode == self.preset_mode:
+            return False
+
+        try:
+            profile = PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE[preset_mode]
+            await self._client.set_profile(profile)
+            self.coordinator.data.profile = profile
+
+        except ValloxApiException as err:
+            raise HomeAssistantError(f"Failed to set profile: {preset_mode}") from err
+
+        return True
+
+    async def _async_set_percentage_internal(self, percentage: int) -> bool:
+        """Set fan speed percentage for current profile.
+
+        Returns true if speed has been changed, false otherwise.
+        """
+        vallox_profile = self.coordinator.data.profile
+
+        try:
+            await self._client.set_fan_speed(vallox_profile, percentage)
+        except ValloxInvalidInputException as err:
+            # This can happen if current profile does not support setting the fan speed.
+            raise ValueError(
+                f"{vallox_profile} profile does not support setting the fan speed"
+            ) from err
+        except ValloxApiException as err:
+            raise HomeAssistantError("Failed to set fan speed") from err
+
+        return True

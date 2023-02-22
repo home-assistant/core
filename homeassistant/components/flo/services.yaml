@@ -15,9 +15,9 @@ set_sleep_mode:
       selector:
         select:
           options:
-            - '120'
-            - '1440'
-            - '4320'
+            - "120"
+            - "1440"
+            - "4320"
     revert_to_mode:
       name: Revert to mode
       description: The mode to revert to after sleep_minutes has elapsed.
@@ -25,8 +25,8 @@ set_sleep_mode:
       selector:
         select:
           options:
-            - 'away'
-            - 'home'
+            - "away"
+            - "home"
 set_away_mode:
   name: Set away mode
   description: Set the location into away mode.

@@ -5,10 +5,11 @@ import math
 
 from aioesphomeapi import NumberInfo, NumberMode as EsphomeNumberMode, NumberState
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import (
     EsphomeEntity,
@@ -44,30 +45,31 @@ NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapp
 )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
 
     @property
-    def min_value(self) -> float:
+    def device_class(self) -> NumberDeviceClass | None:
+        """Return the class of this entity."""
+        return try_parse_enum(NumberDeviceClass, self._static_info.device_class)
+
+    @property
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         return super()._static_info.min_value
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         return super()._static_info.max_value
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         """Return the increment/decrement step."""
         return super()._static_info.step
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return super()._static_info.unit_of_measurement
 
@@ -78,8 +80,9 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
             return NUMBER_MODES.from_esphome(self._static_info.mode)
         return NumberMode.AUTO
 
+    @property
     @esphome_state_property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
@@ -87,6 +90,6 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
             return None
         return self._state.state
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self._client.number_command(self._static_info.key, value)

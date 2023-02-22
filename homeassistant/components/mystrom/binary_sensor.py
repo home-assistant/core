@@ -1,19 +1,26 @@
 """Support for the myStrom buttons."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up myStrom Binary Sensor."""
     hass.http.register_view(MyStromView(async_add_entities))
-
-    return True
 
 
 class MyStromView(HomeAssistantView):
@@ -65,6 +72,8 @@ class MyStromView(HomeAssistantView):
 class MyStromBinarySensor(BinarySensorEntity):
     """Representation of a myStrom button."""
 
+    _attr_should_poll = False
+
     def __init__(self, button_id):
         """Initialize the myStrom Binary sensor."""
         self._button_id = button_id
@@ -74,11 +83,6 @@ class MyStromBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._button_id
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def is_on(self):

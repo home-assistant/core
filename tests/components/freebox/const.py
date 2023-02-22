@@ -22,6 +22,7 @@ DATA_SYSTEM_GET_CONFIG = {
     "fans": [{"id": "fan0_speed", "name": "Ventilateur 1", "value": 2130}],
     "sensors": [
         {"id": "temp_hdd", "name": "Disque dur", "value": 40},
+        {"id": "temp_hdd2", "name": "Disque dur 2"},
         {"id": "temp_sw", "name": "Température Switch", "value": 50},
         {"id": "temp_cpum", "name": "Température CPU M", "value": 60},
         {"id": "temp_cpub", "name": "Température CPU B", "value": 56},
@@ -123,7 +124,42 @@ DATA_STORAGE_GET_DISKS = [
                 "path": "L0Rpc3F1ZSBkdXI=",
             }
         ],
-    }
+    },
+    {
+        "idle_duration": 8290,
+        "read_error_requests": 0,
+        "read_requests": 2326826,
+        "spinning": False,
+        "table_type": "gpt",
+        "firmware": "0001",
+        "type": "sata",
+        "idle": True,
+        "connector": 0,
+        "id": 2000,
+        "write_error_requests": 0,
+        "state": "enabled",
+        "write_requests": 122733632,
+        "total_bytes": 2000000000000,
+        "model": "ST2000LM015-2E8174",
+        "active_duration": 0,
+        "temp": 0,
+        "serial": "WDZYJ27Q",
+        "partitions": [
+            {
+                "fstype": "ext4",
+                "total_bytes": 1960000000000,
+                "label": "Disque 2",
+                "id": 2001,
+                "internal": False,
+                "fsck_result": "no_run_yet",
+                "state": "mounted",
+                "disk_id": 2000,
+                "free_bytes": 1880000000000,
+                "used_bytes": 85410000000,
+                "path": "L0Rpc3F1ZSAy",
+            }
+        ],
+    },
 ]
 
 # switch

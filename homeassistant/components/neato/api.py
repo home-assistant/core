@@ -7,6 +7,7 @@ from typing import Any
 import pybotvac
 
 from homeassistant import config_entries, core
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -27,7 +28,7 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
         super().__init__(self.session.token, vendor=pybotvac.Neato())
 
     def refresh_tokens(self) -> str:
-        """Refresh and return new Neato Botvac tokens using Home Assistant OAuth2 session."""
+        """Refresh and return new Neato Botvac tokens."""
         run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self.hass.loop
         ).result()
@@ -35,10 +36,11 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
         return self.session.token["access_token"]  # type: ignore[no-any-return]
 
 
-class NeatoImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class NeatoImplementation(AuthImplementation):
     """Neato implementation of LocalOAuth2Implementation.
 
-    We need this class because we have to add client_secret and scope to the authorization request.
+    We need this class because we have to add client_secret
+    and scope to the authorization request.
     """
 
     @property

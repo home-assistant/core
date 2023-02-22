@@ -1,49 +1,58 @@
-"""
-Provide a mock sensor platform.
+"""Provide a mock sensor platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-import homeassistant.components.sensor as sensor
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES,
+    RestoreSensor,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     FREQUENCY_GIGAHERTZ,
+    LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
+    POWER_VOLT_AMPERE,
+    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     VOLUME_CUBIC_METERS,
+    UnitOfPressure,
 )
 
 from tests.common import MockEntity
 
-DEVICE_CLASSES = list(sensor.DEVICE_CLASSES)
 DEVICE_CLASSES.append("none")
 
 UNITS_OF_MEASUREMENT = {
-    sensor.DEVICE_CLASS_BATTERY: PERCENTAGE,  # % of battery that is left
-    sensor.DEVICE_CLASS_CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
-    sensor.DEVICE_CLASS_CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
-    sensor.DEVICE_CLASS_HUMIDITY: PERCENTAGE,  # % of humidity in the air
-    sensor.DEVICE_CLASS_ILLUMINANCE: "lm",  # current light level (lx/lm)
-    sensor.DEVICE_CLASS_NITROGEN_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen dioxide
-    sensor.DEVICE_CLASS_NITROGEN_MONOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen monoxide
-    sensor.DEVICE_CLASS_NITROUS_OXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen oxide
-    sensor.DEVICE_CLASS_OZONE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of ozone
-    sensor.DEVICE_CLASS_PM1: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM1
-    sensor.DEVICE_CLASS_PM10: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM10
-    sensor.DEVICE_CLASS_PM25: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM2.5
-    sensor.DEVICE_CLASS_SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
-    sensor.DEVICE_CLASS_SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
-    sensor.DEVICE_CLASS_TEMPERATURE: "C",  # temperature (C/F)
-    sensor.DEVICE_CLASS_PRESSURE: PRESSURE_HPA,  # pressure (hPa/mbar)
-    sensor.DEVICE_CLASS_POWER: "kW",  # power (W/kW)
-    sensor.DEVICE_CLASS_CURRENT: "A",  # current (A)
-    sensor.DEVICE_CLASS_ENERGY: "kWh",  # energy (Wh/kWh)
-    sensor.DEVICE_CLASS_FREQUENCY: FREQUENCY_GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
-    sensor.DEVICE_CLASS_POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
-    sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
-    sensor.DEVICE_CLASS_VOLTAGE: "V",  # voltage (V)
-    sensor.DEVICE_CLASS_GAS: VOLUME_CUBIC_METERS,  # gas (m³)
+    SensorDeviceClass.APPARENT_POWER: POWER_VOLT_AMPERE,  # apparent power (VA)
+    SensorDeviceClass.BATTERY: PERCENTAGE,  # % of battery that is left
+    SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
+    SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
+    SensorDeviceClass.HUMIDITY: PERCENTAGE,  # % of humidity in the air
+    SensorDeviceClass.ILLUMINANCE: LIGHT_LUX,  # current light level lx
+    SensorDeviceClass.MOISTURE: PERCENTAGE,  # % of water in a substance
+    SensorDeviceClass.NITROGEN_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen dioxide
+    SensorDeviceClass.NITROGEN_MONOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen monoxide
+    SensorDeviceClass.NITROUS_OXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of nitrogen oxide
+    SensorDeviceClass.OZONE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of ozone
+    SensorDeviceClass.PM1: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM1
+    SensorDeviceClass.PM10: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM10
+    SensorDeviceClass.PM25: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of PM2.5
+    SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
+    SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
+    SensorDeviceClass.TEMPERATURE: "C",  # temperature (C/F)
+    SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,  # pressure (hPa/mbar)
+    SensorDeviceClass.POWER: "kW",  # power (W/kW)
+    SensorDeviceClass.CURRENT: "A",  # current (A)
+    SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)
+    SensorDeviceClass.FREQUENCY: FREQUENCY_GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
+    SensorDeviceClass.POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
+    SensorDeviceClass.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,  # reactive power (var)
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
+    SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
+    SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,  # gas (m³)
 }
 
 ENTITIES = {}
@@ -61,7 +70,7 @@ def init(empty=False):
                 name=f"{device_class} sensor",
                 unique_id=f"unique_{device_class}",
                 device_class=device_class,
-                unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
+                native_unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
             )
             for device_class in DEVICE_CLASSES
         }
@@ -75,7 +84,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockSensor(MockEntity, sensor.SensorEntity):
+class MockSensor(MockEntity, SensorEntity):
     """Mock Sensor class."""
 
     @property
@@ -89,6 +98,11 @@ class MockSensor(MockEntity, sensor.SensorEntity):
         return self._handle("last_reset")
 
     @property
+    def suggested_display_precision(self):
+        """Return the number of digits after the decimal point."""
+        return self._handle("suggested_display_precision")
+
+    @property
     def native_unit_of_measurement(self):
         """Return the native unit_of_measurement of this sensor."""
         return self._handle("native_unit_of_measurement")
@@ -99,6 +113,30 @@ class MockSensor(MockEntity, sensor.SensorEntity):
         return self._handle("native_value")
 
     @property
+    def options(self):
+        """Return the options for this sensor."""
+        return self._handle("options")
+
+    @property
     def state_class(self):
         """Return the state class of this sensor."""
         return self._handle("state_class")
+
+    @property
+    def suggested_unit_of_measurement(self):
+        """Return the state class of this sensor."""
+        return self._handle("suggested_unit_of_measurement")
+
+
+class MockRestoreSensor(MockSensor, RestoreSensor):
+    """Mock RestoreSensor class."""
+
+    async def async_added_to_hass(self) -> None:
+        """Restore native_value and native_unit_of_measurement."""
+        await super().async_added_to_hass()
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is None:
+            return
+        self._values["native_value"] = last_sensor_data.native_value
+        self._values[
+            "native_unit_of_measurement"
+        ] = last_sensor_data.native_unit_of_measurement

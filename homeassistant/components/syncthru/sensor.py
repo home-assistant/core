@@ -1,25 +1,21 @@
 """Support for Samsung Printers with SyncThru web interface."""
 from __future__ import annotations
 
-import logging
-
 from pysyncthru import SyncThru, SyncthruState
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from . import device_identifiers
-from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 COLORS = ["black", "cyan", "magenta", "yellow"]
 DRUM_COLORS = COLORS
@@ -42,39 +38,17 @@ SYNCTHRU_STATE_HUMAN = {
     SyncthruState.ERROR: "error",
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(
-            CONF_NAME, default=DEFAULT_NAME_TEMPLATE.format(DEFAULT_MODEL)
-        ): cv.string,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SyncThru component."""
-    _LOGGER.warning(
-        "Loading syncthru via platform config is deprecated and no longer "
-        "necessary as of 0.113; Please remove it from your configuration YAML"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_URL: config.get(CONF_RESOURCE),
-                CONF_NAME: config.get(CONF_NAME),
-            },
-        )
-    )
-    return True
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up from config entry."""
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator[SyncThru] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     printer: SyncThru = coordinator.data
 
     supp_toner = printer.toner_status(filter_supported=True)
@@ -82,8 +56,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     supp_tray = printer.input_tray_status(filter_supported=True)
     supp_output_tray = printer.output_tray_status()
 
-    name = config_entry.data[CONF_NAME]
-    entities = [SyncThruMainSensor(coordinator, name)]
+    name: str = config_entry.data[CONF_NAME]
+    entities: list[SyncThruSensor] = [
+        SyncThruMainSensor(coordinator, name),
+        SyncThruActiveAlertSensor(coordinator, name),
+    ]
 
     for key in supp_toner:
         entities.append(SyncThruTonerSensor(coordinator, name, key))
@@ -91,22 +68,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(SyncThruDrumSensor(coordinator, name, key))
     for key in supp_tray:
         entities.append(SyncThruInputTraySensor(coordinator, name, key))
-    for key in supp_output_tray:
-        entities.append(SyncThruOutputTraySensor(coordinator, name, key))
+    for int_key in supp_output_tray:
+        entities.append(SyncThruOutputTraySensor(coordinator, name, int_key))
 
     async_add_entities(entities)
 
 
-class SyncThruSensor(CoordinatorEntity, SensorEntity):
+class SyncThruSensor(CoordinatorEntity[DataUpdateCoordinator[SyncThru]], SensorEntity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
-    def __init__(self, coordinator, name):
+    _attr_icon = "mdi:printer"
+
+    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.syncthru: SyncThru = coordinator.data
-        self._name = name
-        self._icon = "mdi:printer"
-        self._unit_of_measurement = None
+        self.syncthru = coordinator.data
+        self._attr_name = name
         self._id_suffix = ""
 
     @property
@@ -114,21 +91,6 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
         """Return unique ID for the sensor."""
         serial = self.syncthru.serial_number()
         return f"{serial}{self._id_suffix}" if serial else None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon of the device."""
-        return self._icon
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measuremnt."""
-        return self._unit_of_measurement
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -141,14 +103,13 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
 
 
 class SyncThruMainSensor(SyncThruSensor):
-    """
-    Implementation of the main sensor, conducting the actual polling.
+    """Implementation of the main sensor, conducting the actual polling.
 
     It also shows the detailed state and presents
     the displayed current status message.
     """
 
-    def __init__(self, coordinator, name):
+    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
         self._id_suffix = "_main"
@@ -174,12 +135,15 @@ class SyncThruMainSensor(SyncThruSensor):
 class SyncThruTonerSensor(SyncThruSensor):
     """Implementation of a Samsung Printer toner sensor platform."""
 
-    def __init__(self, coordinator, name, color):
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, color: str
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
-        self._name = f"{name} Toner {color}"
+        self._attr_name = f"{name} Toner {color}"
         self._color = color
-        self._unit_of_measurement = PERCENTAGE
         self._id_suffix = f"_toner_{color}"
 
     @property
@@ -194,14 +158,17 @@ class SyncThruTonerSensor(SyncThruSensor):
 
 
 class SyncThruDrumSensor(SyncThruSensor):
-    """Implementation of a Samsung Printer toner sensor platform."""
+    """Implementation of a Samsung Printer drum sensor platform."""
 
-    def __init__(self, syncthru, name, color):
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, color: str
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._name = f"{name} Drum {color}"
+        super().__init__(coordinator, name)
+        self._attr_name = f"{name} Drum {color}"
         self._color = color
-        self._unit_of_measurement = PERCENTAGE
         self._id_suffix = f"_drum_{color}"
 
     @property
@@ -218,10 +185,12 @@ class SyncThruDrumSensor(SyncThruSensor):
 class SyncThruInputTraySensor(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
 
-    def __init__(self, syncthru, name, number):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, number: str
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._name = f"{name} Tray {number}"
+        super().__init__(coordinator, name)
+        self._attr_name = f"{name} Tray {number}"
         self._number = number
         self._id_suffix = f"_tray_{number}"
 
@@ -242,12 +211,14 @@ class SyncThruInputTraySensor(SyncThruSensor):
 
 
 class SyncThruOutputTraySensor(SyncThruSensor):
-    """Implementation of a Samsung Printer input tray sensor platform."""
+    """Implementation of a Samsung Printer output tray sensor platform."""
 
-    def __init__(self, syncthru, name, number):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, number: int
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._name = f"{name} Output Tray {number}"
+        super().__init__(coordinator, name)
+        self._attr_name = f"{name} Output Tray {number}"
         self._number = number
         self._id_suffix = f"_output_tray_{number}"
 
@@ -265,3 +236,18 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         if tray_state == "":
             tray_state = "Ready"
         return tray_state
+
+
+class SyncThruActiveAlertSensor(SyncThruSensor):
+    """Implementation of a Samsung Printer active alerts sensor platform."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, name)
+        self._attr_name = f"{name} Active Alerts"
+        self._id_suffix = "_active_alerts"
+
+    @property
+    def native_value(self):
+        """Show number of active alerts."""
+        return self.syncthru.raw().get("GXI_ACTIVE_ALERT_TOTAL")

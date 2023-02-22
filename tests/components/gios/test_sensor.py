@@ -14,7 +14,8 @@ from homeassistant.components.gios.const import (
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as PLATFORM,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -22,23 +23,18 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
+from . import init_integration
+
 from tests.common import async_fire_time_changed, load_fixture
-from tests.components.gios import init_integration
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test states of the sensor."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -48,7 +44,7 @@ async def test_sensor(hass):
     assert state.state == "0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -65,8 +61,8 @@ async def test_sensor(hass):
     assert state.state == "252"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CO
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -82,8 +78,8 @@ async def test_sensor(hass):
     assert state.state == "7"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_NITROGEN_DIOXIDE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.NITROGEN_DIOXIDE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -99,8 +95,8 @@ async def test_sensor(hass):
     assert state.state == "96"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_OZONE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.OZONE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -116,8 +112,8 @@ async def test_sensor(hass):
     assert state.state == "17"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM10
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -133,8 +129,8 @@ async def test_sensor(hass):
     assert state.state == "4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM25
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -150,8 +146,8 @@ async def test_sensor(hass):
     assert state.state == "4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SULPHUR_DIOXIDE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SULPHUR_DIOXIDE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -167,7 +163,6 @@ async def test_sensor(hass):
     assert state.state == "dobry"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AQI
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
@@ -176,7 +171,7 @@ async def test_sensor(hass):
     assert entry.unique_id == "123-aqi"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
@@ -218,7 +213,7 @@ async def test_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_invalid_indexes(hass):
+async def test_invalid_indexes(hass: HomeAssistant) -> None:
     """Test states of the sensor when API returns invalid indexes."""
     await init_integration(hass, invalid_indexes=True)
     registry = er.async_get(hass)
@@ -228,7 +223,7 @@ async def test_invalid_indexes(hass):
     assert state.state == "0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -245,7 +240,7 @@ async def test_invalid_indexes(hass):
     assert state.state == "252"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -261,7 +256,7 @@ async def test_invalid_indexes(hass):
     assert state.state == "7"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -277,7 +272,7 @@ async def test_invalid_indexes(hass):
     assert state.state == "96"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -293,7 +288,7 @@ async def test_invalid_indexes(hass):
     assert state.state == "17"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -309,7 +304,7 @@ async def test_invalid_indexes(hass):
     assert state.state == "4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -325,7 +320,7 @@ async def test_invalid_indexes(hass):
     assert state.state == "4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_STATION) == "Test Name 1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -340,7 +335,7 @@ async def test_invalid_indexes(hass):
     assert state is None
 
 
-async def test_aqi_sensor_availability(hass):
+async def test_aqi_sensor_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the AQI sensor unavailable correctly when indexes are invalid."""
     await init_integration(hass)
 
@@ -365,7 +360,7 @@ async def test_aqi_sensor_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_unique_id_migration(hass):
+async def test_unique_id_migration(hass: HomeAssistant) -> None:
     """Test states of the unique_id migration."""
     registry = er.async_get(hass)
 

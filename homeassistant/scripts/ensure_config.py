@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 def run(args):
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(
-        description=("Ensure a Home Assistant config exists, creates one if necessary.")
+        description="Ensure a Home Assistant config exists, creates one if necessary."
     )
     parser.add_argument(
         "-c",
@@ -30,7 +30,7 @@ def run(args):
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         print("Creating directory", config_dir)
-        os.makedirs(config_dir)
+        os.makedirs(config_dir, exist_ok=True)
 
     config_path = asyncio.run(async_run(config_dir))
     print("Configuration file:", config_path)

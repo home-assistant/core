@@ -1,4 +1,6 @@
 """Support for the NOAA Tides and Currents API."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 
@@ -7,20 +9,18 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_NAME,
-    CONF_TIME_ZONE,
-    CONF_UNIT_SYSTEM,
-)
+from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_STATION_ID = "station_id"
 
-DEFAULT_ATTRIBUTION = "Data provided by NOAA"
 DEFAULT_NAME = "NOAA Tides"
 DEFAULT_TIMEZONE = "lst_ldt"
 
@@ -39,7 +39,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NOAA Tides and Currents sensor."""
     station_id = config[CONF_STATION_ID]
     name = config.get(CONF_NAME)
@@ -47,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if CONF_UNIT_SYSTEM in config:
         unit_system = config[CONF_UNIT_SYSTEM]
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         unit_system = UNIT_SYSTEMS[1]
     else:
         unit_system = UNIT_SYSTEMS[0]
@@ -74,6 +79,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NOAATidesAndCurrentsSensor(SensorEntity):
     """Representation of a NOAA Tides and Currents sensor."""
 
+    _attr_attribution = "Data provided by NOAA"
+
     def __init__(self, name, station_id, timezone, unit_system, station):
         """Initialize the sensor."""
         self._name = name
@@ -91,7 +98,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of this device."""
-        attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        attr = {}
         if self.data is None:
             return attr
         if self.data["hi_lo"][1] == "H":
@@ -120,7 +127,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
             return f"Low tide at {tidetime}"
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
         begin = datetime.now()
         delta = timedelta(days=2)

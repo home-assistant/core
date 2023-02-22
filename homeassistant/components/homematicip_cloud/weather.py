@@ -22,8 +22,9 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -48,7 +49,9 @@ HOME_WEATHER_CONDITION = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -61,12 +64,14 @@ async def async_setup_entry(
 
     entities.append(HomematicipHomeWeather(hap))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
     """Representation of the HomematicIP weather sensor plus & basic."""
+
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
@@ -78,14 +83,9 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
         return self._device.label
 
     @property
-    def temperature(self) -> float:
+    def native_temperature(self) -> float:
         """Return the platform temperature."""
         return self._device.actualTemperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def humidity(self) -> int:
@@ -93,7 +93,7 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
         return self._device.humidity
 
     @property
-    def wind_speed(self) -> float:
+    def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self._device.windSpeed
 
@@ -126,6 +126,9 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
 class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     """Representation of the HomematicIP home weather."""
 
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the home weather."""
         hap.home.modelType = "HmIP-Home-Weather"
@@ -142,14 +145,9 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
         return f"Weather {self._home.location.city}"
 
     @property
-    def temperature(self) -> float:
+    def native_temperature(self) -> float:
         """Return the temperature."""
         return self._device.weather.temperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def humidity(self) -> int:
@@ -157,7 +155,7 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
         return self._device.weather.humidity
 
     @property
-    def wind_speed(self) -> float:
+    def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return round(self._device.weather.windSpeed, 1)
 

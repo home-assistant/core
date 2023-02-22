@@ -23,6 +23,7 @@
       }
     },
     "error": {
+      "linking_not_possible": "Couldn't link with the gateway",
       "no_key": "Couldn't get an API key"
     },
     "abort": {
@@ -30,7 +31,6 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "no_bridges": "No deCONZ bridges discovered",
       "no_hardware_available": "No radio hardware connected to deCONZ",
-      "not_deconz_bridge": "Not a deCONZ bridge",
       "updated_instance": "Updated deCONZ instance with new host address"
     }
   },
@@ -49,14 +49,14 @@
   },
   "device_automation": {
     "trigger_type": {
-      "remote_button_short_press": "\"{subtype}\" button pressed",
-      "remote_button_short_release": "\"{subtype}\" button released",
-      "remote_button_long_press": "\"{subtype}\" button continuously pressed",
-      "remote_button_long_release": "\"{subtype}\" button released after long press",
-      "remote_button_double_press": "\"{subtype}\" button double clicked",
-      "remote_button_triple_press": "\"{subtype}\" button triple clicked",
-      "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
-      "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
+      "remote_button_short_press": "\"{subtype}\" pressed",
+      "remote_button_short_release": "\"{subtype}\" released",
+      "remote_button_long_press": "\"{subtype}\" continuously pressed",
+      "remote_button_long_release": "\"{subtype}\" released after long press",
+      "remote_button_double_press": "\"{subtype}\" double clicked",
+      "remote_button_triple_press": "\"{subtype}\" triple clicked",
+      "remote_button_quadruple_press": "\"{subtype}\" quadruple clicked",
+      "remote_button_quintuple_press": "\"{subtype}\" quintuple clicked",
       "remote_button_rotated": "Button rotated \"{subtype}\"",
       "remote_button_rotated_fast": "Button rotated fast \"{subtype}\"",
       "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",

@@ -1,6 +1,7 @@
 """Config flow for Wallbox integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -47,9 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
         """Start the Wallbox config flow."""
         self._reauth_entry: config_entries.ConfigEntry | None = None
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

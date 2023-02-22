@@ -1,12 +1,13 @@
 """Test the condition helper."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_CONDITION,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import (
     condition,
@@ -27,8 +29,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
-
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -42,13 +43,8 @@ def setup_comp(hass):
     """Initialize components."""
     hass.config.set_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(
-        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
     )
-
-
-def teardown():
-    """Restore."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
 
 def assert_element(trace_element, expected_element, path):
@@ -91,7 +87,7 @@ def assert_condition_trace(expected):
             assert_element(condition_trace[key][index], element, path)
 
 
-async def test_invalid_condition(hass):
+async def test_invalid_condition(hass: HomeAssistant) -> None:
     """Test if invalid condition raises."""
     with pytest.raises(HomeAssistantError):
         await condition.async_from_config(
@@ -109,7 +105,7 @@ async def test_invalid_condition(hass):
         )
 
 
-async def test_and_condition(hass):
+async def test_and_condition(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "alias": "And Condition",
@@ -182,7 +178,7 @@ async def test_and_condition(hass):
     )
 
 
-async def test_and_condition_raises(hass):
+async def test_and_condition_raises(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "alias": "And Condition",
@@ -255,7 +251,7 @@ async def test_and_condition_raises(hass):
     )
 
 
-async def test_and_condition_with_template(hass):
+async def test_and_condition_with_template(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "condition": "and",
@@ -294,7 +290,102 @@ async def test_and_condition_with_template(hass):
     assert test(hass)
 
 
-async def test_or_condition(hass):
+async def test_and_condition_shorthand(hass: HomeAssistant) -> None:
+    """Test the 'and' condition shorthand."""
+    config = {
+        "alias": "And Condition Shorthand",
+        "and": [
+            {
+                "alias": "Template Condition",
+                "condition": "template",
+                "value_template": '{{ states.sensor.temperature.state == "100" }}',
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "And Condition Shorthand"
+    assert "and" not in config.keys()
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [
+                {"result": {"entities": ["sensor.temperature"], "result": False}}
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+
+async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
+    """Test the 'and' condition list shorthand."""
+    config = {
+        "alias": "And Condition List Shorthand",
+        "condition": [
+            {
+                "alias": "Template Condition",
+                "condition": "template",
+                "value_template": '{{ states.sensor.temperature.state == "100" }}',
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "And Condition List Shorthand"
+    assert "and" not in config.keys()
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [
+                {"result": {"entities": ["sensor.temperature"], "result": False}}
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+
+async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> None:
+    """Test the 'and' condition list shorthand syntax check."""
+    config = {
+        "alias": "Bad shorthand syntax",
+        "condition": ["bad", "syntax"],
+    }
+
+    with pytest.raises(vol.MultipleInvalid):
+        cv.CONDITION_SCHEMA(config)
+
+
+async def test_or_condition(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "alias": "Or Condition",
@@ -377,7 +468,7 @@ async def test_or_condition(hass):
     )
 
 
-async def test_or_condition_raises(hass):
+async def test_or_condition_raises(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "alias": "Or Condition",
@@ -450,7 +541,7 @@ async def test_or_condition_raises(hass):
     )
 
 
-async def test_or_condition_with_template(hass):
+async def test_or_condition_with_template(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "condition": "or",
@@ -477,7 +568,37 @@ async def test_or_condition_with_template(hass):
     assert test(hass)
 
 
-async def test_not_condition(hass):
+async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
+    """Test the 'or' condition shorthand."""
+    config = {
+        "alias": "Or Condition Shorthand",
+        "or": [
+            {'{{ states.sensor.temperature.state == "100" }}'},
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "Or Condition Shorthand"
+    assert "or" not in config.keys()
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+
+
+async def test_not_condition(hass: HomeAssistant) -> None:
     """Test the 'not' condition."""
     config = {
         "alias": "Not Condition",
@@ -576,7 +697,7 @@ async def test_not_condition(hass):
     )
 
 
-async def test_not_condition_raises(hass):
+async def test_not_condition_raises(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "alias": "Not Condition",
@@ -643,7 +764,7 @@ async def test_not_condition_raises(hass):
     )
 
 
-async def test_not_condition_with_template(hass):
+async def test_not_condition_with_template(hass: HomeAssistant) -> None:
     """Test the 'or' condition."""
     config = {
         "condition": "not",
@@ -676,7 +797,43 @@ async def test_not_condition_with_template(hass):
     assert not test(hass)
 
 
-async def test_time_window(hass):
+async def test_not_condition_shorthand(hass: HomeAssistant) -> None:
+    """Test the 'or' condition shorthand."""
+    config = {
+        "alias": "Not Condition Shorthand",
+        "not": [
+            {
+                "condition": "template",
+                "value_template": '{{ states.sensor.temperature.state == "100" }}',
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 50,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    assert config["alias"] == "Not Condition Shorthand"
+    assert "not" not in config.keys()
+
+    hass.states.async_set("sensor.temperature", 101)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 50)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 49)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert not test(hass)
+
+
+async def test_time_window(hass: HomeAssistant) -> None:
     """Test time condition windows."""
     sixam = "06:00:00"
     sixpm = "18:00:00"
@@ -729,7 +886,7 @@ async def test_time_window(hass):
         assert test2(hass)
 
 
-async def test_time_using_input_datetime(hass):
+async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
     """Test time conditions using input_datetime entities."""
     await async_setup_component(
         hass,
@@ -849,17 +1006,17 @@ async def test_time_using_input_datetime(hass):
         condition.time(hass, before="input_datetime.not_existing")
 
 
-async def test_time_using_sensor(hass):
+async def test_time_using_sensor(hass: HomeAssistant) -> None:
     """Test time conditions using sensor entities."""
     hass.states.async_set(
         "sensor.am",
         "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.pm",
         "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.no_device_class",
@@ -868,7 +1025,7 @@ async def test_time_using_sensor(hass):
     hass.states.async_set(
         "sensor.invalid_timestamp",
         "This is not a timestamp",
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
 
     with patch(
@@ -933,7 +1090,7 @@ async def test_time_using_sensor(hass):
         condition.time(hass, before="sensor.not_existing")
 
 
-async def test_state_raises(hass):
+async def test_state_raises(hass: HomeAssistant) -> None:
     """Test that state raises ConditionError on errors."""
     # No entity
     with pytest.raises(ConditionError, match="no entity"):
@@ -968,7 +1125,82 @@ async def test_state_raises(hass):
         test(hass)
 
 
-async def test_state_unknown_attribute(hass):
+async def test_state_for(hass: HomeAssistant) -> None:
+    """Test state with duration."""
+    config = {
+        "condition": "and",
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": ["sensor.temperature"],
+                "state": "100",
+                "for": {"seconds": 5},
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert not test(hass)
+
+    now = dt_util.utcnow() + timedelta(seconds=5)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        assert test(hass)
+
+
+async def test_state_for_template(hass: HomeAssistant) -> None:
+    """Test state with templated duration."""
+    config = {
+        "condition": "and",
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": ["sensor.temperature"],
+                "state": "100",
+                "for": {"seconds": "{{ states('input_number.test')|int }}"},
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 100)
+    hass.states.async_set("input_number.test", 5)
+    assert not test(hass)
+
+    now = dt_util.utcnow() + timedelta(seconds=5)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        assert test(hass)
+
+
+@pytest.mark.parametrize("for_template", [{"{{invalid}}": 5}, {"hours": "{{ 1/0 }}"}])
+async def test_state_for_invalid_template(hass: HomeAssistant, for_template) -> None:
+    """Test state with invalid templated duration."""
+    config = {
+        "condition": "and",
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": ["sensor.temperature"],
+                "state": "100",
+                "for": for_template,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 100)
+    hass.states.async_set("input_number.test", 5)
+    with pytest.raises(ConditionError):
+        assert not test(hass)
+
+
+async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that state returns False on unknown attribute."""
     # Unknown attribute
     config = {
@@ -990,7 +1222,9 @@ async def test_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'model' of entity sensor.door does not exist",
+                        "message": (
+                            "attribute 'model' of entity sensor.door does not exist"
+                        ),
                     }
                 }
             ],
@@ -998,7 +1232,7 @@ async def test_state_unknown_attribute(hass):
     )
 
 
-async def test_state_multiple_entities(hass):
+async def test_state_multiple_entities(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1027,7 +1261,41 @@ async def test_state_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_multiple_states(hass):
+async def test_state_multiple_entities_match_any(hass: HomeAssistant) -> None:
+    """Test with multiple entities in condition with match any."""
+    config = {
+        "condition": "and",
+        "conditions": [
+            {
+                "condition": "state",
+                "entity_id": ["sensor.temperature_1", "sensor.temperature_2"],
+                "match": "any",
+                "state": "100",
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 100)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 101)
+    hass.states.async_set("sensor.temperature_2", 100)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 100)
+    hass.states.async_set("sensor.temperature_2", 101)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature_1", 101)
+    hass.states.async_set("sensor.temperature_2", 101)
+    assert not test(hass)
+
+
+async def test_multiple_states(hass: HomeAssistant) -> None:
     """Test with multiple states in condition."""
     config = {
         "condition": "and",
@@ -1054,7 +1322,7 @@ async def test_multiple_states(hass):
     assert not test(hass)
 
 
-async def test_state_attribute(hass):
+async def test_state_attribute(hass: HomeAssistant) -> None:
     """Test with state attribute in condition."""
     config = {
         "condition": "and",
@@ -1087,7 +1355,7 @@ async def test_state_attribute(hass):
     assert not test(hass)
 
 
-async def test_state_attribute_boolean(hass):
+async def test_state_attribute_boolean(hass: HomeAssistant) -> None:
     """Test with boolean state attribute in condition."""
     config = {
         "condition": "state",
@@ -1112,7 +1380,7 @@ async def test_state_attribute_boolean(hass):
     assert test(hass)
 
 
-async def test_state_entity_registry_id(hass):
+async def test_state_entity_registry_id(hass: HomeAssistant) -> None:
     """Test with entity specified by entity registry id."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -1135,7 +1403,7 @@ async def test_state_entity_registry_id(hass):
     assert not test(hass)
 
 
-async def test_state_using_input_entities(hass):
+async def test_state_using_input_entities(hass: HomeAssistant) -> None:
     """Test state conditions using input_* entities."""
     await async_setup_component(
         hass,
@@ -1216,7 +1484,7 @@ async def test_state_using_input_entities(hass):
     assert test(hass)
 
 
-async def test_numeric_state_known_non_matching(hass):
+async def test_numeric_state_known_non_matching(hass: HomeAssistant) -> None:
     """Test that numeric_state doesn't match on known non-matching states."""
     hass.states.async_set("sensor.temperature", "unavailable")
     config = {
@@ -1238,7 +1506,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unavailable' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unavailable' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1256,7 +1526,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unknown' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unknown' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1264,7 +1536,7 @@ async def test_numeric_state_known_non_matching(hass):
     )
 
 
-async def test_numeric_state_raises(hass):
+async def test_numeric_state_raises(hass: HomeAssistant) -> None:
     """Test that numeric_state raises ConditionError on errors."""
     # Unknown entities
     config = {
@@ -1354,7 +1626,7 @@ async def test_numeric_state_raises(hass):
         test(hass)
 
 
-async def test_numeric_state_unknown_attribute(hass):
+async def test_numeric_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that numeric_state returns False on unknown attribute."""
     # Unknown attribute
     config = {
@@ -1376,7 +1648,10 @@ async def test_numeric_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'temperature' of entity sensor.temperature does not exist",
+                        "message": (
+                            "attribute 'temperature' of entity sensor.temperature does"
+                            " not exist"
+                        ),
                     }
                 }
             ],
@@ -1384,7 +1659,7 @@ async def test_numeric_state_unknown_attribute(hass):
     )
 
 
-async def test_numeric_state_multiple_entities(hass):
+async def test_numeric_state_multiple_entities(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1414,7 +1689,7 @@ async def test_numeric_state_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_numeric_state_attribute(hass):
+async def test_numeric_state_attribute(hass: HomeAssistant) -> None:
     """Test with numeric state attribute in condition."""
     config = {
         "condition": "and",
@@ -1447,7 +1722,7 @@ async def test_numeric_state_attribute(hass):
     assert not test(hass)
 
 
-async def test_numeric_state_entity_registry_id(hass):
+async def test_numeric_state_entity_registry_id(hass: HomeAssistant) -> None:
     """Test with entity specified by entity registry id."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -1470,7 +1745,7 @@ async def test_numeric_state_entity_registry_id(hass):
     assert not test(hass)
 
 
-async def test_numeric_state_using_input_number(hass):
+async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
     """Test numeric_state conditions using input_number entities."""
     hass.states.async_set("number.low", 10)
     await async_setup_component(
@@ -1540,7 +1815,7 @@ async def test_numeric_state_using_input_number(hass):
         )
 
 
-async def test_zone_raises(hass):
+async def test_zone_raises(hass: HomeAssistant) -> None:
     """Test that zone raises ConditionError on errors."""
     config = {
         "condition": "zone",
@@ -1626,7 +1901,7 @@ async def test_zone_raises(hass):
     assert test(hass)
 
 
-async def test_zone_multiple_entities(hass):
+async def test_zone_multiple_entities(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1686,7 +1961,7 @@ async def test_zone_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_multiple_zones(hass):
+async def test_multiple_zones(hass: HomeAssistant) -> None:
     """Test with multiple entities in condition."""
     config = {
         "condition": "and",
@@ -1735,7 +2010,7 @@ async def test_multiple_zones(hass):
     assert not test(hass)
 
 
-async def test_extract_entities():
+async def test_extract_entities() -> None:
     """Test extracting entities."""
     assert condition.async_extract_entities(
         {
@@ -1808,59 +2083,56 @@ async def test_extract_entities():
     }
 
 
-async def test_extract_devices():
+async def test_extract_devices() -> None:
     """Test extracting devices."""
-    assert (
-        condition.async_extract_devices(
-            {
-                "condition": "and",
-                "conditions": [
-                    {"condition": "device", "device_id": "abcd", "domain": "light"},
-                    {"condition": "device", "device_id": "qwer", "domain": "switch"},
-                    {
-                        "condition": "state",
-                        "entity_id": "sensor.not_a_device",
-                        "state": "100",
-                    },
-                    {
-                        "condition": "not",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_not",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_not",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    {
-                        "condition": "or",
-                        "conditions": [
-                            {
-                                "condition": "device",
-                                "device_id": "abcd_or",
-                                "domain": "light",
-                            },
-                            {
-                                "condition": "device",
-                                "device_id": "qwer_or",
-                                "domain": "switch",
-                            },
-                        ],
-                    },
-                    Template("{{ is_state('light.example', 'on') }}"),
-                ],
-            }
-        )
-        == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
-    )
+    assert condition.async_extract_devices(
+        {
+            "condition": "and",
+            "conditions": [
+                {"condition": "device", "device_id": "abcd", "domain": "light"},
+                {"condition": "device", "device_id": "qwer", "domain": "switch"},
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.not_a_device",
+                    "state": "100",
+                },
+                {
+                    "condition": "not",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_not",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_not",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_or",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_or",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                Template("{{ is_state('light.example', 'on') }}"),
+            ],
+        }
+    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}
 
 
-async def test_condition_template_error(hass):
+async def test_condition_template_error(hass: HomeAssistant) -> None:
     """Test invalid template."""
     config = {"condition": "template", "value_template": "{{ undefined.state }}"}
     config = cv.CONDITION_SCHEMA(config)
@@ -1871,7 +2143,7 @@ async def test_condition_template_error(hass):
         test(hass)
 
 
-async def test_condition_template_invalid_results(hass):
+async def test_condition_template_invalid_results(hass: HomeAssistant) -> None:
     """Test template condition render false with invalid results."""
     config = {"condition": "template", "value_template": "{{ 'string' }}"}
     config = cv.CONDITION_SCHEMA(config)
@@ -1944,9 +2216,10 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
     assert condition_trace == expected
 
 
-async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+async def test_if_action_before_sunrise_no_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was before sunrise.
 
     Before sunrise is true from midnight until sunset, local time.
     """
@@ -2014,9 +2287,10 @@ async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+async def test_if_action_after_sunrise_no_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was after sunrise.
 
     After sunrise is true from sunrise until midnight, local time.
     """
@@ -2084,9 +2358,10 @@ async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise with offset.
+async def test_if_action_before_sunrise_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was before sunrise with offset.
 
     Before sunrise is true from midnight until sunset, local time.
     """
@@ -2206,9 +2481,10 @@ async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls)
     )
 
 
-async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunset with offset.
+async def test_if_action_before_sunset_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was before sunset with offset.
 
     Before sunset is true from midnight until sunset, local time.
     """
@@ -2328,9 +2604,10 @@ async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise with offset.
+async def test_if_action_after_sunrise_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was after sunrise with offset.
 
     After sunrise is true from sunrise until midnight, local time.
     """
@@ -2474,9 +2751,10 @@ async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunset with offset.
+async def test_if_action_after_sunset_with_offset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was after sunset with offset.
 
     After sunset is true from sunset until midnight, local time.
     """
@@ -2548,9 +2826,10 @@ async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_before_and_after_during(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunset and before sunrise.
+async def test_if_action_after_and_before_during(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was after sunrise and before sunset.
 
     This is true from sunrise until sunset.
     """
@@ -2650,17 +2929,140 @@ async def test_if_action_before_and_after_during(hass, hass_ws_client, calls):
     )
 
 
-async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
+async def test_if_action_before_or_after_during(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was before sunrise or after sunset.
+
+    This is true from midnight until sunrise and from sunset until midnight
     """
-    Test if action was before sunrise.
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "sun",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "sun",
+                    "before": SUN_EVENT_SUNRISE,
+                    "after": SUN_EVENT_SUNSET,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # sunrise: 2015-09-16 06:33:18 local, sunset: 2015-09-16 18:53:45 local
+    # sunrise: 2015-09-16 13:33:18 UTC,   sunset: 2015-09-17 01:53:45 UTC
+    # now = sunrise - 1s -> 'before sunrise' | 'after sunset' true
+    now = datetime(2015, 9, 16, 13, 33, 17, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": True,
+            "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
+
+    # now = sunset + 1s -> 'before sunrise' | 'after sunset' true
+    now = datetime(2015, 9, 17, 1, 53, 46, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": True,
+            "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
+
+    # now = sunrise + 1s -> 'before sunrise' | 'after sunset' false
+    now = datetime(2015, 9, 16, 13, 33, 19, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": False,
+            "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
+
+    # now = sunset - 1s -> 'before sunrise' | 'after sunset' false
+    now = datetime(2015, 9, 17, 1, 53, 44, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 2
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": False,
+            "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
+
+    # now = midnight + 1s local  -> 'before sunrise' | 'after sunset' true
+    now = datetime(2015, 9, 16, 7, 0, 1, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 3
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": True,
+            "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
+
+    # now = midnight - 1s local  -> 'before sunrise' | 'after sunset' true
+    now = datetime(2015, 9, 17, 6, 59, 59, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 4
+    await assert_automation_condition_trace(
+        hass_ws_client,
+        "sun",
+        {
+            "result": True,
+            "wanted_time_after": "2015-09-17T01:53:44.723614+00:00",
+            "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
+        },
+    )
+
+
+async def test_if_action_before_sunrise_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was before sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
     at 7 AM and sunset at 3AM during summer
     After sunrise is true from sunrise until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2727,17 +3129,17 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
     )
 
 
-async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+async def test_if_action_after_sunrise_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was after sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
     at 7 AM and sunset at 3AM during summer
     Before sunrise is true from midnight until sunrise, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2804,17 +3206,17 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
     )
 
 
-async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+async def test_if_action_before_sunset_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was before sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
     at 7 AM and sunset at 3AM during summer
     Before sunset is true from midnight until sunset, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2881,17 +3283,17 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
     )
 
 
-async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+async def test_if_action_after_sunset_no_offset_kotzebue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, calls
+) -> None:
+    """Test if action was after sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
     at 7 AM and sunset at 3AM during summer
     After sunset is true from sunset until midnight, local time.
     """
-    tz = dt_util.get_time_zone("America/Anchorage")
-    dt_util.set_default_time_zone(tz)
+    hass.config.set_time_zone("America/Anchorage")
     hass.config.latitude = 66.5
     hass.config.longitude = 162.4
     await async_setup_component(
@@ -2958,7 +3360,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
     )
 
 
-async def test_trigger(hass):
+async def test_trigger(hass: HomeAssistant) -> None:
     """Test trigger condition."""
     config = {"alias": "Trigger Cond", "condition": "trigger", "id": "123456"}
     config = cv.CONDITION_SCHEMA(config)
@@ -2972,14 +3374,162 @@ async def test_trigger(hass):
     assert test(hass, {"trigger": {"id": "123456"}})
 
 
-async def test_platform_async_validate_condition_config(hass):
+async def test_platform_async_validate_condition_config(hass: HomeAssistant) -> None:
     """Test platform.async_validate_condition_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
-    platform = AsyncMock()
     with patch(
-        "homeassistant.helpers.condition.async_get_device_automation_platform",
-        return_value=platform,
-    ):
-        platform.async_validate_condition_config.return_value = config
+        "homeassistant.components.device_automation.condition.async_validate_condition_config",
+        AsyncMock(),
+    ) as device_automation_validate_condition_mock:
         await condition.async_validate_condition_config(hass, config)
-        platform.async_validate_condition_config.assert_awaited()
+        device_automation_validate_condition_mock.assert_awaited()
+
+
+async def test_disabled_condition(hass: HomeAssistant) -> None:
+    """Test a disabled condition returns none."""
+    config = {
+        "enabled": False,
+        "condition": "state",
+        "entity_id": "binary_sensor.test",
+        "state": "on",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("binary_sensor.test", "on")
+    assert test(hass) is None
+
+    # Still passses, condition is not enabled
+    hass.states.async_set("binary_sensor.test", "off")
+    assert test(hass) is None
+
+
+async def test_and_condition_with_disabled_condition(hass: HomeAssistant) -> None:
+    """Test the 'and' condition with one of the conditions disabled."""
+    config = {
+        "alias": "And Condition",
+        "condition": "and",
+        "conditions": [
+            {
+                "enabled": False,
+                "condition": "state",
+                "entity_id": "sensor.temperature",
+                "state": "100",
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "wanted_state_below": 110.0,
+                        "state": 120.0,
+                    }
+                }
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 105.0}}],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
+        }
+    )
+
+
+async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None:
+    """Test the 'or' condition with one of the conditions disabled."""
+    config = {
+        "alias": "Or Condition",
+        "condition": "or",
+        "conditions": [
+            {
+                "enabled": False,
+                "condition": "state",
+                "entity_id": "sensor.temperature",
+                "state": "100",
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 120.0,
+                        "wanted_state_below": 110.0,
+                    }
+                }
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 105.0}}],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
+        }
+    )

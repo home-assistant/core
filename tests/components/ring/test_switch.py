@@ -1,5 +1,8 @@
 """The tests for the Ring switch platform."""
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+import requests_mock
+
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
@@ -7,9 +10,11 @@ from .common import setup_platform
 from tests.common import load_fixture
 
 
-async def test_entity_registry(hass, requests_mock):
+async def test_entity_registry(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, SWITCH_DOMAIN)
+    await setup_platform(hass, Platform.SWITCH)
     entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("switch.front_siren")
@@ -19,18 +24,22 @@ async def test_entity_registry(hass, requests_mock):
     assert entry.unique_id == "345678-siren"
 
 
-async def test_siren_off_reports_correctly(hass, requests_mock):
+async def test_siren_off_reports_correctly(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests that the initial state of a device that should be off is correct."""
-    await setup_platform(hass, SWITCH_DOMAIN)
+    await setup_platform(hass, Platform.SWITCH)
 
     state = hass.states.get("switch.front_siren")
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "Front siren"
 
 
-async def test_siren_on_reports_correctly(hass, requests_mock):
+async def test_siren_on_reports_correctly(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests that the initial state of a device that should be on is correct."""
-    await setup_platform(hass, SWITCH_DOMAIN)
+    await setup_platform(hass, Platform.SWITCH)
 
     state = hass.states.get("switch.internal_siren")
     assert state.state == "on"
@@ -38,9 +47,11 @@ async def test_siren_on_reports_correctly(hass, requests_mock):
     assert state.attributes.get("icon") == "mdi:alarm-bell"
 
 
-async def test_siren_can_be_turned_on(hass, requests_mock):
+async def test_siren_can_be_turned_on(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests the siren turns on correctly."""
-    await setup_platform(hass, SWITCH_DOMAIN)
+    await setup_platform(hass, Platform.SWITCH)
 
     # Mocks the response for turning a siren on
     requests_mock.put(
@@ -60,9 +71,11 @@ async def test_siren_can_be_turned_on(hass, requests_mock):
     assert state.state == "on"
 
 
-async def test_updates_work(hass, requests_mock):
+async def test_updates_work(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests the update service works correctly."""
-    await setup_platform(hass, SWITCH_DOMAIN)
+    await setup_platform(hass, Platform.SWITCH)
     state = hass.states.get("switch.front_siren")
     assert state.state == "off"
     # Changes the return to indicate that the siren is now on.

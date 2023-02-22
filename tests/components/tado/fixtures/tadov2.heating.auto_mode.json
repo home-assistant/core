@@ -7,8 +7,8 @@
     "type": "HEATING",
     "power": "ON",
     "temperature": {
-      "celsius": 20.00,
-      "fahrenheit": 68.00
+      "celsius": 20.0,
+      "fahrenheit": 68.0
     }
   },
   "overlayType": null,
@@ -20,8 +20,8 @@
       "type": "HEATING",
       "power": "ON",
       "temperature": {
-        "celsius": 21.00,
-        "fahrenheit": 69.80
+        "celsius": 21.0,
+        "fahrenheit": 69.8
       }
     }
   },
@@ -34,7 +34,7 @@
   "activityDataPoints": {
     "heatingPower": {
       "type": "PERCENTAGE",
-      "percentage": 0.00,
+      "percentage": 0.0,
       "timestamp": "2020-03-10T07:47:45.978Z"
     }
   },
@@ -51,7 +51,7 @@
     },
     "humidity": {
       "type": "PERCENTAGE",
-      "percentage": 45.20,
+      "percentage": 45.2,
       "timestamp": "2020-03-10T07:44:11.947Z"
     }
   }

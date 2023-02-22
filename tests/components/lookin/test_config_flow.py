@@ -10,11 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.lookin.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -28,7 +24,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_manual_setup(hass: HomeAssistant):
+async def test_manual_setup(hass: HomeAssistant) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -45,13 +41,13 @@ async def test_manual_setup(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS}
     assert result["title"] == DEFAULT_ENTRY_TITLE
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_setup_already_exists(hass: HomeAssistant):
+async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     """Test manually setting up and the device already exists."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=DEVICE_ID
@@ -70,11 +66,11 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_manual_setup_device_offline(hass: HomeAssistant):
+async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     """Test manually setting up, device offline."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -93,7 +89,7 @@ async def test_manual_setup_device_offline(hass: HomeAssistant):
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_manual_setup_unknown_exception(hass: HomeAssistant):
+async def test_manual_setup_unknown_exception(hass: HomeAssistant) -> None:
     """Test manually setting up, unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -112,7 +108,7 @@ async def test_manual_setup_unknown_exception(hass: HomeAssistant):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_discovered_zeroconf(hass):
+async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup when discovered from zeroconf."""
 
     with _patch_get_info():
@@ -123,7 +119,7 @@ async def test_discovered_zeroconf(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_get_info(), patch(
@@ -132,7 +128,7 @@ async def test_discovered_zeroconf(hass):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_HOST: IP_ADDRESS}
     assert result2["title"] == DEFAULT_ENTRY_TITLE
     assert mock_async_setup_entry.called
@@ -151,12 +147,12 @@ async def test_discovered_zeroconf(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "127.0.0.2"
 
 
-async def test_discovered_zeroconf_cannot_connect(hass):
+async def test_discovered_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     """Test we abort if we cannot connect when discovered from zeroconf."""
 
     with _patch_get_info(exception=NoUsableService):
@@ -167,11 +163,11 @@ async def test_discovered_zeroconf_cannot_connect(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovered_zeroconf_unknown_exception(hass):
+async def test_discovered_zeroconf_unknown_exception(hass: HomeAssistant) -> None:
     """Test we abort if we get an unknown exception when discovered from zeroconf."""
 
     with _patch_get_info(exception=Exception):
@@ -182,5 +178,5 @@ async def test_discovered_zeroconf_unknown_exception(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"

@@ -1,8 +1,13 @@
 """Base class for August entity."""
+from abc import abstractmethod
+
+from yalexs.doorbell import Doorbell
+from yalexs.lock import Lock
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from . import DOMAIN
+from . import DOMAIN, AugustData
 from .const import MANUFACTURER
 
 DEVICE_TYPES = ["keypad", "lock", "camera", "doorbell", "door", "bell"]
@@ -13,7 +18,7 @@ class AugustEntityMixin(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, data, device):
+    def __init__(self, data: AugustData, device: Doorbell | Lock) -> None:
         """Initialize an August device."""
         super().__init__()
         self._data = data
@@ -36,10 +41,19 @@ class AugustEntityMixin(Entity):
     def _detail(self):
         return self._data.get_device_detail(self._device.device_id)
 
+    @property
+    def _hyper_bridge(self):
+        """Check if the lock has a paired hyper bridge."""
+        return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
+
     @callback
     def _update_from_data_and_write_state(self):
         self._update_from_data()
         self.async_write_ha_state()
+
+    @abstractmethod
+    def _update_from_data(self):
+        """Update the entity state from the data object."""
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
@@ -65,7 +79,5 @@ def _remove_device_types(name, device_types):
     """
     lower_name = name.lower()
     for device_type in device_types:
-        device_type_with_space = f" {device_type}"
-        if lower_name.endswith(device_type_with_space):
-            lower_name = lower_name[: -len(device_type_with_space)]
+        lower_name = lower_name.removesuffix(f" {device_type}")
     return name[: len(lower_name)]

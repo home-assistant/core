@@ -3,10 +3,12 @@ import asyncio
 from unittest.mock import patch
 
 from pyinsteon.address import Address
+import pytest
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.const import (
     CONF_CAT,
+    CONF_DEV_PATH,
     CONF_OVERRIDE,
     CONF_SUBCAT,
     CONF_X10,
@@ -54,7 +56,7 @@ async def mock_failed_connection(*args, **kwargs):
     raise ConnectionError("Connection failed")
 
 
-async def test_setup_entry(hass: HomeAssistant):
+async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setting up the entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
@@ -72,12 +74,12 @@ async def test_setup_entry(hass: HomeAssistant):
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
-        # pylint: disable=no-member
+        # pylint: disable-next=no-member
         assert insteon.devices.async_save.call_count == 1
         assert mock_close.called
 
 
-async def test_import_plm(hass: HomeAssistant):
+async def test_import_plm(hass: HomeAssistant) -> None:
     """Test setting up the entry from YAML to a PLM."""
     config = {}
     config[DOMAIN] = MOCK_IMPORT_CONFIG_PLM
@@ -102,7 +104,7 @@ async def test_import_plm(hass: HomeAssistant):
     assert CONF_PORT not in data
 
 
-async def test_import_hub1(hass: HomeAssistant):
+async def test_import_hub1(hass: HomeAssistant) -> None:
     """Test setting up the entry from YAML to a hub v1."""
     config = {}
     config[DOMAIN] = MOCK_IMPORT_MINIMUM_HUB_V1
@@ -129,7 +131,7 @@ async def test_import_hub1(hass: HomeAssistant):
     assert CONF_PASSWORD not in data
 
 
-async def test_import_hub2(hass: HomeAssistant):
+async def test_import_hub2(hass: HomeAssistant) -> None:
     """Test setting up the entry from YAML to a hub v2."""
     config = {}
     config[DOMAIN] = MOCK_IMPORT_MINIMUM_HUB_V2
@@ -156,7 +158,7 @@ async def test_import_hub2(hass: HomeAssistant):
     assert data[CONF_PASSWORD] == MOCK_IMPORT_MINIMUM_HUB_V2[CONF_PASSWORD]
 
 
-async def test_import_options(hass: HomeAssistant):
+async def test_import_options(hass: HomeAssistant) -> None:
     """Test setting up the entry from YAML including options."""
     config = {}
     config[DOMAIN] = MOCK_IMPORT_FULL_CONFIG_PLM
@@ -189,7 +191,7 @@ async def test_import_options(hass: HomeAssistant):
     assert options[CONF_X10][1] == MOCK_IMPORT_FULL_CONFIG_PLM[CONF_X10][1]
 
 
-async def test_import_failed_connection(hass: HomeAssistant):
+async def test_import_failed_connection(hass: HomeAssistant) -> None:
     """Test a failed connection in import does not create a config entry."""
     config = {}
     config[DOMAIN] = MOCK_IMPORT_CONFIG_PLM
@@ -208,7 +210,9 @@ async def test_import_failed_connection(hass: HomeAssistant):
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_setup_entry_failed_connection(hass: HomeAssistant, caplog):
+async def test_setup_entry_failed_connection(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up the entry with a failed connection."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
     config_entry.add_to_hass(hass)
@@ -222,3 +226,24 @@ async def test_setup_entry_failed_connection(hass: HomeAssistant, caplog):
             {},
         )
         assert "Could not connect to Insteon modem" in caplog.text
+
+
+async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
+    """Test importing a dev_url config entry."""
+    config = {}
+    config[DOMAIN] = {CONF_DEV_PATH: "/some/path"}
+
+    with patch.object(
+        insteon, "async_connect", new=mock_successful_connection
+    ), patch.object(insteon, "close_insteon_connection"), patch.object(
+        insteon, "devices", new=MockDevices()
+    ), patch(
+        PATCH_CONNECTION, new=mock_successful_connection
+    ):
+        assert await async_setup_component(
+            hass,
+            insteon.DOMAIN,
+            config,
+        )
+        await hass.async_block_till_done()
+        await asyncio.sleep(0.01)

@@ -23,7 +23,7 @@ class OneWireEntityDescription(EntityDescription):
 _LOGGER = logging.getLogger(__name__)
 
 
-class OneWireBaseEntity(Entity):
+class OneWireEntity(Entity):
     """Implementation of a 1-Wire entity."""
 
     entity_description: OneWireEntityDescription
@@ -35,15 +35,18 @@ class OneWireBaseEntity(Entity):
         device_info: DeviceInfo,
         device_file: str,
         name: str,
+        owproxy: protocol._Proxy,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
+        self._last_update_success = True
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._attr_name = name
         self._device_file = device_file
         self._state: StateType = None
         self._value_raw: float | None = None
+        self._owproxy = owproxy
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -53,46 +56,28 @@ class OneWireBaseEntity(Entity):
             "raw_value": self._value_raw,
         }
 
-
-class OneWireProxyEntity(OneWireBaseEntity):
-    """Implementation of a 1-Wire entity connected through owserver."""
-
-    def __init__(
-        self,
-        description: OneWireEntityDescription,
-        device_id: str,
-        device_info: DeviceInfo,
-        device_file: str,
-        name: str,
-        owproxy: protocol._Proxy,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            description=description,
-            device_id=device_id,
-            device_info=device_info,
-            device_file=device_file,
-            name=name,
-        )
-        self._owproxy = owproxy
-
-    def _read_value_ownet(self) -> str:
-        """Read a value from the owserver."""
+    def _read_value(self) -> str:
+        """Read a value from the server."""
         read_bytes: bytes = self._owproxy.read(self._device_file)
         return read_bytes.decode().lstrip()
 
-    def _write_value_ownet(self, value: bytes) -> None:
-        """Write a value to the owserver."""
+    def _write_value(self, value: bytes) -> None:
+        """Write a value to the server."""
         self._owproxy.write(self._device_file, value)
 
     def update(self) -> None:
         """Get the latest data from the device."""
         try:
-            self._value_raw = float(self._read_value_ownet())
+            self._value_raw = float(self._read_value())
         except protocol.Error as exc:
-            _LOGGER.error("Owserver failure in read(), got: %s", exc)
+            if self._last_update_success:
+                _LOGGER.error("Error fetching %s data: %s", self.name, exc)
+                self._last_update_success = False
             self._state = None
         else:
+            if not self._last_update_success:
+                self._last_update_success = True
+                _LOGGER.info("Fetching %s data recovered", self.name)
             if self.entity_description.read_mode == READ_MODE_INT:
                 self._state = int(self._value_raw)
             elif self.entity_description.read_mode == READ_MODE_BOOL:

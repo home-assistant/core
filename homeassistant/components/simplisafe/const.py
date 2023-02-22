@@ -14,5 +14,3 @@ ATTR_EXIT_DELAY_AWAY = "exit_delay_away"
 ATTR_EXIT_DELAY_HOME = "exit_delay_home"
 ATTR_LIGHT = "light"
 ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
-
-CONF_USER_ID = "user_id"

@@ -1,5 +1,8 @@
 """Support for SNMP enabled switch."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
@@ -38,7 +41,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_AUTH_KEY,
@@ -114,7 +120,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SNMP switch."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -199,7 +210,6 @@ class SnmpSwitch(SwitchEntity):
         self._payload_off = payload_off
 
         if version == "3":
-
             if not authkey:
                 authproto = "none"
             if not privkey:
@@ -225,12 +235,12 @@ class SnmpSwitch(SwitchEntity):
                 ContextData(),
             ]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         # If vartype set, use it - http://snmplabs.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
         await self._execute_command(self._command_payload_on)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._execute_command(self._command_payload_off)
 
@@ -246,11 +256,12 @@ class SnmpSwitch(SwitchEntity):
         else:
             await self._set(MAP_SNMP_VARTYPES.get(self._vartype, Integer)(command))
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the state."""
-        errindication, errstatus, errindex, restable = await getCmd(
+        get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
+        errindication, errstatus, errindex, restable = await get_result
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)

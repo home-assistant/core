@@ -9,7 +9,7 @@ import pytest
 import homeassistant.components.google_pubsub as google_pubsub
 from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
@@ -23,18 +23,18 @@ class FilterTest:
     should_pass: bool
 
 
-async def test_datetime():
+async def test_datetime() -> None:
     """Test datetime encoding."""
     time = datetime(2019, 1, 13, 12, 30, 5)
     assert victim().encode(time) == '"2019-01-13T12:30:05"'
 
 
-async def test_no_datetime():
+async def test_no_datetime() -> None:
     """Test integer encoding."""
     assert victim().encode(42) == "42"
 
 
-async def test_nested():
+async def test_nested() -> None:
     """Test dictionary encoding."""
     assert victim().encode({"foo": "bar"}) == '{"foo": "bar"}'
 
@@ -42,10 +42,9 @@ async def test_nested():
 @pytest.fixture(autouse=True, name="mock_client")
 def mock_client_fixture():
     """Mock the pubsub client."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.pubsub_v1") as client:
-        client.PublisherClient = mock.MagicMock()
+    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.PublisherClient") as client:
         setattr(
-            client.PublisherClient,
+            client,
             "from_service_account_json",
             mock.MagicMock(return_value=mock.MagicMock()),
         )
@@ -69,7 +68,7 @@ def mock_bus_and_json(hass, monkeypatch):
     )
 
 
-async def test_minimal_config(hass, mock_client):
+async def test_minimal_config(hass: HomeAssistant, mock_client) -> None:
     """Test the minimal config and defaults of component."""
     config = {
         google_pubsub.DOMAIN: {
@@ -83,13 +82,13 @@ async def test_minimal_config(hass, mock_client):
     await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
-    assert mock_client.PublisherClient.from_service_account_json.call_count == 1
-    assert mock_client.PublisherClient.from_service_account_json.call_args[0][
-        0
-    ] == os.path.join(hass.config.config_dir, "creds")
+    assert mock_client.from_service_account_json.call_count == 1
+    assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
+        hass.config.config_dir, "creds"
+    )
 
 
-async def test_full_config(hass, mock_client):
+async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     """Test the full config of the component."""
     config = {
         google_pubsub.DOMAIN: {
@@ -110,10 +109,10 @@ async def test_full_config(hass, mock_client):
     await hass.async_block_till_done()
     assert hass.bus.listen.called
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
-    assert mock_client.PublisherClient.from_service_account_json.call_count == 1
-    assert mock_client.PublisherClient.from_service_account_json.call_args[0][
-        0
-    ] == os.path.join(hass.config.config_dir, "creds")
+    assert mock_client.from_service_account_json.call_count == 1
+    assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
+        hass.config.config_dir, "creds"
+    )
 
 
 def make_event(entity_id):
@@ -144,7 +143,7 @@ async def _setup(hass, filter_config):
     return hass.bus.listen.call_args_list[0][0][1]
 
 
-async def test_allowlist(hass, mock_client):
+async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist only config."""
     handler_method = await _setup(
         hass,
@@ -154,7 +153,7 @@ async def test_allowlist(hass, mock_client):
             "include_entities": ["binary_sensor.included"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("climate.excluded", False),
@@ -174,7 +173,7 @@ async def test_allowlist(hass, mock_client):
         publish_client.publish.reset_mock()
 
 
-async def test_denylist(hass, mock_client):
+async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist only config."""
     handler_method = await _setup(
         hass,
@@ -184,7 +183,7 @@ async def test_denylist(hass, mock_client):
             "exclude_entities": ["binary_sensor.excluded"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("climate.excluded", False),
@@ -204,7 +203,7 @@ async def test_denylist(hass, mock_client):
         publish_client.publish.reset_mock()
 
 
-async def test_filtered_allowlist(hass, mock_client):
+async def test_filtered_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist config with a filtering denylist."""
     handler_method = await _setup(
         hass,
@@ -216,14 +215,14 @@ async def test_filtered_allowlist(hass, mock_client):
             "exclude_entities": ["light.excluded"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("light.included", True),
         FilterTest("light.excluded_test", False),
         FilterTest("light.excluded", False),
         FilterTest("sensor.included_test", True),
-        FilterTest("climate.included_test", False),
+        FilterTest("climate.included_test", True),
     ]
 
     for test in tests:
@@ -235,7 +234,7 @@ async def test_filtered_allowlist(hass, mock_client):
         publish_client.publish.reset_mock()
 
 
-async def test_filtered_denylist(hass, mock_client):
+async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist config with a filtering allowlist."""
     handler_method = await _setup(
         hass,
@@ -246,7 +245,7 @@ async def test_filtered_denylist(hass, mock_client):
             "exclude_entities": ["light.excluded"],
         },
     )
-    publish_client = mock_client.PublisherClient.from_service_account_json("path")
+    publish_client = mock_client.from_service_account_json("path")
 
     tests = [
         FilterTest("climate.excluded", False),

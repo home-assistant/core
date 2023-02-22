@@ -3,7 +3,9 @@ import gc100
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 CONF_PORTS = "ports"
 
@@ -25,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the gc100 component."""
     config = base_config[DOMAIN]
     host = config[CONF_HOST]

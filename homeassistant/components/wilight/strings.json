@@ -3,8 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "confirm": {
-        "title": "WiLight",
-        "description": "Do you want to set up WiLight {name}?\n\n It supports: {components}"
+        "description": "The following components are supported: {components}"
       }
     },
     "abort": {

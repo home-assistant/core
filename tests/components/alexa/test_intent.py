@@ -1,5 +1,4 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access
 from http import HTTPStatus
 import json
 
@@ -8,11 +7,14 @@ import pytest
 from homeassistant.components import alexa
 from homeassistant.components.alexa import intent
 from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
+APPLICATION_ID_SESSION_OPEN = (
+    "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebf"
+)
 REQUEST_ID = "amzn1.echo-api.request.0000000-0000-0000-0000-00000000000"
 AUTHORITY_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.ZODIAC"
 BUILTIN_AUTH_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.TEST"
@@ -24,8 +26,9 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(loop, hass, hass_client):
+def alexa_client(event_loop, hass, hass_client):
     """Initialize a Home Assistant server for testing this module."""
+    loop = event_loop
 
     @callback
     def mock_service(call):
@@ -102,6 +105,16 @@ def alexa_client(loop, hass, hass_client):
                             "text": "LaunchRequest has been received.",
                         }
                     },
+                    APPLICATION_ID_SESSION_OPEN: {
+                        "speech": {
+                            "type": "plain",
+                            "text": "LaunchRequest has been received.",
+                        },
+                        "reprompt": {
+                            "type": "plain",
+                            "text": "LaunchRequest has been received.",
+                        },
+                    },
                 }
             },
         )
@@ -117,7 +130,7 @@ def _intent_req(client, data=None):
     )
 
 
-async def test_intent_launch_request(alexa_client):
+async def test_intent_launch_request(alexa_client) -> None:
     """Test the launch of a request."""
     data = {
         "version": "1.0",
@@ -139,9 +152,39 @@ async def test_intent_launch_request(alexa_client):
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "LaunchRequest has been received."
+    assert data.get("response", {}).get("shouldEndSession")
 
 
-async def test_intent_launch_request_not_configured(alexa_client):
+async def test_intent_launch_request_with_session_open(alexa_client) -> None:
+    """Test the launch of a request."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": True,
+            "sessionId": SESSION_ID,
+            "application": {"applicationId": APPLICATION_ID_SESSION_OPEN},
+            "attributes": {},
+            "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
+        },
+        "request": {
+            "type": "LaunchRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+        },
+    }
+    req = await _intent_req(alexa_client, data)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    text = data.get("response", {}).get("outputSpeech", {}).get("text")
+    assert text == "LaunchRequest has been received."
+    text = (
+        data.get("response", {}).get("reprompt", {}).get("outputSpeech", {}).get("text")
+    )
+    assert text == "LaunchRequest has been received."
+    assert not data.get("response", {}).get("shouldEndSession")
+
+
+async def test_intent_launch_request_not_configured(alexa_client) -> None:
     """Test the launch of a request."""
     data = {
         "version": "1.0",
@@ -149,7 +192,9 @@ async def test_intent_launch_request_not_configured(alexa_client):
             "new": True,
             "sessionId": SESSION_ID,
             "application": {
-                "applicationId": "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000"
+                "applicationId": (
+                    "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000"
+                ),
             },
             "attributes": {},
             "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},
@@ -167,7 +212,7 @@ async def test_intent_launch_request_not_configured(alexa_client):
     assert text == "This intent is not yet configured within Home Assistant."
 
 
-async def test_intent_request_with_slots(alexa_client):
+async def test_intent_request_with_slots(alexa_client) -> None:
     """Test a request with slots."""
     data = {
         "version": "1.0",
@@ -201,7 +246,7 @@ async def test_intent_request_with_slots(alexa_client):
     assert text == "You told us your sign is virgo."
 
 
-async def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
+async def test_intent_request_with_slots_and_synonym_resolution(alexa_client) -> None:
     """Test a request with slots and a name synonym."""
     data = {
         "version": "1.0",
@@ -254,7 +299,9 @@ async def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
     assert text == "You told us your sign is Virgo."
 
 
-async def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_client):
+async def test_intent_request_with_slots_and_multi_synonym_resolution(
+    alexa_client,
+) -> None:
     """Test a request with slots and multiple name synonyms."""
     data = {
         "version": "1.0",
@@ -307,7 +354,7 @@ async def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_clie
     assert text == "You told us your sign is V zodiac."
 
 
-async def test_intent_request_with_slots_but_no_value(alexa_client):
+async def test_intent_request_with_slots_but_no_value(alexa_client) -> None:
     """Test a request with slots but no value."""
     data = {
         "version": "1.0",
@@ -341,7 +388,7 @@ async def test_intent_request_with_slots_but_no_value(alexa_client):
     assert text == "You told us your sign is ."
 
 
-async def test_intent_request_without_slots(hass, alexa_client):
+async def test_intent_request_without_slots(hass: HomeAssistant, alexa_client) -> None:
     """Test a request without slots."""
     data = {
         "version": "1.0",
@@ -382,7 +429,7 @@ async def test_intent_request_without_slots(hass, alexa_client):
     assert text == "You are both home, you silly"
 
 
-async def test_intent_request_calling_service(alexa_client):
+async def test_intent_request_calling_service(alexa_client) -> None:
     """Test a request for calling a service."""
     data = {
         "version": "1.0",
@@ -420,7 +467,7 @@ async def test_intent_request_calling_service(alexa_client):
     assert data["response"]["outputSpeech"]["text"] == "Service called for virgo"
 
 
-async def test_intent_session_ended_request(alexa_client):
+async def test_intent_session_ended_request(alexa_client) -> None:
     """Test the request for ending the session."""
     data = {
         "version": "1.0",
@@ -447,11 +494,14 @@ async def test_intent_session_ended_request(alexa_client):
 
     req = await _intent_req(alexa_client, data)
     assert req.status == HTTPStatus.OK
-    text = await req.text()
-    assert text == ""
+    data = await req.json()
+    assert (
+        data["response"]["outputSpeech"]["text"]
+        == "This intent is not yet configured within Home Assistant."
+    )
 
 
-async def test_intent_from_built_in_intent_library(alexa_client):
+async def test_intent_from_built_in_intent_library(alexa_client) -> None:
     """Test intents from the Built-in Intent Library."""
     data = {
         "request": {

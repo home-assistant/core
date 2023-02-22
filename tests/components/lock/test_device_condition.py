@@ -2,6 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
     STATE_JAMMED,
@@ -9,8 +10,11 @@ from homeassistant.const import (
     STATE_LOCKING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
+    EntityCategory,
 )
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -18,22 +22,8 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -42,57 +32,99 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg):
+async def test_get_conditions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a lock."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_conditions = [
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_locked",
+            "type": condition,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "is_unlocked",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "is_unlocking",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "is_locking",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "is_jammed",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
+            "metadata": {"secondary": False},
+        }
+        for condition in [
+            "is_locked",
+            "is_unlocked",
+            "is_unlocking",
+            "is_locking",
+            "is_jammed",
+        ]
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_if_state(hass, calls):
+@pytest.mark.parametrize(
+    ("hidden_by", "entity_category"),
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_conditions_hidden_auxiliary(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hidden_by,
+    entity_category,
+) -> None:
+    """Test we get the expected conditions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for condition in [
+            "is_locked",
+            "is_unlocked",
+            "is_unlocking",
+            "is_locking",
+            "is_jammed",
+        ]
+    ]
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert_lists_same(conditions, expected_conditions)
+
+
+async def test_if_state(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set("lock.entity", STATE_LOCKED)
 

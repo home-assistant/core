@@ -47,7 +47,7 @@ send_command:
       required: true
       example: "Play"
       selector:
-        text:
+        object:
     num_repeats:
       name: Repeats
       description: The number of times you want to repeat the command(s).

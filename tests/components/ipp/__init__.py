@@ -3,8 +3,14 @@ import aiohttp
 from pyipp import IPPConnectionUpgradeRequired, IPPError
 
 from homeassistant.components import zeroconf
-from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_UUID,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, get_fixture_path
@@ -38,6 +44,7 @@ MOCK_ZEROCONF_IPP_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
     type=IPP_ZEROCONF_SERVICE_TYPE,
     name=f"{ZEROCONF_NAME}.{IPP_ZEROCONF_SERVICE_TYPE}",
     host=ZEROCONF_HOST,
+    addresses=[ZEROCONF_HOST],
     hostname=ZEROCONF_HOSTNAME,
     port=ZEROCONF_PORT,
     properties={"rp": ZEROCONF_RP},
@@ -47,6 +54,7 @@ MOCK_ZEROCONF_IPPS_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
     type=IPPS_ZEROCONF_SERVICE_TYPE,
     name=f"{ZEROCONF_NAME}.{IPPS_ZEROCONF_SERVICE_TYPE}",
     host=ZEROCONF_HOST,
+    addresses=[ZEROCONF_HOST],
     hostname=ZEROCONF_HOSTNAME,
     port=ZEROCONF_PORT,
     properties={"rp": ZEROCONF_RP},

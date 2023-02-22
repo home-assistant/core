@@ -6,18 +6,21 @@ import voluptuous as vol
 from wirelesstagpy import WirelessTags
 from wirelesstagpy.exceptions import WirelessTagsException
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfElectricPotential,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,8 +118,7 @@ class WirelessTagPlatform:
                             )
                 except Exception as ex:  # pylint: disable=broad-except
                     _LOGGER.error(
-                        "Unable to handle tag update:\
-                                %s error: %s",
+                        "Unable to handle tag update: %s error: %s",
                         str(tag),
                         str(ex),
                     )
@@ -124,7 +126,7 @@ class WirelessTagPlatform:
         self.api.start_monitoring(push_callback)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Wireless Sensor Tag component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
@@ -139,7 +141,8 @@ def setup(hass, config):
         hass.data[DOMAIN] = platform
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {ex}<br />Please restart hass after fixing this.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
@@ -182,7 +185,6 @@ class WirelessTagBaseSensor(Entity):
         """
         return self.decorate_value(self.principal_value)
 
-    # pylint: disable=no-self-use
     def decorate_value(self, value):
         """Decorate input value to be well presented for end user."""
         return f"{value:.1f}"
@@ -210,8 +212,14 @@ class WirelessTagBaseSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
-            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{ELECTRIC_POTENTIAL_VOLT}",
-            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
+            ATTR_VOLTAGE: (
+                f"{self._tag.battery_volts:.2f}{UnitOfElectricPotential.VOLT}"
+            ),
+            ATTR_TAG_SIGNAL_STRENGTH: (
+                f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}"
+            ),
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{PERCENTAGE}",
+            ATTR_TAG_POWER_CONSUMPTION: (
+                f"{self._tag.power_consumption:.2f}{PERCENTAGE}"
+            ),
         }

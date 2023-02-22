@@ -7,7 +7,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -21,7 +21,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -33,7 +33,7 @@ def setup_comp(hass):
     hass.states.async_set("test.entity", "hello")
 
 
-async def test_if_fires_on_entity_change(hass, calls):
+async def test_if_fires_on_entity_change(hass: HomeAssistant, calls) -> None:
     """Test for firing on entity change."""
     context = Context()
     hass.states.async_set("test.entity", "hello")
@@ -83,7 +83,7 @@ async def test_if_fires_on_entity_change(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_uuid(hass, calls):
+async def test_if_fires_on_entity_change_uuid(hass: HomeAssistant, calls) -> None:
     """Test for firing on entity change."""
     context = Context()
 
@@ -141,7 +141,9 @@ async def test_if_fires_on_entity_change_uuid(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_from_filter(hass, calls):
+async def test_if_fires_on_entity_change_with_from_filter(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with filter."""
     assert await async_setup_component(
         hass,
@@ -164,7 +166,39 @@ async def test_if_fires_on_entity_change_with_from_filter(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_to_filter(hass, calls):
+async def test_if_fires_on_entity_change_with_not_from_filter(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing on entity change inverse filter."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "not_from": "hello",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Do not fire from hello
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    hass.states.async_set("test.entity", "universum")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_fires_on_entity_change_with_to_filter(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with to filter."""
     assert await async_setup_component(
         hass,
@@ -187,7 +221,39 @@ async def test_if_fires_on_entity_change_with_to_filter(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_from_filter_all(hass, calls):
+async def test_if_fires_on_entity_change_with_not_to_filter(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing on entity change with to filter."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "not_to": "world",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Do not fire to world
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    hass.states.async_set("test.entity", "universum")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_fires_on_entity_change_with_from_filter_all(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with filter."""
     assert await async_setup_component(
         hass,
@@ -211,7 +277,9 @@ async def test_if_fires_on_entity_change_with_from_filter_all(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_to_filter_all(hass, calls):
+async def test_if_fires_on_entity_change_with_to_filter_all(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with to filter."""
     assert await async_setup_component(
         hass,
@@ -235,7 +303,9 @@ async def test_if_fires_on_entity_change_with_to_filter_all(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_attribute_change_with_to_filter(hass, calls):
+async def test_if_fires_on_attribute_change_with_to_filter(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for not firing on attribute change."""
     assert await async_setup_component(
         hass,
@@ -259,7 +329,9 @@ async def test_if_fires_on_attribute_change_with_to_filter(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_both_filters(hass, calls):
+async def test_if_fires_on_entity_change_with_both_filters(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if both filters are a non match."""
     assert await async_setup_component(
         hass,
@@ -283,7 +355,101 @@ async def test_if_fires_on_entity_change_with_both_filters(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_not_fires_if_to_filter_not_match(hass, calls):
+async def test_if_fires_on_entity_change_with_not_from_to(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing if not from doesn't match and to match."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "not_from": ["hello", "galaxy"],
+                    "to": ["galaxy", "universe"],
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # We should not trigger from hello
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    # We should not trigger to != galaxy
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    # We should trigger to galaxy
+    hass.states.async_set("test.entity", "galaxy")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should not trigger from milky way
+    hass.states.async_set("test.entity", "milky_way")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should trigger to universe
+    hass.states.async_set("test.entity", "universe")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_if_fires_on_entity_change_with_from_not_to(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing if not from doesn't match and to match."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "from": ["hello", "galaxy"],
+                    "not_to": ["galaxy", "universe"],
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # We should trigger to world from hello
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Reset back to hello, should not trigger
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should not trigger to galaxy
+    hass.states.async_set("test.entity", "galaxy")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should trigger form galaxy to milky way
+    hass.states.async_set("test.entity", "milky_way")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    # We should not trigger to universe
+    hass.states.async_set("test.entity", "universe")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_if_not_fires_if_to_filter_not_match(hass: HomeAssistant, calls) -> None:
     """Test for not firing if to filter is not a match."""
     assert await async_setup_component(
         hass,
@@ -307,7 +473,9 @@ async def test_if_not_fires_if_to_filter_not_match(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_not_fires_if_from_filter_not_match(hass, calls):
+async def test_if_not_fires_if_from_filter_not_match(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for not firing if from filter is not a match."""
     hass.states.async_set("test.entity", "bye")
 
@@ -333,7 +501,7 @@ async def test_if_not_fires_if_from_filter_not_match(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_not_fires_if_entity_not_match(hass, calls):
+async def test_if_not_fires_if_entity_not_match(hass: HomeAssistant, calls) -> None:
     """Test for not firing if entity is not matching."""
     assert await async_setup_component(
         hass,
@@ -352,7 +520,7 @@ async def test_if_not_fires_if_entity_not_match(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_action(hass, calls):
+async def test_if_action(hass: HomeAssistant, calls) -> None:
     """Test for to action."""
     entity_id = "domain.test_entity"
     test_state = "new_state"
@@ -384,7 +552,7 @@ async def test_if_action(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fails_setup_if_to_boolean_value(hass, calls):
+async def test_if_fails_setup_if_to_boolean_value(hass: HomeAssistant, calls) -> None:
     """Test for setup failure for boolean to."""
     with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(
@@ -403,7 +571,7 @@ async def test_if_fails_setup_if_to_boolean_value(hass, calls):
         )
 
 
-async def test_if_fails_setup_if_from_boolean_value(hass, calls):
+async def test_if_fails_setup_if_from_boolean_value(hass: HomeAssistant, calls) -> None:
     """Test for setup failure for boolean from."""
     with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(
@@ -422,31 +590,29 @@ async def test_if_fails_setup_if_from_boolean_value(hass, calls):
         )
 
 
-async def test_if_fails_setup_bad_for(hass, calls):
+async def test_if_fails_setup_bad_for(hass: HomeAssistant, calls) -> None:
     """Test for setup failure for bad for."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "state",
-                    "entity_id": "test.entity",
-                    "to": "world",
-                    "for": {"invalid": 5},
-                },
-                "action": {"service": "homeassistant.turn_on"},
-            }
-        },
-    )
-
-    with patch.object(state_trigger, "_LOGGER") as mock_logger:
-        hass.states.async_set("test.entity", "world")
-        await hass.async_block_till_done()
-        assert mock_logger.error.called
+    with assert_setup_component(0, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": "test.entity",
+                        "to": "world",
+                        "for": {"invalid": 5},
+                    },
+                    "action": {"service": "homeassistant.turn_on"},
+                }
+            },
+        )
 
 
-async def test_if_not_fires_on_entity_change_with_for(hass, calls):
+async def test_if_not_fires_on_entity_change_with_for(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for not firing on entity change with for."""
     assert await async_setup_component(
         hass,
@@ -474,7 +640,9 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
+async def test_if_not_fires_on_entities_change_with_for_after_stop(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for not firing on entity change with for after stop trigger."""
     assert await async_setup_component(
         hass,
@@ -518,7 +686,9 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
+async def test_if_fires_on_entity_change_with_for_attribute_change(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with for and attribute change."""
     assert await async_setup_component(
         hass,
@@ -555,7 +725,9 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
         assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_for_multiple_force_update(hass, calls):
+async def test_if_fires_on_entity_change_with_for_multiple_force_update(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with for and force update."""
     assert await async_setup_component(
         hass,
@@ -591,7 +763,7 @@ async def test_if_fires_on_entity_change_with_for_multiple_force_update(hass, ca
         assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_for(hass, calls):
+async def test_if_fires_on_entity_change_with_for(hass: HomeAssistant, calls) -> None:
     """Test for firing on entity change with for."""
     assert await async_setup_component(
         hass,
@@ -617,7 +789,9 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_with_for_without_to(hass, calls):
+async def test_if_fires_on_entity_change_with_for_without_to(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with for."""
     assert await async_setup_component(
         hass,
@@ -654,7 +828,9 @@ async def test_if_fires_on_entity_change_with_for_without_to(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_does_not_fires_on_entity_change_with_for_without_to_2(hass, calls):
+async def test_if_does_not_fires_on_entity_change_with_for_without_to_2(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity change with for."""
     assert await async_setup_component(
         hass,
@@ -687,7 +863,9 @@ async def test_if_does_not_fires_on_entity_change_with_for_without_to_2(hass, ca
     assert len(calls) == 0
 
 
-async def test_if_fires_on_entity_creation_and_removal(hass, calls):
+async def test_if_fires_on_entity_creation_and_removal(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entity creation and removal, with to/from constraints."""
     # set automations for multiple combinations to/from
     assert await async_setup_component(
@@ -752,7 +930,7 @@ async def test_if_fires_on_entity_creation_and_removal(hass, calls):
     assert calls[3].context.parent_id == context_0.id
 
 
-async def test_if_fires_on_for_condition(hass, calls):
+async def test_if_fires_on_for_condition(hass: HomeAssistant, calls) -> None:
     """Test for firing if condition is on."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=10)
@@ -789,7 +967,9 @@ async def test_if_fires_on_for_condition(hass, calls):
         assert len(calls) == 1
 
 
-async def test_if_fires_on_for_condition_attribute_change(hass, calls):
+async def test_if_fires_on_for_condition_attribute_change(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if condition is on with attribute change."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=4)
@@ -836,7 +1016,7 @@ async def test_if_fires_on_for_condition_attribute_change(hass, calls):
         assert len(calls) == 1
 
 
-async def test_if_fails_setup_for_without_time(hass, calls):
+async def test_if_fails_setup_for_without_time(hass: HomeAssistant, calls) -> None:
     """Test for setup failure if no time is provided."""
     with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(
@@ -846,7 +1026,7 @@ async def test_if_fails_setup_for_without_time(hass, calls):
                 automation.DOMAIN: {
                     "trigger": {"platform": "event", "event_type": "bla"},
                     "condition": {
-                        "platform": "state",
+                        "condition": "state",
                         "entity_id": "test.entity",
                         "state": "on",
                         "for": {},
@@ -857,7 +1037,7 @@ async def test_if_fails_setup_for_without_time(hass, calls):
         )
 
 
-async def test_if_fails_setup_for_without_entity(hass, calls):
+async def test_if_fails_setup_for_without_entity(hass: HomeAssistant, calls) -> None:
     """Test for setup failure if no entity is provided."""
     with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(
@@ -865,9 +1045,9 @@ async def test_if_fails_setup_for_without_entity(hass, calls):
             automation.DOMAIN,
             {
                 automation.DOMAIN: {
-                    "trigger": {"event_type": "bla"},
+                    "trigger": {"platform": "event", "event_type": "bla"},
                     "condition": {
-                        "platform": "state",
+                        "condition": "state",
                         "state": "on",
                         "for": {"seconds": 5},
                     },
@@ -877,7 +1057,7 @@ async def test_if_fails_setup_for_without_entity(hass, calls):
         )
 
 
-async def test_wait_template_with_trigger(hass, calls):
+async def test_wait_template_with_trigger(hass: HomeAssistant, calls) -> None:
     """Test using wait template with 'trigger.entity_id'."""
     assert await async_setup_component(
         hass,
@@ -919,7 +1099,9 @@ async def test_wait_template_with_trigger(hass, calls):
     assert calls[0].data["some"] == "state - test.entity - hello - world"
 
 
-async def test_if_fires_on_entities_change_no_overlap(hass, calls):
+async def test_if_fires_on_entities_change_no_overlap(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entities change with no overlap."""
     assert await async_setup_component(
         hass,
@@ -961,7 +1143,7 @@ async def test_if_fires_on_entities_change_no_overlap(hass, calls):
         assert calls[1].data["some"] == "test.entity_2"
 
 
-async def test_if_fires_on_entities_change_overlap(hass, calls):
+async def test_if_fires_on_entities_change_overlap(hass: HomeAssistant, calls) -> None:
     """Test for firing on entities change with overlap."""
     assert await async_setup_component(
         hass,
@@ -1014,7 +1196,9 @@ async def test_if_fires_on_entities_change_overlap(hass, calls):
         assert calls[1].data["some"] == "test.entity_2"
 
 
-async def test_if_fires_on_change_with_for_template_1(hass, calls):
+async def test_if_fires_on_change_with_for_template_1(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on change with for template."""
     assert await async_setup_component(
         hass,
@@ -1040,7 +1224,9 @@ async def test_if_fires_on_change_with_for_template_1(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_change_with_for_template_2(hass, calls):
+async def test_if_fires_on_change_with_for_template_2(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on change with for template."""
     assert await async_setup_component(
         hass,
@@ -1066,7 +1252,9 @@ async def test_if_fires_on_change_with_for_template_2(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_change_with_for_template_3(hass, calls):
+async def test_if_fires_on_change_with_for_template_3(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on change with for template."""
     assert await async_setup_component(
         hass,
@@ -1092,7 +1280,9 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_change_with_for_template_4(hass, calls):
+async def test_if_fires_on_change_with_for_template_4(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on change with for template."""
     assert await async_setup_component(
         hass,
@@ -1119,7 +1309,7 @@ async def test_if_fires_on_change_with_for_template_4(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_change_from_with_for(hass, calls):
+async def test_if_fires_on_change_from_with_for(hass: HomeAssistant, calls) -> None:
     """Test for firing on change with from/for."""
     assert await async_setup_component(
         hass,
@@ -1148,7 +1338,7 @@ async def test_if_fires_on_change_from_with_for(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_not_fires_on_change_from_with_for(hass, calls):
+async def test_if_not_fires_on_change_from_with_for(hass: HomeAssistant, calls) -> None:
     """Test for firing on change with from/for."""
     assert await async_setup_component(
         hass,
@@ -1177,7 +1367,7 @@ async def test_if_not_fires_on_change_from_with_for(hass, calls):
     assert len(calls) == 0
 
 
-async def test_invalid_for_template_1(hass, calls):
+async def test_invalid_for_template_1(hass: HomeAssistant, calls) -> None:
     """Test for invalid for template."""
     assert await async_setup_component(
         hass,
@@ -1201,7 +1391,9 @@ async def test_invalid_for_template_1(hass, calls):
         assert mock_logger.error.called
 
 
-async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
+async def test_if_fires_on_entities_change_overlap_for_template(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing on entities change with overlap and for template."""
     assert await async_setup_component(
         hass,
@@ -1261,7 +1453,9 @@ async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
         assert calls[1].data["some"] == "test.entity_2 - 0:00:10"
 
 
-async def test_attribute_if_fires_on_entity_change_with_both_filters(hass, calls):
+async def test_attribute_if_fires_on_entity_change_with_both_filters(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if both filters are match attribute."""
     hass.states.async_set("test.entity", "bla", {"name": "hello"})
 
@@ -1288,7 +1482,9 @@ async def test_attribute_if_fires_on_entity_change_with_both_filters(hass, calls
     assert len(calls) == 1
 
 
-async def test_attribute_if_fires_on_entity_where_attr_stays_constant(hass, calls):
+async def test_attribute_if_fires_on_entity_where_attr_stays_constant(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if attribute stays the same."""
     hass.states.async_set("test.entity", "bla", {"name": "hello", "other": "old_value"})
 
@@ -1325,8 +1521,8 @@ async def test_attribute_if_fires_on_entity_where_attr_stays_constant(hass, call
 
 
 async def test_attribute_if_fires_on_entity_where_attr_stays_constant_filter(
-    hass, calls
-):
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if attribute stays the same."""
     hass.states.async_set("test.entity", "bla", {"name": "other_name"})
 
@@ -1369,7 +1565,9 @@ async def test_attribute_if_fires_on_entity_where_attr_stays_constant_filter(
     assert len(calls) == 1
 
 
-async def test_attribute_if_fires_on_entity_where_attr_stays_constant_all(hass, calls):
+async def test_attribute_if_fires_on_entity_where_attr_stays_constant_all(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if attribute stays the same."""
     hass.states.async_set("test.entity", "bla", {"name": "hello", "other": "old_value"})
 
@@ -1413,8 +1611,8 @@ async def test_attribute_if_fires_on_entity_where_attr_stays_constant_all(hass, 
 
 
 async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
-    hass, calls
-):
+    hass: HomeAssistant, calls
+) -> None:
     """Test for not firing on entity change with for after stop trigger."""
     hass.states.async_set("test.entity", "bla", {"name": "hello"})
 
@@ -1466,8 +1664,8 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
 
 
 async def test_attribute_if_fires_on_entity_change_with_both_filters_boolean(
-    hass, calls
-):
+    hass: HomeAssistant, calls
+) -> None:
     """Test for firing if both filters are match attribute."""
     hass.states.async_set("test.entity", "bla", {"happening": False})
 
@@ -1494,7 +1692,7 @@ async def test_attribute_if_fires_on_entity_change_with_both_filters_boolean(
     assert len(calls) == 1
 
 
-async def test_variables_priority(hass, calls):
+async def test_variables_priority(hass: HomeAssistant, calls) -> None:
     """Test an externally defined trigger variable is overridden."""
     assert await async_setup_component(
         hass,

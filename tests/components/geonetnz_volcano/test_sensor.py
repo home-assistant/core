@@ -1,6 +1,8 @@
 """The tests for the GeoNet NZ Volcano Feed integration."""
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
+
 from homeassistant.components import geonetnz_volcano
 from homeassistant.components.geo_location import ATTR_DISTANCE
 from homeassistant.components.geonetnz_volcano import DEFAULT_SCAN_INTERVAL
@@ -19,17 +21,19 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from . import _generate_mock_feed_entry
 
 from tests.common import async_fire_time_changed
-from tests.components.geonetnz_volcano import _generate_mock_feed_entry
 
 CONFIG = {geonetnz_volcano.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass, legacy_patchable_time):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -48,7 +52,7 @@ async def test_setup(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=AsyncMock
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
@@ -145,9 +149,9 @@ async def test_setup(hass, legacy_patchable_time):
         )
 
 
-async def test_setup_imperial(hass):
+async def test_setup_imperial(hass: HomeAssistant) -> None:
     """Test the setup of the integration using imperial unit system."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 1, 15.5, (38.0, -3.0))
 

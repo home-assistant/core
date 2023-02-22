@@ -1,4 +1,6 @@
 """Support for the Italian train system using ViaggiaTreno API."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -9,15 +11,17 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, TIME_MINUTES
+from homeassistant.const import UnitOfTime
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Powered by ViaggiaTreno Data"
-
 VIAGGIATRENO_ENDPOINT = (
-    "http://www.viaggiatreno.it/viaggiatrenonew/"
+    "http://www.viaggiatreno.it/infomobilita/"
     "resteasy/viaggiatreno/andamentoTreno/"
     "{station_id}/{train_id}/{timestamp}"
 )
@@ -57,7 +61,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ViaggiaTreno platform."""
     train_id = config.get(CONF_TRAIN_ID)
     station_id = config.get(CONF_STATION_ID)
@@ -69,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
-        session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
+        session = async_get_clientsession(hass)
         async with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
         if req.status != HTTPStatus.OK:
@@ -84,6 +93,8 @@ async def async_http_request(hass, uri):
 
 class ViaggiaTrenoSensor(SensorEntity):
     """Implementation of a ViaggiaTreno sensor."""
+
+    _attr_attribution = "Powered by ViaggiaTreno Data"
 
     def __init__(self, train_id, station_id, name):
         """Initialize the sensor."""
@@ -121,7 +132,6 @@ class ViaggiaTrenoSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return extra attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
 
     @staticmethod
@@ -150,7 +160,7 @@ class ViaggiaTrenoSensor(SensorEntity):
             return True
         return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state."""
         uri = self.uri
         res = await async_http_request(self.hass, uri)
@@ -177,5 +187,5 @@ class ViaggiaTrenoSensor(SensorEntity):
                 self._unit = ""
             else:
                 self._state = res.get("ritardo")
-                self._unit = TIME_MINUTES
+                self._unit = UnitOfTime.MINUTES
                 self._icon = ICON

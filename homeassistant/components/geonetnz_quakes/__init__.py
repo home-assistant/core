@@ -5,20 +5,21 @@ import logging
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_MILES,
+    UnitOfLength,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_MINIMUM_MAGNITUDE,
@@ -58,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GeoNet NZ Quakes component."""
     if DOMAIN not in config:
         return True
@@ -87,14 +88,16 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the GeoNet NZ Quakes component as config entry."""
     hass.data.setdefault(DOMAIN, {})
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
-    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-        radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
+        radius = DistanceConverter.convert(
+            radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+        )
     # Create feed entity manager for all platforms.
     manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius)
     feeds[config_entry.entry_id] = manager
@@ -103,7 +106,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an GeoNet NZ Quakes component config entry."""
     manager = hass.data[DOMAIN][FEED].pop(entry.entry_id)
     await manager.async_stop()
@@ -143,7 +146,9 @@ class GeonetnzQuakesFeedEntityManager:
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        self._hass.config_entries.async_setup_platforms(self._config_entry, PLATFORMS)
+        await self._hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         async def update(event_time):
             """Update."""

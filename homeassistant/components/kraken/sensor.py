@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import KrakenData
 from .const import (
@@ -86,7 +88,9 @@ async def async_setup_entry(
     )
 
 
-class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
+class KrakenSensor(
+    CoordinatorEntity[DataUpdateCoordinator[KrakenResponse | None]], SensorEntity
+):
     """Define a Kraken sensor."""
 
     entity_description: KrakenSensorEntityDescription
@@ -104,28 +108,29 @@ class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
         self.tracked_asset_pair_wsname = kraken_data.tradable_asset_pairs[
             tracked_asset_pair
         ]
-        source_asset = tracked_asset_pair.split("/")[0]
         self._target_asset = tracked_asset_pair.split("/")[1]
         if "number_of" not in description.key:
             self._attr_native_unit_of_measurement = self._target_asset
-        self._device_name = f"{source_asset} {self._target_asset}"
-        self._attr_name = "_".join(
+        self._device_name = create_device_name(tracked_asset_pair)
+        self._attr_unique_id = "_".join(
             [
                 tracked_asset_pair.split("/")[0],
                 tracked_asset_pair.split("/")[1],
                 description.key,
             ]
-        )
-        self._attr_unique_id = self._attr_name.lower()
+        ).lower()
         self._received_data_at_least_once = False
         self._available = True
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
         self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.kraken.com/",
             entry_type=device_registry.DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{source_asset}_{self._target_asset}")},
+            identifiers={(DOMAIN, "_".join(self._device_name.split(" ")))},
             manufacturer="Kraken.com",
             name=self._device_name,
         )
+        self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

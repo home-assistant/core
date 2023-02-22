@@ -1,45 +1,38 @@
 """Test the sensor significant change platform."""
 import pytest
 
-from homeassistant.components.sensor.significant_change import (
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    async_check_significant_change,
-)
+from homeassistant.components.sensor import SensorDeviceClass, significant_change
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 
 AQI_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_AQI,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.AQI,
 }
 
 BATTERY_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
 }
 
 HUMIDITY_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
 }
 
 TEMP_CELSIUS_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 
 TEMP_FREEDOM_ATTRS = {
-    ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
+    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 
 
 @pytest.mark.parametrize(
-    "old_state,new_state,attrs,result",
+    ("old_state", "new_state", "attrs", "result"),
     [
         ("0", "1", AQI_ATTRS, True),
         ("1", "0", AQI_ATTRS, True),
@@ -58,11 +51,17 @@ TEMP_FREEDOM_ATTRS = {
         ("12.1", "12.2", TEMP_CELSIUS_ATTRS, False),
         ("70", "71", TEMP_FREEDOM_ATTRS, True),
         ("70", "70.5", TEMP_FREEDOM_ATTRS, False),
+        ("fail", "70", TEMP_FREEDOM_ATTRS, True),
+        ("70", "fail", TEMP_FREEDOM_ATTRS, False),
     ],
 )
-async def test_significant_change_temperature(old_state, new_state, attrs, result):
+async def test_significant_change_temperature(
+    old_state, new_state, attrs, result
+) -> None:
     """Detect temperature significant changes."""
     assert (
-        async_check_significant_change(None, old_state, attrs, new_state, attrs)
+        significant_change.async_check_significant_change(
+            None, old_state, attrs, new_state, attrs
+        )
         is result
     )

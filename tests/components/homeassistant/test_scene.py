@@ -6,12 +6,14 @@ import voluptuous as vol
 
 from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, async_mock_service
 
 
-async def test_reload_config_service(hass):
+async def test_reload_config_service(hass: HomeAssistant) -> None:
     """Test the reload config service."""
     assert await async_setup_component(hass, "scene", {})
 
@@ -41,7 +43,7 @@ async def test_reload_config_service(hass):
     assert hass.states.get("scene.bye") is not None
 
 
-async def test_apply_service(hass):
+async def test_apply_service(hass: HomeAssistant) -> None:
     """Test the apply service."""
     assert await async_setup_component(hass, "scene", {})
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
@@ -83,7 +85,9 @@ async def test_apply_service(hass):
     assert turn_on_calls[0].data.get("brightness") == 50
 
 
-async def test_create_service(hass, caplog):
+async def test_create_service(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the create service."""
     assert await async_setup_component(
         hass,
@@ -119,7 +123,7 @@ async def test_create_service(hass, caplog):
     assert scene is not None
     assert scene.domain == "scene"
     assert scene.name == "hallo"
-    assert scene.state == "scening"
+    assert scene.state == STATE_UNKNOWN
     assert scene.attributes.get("entity_id") == ["light.bed_light"]
 
     assert await hass.services.async_call(
@@ -137,7 +141,7 @@ async def test_create_service(hass, caplog):
     assert scene is not None
     assert scene.domain == "scene"
     assert scene.name == "hallo"
-    assert scene.state == "scening"
+    assert scene.state == STATE_UNKNOWN
     assert scene.attributes.get("entity_id") == ["light.kitchen_light"]
 
     assert await hass.services.async_call(
@@ -156,11 +160,13 @@ async def test_create_service(hass, caplog):
     assert scene is not None
     assert scene.domain == "scene"
     assert scene.name == "hallo_2"
-    assert scene.state == "scening"
+    assert scene.state == STATE_UNKNOWN
     assert scene.attributes.get("entity_id") == ["light.kitchen"]
 
 
-async def test_snapshot_service(hass, caplog):
+async def test_snapshot_service(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the snapshot option."""
     assert await async_setup_component(hass, "scene", {"scene": {}})
     await hass.async_block_till_done()
@@ -218,7 +224,7 @@ async def test_snapshot_service(hass, caplog):
     assert "light.bed_light" in scene.attributes.get("entity_id")
 
 
-async def test_ensure_no_intersection(hass):
+async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
     """Test that entities and snapshot_entities do not overlap."""
     assert await async_setup_component(hass, "scene", {"scene": {}})
     await hass.async_block_till_done()
@@ -239,7 +245,7 @@ async def test_ensure_no_intersection(hass):
     assert hass.states.get("scene.hallo") is None
 
 
-async def test_scenes_with_entity(hass):
+async def test_scenes_with_entity(hass: HomeAssistant) -> None:
     """Test finding scenes with a specific entity."""
     assert await async_setup_component(
         hass,
@@ -263,7 +269,7 @@ async def test_scenes_with_entity(hass):
     ]
 
 
-async def test_entities_in_scene(hass):
+async def test_entities_in_scene(hass: HomeAssistant) -> None:
     """Test finding entities in a scene."""
     assert await async_setup_component(
         hass,
@@ -289,7 +295,7 @@ async def test_entities_in_scene(hass):
         assert ha_scene.entities_in_scene(hass, scene_id) == entities
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test passing config in YAML."""
     assert await async_setup_component(
         hass,
@@ -320,7 +326,7 @@ async def test_config(hass):
     assert "icon" not in no_icon.attributes
 
 
-def test_validator():
+def test_validator() -> None:
     """Test validators."""
     parsed = ha_scene.STATES_SCHEMA({"light.Test": {"state": "on"}})
     assert len(parsed) == 1

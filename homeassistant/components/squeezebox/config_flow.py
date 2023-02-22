@@ -60,7 +60,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
         self.discovery_info = None
@@ -95,8 +95,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = _base_schema(self.discovery_info)
 
     async def _validate_input(self, data):
-        """
-        Validate the user input allows us to connect.
+        """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
         """
@@ -157,13 +156,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
-
-    async def async_step_import(self, config):
-        """Import a config flow from configuration."""
-        error = await self._validate_input(config)
-        if error:
-            return self.async_abort(reason=error)
-        return self.async_create_entry(title=config[CONF_HOST], data=config)
 
     async def async_step_integration_discovery(self, discovery_info):
         """Handle discovery of a server."""

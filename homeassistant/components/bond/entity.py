@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any
 
 from aiohttp import ClientError
-from bond_api import BPUPSubscriptions
+from bond_async import BPUPSubscriptions
 
 from homeassistant.const import (
+    ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
@@ -40,6 +40,7 @@ class BondEntity(Entity):
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
+        sub_device_id: str | None = None,
     ) -> None:
         """Initialize entity with API and device info."""
         self._hub = hub
@@ -48,15 +49,22 @@ class BondEntity(Entity):
         self._sub_device = sub_device
         self._attr_available = True
         self._bpup_subs = bpup_subs
-        self._update_lock: Lock | None = None
+        self._update_lock = Lock()
         self._initialized = False
-        sub_device_id: str = f"_{sub_device}" if sub_device else ""
+        if sub_device_id:
+            sub_device_id = f"_{sub_device_id}"
+        elif sub_device:
+            sub_device_id = f"_{sub_device}"
+        else:
+            sub_device_id = ""
         self._attr_unique_id = f"{hub.bond_id}_{device.device_id}{sub_device_id}"
         if sub_device:
             sub_device_name = sub_device.replace("_", " ").title()
             self._attr_name = f"{device.name} {sub_device_name}"
         else:
             self._attr_name = device.name
+        self._attr_assumed_state = self._hub.is_bridge and not self._device.trust_state
+        self._apply_state()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -68,7 +76,7 @@ class BondEntity(Entity):
             configuration_url=f"http://{self._hub.host}",
         )
         if self.name is not None:
-            device_info[ATTR_NAME] = self.name
+            device_info[ATTR_NAME] = self._device.name
         if self._hub.bond_id is not None:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
         if self._device.location is not None:
@@ -78,6 +86,8 @@ class BondEntity(Entity):
                 device_info[ATTR_MODEL] = self._hub.model
             if self._hub.fw_ver is not None:
                 device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+            if self._hub.mcu_ver is not None:
+                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
         else:
             model_data = []
             if self._device.branding_profile:
@@ -93,7 +103,8 @@ class BondEntity(Entity):
         """Fetch assumed state of the cover from the hub using API."""
         await self._async_update_from_api()
 
-    async def _async_update_if_bpup_not_alive(self, *_: Any) -> None:
+    @callback
+    def _async_update_if_bpup_not_alive(self, now: datetime) -> None:
         """Fetch via the API if BPUP is not alive."""
         if (
             self.hass.is_stopping
@@ -102,8 +113,6 @@ class BondEntity(Entity):
             and self.available
         ):
             return
-
-        assert self._update_lock is not None
         if self._update_lock.locked():
             _LOGGER.warning(
                 "Updating %s took longer than the scheduled update interval %s",
@@ -111,7 +120,10 @@ class BondEntity(Entity):
                 _FALLBACK_SCAN_INTERVAL,
             )
             return
+        self.hass.async_create_task(self._async_update())
 
+    async def _async_update(self) -> None:
+        """Fetch via the API."""
         async with self._update_lock:
             await self._async_update_from_api()
             self.async_write_ha_state()
@@ -128,10 +140,9 @@ class BondEntity(Entity):
             self._attr_available = False
         else:
             self._async_state_callback(state)
-        self._attr_assumed_state = self._hub.is_bridge and not self._device.trust_state
 
     @abstractmethod
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
         raise NotImplementedError
 
     @callback
@@ -144,18 +155,22 @@ class BondEntity(Entity):
         _LOGGER.debug(
             "Device state for %s (%s) is:\n%s", self.name, self.entity_id, state
         )
-        self._apply_state(state)
+        self._device.state = state
+        self._apply_state()
 
     @callback
-    def _async_bpup_callback(self, state: dict) -> None:
+    def _async_bpup_callback(self, json_msg: dict) -> None:
         """Process a state change from BPUP."""
-        self._async_state_callback(state)
+        topic = json_msg["t"]
+        if topic != f"devices/{self._device_id}/state":
+            return
+
+        self._async_state_callback(json_msg["b"])
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
-        self._update_lock = Lock()
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
         self.async_on_remove(
             async_track_time_interval(

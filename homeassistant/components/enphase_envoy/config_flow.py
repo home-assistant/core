@@ -1,6 +1,7 @@
 """Config flow for Enphase Envoy integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import contextlib
 import logging
 from typing import Any
@@ -11,17 +12,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.network import is_ipv4_address
 
 from .const import DOMAIN
 
@@ -60,7 +56,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize an envoy flow."""
         self.ip_address = None
-        self.name = None
         self.username = None
         self._reauth_entry = None
 
@@ -80,19 +75,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema[vol.Optional(CONF_PASSWORD, default="")] = str
         return vol.Schema(schema)
 
-    async def async_step_import(self, import_config):
-        """Handle a flow import."""
-        self.ip_address = import_config[CONF_IP_ADDRESS]
-        self.username = import_config[CONF_USERNAME]
-        self.name = import_config[CONF_NAME]
-        return await self.async_step_user(
-            {
-                CONF_HOST: import_config[CONF_IP_ADDRESS],
-                CONF_USERNAME: import_config[CONF_USERNAME],
-                CONF_PASSWORD: import_config[CONF_PASSWORD],
-            }
-        )
-
     @callback
     def _async_current_hosts(self):
         """Return a set of hosts."""
@@ -106,6 +88,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        if not is_ipv4_address(discovery_info.host):
+            return self.async_abort(reason="not_ipv4_address")
         serial = discovery_info.properties["serialnum"]
         await self.async_set_unique_id(serial)
         self.ip_address = discovery_info.host
@@ -127,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, user_input):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -136,8 +120,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _async_envoy_name(self) -> str:
         """Return the name of the envoy."""
-        if self.name:
-            return self.name
         if self.unique_id:
             return f"{ENVOY} {self.unique_id}"
         return ENVOY

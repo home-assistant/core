@@ -5,15 +5,17 @@ import voluptuous as vol
 from youtube_dl import YoutubeDL
 from youtube_dl.utils import DownloadError, ExtractorError
 
-from homeassistant.components.media_player import MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,10 +40,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media extractor service."""
 
-    def play_media(call):
+    def play_media(call: ServiceCall) -> None:
         """Get stream URL and send it to the play_media service."""
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
@@ -138,18 +140,16 @@ class MediaExtractor:
         except MEQueryException:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
-        else:
-            data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
-            data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
-            if entity_id:
-                data[ATTR_ENTITY_ID] = entity_id
+        data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
+        data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
-            self.hass.async_create_task(
-                self.hass.services.async_call(
-                    MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data
-                )
-            )
+        if entity_id:
+            data[ATTR_ENTITY_ID] = entity_id
+
+        self.hass.async_create_task(
+            self.hass.services.async_call(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
+        )
 
     def get_stream_query_for_entity(self, entity_id):
         """Get stream format query for entity."""

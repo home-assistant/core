@@ -1,26 +1,35 @@
 """Test config entries API."""
-
 from collections import OrderedDict
 from http import HTTPStatus
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS
-from homeassistant.core import callback
+from homeassistant.config_entries import HANDLERS, ConfigFlow
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.generated import config_flows
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
+    MockUser,
     mock_entity_platform,
     mock_integration,
 )
+from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture
+def clear_handlers():
+    """Clear config entry handlers."""
+    with patch.dict(HANDLERS, clear=True):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -30,104 +39,182 @@ def mock_test_component(hass):
 
 
 @pytest.fixture
-def client(hass, hass_client):
+async def client(hass, hass_client):
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(async_setup_component(hass, "http", {}))
-    hass.loop.run_until_complete(config_entries.async_setup(hass))
-    yield hass.loop.run_until_complete(hass_client())
+    await async_setup_component(hass, "http", {})
+    await config_entries.async_setup(hass)
+    return await hass_client()
 
 
-async def test_get_entries(hass, client):
+async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
     """Test get entries."""
-    with patch.dict(HANDLERS, clear=True):
+    mock_integration(hass, MockModule("comp1"))
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
+    )
+    mock_integration(
+        hass, MockModule("comp3", partial_manifest={"integration_type": "hub"})
+    )
+    mock_integration(
+        hass, MockModule("comp4", partial_manifest={"integration_type": "device"})
+    )
+    mock_integration(
+        hass, MockModule("comp5", partial_manifest={"integration_type": "service"})
+    )
 
-        @HANDLERS.register("comp1")
-        class Comp1ConfigFlow:
-            """Config flow with options flow."""
+    @HANDLERS.register("comp1")
+    class Comp1ConfigFlow:
+        """Config flow with options flow."""
 
-            @staticmethod
-            @callback
-            def async_get_options_flow(config_entry):
-                """Get options flow."""
-                pass
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Get options flow."""
 
-            @classmethod
-            @callback
-            def async_supports_options_flow(cls, config_entry):
-                """Return options flow support for this handler."""
-                return True
+        @classmethod
+        @callback
+        def async_supports_options_flow(cls, config_entry):
+            """Return options flow support for this handler."""
+            return True
 
-        hass.helpers.config_entry_flow.register_discovery_flow(
-            "comp2", "Comp 2", lambda: None
-        )
+    config_entry_flow.register_discovery_flow("comp2", "Comp 2", lambda: None)
 
-        entry = MockConfigEntry(
-            domain="comp1",
-            title="Test 1",
-            source="bla",
-        )
-        entry.supports_unload = True
-        entry.add_to_hass(hass)
-        MockConfigEntry(
-            domain="comp2",
-            title="Test 2",
-            source="bla2",
-            state=core_ce.ConfigEntryState.SETUP_ERROR,
-            reason="Unsupported API",
-        ).add_to_hass(hass)
-        MockConfigEntry(
-            domain="comp3",
-            title="Test 3",
-            source="bla3",
-            disabled_by=core_ce.DISABLED_USER,
-        ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry.supports_unload = True
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp2",
+        title="Test 2",
+        source="bla2",
+        state=core_ce.ConfigEntryState.SETUP_ERROR,
+        reason="Unsupported API",
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp3",
+        title="Test 3",
+        source="bla3",
+        disabled_by=core_ce.ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp4",
+        title="Test 4",
+        source="bla4",
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp5",
+        title="Test 5",
+        source="bla5",
+    ).add_to_hass(hass)
 
-        resp = await client.get("/api/config/config_entries/entry")
-        assert resp.status == HTTPStatus.OK
-        data = await resp.json()
-        for entry in data:
-            entry.pop("entry_id")
-        assert data == [
-            {
-                "domain": "comp1",
-                "title": "Test 1",
-                "source": "bla",
-                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-                "supports_options": True,
-                "supports_unload": True,
-                "pref_disable_new_entities": False,
-                "pref_disable_polling": False,
-                "disabled_by": None,
-                "reason": None,
-            },
-            {
-                "domain": "comp2",
-                "title": "Test 2",
-                "source": "bla2",
-                "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
-                "supports_options": False,
-                "supports_unload": False,
-                "pref_disable_new_entities": False,
-                "pref_disable_polling": False,
-                "disabled_by": None,
-                "reason": "Unsupported API",
-            },
-            {
-                "domain": "comp3",
-                "title": "Test 3",
-                "source": "bla3",
-                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-                "supports_options": False,
-                "supports_unload": False,
-                "pref_disable_new_entities": False,
-                "pref_disable_polling": False,
-                "disabled_by": core_ce.DISABLED_USER,
-                "reason": None,
-            },
-        ]
+    resp = await client.get("/api/config/config_entries/entry")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    for entry in data:
+        entry.pop("entry_id")
+    assert data == [
+        {
+            "domain": "comp1",
+            "title": "Test 1",
+            "source": "bla",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_options": True,
+            "supports_remove_device": False,
+            "supports_unload": True,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": None,
+            "reason": None,
+        },
+        {
+            "domain": "comp2",
+            "title": "Test 2",
+            "source": "bla2",
+            "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": None,
+            "reason": "Unsupported API",
+        },
+        {
+            "domain": "comp3",
+            "title": "Test 3",
+            "source": "bla3",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
+            "reason": None,
+        },
+        {
+            "domain": "comp4",
+            "title": "Test 4",
+            "source": "bla4",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": None,
+            "reason": None,
+        },
+        {
+            "domain": "comp5",
+            "title": "Test 5",
+            "source": "bla5",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": None,
+            "reason": None,
+        },
+    ]
+
+    resp = await client.get("/api/config/config_entries/entry?domain=comp3")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 1
+    assert data[0]["domain"] == "comp3"
+
+    resp = await client.get("/api/config/config_entries/entry?domain=comp3&type=helper")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 0
+
+    resp = await client.get("/api/config/config_entries/entry?type=hub")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 2
+    assert data[0]["domain"] == "comp1"
+    assert data[1]["domain"] == "comp3"
+
+    resp = await client.get("/api/config/config_entries/entry?type=device")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 1
+    assert data[0]["domain"] == "comp4"
+
+    resp = await client.get("/api/config/config_entries/entry?type=service")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 1
+    assert data[0]["domain"] == "comp5"
 
 
-async def test_remove_entry(hass, client):
+async def test_remove_entry(hass: HomeAssistant, client) -> None:
     """Test removing an entry via the API."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
@@ -138,7 +225,7 @@ async def test_remove_entry(hass, client):
     assert len(hass.config_entries.async_entries()) == 0
 
 
-async def test_reload_entry(hass, client):
+async def test_reload_entry(hass: HomeAssistant, client) -> None:
     """Test reloading an entry via the API."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
@@ -151,13 +238,15 @@ async def test_reload_entry(hass, client):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_reload_invalid_entry(hass, client):
+async def test_reload_invalid_entry(hass: HomeAssistant, client) -> None:
     """Test reloading an invalid entry via the API."""
     resp = await client.post("/api/config/config_entries/entry/invalid/reload")
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_remove_entry_unauth(hass, client, hass_admin_user):
+async def test_remove_entry_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser
+) -> None:
     """Test removing an entry via the API."""
     hass_admin_user.groups = []
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
@@ -167,7 +256,9 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_reload_entry_unauth(hass, client, hass_admin_user):
+async def test_reload_entry_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser
+) -> None:
     """Test reloading an entry via the API."""
     hass_admin_user.groups = []
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
@@ -179,7 +270,9 @@ async def test_reload_entry_unauth(hass, client, hass_admin_user):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
+async def test_reload_entry_in_failed_state(
+    hass: HomeAssistant, client, hass_admin_user: MockUser
+) -> None:
     """Test reloading an entry via the API that has already failed to unload."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.FAILED_UNLOAD)
     entry.add_to_hass(hass)
@@ -190,13 +283,63 @@ async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_available_flows(hass, client):
+async def test_reload_entry_in_setup_retry(
+    hass: HomeAssistant, client, hass_admin_user: MockUser
+) -> None:
+    """Test reloading an entry via the API that is in setup retry."""
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
+    entry.supports_unload = True
+    entry.add_to_hass(hass)
+
+    with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+        )
+        await hass.async_block_till_done()
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {"require_restart": False}
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("type_filter", "result"),
+    (
+        (None, {"hello", "another", "world"}),
+        ("integration", {"hello", "another"}),
+        ("helper", {"world"}),
+    ),
+)
+async def test_available_flows(
+    hass: HomeAssistant, client, type_filter, result
+) -> None:
     """Test querying the available flows."""
-    with patch.object(config_flows, "FLOWS", ["hello", "world"]):
-        resp = await client.get("/api/config/config_entries/flow_handlers")
+    with patch.object(
+        config_flows,
+        "FLOWS",
+        {"integration": ["hello", "another"], "helper": ["world"]},
+    ):
+        resp = await client.get(
+            "/api/config/config_entries/flow_handlers",
+            params={"type": type_filter} if type_filter else {},
+        )
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
-        assert set(data) == {"hello", "world"}
+        assert set(data) == result
 
 
 ############################
@@ -204,7 +347,7 @@ async def test_available_flows(hass, client):
 ############################
 
 
-async def test_initialize_flow(hass, client):
+async def test_initialize_flow(hass: HomeAssistant, client) -> None:
     """Test we can initialize a flow."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -252,7 +395,38 @@ async def test_initialize_flow(hass, client):
     }
 
 
-async def test_initialize_flow_unauth(hass, client, hass_admin_user):
+async def test_initialize_flow_unmet_dependency(hass: HomeAssistant, client) -> None:
+    """Test unmet dependencies are listed."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    mock_integration(
+        hass, MockModule(domain="dependency_1", config_schema=config_schema)
+    )
+    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    mock_integration(
+        hass,
+        MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            pass
+
+    with patch.dict(HANDLERS, {"test2": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test2", "show_advanced_options": True},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.text()
+    assert data == "Failed dependencies dependency_1"
+
+
+async def test_initialize_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser
+) -> None:
     """Test we can initialize a flow."""
     hass_admin_user.groups = []
 
@@ -277,7 +451,7 @@ async def test_initialize_flow_unauth(hass, client, hass_admin_user):
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_abort(hass, client):
+async def test_abort(hass: HomeAssistant, client) -> None:
     """Test a flow that aborts."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -301,7 +475,9 @@ async def test_abort(hass, client):
     }
 
 
-async def test_create_account(hass, client, enable_custom_integrations):
+async def test_create_account(
+    hass: HomeAssistant, client, enable_custom_integrations: None
+) -> None:
     """Test a flow that creates an account."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -341,6 +517,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
+            "supports_remove_device": False,
             "supports_unload": False,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -353,7 +530,9 @@ async def test_create_account(hass, client, enable_custom_integrations):
     }
 
 
-async def test_two_step_flow(hass, client, enable_custom_integrations):
+async def test_two_step_flow(
+    hass: HomeAssistant, client, enable_custom_integrations: None
+) -> None:
     """Test we can finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -414,6 +593,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -426,7 +606,9 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
         }
 
 
-async def test_continue_flow_unauth(hass, client, hass_admin_user):
+async def test_continue_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser
+) -> None:
     """Test we can't finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -472,7 +654,9 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_get_progress_index(hass, hass_ws_client):
+async def test_get_progress_index(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test querying for the flows that are in progress."""
     assert await async_setup_component(hass, "config", {})
     mock_entity_platform(hass, "config_flow.test", None)
@@ -506,7 +690,9 @@ async def test_get_progress_index(hass, hass_ws_client):
     ]
 
 
-async def test_get_progress_index_unauth(hass, hass_ws_client, hass_admin_user):
+async def test_get_progress_index_unauth(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
     """Test we can't get flows that are in progress."""
     assert await async_setup_component(hass, "config", {})
     hass_admin_user.groups = []
@@ -519,7 +705,7 @@ async def test_get_progress_index_unauth(hass, hass_ws_client, hass_admin_user):
     assert response["error"]["code"] == "unauthorized"
 
 
-async def test_get_progress_flow(hass, client):
+async def test_get_progress_flow(hass: HomeAssistant, client) -> None:
     """Test we can query the API for same result as we get from init a flow."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -553,7 +739,9 @@ async def test_get_progress_flow(hass, client):
     assert data == data2
 
 
-async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
+async def test_get_progress_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser
+) -> None:
     """Test we can can't query the API for result of flow."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -586,7 +774,7 @@ async def test_get_progress_flow_unauth(hass, client, hass_admin_user):
     assert resp2.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_options_flow(hass, client):
+async def test_options_flow(hass: HomeAssistant, client) -> None:
     """Test we can change options."""
 
     class TestFlow(core_ce.ConfigFlow):
@@ -631,7 +819,7 @@ async def test_options_flow(hass, client):
     }
 
 
-async def test_two_step_options_flow(hass, client):
+async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
     """Test we can finish a two step options flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -696,7 +884,7 @@ async def test_two_step_options_flow(hass, client):
         }
 
 
-async def test_options_flow_with_invalid_data(hass, client):
+async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> None:
     """Test an options flow with invalid_data."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -766,12 +954,16 @@ async def test_options_flow_with_invalid_data(hass, client):
         assert resp.status == HTTPStatus.BAD_REQUEST
         data = await resp.json()
         assert data == {
-            "message": "User input malformed: invalid is not a valid option for "
-            "dictionary value @ data['choices']"
+            "message": (
+                "User input malformed: invalid is not a valid option for "
+                "dictionary value @ data['choices']"
+            )
         }
 
 
-async def test_update_prefrences(hass, hass_ws_client):
+async def test_update_prefrences(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can update system options."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -820,7 +1012,9 @@ async def test_update_prefrences(hass, hass_ws_client):
     assert entry.pref_disable_polling is True
 
 
-async def test_update_entry(hass, hass_ws_client):
+async def test_update_entry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can update entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -843,7 +1037,9 @@ async def test_update_entry(hass, hass_ws_client):
     assert entry.title == "Updated Title"
 
 
-async def test_update_entry_nonexisting(hass, hass_ws_client):
+async def test_update_entry_nonexisting(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can update entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -862,7 +1058,9 @@ async def test_update_entry_nonexisting(hass, hass_ws_client):
     assert response["error"]["code"] == "not_found"
 
 
-async def test_disable_entry(hass, hass_ws_client):
+async def test_disable_entry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can disable entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -877,14 +1075,14 @@ async def test_disable_entry(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": entry.entry_id,
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()
 
     assert response["success"]
     assert response["result"] == {"require_restart": True}
-    assert entry.disabled_by == core_ce.DISABLED_USER
+    assert entry.disabled_by is core_ce.ConfigEntryDisabler.USER
     assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
@@ -920,7 +1118,9 @@ async def test_disable_entry(hass, hass_ws_client):
     assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
 
-async def test_disable_entry_nonexisting(hass, hass_ws_client):
+async def test_disable_entry_nonexisting(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can disable entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -930,7 +1130,7 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": "non_existing",
-            "disabled_by": core_ce.DISABLED_USER,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
         }
     )
     response = await ws_client.receive_json()
@@ -939,7 +1139,9 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
     assert response["error"]["code"] == "not_found"
 
 
-async def test_ignore_flow(hass, hass_ws_client):
+async def test_ignore_flow(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
     mock_integration(
@@ -952,7 +1154,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
-            return self.async_show_form(step_id="account", data_schema=vol.Schema({}))
+            return self.async_show_form(step_id="account")
 
     ws_client = await hass_ws_client(hass)
 
@@ -960,7 +1162,7 @@ async def test_ignore_flow(hass, hass_ws_client):
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         await ws_client.send_json(
             {
@@ -982,7 +1184,9 @@ async def test_ignore_flow(hass, hass_ws_client):
     assert entry.title == "Test Integration"
 
 
-async def test_ignore_flow_nonexisting(hass, hass_ws_client):
+async def test_ignore_flow_nonexisting(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -999,3 +1203,721 @@ async def test_ignore_flow_nonexisting(hass, hass_ws_client):
 
     assert not response["success"]
     assert response["error"]["code"] == "not_found"
+
+
+async def test_get_entries_ws(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, clear_handlers
+) -> None:
+    """Test get entries with the websocket api."""
+    assert await async_setup_component(hass, "config", {})
+    mock_integration(hass, MockModule("comp1"))
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
+    )
+    mock_integration(
+        hass, MockModule("comp3", partial_manifest={"integration_type": "hub"})
+    )
+    mock_integration(
+        hass, MockModule("comp4", partial_manifest={"integration_type": "device"})
+    )
+    mock_integration(
+        hass, MockModule("comp5", partial_manifest={"integration_type": "service"})
+    )
+
+    entry = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp2",
+        title="Test 2",
+        source="bla2",
+        state=core_ce.ConfigEntryState.SETUP_ERROR,
+        reason="Unsupported API",
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp3",
+        title="Test 3",
+        source="bla3",
+        disabled_by=core_ce.ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp4",
+        title="Test 4",
+        source="bla4",
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp5",
+        title="Test 5",
+        source="bla5",
+    ).add_to_hass(hass)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/get",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 1",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp2",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": "Unsupported API",
+            "source": "bla2",
+            "state": "setup_error",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 2",
+        },
+        {
+            "disabled_by": "user",
+            "domain": "comp3",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla3",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 3",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp4",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla4",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 4",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp5",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla5",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 5",
+        },
+    ]
+
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config_entries/get",
+            "domain": "comp1",
+            "type_filter": "hub",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 6
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 1",
+        }
+    ]
+
+    await ws_client.send_json(
+        {
+            "id": 7,
+            "type": "config_entries/get",
+            "type_filter": ["service", "device"],
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 7
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp4",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla4",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 4",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp5",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla5",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 5",
+        },
+    ]
+
+    await ws_client.send_json(
+        {
+            "id": 8,
+            "type": "config_entries/get",
+            "type_filter": "hub",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 8
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 1",
+        },
+        {
+            "disabled_by": "user",
+            "domain": "comp3",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla3",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 3",
+        },
+    ]
+
+    # Verify we skip broken integrations
+    with patch(
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
+    ):
+        await ws_client.send_json(
+            {
+                "id": 9,
+                "type": "config_entries/get",
+                "type_filter": "hub",
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["id"] == 9
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 1",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp2",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": "Unsupported API",
+            "source": "bla2",
+            "state": "setup_error",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 2",
+        },
+        {
+            "disabled_by": "user",
+            "domain": "comp3",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla3",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 3",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp4",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla4",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 4",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp5",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla5",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test 5",
+        },
+    ]
+
+    # Verify we don't send config entries when only helpers are requested
+    with patch(
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
+    ):
+        await ws_client.send_json(
+            {
+                "id": 10,
+                "type": "config_entries/get",
+                "type_filter": ["helper"],
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["id"] == 10
+    assert response["result"] == []
+
+    # Verify we raise if something really goes wrong
+
+    with patch(
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": Exception()},
+    ):
+        await ws_client.send_json(
+            {
+                "id": 11,
+                "type": "config_entries/get",
+                "type_filter": ["device", "hub", "service"],
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["id"] == 11
+    assert response["success"] is False
+
+
+async def test_subscribe_entries_ws(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, clear_handlers
+) -> None:
+    """Test subscribe entries with the websocket api."""
+    assert await async_setup_component(hass, "config", {})
+    mock_integration(hass, MockModule("comp1"))
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
+    )
+    mock_integration(
+        hass, MockModule("comp3", partial_manifest={"integration_type": "device"})
+    )
+    entry = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp2",
+        title="Test 2",
+        source="bla2",
+        state=core_ce.ConfigEntryState.SETUP_ERROR,
+        reason="Unsupported API",
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp3",
+        title="Test 3",
+        source="bla3",
+        disabled_by=core_ce.ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/subscribe",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["result"] is None
+    assert response["success"] is True
+    assert response["type"] == "result"
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "type": None,
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "Test 1",
+            },
+        },
+        {
+            "type": None,
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp2",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": "Unsupported API",
+                "source": "bla2",
+                "state": "setup_error",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "Test 2",
+            },
+        },
+        {
+            "type": None,
+            "entry": {
+                "disabled_by": "user",
+                "domain": "comp3",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla3",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "Test 3",
+            },
+        },
+    ]
+    assert hass.config_entries.async_update_entry(entry, title="changed")
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "changed",
+            },
+            "type": "updated",
+        }
+    ]
+    await hass.config_entries.async_remove(entry.entry_id)
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "changed",
+            },
+            "type": "removed",
+        }
+    ]
+    await hass.config_entries.async_add(entry)
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "changed",
+            },
+            "type": "added",
+        }
+    ]
+
+
+async def test_subscribe_entries_ws_filtered(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, clear_handlers
+) -> None:
+    """Test subscribe entries with the websocket api with a type filter."""
+    assert await async_setup_component(hass, "config", {})
+    mock_integration(hass, MockModule("comp1"))
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
+    )
+    mock_integration(
+        hass, MockModule("comp3", partial_manifest={"integration_type": "device"})
+    )
+    mock_integration(
+        hass, MockModule("comp4", partial_manifest={"integration_type": "service"})
+    )
+    entry = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain="comp2",
+        title="Test 2",
+        source="bla2",
+        state=core_ce.ConfigEntryState.SETUP_ERROR,
+        reason="Unsupported API",
+    )
+    entry2.add_to_hass(hass)
+    entry3 = MockConfigEntry(
+        domain="comp3",
+        title="Test 3",
+        source="bla3",
+        disabled_by=core_ce.ConfigEntryDisabler.USER,
+    )
+    entry3.add_to_hass(hass)
+    entry4 = MockConfigEntry(
+        domain="comp4",
+        title="Test 4",
+        source="bla4",
+    )
+    entry4.add_to_hass(hass)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/subscribe",
+            "type_filter": ["hub", "device"],
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["result"] is None
+    assert response["success"] is True
+    assert response["type"] == "result"
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "type": None,
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "Test 1",
+            },
+        },
+        {
+            "type": None,
+            "entry": {
+                "disabled_by": "user",
+                "domain": "comp3",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla3",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "Test 3",
+            },
+        },
+    ]
+    assert hass.config_entries.async_update_entry(entry, title="changed")
+    assert hass.config_entries.async_update_entry(entry3, title="changed too")
+    assert hass.config_entries.async_update_entry(entry4, title="changed but ignored")
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "changed",
+            },
+            "type": "updated",
+        }
+    ]
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "entry": {
+                "disabled_by": "user",
+                "domain": "comp3",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla3",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "changed too",
+            },
+            "type": "updated",
+        }
+    ]
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_remove(entry2.entry_id)
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "changed",
+            },
+            "type": "removed",
+        }
+    ]
+    await hass.config_entries.async_add(entry)
+    response = await ws_client.receive_json()
+    assert response["id"] == 5
+    assert response["event"] == [
+        {
+            "entry": {
+                "disabled_by": None,
+                "domain": "comp1",
+                "entry_id": ANY,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
+                "reason": None,
+                "source": "bla",
+                "state": "not_loaded",
+                "supports_options": False,
+                "supports_remove_device": False,
+                "supports_unload": False,
+                "title": "changed",
+            },
+            "type": "added",
+        }
+    ]

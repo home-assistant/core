@@ -1,41 +1,49 @@
 """Support for DHT and DS18B20 sensors attached to a Konnected device."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
     CONF_ZONE,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
-        key=DEVICE_CLASS_TEMPERATURE,
+        key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "humidity": SensorEntityDescription(
-        key=DEVICE_CLASS_HUMIDITY,
+        key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up sensors attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
     device_id = config_entry.data["id"]
@@ -94,7 +102,7 @@ class KonnectedSensor(SensorEntity):
         description: SensorEntityDescription,
         addr=None,
         initial_state=None,
-    ):
+    ) -> None:
         """Initialize the entity for a single sensor_type."""
         self.entity_description = description
         self._addr = addr
@@ -119,7 +127,7 @@ class KonnectedSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
         entity_id_key = self._addr or self.entity_description.key
         self._data[entity_id_key] = self.entity_id
@@ -130,7 +138,7 @@ class KonnectedSensor(SensorEntity):
     @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
-        if self.entity_description.key == DEVICE_CLASS_HUMIDITY:
+        if self.entity_description.key == "humidity":
             self._state = int(float(state))
         else:
             self._state = round(float(state), 1)

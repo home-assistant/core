@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "init": {
-        "title": "OpenTherm Gateway",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "device": "Path or URL",
@@ -13,13 +12,13 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "id_exists": "Gateway id already exists",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     }
   },
   "options": {
     "step": {
       "init": {
-        "description": "Options for the OpenTherm Gateway",
         "data": {
           "floor_temperature": "Floor Temperature",
           "read_precision": "Read Precision",

@@ -1,26 +1,23 @@
 """Support for MySensors lights."""
 from __future__ import annotations
 
-from typing import Any, Tuple, cast
+from typing import Any, cast
 
-from homeassistant.components import mysensors
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    DOMAIN,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
+from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
 from .device import MySensorsDevice
 from .helpers import on_unload
@@ -42,7 +39,7 @@ async def async_setup_entry(
         """Discover and add a MySensors light."""
         mysensors.setup_mysensors_platform(
             hass,
-            DOMAIN,
+            Platform.LIGHT,
             discovery_info,
             device_class_map,
             async_add_entities=async_add_entities,
@@ -53,7 +50,7 @@ async def async_setup_entry(
         config_entry.entry_id,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.LIGHT),
             async_discover,
         ),
     )
@@ -137,8 +134,8 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
 class MySensorsLightDimmer(MySensorsLight):
     """Dimmer child class to MySensorsLight."""
 
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -147,9 +144,10 @@ class MySensorsLightDimmer(MySensorsLight):
         if self.assumed_state:
             self.async_write_ha_state()
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._async_update_light()
         self._async_update_dimmer()
 
@@ -157,8 +155,8 @@ class MySensorsLightDimmer(MySensorsLight):
 class MySensorsLightRGB(MySensorsLight):
     """RGB child class to MySensorsLight."""
 
-    _attr_supported_color_modes = {COLOR_MODE_RGB}
-    _attr_color_mode = COLOR_MODE_RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -184,9 +182,10 @@ class MySensorsLightRGB(MySensorsLight):
             self._attr_rgb_color = new_rgb
             self._values[self.value_type] = hex_color
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
-        await super().async_update()
+        super()._async_update()
         self._async_update_light()
         self._async_update_dimmer()
         self._async_update_rgb_or_w()
@@ -196,15 +195,15 @@ class MySensorsLightRGB(MySensorsLight):
         """Update the controller with values from RGB child."""
         value = self._values[self.value_type]
         self._attr_rgb_color = cast(
-            Tuple[int, int, int], tuple(rgb_hex_to_rgb_list(value))
+            tuple[int, int, int], tuple(rgb_hex_to_rgb_list(value))
         )
 
 
 class MySensorsLightRGBW(MySensorsLightRGB):
     """RGBW child class to MySensorsLightRGB."""
 
-    _attr_supported_color_modes = {COLOR_MODE_RGBW}
-    _attr_color_mode = COLOR_MODE_RGBW
+    _attr_supported_color_modes = {ColorMode.RGBW}
+    _attr_color_mode = ColorMode.RGBW
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -235,5 +234,5 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         """Update the controller with values from RGBW child."""
         value = self._values[self.value_type]
         self._attr_rgbw_color = cast(
-            Tuple[int, int, int, int], tuple(rgb_hex_to_rgb_list(value))
+            tuple[int, int, int, int], tuple(rgb_hex_to_rgb_list(value))
         )

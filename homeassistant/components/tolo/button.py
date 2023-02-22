@@ -4,7 +4,7 @@ from tololib.const import LampMode
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
 class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
     """Button for switching to the next lamp color."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:palette"
     _attr_name = "Next Color"
 

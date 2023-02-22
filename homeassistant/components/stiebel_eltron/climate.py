@@ -1,16 +1,19 @@
 """Support for stiebel_eltron climate platform."""
-import logging
+from __future__ import annotations
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+import logging
+from typing import Any
+
+from homeassistant.components.climate import (
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as STE_DOMAIN
 
@@ -22,19 +25,18 @@ PRESET_DAY = "day"
 PRESET_SETBACK = "setback"
 PRESET_EMERGENCY = "emergency"
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_HVAC = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
 SUPPORT_PRESET = [PRESET_ECO, PRESET_DAY, PRESET_EMERGENCY, PRESET_SETBACK]
 
 # Mapping STIEBEL ELTRON states to homeassistant states/preset.
 STE_TO_HA_HVAC = {
-    "AUTOMATIC": HVAC_MODE_AUTO,
-    "MANUAL MODE": HVAC_MODE_HEAT,
-    "STANDBY": HVAC_MODE_AUTO,
-    "DAY MODE": HVAC_MODE_AUTO,
-    "SETBACK MODE": HVAC_MODE_AUTO,
-    "DHW": HVAC_MODE_OFF,
-    "EMERGENCY OPERATION": HVAC_MODE_AUTO,
+    "AUTOMATIC": HVACMode.AUTO,
+    "MANUAL MODE": HVACMode.HEAT,
+    "STANDBY": HVACMode.AUTO,
+    "DAY MODE": HVACMode.AUTO,
+    "SETBACK MODE": HVACMode.AUTO,
+    "DHW": HVACMode.OFF,
+    "EMERGENCY OPERATION": HVACMode.AUTO,
 }
 
 STE_TO_HA_PRESET = {
@@ -45,15 +47,20 @@ STE_TO_HA_PRESET = {
 }
 
 HA_TO_STE_HVAC = {
-    HVAC_MODE_AUTO: "AUTOMATIC",
-    HVAC_MODE_HEAT: "MANUAL MODE",
-    HVAC_MODE_OFF: "DHW",
+    HVACMode.AUTO: "AUTOMATIC",
+    HVACMode.HEAT: "MANUAL MODE",
+    HVACMode.OFF: "DHW",
 }
 
 HA_TO_STE_PRESET = {k: i for i, k in STE_TO_HA_PRESET.items()}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the StiebelEltron platform."""
     name = hass.data[STE_DOMAIN]["name"]
     ste_data = hass.data[STE_DOMAIN]["ste_data"]
@@ -63,6 +70,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class StiebelEltron(ClimateEntity):
     """Representation of a STIEBEL ELTRON heat pump."""
+
+    _attr_hvac_modes = SUPPORT_HVAC
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, ste_data):
         """Initialize the unit."""
@@ -75,12 +88,7 @@ class StiebelEltron(ClimateEntity):
         self._force_update = False
         self._ste_data = ste_data
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    def update(self):
+    def update(self) -> None:
         """Update unit attributes."""
         self._ste_data.update(no_throttle=self._force_update)
         self._force_update = False
@@ -105,11 +113,7 @@ class StiebelEltron(ClimateEntity):
         """Return the name of the climate device."""
         return self._name
 
-    # Handle SUPPORT_TARGET_TEMPERATURE
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+    # Handle ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
     def current_temperature(self):
@@ -142,12 +146,7 @@ class StiebelEltron(ClimateEntity):
         return float(f"{self._current_humidity:.1f}")
 
     @property
-    def hvac_modes(self):
-        """List of the operation modes."""
-        return SUPPORT_HVAC
-
-    @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         return STE_TO_HA_HVAC.get(self._operation)
 
@@ -161,7 +160,7 @@ class StiebelEltron(ClimateEntity):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if self.preset_mode:
             return
@@ -170,7 +169,7 @@ class StiebelEltron(ClimateEntity):
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if target_temperature is not None:
@@ -178,7 +177,7 @@ class StiebelEltron(ClimateEntity):
             self._ste_data.api.set_target_temp(target_temperature)
             self._force_update = True
 
-    def set_preset_mode(self, preset_mode: str):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         new_mode = HA_TO_STE_PRESET.get(preset_mode)
         _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)

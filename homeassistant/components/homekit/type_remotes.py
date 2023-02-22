@@ -1,5 +1,5 @@
 """Class to hold remote accessories."""
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import logging
 
 from pyhap.const import CATEGORY_TELEVISION
@@ -9,7 +9,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY_LIST,
     ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
-    SUPPORT_ACTIVITY,
+    RemoteEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -47,10 +47,10 @@ from .const import (
     KEY_PREVIOUS_TRACK,
     KEY_REWIND,
     KEY_SELECT,
-    MAX_NAME_LENGTH,
     SERV_INPUT_SOURCE,
     SERV_TELEVISION,
 )
+from .util import cleanup_name_for_homekit
 
 MAXIMUM_SOURCES = (
     90  # Maximum services per accessory is 100. The base acccessory uses 9
@@ -75,7 +75,7 @@ REMOTE_KEYS = {
 }
 
 
-class RemoteInputSelectAccessory(HomeAccessory):
+class RemoteInputSelectAccessory(HomeAccessory, ABC):
     """Generate a InputSelect accessory."""
 
     def __init__(
@@ -96,14 +96,16 @@ class RemoteInputSelectAccessory(HomeAccessory):
         self.sources = []
         self.support_select_source = False
         if features & required_feature:
-            sources = state.attributes.get(source_list_key, [])
+            sources = self._get_ordered_source_list_from_state(state)
             if len(sources) > MAXIMUM_SOURCES:
                 _LOGGER.warning(
                     "%s: Reached maximum number of sources (%s)",
                     self.entity_id,
                     MAXIMUM_SOURCES,
                 )
-            self.sources = sources[:MAXIMUM_SOURCES]
+            self.sources = [
+                cleanup_name_for_homekit(source) for source in sources[:MAXIMUM_SOURCES]
+            ]
             if self.sources:
                 self.support_select_source = True
 
@@ -129,19 +131,32 @@ class RemoteInputSelectAccessory(HomeAccessory):
         )
         for index, source in enumerate(self.sources):
             serv_input = self.add_preload_service(
-                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
+                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME], unique_id=source
             )
             serv_tv.add_linked_service(serv_input)
-            serv_input.configure_char(
-                CHAR_CONFIGURED_NAME, value=source[:MAX_NAME_LENGTH]
-            )
-            serv_input.configure_char(CHAR_NAME, value=source[:MAX_NAME_LENGTH])
+            serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
+            serv_input.configure_char(CHAR_NAME, value=source)
             serv_input.configure_char(CHAR_IDENTIFIER, value=index)
             serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
             input_type = 3 if "hdmi" in source.lower() else 0
             serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
             serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
+
+    def _get_ordered_source_list_from_state(self, state: State) -> list[str]:
+        """Return ordered source list while preserving order with duplicates removed.
+
+        Some integrations have duplicate sources in the source list
+        which will make the source list conflict as HomeKit requires
+        unique source names.
+        """
+        seen = set()
+        sources: list[str] = []
+        for source in state.attributes.get(self.source_list_key, []):
+            if source not in seen:
+                sources.append(source)
+            seen.add(source)
+        return sources
 
     @abstractmethod
     def set_on_off(self, value):
@@ -161,16 +176,17 @@ class RemoteInputSelectAccessory(HomeAccessory):
         # Set active input
         if not self.support_select_source or not self.sources:
             return
-        source_name = new_state.attributes.get(self.source_key)
+        source = new_state.attributes.get(self.source_key)
+        source_name = cleanup_name_for_homekit(source)
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
         if source_name in self.sources:
             index = self.sources.index(source_name)
             self.char_input_source.set_value(index)
             return
 
-        possible_sources = new_state.attributes.get(self.source_list_key, [])
-        if source_name in possible_sources:
-            index = possible_sources.index(source_name)
+        possible_sources = self._get_ordered_source_list_from_state(new_state)
+        if source in possible_sources:
+            index = possible_sources.index(source)
             if index >= MAXIMUM_SOURCES:
                 _LOGGER.debug(
                     "%s: Source %s and above are not supported",
@@ -189,7 +205,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
         _LOGGER.debug(
             "%s: Source %s does not exist the source list: %s",
             self.entity_id,
-            source_name,
+            source,
             possible_sources,
         )
         self.char_input_source.set_value(0)
@@ -202,7 +218,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def __init__(self, *args):
         """Initialize a Activity Remote accessory object."""
         super().__init__(
-            SUPPORT_ACTIVITY,
+            RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY,
             ATTR_ACTIVITY_LIST,
             *args,

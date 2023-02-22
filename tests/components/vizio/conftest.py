@@ -216,6 +216,22 @@ def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
         yield
 
 
+@pytest.fixture(name="vizio_update_with_apps_on_input")
+def vizio_update_with_apps_on_input_fixture(vizio_update: pytest.fixture):
+    """Mock valid updates to vizio device that supports apps but is on a TV input."""
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+        return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+        return_value=CURRENT_INPUT,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+        return_value=AppConfig("unknown", 1, "app"),
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_hostname_check")
 def vizio_hostname_check():
     """Mock vizio hostname resolution."""

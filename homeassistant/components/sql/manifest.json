@@ -1,8 +1,9 @@
 {
   "domain": "sql",
   "name": "SQL",
+  "codeowners": ["@dgomes", "@gjohansson-ST"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sql",
-  "requirements": ["sqlalchemy==1.4.27"],
-  "codeowners": ["@dgomes"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "requirements": ["sqlalchemy==2.0.4"]
 }

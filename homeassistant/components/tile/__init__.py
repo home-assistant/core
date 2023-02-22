@@ -1,6 +1,7 @@
 """The Tile component."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 
@@ -11,13 +12,13 @@ from pytile.tile import Tile
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.async_ import gather_with_concurrency
 
-from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 DEVICE_TYPES = ["PHONE", "TILE"]
@@ -28,13 +29,20 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
 CONF_SHOW_INACTIVE = "show_inactive"
 
 
+@dataclass
+class TileData:
+    """Define an object to be stored in `hass.data`."""
+
+    coordinators: dict[str, DataUpdateCoordinator[None]]
+    tiles: dict[str, Tile]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tile as config entry."""
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
-        """
-        Define a callback to migrate appropriate Tile entities to new unique IDs.
+        """Define a callback to migrate appropriate Tile entities to new unique IDs.
 
         Old: tile_{uuid}
         New: {username}_{uuid}
@@ -68,9 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             session=websession,
         )
         tiles = await client.async_get_tiles()
-    except InvalidAuthError:
-        LOGGER.error("Invalid credentials provided")
-        return False
+    except InvalidAuthError as err:
+        raise ConfigEntryAuthFailed("Invalid credentials") from err
     except TileError as err:
         raise ConfigEntryNotReady("Error during integration setup") from err
 
@@ -78,13 +85,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update the Tile."""
         try:
             await tile.async_update()
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed("Invalid credentials") from err
         except SessionExpiredError:
             LOGGER.info("Tile session expired; creating a new one")
             await client.async_init()
         except TileError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
-    coordinators = {}
+    coordinators: dict[str, DataUpdateCoordinator[None]] = {}
     coordinator_init_tasks = []
 
     for tile_uuid, tile in tiles.items():
@@ -99,12 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await gather_with_concurrency(DEFAULT_INIT_TASK_LIMIT, *coordinator_init_tasks)
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinators,
-        DATA_TILE: tiles,
-    }
+    hass.data[DOMAIN][entry.entry_id] = TileData(coordinators=coordinators, tiles=tiles)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

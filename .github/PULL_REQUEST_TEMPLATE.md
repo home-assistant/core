@@ -33,6 +33,7 @@
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New integration (thank you!)
 - [ ] New feature (which adds functionality to an existing integration)
+- [ ] Deprecation (breaking change to happen in the future)
 - [ ] Breaking change (fix/feature causing existing functionality to break)
 - [ ] Code quality improvements to existing code or addition of tests
 
@@ -74,18 +75,6 @@ If the code communicates with devices, web services, or third-party tools:
 - [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
 - [ ] Untested files have been added to `.coveragerc`.
 
-The integration reached or maintains the following [Integration Quality Scale][quality-scale]:
-<!--
-  The Integration Quality Scale scores an integration on the code quality
-  and user experience. Each level of the quality scale consists of a list
-  of requirements. We highly recommend getting your integration scored!
--->
-
-- [ ] No score or internal
-- [ ] 🥈 Silver
-- [ ] 🥇 Gold
-- [ ] 🏆 Platinum
-
 <!--
   This project is very active and we have a high turnover of pull requests.
 
@@ -107,7 +96,7 @@ To help with the load of incoming pull requests:
 
 - [ ] I have reviewed two other [open pull requests][prs] in this repository.
 
-[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone
+[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
 
 <!--
   Thank you for contributing <3

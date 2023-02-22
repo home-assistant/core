@@ -1,0 +1,10 @@
+{
+  "title": "Update",
+  "device_automation": {
+    "trigger_type": {
+      "changed_states": "{entity_name} update availability changed",
+      "turned_on": "{entity_name} got an update available",
+      "turned_off": "{entity_name} became up-to-date"
+    }
+  }
+}

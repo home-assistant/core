@@ -1,0 +1,149 @@
+# serializer version: 1
+# name: test_buttons[button.frenck_identify-identify-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frenck Identify',
+      'icon': 'mdi:help',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.frenck_identify',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.frenck_identify-identify-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.frenck_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:help',
+    'original_name': 'Identify',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'GW24L1A02987_identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.frenck_identify-identify-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---
+# name: test_buttons[button.frenck_restart-restart-key-light-mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'Frenck Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.frenck_restart',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[button.frenck_restart-restart-key-light-mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.frenck_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'elgato',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'GW24L1A02987_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button.frenck_restart-restart-key-light-mini].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '202',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'elgato',
+        'GW24L1A02987',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Elgato',
+    'model': 'Elgato Key Light Mini',
+    'name': 'Frenck',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': '1.0.4 (229)',
+    'via_device_id': None,
+  })
+# ---

@@ -12,21 +12,23 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
     async_track_time_change,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
     vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
-    msg="Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'",
+    msg=(
+        "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+    ),
 )
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -37,10 +39,15 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
-    entities = {}
+    trigger_data = trigger_info["trigger_data"]
+    entities: dict[str, CALLBACK_TYPE] = {}
     removes = []
     job = HassJob(action)
 

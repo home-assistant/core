@@ -1,10 +1,15 @@
 """Test reproduce state for Lock."""
-from homeassistant.core import State
+import pytest
+
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Lock states."""
     hass.states.async_set("lock.entity_locked", "locked", {})
     hass.states.async_set("lock.entity_unlocked", "unlocked", {})
@@ -13,7 +18,8 @@ async def test_reproducing_states(hass, caplog):
     unlock_calls = async_mock_service(hass, "lock", "unlock")
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("lock.entity_locked", "locked"),
             State("lock.entity_unlocked", "unlocked", {}),
@@ -24,16 +30,15 @@ async def test_reproducing_states(hass, caplog):
     assert len(unlock_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("lock.entity_locked", "not_supported")]
-    )
+    await async_reproduce_state(hass, [State("lock.entity_locked", "not_supported")])
 
     assert "not_supported" in caplog.text
     assert len(lock_calls) == 0
     assert len(unlock_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("lock.entity_locked", "unlocked"),
             State("lock.entity_unlocked", "locked"),

@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -17,11 +18,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    DATA_RATE_KIBIBYTES_PER_SECOND,
     STATE_IDLE,
+    UnitOfDataRate,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +43,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         name="Up Speed",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
     ),
 )
 
@@ -58,7 +64,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the qBittorrent sensors."""
 
     try:
@@ -96,7 +107,7 @@ class QBittorrentSensor(SensorEntity):
         qbittorrent_client,
         client_name,
         exception,
-    ):
+    ) -> None:
         """Initialize the qBittorrent sensor."""
         self.entity_description = description
         self.client = qbittorrent_client
@@ -105,7 +116,7 @@ class QBittorrentSensor(SensorEntity):
         self._attr_name = f"{client_name} {description.name}"
         self._attr_available = False
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from qBittorrent and updates the state."""
         try:
             data = self.client.sync_main_data()

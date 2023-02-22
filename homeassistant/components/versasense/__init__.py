@@ -4,10 +4,12 @@ import logging
 import pyversasense as pyv
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     KEY_CONSUMER,
@@ -30,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the versasense component."""
     session = aiohttp_client.async_get_clientsession(hass)
     consumer = pyv.Consumer(config[DOMAIN]["host"], session)
@@ -48,8 +50,8 @@ async def _configure_entities(hass, config, consumer):
     devices = await consumer.fetchDevices()
     _LOGGER.debug(devices)
 
-    sensor_info_list = []
-    switch_info_list = []
+    sensor_info = {}
+    switch_info = {}
 
     for mac, device in devices.items():
         _LOGGER.info("Device connected: %s %s", device.name, mac)
@@ -59,22 +61,18 @@ async def _configure_entities(hass, config, consumer):
             hass.data[DOMAIN][mac][peripheral_id] = peripheral
 
             if peripheral.classification == PERIPHERAL_CLASS_SENSOR:
-                sensor_info_list = _add_entity_info_to_list(
-                    peripheral, device, sensor_info_list
-                )
+                sensor_info = _add_entity_info(peripheral, device, sensor_info)
             elif peripheral.classification == PERIPHERAL_CLASS_SENSOR_ACTUATOR:
-                switch_info_list = _add_entity_info_to_list(
-                    peripheral, device, switch_info_list
-                )
+                switch_info = _add_entity_info(peripheral, device, switch_info)
 
-    if sensor_info_list:
-        _load_platform(hass, config, "sensor", sensor_info_list)
+    if sensor_info:
+        _load_platform(hass, config, Platform.SENSOR, sensor_info)
 
-    if switch_info_list:
-        _load_platform(hass, config, "switch", switch_info_list)
+    if switch_info:
+        _load_platform(hass, config, Platform.SWITCH, switch_info)
 
 
-def _add_entity_info_to_list(peripheral, device, entity_info_list):
+def _add_entity_info(peripheral, device, entity_dict) -> None:
     """Add info from a peripheral to specified list."""
     for measurement in peripheral.measurements:
         entity_info = {
@@ -85,13 +83,14 @@ def _add_entity_info_to_list(peripheral, device, entity_info_list):
             KEY_PARENT_MAC: device.mac,
         }
 
-        entity_info_list.append(entity_info)
+        key = f"{entity_info[KEY_PARENT_MAC]}/{entity_info[KEY_IDENTIFIER]}/{entity_info[KEY_MEASUREMENT]}"
+        entity_dict[key] = entity_info
 
-    return entity_info_list
+    return entity_dict
 
 
-def _load_platform(hass, config, entity_type, entity_info_list):
+def _load_platform(hass, config, entity_type, entity_info):
     """Load platform with list of entity info."""
     hass.async_create_task(
-        async_load_platform(hass, entity_type, DOMAIN, entity_info_list, config)
+        async_load_platform(hass, entity_type, DOMAIN, entity_info, config)
     )

@@ -1,7 +1,6 @@
 """The Switcher integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -30,7 +29,13 @@ from .const import (
 )
 from .utils import async_start_bridge, async_stop_bridge
 
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,26 +101,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ] = SwitcherDataUpdateCoordinator(hass, entry, device)
         coordinator.async_setup()
 
-    async def platforms_setup_task() -> None:
-        # Must be ready before dispatcher is called
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
+    # Must be ready before dispatcher is called
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-        discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
-        if discovery_task is not None:
-            discovered_devices = await discovery_task
-            for device in discovered_devices.values():
-                on_device_data_callback(device)
+    discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
+    if discovery_task is not None:
+        discovered_devices = await discovery_task
+        for device in discovered_devices.values():
+            on_device_data_callback(device)
 
-        await async_start_bridge(hass, on_device_data_callback)
+    await async_start_bridge(hass, on_device_data_callback)
 
-    hass.async_create_task(platforms_setup_task())
-
-    @callback
     async def stop_bridge(event: Event) -> None:
         await async_stop_bridge(hass)
 
@@ -126,7 +122,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class SwitcherDataUpdateCoordinator(
+    update_coordinator.DataUpdateCoordinator[SwitcherBase]
+):
     """Switcher device data update coordinator."""
 
     def __init__(
@@ -142,10 +140,11 @@ class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.data = device
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+            f"Device {self.name} did not send update for"
+            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
         )
 
     @property

@@ -10,10 +10,6 @@ STEP_IMPORT_FAILED = "import_failed"
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
 
-BRIDGE_LEAP = "leap"
-BRIDGE_LIP = "lip"
-BRIDGE_DEVICE = "bridge_device"
-BUTTON_DEVICES = "button_devices"
 LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 BRIDGE_DEVICE_ID = "1"
@@ -22,7 +18,9 @@ MANUFACTURER = "Lutron Electronics Co., Inc"
 
 ATTR_SERIAL = "serial"
 ATTR_TYPE = "type"
-ATTR_BUTTON_NUMBER = "button_number"
+ATTR_BUTTON_TYPE = "button_type"
+ATTR_LEAP_BUTTON_NUMBER = "leap_button_number"
+ATTR_BUTTON_NUMBER = "button_number"  # LIP button number
 ATTR_DEVICE_NAME = "device_name"
 ATTR_AREA_NAME = "area_name"
 ATTR_ACTION = "action"
@@ -33,3 +31,7 @@ ACTION_RELEASE = "release"
 CONF_SUBTYPE = "subtype"
 
 BRIDGE_TIMEOUT = 35
+
+UNASSIGNED_AREA = "Unassigned"
+
+CONFIG_URL = "https://device-login.lutron.com"

@@ -1,20 +1,7 @@
 """deCONZ alarm control panel platform tests."""
-
 from unittest.mock import patch
 
-from pydeconz.sensor import (
-    ANCILLARY_CONTROL_ARMED_AWAY,
-    ANCILLARY_CONTROL_ARMED_NIGHT,
-    ANCILLARY_CONTROL_ARMED_STAY,
-    ANCILLARY_CONTROL_ARMING_AWAY,
-    ANCILLARY_CONTROL_ARMING_NIGHT,
-    ANCILLARY_CONTROL_ARMING_STAY,
-    ANCILLARY_CONTROL_DISARMED,
-    ANCILLARY_CONTROL_ENTRY_DELAY,
-    ANCILLARY_CONTROL_EXIT_DELAY,
-    ANCILLARY_CONTROL_IN_ALARM,
-    ANCILLARY_CONTROL_NOT_READY,
-)
+from pydeconz.models.sensor.ancillary_control import AncillaryControlPanel
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -34,7 +21,9 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -42,14 +31,20 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_sensors(hass, aioclient_mock):
+
+async def test_no_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no climate entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
+async def test_alarm_control_panel(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of alarm control panel entities."""
     data = {
         "alarmsystems": {
@@ -99,7 +94,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
                     "action": "armed_stay",
                     "lastupdated": "2021-07-25T18:02:51.172",
                     "lowbattery": False,
-                    "panel": "exit_delay",
+                    "panel": "none",
                     "seconds_remaining": 55,
                     "tampered": False,
                 },
@@ -112,8 +107,8 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 3
-    assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_PENDING
+    assert len(hass.states.async_all()) == 4
+    assert hass.states.get("alarm_control_panel.keypad").state == STATE_UNKNOWN
 
     # Event signals alarm control panel armed away
 
@@ -122,7 +117,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "state": {"panel": ANCILLARY_CONTROL_ARMED_AWAY},
+        "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -136,7 +131,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "state": {"panel": ANCILLARY_CONTROL_ARMED_NIGHT},
+        "state": {"panel": AncillaryControlPanel.ARMED_NIGHT},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -152,7 +147,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "state": {"panel": ANCILLARY_CONTROL_ARMED_STAY},
+        "state": {"panel": AncillaryControlPanel.ARMED_STAY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -166,7 +161,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "state": {"panel": ANCILLARY_CONTROL_DISARMED},
+        "state": {"panel": AncillaryControlPanel.DISARMED},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -176,11 +171,10 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     # Event signals alarm control panel arming
 
     for arming_event in {
-        ANCILLARY_CONTROL_ARMING_AWAY,
-        ANCILLARY_CONTROL_ARMING_NIGHT,
-        ANCILLARY_CONTROL_ARMING_STAY,
+        AncillaryControlPanel.ARMING_AWAY,
+        AncillaryControlPanel.ARMING_NIGHT,
+        AncillaryControlPanel.ARMING_STAY,
     }:
-
         event_changed_sensor = {
             "t": "event",
             "e": "changed",
@@ -195,8 +189,10 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
 
     # Event signals alarm control panel pending
 
-    for pending_event in {ANCILLARY_CONTROL_ENTRY_DELAY, ANCILLARY_CONTROL_EXIT_DELAY}:
-
+    for pending_event in {
+        AncillaryControlPanel.ENTRY_DELAY,
+        AncillaryControlPanel.EXIT_DELAY,
+    }:
         event_changed_sensor = {
             "t": "event",
             "e": "changed",
@@ -218,7 +214,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "state": {"panel": ANCILLARY_CONTROL_IN_ALARM},
+        "state": {"panel": AncillaryControlPanel.IN_ALARM},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -232,7 +228,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "state": {"panel": ANCILLARY_CONTROL_NOT_READY},
+        "state": {"panel": AncillaryControlPanel.NOT_READY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -298,7 +294,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 3
+    assert len(states) == 4
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

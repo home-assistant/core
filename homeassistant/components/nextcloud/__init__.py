@@ -10,14 +10,17 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "nextcloud"
-PLATFORMS = ("sensor", "binary_sensor")
+PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 # Validate user configuration
@@ -82,14 +85,13 @@ SENSORS = (
     "nextcloud_server_php_upload_max_filesize",
     "nextcloud_database_type",
     "nextcloud_database_version",
-    "nextcloud_database_version",
     "nextcloud_activeUsers_last5minutes",
     "nextcloud_activeUsers_last1hour",
     "nextcloud_activeUsers_last24hours",
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nextcloud integration."""
     # Fetch Nextcloud Monitor api data
     conf = config[DOMAIN]
@@ -98,6 +100,7 @@ def setup(hass, config):
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
+        return False
 
     hass.data[DOMAIN] = get_data_points(ncm.data)
     hass.data[DOMAIN]["instance"] = conf[CONF_URL]

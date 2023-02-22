@@ -3,9 +3,11 @@ import pytest
 
 import homeassistant.components.persistent_notification as pn
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -14,13 +16,13 @@ async def setup_integration(hass):
     assert await async_setup_component(hass, pn.DOMAIN, {})
 
 
-async def test_create(hass):
+async def test_create(hass: HomeAssistant) -> None:
     """Test creating notification without title or notification id."""
     notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
     assert len(notifications) == 0
 
-    pn.async_create(hass, "Hello World {{ 1 + 1 }}", title="{{ 1 + 1 }} beers")
+    pn.async_create(hass, "Hello World 2", title="2 beers")
 
     entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
     assert len(entity_ids) == 1
@@ -38,7 +40,7 @@ async def test_create(hass):
     assert notification["created_at"] is not None
 
 
-async def test_create_notification_id(hass):
+async def test_create_notification_id(hass: HomeAssistant) -> None:
     """Ensure overwrites existing notification with same id."""
     notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
@@ -68,28 +70,7 @@ async def test_create_notification_id(hass):
     assert notification["message"] == "test 2"
 
 
-async def test_create_template_error(hass):
-    """Ensure we output templates if contain error."""
-    notifications = hass.data[pn.DOMAIN]
-    assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
-    assert len(notifications) == 0
-
-    pn.async_create(hass, "{{ message + 1 }}", "{{ title + 1 }}")
-
-    entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
-    assert len(entity_ids) == 1
-    assert len(notifications) == 1
-
-    state = hass.states.get(entity_ids[0])
-    assert state.attributes.get("message") == "{{ message + 1 }}"
-    assert state.attributes.get("title") == "{{ title + 1 }}"
-
-    notification = notifications.get(entity_ids[0])
-    assert notification["message"] == "{{ message + 1 }}"
-    assert notification["title"] == "{{ title + 1 }}"
-
-
-async def test_dismiss_notification(hass):
+async def test_dismiss_notification(hass: HomeAssistant) -> None:
     """Ensure removal of specific notification."""
     notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
@@ -105,7 +86,7 @@ async def test_dismiss_notification(hass):
     assert len(notifications) == 0
 
 
-async def test_mark_read(hass):
+async def test_mark_read(hass: HomeAssistant) -> None:
     """Ensure notification is marked as Read."""
     events = async_capture_events(hass, pn.EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
     notifications = hass.data[pn.DOMAIN]
@@ -143,7 +124,9 @@ async def test_mark_read(hass):
     assert len(events) == 3
 
 
-async def test_ws_get_notifications(hass, hass_ws_client):
+async def test_ws_get_notifications(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test websocket endpoint for retrieving persistent notifications."""
     await async_setup_component(hass, pn.DOMAIN, {})
 
@@ -158,9 +141,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     assert len(notifications) == 0
 
     # Create
-    hass.components.persistent_notification.async_create(
-        "test", notification_id="Beer 2"
-    )
+    pn.async_create(hass, "test", notification_id="Beer 2")
     await client.send_json({"id": 6, "type": "persistent_notification/get"})
     msg = await client.receive_json()
     assert msg["id"] == 6
@@ -186,7 +167,7 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     assert notifications[0]["status"] == pn.STATUS_READ
 
     # Dismiss
-    hass.components.persistent_notification.async_dismiss("Beer 2")
+    pn.async_dismiss(hass, "Beer 2")
     await client.send_json({"id": 8, "type": "persistent_notification/get"})
     msg = await client.receive_json()
     notifications = msg["result"]

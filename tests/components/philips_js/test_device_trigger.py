@@ -2,7 +2,9 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.philips_js.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -19,7 +21,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, mock_device):
+async def test_get_triggers(hass: HomeAssistant, mock_device) -> None:
     """Test we get the expected triggers."""
     expected_triggers = [
         {
@@ -27,15 +29,19 @@ async def test_get_triggers(hass, mock_device):
             "domain": DOMAIN,
             "type": "turn_on",
             "device_id": mock_device.id,
+            "metadata": {},
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", mock_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, mock_device.id
+    )
+    triggers = [trigger for trigger in triggers if trigger["domain"] == DOMAIN]
     assert_lists_same(triggers, expected_triggers)
 
 
 async def test_if_fires_on_turn_on_request(
-    hass, calls, mock_tv, mock_entity, mock_device
-):
+    hass: HomeAssistant, calls, mock_tv, mock_entity, mock_device
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
 
     mock_tv.on = False

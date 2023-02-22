@@ -24,7 +24,9 @@ from homeassistant.components.withings import async_unload_entry
 from homeassistant.components.withings.common import (
     ConfigEntryWithingsApi,
     DataManager,
+    WithingsEntityDescription,
     get_all_data_managers,
+    get_attribute_unique_id,
 )
 import homeassistant.components.withings.const as const
 from homeassistant.config import async_process_ha_core_config
@@ -37,11 +39,12 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -167,6 +170,10 @@ class ComponentFactory:
         )
 
         api_mock: ConfigEntryWithingsApi = MagicMock(spec=ConfigEntryWithingsApi)
+        api_mock.config_entry = MockConfigEntry(
+            domain=const.DOMAIN,
+            data={"profile": profile_config.profile},
+        )
         ComponentFactory._setup_api_method(
             api_mock.user_get_device, profile_config.api_response_user_get_device
         )
@@ -191,19 +198,19 @@ class ComponentFactory:
             const.DOMAIN, context={"source": SOURCE_USER}
         )
         assert result
-        # pylint: disable=protected-access
+
         state = config_entry_oauth2_flow._encode_jwt(
             self._hass,
             {
                 "flow_id": result["flow_id"],
-                "redirect_uri": "http://127.0.0.1:8080/auth/external/callback",
+                "redirect_uri": "https://example.com/auth/external/callback",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+        assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
         assert result["url"] == (
             "https://account.withings.com/oauth2_user/authorize2?"
             f"response_type=code&client_id={self._client_id}&"
-            "redirect_uri=http://127.0.0.1:8080/auth/external/callback&"
+            "redirect_uri=https://example.com/auth/external/callback&"
             f"state={state}"
             "&scope=user.info,user.metrics,user.activity,user.sleepevents"
         )
@@ -216,13 +223,15 @@ class ComponentFactory:
 
         self._aioclient_mock.clear_requests()
         self._aioclient_mock.post(
-            "https://account.withings.com/oauth2/token",
+            "https://wbsapi.withings.net/v2/oauth2",
             json={
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "userid": profile_config.user_id,
+                "body": {
+                    "refresh_token": "mock-refresh-token",
+                    "access_token": "mock-access-token",
+                    "type": "Bearer",
+                    "expires_in": 60,
+                    "userid": profile_config.user_id,
+                },
             },
         )
 
@@ -299,15 +308,6 @@ def get_config_entries_for_user_id(
     )
 
 
-def async_get_flow_for_user_id(hass: HomeAssistant, user_id: int) -> list[dict]:
-    """Get a flow for a user id."""
-    return [
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["handler"] == const.DOMAIN and flow["context"].get("userid") == user_id
-    ]
-
-
 def get_data_manager_by_user_id(
     hass: HomeAssistant, user_id: int
 ) -> DataManager | None:
@@ -322,3 +322,16 @@ def get_data_manager_by_user_id(
         ),
         None,
     )
+
+
+async def async_get_entity_id(
+    hass: HomeAssistant,
+    description: WithingsEntityDescription,
+    user_id: int,
+    platform: str,
+) -> str | None:
+    """Get an entity id for a user's attribute."""
+    entity_registry = er.async_get(hass)
+    unique_id = get_attribute_unique_id(description, user_id)
+
+    return entity_registry.async_get_entity_id(platform, const.DOMAIN, unique_id)

@@ -25,7 +25,7 @@ set:
       description: Name of icon for the group.
       example: "mdi:camera"
       selector:
-        text:
+        icon:
     entities:
       name: Entities
       description: List of all members in the group. Not compatible with 'delta'.
@@ -35,6 +35,12 @@ set:
     add_entities:
       name: Add Entities
       description: List of members that will change on group listening.
+      example: domain.entity_id1, domain.entity_id2
+      selector:
+        object:
+    remove_entities:
+      name: Remove Entities
+      description: List of members that will be removed from group listening.
       example: domain.entity_id1, domain.entity_id2
       selector:
         object:

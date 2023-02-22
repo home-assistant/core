@@ -5,11 +5,20 @@ from unittest.mock import patch
 
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
 import homeassistant.components.sensor as sensor
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_PLATFORM, CONF_TIMEOUT
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClientGenerator
 
 DEVICE_ID = "123TESTMAC"
 NAME = "test_device"
@@ -47,7 +56,9 @@ async def assert_distance(hass, distance):
     assert state.attributes.get("distance") == distance
 
 
-async def test_room_update(hass, mqtt_mock):
+async def test_room_update(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the updating between rooms."""
     assert await async_setup_component(
         hass,
@@ -82,3 +93,32 @@ async def test_room_update(hass, mqtt_mock):
         await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
         await assert_state(hass, BEDROOM)
         await assert_distance(hass, 10)
+
+
+async def test_unique_id_is_set(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the updating between rooms."""
+    unique_name = "my_unique_name_0123456789"
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                CONF_PLATFORM: "mqtt_room",
+                CONF_NAME: NAME,
+                CONF_DEVICE_ID: DEVICE_ID,
+                CONF_STATE_TOPIC: "room_presence",
+                CONF_QOS: DEFAULT_QOS,
+                CONF_TIMEOUT: 5,
+                CONF_UNIQUE_ID: unique_name,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(SENSOR_STATE)
+    assert state.state is not None
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(SENSOR_STATE)
+    assert entry.unique_id == unique_name

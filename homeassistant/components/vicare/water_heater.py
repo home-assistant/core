@@ -1,6 +1,7 @@
 """Viessmann ViCare water_heater device."""
 from contextlib import suppress
 import logging
+from typing import Any
 
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -10,28 +11,34 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.water_heater import (
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_NAME,
+    PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
     VICARE_API,
-    VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
+    VICARE_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_MODE_DHW = "dhw"
+VICARE_MODE_HEATING = "heating"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
+VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
@@ -42,11 +49,11 @@ VICARE_TEMP_WATER_MAX = 60
 OPERATION_MODE_ON = "on"
 OPERATION_MODE_OFF = "off"
 
-SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE
-
 VICARE_TO_HA_HVAC_DHW = {
     VICARE_MODE_DHW: OPERATION_MODE_ON,
     VICARE_MODE_DHWANDHEATING: OPERATION_MODE_ON,
+    VICARE_MODE_DHWANDHEATINGCOOLING: OPERATION_MODE_ON,
+    VICARE_MODE_HEATING: OPERATION_MODE_OFF,
     VICARE_MODE_FORCEDREDUCED: OPERATION_MODE_OFF,
     VICARE_MODE_FORCEDNORMAL: OPERATION_MODE_ON,
     VICARE_MODE_OFF: OPERATION_MODE_OFF,
@@ -58,42 +65,48 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 
-def _build_entity(name, vicare_api, circuit, device_config, heating_type):
-    """Create a ViCare water_heater entity."""
-    _LOGGER.debug("Found device %s", name)
-    return ViCareWater(
-        name,
-        vicare_api,
-        circuit,
-        device_config,
-        heating_type,
-    )
+def _get_circuits(vicare_api):
+    """Return the list of circuits."""
+    try:
+        return vicare_api.circuits
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("No circuits found")
+        return []
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ViCare climate platform."""
-    name = config_entry.data[CONF_NAME]
+    name = VICARE_NAME
+    entities = []
+    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
+    circuits = await hass.async_add_executor_job(_get_circuits, api)
 
-    all_devices = []
-    for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
+    for circuit in circuits:
         suffix = ""
-        if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
+        if len(circuits) > 1:
             suffix = f" {circuit.id}"
-        entity = _build_entity(
+
+        entity = ViCareWater(
             f"{name} Water{suffix}",
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
+            api,
             circuit,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
             config_entry.data[CONF_HEATING_TYPE],
         )
-        if entity is not None:
-            all_devices.append(entity)
+        entities.append(entity)
 
-    async_add_devices(all_devices)
+    async_add_entities(entities)
 
 
 class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
+
+    _attr_precision = PRECISION_TENTHS
+    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the DHW water_heater device."""
@@ -108,7 +121,7 @@ class ViCareWater(WaterHeaterEntity):
         self._current_mode = None
         self._heating_type = heating_type
 
-    def update(self):
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
@@ -134,24 +147,20 @@ class ViCareWater(WaterHeaterEntity):
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         return f"{self._device_config.getConfig().serial}-{self._circuit.id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self._device_config.getConfig().serial)},
-            "name": self._device_config.getModel(),
-            "manufacturer": "Viessmann",
-            "model": (DOMAIN, self._device_config.getModel()),
-        }
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
+            name=self._device_config.getModel(),
+            manufacturer="Viessmann",
+            model=self._device_config.getModel(),
+            configuration_url="https://developer.viessmann.com/",
+        )
 
     @property
     def name(self):
@@ -161,7 +170,7 @@ class ViCareWater(WaterHeaterEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):
@@ -173,7 +182,7 @@ class ViCareWater(WaterHeaterEntity):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setDomesticHotWaterTemperature(temp)
@@ -190,8 +199,8 @@ class ViCareWater(WaterHeaterEntity):
         return VICARE_TEMP_WATER_MAX
 
     @property
-    def precision(self):
-        """Return the precision of the system."""
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to wholes."""
         return PRECISION_WHOLE
 
     @property

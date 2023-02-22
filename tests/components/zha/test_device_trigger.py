@@ -1,12 +1,16 @@
 """ZHA device automation trigger tests."""
 from datetime import timedelta
 import time
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -33,6 +37,13 @@ DOUBLE_PRESS = "remote_button_double_press"
 SHORT_PRESS = "remote_button_short_press"
 LONG_PRESS = "remote_button_long_press"
 LONG_RELEASE = "remote_button_long_release"
+
+
+@pytest.fixture(autouse=True)
+def sensor_platforms_only():
+    """Only set up the sensor platform and required base platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", (Platform.SENSOR,)):
+        yield
 
 
 def _same_lists(list_a, list_b):
@@ -72,8 +83,8 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
     return zigpy_device, zha_device
 
 
-async def test_triggers(hass, mock_devices):
-    """Test zha device triggers."""
+async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
+    """Test ZHA device triggers."""
 
     zigpy_device, zha_device = mock_devices
 
@@ -90,7 +101,9 @@ async def test_triggers(hass, mock_devices):
     ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
 
     expected_triggers = [
         {
@@ -99,6 +112,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -106,6 +120,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHAKEN,
             "subtype": SHAKEN,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -113,6 +128,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": DOUBLE_PRESS,
             "subtype": DOUBLE_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -120,6 +136,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHORT_PRESS,
             "subtype": SHORT_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -127,6 +144,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_PRESS,
             "subtype": LONG_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -134,13 +152,14 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_RELEASE,
             "subtype": LONG_RELEASE,
+            "metadata": {},
         },
     ]
     assert _same_lists(triggers, expected_triggers)
 
 
-async def test_no_triggers(hass, mock_devices):
-    """Test zha device with no triggers."""
+async def test_no_triggers(hass: HomeAssistant, mock_devices) -> None:
+    """Test ZHA device with no triggers."""
 
     _, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
@@ -148,7 +167,9 @@ async def test_no_triggers(hass, mock_devices):
     ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
     assert triggers == [
         {
             "device_id": reg_device.id,
@@ -156,11 +177,12 @@ async def test_no_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         }
     ]
 
 
-async def test_if_fires_on_event(hass, mock_devices, calls):
+async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> None:
     """Test for remote triggers firing."""
 
     zigpy_device, zha_device = mock_devices
@@ -210,8 +232,8 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
 
 
 async def test_device_offline_fires(
-    hass, zigpy_device_mock, zha_device_restored, calls
-):
+    hass: HomeAssistant, zigpy_device_mock, zha_device_restored, calls
+) -> None:
     """Test for device offline triggers firing."""
 
     zigpy_device = zigpy_device_mock(
@@ -275,8 +297,10 @@ async def test_device_offline_fires(
     assert calls[0].data["message"] == "service called"
 
 
-async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
-    """Test for exception on event triggers firing."""
+async def test_exception_no_triggers(
+    hass: HomeAssistant, mock_devices, calls, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for exception when validating device triggers."""
 
     _, zha_device = mock_devices
 
@@ -306,11 +330,16 @@ async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: "
+        "device does not have trigger ('junk', 'junk')" in caplog.text
+    )
 
 
-async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
-    """Test for exception on event triggers firing."""
+async def test_exception_bad_trigger(
+    hass: HomeAssistant, mock_devices, calls, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for exception when validating device triggers."""
 
     zigpy_device, zha_device = mock_devices
 
@@ -348,4 +377,7 @@ async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: "
+        "device does not have trigger ('junk', 'junk')" in caplog.text
+    )

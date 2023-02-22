@@ -1,5 +1,7 @@
 """Config flow for MyQ integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import pymyq
 from pymyq.errors import InvalidCredentialsError, MyQError
@@ -7,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -23,7 +26,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Start a myq config flow."""
         self._reauth_unique_id = None
 
@@ -60,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
         self._reauth_unique_id = self.context["unique_id"]
         return await self.async_step_reauth_confirm()

@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from collections import deque
 import logging
+from typing import Any
 
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 
 from .const import DOMAIN
@@ -28,7 +29,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
     """Enable state reporting."""
     checker = None
     unsub_pending: CALLBACK_TYPE | None = None
-    pending = deque([{}])
+    pending: deque[dict[str, Any]] = deque([{}])
 
     async def report_states(now=None):
         """Report the states."""
@@ -136,9 +137,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
 
         await google_config.async_report_state_all({"devices": {"states": entities}})
 
-        unsub = hass.helpers.event.async_track_state_change(
-            MATCH_ALL, async_entity_state_listener
-        )
+        unsub = async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
 
     unsub = async_call_later(hass, INITIAL_REPORT_DELAY, initial_report)
 

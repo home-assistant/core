@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from pynws import SimpleNWS
 
@@ -36,14 +37,13 @@ FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEBOUNCE_TIME = 60  # in seconds
 
 
-def base_unique_id(latitude, longitude):
+def base_unique_id(latitude: float, longitude: float) -> str:
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
 
 
-class NwsDataUpdateCoordinator(DataUpdateCoordinator):
-    """
-    NWS data update coordinator.
+class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
+    """NWS data update coordinator.
 
     Implements faster data update intervals for failed updates and exposes a last successful update time.
     """
@@ -56,7 +56,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         update_interval: datetime.timedelta,
         failed_update_interval: datetime.timedelta,
-        update_method: Callable[[], Awaitable] | None = None,
+        update_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: debounce.Debouncer | None = None,
     ) -> None:
         """Initialize NWS coordinator."""
@@ -69,7 +69,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
             request_refresh_debouncer=request_refresh_debouncer,
         )
         self.failed_update_interval = failed_update_interval
-        self.last_update_success_time = None
+        self.last_update_success_time: datetime.datetime | None = None
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -83,6 +83,9 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         # That way we obtain a constant update frequency,
         # as long as the update process takes less than a second
         if self.last_update_success:
+            if TYPE_CHECKING:
+                # the base class allows None, but this one doesn't
+                assert self.update_interval is not None
             update_interval = self.update_interval
             self.last_update_success_time = utcnow()
         else:
@@ -155,7 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -170,7 +173,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def device_info(latitude, longitude) -> DeviceInfo:
+def device_info(latitude: float, longitude: float) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,

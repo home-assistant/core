@@ -1,4 +1,6 @@
 """Support for Songpal-enabled (Sony) media devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
 import logging
@@ -14,17 +16,13 @@ from songpal import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import (
@@ -33,6 +31,8 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
 
@@ -41,29 +41,26 @@ _LOGGER = logging.getLogger(__name__)
 PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
-SUPPORT_SONGPAL = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-)
-
 INITIAL_RETRY_DELAY = 10
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: dict, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up from legacy configuration file. Obsolete."""
     _LOGGER.error(
-        "Configuring Songpal through media_player platform is no longer supported. Convert to songpal platform or UI configuration"
+        "Configuring Songpal through media_player platform is no longer supported."
+        " Convert to songpal platform or UI configuration"
     )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up songpal media player."""
     name = config_entry.data[CONF_NAME]
@@ -94,6 +91,16 @@ async def async_setup_entry(
 class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
+    _attr_should_poll = False
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
+
     def __init__(self, name, device):
         """Init."""
         self._name = name
@@ -114,16 +121,11 @@ class SongpalEntity(MediaPlayerEntity):
         self._active_source = None
         self._sources = {}
 
-    @property
-    def should_poll(self):
-        """Return True if the device should be polled."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity is added to hass."""
         await self.async_activate_websocket()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await self._dev.stop_listen_notifications()
 
@@ -203,13 +205,18 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo.macAddr
+        return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        connections = set()
+        if self._sysinfo.macAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr))
+        if self._sysinfo.wirelessMacAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.wirelessMacAddr))
         return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
+            connections=connections,
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Sony Corporation",
             model=self._model,
@@ -227,7 +234,7 @@ class SongpalEntity(MediaPlayerEntity):
         _LOGGER.debug("Calling set_sound_setting with %s: %s", name, value)
         await self._dev.set_sound_settings(name, value)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch updates from the device."""
         try:
             if self._sysinfo is None:
@@ -276,7 +283,7 @@ class SongpalEntity(MediaPlayerEntity):
             _LOGGER.error("Unable to update: %s", ex)
             self._available = False
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select source."""
         for out in self._sources.values():
             if out.title == source:
@@ -291,11 +298,11 @@ class SongpalEntity(MediaPlayerEntity):
         return [src.title for src in self._sources.values()]
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return current state."""
         if self._state:
-            return STATE_ON
-        return STATE_OFF
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
     def source(self):
@@ -309,29 +316,29 @@ class SongpalEntity(MediaPlayerEntity):
         volume = self._volume / self._volume_max
         return volume
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         volume = int(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Set volume up."""
         return await self._volume_control.set_volume(self._volume + 1)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Set volume down."""
         return await self._volume_control.set_volume(self._volume - 1)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the device on."""
         return await self._dev.set_power(True)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the device off."""
         return await self._dev.set_power(False)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the device."""
         _LOGGER.debug("Set mute: %s", mute)
         return await self._volume_control.set_mute(mute)
@@ -340,8 +347,3 @@ class SongpalEntity(MediaPlayerEntity):
     def is_volume_muted(self):
         """Return whether the device is muted."""
         return self._is_muted
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_SONGPAL

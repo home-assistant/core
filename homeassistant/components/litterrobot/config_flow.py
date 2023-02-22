@@ -1,14 +1,20 @@
 """Config flow for Litter-Robot integration."""
-import logging
+from __future__ import annotations
 
+from collections.abc import Mapping
+import logging
+from typing import Any
+
+from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .hub import LitterRobotHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,29 +28,71 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    username: str
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle a reauthorization flow request."""
+        self.username = entry_data[CONF_USERNAME]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle user's reauth credentials."""
+        errors = {}
+        if user_input:
+            entry_id = self.context["entry_id"]
+            if entry := self.hass.config_entries.async_get_entry(entry_id):
+                user_input = user_input | {CONF_USERNAME: self.username}
+                if not (error := await self._async_validate_input(user_input)):
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data=entry.data | user_input,
+                    )
+                    await self.hass.config_entries.async_reload(entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
+            errors["base"] = error
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            description_placeholders={CONF_USERNAME: self.username},
+            errors=errors,
+        )
+
+    async def async_step_user(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
-            hub = LitterRobotHub(self.hass, user_input)
-            try:
-                await hub.login()
-            except LitterRobotLoginException:
-                errors["base"] = "invalid_auth"
-            except LitterRobotException:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if not errors:
+            if not (error := await self._async_validate_input(user_input)):
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
+            errors["base"] = error
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def _async_validate_input(self, user_input: Mapping[str, Any]) -> str:
+        """Validate login credentials."""
+        account = Account(websession=async_get_clientsession(self.hass))
+        try:
+            await account.connect(
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+            )
+            await account.disconnect()
+        except LitterRobotLoginException:
+            return "invalid_auth"
+        except LitterRobotException:
+            return "cannot_connect"
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception: %s", ex)
+            return "unknown"
+        return ""

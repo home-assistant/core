@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity
 
 
 async def async_setup_entry(
@@ -53,9 +53,9 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             self._attr_name = f"{self._attr_name}-counter"
         # define the device class
         if self._is_counter:
-            self._attr_device_class = SensorDeviceClass.ENERGY
-        elif channel.is_counter_channel():
             self._attr_device_class = SensorDeviceClass.POWER
+        elif channel.is_counter_channel():
+            self._attr_device_class = SensorDeviceClass.ENERGY
         elif channel.is_temperature():
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
         # define the icon

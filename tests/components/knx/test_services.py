@@ -1,4 +1,7 @@
 """Test KNX services."""
+import pytest
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
+
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -7,54 +10,117 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_send(hass: HomeAssistant, knx: KNXTestKit):
+@pytest.mark.parametrize(
+    ("service_payload", "expected_telegrams", "expected_apci"),
+    [
+        # send DPT 1 telegram
+        (
+            {"address": "1/2/3", "payload": True, "response": True},
+            [("1/2/3", True)],
+            GroupValueResponse,
+        ),
+        (
+            {"address": "1/2/3", "payload": True, "response": False},
+            [("1/2/3", True)],
+            GroupValueWrite,
+        ),
+        # send DPT 5 telegram
+        (
+            {"address": "1/2/3", "payload": [99], "response": True},
+            [("1/2/3", (99,))],
+            GroupValueResponse,
+        ),
+        (
+            {"address": "1/2/3", "payload": [99], "response": False},
+            [("1/2/3", (99,))],
+            GroupValueWrite,
+        ),
+        # send DPT 5 percent telegram
+        (
+            {"address": "1/2/3", "payload": 99, "type": "percent", "response": True},
+            [("1/2/3", (0xFC,))],
+            GroupValueResponse,
+        ),
+        (
+            {"address": "1/2/3", "payload": 99, "type": "percent", "response": False},
+            [("1/2/3", (0xFC,))],
+            GroupValueWrite,
+        ),
+        # send temperature DPT 9 telegram
+        (
+            {
+                "address": "1/2/3",
+                "payload": 21.0,
+                "type": "temperature",
+                "response": True,
+            },
+            [("1/2/3", (0x0C, 0x1A))],
+            GroupValueResponse,
+        ),
+        (
+            {
+                "address": "1/2/3",
+                "payload": 21.0,
+                "type": "temperature",
+                "response": False,
+            },
+            [("1/2/3", (0x0C, 0x1A))],
+            GroupValueWrite,
+        ),
+        # send multiple telegrams
+        (
+            {
+                "address": ["1/2/3", "2/2/2", "3/3/3"],
+                "payload": 99,
+                "type": "percent",
+                "response": True,
+            },
+            [
+                ("1/2/3", (0xFC,)),
+                ("2/2/2", (0xFC,)),
+                ("3/3/3", (0xFC,)),
+            ],
+            GroupValueResponse,
+        ),
+        (
+            {
+                "address": ["1/2/3", "2/2/2", "3/3/3"],
+                "payload": 99,
+                "type": "percent",
+                "response": False,
+            },
+            [
+                ("1/2/3", (0xFC,)),
+                ("2/2/2", (0xFC,)),
+                ("3/3/3", (0xFC,)),
+            ],
+            GroupValueWrite,
+        ),
+    ],
+)
+async def test_send(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    service_payload,
+    expected_telegrams,
+    expected_apci,
+) -> None:
     """Test `knx.send` service."""
-    test_address = "1/2/3"
     await knx.setup_integration({})
 
-    # send DPT 1 telegram
-    await hass.services.async_call(
-        "knx", "send", {"address": test_address, "payload": True}, blocking=True
-    )
-    await knx.assert_write(test_address, True)
-
-    # send raw DPT 5 telegram
-    await hass.services.async_call(
-        "knx", "send", {"address": test_address, "payload": [99]}, blocking=True
-    )
-    await knx.assert_write(test_address, (99,))
-
-    # send "percent" DPT 5 telegram
     await hass.services.async_call(
         "knx",
         "send",
-        {"address": test_address, "payload": 99, "type": "percent"},
+        service_payload,
         blocking=True,
     )
-    await knx.assert_write(test_address, (0xFC,))
 
-    # send "temperature" DPT 9 telegram
-    await hass.services.async_call(
-        "knx",
-        "send",
-        {"address": test_address, "payload": 21.0, "type": "temperature"},
-        blocking=True,
-    )
-    await knx.assert_write(test_address, (0x0C, 0x1A))
-
-    # send multiple telegrams
-    await hass.services.async_call(
-        "knx",
-        "send",
-        {"address": [test_address, "2/2/2", "3/3/3"], "payload": 99, "type": "percent"},
-        blocking=True,
-    )
-    await knx.assert_write(test_address, (0xFC,))
-    await knx.assert_write("2/2/2", (0xFC,))
-    await knx.assert_write("3/3/3", (0xFC,))
+    for expected_response in expected_telegrams:
+        group_address, payload = expected_response
+        await knx.assert_telegram(group_address, payload, expected_apci)
 
 
-async def test_read(hass: HomeAssistant, knx: KNXTestKit):
+async def test_read(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.read` service."""
     await knx.setup_integration({})
 
@@ -74,7 +140,7 @@ async def test_read(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_read("3/3/3")
 
 
-async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
+async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.event_register` service."""
     events = async_capture_events(hass, "knx_event")
     test_address = "1/2/3"
@@ -127,7 +193,7 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
     assert untyped_event_1.data["value"] is None
 
 
-async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit):
+async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test `knx.exposure_register` service."""
     test_address = "1/2/3"
     test_entity = "fake.entity"

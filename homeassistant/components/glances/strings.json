@@ -2,9 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Glances",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -16,21 +14,10 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "wrong_version": "Version not supported (2 or 3 only)"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Configure options for Glances",
-        "data": {
-          "scan_interval": "Update frequency"
-        }
-      }
     }
   }
 }

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "SimpliSafe authenticates with Home Assistant via the SimpliSafe web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({docs_url}) before starting.\n\n1. Click [here]({url}) to open the SimpliSafe web app and input your credentials.\n\n2. When the login process is complete, return here and input the authorization code below.",
+        "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. If you've already logged into SimpliSafe in your browser, you may want to open a new tab, then copy/paste the above URL into that tab.\n\nWhen the process is complete, return here and input the authorization code from the `com.simplisafe.mobile` URL.",
         "data": {
           "auth_code": "Authorization Code"
         }
@@ -11,7 +11,7 @@
     "error": {
       "identifier_exists": "Account already registered",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "still_awaiting_mfa": "Still awaiting MFA email click",
+      "invalid_auth_code_length": "SimpliSafe authorization codes are 45 characters in length",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -28,6 +28,12 @@
           "code": "Code (used in Home Assistant UI)"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_service": {
+      "title": "The {deprecated_service} service is being removed",
+      "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`. Then, click SUBMIT below to mark this issue as resolved."
     }
   }
 }

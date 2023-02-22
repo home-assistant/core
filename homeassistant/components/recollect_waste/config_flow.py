@@ -23,7 +23,7 @@ DATA_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ReCollect Waste."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback

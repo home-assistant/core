@@ -1,4 +1,6 @@
 """Config flow for ezviz."""
+from __future__ import annotations
+
 import logging
 
 from pyezviz.client import EzvizClient
@@ -12,7 +14,7 @@ from pyezviz.exceptions import (
 from pyezviz.test_cam_rtsp import TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -65,7 +67,7 @@ def _test_camera_rtsp_creds(data):
 
 
 class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ezviz."""
+    """Handle a config flow for EZVIZ."""
 
     VERSION = 1
 
@@ -99,7 +101,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_and_create_camera_rtsp(self, data):
         """Try DESCRIBE on RTSP camera with credentials."""
 
-        # Get Ezviz cloud credentials from config entry
+        # Get EZVIZ cloud credentials from config entry
         ezviz_client_creds = {
             CONF_USERNAME: None,
             CONF_PASSWORD: None,
@@ -134,7 +136,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         except PyEzvizError as err:
             raise PyEzvizError from err
 
-        # Secondly try to wake hybernating camera.
+        # Secondly try to wake hibernating camera.
         try:
             await self.hass.async_add_executor_job(
                 ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
@@ -164,7 +166,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> EzvizOptionsFlowHandler:
         """Get the options flow for this handler."""
         return EzvizOptionsFlowHandler(config_entry)
 
@@ -180,7 +182,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             if user_input[CONF_URL] == CONF_CUSTOMIZE:
                 self.context["data"] = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
@@ -259,7 +260,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user_custom_url", data_schema=data_schema_custom_url, errors=errors
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_integration_discovery(self, discovery_info):
         """Handle a flow for discovered camera without rtsp config entry."""
 
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
@@ -307,60 +308,16 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, import_config):
-        """Handle config import from yaml."""
-        _LOGGER.debug("import config: %s", import_config)
-
-        # Check importing camera.
-        if ATTR_SERIAL in import_config:
-            return await self.async_step_import_camera(import_config)
-
-        # Validate and setup of main ezviz cloud account.
-        try:
-            return await self._validate_and_create_auth(import_config)
-
-        except InvalidURL:
-            _LOGGER.error("Error importing Ezviz platform config: invalid host")
-            return self.async_abort(reason="invalid_host")
-
-        except InvalidHost:
-            _LOGGER.error("Error importing Ezviz platform config: cannot connect")
-            return self.async_abort(reason="cannot_connect")
-
-        except (AuthTestResultFailed, PyEzvizError):
-            _LOGGER.error("Error importing Ezviz platform config: invalid auth")
-            return self.async_abort(reason="invalid_auth")
-
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Error importing ezviz platform config: unexpected exception"
-            )
-
-        return self.async_abort(reason="unknown")
-
-    async def async_step_import_camera(self, data):
-        """Create RTSP auth entry per camera in config."""
-
-        await self.async_set_unique_id(data[ATTR_SERIAL])
-        self._abort_if_unique_id_configured()
-
-        _LOGGER.debug("Create camera with: %s", data)
-
-        cam_serial = data.pop(ATTR_SERIAL)
-        data[CONF_TYPE] = ATTR_TYPE_CAMERA
-
-        return self.async_create_entry(title=cam_serial, data=data)
-
 
 class EzvizOptionsFlowHandler(OptionsFlow):
-    """Handle Ezviz client options."""
+    """Handle EZVIZ client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Manage Ezviz options."""
+        """Manage EZVIZ options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

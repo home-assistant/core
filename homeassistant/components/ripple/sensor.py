@@ -1,14 +1,17 @@
 """Support for Ripple sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from pyripple import get_balance
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-ATTRIBUTION = "Data provided by ripple.com"
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "Ripple Balance"
 
@@ -22,7 +25,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ripple.com sensors."""
     address = config.get(CONF_ADDRESS)
     name = config.get(CONF_NAME)
@@ -32,6 +40,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class RippleSensor(SensorEntity):
     """Representation of an Ripple.com sensor."""
+
+    _attr_attribution = "Data provided by ripple.com"
 
     def __init__(self, name, address):
         """Initialize the sensor."""
@@ -55,12 +65,7 @@ class RippleSensor(SensorEntity):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         if (balance := get_balance(self.address)) is not None:
             self._state = balance

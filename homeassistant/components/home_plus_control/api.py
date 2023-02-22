@@ -5,6 +5,7 @@ from homeassistant import config_entries, core
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import DEFAULT_UPDATE_INTERVALS
+from .helpers import HomePlusControlOAuth2Implementation
 
 
 class HomePlusControlAsyncApi(HomePlusControlAPI):
@@ -39,6 +40,8 @@ class HomePlusControlAsyncApi(HomePlusControlAPI):
         self._oauth_session = config_entry_oauth2_flow.OAuth2Session(
             hass, config_entry, implementation
         )
+
+        assert isinstance(implementation, HomePlusControlOAuth2Implementation)
 
         # Create the API authenticated client - external library
         super().__init__(

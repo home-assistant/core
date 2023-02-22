@@ -8,8 +8,6 @@ from typing import Any
 
 from homeassistant.core import split_entity_id
 
-# mypy: disallow-any-generics
-
 
 class EntityValues:
     """Class to store entity id based values."""

@@ -1,22 +1,24 @@
 """Support for Nest Thermostat binary sensors."""
+# mypy: ignore-errors
+
 from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NestSensorDevice
 from .const import DATA_NEST, DATA_NEST_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_TYPES = {"online": DEVICE_CLASS_CONNECTIVITY}
+BINARY_TYPES = {"online": BinarySensorDeviceClass.CONNECTIVITY}
 
 CLIMATE_BINARY_TYPES = {
     "fan": None,
@@ -26,9 +28,9 @@ CLIMATE_BINARY_TYPES = {
 }
 
 CAMERA_BINARY_TYPES = {
-    "motion_detected": DEVICE_CLASS_MOTION,
-    "sound_detected": DEVICE_CLASS_SOUND,
-    "person_detected": DEVICE_CLASS_OCCUPANCY,
+    "motion_detected": BinarySensorDeviceClass.MOTION,
+    "sound_detected": BinarySensorDeviceClass.SOUND,
+    "person_detected": BinarySensorDeviceClass.OCCUPANCY,
 }
 
 STRUCTURE_BINARY_TYPES = {"away": None}
@@ -54,14 +56,9 @@ _VALID_BINARY_SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Nest binary sensors.
-
-    No longer used.
-    """
-
-
-async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_legacy_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a Nest binary sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
@@ -160,7 +157,7 @@ class NestActivityZoneSensor(NestBinarySensor):
     @property
     def device_class(self):
         """Return the device class of the binary sensor."""
-        return DEVICE_CLASS_MOTION
+        return BinarySensorDeviceClass.MOTION
 
     def update(self):
         """Retrieve latest state."""

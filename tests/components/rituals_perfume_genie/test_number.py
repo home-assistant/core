@@ -4,11 +4,11 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.rituals_perfume_genie.number import (
@@ -80,7 +80,7 @@ async def test_set_number_value(hass: HomeAssistant) -> None:
     assert state.state == "1"
 
 
-async def test_set_number_value_out_of_range(hass: HomeAssistant):
+async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
     """Test setting the diffuser number entity value out of range."""
     config_entry = mock_config_entry(unique_id="number_set_value_out_of_range_test")
     diffuser = mock_diffuser(hublot="lot123", perfume_amount=2)
@@ -130,7 +130,7 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant):
     assert state.state == "2"
 
 
-async def test_set_number_value_to_float(hass: HomeAssistant):
+async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
     """Test setting the diffuser number entity value to a float."""
     config_entry = mock_config_entry(unique_id="number_set_value_to_float_test")
     diffuser = mock_diffuser(hublot="lot123", perfume_amount=3)

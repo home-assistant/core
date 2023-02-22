@@ -1,5 +1,4 @@
 """Support for the Fitbit API."""
-
 from __future__ import annotations
 
 import datetime
@@ -14,24 +13,22 @@ from fitbit.api import FitbitOauth2Client
 from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenError
 import voluptuous as vol
 
+from homeassistant.components import configurator
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_UNIT_SYSTEM,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_UNIT_SYSTEM
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     ATTR_ACCESS_TOKEN,
@@ -83,7 +80,6 @@ def request_app_setup(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Assist user with configuring the Fitbit dev application."""
-    configurator = hass.components.configurator
 
     def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
         """Handle configuration updates."""
@@ -92,10 +88,11 @@ def request_app_setup(
             config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
                 error_msg = (
-                    "You didn't correctly modify fitbit.conf",
-                    " please try again",
+                    f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try"
+                    " again."
                 )
-                configurator.notify_errors(_CONFIGURING["fitbit"], error_msg)
+
+                configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
                 setup_platform(hass, config, add_entities, discovery_info)
         else:
@@ -112,14 +109,16 @@ def request_app_setup(
                        Then come back here and hit the below button.
                        """
     except NoURLAvailableError:
-        error_msg = """Could not find a SSL enabled URL for your Home Assistant instance.
-                     Fitbit requires that your Home Assistant instance is accessible via HTTPS.
-                     """
-        configurator.notify_errors(_CONFIGURING["fitbit"], error_msg)
+        _LOGGER.error(
+            "Could not find an SSL enabled URL for your Home Assistant instance. "
+            "Fitbit requires that your Home Assistant instance is accessible via HTTPS"
+        )
+        return
 
-    submit = "I have saved my Client ID and Client Secret into fitbit.conf."
+    submit = f"I have saved my Client ID and Client Secret into {FITBIT_CONFIG_FILE}."
 
     _CONFIGURING["fitbit"] = configurator.request_config(
+        hass,
         "Fitbit",
         fitbit_configuration_callback,
         description=description,
@@ -130,10 +129,9 @@ def request_app_setup(
 
 def request_oauth_completion(hass: HomeAssistant) -> None:
     """Request user complete Fitbit OAuth2 flow."""
-    configurator = hass.components.configurator
     if "fitbit" in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING["fitbit"], "Failed to register, please try again."
+            hass, _CONFIGURING["fitbit"], "Failed to register, please try again."
         )
 
         return
@@ -146,6 +144,7 @@ def request_oauth_completion(hass: HomeAssistant) -> None:
     description = f"Please authorize Fitbit by visiting {start_url}"
 
     _CONFIGURING["fitbit"] = configurator.request_config(
+        hass,
         "Fitbit",
         fitbit_configuration_callback,
         description=description,
@@ -174,7 +173,7 @@ def setup_platform(
         return
 
     if "fitbit" in _CONFIGURING:
-        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
+        configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
 
     access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token: str | None = config_file.get(ATTR_REFRESH_TOKEN)
@@ -196,10 +195,11 @@ def setup_platform(
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
+        user_profile = authd_client.user_profile_get()["user"]
         if (unit_system := config[CONF_UNIT_SYSTEM]) == "default":
-            authd_client.system = authd_client.user_profile_get()["user"]["locale"]
+            authd_client.system = user_profile["locale"]
             if authd_client.system != "en_GB":
-                if hass.config.units.is_metric:
+                if hass.config.units is METRIC_SYSTEM:
                     authd_client.system = "metric"
                 else:
                     authd_client.system = "en_US"
@@ -212,9 +212,10 @@ def setup_platform(
         entities = [
             FitbitSensor(
                 authd_client,
+                user_profile,
                 config_path,
                 description,
-                hass.config.units.is_metric,
+                hass.config.units is METRIC_SYSTEM,
                 clock_format,
             )
             for description in FITBIT_RESOURCES_LIST
@@ -225,9 +226,10 @@ def setup_platform(
                 [
                     FitbitSensor(
                         authd_client,
+                        user_profile,
                         config_path,
                         FITBIT_RESOURCE_BATTERY,
-                        hass.config.units.is_metric,
+                        hass.config.units is METRIC_SYSTEM,
                         clock_format,
                         dev_extra,
                     )
@@ -280,7 +282,6 @@ class FitbitAuthCallbackView(HomeAssistantView):
         self.add_entities = add_entities
         self.oauth = oauth
 
-    @callback
     async def get(self, request: Request) -> str:
         """Finish OAuth callback request."""
         hass: HomeAssistant = request.app["hass"]
@@ -343,10 +344,12 @@ class FitbitSensor(SensorEntity):
     """Implementation of a Fitbit sensor."""
 
     entity_description: FitbitSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
         client: Fitbit,
+        user_profile: dict[str, Any],
         config_path: str,
         description: FitbitSensorEntityDescription,
         is_metric: bool,
@@ -360,10 +363,13 @@ class FitbitSensor(SensorEntity):
         self.is_metric = is_metric
         self.clock_format = clock_format
         self.extra = extra
+
+        self._attr_unique_id = f"{user_profile['encodedId']}_{description.key}"
         if self.extra is not None:
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
-        if (unit_type := description.unit_type) == "":
-            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
+            self._attr_unique_id = f"{self._attr_unique_id}_{self.extra.get('id')}"
+
+        if description.unit_type:
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
@@ -371,8 +377,9 @@ class FitbitSensor(SensorEntity):
                     measurement_system = FITBIT_MEASUREMENTS["metric"]
                 else:
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
+            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             unit_type = measurement_system[split_resource]
-        self._attr_native_unit_of_measurement = unit_type
+            self._attr_native_unit_of_measurement = unit_type
 
     @property
     def icon(self) -> str | None:
@@ -389,7 +396,7 @@ class FitbitSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attrs: dict[str, str | None] = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs: dict[str, str | None] = {}
 
         if self.extra is not None:
             attrs["model"] = self.extra.get("deviceVersion")
@@ -443,7 +450,7 @@ class FitbitSensor(SensorEntity):
                     self._attr_native_value = raw_state
                 else:
                     try:
-                        self._attr_native_value = f"{int(raw_state):,}"
+                        self._attr_native_value = int(raw_state)
                     except TypeError:
                         self._attr_native_value = raw_state
 

@@ -3,88 +3,83 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from ondilo import OndiloError
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
+from .api import OndiloClient
 from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="orp",
         name="Oxydo Reduction Potential",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
-        device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
         name="pH",
-        native_unit_of_measurement=None,
         icon="mdi:pool",
-        device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="tds",
         name="TDS",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:pool",
-        device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
-        device_class=DEVICE_CLASS_BATTERY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rssi",
         name="RSSI",
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="salt",
         name="Salt",
         native_unit_of_measurement="mg/L",
         icon="mdi:pool",
-        device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -93,12 +88,14 @@ SCAN_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Ondilo ICO sensors."""
 
-    api = hass.data[DOMAIN][entry.entry_id]
+    api: OndiloClient = hass.data[DOMAIN][entry.entry_id]
 
-    async def async_update_data():
+    async def async_update_data() -> list[dict[str, Any]]:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
@@ -137,12 +134,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class OndiloICO(CoordinatorEntity, SensorEntity):
+class OndiloICO(
+    CoordinatorEntity[DataUpdateCoordinator[list[dict[str, Any]]]], SensorEntity
+):
     """Representation of a Sensor."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[list[dict[str, Any]]],
         poolidx: int,
         description: SensorEntityDescription,
     ) -> None:

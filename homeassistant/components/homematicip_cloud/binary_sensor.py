@@ -36,6 +36,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -71,7 +72,9 @@ SAM_DEVICE_ATTRIBUTES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -139,8 +142,7 @@ async def async_setup_entry(
         elif isinstance(group, AsyncSecurityZoneGroup):
             entities.append(HomematicipSecurityZoneSensorGroup(hap, device=group))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
@@ -193,7 +195,7 @@ class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP base action sensor."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOVING
 
@@ -238,7 +240,7 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         )
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.OPENING
 
@@ -272,7 +274,7 @@ class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEn
         self.has_additional_state = has_additional_state
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.DOOR
 
@@ -293,7 +295,7 @@ class HomematicipMotionDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP motion detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOTION
 
@@ -307,7 +309,7 @@ class HomematicipPresenceDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP presence detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.PRESENCE
 
@@ -321,7 +323,7 @@ class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP smoke detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.SMOKE
 
@@ -340,7 +342,7 @@ class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP water detector."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOISTURE
 
@@ -376,7 +378,7 @@ class HomematicipRainSensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, "Raining")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOISTURE
 
@@ -394,7 +396,7 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, post="Sunshine")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.LIGHT
 
@@ -423,7 +425,7 @@ class HomematicipBatterySensor(HomematicipGenericEntity, BinarySensorEntity):
         super().__init__(hap, device, post="Battery")
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.BATTERY
 
@@ -443,7 +445,7 @@ class HomematicipPluggableMainsFailureSurveillanceSensor(
         super().__init__(hap, device)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.POWER
 
@@ -462,7 +464,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         super().__init__(hap, device, post=post)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.SAFETY
 

@@ -1,5 +1,4 @@
 """Support for Toon van Eneco devices."""
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -103,7 +102,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
-            (DOMAIN, coordinator.data.agreement.agreement_id, "meter_adapter")
+            (
+                DOMAIN,
+                coordinator.data.agreement.agreement_id,
+                "meter_adapter",
+            )  # type: ignore[arg-type]
         },
         manufacturer="Eneco",
         name="Meter Adapter",
@@ -111,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Spin up the platforms
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # If Home Assistant is already in a running state, register the webhook
     # immediately, else trigger it after Home Assistant has finished starting.

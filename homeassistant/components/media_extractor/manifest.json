@@ -1,10 +1,11 @@
 {
   "domain": "media_extractor",
   "name": "Media Extractor",
-  "documentation": "https://www.home-assistant.io/integrations/media_extractor",
-  "requirements": ["youtube_dl==2021.06.06"],
-  "dependencies": ["media_player"],
   "codeowners": [],
+  "dependencies": ["media_player"],
+  "documentation": "https://www.home-assistant.io/integrations/media_extractor",
+  "iot_class": "calculated",
+  "loggers": ["youtube_dl"],
   "quality_scale": "internal",
-  "iot_class": "calculated"
+  "requirements": ["youtube_dl==2021.12.17"]
 }

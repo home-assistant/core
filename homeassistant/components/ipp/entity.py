@@ -8,7 +8,7 @@ from .const import DOMAIN
 from .coordinator import IPPDataUpdateCoordinator
 
 
-class IPPEntity(CoordinatorEntity):
+class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
     """Defines a base IPP entity."""
 
     def __init__(
@@ -41,4 +41,5 @@ class IPPEntity(CoordinatorEntity):
             model=self.coordinator.data.info.model,
             name=self.coordinator.data.info.name,
             sw_version=self.coordinator.data.info.version,
+            configuration_url=self.coordinator.data.info.more_info,
         )

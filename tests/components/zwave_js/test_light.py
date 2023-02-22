@@ -13,9 +13,18 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
-    SUPPORT_TRANSITION,
+    DOMAIN as LIGHT_DOMAIN,
+    LightEntityFeature,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant
 
 from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
@@ -24,8 +33,12 @@ from .common import (
     ZEN_31_ENTITY,
 )
 
+HSM200_V1_ENTITY = "light.hsm200"
 
-async def test_light(hass, client, bulb_6_multi_color, integration):
+
+async def test_light(
+    hass: HomeAssistant, client, bulb_6_multi_color, integration
+) -> None:
     """Test the light entity."""
     node = bulb_6_multi_color
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
@@ -34,7 +47,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_MIN_MIREDS] == 153
     assert state.attributes[ATTR_MAX_MIREDS] == 370
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
     # Test turning on
@@ -50,21 +63,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 255
 
@@ -83,21 +84,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 255
     assert args["options"]["transitionDuration"] == "10s"
@@ -156,21 +145,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 50
     assert args["options"]["transitionDuration"] == "default"
@@ -194,21 +171,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 50
     assert args["options"]["transitionDuration"] == "20s"
@@ -227,12 +192,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
-    assert args["valueId"]["commandClassName"] == "Color Switch"
     assert args["valueId"]["commandClass"] == 51
     assert args["valueId"]["endpoint"] == 0
-    assert args["valueId"]["metadata"]["label"] == "Target Color"
     assert args["valueId"]["property"] == "targetColor"
-    assert args["valueId"]["propertyName"] == "targetColor"
     assert args["value"] == {
         "blue": 255,
         "coldWhite": 0,
@@ -326,12 +288,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     args = client.async_send_command.call_args_list[0][0][0]  # red 0
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
-    assert args["valueId"]["commandClassName"] == "Color Switch"
     assert args["valueId"]["commandClass"] == 51
     assert args["valueId"]["endpoint"] == 0
-    assert args["valueId"]["metadata"]["label"] == "Target Color"
     assert args["valueId"]["property"] == "targetColor"
-    assert args["valueId"]["propertyName"] == "targetColor"
     assert args["value"] == {
         "blue": 0,
         "coldWhite": 235,
@@ -432,26 +391,16 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 0
 
 
-async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
+async def test_v4_dimmer_light(
+    hass: HomeAssistant, client, eaton_rf9640_dimmer, integration
+) -> None:
     """Test a light that supports MultiLevelSwitch CommandClass version 4."""
     state = hass.states.get(EATON_RF9640_ENTITY)
 
@@ -461,20 +410,21 @@ async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
     assert state.attributes[ATTR_BRIGHTNESS] == 57
 
 
-async def test_optional_light(hass, client, aeon_smart_switch_6, integration):
+async def test_optional_light(
+    hass: HomeAssistant, client, aeon_smart_switch_6, integration
+) -> None:
     """Test a device that has an additional light endpoint being identified as light."""
     state = hass.states.get(AEON_SMART_SWITCH_LIGHT_ENTITY)
     assert state.state == STATE_ON
 
 
-async def test_rgbw_light(hass, client, zen_31, integration):
+async def test_rgbw_light(hass: HomeAssistant, client, zen_31, integration) -> None:
     """Test the light entity."""
-    zen_31
     state = hass.states.get(ZEN_31_ENTITY)
 
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Test turning on
     await hass.services.async_call(
@@ -489,20 +439,9 @@ async def test_rgbw_light(hass, client, zen_31, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 94
     assert args["valueId"] == {
-        "commandClassName": "Color Switch",
         "commandClass": 51,
         "endpoint": 1,
         "property": "targetColor",
-        "propertyName": "targetColor",
-        "ccVersion": 0,
-        "metadata": {
-            "label": "Target Color",
-            "type": "any",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
-        "value": {"blue": 70, "green": 159, "red": 255, "warmWhite": 141},
     }
     assert args["value"] == {"blue": 0, "green": 0, "red": 0, "warmWhite": 128}
 
@@ -510,35 +449,153 @@ async def test_rgbw_light(hass, client, zen_31, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 94
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 1,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "ccVersion": 0,
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-        },
-        "value": 59,
     }
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
 
 
-async def test_light_none_color_value(hass, light_color_null_values, integration):
+async def test_light_none_color_value(
+    hass: HomeAssistant, light_color_null_values, integration
+) -> None:
     """Test the light entity can handle None value in current color Value."""
     entity_id = "light.repeater"
     state = hass.states.get(entity_id)
 
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
+
+
+async def test_black_is_off(
+    hass: HomeAssistant, client, express_controls_ezmultipli, integration
+) -> None:
+    """Test the black is off light entity."""
+    node = express_controls_ezmultipli
+    state = hass.states.get(HSM200_V1_ENTITY)
+    assert state.state == STATE_ON
+
+    # Attempt to turn on the light and ensure it defaults to white
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 0,
+        "property": "targetColor",
+    }
+    assert args["value"] == {"red": 255, "green": 255, "blue": 255}
+
+    client.async_send_command.reset_mock()
+
+    # Force the light to turn off
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "newValue": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 0,
+                },
+                "prevValue": {
+                    "red": 0,
+                    "green": 255,
+                    "blue": 0,
+                },
+                "propertyName": "currentColor",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(HSM200_V1_ENTITY)
+    assert state.state == STATE_OFF
+
+    # Force the light to turn on
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "newValue": {
+                    "red": 0,
+                    "green": 255,
+                    "blue": 0,
+                },
+                "prevValue": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 0,
+                },
+                "propertyName": "currentColor",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(HSM200_V1_ENTITY)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 0,
+        "property": "targetColor",
+    }
+    assert args["value"] == {"red": 0, "green": 0, "blue": 0}
+
+    client.async_send_command.reset_mock()
+
+    # Assert that the last color is restored
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 0,
+        "property": "targetColor",
+    }
+    assert args["value"] == {"red": 0, "green": 255, "blue": 0}
+
+    client.async_send_command.reset_mock()

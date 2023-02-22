@@ -1,8 +1,8 @@
 {
   "domain": "bluesound",
   "name": "Bluesound",
-  "documentation": "https://www.home-assistant.io/integrations/bluesound",
-  "requirements": ["xmltodict==0.12.0"],
   "codeowners": ["@thrawnarn"],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/bluesound",
+  "iot_class": "local_polling",
+  "requirements": ["xmltodict==0.13.0"]
 }

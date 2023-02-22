@@ -116,8 +116,36 @@ def write_version(version):
         "PATCH_VERSION: Final = .*\n", f'PATCH_VERSION: Final = "{patch}"\n', content
     )
 
-    with open("homeassistant/const.py", "wt") as fil:
-        content = fil.write(content)
+    with open("homeassistant/const.py", "w") as fil:
+        fil.write(content)
+
+
+def write_version_metadata(version: Version) -> None:
+    """Update pyproject.toml file with new version."""
+    with open("pyproject.toml", encoding="utf8") as fp:
+        content = fp.read()
+
+    content = re.sub(r"(version\W+=\W).+\n", f'\\g<1>"{version}"\n', content, count=1)
+
+    with open("pyproject.toml", "w", encoding="utf8") as fp:
+        fp.write(content)
+
+
+def write_ci_workflow(version: Version) -> None:
+    """Update ci workflow with new version."""
+    with open(".github/workflows/ci.yaml") as fp:
+        content = fp.read()
+
+    short_version = ".".join(str(version).split(".", maxsplit=2)[:2])
+    content = re.sub(
+        r"(\n\W+HA_SHORT_VERSION: )\d{4}\.\d{1,2}\n",
+        f"\\g<1>{short_version}\n",
+        content,
+        count=1,
+    )
+
+    with open(".github/workflows/ci.yaml", "w") as fp:
+        fp.write(content)
 
 
 def main():
@@ -142,6 +170,9 @@ def main():
     assert bumped > current, "BUG! New version is not newer than old version"
 
     write_version(bumped)
+    write_version_metadata(bumped)
+    write_ci_workflow(bumped)
+    print(bumped)
 
     if not arguments.commit:
         return

@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .utils import load_plum
@@ -60,6 +59,8 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=username, data={CONF_USERNAME: username, CONF_PASSWORD: password}
         )
 
-    async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
+    async def async_step_import(
+        self, import_config: dict[str, Any] | None
+    ) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)

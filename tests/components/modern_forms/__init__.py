@@ -1,7 +1,7 @@
 """Tests for the Modern Forms integration."""
 
+from collections.abc import Callable
 import json
-from typing import Callable
 
 from aiomodernforms.const import COMMAND_QUERY_STATIC_DATA
 

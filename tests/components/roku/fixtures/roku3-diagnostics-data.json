@@ -1,0 +1,85 @@
+{
+  "app": {
+    "app_id": null,
+    "name": "Roku",
+    "screensaver": false,
+    "version": null
+  },
+  "apps": [
+    {
+      "app_id": "11",
+      "name": "Roku Channel Store",
+      "screensaver": false,
+      "version": null
+    },
+    {
+      "app_id": "12",
+      "name": "Netflix",
+      "screensaver": false,
+      "version": null
+    },
+    {
+      "app_id": "13",
+      "name": "Amazon Video on Demand",
+      "screensaver": false,
+      "version": null
+    },
+    {
+      "app_id": "14",
+      "name": "MLB.TV®",
+      "screensaver": false,
+      "version": null
+    },
+    {
+      "app_id": "26",
+      "name": "Free FrameChannel Service",
+      "screensaver": false,
+      "version": null
+    },
+    {
+      "app_id": "27",
+      "name": "Mediafly",
+      "screensaver": false,
+      "version": null
+    },
+    {
+      "app_id": "28",
+      "name": "Pandora",
+      "screensaver": false,
+      "version": null
+    },
+    {
+      "app_id": "74519",
+      "name": "Pluto TV - It's Free TV",
+      "screensaver": false,
+      "version": "5.2.0"
+    }
+  ],
+  "channel": null,
+  "channels": [],
+  "info": {
+    "brand": "Roku",
+    "device_location": null,
+    "device_type": "box",
+    "ethernet_mac": "b0:a7:37:96:4d:fa",
+    "ethernet_support": true,
+    "headphones_connected": false,
+    "model_name": "Roku 3",
+    "model_number": "4200X",
+    "name": "My Roku 3",
+    "network_name": null,
+    "network_type": "ethernet",
+    "serial_number": "1GU48T017973",
+    "supports_airplay": false,
+    "supports_find_remote": false,
+    "supports_private_listening": false,
+    "version": "7.5.0",
+    "wifi_mac": "b0:a7:37:96:4d:fb"
+  },
+  "media": null,
+  "state": {
+    "at": "2022-01-23T21:05:03.154737",
+    "available": true,
+    "standby": false
+  }
+}

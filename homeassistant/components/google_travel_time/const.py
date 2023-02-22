@@ -1,6 +1,4 @@
 """Constants for Google Travel Time."""
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
-
 DOMAIN = "google_travel_time"
 
 ATTRIBUTION = "Powered by Google"
@@ -25,8 +23,6 @@ DEPARTURE_TIME = "Departure Time"
 TIME_TYPES = [ARRIVAL_TIME, DEPARTURE_TIME]
 
 DEFAULT_NAME = "Google Travel Time"
-
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
 
 ALL_LANGUAGES = [
     "ar",
@@ -86,4 +82,8 @@ TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
 TRANSPORT_TYPE = ["bus", "subway", "train", "tram", "rail"]
 TRAVEL_MODE = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODEL = ["best_guess", "pessimistic", "optimistic"]
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
+
+# googlemaps library uses "metric" or "imperial" terminology in distance_matrix
+UNITS_METRIC = "metric"
+UNITS_IMPERIAL = "imperial"
+UNITS = [UNITS_METRIC, UNITS_IMPERIAL]

@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Efergy",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }

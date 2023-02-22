@@ -17,6 +17,7 @@ def get_update_manager(device):
         "A1": BroadlinkA1UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
         "LB1": BroadlinkLB1UpdateManager,
+        "LB2": BroadlinkLB1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,
@@ -75,17 +76,16 @@ class BroadlinkUpdateManager(ABC):
                 )
             raise UpdateFailed(err) from err
 
-        else:
-            if self.available is False:
-                _LOGGER.warning(
-                    "Connected to %s (%s at %s)",
-                    self.device.name,
-                    self.device.api.model,
-                    self.device.api.host[0],
-                )
-            self.available = True
-            self.last_update = dt.utcnow()
-            return data
+        if self.available is False:
+            _LOGGER.warning(
+                "Connected to %s (%s at %s)",
+                self.device.name,
+                self.device.api.model,
+                self.device.api.host[0],
+            )
+        self.available = True
+        self.last_update = dt.utcnow()
+        return data
 
     @abstractmethod
     async def async_fetch_data(self):
