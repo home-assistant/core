@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -64,14 +64,6 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._host: str | None = None
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> ObihaiOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return ObihaiOptionsFlowHandler(config_entry)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -123,47 +115,4 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: config[CONF_PASSWORD],
                 CONF_USERNAME: config.get(CONF_USERNAME),
             },
-        )
-
-
-class ObihaiOptionsFlowHandler(OptionsFlow):
-    """Handle Obihai options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Obihai options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage Obihai options."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            errors = await async_validate_credentials(self.hass, user_input)
-            if not errors:
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    if (
-                        entry.entry_id != self.config_entry.entry_id
-                        and entry.options[CONF_OBIHAI_HOST]
-                        == user_input[CONF_OBIHAI_HOST]
-                    ):
-                        errors = {CONF_OBIHAI_HOST: "already_configured"}
-
-                if not errors:
-                    return self.async_create_entry(
-                        title=user_input.get(CONF_NAME, user_input[CONF_OBIHAI_HOST]),
-                        data={
-                            CONF_OBIHAI_HOST: user_input[CONF_OBIHAI_HOST],
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            CONF_USERNAME: user_input.get(CONF_USERNAME),
-                        },
-                    )
-        else:
-            user_input = {}
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=async_get_schema(user_input or self.config_entry.options),
-            errors=errors,
         )
