@@ -1893,22 +1893,16 @@ async def help_test_setup_manual_entity_from_yaml(
     await hass.async_block_till_done()
 
 
-async def help_test_unload_config_entry(
-    hass: HomeAssistant, tmp_path: Path, newconfig: ConfigType
-) -> None:
+async def help_test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unloading the MQTT config entry."""
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
 
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump(newconfig)
-    new_yaml_config_file.write_text(new_yaml_config)
-    with patch.object(module_hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
-        assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-        # work-a-round mypy bug https://github.com/python/mypy/issues/9005#issuecomment-1280985006
-        updated_config_entry = mqtt_config_entry
-        assert updated_config_entry.state is ConfigEntryState.NOT_LOADED
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+    # work-a-round mypy bug https://github.com/python/mypy/issues/9005#issuecomment-1280985006
+    updated_config_entry = mqtt_config_entry
+    assert updated_config_entry.state is ConfigEntryState.NOT_LOADED
+    await hass.async_block_till_done()
 
 
 async def help_test_unload_config_entry_with_platform(
@@ -1942,7 +1936,7 @@ async def help_test_unload_config_entry_with_platform(
     discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
     assert discovery_setup_entity
 
-    await help_test_unload_config_entry(hass, tmp_path, config_setup)
+    await help_test_unload_config_entry(hass)
 
     async_fire_mqtt_message(
         hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_setup)
