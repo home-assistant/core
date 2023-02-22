@@ -35,18 +35,34 @@ def configured_instances(hass: HomeAssistant) -> set[str]:
 
 
 def _get_data_schema(
-    name: str | None,
-    latitude: float | None,
-    longitude: float | None,
-    elevation: int | None,
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry | None = None
 ) -> vol.Schema:
     """Get a schema with default values."""
+    # If tracking home or no config entry is passed in, default value come from Home location
+    if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
+        return vol.Schema(
+            {
+                vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
+                vol.Required(CONF_LATITUDE, default=hass.config.latitude): cv.latitude,
+                vol.Required(
+                    CONF_LONGITUDE, default=hass.config.longitude
+                ): cv.longitude,
+                vol.Required(CONF_ELEVATION, default=hass.config.elevation): int,
+            }
+        )
+    # Not tracking home, default values come from config entry
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default=name): str,
-            vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
-            vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
-            vol.Required(CONF_ELEVATION, default=elevation): int,
+            vol.Required(CONF_NAME, default=config_entry.data.get(CONF_NAME)): str,
+            vol.Required(
+                CONF_LATITUDE, default=config_entry.data.get(CONF_LATITUDE)
+            ): cv.latitude,
+            vol.Required(
+                CONF_LONGITUDE, default=config_entry.data.get(CONF_LONGITUDE)
+            ): cv.longitude,
+            vol.Required(
+                CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
+            ): int,
         }
     )
 
@@ -78,12 +94,7 @@ class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_data_schema(
-                name=HOME_LOCATION_NAME,
-                latitude=self.hass.config.latitude,
-                longitude=self.hass.config.longitude,
-                elevation=self.hass.config.elevation,
-            ),
+            data_schema=_get_data_schema(self.hass),
             errors=self._errors,
         )
 
@@ -134,15 +145,8 @@ class MetOptionsFlowHandler(config_entries.OptionsFlow):
                 title=self._config_entry.title, data=user_input
             )
 
-        config_data = self._config_entry.data
-
         return self.async_show_form(
             step_id="init",
-            data_schema=_get_data_schema(
-                name=config_data.get(CONF_NAME),
-                latitude=config_data.get(CONF_LATITUDE),
-                longitude=config_data.get(CONF_LONGITUDE),
-                elevation=config_data.get(CONF_ELEVATION),
-            ),
+            data_schema=_get_data_schema(self.hass, config_entry=self._config_entry),
             errors=self._errors,
         )
