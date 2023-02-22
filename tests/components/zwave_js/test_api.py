@@ -2,6 +2,7 @@
 from copy import deepcopy
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -2903,8 +2904,8 @@ async def test_firmware_upload_view(
     integration,
     hass_client: ClientSessionGenerator,
     firmware_file,
-    firmware_data: dict[str, str],
-    expected_data: dict[str, int],
+    firmware_data: dict[str, Any],
+    expected_data: dict[str, Any],
 ) -> None:
     """Test the HTTP firmware upload view."""
     client = await hass_client()
