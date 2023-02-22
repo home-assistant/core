@@ -30,20 +30,19 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Network UPS Tools (NUT) devices."""
-    return (
-        []
-        if (entry_id := _get_entry_id_from_device_id(hass, device_id)) is None
-        else [
-            {
-                **{
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                },
-                CONF_TYPE: _get_device_action_name(command_name),
-            }
-            for command_name in hass.data[DOMAIN][entry_id][DEVICE_SUPPORTED_COMMANDS]
-        ]
-    )
+    if (entry_id := _get_entry_id_from_device_id(hass, device_id)) is None:
+        return []
+    base_action = {
+        CONF_DEVICE_ID: device_id,
+        CONF_DOMAIN: DOMAIN,
+    }
+    supported_commands: set[str] = hass.data[DOMAIN][entry_id][
+        DEVICE_SUPPORTED_COMMANDS
+    ]
+    return [
+        {CONF_TYPE: _get_device_action_name(command_name)} | base_action
+        for command_name in supported_commands
+    ]
 
 
 async def async_call_action_from_config(
