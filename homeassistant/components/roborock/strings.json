@@ -19,12 +19,6 @@
         "data": {
           "code": "Verification code"
         }
-      },
-      "password": {
-        "description": "Type your password",
-        "data": {
-          "password": "Password"
-        }
       }
     },
     "error": {
