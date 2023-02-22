@@ -142,10 +142,6 @@ class ObihaiServiceSensors(SensorEntity):
             return "mdi:restart-alert"
         return "mdi:phone"
 
-    def reboot(self) -> None:
-        """Reboot the Obihai."""
-        self._pyobihai.call_reboot()
-
     def update(self) -> bool:
         """Update the sensor."""
         if self._pyobihai.check_account():
