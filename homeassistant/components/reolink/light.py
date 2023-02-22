@@ -142,13 +142,12 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn light on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
         if (
-            brightness is not None
-            and self.entity_description.set_brightness is not None
-        ):
+            brightness := kwargs.get(ATTR_BRIGHTNESS)
+        ) is not None and self.entity_description.set_brightness is not None:
+            brightness_pct = int(brightness / 255.0 * 100)
             await self.entity_description.set_brightness(
-                self._host.api, self._channel, brightness
+                self._host.api, self._channel, brightness_pct
             )
 
         await self.entity_description.turn_on_off(self._host.api, self._channel, True)
