@@ -3317,11 +3317,11 @@ async def test_publish_or_subscribe_without_valid_config_entry(
 )
 async def test_disabling_and_enabling_entry(
     hass: HomeAssistant,
-    mock_hass_config: None,
-    mqtt_mock: MqttMockHAClient,
-    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test disabling and enabling the config entry."""
+    await mqtt_mock_entry_no_yaml_config()
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
     # Late discovery of a light
@@ -3335,6 +3335,10 @@ async def test_disabling_and_enabling_entry(
 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
+    assert (
+        "MQTT integration is disabled, skipping setup of discovered item MQTT light"
+        in caplog.text
+    )
 
     new_mqtt_config_entry = entry
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
@@ -3395,7 +3399,6 @@ async def test_disabling_and_enabling_entry(
 )
 async def test_setup_manual_items_with_unique_ids(
     hass: HomeAssistant,
-    tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
     hass_config: ConfigType,
     unique: bool,
