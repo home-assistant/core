@@ -34,7 +34,7 @@ async def test_commission(
 
     matter_client.commission_with_code.reset_mock()
     matter_client.commission_with_code.side_effect = InvalidCommand(
-        "test_id", "test_code", "Failed to commission"
+        "test_id", "9", "Failed to commission"
     )
 
     await ws_client.send_json(
@@ -47,7 +47,7 @@ async def test_commission(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "9"
     matter_client.commission_with_code.assert_called_once_with("12345678")
 
 
@@ -74,7 +74,7 @@ async def test_commission_on_network(
 
     matter_client.commission_on_network.reset_mock()
     matter_client.commission_on_network.side_effect = NodeCommissionFailed(
-        "test_id", "test_code", "Failed to commission on network"
+        "test_id", "1", "Failed to commission on network"
     )
 
     await ws_client.send_json(
@@ -87,7 +87,7 @@ async def test_commission_on_network(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "1"
     matter_client.commission_on_network.assert_called_once_with(1234)
 
 
@@ -114,7 +114,7 @@ async def test_set_thread_dataset(
 
     matter_client.set_thread_operational_dataset.reset_mock()
     matter_client.set_thread_operational_dataset.side_effect = NodeCommissionFailed(
-        "test_id", "test_code", "Failed to commission"
+        "test_id", "1", "Failed to commission"
     )
 
     await ws_client.send_json(
@@ -127,7 +127,7 @@ async def test_set_thread_dataset(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "1"
     matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
 
 
@@ -158,7 +158,7 @@ async def test_set_wifi_credentials(
 
     matter_client.set_wifi_credentials.reset_mock()
     matter_client.set_wifi_credentials.side_effect = NodeCommissionFailed(
-        "test_id", "test_code", "Failed to commission on network"
+        "test_id", "1", "Failed to commission on network"
     )
 
     await ws_client.send_json(
@@ -172,7 +172,7 @@ async def test_set_wifi_credentials(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "test_code"
+    assert msg["error"]["code"] == "1"
     assert matter_client.set_wifi_credentials.call_count == 1
     assert matter_client.set_wifi_credentials.call_args == call(
         ssid="test_network", credentials="test_password"

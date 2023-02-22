@@ -34,7 +34,9 @@ async def test_contact_sensor(
     assert state.state == "on"
 
     set_node_attribute(contact_sensor_node, 1, 69, 0, False)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(contact_sensor_node.node_id, "1/69/0", False)
+    )
 
     state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
     assert state
@@ -62,7 +64,9 @@ async def test_occupancy_sensor(
     assert state.state == "on"
 
     set_node_attribute(occupancy_sensor_node, 1, 1030, 0, 0)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(occupancy_sensor_node.node_id, "1/1030/0", 0)
+    )
 
     state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
     assert state
