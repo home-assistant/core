@@ -13,6 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -87,6 +88,77 @@ NUMBER_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "volume"),
         value=lambda api, ch: api.volume(ch),
         method=lambda api, ch, value: api.set_volume(ch, volume=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="guard_return_time",
+        name="Guard return time",
+        icon="mdi:crosshairs-gps",
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        get_min_value=lambda api, ch: 10,
+        get_max_value=lambda api, ch: 300,
+        supported=lambda api, ch: api.supported(ch, "ptz_guard"),
+        value=lambda api, ch: api.ptz_guard_time(ch),
+        method=lambda api, ch, value: api.set_ptz_guard(ch, time=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="motion_sensitivity",
+        name="Motion sensitivity",
+        icon="mdi:motion-sensor",
+        native_step=1,
+        get_min_value=lambda api, ch: 1,
+        get_max_value=lambda api, ch: 50,
+        supported=lambda api, ch: api.supported(ch, "md_sensitivity"),
+        value=lambda api, ch: api.md_sensitivity(ch),
+        method=lambda api, ch, value: api.set_md_sensitivity(ch, int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_face_sensititvity",
+        name="AI face sensitivity",
+        icon="mdi:face-recognition",
+        native_step=1,
+        get_min_value=lambda api, ch: 0,
+        get_max_value=lambda api, ch: 100,
+        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
+        and api.ai_supported(ch, "face"),
+        value=lambda api, ch: api.ai_sensitivity(ch, "face"),
+        method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "face"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_person_sensititvity",
+        name="AI person sensitivity",
+        icon="mdi:account",
+        native_step=1,
+        get_min_value=lambda api, ch: 0,
+        get_max_value=lambda api, ch: 100,
+        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
+        and api.ai_supported(ch, "people"),
+        value=lambda api, ch: api.ai_sensitivity(ch, "people"),
+        method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "people"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_vehicle_sensititvity",
+        name="AI vehicle sensitivity",
+        icon="mdi:car",
+        native_step=1,
+        get_min_value=lambda api, ch: 0,
+        get_max_value=lambda api, ch: 100,
+        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
+        and api.ai_supported(ch, "vehicle"),
+        value=lambda api, ch: api.ai_sensitivity(ch, "vehicle"),
+        method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "vehicle"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_pet_sensititvity",
+        name="AI pet sensitivity",
+        icon="mdi:dog-side",
+        native_step=1,
+        get_min_value=lambda api, ch: 0,
+        get_max_value=lambda api, ch: 100,
+        supported=lambda api, ch: api.supported(ch, "ai_sensitivity")
+        and api.ai_supported(ch, "dog_cat"),
+        value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
+        method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
     ),
 )
 
