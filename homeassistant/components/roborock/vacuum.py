@@ -28,7 +28,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import RoborockDataUpdateCoordinator
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SERVICE_VACUUM_CLEAN_SEGMENT,
+    SERVICE_VACUUM_CLEAN_ZONE,
+    SERVICE_VACUUM_RESET_CONSUMABLES,
+    SERVICE_VACUUM_SET_FAN_SPEED,
+    SERVICE_VACUUM_SET_MOP_INTENSITY,
+    SERVICE_VACUUM_SET_MOP_MODE,
+)
 from .device import RoborockCoordinatedEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +81,7 @@ def add_services() -> None:
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        "vacuum_clean_zone",
+        SERVICE_VACUUM_CLEAN_ZONE,
         cv.make_entity_service_schema(
             {
                 vol.Required("zone"): vol.All(
@@ -98,35 +106,35 @@ def add_services() -> None:
     )
 
     platform.async_register_entity_service(
-        "vacuum_clean_segment",
+        SERVICE_VACUUM_CLEAN_SEGMENT,
         cv.make_entity_service_schema(
             {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])}
         ),
         RoborockVacuum.async_clean_segment.__name__,
     )
     platform.async_register_entity_service(
-        "vacuum_set_mop_mode",
+        SERVICE_VACUUM_SET_MOP_MODE,
         cv.make_entity_service_schema(
             {vol.Required("mop_mode"): vol.In(list(MOP_MODE_CODES.values()))}
         ),
         RoborockVacuum.async_set_mop_mode.__name__,
     )
     platform.async_register_entity_service(
-        "vacuum_set_mop_intensity",
+        SERVICE_VACUUM_SET_MOP_INTENSITY,
         cv.make_entity_service_schema(
             {vol.Required("mop_intensity"): vol.In(list(MOP_INTENSITY_CODES.values()))}
         ),
         RoborockVacuum.async_set_mop_intensity.__name__,
     )
     platform.async_register_entity_service(
-        "vacuum_set_fan_speed",
+        SERVICE_VACUUM_SET_FAN_SPEED,
         cv.make_entity_service_schema(
             {vol.Required("fan_speed"): vol.In(list(FAN_SPEED_CODES.values()))}
         ),
         RoborockVacuum.async_set_fan_speed.__name__,
     )
     platform.async_register_entity_service(
-        "vacuum_reset_consumables",
+        SERVICE_VACUUM_RESET_CONSUMABLES,
         cv.make_entity_service_schema({}),
         RoborockVacuum.async_reset_consumable.__name__,
     )

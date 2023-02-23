@@ -1,7 +1,6 @@
 """The Roborock component."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -12,17 +11,18 @@ from roborock.exceptions import RoborockException, RoborockTimeout
 from roborock.typing import RoborockDeviceInfo, RoborockDeviceProp
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_BASE_URL,
-    CONF_ENTRY_USERNAME,
     CONF_INCLUDE_SHARED,
     CONF_USER_DATA,
     DOMAIN,
     PLATFORMS,
+    SERVICES,
     VACUUM,
 )
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     user_data = UserData(entry.data.get(CONF_USER_DATA))
     base_url = entry.data.get(CONF_BASE_URL)
-    username = entry.data.get(CONF_ENTRY_USERNAME)
+    username = entry.data.get(CONF_USERNAME)
     vacuum_options = entry.options.get(VACUUM)
     include_shared = (
         vacuum_options.get(CONF_INCLUDE_SHARED) if vacuum_options else False
@@ -138,21 +138,16 @@ class RoborockDataUpdateCoordinator(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
-    coordinator: RoborockDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    unloaded = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-                if platform in coordinator.platforms
-            ]
-        )
-    )
-    if unloaded:
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # await hass.data[DOMAIN][entry.entry_id].release() # RELEASE IS NOT FUNCTINOAL TODO
         hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.release()
 
-    return unloaded
+    if not hass.data[DOMAIN]:
+        for service in SERVICES:
+            hass.services.async_remove(DOMAIN, service)
+
+    return unload_ok
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

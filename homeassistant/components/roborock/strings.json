@@ -22,8 +22,8 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_code": "The code you entered was incorrect, please check it and try again.",
+      "invalid_email": "There is no account associated with the email you entered, please try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

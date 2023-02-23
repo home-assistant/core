@@ -1,24 +1,19 @@
 """Config flow for Roborock."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
 from roborock.api import RoborockClient
 from roborock.containers import UserData
+from roborock.exceptions import RoborockException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    CONF_BASE_URL,
-    CONF_ENTRY_CODE,
-    CONF_ENTRY_USERNAME,
-    CONF_USER_DATA,
-    DOMAIN,
-)
+from .const import CONF_BASE_URL, CONF_ENTRY_CODE, CONF_USER_DATA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +31,16 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._client: RoborockClient = None
         self._auth_method: str | None = None
 
-    async def async_step_reauth(self, _user_input: Mapping[str, Any]) -> FlowResult:
-        """Handle a reauth flow."""
-        return self._show_user_form()
+    # async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    #     """Handle a reauth flow."""
+    #     return await self.async_step_reauth_confirm(entry_data)
+
+    # async def async_step_reauth_confirm(
+    #     self, user_input: dict[str, Any] | None = None
+    # ) -> FlowResult:
+    #     """Handle reauthorization flow."""
+    #     # TO-DO Show correct form based on code error or email error
+    #     return self._show_code_form(user_input)
 
     async def async_step_user(
         self, _user_input: dict[str, Any] | None = None
@@ -52,8 +54,8 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         self._errors.clear()
 
-        if user_input and user_input[CONF_ENTRY_USERNAME]:
-            username = user_input[CONF_ENTRY_USERNAME]
+        if user_input and user_input[CONF_USERNAME]:
+            username = user_input[CONF_USERNAME]
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
             self._username = username
@@ -62,9 +64,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if client:
                     self._client = client
                     return self._show_code_form(user_input)
-                self._errors["base"] = "auth"
-            return self._show_email_form(user_input)
-
         return self._show_email_form(user_input)
 
     async def async_step_code(
@@ -82,7 +81,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_data = await self._code_login(code)
         if user_data and username:
             return self._create_entry(username, user_data)
-        self._errors["base"] = "no_device"
 
         return self._show_code_form(user_input)
 
@@ -99,7 +97,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_ENTRY_USERNAME, default=user_input.get(CONF_ENTRY_USERNAME)
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str
                 }
             ),
@@ -126,7 +124,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=username,
             data={
-                CONF_ENTRY_USERNAME: username,
+                CONF_USERNAME: username,
                 CONF_USER_DATA: user_data,
                 CONF_BASE_URL: self._client.base_url,
             },
@@ -139,9 +137,13 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             client = RoborockClient(username)
             await client.request_code()
             return client
+        except RoborockException as ex:
+            _LOGGER.exception(ex)
+            self._errors["base"] = "invalid_email"
+            return None
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception(ex)
-            self._errors["base"] = "auth"
+            self._errors["base"] = "unknown"
             return None
 
     async def _code_login(self, code: str) -> UserData | None:
@@ -150,7 +152,11 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Logging into Roborock account using email provided code")
             login_data = await self._client.code_login(code)
             return login_data
+        except RoborockException as ex:
+            _LOGGER.exception(ex)
+            self._errors["base"] = "invalid_code"
+            return None
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception(ex)
-            self._errors["base"] = "auth"
+            self._errors["base"] = "unknown"
             return None
