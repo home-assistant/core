@@ -323,8 +323,8 @@ async def test_form_user_discover_fails_aborts_already_configured(
 
 
 async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_connect(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test discovery skipped and we can auto fetch the password then we fail to connect."""
 
     with patch(
@@ -496,8 +496,8 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
 
 
 async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_and_cannot_connect(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test discovery finds no devices and password fetch fails then we cannot connect."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -626,7 +626,9 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
 
 
 @pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES)
-async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
+async def test_dhcp_discovery_and_roomba_discovery_finds(
+    hass: HomeAssistant, discovery_data
+) -> None:
     """Test we can process the discovery from dhcp and roomba discovery matches the device."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -679,7 +681,9 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
 
 
 @pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP)
-async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
+async def test_dhcp_discovery_falls_back_to_manual(
+    hass: HomeAssistant, discovery_data
+) -> None:
     """Test we can process the discovery from dhcp but roomba discovery cannot find the specific device."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -751,7 +755,9 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
 
 
 @pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP)
-async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_data):
+async def test_dhcp_discovery_no_devices_falls_back_to_manual(
+    hass: HomeAssistant, discovery_data
+) -> None:
     """Test we can process the discovery from dhcp but roomba discovery cannot find any devices."""
 
     mocked_roomba = _create_mocked_roomba(

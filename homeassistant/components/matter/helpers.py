@@ -11,9 +11,9 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
-    from matter_server.common.models.node import MatterNode
-    from matter_server.common.models.node_device import AbstractMatterNodeDevice
-    from matter_server.common.models.server_information import ServerInfo
+    from matter_server.client.models.node import MatterNode
+    from matter_server.client.models.node_device import AbstractMatterNodeDevice
+    from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
 
@@ -37,7 +37,7 @@ def get_matter(hass: HomeAssistant) -> MatterAdapter:
 
 
 def get_operational_instance_id(
-    server_info: ServerInfo,
+    server_info: ServerInfoMessage,
     node: MatterNode,
 ) -> str:
     """Return `Operational Instance Name` for given MatterNode."""
@@ -49,7 +49,7 @@ def get_operational_instance_id(
 
 
 def get_device_id(
-    server_info: ServerInfo,
+    server_info: ServerInfoMessage,
     node_device: AbstractMatterNodeDevice,
 ) -> str:
     """Return HA device_id for the given MatterNodeDevice."""

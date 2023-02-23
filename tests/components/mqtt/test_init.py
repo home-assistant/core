@@ -98,7 +98,7 @@ def sensor_platforms_only() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_storage(hass_storage: Generator[dict[str, Any], None, None]) -> None:
+def mock_storage(hass_storage: dict[str, Any]) -> None:
     """Autouse hass_storage for the TestCase tests."""
 
 
@@ -920,109 +920,42 @@ async def test_subscribe_bad_topic(
         await mqtt.async_subscribe(hass, 55, record_calls)  # type: ignore[arg-type]
 
 
-# Support for a deprecated callback type will be removed from HA core 2023.2.0
-async def test_subscribe_deprecated(
+# Support for a deprecated callback type was removed with HA core 2023.3.0
+# Test can be removed from HA core 2023.5.0
+async def test_subscribe_with_deprecated_callback_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
-    """Test the subscription of a topic using deprecated callback signature."""
-    calls: list[tuple[str, ReceivePayloadType, int]]
-
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    """Test the subscription of a topic using deprecated callback signature fails."""
 
     async def record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
         """Record calls."""
-        calls.append((topic, payload, qos))
 
-    calls = []
-    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    mqtt_mock.async_publish.reset_mock()
-
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, "test-topic", record_calls)
     # Test with partial wrapper
-    calls = []
-    unsub = await mqtt.async_subscribe(
-        hass, "test-topic", RecordCallsPartial(record_calls)
-    )
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, "test-topic", RecordCallsPartial(record_calls))
 
 
-# Support for a deprecated callback type will be removed from HA core 2023.2.0
-async def test_subscribe_deprecated_async(
+# Support for a deprecated callback type was removed with HA core 2023.3.0
+# Test can be removed from HA core 2023.5.0
+async def test_subscribe_deprecated_async_fails(
     hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
-    """Test the subscription of a topic using deprecated coroutine signature."""
-    calls: list[tuple[str, ReceivePayloadType, int]]
-
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    """Test the subscription of a topic using deprecated coroutine signature fails."""
 
     @callback
     def async_record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
         """Record calls."""
-        calls.append((topic, payload, qos))
 
-    calls = []
-    unsub = await mqtt.async_subscribe(hass, "test-topic", async_record_calls)
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    mqtt_mock.async_publish.reset_mock()
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(hass, "test-topic", async_record_calls)
 
     # Test with partial wrapper
-    calls = []
-    unsub = await mqtt.async_subscribe(
-        hass, "test-topic", RecordCallsPartial(async_record_calls)
-    )
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0][0] == "test-topic"
-    assert calls[0][1] == "test-payload"
-
-    unsub()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(calls) == 1
+    with pytest.raises(HomeAssistantError):
+        await mqtt.async_subscribe(
+            hass, "test-topic", RecordCallsPartial(async_record_calls)
+        )
 
 
 async def test_subscribe_topic_not_match(
@@ -1290,7 +1223,7 @@ async def test_subscribe_same_topic(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
-    """Test subscring to same topic twice and simulate retained messages.
+    """Test subscribing to same topic twice and simulate retained messages.
 
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages.
@@ -1300,25 +1233,32 @@ async def test_subscribe_same_topic(
     # Fake that the client is connected
     mqtt_mock().connected = True
 
-    calls_a = MagicMock()
-    await mqtt.async_subscribe(hass, "test/state", calls_a)
+    calls_a: list[ReceiveMessage] = []
+    calls_b: list[ReceiveMessage] = []
+
+    def _callback_a(msg: ReceiveMessage) -> None:
+        calls_a.append(msg)
+
+    def _callback_b(msg: ReceiveMessage) -> None:
+        calls_b.append(msg)
+
+    await mqtt.async_subscribe(hass, "test/state", _callback_a)
     async_fire_mqtt_message(
         hass, "test/state", "online"
     )  # Simulate a (retained) message
     await hass.async_block_till_done()
-    assert calls_a.called
+    assert len(calls_a) == 1
     mqtt_client_mock.subscribe.assert_called()
-    calls_a.reset_mock()
+    calls_a = []
     mqtt_client_mock.reset_mock()
 
-    calls_b = MagicMock()
-    await mqtt.async_subscribe(hass, "test/state", calls_b)
+    await mqtt.async_subscribe(hass, "test/state", _callback_b)
     async_fire_mqtt_message(
         hass, "test/state", "online"
     )  # Simulate a (retained) message
     await hass.async_block_till_done()
-    assert calls_a.called
-    assert calls_b.called
+    assert len(calls_a) == 1
+    assert len(calls_b) == 1
     mqtt_client_mock.subscribe.assert_called()
 
 
@@ -1353,19 +1293,25 @@ async def test_unsubscribe_race(
     # Fake that the client is connected
     mqtt_mock().connected = True
 
-    calls_a = MagicMock()
-    calls_b = MagicMock()
+    calls_a: list[ReceiveMessage] = []
+    calls_b: list[ReceiveMessage] = []
+
+    def _callback_a(msg: ReceiveMessage) -> None:
+        calls_a.append(msg)
+
+    def _callback_b(msg: ReceiveMessage) -> None:
+        calls_b.append(msg)
 
     mqtt_client_mock.reset_mock()
-    unsub = await mqtt.async_subscribe(hass, "test/state", calls_a)
+    unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
     unsub()
-    await mqtt.async_subscribe(hass, "test/state", calls_b)
+    await mqtt.async_subscribe(hass, "test/state", _callback_b)
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test/state", "online")
     await hass.async_block_till_done()
-    assert not calls_a.called
-    assert calls_b.called
+    assert not calls_a
+    assert calls_b
 
     # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
     expected_calls_1 = [
@@ -1444,6 +1390,69 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 
     expected.append(call("test/state", 1))
     assert mqtt_client_mock.subscribe.mock_calls == expected
+
+
+async def test_reload_entry_with_restored_subscriptions(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mqtt_client_mock: MqttMockPahoClient,
+    record_calls: MessageCallbackType,
+    calls: list[ReceiveMessage],
+) -> None:
+    """Test reloading the config entry with with subscriptions restored."""
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+    mqtt_client_mock.connect.return_value = 0
+    assert await mqtt.async_setup_entry(hass, entry)
+    await hass.async_block_till_done()
+
+    await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    await mqtt.async_subscribe(hass, "wild/+/card", record_calls)
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload"
+    calls.clear()
+
+    # Reload the entry
+    config_yaml_new = {}
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
+
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload2")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload2")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload2"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload2"
+    calls.clear()
+
+    # Reload the entry again
+    config_yaml_new = {}
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config_yaml_new)
+
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload3")
+    async_fire_mqtt_message(hass, "wild/any/card", "wild-card-payload3")
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload3"
+    assert calls[1].topic == "wild/any/card"
+    assert calls[1].payload == "wild-card-payload3"
 
 
 async def test_initial_setup_logs_error(
@@ -1746,7 +1755,7 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
 
 
 @pytest.mark.parametrize(
-    "config, insecure_param",
+    ("config", "insecure_param"),
     [
         ({"certificate": "auto"}, "not set"),
         ({"certificate": "auto", "tls_insecure": False}, False),
@@ -1816,7 +1825,7 @@ async def test_tls_version(
         await mqtt_mock_entry_with_yaml_config()
 
         assert calls
-        assert calls[0][3] == ssl.PROTOCOL_TLS
+        assert calls[0][3] == ssl.PROTOCOL_TLS_CLIENT
 
 
 @pytest.mark.parametrize(
@@ -1842,7 +1851,7 @@ async def test_custom_birth_message(
     await mqtt_mock_entry_no_yaml_config()
     birth = asyncio.Event()
 
-    async def wait_birth(topic, payload, qos) -> None:
+    async def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
@@ -1877,7 +1886,7 @@ async def test_default_birth_message(
     await mqtt_mock_entry_no_yaml_config()
     birth = asyncio.Event()
 
-    async def wait_birth(topic, payload, qos) -> None:
+    async def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
@@ -1944,7 +1953,6 @@ async def test_delayed_birth_message(
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"].client,
-        spec_set=hass.data["mqtt"].client,
         wraps=hass.data["mqtt"].client,
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
@@ -1953,7 +1961,7 @@ async def test_delayed_birth_message(
     mqtt_mock = hass.data["mqtt"].client
     mqtt_mock.reset_mock()
 
-    async def wait_birth(topic, payload, qos) -> None:
+    async def wait_birth(msg: ReceiveMessage) -> None:
         """Handle birth message."""
         birth.set()
 
@@ -2052,19 +2060,16 @@ async def test_mqtt_subscribes_topics_on_connect(
     await mqtt.async_subscribe(hass, "still/pending", record_calls)
     await mqtt.async_subscribe(hass, "still/pending", record_calls, 1)
 
-    with patch.object(hass, "add_job") as hass_jobs:
-        mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, 0)
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        assert mqtt_client_mock.disconnect.call_count == 0
+    assert mqtt_client_mock.disconnect.call_count == 0
 
-        assert len(hass_jobs.mock_calls) == 1
-        assert set(hass_jobs.mock_calls[0][1][1]) == {
-            ("home/sensor", 2),
-            ("still/pending", 1),
-            ("topic/test", 0),
-        }
+    assert mqtt_client_mock.subscribe.call_count == 3
+    mqtt_client_mock.subscribe.assert_any_call("topic/test", 0)
+    mqtt_client_mock.subscribe.assert_any_call("home/sensor", 2)
+    mqtt_client_mock.subscribe.assert_any_call("still/pending", 1)
 
 
 async def test_setup_entry_with_config_override(
@@ -3149,7 +3154,7 @@ async def test_disabling_and_enabling_entry(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 @pytest.mark.parametrize(
-    "config, unique",
+    ("config", "unique"),
     [
         (
             [

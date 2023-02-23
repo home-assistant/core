@@ -1003,7 +1003,7 @@
         "denonavr": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling",
+          "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
         },
         "heos": {
@@ -1143,6 +1143,12 @@
       "name": "Dooya",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "dormakaba_dkey": {
+      "name": "Dormakaba dKey",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "dovado": {
       "name": "Dovado",
@@ -1739,7 +1745,7 @@
       "iot_class": "cloud_polling"
     },
     "forked_daapd": {
-      "name": "Owntone",
+      "name": "OwnTone",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"

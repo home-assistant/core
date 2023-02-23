@@ -231,7 +231,9 @@ async def test_state_reporting_all(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
 
 
-async def test_service_calls(hass, enable_custom_integrations):
+async def test_service_calls(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test service calls."""
     await async_setup_component(
         hass,

@@ -579,15 +579,16 @@ async def test_discover_dynamic_group(
     tasks = []
     real_create_task = asyncio.create_task
 
-    def create_task(*args, **kwargs):
-        tasks.append(real_create_task(*args, **kwargs))
+    def create_task(coroutine, name):
+        tasks.append(real_create_task(coroutine))
 
     # Discover cast service
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_1,
-    ), patch(
-        "homeassistant.components.cast.media_player.asyncio.create_task",
+    ), patch.object(
+        hass,
+        "async_create_background_task",
         wraps=create_task,
     ):
         discover_cast(
@@ -611,8 +612,9 @@ async def test_discover_dynamic_group(
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_2,
-    ), patch(
-        "homeassistant.components.cast.media_player.asyncio.create_task",
+    ), patch.object(
+        hass,
+        "async_create_background_task",
         wraps=create_task,
     ):
         discover_cast(
@@ -636,8 +638,9 @@ async def test_discover_dynamic_group(
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf_1,
-    ), patch(
-        "homeassistant.components.cast.media_player.asyncio.create_task",
+    ), patch.object(
+        hass,
+        "async_create_background_task",
         wraps=create_task,
     ):
         discover_cast(
@@ -760,7 +763,7 @@ async def test_entity_availability(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize("port,entry_type", ((8009, None), (12345, None)))
+@pytest.mark.parametrize(("port", "entry_type"), ((8009, None), (12345, None)))
 async def test_device_registry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, port, entry_type
 ) -> None:
@@ -890,7 +893,7 @@ async def test_entity_cast_status(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "cast_type,supported_features,supported_features_no_media",
+    ("cast_type", "supported_features", "supported_features_no_media"),
     [
         (
             pychromecast.const.CAST_TYPE_AUDIO,
@@ -1248,7 +1251,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) 
 
 
 @pytest.mark.parametrize(
-    "url,fixture,playlist_item",
+    ("url", "fixture", "playlist_item"),
     (
         # Test title is extracted from m3u playlist
         (
@@ -1510,7 +1513,7 @@ async def test_entity_control(hass: HomeAssistant, quick_play_mock) -> None:
 
 # Some smart TV's with Google TV report "Netflix", not the Netflix app's ID
 @pytest.mark.parametrize(
-    "app_id, state_no_media",
+    ("app_id", "state_no_media"),
     [(pychromecast.APP_YOUTUBE, "idle"), ("Netflix", "playing")],
 )
 async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media) -> None:

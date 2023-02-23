@@ -576,3 +576,22 @@ async def test_send_usage_with_certificate(
         await analytics.send_analytics()
 
     assert "'certificate': True" in caplog.text
+
+
+async def test_send_with_recorder(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test recorder information."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    hass.http = Mock(ssl_certificate="/some/path/to/cert.pem")
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+
+    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+        await analytics.send_analytics()
+
+    postdata = aioclient_mock.mock_calls[-1][2]
+    assert postdata["recorder"]["engine"] == "sqlite"

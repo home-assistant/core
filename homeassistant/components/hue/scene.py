@@ -71,7 +71,7 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=600)
+                vol.Coerce(float), vol.Range(min=0, max=3600)
             ),
             vol.Optional(ATTR_BRIGHTNESS): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=255)

@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Tests for BTHome v1
 @pytest.mark.parametrize(
-    "mac_address, advertisement, bind_key, result",
+    ("mac_address", "advertisement", "bind_key", "result"),
     [
         (
             "A4:C1:38:8D:18:B2",
@@ -372,7 +372,7 @@ async def test_v1_sensors(
 
 # Tests for BTHome V2
 @pytest.mark.parametrize(
-    "mac_address, advertisement, bind_key, result",
+    ("mac_address", "advertisement", "bind_key", "result"),
     [
         (
             "A4:C1:38:8D:18:B2",

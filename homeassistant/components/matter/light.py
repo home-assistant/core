@@ -7,7 +7,7 @@ from functools import partial
 from typing import Any
 
 from chip.clusters import Objects as clusters
-from matter_server.common.models import device_types
+from matter_server.client.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -85,15 +85,13 @@ class MatterLight(MatterEntity, LightEntity):
     def _supports_color_mode(self, color_feature: MatterColorControlFeatures) -> bool:
         """Return if device supports given color mode."""
 
-        feature_map = self._device_type_instance.node.get_attribute(
-            self._device_type_instance.endpoint,
-            clusters.ColorControl,
+        feature_map = self.get_matter_attribute_value(
             clusters.ColorControl.Attributes.FeatureMap,
         )
 
-        assert isinstance(feature_map.value, int)
+        assert isinstance(feature_map, int)
 
-        return self._supports_feature(feature_map.value, color_feature)
+        return self._supports_feature(feature_map, color_feature)
 
     def _supports_hs_color(self) -> bool:
         """Return if device supports hs color."""
@@ -176,7 +174,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert level_control is not None
 
-        level = round(
+        level = round(  # type: ignore[unreachable]
             renormalize(
                 brightness,
                 (0, 255),
@@ -195,13 +193,17 @@ class MatterLight(MatterEntity, LightEntity):
     def _get_xy_color(self) -> tuple[float, float]:
         """Get xy color from matter."""
 
-        x_color = self.get_matter_attribute(clusters.ColorControl.Attributes.CurrentX)
-        y_color = self.get_matter_attribute(clusters.ColorControl.Attributes.CurrentY)
+        x_color = self.get_matter_attribute_value(
+            clusters.ColorControl.Attributes.CurrentX
+        )
+        y_color = self.get_matter_attribute_value(
+            clusters.ColorControl.Attributes.CurrentY
+        )
 
         assert x_color is not None
         assert y_color is not None
 
-        xy_color = convert_to_hass_xy((x_color.value, y_color.value))
+        xy_color = convert_to_hass_xy((x_color, y_color))
         LOGGER.debug(
             "Got xy color %s for %s",
             xy_color,
@@ -213,16 +215,18 @@ class MatterLight(MatterEntity, LightEntity):
     def _get_hs_color(self) -> tuple[float, float]:
         """Get hs color from matter."""
 
-        hue = self.get_matter_attribute(clusters.ColorControl.Attributes.CurrentHue)
+        hue = self.get_matter_attribute_value(
+            clusters.ColorControl.Attributes.CurrentHue
+        )
 
-        saturation = self.get_matter_attribute(
+        saturation = self.get_matter_attribute_value(
             clusters.ColorControl.Attributes.CurrentSaturation
         )
 
         assert hue is not None
         assert saturation is not None
 
-        hs_color = convert_to_hass_hs((hue.value, saturation.value))
+        hs_color = convert_to_hass_hs((hue, saturation))
 
         LOGGER.debug(
             "Got hs color %s for %s",
@@ -235,7 +239,7 @@ class MatterLight(MatterEntity, LightEntity):
     def _get_color_temperature(self) -> int:
         """Get color temperature from matter."""
 
-        color_temp = self.get_matter_attribute(
+        color_temp = self.get_matter_attribute_value(
             clusters.ColorControl.Attributes.ColorTemperatureMireds
         )
 
@@ -243,11 +247,11 @@ class MatterLight(MatterEntity, LightEntity):
 
         LOGGER.debug(
             "Got color temperature %s for %s",
-            color_temp.value,
+            color_temp,
             self._device_type_instance,
         )
 
-        return int(color_temp.value)
+        return int(color_temp)
 
     def _get_brightness(self) -> int:
         """Get brightness from matter."""
@@ -257,7 +261,7 @@ class MatterLight(MatterEntity, LightEntity):
         # We should not get here if brightness is not supported.
         assert level_control is not None
 
-        LOGGER.debug(
+        LOGGER.debug(  # type: ignore[unreachable]
             "Got brightness %s for %s",
             level_control.currentLevel,
             self._device_type_instance,
@@ -274,13 +278,13 @@ class MatterLight(MatterEntity, LightEntity):
     def _get_color_mode(self) -> ColorMode:
         """Get color mode from matter."""
 
-        color_mode = self.get_matter_attribute(
+        color_mode = self.get_matter_attribute_value(
             clusters.ColorControl.Attributes.ColorMode
         )
 
         assert color_mode is not None
 
-        ha_color_mode = COLOR_MODE_MAP[MatterColorMode(color_mode.value)]
+        ha_color_mode = COLOR_MODE_MAP[MatterColorMode(color_mode)]
 
         LOGGER.debug(
             "Got color mode (%s) for %s", ha_color_mode, self._device_type_instance
@@ -292,7 +296,7 @@ class MatterLight(MatterEntity, LightEntity):
         """Send device command."""
         await self.matter_client.send_device_command(
             node_id=self._device_type_instance.node.node_id,
-            endpoint=self._device_type_instance.endpoint,
+            endpoint_id=self._device_type_instance.endpoint_id,
             command=command,
         )
 
@@ -369,8 +373,9 @@ class MatterLight(MatterEntity, LightEntity):
         if supports_color_temperature:
             self._attr_color_temp = self._get_color_temperature()
 
-        if attr := self.get_matter_attribute(clusters.OnOff.Attributes.OnOff):
-            self._attr_is_on = attr.value
+        self._attr_is_on = self.get_matter_attribute_value(
+            clusters.OnOff.Attributes.OnOff
+        )
 
         if supports_brightness:
             self._attr_brightness = self._get_brightness()
