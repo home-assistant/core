@@ -43,10 +43,10 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     #     return self._show_code_form(user_input)
 
     async def async_step_user(
-        self, _user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        return self._show_user_form()
+        return self._show_email_form(user_input)
 
     async def async_step_email(
         self, user_input: dict[str, Any] | None = None
@@ -59,11 +59,10 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
             self._username = username
-            if self._auth_method == CONF_ENTRY_CODE:
-                client = await self._request_code(username)
-                if client:
-                    self._client = client
-                    return self._show_code_form(user_input)
+            client = await self._request_code(username)
+            if client:
+                self._client = client
+                return self._show_code_form(user_input)
         return self._show_email_form(user_input)
 
     async def async_step_code(
@@ -73,7 +72,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors.clear()
 
         if not user_input:
-            self._auth_method = CONF_ENTRY_CODE
             return self._show_email_form()
 
         username = self._username
@@ -83,10 +81,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._create_entry(username, user_data)
 
         return self._show_code_form(user_input)
-
-    def _show_user_form(self) -> FlowResult:
-        """Show the configuration form to choose authentication method."""
-        return self.async_show_menu(step_id="user", menu_options=[CONF_ENTRY_CODE])
 
     def _show_email_form(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Show the configuration form to provide user email."""
