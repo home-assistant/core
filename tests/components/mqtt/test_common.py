@@ -104,15 +104,14 @@ async def help_test_availability_when_connection_lost(
 
 async def help_test_availability_without_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
 ) -> None:
     """Test availability without defined availability topic."""
     assert "availability_topic" not in config[mqtt.DOMAIN][domain]
-    assert await async_setup_component(hass, mqtt.DOMAIN, config)
+    await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state != STATE_UNAVAILABLE
