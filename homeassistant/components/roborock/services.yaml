@@ -1,0 +1,236 @@
+vacuum_remote_control_start:
+  name: Vacuum remote control start
+  description: Start remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+
+vacuum_remote_control_stop:
+  name: Vacuum remote control stop
+  description: Stop remote control mode of the vacuum cleaner.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+
+vacuum_remote_control_move:
+  name: Vacuum remote control move
+  description: Remote control the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    velocity:
+      name: Velocity
+      description: Speed.
+      selector:
+        number:
+          min: -0.29
+          max: 0.29
+          step: 0.01
+    rotation:
+      name: Rotation
+      description: Rotation, between -179 degrees and 179 degrees.
+      selector:
+        number:
+          min: -179
+          max: 179
+          unit_of_measurement: "°"
+    duration:
+      name: Duration
+      description: Duration of the movement.
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: seconds
+
+vacuum_remote_control_move_step:
+  name: Vacuum remote control move step
+  description: Remote control the vacuum cleaner, only makes one move and then stops.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    velocity:
+      name: Velocity
+      description: Speed.
+      selector:
+        number:
+          min: -0.29
+          max: 0.29
+          step: 0.01
+    rotation:
+      name: Rotation
+      description: Rotation.
+      selector:
+        number:
+          min: -179
+          max: 179
+          unit_of_measurement: "°"
+    duration:
+      name: Duration
+      description: Duration of the movement.
+      selector:
+        number:
+          min: 1
+          max: 86400
+          unit_of_measurement: seconds
+
+vacuum_clean_zone:
+  name: Vacuum clean zone
+  description: Start the cleaning operation in the selected areas for the number of repeats indicated.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    zone:
+      name: Zone
+      description: Array of zones. Each zone is an array of 4 integer values.
+      required: true
+      example: "[[23510,25311,25110,26362]]"
+      selector:
+        object:
+    repeats:
+      name: Repeats
+      description: Number of cleaning repeats for each zone.
+      selector:
+        number:
+          min: 1
+          max: 3
+
+vacuum_goto:
+  name: Vacuum go to
+  description: Go to the specified coordinates
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    x_coord:
+      name: X coordinate
+      description: x-coordinate
+      required: true
+      example: 26300
+      selector:
+        text:
+    y_coord:
+      name: Y coordinate
+      description: y-coordinate
+      required: true
+      example: 22500
+      selector:
+        text:
+
+vacuum_clean_segment:
+  name: Vacuum clean segment
+  description: Start cleaning of the specified segment(s).
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    segments:
+      name: Segments
+      description: Segments.
+      required: true
+      example: "[1,2]"
+      selector:
+        object:
+
+vacuum_set_mop_mode:
+  name: Vacuum set mop mode
+  description: Change vacuum mop mode.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    mop_mode:
+      name: Mop Mode
+      description: Mop mode.
+      required: true
+      example: "standard"
+      selector:
+        select:
+          options:
+            - "standard"
+            - "deep"
+            - "deep_plus"
+            - "custom"
+
+vacuum_set_mop_intensity:
+  name: Vacuum set mop intensity
+  description: Change vacuum mop intensity.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    mop_intensity:
+      name: Mop Intensity
+      description: Mop intensity.
+      required: true
+      example: "mild"
+      selector:
+        select:
+          options:
+            - "off"
+            - "mild"
+            - "moderate"
+            - "intense"
+            - "custom"
+
+vacuum_set_fan_speed:
+  name: Vacuum set fan speed
+  description: Change vacuum fan speed.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    fan_speed:
+      name: Fan speed
+      description: Fan speed.
+      required: true
+      example: "balanced"
+      selector:
+        select:
+          options:
+            - "off"
+            - "silent"
+            - "balanced"
+            - "turbo"
+            - "max"
+            - "max_plus"
+            - "custom"
+
+vacuum_reset_consumables:
+  name: Vacuum reset consumables
+  description: Reset vacuum consumables.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+
+camera_load_multi_map:
+  name: Vacuum camera map load multi map
+  description: Change vacuum camera map.
+  target:
+    entity:
+      integration: roborock
+      domain: camera
+  fields:
+    map_flag:
+      name: Map flag
+      description: The id of the map to be loaded
+      required: true
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 4
