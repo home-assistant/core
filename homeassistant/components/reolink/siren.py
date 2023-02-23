@@ -73,7 +73,6 @@ async def async_setup_entry(
 class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
     """Base siren entity class for Reolink IP cameras."""
 
-    _attr_has_entity_name = True
     _attr_supported_features = (
         SirenEntityFeature.TURN_ON
         | SirenEntityFeature.TURN_OFF
