@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -23,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import LOGGER
 from .entity import MatterEntity
 from .helpers import get_matter
+from .models import MatterDiscoverySchema
 from .util import (
     convert_to_hass_hs,
     convert_to_hass_xy,
@@ -378,3 +380,25 @@ class MatterLight(MatterEntity, LightEntity):
 
         if supports_brightness:
             self._attr_brightness = self._get_brightness()
+
+
+# Discovery schema(s) to map Matter Attributes to HA entities
+DISCOVERY_SCHEMAS = [
+    MatterDiscoverySchema(
+        platform=Platform.LIGHT,
+        entity_description=LightEntityDescription(key="ExtendedMatterLight"),
+        entity_class=MatterLight,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        optional_attributes=(
+            clusters.LevelControl.Attributes.CurrentLevel,
+            clusters.ColorControl.Attributes.ColorMode,
+            clusters.ColorControl.Attributes.CurrentHue,
+            clusters.ColorControl.Attributes.CurrentSaturation,
+            clusters.ColorControl.Attributes.CurrentX,
+            clusters.ColorControl.Attributes.CurrentY,
+            clusters.ColorControl.Attributes.ColorTemperatureMireds,
+        ),
+        # restrict device type to prevent discovery in switch platform
+        not_device_type=(device_types.OnOffPlugInUnit,),
+    ),
+]
