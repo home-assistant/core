@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -2186,6 +2186,9 @@ class FirmwareUploadView(HomeAssistantView):
                     additional_user_agent_components=USER_AGENT,
                 )
             else:
+                firmware_target: int | None = None
+                if "target" in data:
+                    firmware_target = int(cast(str, data["target"]))
                 await update_firmware(
                     node.client.ws_server_url,
                     node,
@@ -2193,6 +2196,7 @@ class FirmwareUploadView(HomeAssistantView):
                         NodeFirmwareUpdateData(
                             uploaded_file.filename,
                             await hass.async_add_executor_job(uploaded_file.file.read),
+                            firmware_target=firmware_target,
                         )
                     ],
                     async_get_clientsession(hass),
