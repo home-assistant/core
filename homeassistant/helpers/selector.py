@@ -84,9 +84,9 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Integration that provided the entity
         vol.Optional("integration"): str,
         # Domain the entity belongs to
-        vol.Optional("domain"): vol.Any(str, [str]),
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
         # Device class of the entity
-        vol.Optional("device_class"): vol.Any(str, [str]),
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
     }
 )
 
@@ -108,8 +108,8 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Model of device
         vol.Optional("model"): str,
         # Device has to contain entities matching this selector
-        vol.Optional("entity"): vol.Any(
-            ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+        vol.Optional("entity"): vol.All(
+            cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
         ),
     }
 )
@@ -192,12 +192,12 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): vol.Any(
-                ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
-            vol.Optional("device"): vol.Any(
-                DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
             vol.Optional("multiple", default=False): cv.boolean,
@@ -421,8 +421,8 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
     CONFIG_SCHEMA = DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("filter"): vol.Any(
-                DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("filter"): vol.All(
+                cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
         },
@@ -491,8 +491,8 @@ class EntitySelector(Selector[EntitySelectorConfig]):
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
-            vol.Optional("filter"): vol.Any(
-                ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("filter"): vol.All(
+                cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
         }
@@ -851,12 +851,12 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): vol.Any(
-                ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.All(
+                cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
-            vol.Optional("device"): vol.Any(
-                DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("device"): vol.All(
+                cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
         }
