@@ -380,11 +380,14 @@ class UtilityMeterSensor(RestoreSensor):
     @staticmethod
     def _validate_state(state: State | None) -> Decimal | None:
         """Parse the state as a Decimal if available. Throws DecimalException if the state is not a number."""
-        return (
-            None
-            if state is None or state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-            else Decimal(state.state)
-        )
+        try:
+            return (
+                None
+                if state is None or state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
+                else Decimal(state.state)
+            )
+        except DecimalException:
+            return None
 
     def calculate_adjustment(
         self, old_state: State | None, new_state: State
@@ -392,11 +395,8 @@ class UtilityMeterSensor(RestoreSensor):
         """Calculate the adjustment based on the old and new state."""
 
         # First check if the new_state is valid (see discussion in PR #88446)
-        try:
-            if (new_state_val := self._validate_state(new_state)) is None:
-                return None
-        except DecimalException as err:
-            _LOGGER.warning("Invalid state %s: %s", new_state.state, err)
+        if (new_state_val := self._validate_state(new_state)) is None:
+            _LOGGER.warning("Invalid state %s", new_state.state)
             return None
 
         if self._sensor_delta_values:
@@ -408,13 +408,13 @@ class UtilityMeterSensor(RestoreSensor):
         ):  # Fallback to old_state if sensor is periodically resetting but last_valid_state is None
             return new_state_val - self._last_valid_state
 
-        try:
-            if (old_state_val := self._validate_state(old_state)) is not None:
-                return new_state_val - old_state_val
-        except DecimalException as err:
-            _LOGGER.warning(
-                "Invalid state (%s > %s): %s", old_state.state, new_state_val, err  # type: ignore[union-attr]  # because Exception only raised if old_state is not None
-            )
+        if (old_state_val := self._validate_state(old_state)) is not None:
+            return new_state_val - old_state_val
+        _LOGGER.warning(
+            "Invalid state (%s > %s)",
+            old_state.state if old_state else None,
+            new_state_val,
+        )
         return None
 
     @callback
@@ -423,14 +423,8 @@ class UtilityMeterSensor(RestoreSensor):
         old_state: State | None = event.data.get("old_state")
         new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
 
-        try:
-            if (new_state_val := self._validate_state(new_state)) is None:
-                return
-        except DecimalException as err:
-            if self._sensor_delta_values:
-                _LOGGER.warning("Invalid adjustment of %s: %s", new_state.state, err)
-            else:
-                _LOGGER.warning("Invalid state %s: %s", new_state.state, err)
+        if (new_state_val := self._validate_state(new_state)) is None:
+            _LOGGER.warning("Invalid state %s", new_state.state)
             return
 
         if self._state is None:

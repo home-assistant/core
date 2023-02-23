@@ -900,7 +900,7 @@ async def test_delta_values(
             force_update=True,
         )
         await hass.async_block_till_done()
-    assert "Invalid adjustment of None" in caplog.text
+    assert "Invalid state None" in caplog.text
 
     now += timedelta(seconds=30)
     with freeze_time(now):
