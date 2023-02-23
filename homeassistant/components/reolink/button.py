@@ -70,8 +70,8 @@ BUTTON_ENTITIES = (
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.down.value),
     ),
     ReolinkButtonEntityDescription(
-        key="ptz_callibrate",
-        name="PTZ callibrate",
+        key="ptz_calibrate",
+        name="PTZ calibrate",
         icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "ptz_callibrate"),
         method=lambda api, ch: api.ptz_callibrate(ch),
