@@ -1,8 +1,10 @@
 """Config flow for the Open Thread Border Router integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
+import aiohttp
 import python_otbr_api
 import voluptuous as vol
 
@@ -48,7 +50,11 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             url = user_input[CONF_URL]
             try:
                 await self._connect_and_create_dataset(url)
-            except python_otbr_api.OTBRError:
+            except (
+                python_otbr_api.OTBRError,
+                aiohttp.ClientError,
+                asyncio.TimeoutError,
+            ):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(DOMAIN)
