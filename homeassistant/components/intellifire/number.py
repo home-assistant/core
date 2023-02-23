@@ -41,6 +41,48 @@ async def async_setup_entry(
 
 
 @dataclass
+class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
+    """Countdown timer control entity."""
+
+    _attr_native_max_value: float = 180
+    _attr_native_min_value: float = 0
+    _attr_native_step: float = 1
+    _attr_mode: NumberMode = NumberMode.AUTO
+    _attr_native_unit_of_measurement = "minutes"
+
+    def __init__(
+        self,
+        coordinator: IntellifireDataUpdateCoordinator,
+        description: NumberEntityDescription,
+    ) -> None:
+        """Initilaize fireplace timer."""
+        super().__init__(coordinator, description)
+
+    @property
+    def enabled(self) -> bool:
+        """Only enable this entity if the sleep timer is turned on."""
+        return self.coordinator.read_api.data.timer_on
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the current Timer value in minutes."""
+        # UI uses 1-5 for flame height, backing lib uses 0-4
+        value = int(self.coordinator.read_api.data.timeremaining_s / 60)
+        return value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Slider change."""
+        minutes: int = int(value)
+        await self.coordinator.control_api.set_sleep_timer(minutes=minutes)
+        LOGGER.debug(
+            "%s set sleep timer to %d ",
+            self._attr_name,
+            value,
+        )
+        await self.coordinator.async_refresh()
+
+
+@dataclass
 class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
     """Flame height control entity."""
 
