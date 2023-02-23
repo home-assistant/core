@@ -177,6 +177,7 @@ STATS_BINARY_PERCENTAGE = {
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
+CONF_PRESERVE_LAST_VAL = "preserve_last_val"
 CONF_PRECISION = "precision"
 CONF_PERCENTILE = "percentile"
 
@@ -222,6 +223,7 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
+        vol.Optional(CONF_PRESERVE_LAST_VAL, default=False): cv.boolean,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
         vol.Optional(CONF_PERCENTILE, default=50): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=99)
@@ -254,6 +256,7 @@ async def async_setup_platform(
                 state_characteristic=config[CONF_STATE_CHARACTERISTIC],
                 samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
                 samples_max_age=config.get(CONF_MAX_AGE),
+                samples_preserve_last_val=config[CONF_PRESERVE_LAST_VAL],
                 precision=config[CONF_PRECISION],
                 percentile=config[CONF_PERCENTILE],
             )
@@ -273,6 +276,7 @@ class StatisticsSensor(SensorEntity):
         state_characteristic: str,
         samples_max_buffer_size: int | None,
         samples_max_age: timedelta | None,
+        samples_preserve_last_val: bool,
         precision: int,
         percentile: int,
     ) -> None:
@@ -288,6 +292,7 @@ class StatisticsSensor(SensorEntity):
         self._state_characteristic: str = state_characteristic
         self._samples_max_buffer_size: int | None = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
+        self._samples_preserve_last_val: bool = samples_preserve_last_val
         self._precision: int = precision
         self._percentile: int = percentile
         self._value: StateType | datetime = None
@@ -443,13 +448,23 @@ class StatisticsSensor(SensorEntity):
         now = dt_util.utcnow()
 
         _LOGGER.debug(
-            "%s: purging records older then %s(%s)",
+            "%s: purging records older then %s(%s)(preserve_last_val: %s)",
             self.entity_id,
             dt_util.as_local(now - max_age),
             self._samples_max_age,
+            self._samples_preserve_last_val
         )
 
         while self.ages and (now - self.ages[0]) > max_age:
+            if self._samples_preserve_last_val and len(self.ages) == 1:
+                _LOGGER.debug(
+                    "%s: preserving expired record with datetime %s(%s)",
+                    self.entity_id,
+                    dt_util.as_local(self.ages[0]),
+                    (now - self.ages[0]),
+                )
+                break
+
             _LOGGER.debug(
                 "%s: purging record with datetime %s(%s)",
                 self.entity_id,
