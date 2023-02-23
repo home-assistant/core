@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.components.utility_meter import DEFAULT_OFFSET
 from homeassistant.components.utility_meter.const import (
     ATTR_VALUE,
     DAILY,
@@ -28,6 +29,7 @@ from homeassistant.components.utility_meter.sensor import (
     ATTR_STATUS,
     COLLECTING,
     PAUSED,
+    UtilityMeterSensor,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -1426,3 +1428,27 @@ async def test_bad_offset(hass: HomeAssistant) -> None:
     assert not await async_setup_component(
         hass, DOMAIN, gen_config("monthly", timedelta(days=31))
     )
+
+
+def test_calculate_adjustment_invalid_new_state(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that calculate_adjustment method returns None if the new state is invalid."""
+    mock_sensor = UtilityMeterSensor(
+        cron_pattern=None,
+        delta_values=False,
+        meter_offset=DEFAULT_OFFSET,
+        meter_type=DAILY,
+        name="Test utility meter",
+        net_consumption=False,
+        parent_meter="sensor.test",
+        periodically_resetting=True,
+        unique_id="test_utility_meter",
+        source_entity="sensor.test",
+        tariff=None,
+        tariff_entity=None,
+    )
+
+    new_state: State = State(entity_id="sensor.test", state="unknown")
+    assert mock_sensor.calculate_adjustment(None, new_state) is None
+    assert "Invalid state unknown" in caplog.text
