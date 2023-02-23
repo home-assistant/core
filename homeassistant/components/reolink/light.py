@@ -92,7 +92,6 @@ async def async_setup_entry(
 class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
     """Base light entity class for Reolink IP cameras."""
 
-    _attr_has_entity_name = True
     entity_description: ReolinkLightEntityDescription
 
     def __init__(
