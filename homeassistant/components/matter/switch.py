@@ -1,24 +1,17 @@
 """Matter switches."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from functools import partial
 from typing import Any
 
 from chip.clusters import Objects as clusters
-from matter_server.client.models import device_types
 
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import MatterEntity, MatterEntityDescriptionBaseClass
+from .entity import MatterEntity
 from .helpers import get_matter
 
 
@@ -35,21 +28,19 @@ async def async_setup_entry(
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
-    entity_description: MatterSwitchEntityDescription
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.matter_client.send_device_command(
-            node_id=self._device_type_instance.node.node_id,
-            endpoint_id=self._device_type_instance.endpoint_id,
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
             command=clusters.OnOff.Commands.On(),
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.matter_client.send_device_command(
-            node_id=self._device_type_instance.node.node_id,
-            endpoint_id=self._device_type_instance.endpoint_id,
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
             command=clusters.OnOff.Commands.Off(),
         )
 
@@ -57,31 +48,5 @@ class MatterSwitch(MatterEntity, SwitchEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._attr_is_on = self.get_matter_attribute_value(
-            clusters.OnOff.Attributes.OnOff
+            self._entity_info.primary_attribute
         )
-
-
-@dataclass
-class MatterSwitchEntityDescription(
-    SwitchEntityDescription,
-    MatterEntityDescriptionBaseClass,
-):
-    """Matter Switch entity description."""
-
-
-# You can't set default values on inherited data classes
-MatterSwitchEntityDescriptionFactory = partial(
-    MatterSwitchEntityDescription, entity_cls=MatterSwitch
-)
-
-
-DEVICE_ENTITY: dict[
-    type[device_types.DeviceType],
-    MatterEntityDescriptionBaseClass | list[MatterEntityDescriptionBaseClass],
-] = {
-    device_types.OnOffPlugInUnit: MatterSwitchEntityDescriptionFactory(
-        key=device_types.OnOffPlugInUnit,
-        subscribe_attributes=(clusters.OnOff.Attributes.OnOff,),
-        device_class=SwitchDeviceClass.OUTLET,
-    ),
-}

@@ -1,23 +1,16 @@
 """Matter binary sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from functools import partial
+from chip.clusters.Objects import uint
+from chip.clusters.Types import Nullable, NullValue
 
-from chip.clusters import Objects as clusters
-from matter_server.client.models import device_types
-
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import MatterEntity, MatterEntityDescriptionBaseClass
+from .entity import MatterEntity
 from .helpers import get_matter
 
 
@@ -34,60 +27,13 @@ async def async_setup_entry(
 class MatterBinarySensor(MatterEntity, BinarySensorEntity):
     """Representation of a Matter binary sensor."""
 
-    entity_description: MatterBinarySensorEntityDescription
-
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_is_on = self.get_matter_attribute_value(
-            # We always subscribe to a single value
-            self.entity_description.subscribe_attributes[0],
-        )
-
-
-class MatterOccupancySensor(MatterBinarySensor):
-    """Representation of a Matter occupancy sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
-
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
-        value = self.get_matter_attribute_value(
-            # We always subscribe to a single value
-            self.entity_description.subscribe_attributes[0],
-        )
-        # The first bit = if occupied
-        self._attr_is_on = (value & 1 == 1) if value is not None else None
-
-
-@dataclass
-class MatterBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    MatterEntityDescriptionBaseClass,
-):
-    """Matter Binary Sensor entity description."""
-
-
-# You can't set default values on inherited data classes
-MatterSensorEntityDescriptionFactory = partial(
-    MatterBinarySensorEntityDescription, entity_cls=MatterBinarySensor
-)
-
-DEVICE_ENTITY: dict[
-    type[device_types.DeviceType],
-    MatterEntityDescriptionBaseClass | list[MatterEntityDescriptionBaseClass],
-] = {
-    device_types.ContactSensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.ContactSensor,
-        name="Contact",
-        subscribe_attributes=(clusters.BooleanState.Attributes.StateValue,),
-        device_class=BinarySensorDeviceClass.DOOR,
-    ),
-    device_types.OccupancySensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.OccupancySensor,
-        name="Occupancy",
-        entity_cls=MatterOccupancySensor,
-        subscribe_attributes=(clusters.OccupancySensing.Attributes.Occupancy,),
-    ),
-}
+        value: bool | uint | int | Nullable | None
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value in (None, NullValue):
+            return None
+        if value_convert := self._entity_info.measurement_to_ha:
+            value = value_convert(value)
+        self._attr_is_on = value

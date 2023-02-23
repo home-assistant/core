@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -27,11 +27,12 @@ from .adapter import MatterAdapter
 from .addon import get_addon_manager
 from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
-from .device_platform import DEVICE_PLATFORM
 from .helpers import MatterEntryData, get_matter, get_node_from_device_entry
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -101,12 +102,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     matter = MatterAdapter(hass, matter_client, entry)
     hass.data[DOMAIN][entry.entry_id] = MatterEntryData(matter, listen_task)
 
-    await hass.config_entries.async_forward_entry_setups(entry, DEVICE_PLATFORM)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await matter.setup_nodes()
 
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
-        await hass.config_entries.async_unload_platforms(entry, DEVICE_PLATFORM)
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
         hass.data[DOMAIN].pop(entry.entry_id)
         try:
             await matter_client.disconnect()
@@ -142,7 +143,7 @@ async def _client_listen(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, DEVICE_PLATFORM)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         matter_entry_data: MatterEntryData = hass.data[DOMAIN].pop(entry.entry_id)

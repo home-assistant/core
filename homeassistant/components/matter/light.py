@@ -1,13 +1,10 @@
 """Matter light."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import Enum
-from functools import partial
 from typing import Any
 
 from chip.clusters import Objects as clusters
-from matter_server.client.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import LOGGER
-from .entity import MatterEntity, MatterEntityDescriptionBaseClass
+from .entity import MatterEntity
 from .helpers import get_matter
 from .util import (
     convert_to_hass_hs,
@@ -73,7 +70,7 @@ async def async_setup_entry(
 class MatterLight(MatterEntity, LightEntity):
     """Representation of a Matter light."""
 
-    entity_description: MatterLightEntityDescription
+    entity_description: LightEntityDescription
 
     def _supports_feature(
         self, feature_map: int, feature: MatterColorControlFeatures
@@ -113,7 +110,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return (
             clusters.LevelControl.Attributes.CurrentLevel
-            in self.entity_description.subscribe_attributes
+            in self._entity_info.attributes_to_watch
         )
 
     def _supports_color(self) -> bool:
@@ -121,7 +118,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return (
             clusters.ColorControl.Attributes.ColorMode
-            in self.entity_description.subscribe_attributes
+            in self._entity_info.attributes_to_watch
         )
 
     async def _set_xy_color(self, xy_color: tuple[float, float]) -> None:
@@ -170,7 +167,7 @@ class MatterLight(MatterEntity, LightEntity):
         """Set brightness."""
 
         LOGGER.debug("Setting brightness to %s", brightness)
-        level_control = self._device_type_instance.get_cluster(clusters.LevelControl)
+        level_control = self._endpoint.get_cluster(clusters.LevelControl)
 
         assert level_control is not None
 
@@ -207,7 +204,7 @@ class MatterLight(MatterEntity, LightEntity):
         LOGGER.debug(
             "Got xy color %s for %s",
             xy_color,
-            self._device_type_instance,
+            self._entity_info.primary_attribute,
         )
 
         return xy_color
@@ -231,7 +228,7 @@ class MatterLight(MatterEntity, LightEntity):
         LOGGER.debug(
             "Got hs color %s for %s",
             hs_color,
-            self._device_type_instance,
+            self._entity_info.primary_attribute,
         )
 
         return hs_color
@@ -248,7 +245,7 @@ class MatterLight(MatterEntity, LightEntity):
         LOGGER.debug(
             "Got color temperature %s for %s",
             color_temp,
-            self._device_type_instance,
+            self._entity_info.primary_attribute,
         )
 
         return int(color_temp)
@@ -256,7 +253,7 @@ class MatterLight(MatterEntity, LightEntity):
     def _get_brightness(self) -> int:
         """Get brightness from matter."""
 
-        level_control = self._device_type_instance.get_cluster(clusters.LevelControl)
+        level_control = self._endpoint.get_cluster(clusters.LevelControl)
 
         # We should not get here if brightness is not supported.
         assert level_control is not None
@@ -264,7 +261,7 @@ class MatterLight(MatterEntity, LightEntity):
         LOGGER.debug(  # type: ignore[unreachable]
             "Got brightness %s for %s",
             level_control.currentLevel,
-            self._device_type_instance,
+            self._entity_info.primary_attribute,
         )
 
         return round(
@@ -287,7 +284,9 @@ class MatterLight(MatterEntity, LightEntity):
         ha_color_mode = COLOR_MODE_MAP[MatterColorMode(color_mode)]
 
         LOGGER.debug(
-            "Got color mode (%s) for %s", ha_color_mode, self._device_type_instance
+            "Got color mode (%s) for %s",
+            ha_color_mode,
+            self._entity_info.primary_attribute,
         )
 
         return ha_color_mode
@@ -295,8 +294,8 @@ class MatterLight(MatterEntity, LightEntity):
     async def send_device_command(self, command: Any) -> None:
         """Send device command."""
         await self.matter_client.send_device_command(
-            node_id=self._device_type_instance.node.node_id,
-            endpoint_id=self._device_type_instance.endpoint_id,
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
             command=command,
         )
 
@@ -360,7 +359,7 @@ class MatterLight(MatterEntity, LightEntity):
         LOGGER.debug(
             "Supported color modes: %s for %s",
             self._attr_supported_color_modes,
-            self._device_type_instance,
+            self._entity_info.primary_attribute,
         )
 
         if supports_color:
@@ -379,68 +378,3 @@ class MatterLight(MatterEntity, LightEntity):
 
         if supports_brightness:
             self._attr_brightness = self._get_brightness()
-
-
-@dataclass
-class MatterLightEntityDescription(
-    LightEntityDescription,
-    MatterEntityDescriptionBaseClass,
-):
-    """Matter light entity description."""
-
-
-# You can't set default values on inherited data classes
-MatterLightEntityDescriptionFactory = partial(
-    MatterLightEntityDescription, entity_cls=MatterLight
-)
-
-# Mapping of a Matter Device type to Light Entity Description.
-# A Matter device type (instance) can consist of multiple attributes.
-# For example a Color Light which has an attribute to control brightness
-# but also for color.
-
-DEVICE_ENTITY: dict[
-    type[device_types.DeviceType],
-    MatterEntityDescriptionBaseClass | list[MatterEntityDescriptionBaseClass],
-] = {
-    device_types.OnOffLight: MatterLightEntityDescriptionFactory(
-        key=device_types.OnOffLight,
-        subscribe_attributes=(clusters.OnOff.Attributes.OnOff,),
-    ),
-    device_types.DimmableLight: MatterLightEntityDescriptionFactory(
-        key=device_types.DimmableLight,
-        subscribe_attributes=(
-            clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
-        ),
-    ),
-    device_types.DimmablePlugInUnit: MatterLightEntityDescriptionFactory(
-        key=device_types.DimmablePlugInUnit,
-        subscribe_attributes=(
-            clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
-        ),
-    ),
-    device_types.ColorTemperatureLight: MatterLightEntityDescriptionFactory(
-        key=device_types.ColorTemperatureLight,
-        subscribe_attributes=(
-            clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
-            clusters.ColorControl.Attributes.ColorMode,
-            clusters.ColorControl.Attributes.ColorTemperatureMireds,
-        ),
-    ),
-    device_types.ExtendedColorLight: MatterLightEntityDescriptionFactory(
-        key=device_types.ExtendedColorLight,
-        subscribe_attributes=(
-            clusters.OnOff.Attributes.OnOff,
-            clusters.LevelControl.Attributes.CurrentLevel,
-            clusters.ColorControl.Attributes.ColorMode,
-            clusters.ColorControl.Attributes.CurrentHue,
-            clusters.ColorControl.Attributes.CurrentSaturation,
-            clusters.ColorControl.Attributes.CurrentX,
-            clusters.ColorControl.Attributes.CurrentY,
-            clusters.ColorControl.Attributes.ColorTemperatureMireds,
-        ),
-    ),
-}
