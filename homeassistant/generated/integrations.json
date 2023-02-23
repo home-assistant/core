@@ -2191,11 +2191,21 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "heatilator": {
+      "name": "Heatilator",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "heatmiser": {
       "name": "Heatmiser",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "heatnglo": {
+      "name": "Heat&Glo",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
     },
     "heiwa": {
       "name": "Heiwa",
@@ -3079,6 +3089,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "majestic": {
+      "name": "Majestic",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "manual": {
       "name": "Manual Alarm Control Panel",
       "integration_type": "hub",
@@ -3383,6 +3398,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "monessen": {
+      "name": "Monessen",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
     },
     "monoprice": {
       "name": "Monoprice 6-Zone Amplifier",
@@ -4342,6 +4362,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
+    },
+    "quadrafire": {
+      "name": "Quadra-Fire",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
     },
     "quantum_gateway": {
       "name": "Quantum Gateway",
@@ -5981,6 +6006,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "vermont_castings": {
+      "name": "Vermont Castings",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
     },
     "versasense": {
       "name": "VersaSense",
