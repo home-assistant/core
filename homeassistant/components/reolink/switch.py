@@ -51,6 +51,30 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.audio_alarm_enabled(ch),
         method=lambda api, ch, value: api.set_audio_alarm(ch, value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="auto_tracking",
+        name="Auto tracking",
+        icon="mdi:target-account",
+        supported=lambda api, ch: api.supported(ch, "auto_track"),
+        value=lambda api, ch: api.auto_track_enabled(ch),
+        method=lambda api, ch, value: api.set_auto_tracking(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="auto_focus",
+        name="Auto focus",
+        icon="mdi:focus-field",
+        supported=lambda api, ch: api.supported(ch, "auto_focus"),
+        value=lambda api, ch: api.autofocus_enabled(ch),
+        method=lambda api, ch, value: api.set_autofocus(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="gaurd_return",
+        name="Guard return",
+        icon="mdi:crosshairs-gps",
+        supported=lambda api, ch: api.supported(ch, "ptz_guard"),
+        value=lambda api, ch: api.ptz_guard_enabled(ch),
+        method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
+    ),
 )
 
 
