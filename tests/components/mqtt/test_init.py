@@ -289,8 +289,21 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "command_topic": "test/select",
+            "name": "Test Select",
+            "options": ["milk", "beer"],
+            "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
+        }
+    ],
+)
 async def test_command_template_variables(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    config: ConfigType,
 ) -> None:
     """Test the rendering of entity variables."""
     topic = "test/select"
@@ -298,22 +311,10 @@ async def test_command_template_variables(
     fake_state = ha.State("select.test_select", "milk")
     mock_restore_cache(hass, (fake_state,))
 
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {
-            mqtt.DOMAIN: {
-                "select": {
-                    "command_topic": topic,
-                    "name": "Test Select",
-                    "options": ["milk", "beer"],
-                    "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
-                }
-            }
-        },
-    )
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    async_fire_mqtt_message(hass, "homeassistant/select/bla/config", json.dumps(config))
+    await hass.async_block_till_done()
 
     state = hass.states.get("select.test_select")
     assert state and state.state == "milk"
@@ -1899,26 +1900,43 @@ async def test_setup_manual_mqtt_empty_platform(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "protocol"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "3.1",
+            },
+            3,
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "3.1.1",
+            },
+            4,
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "5",
+            },
+            5,
+        ),
+    ],
+)
 async def test_setup_mqtt_client_protocol(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    protocol: int,
 ) -> None:
     """Test MQTT client protocol setup."""
     with patch("paho.mqtt.client.Client") as mock_client:
-        assert await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {
-                mqtt.DOMAIN: {
-                    mqtt.config_integration.CONF_PROTOCOL: "3.1",
-                }
-            },
-        )
-        mock_client.on_connect(return_value=0)
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
+        await mqtt_mock_entry_no_yaml_config()
 
-        # check if protocol setup was correctly
-        assert mock_client.call_args[1]["protocol"] == 3
+    # check if protocol setup was correctly
+    assert mock_client.call_args[1]["protocol"] == protocol
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
@@ -1984,18 +2002,20 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
 
 
 @pytest.mark.parametrize(
-    ("config", "insecure_param"),
+    ("mqtt_config_entry_data", "insecure_param"),
     [
-        ({"certificate": "auto"}, "not set"),
-        ({"certificate": "auto", "tls_insecure": False}, False),
-        ({"certificate": "auto", "tls_insecure": True}, True),
+        ({"broker": "test-broker", "certificate": "auto"}, "not set"),
+        (
+            {"broker": "test-broker", "certificate": "auto", "tls_insecure": False},
+            False,
+        ),
+        ({"broker": "test-broker", "certificate": "auto", "tls_insecure": True}, True),
     ],
 )
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    config: ConfigType,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     insecure_param: bool | str,
 ) -> None:
     """Test setup uses bundled certs when certificate is set to auto and insecure."""
@@ -2013,23 +2033,18 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().tls_set = mock_tls_set
         mock_client().tls_insecure_set = mock_tls_insecure_set
-        assert await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {mqtt.DOMAIN: config},
-        )
+        await mqtt_mock_entry_no_yaml_config()
         await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
 
-        assert calls
+    assert calls
 
-        import certifi
+    import certifi
 
-        expected_certificate = certifi.where()
-        assert calls[0][0] == expected_certificate
+    expected_certificate = certifi.where()
+    assert calls[0][0] == expected_certificate
 
-        # test if insecure is set
-        assert insecure_check["insecure"] == insecure_param
+    # test if insecure is set
+    assert insecure_check["insecure"] == insecure_param
 
 
 @pytest.mark.parametrize(
