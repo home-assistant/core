@@ -55,7 +55,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Islamic prayer times sensor platform."""
 
-    coordinator = hass.data[DOMAIN]
+    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN]
 
     async_add_entities(
         IslamicPrayerTimeSensor(coordinator, description)
