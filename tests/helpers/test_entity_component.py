@@ -89,7 +89,9 @@ async def test_setup_recovers_when_setup_raises(hass: HomeAssistant) -> None:
     "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
 )
 @patch("homeassistant.setup.async_setup_component", return_value=True)
-async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
+async def test_setup_does_discovery(
+    mock_setup_component, mock_setup, hass: HomeAssistant
+) -> None:
     """Test setup for discovery."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -106,7 +108,7 @@ async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
 
 
 @patch("homeassistant.helpers.entity_platform.async_track_time_interval")
-async def test_set_scan_interval_via_config(mock_track, hass):
+async def test_set_scan_interval_via_config(mock_track, hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via configuration."""
 
     def platform_setup(hass, config, add_entities, discovery_info=None):
@@ -414,7 +416,9 @@ async def test_set_service_race(hass: HomeAssistant) -> None:
     assert not exception
 
 
-async def test_extract_all_omit_entity_id(hass, caplog):
+async def test_extract_all_omit_entity_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test extract all with None and *."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_add_entities(
@@ -428,7 +432,9 @@ async def test_extract_all_omit_entity_id(hass, caplog):
     )
 
 
-async def test_extract_all_use_match_all(hass, caplog):
+async def test_extract_all_use_match_all(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test extract all with None and *."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_add_entities(

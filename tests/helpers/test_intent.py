@@ -1,5 +1,4 @@
 """Tests for the intent helpers."""
-
 import pytest
 import voluptuous as vol
 
@@ -158,19 +157,19 @@ def test_async_validate_slots() -> None:
     )
 
 
-async def test_cant_turn_on_sensor(hass: HomeAssistant) -> None:
+async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
     """Test that we can't turn on entities that don't support it."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(hass, "sensor", {})
+    assert await async_setup_component(hass, "lock", {})
 
     hass.states.async_set(
-        "sensor.test", "123", attributes={ATTR_FRIENDLY_NAME: "Test Sensor"}
+        "lock.test", "123", attributes={ATTR_FRIENDLY_NAME: "Test Lock"}
     )
 
     result = await conversation.async_converse(
-        hass, "turn on test sensor", None, Context(), None
+        hass, "turn on test lock", None, Context(), None
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
