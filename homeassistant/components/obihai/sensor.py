@@ -189,7 +189,9 @@ class ObihaiServiceSensors(SensorEntity):
 
     def update(self) -> None:
         """Update the sensor."""
-        if self._pyobihai.check_account():
+        if not self._pyobihai.check_account():
+            self._state = None
+            return
             services = self._pyobihai.get_state()
 
             if self._service_name in services:
