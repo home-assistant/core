@@ -11,10 +11,9 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, UnitOfMass
+from homeassistant.const import EntityCategory, Platform, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery

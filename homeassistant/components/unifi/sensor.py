@@ -23,10 +23,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation, UnitOfPower
+from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 

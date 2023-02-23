@@ -7,11 +7,10 @@ import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import check_device_registry, check_entities
 from .const import EXPECTED_ENTITIES
-
-from tests.common import mock_device_registry, mock_registry
 
 pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
 
@@ -23,11 +22,13 @@ def override_platforms() -> Generator[None, None, None]:
         yield
 
 
-async def test_binary_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def test_binary_sensors(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for SFR Box binary sensors."""
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

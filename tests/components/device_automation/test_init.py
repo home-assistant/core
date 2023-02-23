@@ -15,7 +15,7 @@ from homeassistant.components.device_automation import (
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -23,24 +23,11 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     async_mock_service,
-    mock_device_registry,
     mock_integration,
     mock_platform,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -107,17 +94,21 @@ def fake_integration(hass):
 
 
 async def test_websocket_get_actions(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get the expected actions through websocket."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_actions = [
@@ -158,17 +149,21 @@ async def test_websocket_get_actions(
 
 
 async def test_websocket_get_conditions(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get the expected conditions through websocket."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_conditions = [
@@ -208,17 +203,21 @@ async def test_websocket_get_conditions(
 
 
 async def test_websocket_get_triggers(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get the expected triggers through websocket."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_triggers = [
@@ -266,17 +265,21 @@ async def test_websocket_get_triggers(
 
 
 async def test_websocket_get_action_capabilities(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get the expected action capabilities through websocket."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_capabilities = {
@@ -330,8 +333,11 @@ async def test_websocket_get_action_capabilities(
 
 
 async def test_websocket_get_action_capabilities_unknown_domain(
-    hass, hass_ws_client, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get no action capabilities for a non existing domain."""
     await async_setup_component(hass, "device_automation", {})
     expected_capabilities = {}
@@ -353,8 +359,12 @@ async def test_websocket_get_action_capabilities_unknown_domain(
 
 
 async def test_websocket_get_action_capabilities_no_capabilities(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get no action capabilities for a domain which has none.
 
     The tests tests a domain which has a device action platform, but no
@@ -380,8 +390,12 @@ async def test_websocket_get_action_capabilities_no_capabilities(
 
 
 async def test_websocket_get_action_capabilities_bad_action(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get no action capabilities when there is an error."""
     await async_setup_component(hass, "device_automation", {})
     expected_capabilities = {}
@@ -410,17 +424,21 @@ async def test_websocket_get_action_capabilities_bad_action(
 
 
 async def test_websocket_get_condition_capabilities(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get the expected condition capabilities through websocket."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_capabilities = {
@@ -474,8 +492,11 @@ async def test_websocket_get_condition_capabilities(
 
 
 async def test_websocket_get_condition_capabilities_unknown_domain(
-    hass, hass_ws_client, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get no condition capabilities for a non existing domain."""
     await async_setup_component(hass, "device_automation", {})
     expected_capabilities = {}
@@ -497,8 +518,12 @@ async def test_websocket_get_condition_capabilities_unknown_domain(
 
 
 async def test_websocket_get_condition_capabilities_no_capabilities(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get no condition capabilities for a domain which has none.
 
     The tests tests a domain which has a device condition platform, but no
@@ -528,8 +553,12 @@ async def test_websocket_get_condition_capabilities_no_capabilities(
 
 
 async def test_websocket_get_condition_capabilities_bad_condition(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get no condition capabilities when there is an error."""
     await async_setup_component(hass, "device_automation", {})
     expected_capabilities = {}
@@ -562,17 +591,21 @@ async def test_websocket_get_condition_capabilities_bad_condition(
 
 
 async def test_async_get_device_automations_single_device_trigger(
-    hass, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get can fetch the triggers for a device id."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        "light", "test", "5678", device_id=device_entry.id
+    )
     result = await device_automation.async_get_device_automations(
         hass, device_automation.DeviceAutomationType.TRIGGER, [device_entry.id]
     )
@@ -581,17 +614,21 @@ async def test_async_get_device_automations_single_device_trigger(
 
 
 async def test_async_get_device_automations_all_devices_trigger(
-    hass, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get can fetch all the triggers when no device id is passed."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        "light", "test", "5678", device_id=device_entry.id
+    )
     result = await device_automation.async_get_device_automations(
         hass, device_automation.DeviceAutomationType.TRIGGER
     )
@@ -600,17 +637,21 @@ async def test_async_get_device_automations_all_devices_trigger(
 
 
 async def test_async_get_device_automations_all_devices_condition(
-    hass, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get can fetch all the conditions when no device id is passed."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        "light", "test", "5678", device_id=device_entry.id
+    )
     result = await device_automation.async_get_device_automations(
         hass, device_automation.DeviceAutomationType.CONDITION
     )
@@ -619,17 +660,21 @@ async def test_async_get_device_automations_all_devices_condition(
 
 
 async def test_async_get_device_automations_all_devices_action(
-    hass, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get can fetch all the actions when no device id is passed."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        "light", "test", "5678", device_id=device_entry.id
+    )
     result = await device_automation.async_get_device_automations(
         hass, device_automation.DeviceAutomationType.ACTION
     )
@@ -638,17 +683,22 @@ async def test_async_get_device_automations_all_devices_action(
 
 
 async def test_async_get_device_automations_all_devices_action_exception_throw(
-    hass, device_reg, entity_reg, caplog
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we get can fetch all the actions when no device id is passed and can handle one throwing an exception."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        "light", "test", "5678", device_id=device_entry.id
+    )
     with patch(
         "homeassistant.components.light.device_trigger.async_get_triggers",
         side_effect=KeyError,
@@ -662,17 +712,21 @@ async def test_async_get_device_automations_all_devices_action_exception_throw(
 
 
 async def test_websocket_get_trigger_capabilities(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get the expected trigger capabilities through websocket."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_capabilities = {
@@ -726,8 +780,11 @@ async def test_websocket_get_trigger_capabilities(
 
 
 async def test_websocket_get_trigger_capabilities_unknown_domain(
-    hass, hass_ws_client, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get no trigger capabilities for a non existing domain."""
     await async_setup_component(hass, "device_automation", {})
     expected_capabilities = {}
@@ -749,8 +806,12 @@ async def test_websocket_get_trigger_capabilities_unknown_domain(
 
 
 async def test_websocket_get_trigger_capabilities_no_capabilities(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get no trigger capabilities for a domain which has none.
 
     The tests tests a domain which has a device trigger platform, but no
@@ -780,8 +841,12 @@ async def test_websocket_get_trigger_capabilities_no_capabilities(
 
 
 async def test_websocket_get_trigger_capabilities_bad_trigger(
-    hass, hass_ws_client, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test we get no trigger capabilities when there is an error."""
     await async_setup_component(hass, "device_automation", {})
     expected_capabilities = {}
@@ -813,7 +878,9 @@ async def test_websocket_get_trigger_capabilities_bad_trigger(
     module.async_get_trigger_capabilities.assert_called_once()
 
 
-async def test_automation_with_non_existing_integration(hass, caplog):
+async def test_automation_with_non_existing_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation trigger with non existing integration."""
     assert await async_setup_component(
         hass,
@@ -834,7 +901,9 @@ async def test_automation_with_non_existing_integration(hass, caplog):
     assert "Integration 'beer' not found" in caplog.text
 
 
-async def test_automation_with_device_action(hass, caplog, fake_integration):
+async def test_automation_with_device_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fake_integration
+) -> None:
     """Test automation with a device action."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -867,8 +936,11 @@ async def test_automation_with_device_action(hass, caplog, fake_integration):
 
 
 async def test_automation_with_dynamically_validated_action(
-    hass, caplog, device_reg, fake_integration
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    fake_integration,
+) -> None:
     """Test device automation with an action which is dynamically validated."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -878,9 +950,9 @@ async def test_automation_with_dynamically_validated_action(
     config_entry = MockConfigEntry(domain="fake_integration", data={})
     config_entry.state = config_entries.ConfigEntryState.LOADED
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     assert await async_setup_component(
@@ -898,7 +970,9 @@ async def test_automation_with_dynamically_validated_action(
     module.async_validate_action_config.assert_awaited_once()
 
 
-async def test_automation_with_integration_without_device_action(hass, caplog):
+async def test_automation_with_integration_without_device_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation action with integration without device action support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
@@ -918,7 +992,9 @@ async def test_automation_with_integration_without_device_action(hass, caplog):
     )
 
 
-async def test_automation_with_device_condition(hass, caplog, fake_integration):
+async def test_automation_with_device_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fake_integration
+) -> None:
     """Test automation with a device condition."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -948,8 +1024,11 @@ async def test_automation_with_device_condition(hass, caplog, fake_integration):
 
 
 async def test_automation_with_dynamically_validated_condition(
-    hass, caplog, device_reg, fake_integration
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    fake_integration,
+) -> None:
     """Test device automation with a condition which is dynamically validated."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -959,9 +1038,9 @@ async def test_automation_with_dynamically_validated_condition(
     config_entry = MockConfigEntry(domain="fake_integration", data={})
     config_entry.state = config_entries.ConfigEntryState.LOADED
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     assert await async_setup_component(
@@ -984,7 +1063,9 @@ async def test_automation_with_dynamically_validated_condition(
     module.async_validate_condition_config.assert_awaited_once()
 
 
-async def test_automation_with_integration_without_device_condition(hass, caplog):
+async def test_automation_with_integration_without_device_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation condition with integration without device condition support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
@@ -1010,7 +1091,9 @@ async def test_automation_with_integration_without_device_condition(hass, caplog
     )
 
 
-async def test_automation_with_device_trigger(hass, caplog, fake_integration):
+async def test_automation_with_device_trigger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fake_integration
+) -> None:
     """Test automation with a device trigger."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -1039,8 +1122,12 @@ async def test_automation_with_device_trigger(hass, caplog, fake_integration):
 
 
 async def test_automation_with_dynamically_validated_trigger(
-    hass, caplog, device_reg, entity_reg, fake_integration
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration,
+) -> None:
     """Test device automation with a trigger which is dynamically validated."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -1051,11 +1138,11 @@ async def test_automation_with_dynamically_validated_trigger(
     config_entry = MockConfigEntry(domain="fake_integration", data={})
     config_entry.state = config_entries.ConfigEntryState.LOADED
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
 
@@ -1079,7 +1166,9 @@ async def test_automation_with_dynamically_validated_trigger(
     module.async_attach_trigger.assert_awaited_once()
 
 
-async def test_automation_with_integration_without_device_trigger(hass, caplog):
+async def test_automation_with_integration_without_device_trigger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test device automation trigger with integration without device trigger support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
@@ -1103,7 +1192,9 @@ async def test_automation_with_integration_without_device_trigger(hass, caplog):
     )
 
 
-async def test_automation_with_bad_action(hass, caplog):
+async def test_automation_with_bad_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device action."""
     assert await async_setup_component(
         hass,
@@ -1120,7 +1211,9 @@ async def test_automation_with_bad_action(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_condition_action(hass, caplog):
+async def test_automation_with_bad_condition_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device action."""
     assert await async_setup_component(
         hass,
@@ -1137,7 +1230,9 @@ async def test_automation_with_bad_condition_action(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_condition_missing_domain(hass, caplog):
+async def test_automation_with_bad_condition_missing_domain(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device condition."""
     assert await async_setup_component(
         hass,
@@ -1155,7 +1250,9 @@ async def test_automation_with_bad_condition_missing_domain(hass, caplog):
     assert "required key not provided @ data['condition'][0]['domain']" in caplog.text
 
 
-async def test_automation_with_bad_condition(hass, caplog):
+async def test_automation_with_bad_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device condition."""
     assert await async_setup_component(
         hass,
@@ -1179,7 +1276,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_automation_with_sub_condition(hass, calls, enable_custom_integrations):
+async def test_automation_with_sub_condition(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test automation with device condition under and/or conditions."""
     DOMAIN = "light"
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -1289,7 +1388,9 @@ async def test_automation_with_sub_condition(hass, calls, enable_custom_integrat
     )
 
 
-async def test_automation_with_bad_sub_condition(hass, caplog):
+async def test_automation_with_bad_sub_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device condition under and/or conditions."""
     assert await async_setup_component(
         hass,
@@ -1310,7 +1411,9 @@ async def test_automation_with_bad_sub_condition(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_trigger(hass, caplog):
+async def test_automation_with_bad_trigger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test automation with bad device trigger."""
     assert await async_setup_component(
         hass,
@@ -1327,7 +1430,9 @@ async def test_automation_with_bad_trigger(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_websocket_device_not_found(hass, hass_ws_client):
+async def test_websocket_device_not_found(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test calling command with unknown device."""
     await async_setup_component(hass, "device_automation", {})
     client = await hass_ws_client(hass)
@@ -1341,7 +1446,9 @@ async def test_websocket_device_not_found(hass, hass_ws_client):
     assert msg["error"] == {"code": "not_found", "message": "Device not found"}
 
 
-async def test_automation_with_unknown_device(hass, caplog, fake_integration):
+async def test_automation_with_unknown_device(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, fake_integration
+) -> None:
     """Test device automation with a trigger with an unknown device."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -1372,17 +1479,20 @@ async def test_automation_with_unknown_device(hass, caplog, fake_integration):
 
 
 async def test_automation_with_device_wrong_domain(
-    hass, caplog, device_reg, fake_integration
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    fake_integration,
+) -> None:
     """Test device automation where the device doesn't have the right config entry."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
     module = module_cache["fake_integration.device_trigger"]
     module.async_validate_trigger_config = AsyncMock()
 
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id="not_fake_integration_config_entry",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert await async_setup_component(
         hass,
@@ -1409,8 +1519,11 @@ async def test_automation_with_device_wrong_domain(
 
 
 async def test_automation_with_device_component_not_loaded(
-    hass, caplog, device_reg, fake_integration
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    fake_integration,
+) -> None:
     """Test device automation where the device's config entry is not loaded."""
 
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
@@ -1420,9 +1533,9 @@ async def test_automation_with_device_component_not_loaded(
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     assert await async_setup_component(
         hass,

@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +21,7 @@ def mock_temp_dir():
 
 
 @pytest.mark.parametrize(
-    "option,content,file_created",
+    ("option", "content", "file_created"),
     [
         (mqtt.CONF_CERTIFICATE, "auto", False),
         (mqtt.CONF_CERTIFICATE, "### CA CERTIFICATE ###", True),
@@ -29,8 +30,8 @@ def mock_temp_dir():
     ],
 )
 async def test_async_create_certificate_temp_files(
-    hass, mock_temp_dir, option, content, file_created
-):
+    hass: HomeAssistant, mock_temp_dir, option, content, file_created
+) -> None:
     """Test creating and reading certificate files."""
     config = {option: content}
     await mqtt.util.async_create_certificate_temp_files(hass, config)

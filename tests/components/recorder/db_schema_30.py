@@ -30,7 +30,6 @@ from sqlalchemy import (
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 from typing_extensions import Self
@@ -47,13 +46,10 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import (
-    JSON_DECODE_EXCEPTIONS,
-    JSON_DUMP,
-    json_bytes,
-    json_loads,
-)
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.json import JSON_DUMP, json_bytes
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
 
@@ -441,6 +437,7 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
+        entity_registry: er.EntityRegistry,
         exclude_attrs_by_domain: dict[str, set[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:
@@ -477,16 +474,11 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-
-    @declared_attr  # type: ignore[misc]
-    def metadata_id(self) -> Column:
-        """Define the metadata_id column for sub classes."""
-        return Column(
-            Integer,
-            ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-            index=True,
-        )
-
+    metadata_id = Column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
+    )
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)

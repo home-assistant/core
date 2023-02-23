@@ -5,6 +5,7 @@ import time
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.util.timeout import TimeoutManager
 
 
@@ -17,7 +18,7 @@ async def test_simple_global_timeout() -> None:
             await asyncio.sleep(0.3)
 
 
-async def test_simple_global_timeout_with_executor_job(hass):
+async def test_simple_global_timeout_with_executor_job(hass: HomeAssistant) -> None:
     """Test a simple global timeout with executor job."""
     timeout = TimeoutManager()
 
@@ -35,7 +36,9 @@ async def test_simple_global_timeout_freeze() -> None:
             await asyncio.sleep(0.3)
 
 
-async def test_simple_zone_timeout_freeze_inside_executor_job(hass):
+async def test_simple_zone_timeout_freeze_inside_executor_job(
+    hass: HomeAssistant,
+) -> None:
     """Test a simple zone timeout freeze inside an executor job."""
     timeout = TimeoutManager()
 
@@ -48,7 +51,9 @@ async def test_simple_zone_timeout_freeze_inside_executor_job(hass):
             await hass.async_add_executor_job(_some_sync_work)
 
 
-async def test_simple_global_timeout_freeze_inside_executor_job(hass):
+async def test_simple_global_timeout_freeze_inside_executor_job(
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze inside an executor job."""
     timeout = TimeoutManager()
 
@@ -60,7 +65,9 @@ async def test_simple_global_timeout_freeze_inside_executor_job(hass):
         await hass.async_add_executor_job(_some_sync_work)
 
 
-async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job(hass):
+async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job(
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze inside an executor job."""
     timeout = TimeoutManager()
 
@@ -73,7 +80,9 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job(has
             await hass.async_add_executor_job(_some_sync_work)
 
 
-async def test_mix_global_timeout_freeze_and_zone_freeze_different_order(hass):
+async def test_mix_global_timeout_freeze_and_zone_freeze_different_order(
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze inside an executor job before timeout was set."""
     timeout = TimeoutManager()
 
@@ -88,8 +97,8 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_different_order(hass):
 
 
 async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_executor_job(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze other zone inside an executor job."""
     timeout = TimeoutManager()
 
@@ -105,8 +114,8 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_other_zone_inside_execu
 
 
 async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_second_job_outside_zone_context(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze inside an executor job with second job outside of zone context."""
     timeout = TimeoutManager()
 
@@ -121,7 +130,9 @@ async def test_mix_global_timeout_freeze_and_zone_freeze_inside_executor_job_sec
             await hass.async_add_executor_job(lambda: time.sleep(0.2))
 
 
-async def test_simple_global_timeout_freeze_with_executor_job(hass):
+async def test_simple_global_timeout_freeze_with_executor_job(
+    hass: HomeAssistant,
+) -> None:
     """Test a simple global timeout freeze with executor job."""
     timeout = TimeoutManager()
 
@@ -263,7 +274,9 @@ async def test_mix_zone_timeout_trigger_global_cool_down() -> None:
         await asyncio.sleep(0.2)
 
 
-async def test_simple_zone_timeout_freeze_without_timeout_cleanup(hass):
+async def test_simple_zone_timeout_freeze_without_timeout_cleanup(
+    hass: HomeAssistant,
+) -> None:
     """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
     timeout = TimeoutManager()
 
@@ -276,7 +289,9 @@ async def test_simple_zone_timeout_freeze_without_timeout_cleanup(hass):
         await asyncio.sleep(0.2)
 
 
-async def test_simple_zone_timeout_freeze_without_timeout_cleanup2(hass):
+async def test_simple_zone_timeout_freeze_without_timeout_cleanup2(
+    hass: HomeAssistant,
+) -> None:
     """Test a simple zone timeout freeze on a zone that does not have a timeout set."""
     timeout = TimeoutManager()
 

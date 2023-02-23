@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN

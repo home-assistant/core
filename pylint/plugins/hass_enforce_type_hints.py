@@ -91,10 +91,56 @@ _METHOD_MATCH: list[TypeHintMatch] = [
 ]
 
 _TEST_FIXTURES: dict[str, list[str] | str] = {
+    "aioclient_mock": "AiohttpClientMocker",
+    "aiohttp_client": "ClientSessionGenerator",
+    "area_registry": "AreaRegistry",
+    "async_setup_recorder_instance": "RecorderInstanceGenerator",
+    "caplog": "pytest.LogCaptureFixture",
+    "current_request_with_host": "None",
+    "device_registry": "DeviceRegistry",
+    "enable_bluetooth": "None",
+    "enable_custom_integrations": "None",
+    "enable_nightly_purge": "bool",
+    "enable_statistics": "bool",
+    "enable_statistics_table_validation": "bool",
+    "entity_registry": "EntityRegistry",
+    "hass_access_token": "str",
+    "hass_admin_credential": "Credentials",
+    "hass_admin_user": "MockUser",
+    "hass_client": "ClientSessionGenerator",
+    "hass_client_no_auth": "ClientSessionGenerator",
+    "hass_config": "ConfigType",
+    "hass_config_yaml": "str",
+    "hass_config_yaml_files": "dict[str, str]",
+    "hass_owner_user": "MockUser",
+    "hass_read_only_access_token": "str",
+    "hass_read_only_user": "MockUser",
+    "hass_recorder": "Callable[..., HomeAssistant]",
+    "hass_storage": "dict[str, Any]",
+    "hass_supervisor_access_token": "str",
+    "hass_supervisor_user": "MockUser",
+    "hass_ws_client": "WebSocketGenerator",
+    "issue_registry": "IssueRegistry",
+    "legacy_auth": "LegacyApiPasswordAuthProvider",
+    "local_auth": "HassAuthProvider",
+    "mock_async_zeroconf": "None",
+    "mock_bleak_scanner_start": "MagicMock",
+    "mock_bluetooth": "None",
+    "mock_bluetooth_adapters": "None",
+    "mock_device_tracker_conf": "list[Device]",
+    "mock_get_source_ip": "None",
+    "mock_hass_config": "None",
+    "mock_hass_config_yaml": "None",
+    "mock_zeroconf": "None",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
     "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",
     "mqtt_mock_entry_with_yaml_config": "MqttMockHAClientGenerator",
+    "recorder_db_url": "str",
+    "recorder_mock": "Recorder",
+    "requests_mock": "requests_mock.Mocker",
+    "snapshot": "SnapshotAssertion",
+    "tmp_path": "Path",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
@@ -2778,7 +2824,9 @@ def _is_valid_type(
         return True
 
     # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
-    return isinstance(node, nodes.Attribute) and node.attrname == expected_type
+    return isinstance(node, nodes.Attribute) and (
+        node.attrname == expected_type or node.as_string() == expected_type
+    )
 
 
 def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:

@@ -98,7 +98,7 @@ async def test_form_connection_timeout(
 
 async def test_form_already_configured(
     hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-):
+) -> None:
     """Test we handle already configured error."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

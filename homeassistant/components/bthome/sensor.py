@@ -23,6 +23,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -37,7 +38,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 

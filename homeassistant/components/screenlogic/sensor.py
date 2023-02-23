@@ -21,13 +21,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicDataUpdateCoordinator
@@ -206,9 +206,7 @@ class ScreenLogicSensorEntity(ScreenlogicEntity, SensorEntity):
         state_type = self.sensor.get("state_type")
         if self._data_key == "scg_super_chlor_timer":
             return None
-        return SL_STATE_TYPE_TO_HA_STATE_CLASS.get(
-            state_type, SensorStateClass.MEASUREMENT
-        )
+        return SL_STATE_TYPE_TO_HA_STATE_CLASS.get(state_type)
 
     @property
     def options(self) -> list[str] | None:

@@ -1,17 +1,19 @@
 {
   "domain": "screenlogic",
   "name": "Pentair ScreenLogic",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/screenlogic",
-  "requirements": ["screenlogicpy==0.7.0"],
   "codeowners": ["@dieselrabbit", "@bdraco"],
+  "config_flow": true,
   "dhcp": [
-    { "registered_devices": true },
+    {
+      "registered_devices": true
+    },
     {
       "hostname": "pentair*",
       "macaddress": "00C033*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/screenlogic",
   "iot_class": "local_push",
-  "loggers": ["screenlogicpy"]
+  "loggers": ["screenlogicpy"],
+  "requirements": ["screenlogicpy==0.7.2"]
 }

@@ -50,7 +50,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 
 from .util import async_init_integration
 
@@ -73,7 +73,7 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
     return mock_socket
 
 
-def test_validate_entity_config():
+def test_validate_entity_config() -> None:
     """Test validate entities."""
     configs = [
         None,
@@ -173,7 +173,7 @@ def test_validate_entity_config():
     }
 
 
-def test_validate_media_player_features():
+def test_validate_media_player_features() -> None:
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
@@ -187,7 +187,7 @@ def test_validate_media_player_features():
     assert validate_media_player_features(entity_state, config) is False
 
 
-def test_convert_to_float():
+def test_convert_to_float() -> None:
     """Test convert_to_float method."""
     assert convert_to_float(12) == 12
     assert convert_to_float(12.4) == 12.4
@@ -195,7 +195,7 @@ def test_convert_to_float():
     assert convert_to_float(None) is None
 
 
-def test_cleanup_name_for_homekit():
+def test_cleanup_name_for_homekit() -> None:
     """Ensure name sanitize works as expected."""
 
     assert cleanup_name_for_homekit("abc") == "abc"
@@ -208,19 +208,19 @@ def test_cleanup_name_for_homekit():
     assert cleanup_name_for_homekit("の日本_語文字セット") == "の日本 語文字セット"
 
 
-def test_temperature_to_homekit():
+def test_temperature_to_homekit() -> None:
     """Test temperature conversion from HA to HomeKit."""
     assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.5
     assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == 33.4
 
 
-def test_temperature_to_states():
+def test_temperature_to_states() -> None:
     """Test temperature conversion from HomeKit to HA."""
     assert temperature_to_states(20, UnitOfTemperature.CELSIUS) == 20.0
     assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.5
 
 
-def test_density_to_air_quality():
+def test_density_to_air_quality() -> None:
     """Test map PM2.5 density to HomeKit AirQuality level."""
     assert density_to_air_quality(0) == 1
     assert density_to_air_quality(12) == 1
@@ -234,7 +234,9 @@ def test_density_to_air_quality():
     assert density_to_air_quality(200) == 5
 
 
-async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
+async def test_async_show_setup_msg(
+    hass: HomeAssistant, hk_driver, mock_get_source_ip
+) -> None:
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
@@ -257,7 +259,7 @@ async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
-async def test_async_dismiss_setup_msg(hass):
+async def test_async_dismiss_setup_msg(hass: HomeAssistant) -> None:
     """Test dismiss setup message."""
     with patch(
         "homeassistant.components.persistent_notification.async_dismiss",
@@ -270,7 +272,7 @@ async def test_async_dismiss_setup_msg(hass):
     assert mock_dismiss.mock_calls[0][1][1] == "entry_id"
 
 
-async def test_port_is_available(hass):
+async def test_port_is_available(hass: HomeAssistant) -> None:
     """Test we can get an available port and it is actually available."""
     with patch(
         "homeassistant.components.homekit.util.socket.socket",
@@ -303,7 +305,7 @@ async def test_port_is_available(hass):
         assert not async_port_is_available(next_port)
 
 
-async def test_port_is_available_skips_existing_entries(hass):
+async def test_port_is_available_skips_existing_entries(hass: HomeAssistant) -> None:
     """Test we can get an available port and it is actually available."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -380,7 +382,7 @@ async def test_accessory_friendly_name() -> None:
     assert accessory_friendly_name("hass title", accessory) == "Hass title 123"
 
 
-async def test_lock_state_needs_accessory_mode(hass):
+async def test_lock_state_needs_accessory_mode(hass: HomeAssistant) -> None:
     """Test that locks are setup as accessories."""
     hass.states.async_set("lock.mine", "locked")
     assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True

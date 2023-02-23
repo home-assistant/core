@@ -130,7 +130,7 @@ class UbusDeviceScanner(DeviceScanner):
             if result := self.ubus.get_hostapd_clients(hostapd):
                 results = results + 1
                 # Check for each device is authorized (valid wpa key)
-                for key in result["clients"].keys():
+                for key in result["clients"]:
                     device = result["clients"][key]
                     if device["authorized"]:
                         self.last_results.append(key)
