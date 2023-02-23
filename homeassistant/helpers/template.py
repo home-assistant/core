@@ -86,6 +86,7 @@ _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
+_HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
@@ -2049,8 +2050,12 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-def materialize_loader(hass: HomeAssistant) -> jinja2.DictLoader:
+async def async_materialize_hass_loader(hass: HomeAssistant) -> None:
     """Load all custom jinja into memory."""
+    return await hass.async_add_executor_job(_materialize_hass_loader, hass)
+
+
+def _materialize_hass_loader(hass: HomeAssistant) -> None:
     result = {}
     jinja_path = hass.config.path("custom_jinja")
     all_files = [
@@ -2063,7 +2068,36 @@ def materialize_loader(hass: HomeAssistant) -> jinja2.DictLoader:
         path = str(file.relative_to(jinja_path))
         result[path] = content
 
-    return jinja2.DictLoader(result)
+    if _HASS_LOADER not in hass.data:
+        hass.data[_HASS_LOADER] = HassLoader(result)
+    else:
+        hass.data[_HASS_LOADER].sources = result
+
+
+class HassLoader(jinja2.BaseLoader):
+    """An in-memory jinja loader that keeps track of templates that need to be reloaded."""
+
+    def __init__(self, sources: dict[str, str]) -> None:
+        """Initialize an empty HassLoader."""
+        self._sources = sources
+        self._reload = 0
+
+    @property
+    def sources(self) -> dict[str, str]:
+        """A map of filename to jinja source."""
+        return self._sources
+
+    @sources.setter
+    def sources(self, value: dict[str, str]) -> None:
+        self._sources = value
+        self._reload += 1
+
+    def get_source(
+        self, environment: jinja2.Environment, template: str
+    ) -> tuple[str, str | None, Callable[[], bool] | None]:
+        """Get in-memory sources."""
+        cur_reload = self._reload
+        return self._sources[template], template, lambda: cur_reload == self._reload
 
 
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
@@ -2082,7 +2116,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | str | None
         ] = weakref.WeakValueDictionary()
         if hass is not None:
-            self.loader = materialize_loader(hass)
+            self.loader = self._loader
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
@@ -2266,6 +2300,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["states"] = self.globals["states"]
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
+
+    @property
+    def _loader(self):
+        return self.hass.data[_HASS_LOADER]
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
