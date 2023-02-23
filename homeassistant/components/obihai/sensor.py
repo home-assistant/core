@@ -178,5 +178,3 @@ class ObihaiServiceSensors(SensorEntity):
 
         if self._service_name in call_direction:
             self._state = call_direction.get(self._service_name)
-
-        self._state = None

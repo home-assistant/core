@@ -62,11 +62,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             return self.async_create_entry(
                 title=user_input[CONF_HOST],
-                data=user_input
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                },
+                data=user_input,
             )
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
