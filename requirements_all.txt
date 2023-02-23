@@ -342,7 +342,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.2.1
+apprise==1.3.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -480,7 +480,7 @@ boto3==1.20.24
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.1.1
+brother==2.2.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1120,7 +1120,7 @@ messagebird==1.2.0
 meteoalertapi==0.3.0
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.1.0
+meteofrance-api==1.2.0
 
 # homeassistant.components.mfi
 mficlient==0.3.0
@@ -2081,7 +2081,7 @@ python-kasa==0.5.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==2.1.1
+python-matter-server==3.0.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2097,7 +2097,7 @@ python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.3
+python-otbr-api==1.0.4
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2237,7 +2237,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.0
+reolink-aio==0.5.1
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2670,13 +2670,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.0.2
+yalexs-ble==2.0.3
 
 # homeassistant.components.august
 yalexs==1.2.7
 
 # homeassistant.components.august
-yalexs_ble==2.0.2
+yalexs_ble==2.0.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -2706,7 +2706,7 @@ zeroconf==0.47.3
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.92
+zha-quirks==0.0.93
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

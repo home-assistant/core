@@ -4,12 +4,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as all_clusters
-from matter_server.common.models.events import EventType
-from matter_server.common.models.node_device import (
+from matter_server.client.models.node_device import (
     AbstractMatterNodeDevice,
     MatterBridgedNodeDevice,
 )
-from matter_server.common.models.server_information import ServerInfo
+from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -23,7 +22,7 @@ from .helpers import get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
-    from matter_server.common.models.node import MatterNode
+    from matter_server.client.models.node import MatterNode
 
 
 class MatterAdapter:
@@ -70,15 +69,19 @@ class MatterAdapter:
 
         bridge_unique_id: str | None = None
 
-        if node.aggregator_device_type_instance is not None and (
-            node.root_device_type_instance.get_cluster(all_clusters.BasicInformation)
+        if (
+            node.aggregator_device_type_instance is not None
+            and node.root_device_type_instance is not None
+            and node.root_device_type_instance.get_cluster(
+                all_clusters.BasicInformation
+            )
         ):
             # create virtual (parent) device for bridge node device
             bridge_device = MatterBridgedNodeDevice(
                 node.aggregator_device_type_instance
             )
             self._create_device_registry(bridge_device)
-            server_info = cast(ServerInfo, self.matter_client.server_info)
+            server_info = cast(ServerInfoMessage, self.matter_client.server_info)
             bridge_unique_id = get_device_id(server_info, bridge_device)
 
         for node_device in node.node_devices:
@@ -90,7 +93,7 @@ class MatterAdapter:
         bridge_unique_id: str | None = None,
     ) -> None:
         """Create a device registry entry."""
-        server_info = cast(ServerInfo, self.matter_client.server_info)
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
 
         basic_info = node_device.device_info()
         device_type_instances = node_device.device_type_instances()

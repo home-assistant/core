@@ -30,7 +30,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up update entities for Reolink component."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([ReolinkUpdateEntity(reolink_data)])
+    if reolink_data.host.api.supported(None, "update"):
+        async_add_entities([ReolinkUpdateEntity(reolink_data)])
 
 
 class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
