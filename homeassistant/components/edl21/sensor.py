@@ -32,19 +32,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    CONF_SERIAL_PORT,
-    DEFAULT_DEVICE_NAME,
-    DOMAIN,
-    LOGGER,
-    SIGNAL_EDL21_TELEGRAM,
-)
+from .const import CONF_SERIAL_PORT, DOMAIN, LOGGER, SIGNAL_EDL21_TELEGRAM
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -326,16 +319,15 @@ class EDL21:
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict[str, Any],
+        config: Mapping[str, Any],
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._name = config_entry.data[CONF_NAME]
-        self._device_name = config_entry.data[CONF_NAME] or DEFAULT_DEVICE_NAME
-        self._proto = SmlProtocol(config_entry.data[CONF_SERIAL_PORT])
+        self._name = config[CONF_NAME]
+        self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
     async def connect(self) -> None:
@@ -374,12 +366,7 @@ class EDL21:
 
                     new_entities.append(
                         EDL21Entity(
-                            electricity_id,
-                            obis,
-                            self._device_name,
-                            name,
-                            entity_description,
-                            telegram,
+                            electricity_id, obis, name, entity_description, telegram
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -421,23 +408,12 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device_name)},
-            name=self.device_name,
-        )
-
     _attr_should_poll = False
 
-    def __init__(
-        self, electricity_id, obis, device_name, name, entity_description, telegram
-    ):
+    def __init__(self, electricity_id, obis, name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
-        self.device_name = device_name
         self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
@@ -503,7 +479,7 @@ class EDL21Entity(SensorEntity):
         return self._telegram.get("value")
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self):
         """Enumerate supported attributes."""
         return {
             self._state_attrs[k]: v
@@ -512,7 +488,7 @@ class EDL21Entity(SensorEntity):
         }
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None

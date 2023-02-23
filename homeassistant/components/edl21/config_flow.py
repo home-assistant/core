@@ -7,7 +7,14 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_SERIAL_PORT, DEFAULT_DEVICE_NAME, DOMAIN
+from .const import CONF_SERIAL_PORT, DEFAULT_NAME, DOMAIN
+
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Required(CONF_SERIAL_PORT): str,
+    }
+)
 
 
 class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -29,7 +36,7 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=import_config[CONF_NAME] or DEFAULT_DEVICE_NAME,
+            title=import_config[CONF_NAME] or DEFAULT_NAME,
             data=import_config,
         )
 
@@ -50,9 +57,5 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data=user_input,
             )
 
-        data_schema = {
-            vol.Required(CONF_NAME): str,
-            vol.Required(CONF_SERIAL_PORT): str,
-        }
-
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
+        return self.async_show_form(step_id="user", data_schema=data_schema)
