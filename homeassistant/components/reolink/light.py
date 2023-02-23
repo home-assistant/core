@@ -37,7 +37,7 @@ class ReolinkLightEntityDescription(
     """A class that describes light entities."""
 
     supported: Callable[[Host, int | None], bool] = lambda api, ch: True
-    get_brightness: Callable[[Host, int | None], float] | None = None
+    get_brightness: Callable[[Host, int | None], int] | None = None
     set_brightness: Callable[[Host, int | None, float], Any] | None = None
 
 
@@ -131,7 +131,7 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
             255
             * (
                 self.entity_description.get_brightness(self._host.api, self._channel)
-                / 100
+                / 100.0
             )
         )
 
