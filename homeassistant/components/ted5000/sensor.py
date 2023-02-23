@@ -79,7 +79,7 @@ def setup_platform(
         hass,
         DOMAIN,
         "deprecated_ted5000_integration",
-        breaks_in_ha_version="2023.4.0",
+        breaks_in_ha_version="2023.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_ted5000_integration",
