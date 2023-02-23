@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .connectivity import get_pyobihai
+from .connectivity import ObihaiConnection
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, OBIHAI
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -73,49 +73,20 @@ async def async_setup_entry(
     requester = ObihaiConnection(host, username, password)
 
     await hass.async_add_executor_job(requester.update)
-    sensors = requester.sensors
+    sensors = []
+    for key in requester.services:
+        sensors.append(ObihaiServiceSensors(requester.pyobihai, requester.serial, key))
+
+    if requester.line_services is not None:
+        for key in requester.line_services:
+            sensors.append(
+                ObihaiServiceSensors(requester.pyobihai, requester.serial, key)
+            )
+
+    for key in requester.call_direction:
+        sensors.append(ObihaiServiceSensors(requester.pyobihai, requester.serial, key))
 
     async_add_entities(sensors, update_before_add=True)
-
-
-class ObihaiConnection:
-    """Contains a list of Obihai Sensors."""
-
-    def __init__(
-        self,
-        host: str,
-        username: str = DEFAULT_USERNAME,
-        password: str = DEFAULT_PASSWORD,
-    ) -> None:
-        """Store configuration."""
-        self.sensors: list[ObihaiServiceSensors] = []
-        self.host = host
-        self.username = username
-        self.password = password
-
-    def update(self) -> bool:
-        """Validate connection and retrieve a list of sensors."""
-        pyobihai = get_pyobihai(self.host, self.username, self.password)
-
-        if not pyobihai.check_account():
-            return False
-
-        serial = pyobihai.get_device_serial()
-        services = pyobihai.get_state()
-        line_services = pyobihai.get_line_state()
-        call_direction = pyobihai.get_call_direction()
-
-        for key in services:
-            self.sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
-
-        if line_services is not None:
-            for key in line_services:
-                self.sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
-
-        for key in call_direction:
-            self.sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
-
-        return True
 
 
 class ObihaiServiceSensors(SensorEntity):

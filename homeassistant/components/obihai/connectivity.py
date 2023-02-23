@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pyobihai import PyObihai
 
-from .const import LOGGER
+from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, LOGGER
 
 
 def get_pyobihai(
@@ -29,3 +29,38 @@ def validate_auth(
         return False
 
     return True
+
+
+class ObihaiConnection:
+    """Contains a list of Obihai Sensors."""
+
+    def __init__(
+        self,
+        host: str,
+        username: str = DEFAULT_USERNAME,
+        password: str = DEFAULT_PASSWORD,
+    ) -> None:
+        """Store configuration."""
+        self.sensors: list = []
+        self.host = host
+        self.username = username
+        self.password = password
+        self.serial: list = []
+        self.services: list = []
+        self.line_services: list = []
+        self.call_direction: list = []
+        self.pyobihai: PyObihai = None
+
+    def update(self) -> bool:
+        """Validate connection and retrieve a list of sensors."""
+        self.pyobihai = get_pyobihai(self.host, self.username, self.password)
+
+        if not self.pyobihai.check_account():
+            return False
+
+        self.serial = self.pyobihai.get_device_serial()
+        self.services = self.pyobihai.get_state()
+        self.line_services = self.pyobihai.get_line_state()
+        self.call_direction = self.pyobihai.get_call_direction()
+
+        return True

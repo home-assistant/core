@@ -1,40 +1,31 @@
 """Config flow to configure the Obihai integration."""
 from __future__ import annotations
 
-from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .connectivity import validate_auth
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
 
-
-@callback
-def async_get_schema(
-    defaults: dict[str, Any] | MappingProxyType[str, Any]
-) -> vol.Schema:
-    """Return Obihai schema."""
-    schema = {
-        vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=""): str,
         vol.Optional(
             CONF_USERNAME,
-            description={
-                "suggested_value": defaults.get(CONF_USERNAME, DEFAULT_USERNAME)
-            },
+            default=DEFAULT_USERNAME,
         ): str,
         vol.Optional(
             CONF_PASSWORD,
-            default=defaults.get(CONF_PASSWORD, DEFAULT_PASSWORD),
+            default=DEFAULT_PASSWORD,
         ): str,
     }
-
-    return vol.Schema(schema)
+)
 
 
 async def async_validate_credentials(
@@ -64,23 +55,11 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return await self.async_validate_input(user_input)
-
-        user_input = {}
-        return self.async_show_form(
-            step_id="user",
-            data_schema=async_get_schema(user_input),
-        )
-
-    async def async_validate_input(self, user_input: dict[str, Any]) -> FlowResult:
-        """Check form inputs for errors."""
-        errors = await async_validate_credentials(self.hass, user_input)
-        if not errors:
+        errors: dict[str, str] = {}
+        if user_input is not None and not (
+            errors := await async_validate_credentials(self.hass, user_input)
+        ):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
-            # Storing data in option, to allow for changing them later
-            # using an options flow.
             return self.async_create_entry(
                 title=user_input.get(CONF_NAME, user_input[CONF_HOST]),
                 data={
@@ -90,10 +69,11 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
             step_id="user",
-            data_schema=async_get_schema(user_input),
             errors=errors,
+            data_schema=data_schema,
         )
 
     # DEPRECATED
