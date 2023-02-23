@@ -5,10 +5,6 @@ from collections.abc import Generator
 
 from chip.clusters.Objects import ClusterAttributeDescriptor
 from matter_server.client.models.node import MatterEndpoint
-from matter_server.common.helpers.util import (
-    create_attribute_path,
-    parse_attribute_path,
-)
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
@@ -41,28 +37,13 @@ def async_discover_entities(
     endpoint: MatterEndpoint,
 ) -> Generator[MatterEntityInfo, None, None]:
     """Run discovery on MatterEndpoint and return matching MatterEntityInfo(s)."""
-    discovered_attributes: set[str] = set()
-    # use the raw values as that is the easiest and fastest way to inspect all attributes we have
-    for attribute_path in endpoint.node.node_data.attributes:
-        if not attribute_path.startswith(f"{endpoint.endpoint_id}/"):
-            continue
-        # We don't want to rediscover an already processed attribute
-        if attribute_path in discovered_attributes:
-            continue
-        yield from async_discover_single(
-            endpoint, attribute_path, discovered_attributes
-        )
-
-
-@callback
-def async_discover_single(
-    endpoint: MatterEndpoint,
-    attribute_path: str,
-    discovered_attributes: set[str],
-) -> Generator[MatterEntityInfo, None, None]:
-    """Run discovery on a single Matter Attribute and return matching schema info."""
+    discovered_attributes: set[type[ClusterAttributeDescriptor]] = set()
     device_info = endpoint.device_info
     for schema in iter_schemas():
+        # abort if attribute(s) already discovered
+        if any(x in schema.required_attributes for x in discovered_attributes):
+            continue
+
         # check vendor_id
         if (
             schema.vendor_id is not None
@@ -83,7 +64,7 @@ def async_discover_single(
         ):
             continue
 
-        # # check absent device_type
+        # check absent device_type
         if schema.not_device_type is not None and any(
             type(x) in schema.not_device_type for x in endpoint.device_types
         ):
@@ -98,20 +79,14 @@ def async_discover_single(
 
         # check required attributes
         if schema.required_attributes is not None and not all(
-            any(
-                check_attribute(val, val_schema, endpoint.endpoint_id)
-                for val in endpoint.node.node_data.attributes
-            )
+            endpoint.has_attribute(None, val_schema)
             for val_schema in schema.required_attributes
         ):
             continue
 
         # check for values that may not be present
         if schema.absent_attributes is not None and any(
-            any(
-                check_attribute(val, val_schema, endpoint.endpoint_id)
-                for val in endpoint.node.node_data.attributes
-            )
+            endpoint.has_attribute(None, val_schema)
             for val_schema in schema.absent_attributes
         ):
             continue
@@ -122,22 +97,10 @@ def async_discover_single(
         if schema.optional_attributes:
             # check optional attributes
             for optional_attribute in schema.optional_attributes:
-                if any(
-                    check_attribute(val, optional_attribute, endpoint.endpoint_id)
-                    for val in endpoint.node.node_data.attributes
-                ):
-                    if optional_attribute in attributes_to_watch:
-                        continue
+                if optional_attribute in attributes_to_watch:
+                    continue
+                if endpoint.has_attribute(None, optional_attribute):
                     attributes_to_watch.append(optional_attribute)
-
-        # prevent re-discovery of the same attributes
-        for attribute_to_watch in attributes_to_watch:
-            path = create_attribute_path(
-                endpoint.endpoint_id,
-                attribute_to_watch.cluster_id,
-                attribute_to_watch.attribute_id,
-            )
-            discovered_attributes.add(path)
 
         yield MatterEntityInfo(
             endpoint=endpoint,
@@ -148,24 +111,8 @@ def async_discover_single(
             measurement_to_ha=schema.measurement_to_ha,
         )
 
+        # prevent re-discovery of the same attributes
         if not schema.allow_multi:
             # return early since this value may not be discovered
             # by other schemas/platforms
-            return
-
-
-@callback
-def check_attribute(
-    attribute_path: str,
-    schema_attribute: ClusterAttributeDescriptor,
-    required_endpoint_id: int,
-) -> bool:
-    """Check if attribute matches schema."""
-    endpoint_id, cluster_id, attribute_id = parse_attribute_path(attribute_path)
-    if endpoint_id != required_endpoint_id:
-        return False
-    if schema_attribute.cluster_id != cluster_id:
-        return False
-    if schema_attribute.attribute_id != attribute_id:
-        return False
-    return True
+            discovered_attributes.update(attributes_to_watch)
