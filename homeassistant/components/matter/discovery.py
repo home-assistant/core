@@ -28,8 +28,7 @@ SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS.keys())
 def iter_schemas() -> Generator[MatterDiscoverySchema, None, None]:
     """Iterate over all available discovery schemas."""
     for platform_schemas in DISCOVERY_SCHEMAS.values():
-        for schema in platform_schemas:
-            yield schema
+        yield from platform_schemas
 
 
 @callback
