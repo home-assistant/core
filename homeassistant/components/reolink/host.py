@@ -14,6 +14,7 @@ from reolink_aio.exceptions import ReolinkError, SubscriptionError
 from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -68,8 +69,6 @@ class ReolinkHost:
 
     async def async_init(self) -> None:
         """Connect to Reolink host."""
-        self._api.expire_session()
-
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
@@ -138,24 +137,27 @@ class ReolinkHost:
 
     async def disconnect(self):
         """Disconnect from the API, so the connection will be released."""
-        await self._api.unsubscribe()
-
         try:
-            await self._api.logout()
-        except aiohttp.ClientConnectorError as err:
+            await self._api.unsubscribe()
+        except (
+            aiohttp.ClientConnectorError,
+            asyncio.TimeoutError,
+            ReolinkError,
+        ) as err:
             _LOGGER.error(
-                "Reolink connection error while logging out for host %s:%s: %s",
+                "Reolink error while unsubscribing from host %s:%s: %s",
                 self._api.host,
                 self._api.port,
                 str(err),
             )
-        except asyncio.TimeoutError:
-            _LOGGER.error(
-                "Reolink connection timeout while logging out for host %s:%s",
-                self._api.host,
-                self._api.port,
-            )
-        except ReolinkError as err:
+
+        try:
+            await self._api.logout()
+        except (
+            aiohttp.ClientConnectorError,
+            asyncio.TimeoutError,
+            ReolinkError,
+        ) as err:
             _LOGGER.error(
                 "Reolink error while logging out for host %s:%s: %s",
                 self._api.host,
@@ -165,13 +167,13 @@ class ReolinkHost:
 
     async def stop(self, event=None):
         """Disconnect the API."""
-        await self.unregister_webhook()
+        self.unregister_webhook()
         await self.disconnect()
 
     async def subscribe(self) -> None:
         """Subscribe to motion events and register the webhook as a callback."""
         if self.webhook_id is None:
-            await self.register_webhook()
+            self.register_webhook()
 
         if self._api.subscribed:
             _LOGGER.debug(
@@ -248,7 +250,7 @@ class ReolinkHost:
             self._api.host,
         )
 
-    async def register_webhook(self) -> None:
+    def register_webhook(self) -> None:
         """Register the webhook for motion events."""
         self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}_ONVIF"
         event_id = self.webhook_id
@@ -263,8 +265,7 @@ class ReolinkHost:
             try:
                 base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
-                webhook.async_unregister(self._hass, event_id)
-                self.webhook_id = None
+                self.unregister_webhook()
                 raise ReolinkWebhookException(
                     f"Error registering URL for webhook {event_id}: "
                     "HomeAssistant URL is not available"
@@ -273,13 +274,28 @@ class ReolinkHost:
         webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{base_url}{webhook_path}"
 
+        if base_url.startswith("https"):
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                "https_webhook",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="https_webhook",
+                translation_placeholders={
+                    "base_url": base_url,
+                    "network_link": "https://my.home-assistant.io/redirect/network/",
+                },
+            )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
+
         _LOGGER.debug("Registered webhook: %s", event_id)
 
-    async def unregister_webhook(self):
+    def unregister_webhook(self):
         """Unregister the webhook for motion events."""
-        if self.webhook_id:
-            _LOGGER.debug("Unregistering webhook %s", self.webhook_id)
-            webhook.async_unregister(self._hass, self.webhook_id)
+        _LOGGER.debug("Unregistering webhook %s", self.webhook_id)
+        webhook.async_unregister(self._hass, self.webhook_id)
         self.webhook_id = None
 
     async def handle_webhook(
@@ -300,9 +316,10 @@ class ReolinkHost:
             )
             return
 
-        channel = await self._api.ONVIF_event_callback(data)
+        channels = await self._api.ONVIF_event_callback(data)
 
-        if channel is None:
+        if channels is None:
             async_dispatcher_send(hass, f"{webhook_id}_all", {})
         else:
-            async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
+            for channel in channels:
+                async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})

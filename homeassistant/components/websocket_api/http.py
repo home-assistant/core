@@ -16,7 +16,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.json import json_loads
+from homeassistant.util.json import json_loads
 
 from .auth import AuthPhase, auth_required_message
 from .const import (

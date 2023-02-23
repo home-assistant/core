@@ -18,6 +18,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClientGenerator
 
 DEVICE_ID = "123TESTMAC"
 NAME = "test_device"
@@ -55,7 +56,9 @@ async def assert_distance(hass, distance):
     assert state.attributes.get("distance") == distance
 
 
-async def test_room_update(hass, mqtt_mock_entry_with_yaml_config):
+async def test_room_update(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
     """Test the updating between rooms."""
     assert await async_setup_component(
         hass,
@@ -93,7 +96,7 @@ async def test_room_update(hass, mqtt_mock_entry_with_yaml_config):
 
 
 async def test_unique_id_is_set(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test the updating between rooms."""
     unique_name = "my_unique_name_0123456789"
