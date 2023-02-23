@@ -110,17 +110,15 @@ class MatterLight(MatterEntity, LightEntity):
     def _supports_brightness(self) -> bool:
         """Return if device supports brightness."""
 
-        return (
-            clusters.LevelControl.Attributes.CurrentLevel
-            in self._entity_info.attributes_to_watch
+        return self._entity_info.endpoint.has_attribute(
+            None, clusters.LevelControl.Attributes.CurrentLevel
         )
 
     def _supports_color(self) -> bool:
         """Return if device supports color."""
 
-        return (
-            clusters.ColorControl.Attributes.ColorMode
-            in self._entity_info.attributes_to_watch
+        return self._entity_info.endpoint.has_attribute(
+            None, clusters.ColorControl.Attributes.ColorMode
         )
 
     async def _set_xy_color(self, xy_color: tuple[float, float]) -> None:
