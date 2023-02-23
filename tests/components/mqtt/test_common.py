@@ -84,14 +84,12 @@ def help_test_validate_platform_config(
 
 async def help_test_availability_when_connection_lost(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
-    config: ConfigType,
 ) -> None:
     """Test availability after MQTT disconnection."""
-    assert await async_setup_component(hass, mqtt.DOMAIN, config)
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state != STATE_UNAVAILABLE
