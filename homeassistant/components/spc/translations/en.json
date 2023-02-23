@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "failed_to_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "api_url": "API URL",
+                    "ws_url": "Websocket URL"
+                }
+            }
+        }
+    }
+}

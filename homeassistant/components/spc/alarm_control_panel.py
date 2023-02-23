@@ -7,6 +7,7 @@ from pyspcwebgw.const import AreaMode
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -17,9 +18,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_API, SIGNAL_UPDATE_ALARM
+from .const import DOMAIN, SIGNAL_UPDATE_ALARM
 
 
 def _get_alarm_state(area: Area) -> str | None:
@@ -37,16 +37,13 @@ def _get_alarm_state(area: Area) -> str | None:
     return mode_to_state.get(area.mode)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the SPC alarm control panel platform."""
-    if discovery_info is None:
-        return
-    api: SpcWebGateway = hass.data[DATA_API]
+    """Set up the SPC alarm control panel."""
+    api: SpcWebGateway = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
@@ -54,6 +51,7 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
     _attr_should_poll = False
+    _attr_code_arm_required = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -64,6 +62,7 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
         """Initialize the SPC alarm panel."""
         self._area = area
         self._api = api
+        self._attr_unique_id = area.id
 
     async def async_added_to_hass(self) -> None:
         """Call for adding new entities."""

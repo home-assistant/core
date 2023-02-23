@@ -9,12 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_API, SIGNAL_UPDATE_SENSOR
+from . import DOMAIN, SIGNAL_UPDATE_SENSOR
 
 
 def _get_device_class(zone_type: ZoneType) -> BinarySensorDeviceClass | None:
@@ -26,16 +26,13 @@ def _get_device_class(zone_type: ZoneType) -> BinarySensorDeviceClass | None:
     }.get(zone_type)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the SPC binary sensor."""
-    if discovery_info is None:
-        return
-    api: SpcWebGateway = hass.data[DATA_API]
+    api: SpcWebGateway = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
             SpcBinarySensor(zone)
@@ -53,6 +50,7 @@ class SpcBinarySensor(BinarySensorEntity):
     def __init__(self, zone: Zone) -> None:
         """Initialize the sensor device."""
         self._zone = zone
+        self._attr_unique_id = zone.id
 
     async def async_added_to_hass(self) -> None:
         """Call for adding new entities."""
