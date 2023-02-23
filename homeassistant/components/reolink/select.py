@@ -86,7 +86,6 @@ async def async_setup_entry(
 class ReolinkSelectEntity(ReolinkCoordinatorEntity, SelectEntity):
     """Base select entity class for Reolink IP cameras."""
 
-    _attr_has_entity_name = True
     entity_description: ReolinkSelectEntityDescription
 
     def __init__(
