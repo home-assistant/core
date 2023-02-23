@@ -48,8 +48,8 @@ class MatterSensor(MatterEntity, SensorEntity):
         value: Nullable | float | None
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
         if value in (None, NullValue):
-            return None
-        if value_convert := self._entity_info.measurement_to_ha:
+            value = None
+        elif value_convert := self._entity_info.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -129,6 +129,6 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
         # value has double precision
-        measurement_to_ha=lambda x: int(x / 2) if x is not None else None,
+        measurement_to_ha=lambda x: int(x / 2),
     ),
 ]

@@ -78,10 +78,10 @@ class MatterDiscoverySchema:
     required_attributes: tuple[type[ClusterAttributeDescriptor], ...]
 
     # [optional] the value's endpoint must contain this devicetype(s)
-    device_type: tuple[type[DeviceType], ...] | None = None
+    device_type: tuple[type[DeviceType] | DeviceType, ...] | None = None
 
     # [optional] the value's endpoint must NOT contain this devicetype(s)
-    not_device_type: tuple[type[DeviceType], ...] | None = None
+    not_device_type: tuple[type[DeviceType] | DeviceType, ...] | None = None
 
     # [optional] the endpoint's vendor_id must match ANY of these values
     vendor_id: tuple[int, ...] | None = None

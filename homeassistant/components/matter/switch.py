@@ -69,6 +69,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         # restrict device type to prevent discovery by light
         # platform which also uses OnOff cluster
-        device_type=(device_types.OnOffPlugInUnit,),
+        not_device_type=(device_types.OnOffLight, device_types.DimmableLight),
     ),
 ]

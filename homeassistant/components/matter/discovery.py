@@ -60,13 +60,13 @@ def async_discover_entities(
 
         # check required device_type
         if schema.device_type is not None and not any(
-            type(x) in schema.device_type for x in endpoint.device_types
+            x in schema.device_type for x in endpoint.device_types
         ):
             continue
 
         # check absent device_type
         if schema.not_device_type is not None and any(
-            type(x) in schema.not_device_type for x in endpoint.device_types
+            x in schema.not_device_type for x in endpoint.device_types
         ):
             continue
 
