@@ -6,7 +6,7 @@ from functools import partial
 from typing import Any
 
 from chip.clusters import Objects as clusters
-from matter_server.common.models import device_types
+from matter_server.client.models import device_types
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -41,7 +41,7 @@ class MatterSwitch(MatterEntity, SwitchEntity):
         """Turn switch on."""
         await self.matter_client.send_device_command(
             node_id=self._device_type_instance.node.node_id,
-            endpoint=self._device_type_instance.endpoint,
+            endpoint_id=self._device_type_instance.endpoint_id,
             command=clusters.OnOff.Commands.On(),
         )
 
@@ -49,15 +49,16 @@ class MatterSwitch(MatterEntity, SwitchEntity):
         """Turn switch off."""
         await self.matter_client.send_device_command(
             node_id=self._device_type_instance.node.node_id,
-            endpoint=self._device_type_instance.endpoint,
+            endpoint_id=self._device_type_instance.endpoint_id,
             command=clusters.OnOff.Commands.Off(),
         )
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        cluster = self._device_type_instance.get_cluster(clusters.OnOff)
-        self._attr_is_on = cluster.onOff if cluster else None
+        self._attr_is_on = self.get_matter_attribute_value(
+            clusters.OnOff.Attributes.OnOff
+        )
 
 
 @dataclass

@@ -55,7 +55,9 @@ async def test_home_assistant_core_config_validation(hass: HomeAssistant) -> Non
     assert result is None
 
 
-async def test_async_enable_logging(hass, caplog):
+async def test_async_enable_logging(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test to ensure logging is migrated to the queue handlers."""
     with patch("logging.getLogger"), patch(
         "homeassistant.bootstrap.async_activate_log_queue_handler"
@@ -97,7 +99,9 @@ async def test_empty_setup(hass: HomeAssistant) -> None:
         assert domain in hass.config.components, domain
 
 
-async def test_core_failure_loads_safe_mode(hass, caplog):
+async def test_core_failure_loads_safe_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test failing core setup aborts further setup."""
     with patch(
         "homeassistant.components.homeassistant.async_setup",
@@ -462,7 +466,7 @@ async def test_setup_hass(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     event_loop,
 ) -> None:
     """Test it works."""
@@ -512,7 +516,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_mount_local_lib_path,
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
-    caplog,
+    caplog: pytest.LogCaptureFixture,
     event_loop,
 ) -> None:
     """Test it works."""
@@ -581,7 +585,7 @@ async def test_setup_hass_config_dir_nonexistent(
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     event_loop,
-):
+) -> None:
     """Test it works."""
     mock_ensure_config_exists.return_value = False
 
@@ -608,7 +612,7 @@ async def test_setup_hass_safe_mode(
     mock_ensure_config_exists,
     mock_process_ha_config_upgrade,
     event_loop,
-):
+) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup") as browser_setup, patch(
         "homeassistant.config_entries.ConfigEntries.async_domains",
@@ -768,7 +772,9 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
+async def test_warning_logged_on_wrap_up_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we log a warning on bootstrap timeout."""
 
     def gen_domain_setup(domain):

@@ -4,9 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 import logging
+from typing import cast
 
-from zeroconf import ServiceListener, Zeroconf
-from zeroconf.asyncio import AsyncZeroconf
+from zeroconf import BadTypeInNameException, DNSPointer, ServiceListener, Zeroconf
+from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
 from homeassistant.components import zeroconf
 from homeassistant.core import HomeAssistant
@@ -19,6 +20,8 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "HomeAssistant": "homeassistant",
 }
 THREAD_TYPE = "_meshcop._udp.local."
+CLASS_IN = 1
+TYPE_PTR = 12
 
 
 @dataclasses.dataclass
@@ -31,6 +34,65 @@ class ThreadRouterDiscoveryData:
     network_name: str | None
     server: str | None
     vendor_name: str | None
+    addresses: list[str] | None
+    thread_version: str | None
+
+
+def async_discovery_data_from_service(
+    service: AsyncServiceInfo,
+) -> ThreadRouterDiscoveryData:
+    """Get a ThreadRouterDiscoveryData from an AsyncServiceInfo."""
+
+    def try_decode(value: bytes | None) -> str | None:
+        """Try decoding UTF-8."""
+        if value is None:
+            return None
+        try:
+            return value.decode()
+        except UnicodeDecodeError:
+            return None
+
+    ext_pan_id = service.properties.get(b"xp")
+    network_name = try_decode(service.properties.get(b"nn"))
+    model_name = try_decode(service.properties.get(b"mn"))
+    server = service.server
+    vendor_name = try_decode(service.properties.get(b"vn"))
+    thread_version = try_decode(service.properties.get(b"tv"))
+    return ThreadRouterDiscoveryData(
+        brand=KNOWN_BRANDS.get(vendor_name),
+        extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
+        model_name=model_name,
+        network_name=network_name,
+        server=server,
+        vendor_name=vendor_name,
+        addresses=service.parsed_addresses(),
+        thread_version=thread_version,
+    )
+
+
+def async_read_zeroconf_cache(aiozc: AsyncZeroconf) -> list[ThreadRouterDiscoveryData]:
+    """Return all meshcop records already in the zeroconf cache."""
+    results = []
+
+    records = aiozc.zeroconf.cache.async_all_by_details(THREAD_TYPE, TYPE_PTR, CLASS_IN)
+    for record in records:
+        record = cast(DNSPointer, record)
+
+        try:
+            info = AsyncServiceInfo(THREAD_TYPE, record.alias)
+        except BadTypeInNameException as ex:
+            _LOGGER.debug(
+                "Ignoring record with bad type in name: %s: %s", record.alias, ex
+            )
+            continue
+
+        if not info.load_from_cache(aiozc.zeroconf):
+            # data is not fully in the cache, so ignore for now
+            continue
+
+        results.append(async_discovery_data_from_service(info))
+
+    return results
 
 
 class ThreadRouterDiscovery:
@@ -83,15 +145,6 @@ class ThreadRouterDiscovery:
                 _LOGGER.debug("_add_update_service failed to add %s, %s", type_, name)
                 return
 
-            def try_decode(value: bytes | None) -> str | None:
-                """Try decoding UTF-8."""
-                if value is None:
-                    return None
-                try:
-                    return value.decode()
-                except UnicodeDecodeError:
-                    return None
-
             _LOGGER.debug("_add_update_service %s %s", name, service)
             # We use the extended mac address as key, bail out if it's missing
             try:
@@ -99,19 +152,8 @@ class ThreadRouterDiscovery:
             except (KeyError, UnicodeDecodeError) as err:
                 _LOGGER.debug("_add_update_service failed to parse service %s", err)
                 return
-            ext_pan_id = service.properties.get(b"xp")
-            network_name = try_decode(service.properties.get(b"nn"))
-            model_name = try_decode(service.properties.get(b"mn"))
-            server = service.server
-            vendor_name = try_decode(service.properties.get(b"vn"))
-            data = ThreadRouterDiscoveryData(
-                brand=KNOWN_BRANDS.get(vendor_name),
-                extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
-                model_name=model_name,
-                network_name=network_name,
-                server=server,
-                vendor_name=vendor_name,
-            )
+
+            data = async_discovery_data_from_service(service)
             if name in self._known_routers and self._known_routers[name] == (
                 extended_mac_address,
                 data,
