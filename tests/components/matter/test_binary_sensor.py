@@ -31,7 +31,7 @@ async def test_contact_sensor(
     """Test contact sensor."""
     state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
     assert state
-    assert state.state == "on"
+    assert state.state == "off"
 
     set_node_attribute(contact_sensor_node, 1, 69, 0, False)
     await trigger_subscription_callback(
@@ -40,7 +40,7 @@ async def test_contact_sensor(
 
     state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
     assert state
-    assert state.state == "off"
+    assert state.state == "on"
 
 
 @pytest.fixture(name="occupancy_sensor_node")

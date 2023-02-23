@@ -26,7 +26,7 @@ async def test_get_device_id(
     node = await setup_integration_with_node_fixture(
         hass, "device_diagnostics", matter_client
     )
-    device_id = get_device_id(matter_client.server_info, node.node_devices[0])
+    device_id = get_device_id(matter_client.server_info, node.endpoints[0])
 
     assert device_id == "00000000000004D2-0000000000000005-MatterNodeDevice"
 
