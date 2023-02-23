@@ -1,8 +1,8 @@
 """The tests for Network UPS Tools (NUT) device actions."""
-from unittest import mock
 from unittest.mock import MagicMock
 
 from pynut2.nut2 import PyNUTError
+import pytest
 
 from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -161,12 +161,15 @@ async def test_action(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -
 
 
 async def test_rund_command_exception(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test logged error if run command raises exception."""
 
     list_commands_return_value = {"beeper.enable": None}
-    run_command = MagicMock(side_effect=PyNUTError)
+    error_message = "Something wrong happened"
+    run_command = MagicMock(side_effect=PyNUTError(error_message))
     await async_init_integration(
         hass,
         list_vars={"ups.status": "OL"},
@@ -195,7 +198,7 @@ async def test_rund_command_exception(
         },
     )
 
-    with mock.patch("logging.Logger.error") as error:
-        hass.bus.async_fire("test_some_event")
-        await hass.async_block_till_done()
-        error.assert_called_once()
+    hass.bus.async_fire("test_some_event")
+    await hass.async_block_till_done()
+
+    assert error_message in caplog.text
