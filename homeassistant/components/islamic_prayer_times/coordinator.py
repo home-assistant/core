@@ -8,7 +8,7 @@ from prayer_times_calculator import PrayerTimesCalculator, exceptions
 from requests.exceptions import ConnectionError as ConnError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Islamic Prayer Client Object."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Islamic Prayer client."""
-        self.hass = hass
-        self.config_entry: ConfigEntry = config_entry
         self.event_unsub: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
@@ -33,7 +33,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         )
 
     @property
-    def calc_method(self):
+    def calc_method(self) -> str:
         """Return the calculation method."""
         return self.config_entry.options.get(CONF_CALC_METHOD, DEFAULT_CALC_METHOD)
 
@@ -47,7 +47,8 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         )
         return calc.fetch_prayer_times()
 
-    async def async_schedule_future_update(self, midnight_dt: datetime) -> None:
+    @callback
+    def async_schedule_future_update(self, midnight_dt: datetime) -> None:
         """Schedule future update for sensors.
 
         Midnight is a calculated time.  The specifics of the calculation
@@ -83,7 +84,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         if now > midnight_dt:
             next_update_at = midnight_dt + timedelta(days=1, minutes=1)
             _LOGGER.debug(
-                "Midnight is after day the changes so schedule update for after Midnight the next day"
+                "Midnight is after the day changes so schedule update for after Midnight the next day"
             )
         else:
             _LOGGER.debug(
@@ -91,7 +92,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             )
             next_update_at = dt_util.start_of_local_day(now + timedelta(days=1))
 
-        _LOGGER.info("Next update scheduled for: %s", next_update_at)
+        _LOGGER.debug("Next update scheduled for: %s", next_update_at)
 
         self.event_unsub = async_track_point_in_time(
             self.hass, self.async_request_update, next_update_at
@@ -116,5 +117,5 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             if prayer_time := dt_util.parse_datetime(f"{dt_util.now().date()} {time}"):
                 prayer_times_info[prayer] = dt_util.as_utc(prayer_time)
 
-        await self.async_schedule_future_update(prayer_times_info["Midnight"])
+        self.async_schedule_future_update(prayer_times_info["Midnight"])
         return prayer_times_info
