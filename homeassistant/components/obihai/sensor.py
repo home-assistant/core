@@ -18,8 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .connectivity import get_pyobihai
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, OBIHAI
-from .obihai_api import get_pyobihai
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -192,22 +192,20 @@ class ObihaiServiceSensors(SensorEntity):
         if not self._pyobihai.check_account():
             self._state = None
             return
-            services = self._pyobihai.get_state()
 
-            if self._service_name in services:
-                self._state = services.get(self._service_name)
+        services = self._pyobihai.get_state()
 
-            services = self._pyobihai.get_line_state()
+        if self._service_name in services:
+            self._state = services.get(self._service_name)
 
-            if services is not None and self._service_name in services:
-                self._state = services.get(self._service_name)
+        services = self._pyobihai.get_line_state()
 
-            call_direction = self._pyobihai.get_call_direction()
+        if services is not None and self._service_name in services:
+            self._state = services.get(self._service_name)
 
-            if self._service_name in call_direction:
-                self._state = call_direction.get(self._service_name)
+        call_direction = self._pyobihai.get_call_direction()
 
-            return True
+        if self._service_name in call_direction:
+            self._state = call_direction.get(self._service_name)
 
         self._state = None
-        return False

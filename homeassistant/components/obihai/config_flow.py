@@ -11,8 +11,8 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_OBIHAI_HOST, DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
-from .obihai_api import validate_auth
+from .connectivity import validate_auth
+from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
 
 
 @callback
@@ -21,7 +21,7 @@ def async_get_schema(
 ) -> vol.Schema:
     """Return Obihai schema."""
     schema = {
-        vol.Required(CONF_HOST, default=defaults.get(CONF_OBIHAI_HOST, "")): str,
+        vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
         vol.Optional(
             CONF_USERNAME,
             description={
@@ -44,7 +44,7 @@ async def async_validate_credentials(
     errors = {}
     result = await hass.async_add_executor_job(
         validate_auth,
-        user_input.get(CONF_OBIHAI_HOST),
+        user_input.get(CONF_HOST),
         user_input.get(CONF_USERNAME),
         user_input[CONF_PASSWORD],
     )
@@ -67,7 +67,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_validate_input(user_input)
 
-        user_input = {CONF_OBIHAI_HOST: self._host or ""}
+        user_input = {}
         return self.async_show_form(
             step_id="user",
             data_schema=async_get_schema(user_input),
@@ -77,16 +77,14 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Check form inputs for errors."""
         errors = await async_validate_credentials(self.hass, user_input)
         if not errors:
-            self._async_abort_entries_match(
-                {CONF_OBIHAI_HOST: user_input[CONF_OBIHAI_HOST]}
-            )
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             # Storing data in option, to allow for changing them later
             # using an options flow.
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, user_input[CONF_OBIHAI_HOST]),
+                title=user_input.get(CONF_NAME, user_input[CONF_HOST]),
                 data={
-                    CONF_OBIHAI_HOST: user_input[CONF_OBIHAI_HOST],
+                    CONF_HOST: user_input[CONF_HOST],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 },
@@ -101,11 +99,11 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     # DEPRECATED
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle a flow initialized by importing a config."""
-        self._async_abort_entries_match({CONF_OBIHAI_HOST: config[CONF_OBIHAI_HOST]})
+        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
         return self.async_create_entry(
-            title=config.get(CONF_NAME, config[CONF_OBIHAI_HOST]),
+            title=config.get(CONF_NAME, config[CONF_HOST]),
             data={
-                CONF_OBIHAI_HOST: config[CONF_OBIHAI_HOST],
+                CONF_HOST: config[CONF_HOST],
                 CONF_PASSWORD: config[CONF_PASSWORD],
                 CONF_USERNAME: config.get(CONF_USERNAME),
             },

@@ -12,5 +12,4 @@ OBIHAI = "Obihai"
 
 LOGGER = logging.getLogger(__package__)
 
-CONF_OBIHAI_HOST: Final = "host"
 PLATFORMS: Final = [Platform.SENSOR]

@@ -1,5 +1,7 @@
 """Test the Obihai config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.obihai.const import DOMAIN
@@ -7,6 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import USER_INPUT
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -18,9 +22,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("pyobihai.PyObihai.check_account"), patch(
-        "homeassistant.components.obihai.async_setup_entry"
-    ) as mock_setup_entry:
+    with patch("pyobihai.PyObihai.check_account"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,

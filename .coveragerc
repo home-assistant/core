@@ -803,7 +803,7 @@ omit =
     homeassistant/components/nuki/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/oasa_telematics/sensor.py
-    homeassistant/components/obihai/obihai_api.py
+    homeassistant/components/obihai/connectivity.py
     homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
     homeassistant/components/oem/climate.py

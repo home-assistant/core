@@ -1,4 +1,4 @@
-"""Support for Obihai Sensors."""
+"""Support for Obihai Connectivity."""
 from __future__ import annotations
 
 from pyobihai import PyObihai
