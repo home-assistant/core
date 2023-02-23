@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import Host, PtzEnum, GuardEnum
+from reolink_aio.api import GuardEnum, Host, PtzEnum
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
