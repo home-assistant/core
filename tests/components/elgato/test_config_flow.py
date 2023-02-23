@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
     mock_setup_entry: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -38,12 +38,12 @@ async def test_full_user_flow_implementation(
     assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_elgato.info.mock_calls) == 1
 
 
 async def test_full_zeroconf_flow_implementation(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
     mock_setup_entry: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -80,15 +80,15 @@ async def test_full_zeroconf_flow_implementation(
     assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_elgato.info.mock_calls) == 1
 
 
 async def test_connection_error(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
 ) -> None:
     """Test we show user form on Elgato Key Light connection error."""
-    mock_elgato_config_flow.info.side_effect = ElgatoConnectionError
+    mock_elgato.info.side_effect = ElgatoConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -102,10 +102,10 @@ async def test_connection_error(
 
 async def test_zeroconf_connection_error(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
 ) -> None:
     """Test we abort zeroconf flow on Elgato Key Light connection error."""
-    mock_elgato_config_flow.info.side_effect = ElgatoConnectionError
+    mock_elgato.info.side_effect = ElgatoConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -124,7 +124,7 @@ async def test_zeroconf_connection_error(
     assert result.get("type") == FlowResultType.ABORT
 
 
-@pytest.mark.usefixtures("mock_elgato_config_flow")
+@pytest.mark.usefixtures("mock_elgato")
 async def test_user_device_exists_abort(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -140,7 +140,7 @@ async def test_user_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_elgato_config_flow")
+@pytest.mark.usefixtures("mock_elgato")
 async def test_zeroconf_device_exists_abort(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -190,7 +190,7 @@ async def test_zeroconf_device_exists_abort(
 
 async def test_zeroconf_during_onboarding(
     hass: HomeAssistant,
-    mock_elgato_config_flow: MagicMock,
+    mock_elgato: MagicMock,
     mock_setup_entry: AsyncMock,
     mock_onboarding: MagicMock,
     snapshot: SnapshotAssertion,
@@ -214,5 +214,5 @@ async def test_zeroconf_during_onboarding(
     assert result == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_elgato.info.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from functools import lru_cache
 import logging
 import time
 from typing import Any, cast
@@ -110,6 +111,15 @@ ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
 
+_DEFAULT_TABLE_ARGS = {
+    "mysql_default_charset": "utf8mb4",
+    "mysql_collate": "utf8mb4_unicode_ci",
+    "mysql_engine": "InnoDB",
+    "mariadb_default_charset": "utf8mb4",
+    "mariadb_collate": "utf8mb4_unicode_ci",
+    "mariadb_engine": "InnoDB",
+}
+
 
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
@@ -164,7 +174,7 @@ class Events(Base):
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
-        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+        _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_EVENTS
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
@@ -255,9 +265,7 @@ class Events(Base):
 class EventData(Base):
     """Event data history."""
 
-    __table_args__ = (
-        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
-    )
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENT_DATA
     data_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
@@ -284,6 +292,7 @@ class EventData(Base):
         return json_bytes(event.data)
 
     @staticmethod
+    @lru_cache
     def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
         """Return the hash of json encoded shared data."""
         return cast(int, fnv1a_32(shared_data_bytes))
@@ -307,7 +316,7 @@ class States(Base):
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
-        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+        _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_STATES
     state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
@@ -438,9 +447,7 @@ class States(Base):
 class StateAttributes(Base):
     """State attribute change history."""
 
-    __table_args__ = (
-        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
-    )
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATE_ATTRIBUTES
     attributes_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
@@ -492,6 +499,7 @@ class StateAttributes(Base):
         return bytes_result
 
     @staticmethod
+    @lru_cache(maxsize=2048)
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
         """Return the hash of json encoded shared attributes."""
         return cast(int, fnv1a_32(shared_attrs_bytes))
@@ -513,10 +521,8 @@ class StatisticsBase:
     """Statistics base class."""
 
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    created: Mapped[datetime] = mapped_column(
-        DATETIME_TYPE, default=dt_util.utcnow
-    )  # No longer used
-    created_ts: Mapped[float] = mapped_column(TIMESTAMP_TYPE, default=time.time)
+    created: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)  # No longer used
+    created_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, default=time.time)
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
@@ -610,9 +616,7 @@ class StatisticsShortTerm(Base, StatisticsBase):
 class StatisticsMeta(Base):
     """Statistics meta data."""
 
-    __table_args__ = (
-        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
-    )
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATISTICS_META
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     statistic_id: Mapped[str | None] = mapped_column(

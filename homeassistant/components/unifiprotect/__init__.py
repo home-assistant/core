@@ -27,7 +27,6 @@ from .const import (
 from .data import ProtectData, async_ufp_instance_for_config_entry_ids
 from .discovery import async_start_discovery
 from .migrate import async_migrate_data
-from .repairs import async_create_repairs
 from .services import async_cleanup_services, async_setup_services
 from .utils import (
     _async_unifi_mac_from_hass,
@@ -122,7 +121,6 @@ async def _async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, data_service: ProtectData
 ) -> None:
     await async_migrate_data(hass, entry, data_service.api)
-    await async_create_repairs(hass, entry, data_service.api)
 
     await data_service.async_setup()
     if not data_service.last_update_success:

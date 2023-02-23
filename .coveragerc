@@ -414,6 +414,7 @@ omit =
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/button.py
+    homeassistant/components/goodwe/coordinator.py
     homeassistant/components/goodwe/number.py
     homeassistant/components/goodwe/select.py
     homeassistant/components/goodwe/sensor.py
@@ -897,7 +898,6 @@ omit =
     homeassistant/components/ping/binary_sensor.py
     homeassistant/components/ping/device_tracker.py
     homeassistant/components/pioneer/media_player.py
-    homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/__init__.py
     homeassistant/components/plaato/binary_sensor.py
     homeassistant/components/plaato/entity.py
@@ -972,6 +972,7 @@ omit =
     homeassistant/components/reolink/entity.py
     homeassistant/components/reolink/host.py
     homeassistant/components/reolink/number.py
+    homeassistant/components/reolink/update.py
     homeassistant/components/repetier/__init__.py
     homeassistant/components/repetier/sensor.py
     homeassistant/components/rest/notify.py

@@ -8,13 +8,16 @@ from homeassistant.components.sensor import (
     DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
+    device_condition,
 )
+from homeassistant.components.sensor.const import NON_NUMERIC_DEVICE_CLASSES
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import load_json
 
 from tests.common import (
     MockConfigEntry,
@@ -28,9 +31,45 @@ from tests.testing_config.custom_components.test.sensor import UNITS_OF_MEASUREM
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    [
+        device_class
+        for device_class in SensorDeviceClass
+        if device_class not in NON_NUMERIC_DEVICE_CLASSES
+    ],
+)
+def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
+    """Ensure device class constants are declared in device_condition module."""
+    # Ensure it has corresponding CONF_IS_*** constant
+    constant_name = {
+        SensorDeviceClass.BATTERY: "CONF_IS_BATTERY_LEVEL",
+        SensorDeviceClass.CO: "CONF_IS_CO",
+        SensorDeviceClass.CO2: "CONF_IS_CO2",
+    }.get(device_class, f"CONF_IS_{device_class.value.upper()}")
+    assert hasattr(device_condition, constant_name), f"Missing constant {constant_name}"
+
+    # Ensure it has correct value
+    constant_value = {
+        SensorDeviceClass.BATTERY: "is_battery_level",
+    }.get(device_class, f"is_{device_class.value}")
+    assert getattr(device_condition, constant_name) == constant_value
+
+    # Ensure it is present in ENTITY_CONDITIONS
+    assert device_class in ENTITY_CONDITIONS
+    # Ensure it is present in CONDITION_SCHEMA
+    schema_types = (
+        device_condition.CONDITION_SCHEMA.validators[0].schema["type"].container
+    )
+    assert constant_value in schema_types
+    # Ensure it is present in string.json
+    strings = load_json("homeassistant/components/sensor/strings.json")
+    assert constant_value in strings["device_automation"]["condition_type"]
 
 
 async def test_get_conditions(
