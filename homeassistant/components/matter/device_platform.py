@@ -11,7 +11,7 @@ from .sensor import DEVICE_ENTITY as SENSOR_DEVICE_ENTITY
 from .switch import DEVICE_ENTITY as SWITCH_DEVICE_ENTITY
 
 if TYPE_CHECKING:
-    from matter_server.common.models.device_types import DeviceType
+    from matter_server.client.models.device_types import DeviceType
 
     from .entity import MatterEntityDescriptionBaseClass
 

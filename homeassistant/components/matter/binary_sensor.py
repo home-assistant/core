@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from functools import partial
 
 from chip.clusters import Objects as clusters
-from matter_server.common.models import device_types
+from matter_server.client.models import device_types
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -39,8 +39,10 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        cluster = self._device_type_instance.get_cluster(clusters.BooleanState)
-        self._attr_is_on = cluster.stateValue if cluster else None
+        self._attr_is_on = self.get_matter_attribute_value(
+            # We always subscribe to a single value
+            self.entity_description.subscribe_attributes[0],
+        )
 
 
 class MatterOccupancySensor(MatterBinarySensor):
@@ -51,9 +53,12 @@ class MatterOccupancySensor(MatterBinarySensor):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        cluster = self._device_type_instance.get_cluster(clusters.OccupancySensing)
+        value = self.get_matter_attribute_value(
+            # We always subscribe to a single value
+            self.entity_description.subscribe_attributes[0],
+        )
         # The first bit = if occupied
-        self._attr_is_on = cluster.occupancy & 1 == 1 if cluster else None
+        self._attr_is_on = (value & 1 == 1) if value is not None else None
 
 
 @dataclass
