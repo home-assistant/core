@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import USER_INPUT
 
 
-async def test_user_form(hass: HomeAssistant) -> None:
+async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
