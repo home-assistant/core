@@ -140,7 +140,7 @@ def patch_bridge(*, side_effect=None):
 
 
 @pytest.mark.parametrize(
-    ["code", "check"],
+    ("code", "check"),
     [
         (RESULT_CANNOT_RESOLVE, True),
         (RESULT_CONNECTION_REFUSED, True),
@@ -176,7 +176,7 @@ async def test_check_connection_wo_host(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    ["step", "error", "answer"],
+    ("step", "error", "answer"),
     [
         (STEP_FIND, None, False),
         (STEP_FIND, {BASE: RESULT_ERROR}, True),
@@ -197,7 +197,7 @@ async def test_process_step(hass: HomeAssistant, step, error, answer):
 
 
 @pytest.mark.parametrize(
-    ["step", "error"],
+    ("step", "error"),
     [
         (None, None),
         (DUMMY, {BASE: RESULT_ERROR}),
@@ -266,7 +266,7 @@ async def test_step_find_fail(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    ["side_effect", "error"],
+    ("side_effect", "error"),
     [
         (AsusRouterLoginError, RESULT_WRONG_CREDENTIALS),
         (AsusRouterLoginBlockError, RESULT_LOGIN_BLOCKED),
@@ -329,7 +329,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["side_effect", "error"],
+    ("side_effect", "error"),
     [
         (AsusRouterLoginError, RESULT_WRONG_CREDENTIALS),
         (AsusRouterLoginBlockError, RESULT_LOGIN_BLOCKED),
