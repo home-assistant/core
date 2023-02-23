@@ -1,0 +1,8 @@
+# Obihai services
+
+reboot:
+  name: Reboot
+  description: Call reboot on Obihai
+  target:
+    entity:
+      integration: obihai
