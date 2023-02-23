@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
-async def test_async_setup_no_domain_config(hass: HomeAssistant):
+async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
     """Test setup without configuration is noop."""
     result = await async_setup_component(hass, DOMAIN, {})
 
@@ -50,7 +50,9 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
         OSError,
     ],
 )
-async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant, exc: Exception):
+async def test_async_setup_raises_entry_not_ready(
+    hass: HomeAssistant, exc: Exception
+) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -63,7 +65,7 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant, exc: Exce
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant):
+async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant) -> None:
     """Test that setup fails if auth fails during setup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -78,7 +80,9 @@ async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAssistant):
+async def test_async_setup_entry_sets_up_hub_and_supported_domains(
+    hass: HomeAssistant,
+) -> None:
     """Test that configuring entry sets up cover domain."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -124,7 +128,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
     assert len(mock_switch_async_setup_entry.mock_calls) == 1
 
 
-async def test_unload_config_entry(hass: HomeAssistant):
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test that configuration entry supports unloading."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -149,7 +153,7 @@ async def test_unload_config_entry(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_old_identifiers_are_removed(hass: HomeAssistant):
+async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
     """Test we remove the old non-unique identifiers."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -198,7 +202,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
     assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
 
 
-async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant):
+async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant) -> None:
     """Test we can setup a smart by bond device and get the suggested area."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -241,7 +245,7 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant):
     assert device.suggested_area == "Den"
 
 
-async def test_bridge_device_suggested_area(hass: HomeAssistant):
+async def test_bridge_device_suggested_area(hass: HomeAssistant) -> None:
     """Test we can setup a bridge bond device and get the suggested area."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

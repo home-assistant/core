@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_events_http_api(
@@ -28,9 +28,7 @@ async def test_events_http_api(
     start = dt_util.now()
     end = start + timedelta(days=1)
     response = await client.get(
-        "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-            start.isoformat(), end.isoformat()
-        )
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
     )
     assert response.status == HTTPStatus.OK
     events = await response.json()
@@ -63,12 +61,25 @@ async def test_events_http_api_error(
         side_effect=HomeAssistantError("Failure"),
     ):
         response = await client.get(
-            "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-                start.isoformat(), end.isoformat()
-            )
+            f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
         )
         assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
         assert await response.json() == {"message": "Error reading events: Failure"}
+
+
+async def test_events_http_api_dates_wrong_order(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the calendar demo view."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+    client = await hass_client()
+    start = dt_util.now()
+    end = start + timedelta(days=-1)
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_calendars_http_api(
@@ -88,7 +99,7 @@ async def test_calendars_http_api(
 
 
 @pytest.mark.parametrize(
-    "payload,code",
+    ("payload", "code"),
     [
         (
             {
@@ -158,7 +169,9 @@ async def test_calendars_http_api(
         ),
     ],
 )
-async def test_unsupported_websocket(hass, hass_ws_client, payload, code):
+async def test_unsupported_websocket(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload, code
+) -> None:
     """Test unsupported websocket command."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -196,7 +209,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "date_fields,expected_error,error_match",
+    ("date_fields", "expected_error", "error_match"),
     [
         (
             {},

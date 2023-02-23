@@ -136,7 +136,7 @@ async def test_malformed_api_key(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
@@ -148,7 +148,7 @@ async def test_malformed_api_key(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("validate_config_entry")
-async def test_options_flow(hass, mock_config):
+async def test_options_flow(hass: HomeAssistant, mock_config) -> None:
     """Test options flow."""
     result = await hass.config_entries.options.async_init(
         mock_config.entry_id, data=None
@@ -197,7 +197,7 @@ async def test_options_flow(hass, mock_config):
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
@@ -209,7 +209,7 @@ async def test_options_flow(hass, mock_config):
     ],
 )
 @pytest.mark.usefixtures("validate_config_entry")
-async def test_options_flow_departure_time(hass, mock_config):
+async def test_options_flow_departure_time(hass: HomeAssistant, mock_config) -> None:
     """Test options flow with departure time."""
     result = await hass.config_entries.options.async_init(
         mock_config.entry_id, data=None

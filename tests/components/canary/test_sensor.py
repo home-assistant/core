@@ -16,6 +16,8 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -25,7 +27,12 @@ from . import mock_device, mock_location, mock_reading
 from tests.common import async_fire_time_changed
 
 
-async def test_sensors_pro(hass, canary, device_registry, entity_registry) -> None:
+async def test_sensors_pro(
+    hass: HomeAssistant,
+    canary,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the creation and values of the sensors for Canary Pro."""
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
@@ -88,7 +95,7 @@ async def test_sensors_pro(hass, canary, device_registry, entity_registry) -> No
     assert device.model == "Canary Pro"
 
 
-async def test_sensors_attributes_pro(hass, canary) -> None:
+async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
     """Test the creation and values of the sensors attributes for Canary Pro."""
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
@@ -148,7 +155,12 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
     assert state3.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_NORMAL
 
 
-async def test_sensors_flex(hass, canary, device_registry, entity_registry) -> None:
+async def test_sensors_flex(
+    hass: HomeAssistant,
+    canary,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the creation and values of the sensors for Canary Flex."""
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Flex")
 

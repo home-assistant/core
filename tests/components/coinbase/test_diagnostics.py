@@ -1,6 +1,7 @@
 """Test the Coinbase diagnostics."""
-
 from unittest.mock import patch
+
+from homeassistant.core import HomeAssistant
 
 from .common import (
     init_mock_coinbase,
@@ -14,7 +15,9 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client: ClientSessionGenerator):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test we handle a and redact a diagnostics request."""
 
     with patch(

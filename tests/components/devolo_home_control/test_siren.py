@@ -17,7 +17,7 @@ from .mocks import HomeControlMock, HomeControlMockSiren
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren(hass: HomeAssistant):
+async def test_siren(hass: HomeAssistant) -> None:
     """Test setup and state change of a siren device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -47,7 +47,7 @@ async def test_siren(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_switching(hass: HomeAssistant):
+async def test_siren_switching(hass: HomeAssistant) -> None:
     """Test setup and state change via switching of a siren device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -98,7 +98,7 @@ async def test_siren_switching(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_change_default_tone(hass: HomeAssistant):
+async def test_siren_change_default_tone(hass: HomeAssistant) -> None:
     """Test changing the default tone on message."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -127,7 +127,7 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()

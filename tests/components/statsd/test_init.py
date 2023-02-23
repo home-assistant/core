@@ -59,7 +59,7 @@ async def test_statsd_setup_defaults(hass: HomeAssistant) -> None:
     assert hass.bus.listen.called
 
 
-async def test_event_listener_defaults(hass, mock_client):
+async def test_event_listener_defaults(hass: HomeAssistant, mock_client) -> None:
     """Test event listener."""
     config = {"statsd": {"host": "host", "value_mapping": {"custom": 3}}}
 
@@ -94,7 +94,7 @@ async def test_event_listener_defaults(hass, mock_client):
         assert mock_client.incr.called
 
 
-async def test_event_listener_attr_details(hass, mock_client):
+async def test_event_listener_attr_details(hass: HomeAssistant, mock_client) -> None:
     """Test event listener."""
     config = {"statsd": {"host": "host", "log_attributes": True}}
 

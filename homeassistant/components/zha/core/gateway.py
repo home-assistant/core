@@ -40,7 +40,9 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_TYPE,
     CONF_DATABASE,
+    CONF_DEVICE_PATH,
     CONF_RADIO_TYPE,
+    CONF_USE_THREAD,
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
@@ -167,6 +169,15 @@ class ZHAGateway:
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
+        # The bellows UART thread sometimes propagates a cancellation into the main Core
+        # event loop, when a connection to a TCP coordinator fails in a specific way
+        if (
+            CONF_USE_THREAD not in app_config
+            and RadioType[radio_type] is RadioType.ezsp
+            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
+        ):
+            app_config[CONF_USE_THREAD] = False
+
         app_config = app_controller_cls.SCHEMA(app_config)
 
         for attempt in range(STARTUP_RETRIES):
@@ -254,7 +265,9 @@ class ZHAGateway:
             )
 
         # background the fetching of state for mains powered devices
-        asyncio.create_task(fetch_updated_state())
+        self.config_entry.async_create_background_task(
+            self._hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
+        )
 
     def device_joined(self, device: zigpy.device.Device) -> None:
         """Handle device joined.

@@ -19,7 +19,7 @@ NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
 
 
-async def test_switch(hass: HomeAssistant, mock_account: MagicMock):
+async def test_switch(hass: HomeAssistant, mock_account: MagicMock) -> None:
     """Tests the switch entity was set up."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
@@ -34,7 +34,7 @@ async def test_switch(hass: HomeAssistant, mock_account: MagicMock):
 
 
 @pytest.mark.parametrize(
-    "entity_id,robot_command,updated_field",
+    ("entity_id", "robot_command", "updated_field"),
     [
         (NIGHT_LIGHT_MODE_ENTITY_ID, "set_night_light", "nightLightActive"),
         (PANEL_LOCKOUT_ENTITY_ID, "set_panel_lockout", "panelLockActive"),
@@ -46,7 +46,7 @@ async def test_on_off_commands(
     entity_id: str,
     robot_command: str,
     updated_field: str,
-):
+) -> None:
     """Test sending commands to the switch."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
     robot: Robot = mock_account.robots[0]
