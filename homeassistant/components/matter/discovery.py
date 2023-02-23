@@ -113,6 +113,4 @@ def async_discover_entities(
 
         # prevent re-discovery of the same attributes
         if not schema.allow_multi:
-            # return early since this value may not be discovered
-            # by other schemas/platforms
             discovered_attributes.update(attributes_to_watch)
