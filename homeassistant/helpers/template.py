@@ -14,6 +14,7 @@ import json
 import logging
 import math
 from operator import attrgetter, contains
+import pathlib
 import random
 import re
 import statistics
@@ -2048,6 +2049,23 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
+def materialize_loader(hass: HomeAssistant) -> jinja2.DictLoader:
+    """Load all custom jinja into memory."""
+    result = {}
+    jinja_path = hass.config.path("custom_jinja")
+    all_files = [
+        item
+        for item in pathlib.Path(jinja_path).rglob("*")
+        if item.is_file() and item.stat().st_size < 1024 * 1024
+    ]
+    for file in all_files:
+        content = file.open().read()
+        path = str(file.relative_to(jinja_path))
+        result[path] = content
+
+    return jinja2.DictLoader(result)
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -2064,7 +2082,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | str | None
         ] = weakref.WeakValueDictionary()
         if hass is not None:
-            self.loader = jinja2.FileSystemLoader(hass.config.path("custom_jinja"))
+            self.loader = materialize_loader(hass)
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
