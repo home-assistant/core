@@ -44,7 +44,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
     trigger_data = trigger_info["trigger_data"]
-    number = cast(int, config.get(CONF_NUMBER))
+    number = cast(int, config[CONF_NUMBER])
     held_more_than = config.get(CONF_HELD_MORE_THAN)
     held_less_than = config.get(CONF_HELD_LESS_THAN)
     pressed_time = None
