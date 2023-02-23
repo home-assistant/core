@@ -2096,6 +2096,8 @@ class HassLoader(jinja2.BaseLoader):
         self, environment: jinja2.Environment, template: str
     ) -> tuple[str, str | None, Callable[[], bool] | None]:
         """Get in-memory sources."""
+        if template not in self._sources:
+            raise jinja2.TemplateNotFound(template)
         cur_reload = self._reload
         return self._sources[template], template, lambda: cur_reload == self._reload
 
