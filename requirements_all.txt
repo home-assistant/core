@@ -366,7 +366,7 @@ asmog==0.0.6
 asterisk_mbox==0.5.0
 
 # homeassistant.components.asus_router
-asusrouter==0.18.2
+asusrouter==0.20.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms

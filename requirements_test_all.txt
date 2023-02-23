@@ -323,7 +323,7 @@ aranet4==2.1.3
 arcam-fmj==1.2.1
 
 # homeassistant.components.asus_router
-asusrouter==0.18.2
+asusrouter==0.20.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
