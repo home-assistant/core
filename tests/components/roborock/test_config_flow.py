@@ -48,6 +48,36 @@ async def test_successful_config_flow(hass: HomeAssistant, bypass_api_fixture) -
     assert result["result"]
 
 
+async def test_restart_no_user_input(hass: HomeAssistant, bypass_api_fixture) -> None:
+    """Test that if user input is somehow none, we restart."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Provide email address to config flow
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+        )
+        # Check that user form requesting a code is shown
+        assert result["step_id"] == "code"
+
+    # Provide code from email to config flow
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockClient.code_login",
+        return_value=MOCK_CONFIG.get("user_data"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=None
+        )
+    # Check config flow is back on email
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "email"
+
+
 async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
     """Test a failed config flow due to incorrect code."""
     result = await hass.config_entries.flow.async_init(
@@ -77,6 +107,16 @@ async def test_invalid_code(hass: HomeAssistant, bypass_api_fixture) -> None:
     # Check the user form is presented with the error
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_code"}
+    # Raise exception for unknown exception
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockClient.code_login",
+        side_effect=Exception("unknown"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture) -> None:
@@ -97,6 +137,16 @@ async def test_unknown_user(hass: HomeAssistant, bypass_api_fixture) -> None:
     # Check the user form is presented with the error
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_email"}
+    with patch(
+        "homeassistant.components.roborock.config_flow.RoborockClient.request_code",
+        side_effect=Exception("unknown"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "USER_EMAIL"}
+        )
+    # Check the user form is presented with the error
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_reauth(hass: HomeAssistant, bypass_api_fixture) -> None:
