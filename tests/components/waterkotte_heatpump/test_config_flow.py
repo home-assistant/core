@@ -20,16 +20,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "pywaterkotte.ecotouch.Ecotouch.login",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.login",
         return_value=True,
     ), patch(
         "homeassistant.components.waterkotte_heatpump.async_setup_entry",
         return_value=True,
     ), patch(
-        "pywaterkotte.ecotouch.Ecotouch.read_value",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.read_value",
         return_value=42,
     ), patch(
-        "pywaterkotte.ecotouch.Ecotouch.decode_heatpump_series",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.decode_heatpump_series",
         return_value="heatpump type",
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -59,7 +59,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pywaterkotte.ecotouch.Ecotouch.login",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.login",
         side_effect=AuthenticationException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -82,7 +82,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pywaterkotte.ecotouch.Ecotouch.login",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.login",
         side_effect=ConnectionException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -106,16 +106,16 @@ async def test_device_already_configured(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "pywaterkotte.ecotouch.Ecotouch.login",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.login",
         return_value=True,
     ), patch(
-        "pywaterkotte.ecotouch.Ecotouch.read_value",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.read_value",
         side_effect=lambda tag: {
             EcotouchTags.HEATPUMP_TYPE: 42,
             EcotouchTags.SERIAL_NUMBER: "serial_no_123",
         }[tag],
     ), patch(
-        "pywaterkotte.ecotouch.Ecotouch.decode_heatpump_series",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.decode_heatpump_series",
         return_value="heatpump type",
     ):
         result = await hass.config_entries.flow.async_init(
@@ -142,7 +142,7 @@ async def test_unexpected_exception(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pywaterkotte.ecotouch.Ecotouch.login",
+        "homeassistant.components.waterkotte_heatpump.config_flow.Ecotouch.login",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(

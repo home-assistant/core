@@ -54,7 +54,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         serial_no = await hass.async_add_executor_job(
             heatpump.read_value, EcotouchTags.SERIAL_NUMBER
         )
-        # Return info that you want to store in the config entry.
         return {"title": series, "serial_no": serial_no}
 
     except ConnectionException as exc:
@@ -77,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         try:
             info = await validate_input(self.hass, user_input)
