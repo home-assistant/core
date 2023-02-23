@@ -493,6 +493,8 @@ class StatisticsSensor(SensorEntity):
         self._update_value()
 
         # If max_age is set, ensure to update again after the defined interval.
+        # By basing updates off the timestamps of sampled data we avoid updating
+        # when none of the observed entities change.
         if timestamp := self._next_to_purge_timestamp():
             _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
             if self._update_listener:
