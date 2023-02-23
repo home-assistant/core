@@ -35,8 +35,8 @@ async def async_validate_credentials(
     errors = {}
     result = await hass.async_add_executor_job(
         validate_auth,
-        user_input.get(CONF_HOST),
-        user_input.get(CONF_USERNAME),
+        user_input[CONF_HOST],
+        user_input[CONF_USERNAME],
         user_input[CONF_PASSWORD],
     )
 
@@ -65,7 +65,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_USERNAME: user_input.get(CONF_USERNAME),
+                    CONF_USERNAME: user_input[CONF_USERNAME],
                 },
             )
 
@@ -85,6 +85,6 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: config[CONF_HOST],
                 CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_USERNAME: config.get(CONF_USERNAME),
+                CONF_USERNAME: config[CONF_USERNAME],
             },
         )
