@@ -52,6 +52,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                         continue
                     if entry.domain != DOMAIN:
                         continue
+                    if DOMAIN not in hass.data or key not in hass.data[DOMAIN]:
+                        continue
                     coordinator = hass.data[DOMAIN][key]
                     # fully_method(coordinator.fully, *args, **kwargs) would make
                     # test_services.py fail.
