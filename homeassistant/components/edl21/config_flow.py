@@ -19,9 +19,7 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
 
         self._async_abort_entries_match(
-            {
-                CONF_SERIAL_PORT: import_config[CONF_SERIAL_PORT],
-            }
+            {CONF_SERIAL_PORT: import_config[CONF_SERIAL_PORT]}
         )
         if import_config[CONF_NAME] != "":
             self._async_abort_entries_match(
@@ -30,14 +28,8 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-        title = (
-            import_config[CONF_NAME]
-            if import_config[CONF_NAME] != ""
-            else DEFAULT_DEVICE_NAME
-        )
-
         return self.async_create_entry(
-            title=title,
+            title=import_config[CONF_NAME] or DEFAULT_DEVICE_NAME,
             data=import_config,
         )
 
@@ -45,9 +37,7 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the user setup step."""
         if user_input is not None:
             self._async_abort_entries_match(
-                {
-                    CONF_SERIAL_PORT: user_input[CONF_SERIAL_PORT],
-                }
+                {CONF_SERIAL_PORT: user_input[CONF_SERIAL_PORT]}
             )
             self._async_abort_entries_match(
                 {

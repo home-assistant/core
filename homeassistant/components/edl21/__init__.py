@@ -12,8 +12,6 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
 ) -> bool:
     """Set up EDL21 integration from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     # Forward the setup to the sensor platform.
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, Platform.SENSOR)

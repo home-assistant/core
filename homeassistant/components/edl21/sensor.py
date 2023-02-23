@@ -302,7 +302,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
-    hass.data[DOMAIN] = EDL21(hass, config_entry, async_add_entities)
+    hass.data[DOMAIN] = EDL21(hass, config_entry.data, async_add_entities)
     await hass.data[DOMAIN].connect()
 
 
@@ -326,7 +326,7 @@ class EDL21:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config: dict[str, Any],
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize an EDL21 object."""
