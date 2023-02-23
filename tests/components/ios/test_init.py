@@ -13,7 +13,7 @@ from tests.common import mock_component, mock_coro
 @pytest.fixture(autouse=True)
 def mock_load_json():
     """Mock load_json."""
-    with patch("homeassistant.components.ios.load_json", return_value={}):
+    with patch("homeassistant.components.ios.load_json_object", return_value={}):
         yield
 
 

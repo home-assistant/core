@@ -66,7 +66,7 @@ async def test_on_off_light(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=light_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.Off(),
     )
     matter_client.send_device_command.reset_mock()
@@ -84,7 +84,7 @@ async def test_on_off_light(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=light_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.On(),
     )
     matter_client.send_device_command.reset_mock()
@@ -135,7 +135,7 @@ async def test_dimmable_light(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=light_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
             level=128,
             transitionTime=0,
@@ -192,7 +192,7 @@ async def test_color_temperature_light(
         [
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColorTemperature(
                     colorTemperature=3003,
                     transitionTime=0,
@@ -200,7 +200,7 @@ async def test_color_temperature_light(
             ),
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.OnOff.Commands.On(),
             ),
         ]
@@ -268,14 +268,14 @@ async def test_extended_color_light(
         [
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColor(
                     colorX=0.5 * 65536, colorY=0.5 * 65536, transitionTime=0
                 ),
             ),
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.OnOff.Commands.On(),
             ),
         ]
@@ -297,15 +297,19 @@ async def test_extended_color_light(
     matter_client.send_device_command.assert_has_calls(
         [
             call(
-                node_id=light_node.node_id,
-                endpoint=1,
-                command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
-                    hue=0, saturation=0, transitionTime=0
+                node_id=1,
+                endpoint_id=1,
+                command=clusters.ColorControl.Commands.MoveToColor(
+                    colorX=21168,
+                    colorY=21561,
+                    transitionTime=0,
+                    optionsMask=0,
+                    optionsOverride=0,
                 ),
             ),
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.OnOff.Commands.On(),
             ),
         ]

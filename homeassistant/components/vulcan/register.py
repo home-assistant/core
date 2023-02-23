@@ -1,6 +1,6 @@
 """Support for register Vulcan account."""
 
-from vulcan import Account, Keystore  # pylint: disable=import-error
+from vulcan import Account, Keystore
 
 
 async def register(hass, token, symbol, pin):
