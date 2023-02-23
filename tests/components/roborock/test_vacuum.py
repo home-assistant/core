@@ -3,6 +3,10 @@ from unittest.mock import patch
 
 from roborock.typing import RoborockCommand
 
+from homeassistant.components.roborock.const import (
+    SERVICE_VACUUM_SET_MOP_INTENSITY,
+    SERVICE_VACUUM_SET_MOP_MODE,
+)
 from homeassistant.components.roborock.vacuum import (
     ATTR_MOP_INTENSITY_LIST,
     ATTR_MOP_MODE_LIST,
@@ -134,7 +138,7 @@ async def test_mop_modes(hass: HomeAssistant, bypass_api_fixture) -> None:
     ) as mock_send:
         await hass.services.async_call(
             "Roborock",
-            "vacuum_set_mop_mode",
+            SERVICE_VACUUM_SET_MOP_MODE,
             {"entity_id": ENTITY_ID, "mop_mode": "deep"},
             blocking=True,
         )
@@ -159,7 +163,7 @@ async def test_mop_intensity(hass: HomeAssistant, bypass_api_fixture) -> None:
     ) as mock_send:
         await hass.services.async_call(
             "Roborock",
-            "vacuum_set_mop_intensity",
+            SERVICE_VACUUM_SET_MOP_INTENSITY,
             {"entity_id": ENTITY_ID, "mop_intensity": "mild"},
             blocking=True,
         )

@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
-    CONF_ENTRY_USERNAME,
     CONF_USER_DATA,
     DOMAIN,
 )
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -23,7 +23,7 @@ async def setup_platform(
         domain=DOMAIN,
         title=USER_EMAIL,
         data={
-            CONF_ENTRY_USERNAME: USER_EMAIL,
+            CONF_USERNAME: USER_EMAIL,
             CONF_USER_DATA: USER_DATA,
             CONF_BASE_URL: BASE_URL,
         },
