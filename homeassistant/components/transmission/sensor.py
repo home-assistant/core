@@ -20,6 +20,9 @@ from .const import (
     CONF_ORDER,
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
+    STATE_DOWNLOADING,
+    STATE_SEEDING,
+    STATE_UP_DOWN,
     SUPPORTED_ORDER_MODES,
 )
 
@@ -123,19 +126,21 @@ class TransmissionSpeedSensor(TransmissionSensor):
 class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
 
+    _attr_translation_key = "transmission_status"
+
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
             upload = data.uploadSpeed
             download = data.downloadSpeed
-            state = STATE_IDLE
             if upload > 0 and download > 0:
-                state = "Up/Down"
+                self._state = STATE_UP_DOWN
             elif upload > 0 and download == 0:
-                state = "Seeding"
+                self._state = STATE_SEEDING
             elif upload == 0 and download > 0:
-                state = "Downloading"
-            self._state = state.title()
+                self._state = STATE_DOWNLOADING
+            else:
+                self._state = STATE_IDLE
         else:
             self._state = None
 
