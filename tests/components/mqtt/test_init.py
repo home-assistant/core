@@ -2032,29 +2032,27 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
         assert insecure_check["insecure"] == insecure_param
 
 
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_CERTIFICATE: "auto",
+        }
+    ],
+)
 async def test_tls_version(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> None:
     """Test setup defaults for tls."""
-    calls = []
-
-    def mock_tls_set(
-        certificate, certfile=None, keyfile=None, tls_version=None
-    ) -> None:
-        calls.append((certificate, certfile, keyfile, tls_version))
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().tls_set = mock_tls_set
-        assert await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            {mqtt.DOMAIN: {"certificate": "auto"}},
-        )
-        await hass.async_block_till_done()
-        await mqtt_mock_entry_with_yaml_config()
-
-        assert calls
-        assert calls[0][3] == ssl.PROTOCOL_TLS_CLIENT
+    await mqtt_mock_entry_no_yaml_config()
+    await hass.async_block_till_done()
+    assert (
+        mqtt_client_mock.tls_set.mock_calls[0][2]["tls_version"]
+        == ssl.PROTOCOL_TLS_CLIENT
+    )
 
 
 @pytest.mark.parametrize(
