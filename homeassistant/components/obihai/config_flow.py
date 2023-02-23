@@ -15,7 +15,7 @@ from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=""): str,
+        vol.Required(CONF_HOST): str,
         vol.Optional(
             CONF_USERNAME,
             default=DEFAULT_USERNAME,
