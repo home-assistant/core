@@ -63,6 +63,7 @@ from .test_common import (
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
+    help_test_validate_platform_config,
 )
 
 from tests.common import async_fire_mqtt_message
@@ -172,26 +173,18 @@ async def test_fail_setup_without_state_or_command_topic(
 ) -> None:
     """Test for failing setup with no state or command topic."""
     assert (
-        await async_setup_component(
-            hass,
-            mqtt.DOMAIN,
-            config,
-        )
-        is valid
+        help_test_validate_platform_config(hass, alarm_control_panel.DOMAIN, config)
+        == valid
     )
 
 
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_update_state_via_state_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test updating with via state topic."""
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        DEFAULT_CONFIG,
-    )
+    await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     entity_id = "alarm_control_panel.test"
 

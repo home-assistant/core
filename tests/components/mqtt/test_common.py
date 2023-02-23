@@ -25,7 +25,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -68,7 +68,8 @@ _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None
 MQTT_YAML_SCHEMA = vol.Schema({mqtt.DOMAIN: PLATFORM_CONFIG_SCHEMA_BASE})
 
 
-async def help_test_validate_platform_config(
+@callback
+def help_test_validate_platform_config(
     hass: HomeAssistant, domain: str, config: ConfigType
 ) -> ConfigType | None:
     """Test the schema validation."""
