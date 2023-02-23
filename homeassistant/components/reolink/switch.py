@@ -97,7 +97,6 @@ async def async_setup_entry(
 class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
     """Base switch entity class for Reolink IP cameras."""
 
-    _attr_has_entity_name = True
     entity_description: ReolinkSwitchEntityDescription
 
     def __init__(
