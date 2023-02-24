@@ -3,6 +3,7 @@ import logging
 from unittest.mock import AsyncMock
 
 from pyprosegur.exceptions import ProsegurException
+import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Image
@@ -32,7 +33,7 @@ async def test_camera_fail(hass, init_integration, mock_install, caplog):
         except HomeAssistantError as exc:
             assert str(exc) == "Unable to get image"
         else:
-            assert False
+            assert pytest.fail()
 
         assert "Image test_cam doesn't exist" in caplog.text
 
@@ -56,7 +57,6 @@ async def test_request_image_fail(hass, init_integration, mock_install, caplog):
     mock_install.request_image = AsyncMock(side_effect=ProsegurException())
 
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.prosegur"):
-
         await hass.services.async_call(
             DOMAIN,
             "request_image",

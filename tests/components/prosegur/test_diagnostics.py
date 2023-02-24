@@ -11,7 +11,6 @@ async def test_diagnostics(hass, hass_client, init_integration, mock_install):
     with patch(
         "pyprosegur.installation.Installation.retrieve", return_value=mock_install
     ):
-
         diag = await get_diagnostics_for_config_entry(
             hass, hass_client, init_integration
         )
