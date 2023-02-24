@@ -1140,8 +1140,8 @@ build.json @home-assistant/supervisor
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/starlink/ @boswelja
 /tests/components/starlink/ @boswelja
-/homeassistant/components/statistics/ @fabaff @ThomDietrich
-/tests/components/statistics/ @fabaff @ThomDietrich
+/homeassistant/components/statistics/ @ThomDietrich
+/tests/components/statistics/ @ThomDietrich
 /homeassistant/components/steam_online/ @tkdrob
 /tests/components/steam_online/ @tkdrob
 /homeassistant/components/steamist/ @bdraco
