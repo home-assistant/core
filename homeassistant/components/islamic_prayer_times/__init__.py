@@ -16,7 +16,7 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Islamic Prayer Component."""
-    coordinator = IslamicPrayerDataUpdateCoordinator(hass, config_entry)
+    coordinator = IslamicPrayerDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, coordinator)
