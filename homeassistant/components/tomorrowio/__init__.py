@@ -140,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_setup_entry(entry)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -162,7 +162,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
+class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold Tomorrow.io data."""
 
     def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:
@@ -223,8 +223,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
-        """
-        Unload a config entry from coordinator.
+        """Unload a config entry from coordinator.
 
         Returns whether coordinator can be removed as well because there are no
         config entries tied to it anymore.
@@ -235,7 +234,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        data = {}
+        data: dict[str, Any] = {}
         # If we are refreshing because of a new config entry that's not already in our
         # data, we do a partial refresh to avoid wasted API calls.
         if self.data and any(
@@ -320,6 +319,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
     """Base Tomorrow.io Entity."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -339,15 +340,9 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         )
 
     def _get_current_property(self, property_name: str) -> int | str | float | None:
-        """
-        Get property from current conditions.
+        """Get property from current conditions.
 
         Used for V4 API.
         """
         entry_id = self._config_entry.entry_id
         return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

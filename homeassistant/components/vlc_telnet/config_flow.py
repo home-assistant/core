@@ -180,10 +180,8 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
-        else:
-            return self.async_create_entry(
-                title=info["title"], data=self.hassio_discovery
-            )
+
+        return self.async_create_entry(title=info["title"], data=self.hassio_discovery)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

@@ -2,9 +2,9 @@
 import dataclasses
 from unittest.mock import patch
 
-from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
+from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -328,7 +328,7 @@ async def test_zeroconf_no_unique_id(
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, aioclient_mock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the full manual user flow from start to finish."""
     mock_connection(aioclient_mock)

@@ -31,7 +31,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, SPEED_METERS_PER_SECOND, STATE_UNKNOWN
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -252,7 +252,7 @@ async def test_refresh_weather_forecast_retry(
         assert mock_get_forecast.call_count == 3
 
 
-def test_condition_class():
+def test_condition_class() -> None:
     """Test condition class."""
 
     def get_condition(index: int) -> str:
@@ -343,7 +343,7 @@ async def test_custom_speed_unit(
     entity_reg.async_update_entity_options(
         state.entity_id,
         WEATHER_DOMAIN,
-        {ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_METERS_PER_SECOND},
+        {ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND},
     )
 
     await hass.async_block_till_done()

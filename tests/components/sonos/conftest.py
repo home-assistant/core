@@ -10,7 +10,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 class SonosMockService:
@@ -66,13 +66,14 @@ async def async_autosetup_sonos(async_setup_sonos):
 
 
 @pytest.fixture
-def async_setup_sonos(hass, config_entry):
+def async_setup_sonos(hass, config_entry, fire_zgs_event):
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        await fire_zgs_event()
 
     return _wrapper
 
@@ -135,6 +136,10 @@ async def silent_ssdp_scanner(hass):
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 
@@ -345,3 +350,24 @@ def tv_event_fixture(soco):
 def mock_get_source_ip(mock_get_source_ip):
     """Mock network util's async_get_source_ip in all sonos tests."""
     return mock_get_source_ip
+
+
+@pytest.fixture(name="zgs_discovery", scope="session")
+def zgs_discovery_fixture():
+    """Load ZoneGroupState discovery payload and return it."""
+    return load_fixture("sonos/zgs_discovery.xml")
+
+
+@pytest.fixture(name="fire_zgs_event")
+def zgs_event_fixture(hass, soco, zgs_discovery):
+    """Create alarm_event fixture."""
+    variables = {"ZoneGroupState": zgs_discovery}
+
+    async def _wrapper():
+        event = SonosMockEvent(soco, soco.zoneGroupTopology, variables)
+        subscription = soco.zoneGroupTopology.subscribe.return_value
+        sub_callback = subscription.callback
+        sub_callback(event)
+        await hass.async_block_till_done()
+
+    return _wrapper

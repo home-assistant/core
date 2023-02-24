@@ -14,5 +14,6 @@ def get_valid_flume_devices(flume_devices: FlumeDeviceList) -> list[dict[str, An
     return [
         device
         for device in flume_devices.device_list
-        if KEY_DEVICE_LOCATION_NAME in device[KEY_DEVICE_LOCATION]
+        if KEY_DEVICE_LOCATION in device
+        and KEY_DEVICE_LOCATION_NAME in device[KEY_DEVICE_LOCATION]
     ]

@@ -86,8 +86,7 @@ class FroniusCoordinatorBase(
         async_add_entities: AddEntitiesCallback,
         entity_constructor: type[_FroniusEntityT],
     ) -> None:
-        """
-        Add entities for received keys and registers listener for future seen keys.
+        """Add entities for received keys and registers listener for future seen keys.
 
         Called from a platforms `async_setup_entry`.
         """
@@ -104,8 +103,7 @@ class FroniusCoordinatorBase(
                         continue
                     new_entities.append(entity_constructor(self, key, solar_net_id))
                     self.unregistered_keys[solar_net_id].remove(key)
-            if new_entities:
-                async_add_entities(new_entities)
+            async_add_entities(new_entities)
 
         _add_entities_for_unregistered_keys()
         self.solar_net.cleanup_callbacks.append(

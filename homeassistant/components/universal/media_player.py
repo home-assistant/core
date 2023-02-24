@@ -40,10 +40,12 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -77,6 +79,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -92,6 +95,7 @@ ATTR_ACTIVE_CHILD = "active_child"
 CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
+CONF_BROWSE_MEDIA_ENTITY = "browse_media_entity"
 
 STATES_ORDER = [
     STATE_UNKNOWN,
@@ -118,6 +122,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ATTRS, default={}): vol.Or(
             cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA
         ),
+        vol.Optional(CONF_BROWSE_MEDIA_ENTITY): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
@@ -135,17 +140,7 @@ async def async_setup_platform(
     """Set up the universal media players."""
     await async_setup_reload_service(hass, "universal", ["media_player"])
 
-    player = UniversalMediaPlayer(
-        hass,
-        config.get(CONF_NAME),
-        config.get(CONF_CHILDREN),
-        config.get(CONF_COMMANDS),
-        config.get(CONF_ATTRS),
-        config.get(CONF_UNIQUE_ID),
-        config.get(CONF_DEVICE_CLASS),
-        config.get(CONF_STATE_TEMPLATE),
-    )
-
+    player = UniversalMediaPlayer(hass, config)
     async_add_entities([player])
 
 
@@ -157,30 +152,25 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def __init__(
         self,
         hass,
-        name,
-        children,
-        commands,
-        attributes,
-        unique_id=None,
-        device_class=None,
-        state_template=None,
+        config,
     ):
         """Initialize the Universal media device."""
         self.hass = hass
-        self._name = name
-        self._children = children
-        self._cmds = commands
+        self._name = config.get(CONF_NAME)
+        self._children = config.get(CONF_CHILDREN)
+        self._cmds = config.get(CONF_COMMANDS)
         self._attrs = {}
-        for key, val in attributes.items():
+        for key, val in config.get(CONF_ATTRS).items():
             attr = list(map(str.strip, val.split("|", 1)))
             if len(attr) == 1:
                 attr.append(None)
             self._attrs[key] = attr
         self._child_state = None
         self._state_template_result = None
-        self._state_template = state_template
-        self._device_class = device_class
-        self._attr_unique_id = unique_id
+        self._state_template = config.get(CONF_STATE_TEMPLATE)
+        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_unique_id = config.get(CONF_UNIQUE_ID)
+        self._browse_media_entity = config.get(CONF_BROWSE_MEDIA_ENTITY)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to children and template state changes."""
@@ -279,7 +269,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         )
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this device."""
         return self._device_class
 
@@ -353,8 +343,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     @property
     def entity_picture(self):
-        """
-        Return image of the media playing.
+        """Return image of the media playing.
 
         The universal media player doesn't use the parent class logic, since
         the url is coming from child entity pictures which have already been
@@ -453,9 +442,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._override_or_child_attr(ATTR_MEDIA_SHUFFLE)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        flags = self._child_attr(ATTR_SUPPORTED_FEATURES) or 0
+        flags: MediaPlayerEntityFeature = self._child_attr(
+            ATTR_SUPPORTED_FEATURES
+        ) or MediaPlayerEntityFeature(0)
 
         if SERVICE_TURN_ON in self._cmds:
             flags |= MediaPlayerEntityFeature.TURN_ON
@@ -494,6 +485,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
         if SERVICE_PLAY_MEDIA in self._cmds:
             flags |= MediaPlayerEntityFeature.PLAY_MEDIA
+
+        if self._browse_media_entity:
+            flags |= MediaPlayerEntityFeature.BROWSE_MEDIA
 
         if SERVICE_CLEAR_PLAYLIST in self._cmds:
             flags |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
@@ -625,6 +619,20 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         else:
             # Delegate to turn_on or turn_off by default
             await super().async_toggle()
+
+    async def async_browse_media(
+        self,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Return a BrowseMedia instance."""
+        entity_id = self._browse_media_entity
+        if not entity_id and self._child_state:
+            entity_id = self._child_state.entity_id
+        component: EntityComponent[MediaPlayerEntity] = self.hass.data[DOMAIN]
+        if entity_id and (entity := component.get_entity(entity_id)):
+            return await entity.async_browse_media(media_content_type, media_content_id)
+        raise NotImplementedError()
 
     async def async_update(self) -> None:
         """Update state in HA."""

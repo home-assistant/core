@@ -1,1 +1,1 @@
-"""Tests for the Universal Devices ISY994 integration."""
+"""Tests for the Universal Devices ISY/IoX integration."""

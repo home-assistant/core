@@ -11,10 +11,10 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     init_integration,
@@ -64,7 +64,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     state = hass.states.get("sensor.genie_wifi")
     assert state
     assert state.state == str(diffuser.wifi_percentage)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.genie_wifi")

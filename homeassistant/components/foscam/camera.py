@@ -117,7 +117,10 @@ class HassFoscamCamera(Camera):
 
         if ret == -3:
             LOGGER.info(
-                "Can't get motion detection status, camera %s configured with non-admin user",
+                (
+                    "Can't get motion detection status, camera %s configured with"
+                    " non-admin user"
+                ),
                 self.name,
             )
 
@@ -156,7 +159,10 @@ class HassFoscamCamera(Camera):
             if ret != 0:
                 if ret == -3:
                     LOGGER.info(
-                        "Can't set motion detection status, camera %s configured with non-admin user",
+                        (
+                            "Can't set motion detection status, camera %s configured"
+                            " with non-admin user"
+                        ),
                         self.name,
                     )
                 return
@@ -164,7 +170,10 @@ class HassFoscamCamera(Camera):
             self._attr_motion_detection_enabled = True
         except TypeError:
             LOGGER.debug(
-                "Failed enabling motion detection on '%s'. Is it supported by the device?",
+                (
+                    "Failed enabling motion detection on '%s'. Is it supported by the"
+                    " device?"
+                ),
                 self.name,
             )
 
@@ -176,7 +185,10 @@ class HassFoscamCamera(Camera):
             if ret != 0:
                 if ret == -3:
                     LOGGER.info(
-                        "Can't set motion detection status, camera %s configured with non-admin user",
+                        (
+                            "Can't set motion detection status, camera %s configured"
+                            " with non-admin user"
+                        ),
                         self.name,
                     )
                 return
@@ -184,7 +196,10 @@ class HassFoscamCamera(Camera):
             self._attr_motion_detection_enabled = False
         except TypeError:
             LOGGER.debug(
-                "Failed disabling motion detection on '%s'. Is it supported by the device?",
+                (
+                    "Failed disabling motion detection on '%s'. Is it supported by the"
+                    " device?"
+                ),
                 self.name,
             )
 

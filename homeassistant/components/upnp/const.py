@@ -2,22 +2,26 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import UnitOfTime
 
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "upnp"
+DOMAIN_DISCOVERIES = "discoveries"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
 PACKETS_RECEIVED = "packets_received"
 PACKETS_SENT = "packets_sent"
+KIBIBYTES_PER_SEC_RECEIVED = "kibibytes_per_sec_received"
+KIBIBYTES_PER_SEC_SENT = "kibibytes_per_sec_sent"
+PACKETS_PER_SEC_RECEIVED = "packets_per_sec_received"
+PACKETS_PER_SEC_SENT = "packets_per_sec_sent"
 TIMESTAMP = "timestamp"
 DATA_PACKETS = "packets"
-DATA_RATE_PACKETS_PER_SECOND = f"{DATA_PACKETS}/{TIME_SECONDS}"
+DATA_RATE_PACKETS_PER_SECOND = f"{DATA_PACKETS}/{UnitOfTime.SECONDS}"
 WAN_STATUS = "wan_status"
 ROUTER_IP = "ip"
 ROUTER_UPTIME = "uptime"
-KIBIBYTE = 1024
 CONFIG_ENTRY_ST = "st"
 CONFIG_ENTRY_UDN = "udn"
 CONFIG_ENTRY_ORIGINAL_UDN = "original_udn"

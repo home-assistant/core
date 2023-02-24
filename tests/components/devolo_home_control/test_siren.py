@@ -4,7 +4,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.siren import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -12,7 +17,7 @@ from .mocks import HomeControlMock, HomeControlMockSiren
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren(hass: HomeAssistant):
+async def test_siren(hass: HomeAssistant) -> None:
     """Test setup and state change of a siren device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -27,6 +32,7 @@ async def test_siren(hass: HomeAssistant):
     state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OFF
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("devolo.SirenMultiLevelSwitch:Test", 1))
@@ -41,7 +47,7 @@ async def test_siren(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_switching(hass: HomeAssistant):
+async def test_siren_switching(hass: HomeAssistant) -> None:
     """Test setup and state change via switching of a siren device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -92,7 +98,7 @@ async def test_siren_switching(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_change_default_tone(hass: HomeAssistant):
+async def test_siren_change_default_tone(hass: HomeAssistant) -> None:
     """Test changing the default tone on message."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -121,7 +127,7 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()

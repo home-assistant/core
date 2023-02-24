@@ -9,9 +9,9 @@ from aiohttp.client_exceptions import ClientConnectorError, ClientError
 import async_timeout
 from nettigo_air_monitor import (
     ApiError,
-    AuthFailed,
+    AuthFailedError,
     ConnectionOptions,
-    InvalidSensorData,
+    InvalidSensorDataError,
     NAMSensors,
     NettigoAirMonitor,
 )
@@ -56,7 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await nam.async_check_credentials()
-    except AuthFailed as err:
+    except ApiError as err:
+        raise ConfigEntryNotReady from err
+    except AuthFailedError as err:
         raise ConfigEntryAuthFailed from err
 
     coordinator = NAMDataUpdateCoordinator(hass, nam, entry.unique_id)
@@ -90,7 +92,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NAMDataUpdateCoordinator(DataUpdateCoordinator):
+class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
     """Class to manage fetching Nettigo Air Monitor data."""
 
     def __init__(
@@ -114,7 +116,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
                 data = await self.nam.async_update()
         # We do not need to catch AuthFailed exception here because sensor data is
         # always available without authorization.
-        except (ApiError, ClientConnectorError, InvalidSensorData) as error:
+        except (ApiError, ClientConnectorError, InvalidSensorDataError) as error:
             raise UpdateFailed(error) from error
 
         return data

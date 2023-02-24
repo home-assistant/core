@@ -31,12 +31,15 @@ CONF_ZONE3 = "zone3"
 CONF_MANUFACTURER = "manufacturer"
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_UPDATE_AUDYSSEY = "update_audyssey"
+CONF_USE_TELNET = "use_telnet"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 5
 DEFAULT_ZONE2 = False
 DEFAULT_ZONE3 = False
 DEFAULT_UPDATE_AUDYSSEY = False
+DEFAULT_USE_TELNET = False
+DEFAULT_USE_TELNET_NEW_INSTALL = True
 
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
@@ -75,6 +78,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_UPDATE_AUDYSSEY,
                     default=self.config_entry.options.get(
                         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONF_USE_TELNET,
+                    default=self.config_entry.options.get(
+                        CONF_USE_TELNET, DEFAULT_USE_TELNET
                     ),
                 ): bool,
             }
@@ -176,7 +185,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.show_all_sources,
             self.zone2,
             self.zone3,
-            lambda: get_async_client(self.hass),
+            use_telnet=False,
+            update_audyssey=False,
+            async_client_getter=lambda: get_async_client(self.hass),
         )
 
         try:
@@ -199,8 +210,10 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
         else:
             _LOGGER.error(
-                "Could not get serial number of host %s, "
-                "unique_id's will not be available",
+                (
+                    "Could not get serial number of host %s, "
+                    "unique_id's will not be available"
+                ),
                 self.host,
             )
             self._async_abort_entries_match({CONF_HOST: self.host})
@@ -214,6 +227,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MANUFACTURER: receiver.manufacturer,
                 CONF_SERIAL_NUMBER: self.serial_number,
             },
+            options={CONF_USE_TELNET: DEFAULT_USE_TELNET_NEW_INSTALL},
         )
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:

@@ -13,6 +13,7 @@ from . import (
     authorisation_response,
     entry,
     setup_integration,
+    setup_integration_platform_not_ready,
     setup_integration_read_only,
 )
 from .const import MOCK_LOCK_ENTITY_ID
@@ -103,6 +104,18 @@ async def test_wallbox_lock_class_authentication_error(hass: HomeAssistant) -> N
     """Test wallbox lock not loaded on authentication error."""
 
     await setup_integration_read_only(hass)
+
+    state = hass.states.get(MOCK_LOCK_ENTITY_ID)
+
+    assert state is None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_wallbox_lock_class_platform_not_ready(hass: HomeAssistant) -> None:
+    """Test wallbox lock not loaded on authentication error."""
+
+    await setup_integration_platform_not_ready(hass)
 
     state = hass.states.get(MOCK_LOCK_ENTITY_ID)
 

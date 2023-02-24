@@ -11,9 +11,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -200,6 +200,15 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Access Control
+    # https://developer.tuya.com/en/docs/iot/s?id=Kb0o2xhlkxbet
+    "mk": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CLOSED_OPENED_KIT,
+            device_class=BinarySensorDeviceClass.LOCK,
+            on_value={"AQAB"},
+        ),
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8

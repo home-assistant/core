@@ -44,8 +44,7 @@ def _get_config_schema(
     source: str | None,
     input_dict: dict[str, Any] | None = None,
 ) -> vol.Schema:
-    """
-    Return schema defaults for init step based on user input/config dict.
+    """Return schema defaults for init step based on user input/config dict.
 
     Retain info already provided for future form views by setting them as
     defaults in schema.

@@ -21,6 +21,7 @@
       },
       "available": true,
       "binary_sensors": {
+        "cooling_enabled": true,
         "dhw_state": false,
         "heating_state": false,
         "compressor_state": false,
@@ -66,14 +67,12 @@
       "name": "Anna",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 20.5,
         "setpoint_low": 20.5,
         "setpoint_high": 24.0,
         "lower_bound": 4.0,
         "upper_bound": 30.0,
         "resolution": 0.1
       },
-      "available": true,
       "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
       "active_preset": "home",
       "available_schedules": ["standaard"],
@@ -85,7 +84,6 @@
         "illuminance": 86.0,
         "cooling_activation_outdoor_temperature": 25.0,
         "cooling_deactivation_threshold": 4.0,
-        "setpoint": 20.5,
         "setpoint_low": 20.5,
         "setpoint_high": 24.0
       }

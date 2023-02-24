@@ -105,7 +105,6 @@ async def _async_create_entities(hass, config):
     covers = []
 
     for object_id, entity_config in config[CONF_COVERS].items():
-
         entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
@@ -173,7 +172,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._tilt_script = Script(hass, tilt_action, friendly_name, DOMAIN)
         optimistic = config.get(CONF_OPTIMISTIC)
         self._optimistic = optimistic or (
-            not self._template and not self._position_template
+            optimistic is None and not self._template and not self._position_template
         )
         tilt_optimistic = config.get(CONF_TILT_OPTIMISTIC)
         self._tilt_optimistic = tilt_optimistic or not self._tilt_template
@@ -271,8 +270,11 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._tilt_value = state
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if self._position is None:
+            return None
+
         return self._position == 0
 
     @property
@@ -309,7 +311,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         return self._device_class
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 

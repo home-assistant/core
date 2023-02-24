@@ -11,10 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDevice
 from .const import DOMAIN as CASETA_DOMAIN
-from .device_trigger import (
-    LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
-    _lutron_model_to_device_type,
-)
+from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
 from .models import LutronCasetaData
 
 
@@ -28,12 +25,12 @@ async def async_setup_entry(
     bridge = data.bridge
     button_devices = bridge.get_buttons()
     all_devices = data.bridge.get_devices()
-    device_info_by_device_id = data.device_info_by_device_id
+    keypads = data.keypad_data.keypads
     entities: list[LutronCasetaButton] = []
 
     for device in button_devices.values():
-
-        parent_device_info = device_info_by_device_id[device["parent_device"]]
+        parent_keypad = keypads[device["parent_device"]]
+        parent_device_info = parent_keypad["device_info"]
 
         enabled_default = True
         if not (device_name := device.get("device_name")):
@@ -43,9 +40,7 @@ async def async_setup_entry(
             enabled_default = False
             keypad_device = all_devices[device["parent_device"]]
             button_numbers = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
-                _lutron_model_to_device_type(
-                    keypad_device["model"], keypad_device["type"]
-                ),
+                keypad_device["type"],
                 {},
             )
             device_name = (
@@ -57,7 +52,8 @@ async def async_setup_entry(
                 .title()
             )
 
-        # Append the child device name to the end of the parent keypad name to create the entity name
+        # Append the child device name to the end of the parent keypad
+        # name to create the entity name
         full_name = f'{parent_device_info.get("name")} {device_name}'
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
@@ -67,8 +63,7 @@ async def async_setup_entry(
             ),
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):

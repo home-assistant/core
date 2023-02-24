@@ -92,7 +92,8 @@ async def async_validate_config(hass, config):
             if not legacy_warn_printed:
                 legacy_warn_printed = True
                 logging.getLogger(__name__).warning(
-                    "The entity definition format under template: differs from the platform "
+                    "The entity definition format under template: differs from the"
+                    " platform "
                     "configuration format. See "
                     "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
                 )

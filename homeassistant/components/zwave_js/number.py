@@ -71,30 +71,26 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        if self.info.primary_value.metadata.min is None:
-            return 0
-        return float(self.info.primary_value.metadata.min)
+        min_ = self.info.primary_value.metadata.min
+        return float(0 if min_ is None else min_)
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        if self.info.primary_value.metadata.max is None:
-            return 255
-        return float(self.info.primary_value.metadata.max)
+        max_ = self.info.primary_value.metadata.max
+        return float(255 if max_ is None else max_)
 
     @property
     def native_value(self) -> float | None:
         """Return the entity value."""
-        if self.info.primary_value.value is None:
-            return None
-        return float(self.info.primary_value.value)
+        value = self.info.primary_value.value
+        return None if value is None else float(value)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        if self.info.primary_value.metadata.unit is None:
-            return None
-        return str(self.info.primary_value.metadata.unit)
+        unit = self.info.primary_value.metadata.unit
+        return None if unit is None else str(unit)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -113,10 +109,7 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
         super().__init__(config_entry, driver, info)
         max_value = cast(int, self.info.primary_value.metadata.max)
         min_value = cast(int, self.info.primary_value.metadata.min)
-        self.correction_factor = max_value - min_value
-        # Fallback in case we can't properly calculate correction factor
-        if self.correction_factor == 0:
-            self.correction_factor = 1
+        self.correction_factor = (max_value - min_value) or 1
 
         # Entity class attributes
         self._attr_native_min_value = 0

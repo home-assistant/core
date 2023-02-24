@@ -41,6 +41,7 @@ from .const import (
     ATTR_USERNAME,
     CONF_DEFAULT_CHANNEL,
     DATA_CLIENT,
+    SLACK_DATA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ async def async_get_service(
 
     return SlackNotificationService(
         hass,
-        discovery_info.pop(DATA_CLIENT),
+        discovery_info[SLACK_DATA][DATA_CLIENT],
         discovery_info,
     )
 

@@ -24,5 +24,7 @@ MEDIA_SUPPORT_FULLYKIOSK = (
 )
 
 SERVICE_LOAD_URL = "load_url"
+SERVICE_START_APPLICATION = "start_application"
 
 ATTR_URL = "url"
+ATTR_APPLICATION = "application"

@@ -25,7 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if "Invalid authentication" in error.args[0]:
             raise ConfigEntryAuthFailed from error
         raise ConfigEntryNotReady(
-            f"Problem when trying station {entry.data[CONF_FROM]} to {entry.data[CONF_TO]}. Error: {error} "
+            f"Problem when trying station {entry.data[CONF_FROM]} to"
+            f" {entry.data[CONF_TO]}. Error: {error} "
         ) from error
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {

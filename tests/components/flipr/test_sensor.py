@@ -11,7 +11,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_EMAIL,
     CONF_PASSWORD,
-    TEMP_CELSIUS,
+    PERCENTAGE,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as entity_reg
@@ -29,6 +30,7 @@ MOCK_FLIPR_MEASURE = {
     "date_time": MOCK_DATE_TIME,
     "ph_status": "TooLow",
     "chlorine_status": "Medium",
+    "battery": 95.0,
 }
 
 
@@ -69,7 +71,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.flipr_myfliprid_water_temp")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "10.5"
 
@@ -93,6 +95,13 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "0.23654886"
+
+    state = hass.states.get("sensor.flipr_myfliprid_battery_level")
+    assert state
+    assert state.attributes.get(ATTR_ICON) is None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.state == "95.0"
 
 
 async def test_error_flipr_api_sensors(hass: HomeAssistant) -> None:
