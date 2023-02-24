@@ -13,6 +13,7 @@ from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
+    IntegrityError,
     InternalError,
     OperationalError,
     ProgrammingError,
@@ -907,7 +908,14 @@ def _apply_update(  # noqa: C901
             "statistics_short_term",
             "ix_statistics_short_term_statistic_id_start_ts",
         )
-        _migrate_statistics_columns_to_timestamp(session_maker, engine)
+        try:
+            _migrate_statistics_columns_to_timestamp(session_maker, engine)
+        except IntegrityError:
+            # There may be duplicated statistics entries, delete duplicates
+            # and try again
+            with session_scope(session=session_maker()) as session:
+                delete_statistics_duplicates(hass, session)
+            _migrate_statistics_columns_to_timestamp(session_maker, engine)
     elif new_version == 35:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
