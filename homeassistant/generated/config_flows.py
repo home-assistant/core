@@ -8,6 +8,7 @@ FLOWS = {
         "derivative",
         "group",
         "integration",
+        "lifetime_total",
         "min_max",
         "switch_as_x",
         "threshold",

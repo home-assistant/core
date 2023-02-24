@@ -1,0 +1,9 @@
+{
+  "domain": "lifetime_total",
+  "name": "Lifetime Total",
+  "codeowners": ["@avee87"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lifetime_total",
+  "integration_type": "helper",
+  "iot_class": "calculated"
+}

@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Create Lifetime Total Sensor",
+        "description": "Convert periodically resetting sensor (like utility meter reading) into a lifetime total sensor",
+        "data": {
+          "entity_id": "Source entity",
+          "name": "Name"
+        }
+      }
+    }
+  }
+}

@@ -650,6 +650,8 @@ build.json @home-assistant/supervisor
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
+/homeassistant/components/lifetime_total/ @avee87
+/tests/components/lifetime_total/ @avee87
 /homeassistant/components/lifx/ @bdraco @Djelibeybi
 /tests/components/lifx/ @bdraco @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
