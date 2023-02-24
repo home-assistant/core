@@ -16,8 +16,14 @@ arm_home_instant:
 
 bypass_zone:
   name: Bypass Zone
-  description: Bypass a security zone.
+  description: Bypass a TotalConnect zone.
   target:
     entity:
       integration: totalconnect
       domain: alarm_control_panel
+  fields:
+    zone_id:
+      name: Zone ID
+      description: The zone number you want to bypass.
+      required: true
+      example: "12"
