@@ -1144,7 +1144,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.3.0
 
 # homeassistant.components.mopeka
-mopeka_iot_ble==0.4.0
+mopeka_iot_ble==0.4.1
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.17
