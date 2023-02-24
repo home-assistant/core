@@ -22,6 +22,7 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_METHOD,
     ATTR_RESULT,
+    ATTR_SESSION_DATA_USER_ID,
     ATTR_TIMEOUT,
     ATTR_WS_EVENT,
     DOMAIN,
@@ -115,9 +116,9 @@ async def websocket_supervisor_api(
         payload = msg.get(ATTR_DATA, {})
 
         if command == "/ingress/session":
-            # Send username on session creation, so the supervisor can correlate session tokens with users
+            # Send user ID on session creation, so the supervisor can correlate session tokens with users
             # for every request that is authenticated with the given ingress session token.
-            payload["username"] = connection.user.name
+            payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
 
         result = await supervisor.send_command(
             command,
