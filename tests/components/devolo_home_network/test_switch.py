@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from devolo_plc_api.device_api import WifiGuestAccessGet
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
@@ -18,7 +19,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -40,8 +40,8 @@ async def test_switch_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wifi") is not None
-    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_leds") is not None
+    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_guest_wifi")
+    assert hass.states.get(f"{PLATFORM}.{device_name}_enable_leds")
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -72,7 +72,10 @@ async def test_update_guest_wifi_status_auth_failed(
 
 
 async def test_update_enable_guest_wifi(
-    hass: HomeAssistant, mock_device: MockDevice
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test state change of a enable_guest_wifi switch device."""
     entry = configure_integration(hass)
@@ -82,9 +85,10 @@ async def test_update_enable_guest_wifi(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_OFF
+    assert (state := hass.states.get(state_key))
+    assert state == snapshot
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    assert entity_entry == snapshot
 
     # Emulate state change
     mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
@@ -93,8 +97,7 @@ async def test_update_enable_guest_wifi(
     async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
+    assert (state := hass.states.get(state_key))
     assert state.state == STATE_ON
 
     # Switch off
@@ -109,8 +112,7 @@ async def test_update_enable_guest_wifi(
             PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
 
-        state = hass.states.get(state_key)
-        assert state is not None
+        assert (state := hass.states.get(state_key))
         assert state.state == STATE_OFF
         turn_off.assert_called_once_with(False)
 
@@ -131,8 +133,7 @@ async def test_update_enable_guest_wifi(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
 
-        state = hass.states.get(state_key)
-        assert state is not None
+        assert (state := hass.states.get(state_key))
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
 
@@ -151,15 +152,17 @@ async def test_update_enable_guest_wifi(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
 
-        state = hass.states.get(state_key)
-        assert state is not None
+        assert (state := hass.states.get(state_key))
         assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_update_enable_leds(
-    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test state change of a enable_leds switch device."""
     entry = configure_integration(hass)
@@ -169,19 +172,17 @@ async def test_update_enable_leds(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_OFF
-
-    assert entity_registry.async_get(state_key).entity_category == EntityCategory.CONFIG
+    assert (state := hass.states.get(state_key))
+    assert state == snapshot
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    assert entity_entry == snapshot
 
     # Emulate state change
     mock_device.device.async_get_led_setting.return_value = True
     async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
+    assert (state := hass.states.get(state_key))
     assert state.state == STATE_ON
 
     # Switch off
@@ -194,8 +195,7 @@ async def test_update_enable_leds(
             PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
 
-        state = hass.states.get(state_key)
-        assert state is not None
+        assert (state := hass.states.get(state_key))
         assert state.state == STATE_OFF
         turn_off.assert_called_once_with(False)
 
@@ -214,8 +214,7 @@ async def test_update_enable_leds(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
 
-        state = hass.states.get(state_key)
-        assert state is not None
+        assert (state := hass.states.get(state_key))
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
 
@@ -234,8 +233,7 @@ async def test_update_enable_leds(
             PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
 
-        state = hass.states.get(state_key)
-        assert state is not None
+        assert (state := hass.states.get(state_key))
         assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -263,16 +261,12 @@ async def test_device_failure(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-
     api = getattr(mock_device.device, get_method)
     api.side_effect = DeviceUnavailable
     async_fire_time_changed(hass, dt_util.utcnow() + update_interval)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
+    assert (state := hass.states.get(state_key))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -293,9 +287,6 @@ async def test_auth_failed(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-
-    state = hass.states.get(state_key)
-    assert state is not None
 
     setattr(mock_device.device, set_method, AsyncMock())
     api = getattr(mock_device.device, set_method)

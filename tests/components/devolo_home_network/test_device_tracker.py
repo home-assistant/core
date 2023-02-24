@@ -2,20 +2,14 @@
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as PLATFORM
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
-    WIFI_APTYPE,
-    WIFI_BANDS,
 )
-from homeassistant.const import (
-    STATE_HOME,
-    STATE_NOT_HOME,
-    STATE_UNAVAILABLE,
-    UnitOfFrequency,
-)
+from homeassistant.const import STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -31,7 +25,10 @@ SERIAL = DISCOVERY_INFO.properties["SN"]
 
 
 async def test_device_tracker(
-    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device tracker states."""
     state_key = (
@@ -49,14 +46,8 @@ async def test_device_tracker(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_HOME
-    assert state.attributes["wifi"] == WIFI_APTYPE[STATION.vap_type]
-    assert (
-        state.attributes["band"]
-        == f"{WIFI_BANDS[STATION.band]} {UnitOfFrequency.GIGAHERTZ}"
-    )
+    assert (state := hass.states.get(state_key))
+    assert state == snapshot
 
     # Emulate state change
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
@@ -65,8 +56,7 @@ async def test_device_tracker(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
+    assert (state := hass.states.get(state_key))
     assert state.state == STATE_NOT_HOME
 
     # Emulate device failure
@@ -76,15 +66,16 @@ async def test_device_tracker(
     async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
+    assert (state := hass.states.get(state_key))
     assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_restoring_clients(
-    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test restoring existing device_tracker entities."""
     state_key = (
@@ -105,6 +96,5 @@ async def test_restoring_clients(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
+    assert (state := hass.states.get(state_key))
     assert state.state == STATE_NOT_HOME
