@@ -912,7 +912,10 @@ def _apply_update(  # noqa: C901
             _migrate_statistics_columns_to_timestamp(session_maker, engine)
         except IntegrityError as ex:
             _LOGGER.error(
-                "Statistics table contains duplicate entries: %s; Cleaning up duplicates and trying again",
+                "Statistics table contains duplicate entries: %s; "
+                "Cleaning up duplicates and trying again; "
+                "This will take a while; "
+                "Please be patient!",
                 ex,
             )
             # There may be duplicated statistics entries, delete duplicates
