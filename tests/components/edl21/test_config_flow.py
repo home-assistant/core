@@ -39,7 +39,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         data=VALID_CONFIG,
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
@@ -47,20 +47,20 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
         data={
             CONF_NAME: "Other Smart Meter",
-            CONF_SERIAL_PORT: VALID_CONFIG.get(CONF_SERIAL_PORT),
+            CONF_SERIAL_PORT: VALID_CONFIG[CONF_SERIAL_PORT],
         },
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_NAME: VALID_CONFIG.get(CONF_NAME), CONF_SERIAL_PORT: "/dev/ttyUSB2"},
+        data={CONF_NAME: VALID_CONFIG[CONF_NAME], CONF_SERIAL_PORT: "/dev/ttyUSB2"},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -74,9 +74,9 @@ async def test_create_entry_by_user(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == VALID_CONFIG.get(CONF_NAME)
-    assert result["data"][CONF_NAME] == VALID_CONFIG.get(CONF_NAME)
-    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG.get(CONF_SERIAL_PORT)
+    assert result["title"] == VALID_CONFIG[CONF_NAME]
+    assert result["data"][CONF_NAME] == VALID_CONFIG[CONF_NAME]
+    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG[CONF_SERIAL_PORT]
 
 
 async def test_create_entry_by_import(hass: HomeAssistant) -> None:
@@ -89,9 +89,9 @@ async def test_create_entry_by_import(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == VALID_CONFIG.get(CONF_NAME)
-    assert result["data"][CONF_NAME] == VALID_CONFIG.get(CONF_NAME)
-    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG.get(CONF_SERIAL_PORT)
+    assert result["title"] == VALID_CONFIG[CONF_NAME]
+    assert result["data"][CONF_NAME] == VALID_CONFIG[CONF_NAME]
+    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG[CONF_SERIAL_PORT]
 
     # Test the import step with an empty string as name (the name is optional in the old schema and defaults to "")
     result = await hass.config_entries.flow.async_init(
