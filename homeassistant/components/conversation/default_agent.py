@@ -227,7 +227,21 @@ class DefaultAgent(AbstractConversationAgent):
         intent_response: intent.IntentResponse,
         recognize_result: RecognizeResult,
     ) -> str:
-        all_states = intent_response.matched_states + intent_response.unmatched_states
+        # Make copies of the states here so we can add translated names for responses.
+        matched: list[core.State] = []
+
+        for state in intent_response.matched_states:
+            state_copy = core.State.from_dict(state.as_dict())
+            if state_copy is not None:
+                matched.append(state_copy)
+
+        unmatched: list[core.State] = []
+        for state in intent_response.unmatched_states:
+            state_copy = core.State.from_dict(state.as_dict())
+            if state_copy is not None:
+                unmatched.append(state_copy)
+
+        all_states = matched + unmatched
         domains = {state.domain for state in all_states}
         translations = await translation.async_get_translations(
             self.hass, language, "state", domains
@@ -262,13 +276,11 @@ class DefaultAgent(AbstractConversationAgent):
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
-                        template.TemplateState(self.hass, state)
-                        for state in intent_response.matched_states
+                        template.TemplateState(self.hass, state) for state in matched
                     ],
                     # Entity states that did not match the query
                     "unmatched": [
-                        template.TemplateState(self.hass, state)
-                        for state in intent_response.unmatched_states
+                        template.TemplateState(self.hass, state) for state in unmatched
                     ],
                 },
             }
