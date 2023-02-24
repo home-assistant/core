@@ -1734,7 +1734,7 @@ subarulink==0.7.0
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==0.0.8
+sunweg==0.0.9
 
 # homeassistant.components.surepetcare
 surepy==0.8.0
