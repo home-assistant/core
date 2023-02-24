@@ -912,7 +912,7 @@ def _apply_update(  # noqa: C901
             _migrate_statistics_columns_to_timestamp(session_maker, engine)
         except IntegrityError as ex:
             _LOGGER.error(
-                "Statistics table contains duplicate entries: %s; Cleaning up and trying again",
+                "Statistics table contains duplicate entries: %s; Cleaning up duplicates and trying again",
                 ex,
             )
             # There may be duplicated statistics entries, delete duplicates
@@ -920,6 +920,11 @@ def _apply_update(  # noqa: C901
             with session_scope(session=session_maker()) as session:
                 delete_statistics_duplicates(hass, session)
             _migrate_statistics_columns_to_timestamp(session_maker, engine)
+            # Log at error level to ensure the user sees this message in the log
+            # since we logged the error above.
+            _LOGGER.error(
+                "Statistics migration successfully recovered after statistics table duplicate cleanup"
+            )
     elif new_version == 35:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
