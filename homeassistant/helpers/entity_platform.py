@@ -833,13 +833,13 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            updates: dict[str, asyncio.Task[Any]] = {}
-            for entity in self.entities.values():
-                if not entity.should_poll:
-                    continue
-                updates[entity.entity_id] = asyncio.create_task(
+            updates: dict[str, asyncio.Task[Any]] = {
+                entity.entity_id: asyncio.create_task(
                     entity.async_update_ha_state(force_refresh=True, warning=False)
                 )
+                for entity in self.entities.values()
+                if entity.should_poll
+            }
 
             if not updates:
                 return
