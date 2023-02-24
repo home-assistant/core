@@ -143,7 +143,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.4.0
+aioesphomeapi==13.4.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -183,7 +183,7 @@ aiolifx_effects==0.3.1
 aiolifx_themes==0.4.0
 
 # homeassistant.components.livisi
-aiolivisi==0.0.15
+aiolivisi==0.0.16
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
