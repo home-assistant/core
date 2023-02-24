@@ -25,6 +25,7 @@ If your light doesn't support color temp feature, omit `color_temp_template`.
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
 import copy
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -1272,12 +1273,11 @@ async def test_reloadable(
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    topic,
-    value,
-    attribute,
-    attribute_value,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    topic: str,
+    value: str,
+    attribute: str | None,
+    attribute_value: Any,
     init_payload,
 ) -> None:
     """Test handling of incoming encoded payload."""
@@ -1285,8 +1285,7 @@ async def test_encoding_subscribable_topics(
     config["state_template"] = "{{ value }}"
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_with_yaml_config,
-        caplog,
+        mqtt_mock_entry_no_yaml_config,
         light.DOMAIN,
         config,
         topic,

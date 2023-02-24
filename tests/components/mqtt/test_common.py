@@ -852,15 +852,14 @@ async def help_test_discovery_broken(
 
 async def help_test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
     topic: str,
     value: Any,
     attribute: str | None = None,
     attribute_value: Any = None,
-    init_payload: str | None = None,
+    init_payload: tuple[str, str] | None = None,
     skip_raw_test: bool = False,
 ) -> None:
     """Test handling of incoming encoded payload."""
@@ -927,13 +926,17 @@ async def help_test_encoding_subscribable_topics(
         init_payload_value_utf8 = init_payload[1].encode("utf-8")
         init_payload_value_utf16 = init_payload[1].encode("utf-16")
 
-    await hass.async_block_till_done()
-
-    assert await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {domain: [config1, config2, config3]}}
+    await mqtt_mock_entry_no_yaml_config()
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/item1/config", json.dumps(config1)
+    )
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/item2/config", json.dumps(config2)
+    )
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/item3/config", json.dumps(config3)
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     expected_result = attribute_value or value
 

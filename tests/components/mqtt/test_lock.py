@@ -1,5 +1,6 @@
 """The tests for the MQTT lock platform."""
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -991,18 +992,16 @@ async def test_reloadable(
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    topic,
-    value,
-    attribute,
-    attribute_value,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    topic: str,
+    value: str,
+    attribute: str | None,
+    attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_with_yaml_config,
-        caplog,
+        mqtt_mock_entry_no_yaml_config,
         lock.DOMAIN,
         DEFAULT_CONFIG[mqtt.DOMAIN][lock.DOMAIN],
         topic,

@@ -169,6 +169,7 @@ mqtt:
 
 """
 import copy
+from typing import Any
 from unittest.mock import call, patch
 
 import pytest
@@ -3078,13 +3079,12 @@ async def test_reloadable(
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    topic,
-    value,
-    attribute,
-    attribute_value,
-    init_payload,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    topic: str,
+    value: str,
+    attribute: str | None,
+    attribute_value: Any,
+    init_payload: tuple[str, str] | None,
 ) -> None:
     """Test handling of incoming encoded payload."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
@@ -3101,8 +3101,7 @@ async def test_encoding_subscribable_topics(
 
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_with_yaml_config,
-        caplog,
+        mqtt_mock_entry_no_yaml_config,
         light.DOMAIN,
         config,
         topic,
@@ -3121,13 +3120,13 @@ async def test_encoding_subscribable_topics(
 )
 async def test_encoding_subscribable_topics_brightness(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    topic,
-    value,
-    attribute,
-    attribute_value,
-    init_payload,
+    topic: str,
+    value: str,
+    attribute: str,
+    attribute_value: int,
+    init_payload: tuple[str, str] | None,
 ) -> None:
     """Test handling of incoming encoded payload for a brightness only light."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
@@ -3135,8 +3134,7 @@ async def test_encoding_subscribable_topics_brightness(
 
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry_with_yaml_config,
-        caplog,
+        mqtt_mock_entry_no_yaml_config,
         light.DOMAIN,
         config,
         topic,
