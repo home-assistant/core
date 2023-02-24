@@ -779,7 +779,7 @@ def _apply_update(  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        # This used to create the unique indexes for start and metadata_id
+        # This used to create the unique indices for start and metadata_id
         # but we changed the format in schema 34 which will now take care
         # of removing any duplicate if they still exist.
         pass
