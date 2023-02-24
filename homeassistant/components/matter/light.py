@@ -79,23 +79,6 @@ class MatterLight(MatterEntity, LightEntity):
             return False
         return ColorMode.BRIGHTNESS in self._attr_supported_color_modes
 
-    def supports_color_feature(self, feature: ColorControlCapabilities) -> bool:
-        """Return if the device supports the given color feature."""
-        featuremap = self.get_matter_attribute_value(
-            clusters.ColorControl.Attributes.FeatureMap,
-        )
-
-        if featuremap is None:
-            return False
-
-        LOGGER.debug(
-            "Got featuremap %s for %s",
-            featuremap,
-            self.entity_id,
-        )
-
-        return bool(featuremap & feature == feature)
-
     async def _set_xy_color(self, xy_color: tuple[float, float]) -> None:
         """Set xy color."""
 
@@ -278,18 +261,16 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if hs_color is not None and self.supports_color_feature(
-            ColorControlCapabilities.HS
-        ):
-            await self._set_hs_color(hs_color)
-        elif xy_color is not None and self.supports_color_feature(
-            ColorControlCapabilities.XY
-        ):
-            await self._set_xy_color(xy_color)
-        elif color_temp is not None and self.supports_color_feature(
-            ColorControlCapabilities.TEMP
-        ):
-            await self._set_color_temp(color_temp)
+        if self.supported_color_modes is not None:
+            if hs_color is not None and ColorMode.HS in self.supported_color_modes:
+                await self._set_hs_color(hs_color)
+            elif xy_color is not None and ColorMode.XY in self.supported_color_modes:
+                await self._set_xy_color(xy_color)
+            elif (
+                color_temp is not None
+                and ColorMode.COLOR_TEMP in self.supported_color_modes
+            ):
+                await self._set_color_temp(color_temp)
 
         if brightness is not None and self.supports_brightness:
             await self._set_brightness(brightness)
@@ -320,13 +301,19 @@ class MatterLight(MatterEntity, LightEntity):
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.ColorControl.Attributes.ColorMode
             ):
-                if self.supports_color_feature(ColorControlCapabilities.HS):
+                capabilities = self.get_matter_attribute_value(
+                    clusters.ColorControl.Attributes.ColorCapabilities
+                )
+
+                assert capabilities is not None
+
+                if capabilities & ColorCapabilities.kHueSaturationSupported:
                     supported_color_modes.add(ColorMode.HS)
 
-                if self.supports_color_feature(ColorControlCapabilities.XY):
+                if capabilities & ColorCapabilities.kXYAttributesSupported:
                     supported_color_modes.add(ColorMode.XY)
 
-                if self.supports_color_feature(ColorControlCapabilities.TEMP):
+                if capabilities & ColorCapabilities.kColorTemperatureSupported:
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
 
             self._attr_supported_color_modes = supported_color_modes
@@ -357,14 +344,16 @@ class MatterLight(MatterEntity, LightEntity):
             self._attr_brightness = self._get_brightness()
 
 
-class ColorControlCapabilities(IntFlag):
+# This enum should be removed once the ColorControlCapabilities enum is added to the CHIP (Matter) library
+# clusters.ColorControl.Bitmap.ColorCapabilities
+class ColorCapabilities(IntFlag):
     """Color control capabilities bitmap."""
 
-    HS = 0x1
-    EHUE = 0x2
-    CL = 0x4
-    XY = 0x8
-    TEMP = 0x10
+    kHueSaturationSupported = 0x1
+    kEnhancedHueSupported = 0x2
+    kColorLoopSupported = 0x4
+    kXYAttributesSupported = 0x8
+    kColorTemperatureSupported = 0x10
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
