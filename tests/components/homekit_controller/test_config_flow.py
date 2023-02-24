@@ -555,7 +555,7 @@ async def test_discovery_already_configured_update_csharp(
     assert entry.data["AccessoryPort"] == discovery_info.port
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_START_ABORT_ERRORS)
 async def test_pair_abort_errors_on_start(
     hass: HomeAssistant, controller, exception, expected
 ) -> None:
@@ -579,7 +579,7 @@ async def test_pair_abort_errors_on_start(
     assert result["reason"] == expected
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_TRY_LATER_ERRORS)
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_TRY_LATER_ERRORS)
 async def test_pair_try_later_errors_on_start(
     hass: HomeAssistant, controller, exception, expected
 ) -> None:
@@ -618,7 +618,7 @@ async def test_pair_try_later_errors_on_start(
     assert result4["title"] == "Koogeek-LS1-20833F"
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_START_FORM_ERRORS)
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_START_FORM_ERRORS)
 async def test_pair_form_errors_on_start(
     hass: HomeAssistant, controller, exception, expected
 ) -> None:
@@ -669,7 +669,7 @@ async def test_pair_form_errors_on_start(
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_FINISH_ABORT_ERRORS)
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_FINISH_ABORT_ERRORS)
 async def test_pair_abort_errors_on_finish(
     hass: HomeAssistant, controller, exception, expected
 ) -> None:
@@ -711,7 +711,7 @@ async def test_pair_abort_errors_on_finish(
     assert result["reason"] == expected
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_FINISH_FORM_ERRORS)
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_FINISH_FORM_ERRORS)
 async def test_pair_form_errors_on_finish(
     hass: HomeAssistant, controller, exception, expected
 ) -> None:

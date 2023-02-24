@@ -271,7 +271,7 @@ async def test_report_with_binary_state(
 
 
 @pytest.mark.parametrize(
-    "error, log_text",
+    ("error", "log_text"),
     [
         (OSError, "Failed to send data to graphite"),
         (socket.gaierror, "Unable to connect to host"),

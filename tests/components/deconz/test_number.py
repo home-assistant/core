@@ -107,7 +107,7 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_number_entities(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

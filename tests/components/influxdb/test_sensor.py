@@ -210,7 +210,7 @@ async def _setup(hass, config_ext, queries, expected_sensors):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock",
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY, _set_query_mock_v1),
         (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY, _set_query_mock_v2),
@@ -226,7 +226,7 @@ async def test_minimal_config(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock",
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (
             DEFAULT_API_VERSION,
@@ -308,7 +308,7 @@ async def test_config_failure(hass: HomeAssistant, config_ext) -> None:
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, make_resultset",
+    ("mock_client", "config_ext", "queries", "set_query_mock", "make_resultset"),
     [
         (
             DEFAULT_API_VERSION,
@@ -344,7 +344,7 @@ async def test_state_matches_query_result(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, make_resultset",
+    ("mock_client", "config_ext", "queries", "set_query_mock", "make_resultset"),
     [
         (
             DEFAULT_API_VERSION,
@@ -383,7 +383,7 @@ async def test_state_matches_first_query_result_for_multiple_return(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock",
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (
             DEFAULT_API_VERSION,
@@ -414,7 +414,7 @@ async def test_state_for_no_results(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, query_exception",
+    ("mock_client", "config_ext", "queries", "set_query_mock", "query_exception"),
     [
         (
             DEFAULT_API_VERSION,
@@ -481,7 +481,7 @@ async def test_error_querying_influx(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, make_resultset, key",
+    ("mock_client", "config_ext", "queries", "set_query_mock", "make_resultset", "key"),
     [
         (
             DEFAULT_API_VERSION,
@@ -549,7 +549,14 @@ async def test_error_rendering_template(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, test_exception, make_resultset",
+    (
+        "mock_client",
+        "config_ext",
+        "queries",
+        "set_query_mock",
+        "test_exception",
+        "make_resultset",
+    ),
     [
         (
             DEFAULT_API_VERSION,
@@ -625,7 +632,7 @@ async def test_connection_error_at_startup(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock",
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (
             DEFAULT_API_VERSION,

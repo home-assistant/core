@@ -73,7 +73,7 @@ async def test_step_import_existing_host(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error,reason",
+    ("error", "reason"),
     [
         (PchkAuthenticationError, "authentication_error"),
         (PchkLicenseError, "license_error"),

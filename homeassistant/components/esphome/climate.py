@@ -61,6 +61,8 @@ from . import (
     platform_async_setup_entry,
 )
 
+FAN_QUIET = "quiet"
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -109,6 +111,7 @@ _FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
         ClimateFanMode.MIDDLE: FAN_MIDDLE,
         ClimateFanMode.FOCUS: FAN_FOCUS,
         ClimateFanMode.DIFFUSE: FAN_DIFFUSE,
+        ClimateFanMode.QUIET: FAN_QUIET,
     }
 )
 _SWING_MODES: EsphomeEnumMapper[ClimateSwingMode, str] = EsphomeEnumMapper(
@@ -142,8 +145,12 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     def precision(self) -> float:
         """Return the precision of the climate device."""
         precicions = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
+        if self._static_info.visual_current_temperature_step != 0:
+            step = self._static_info.visual_current_temperature_step
+        else:
+            step = self._static_info.visual_target_temperature_step
         for prec in precicions:
-            if self._static_info.visual_temperature_step >= prec:
+            if step >= prec:
                 return prec
         # Fall back to highest precision, tenths
         return PRECISION_TENTHS
@@ -184,7 +191,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         # Round to one digit because of floating point math
-        return round(self._static_info.visual_temperature_step, 1)
+        return round(self._static_info.visual_target_temperature_step, 1)
 
     @property
     def min_temp(self) -> float:

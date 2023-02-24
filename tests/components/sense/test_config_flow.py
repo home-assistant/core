@@ -44,7 +44,7 @@ def mock_sense():
         yield mock_sense
 
 
-async def test_form(hass, mock_sense):
+async def test_form(hass: HomeAssistant, mock_sense) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -88,7 +88,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_mfa_required(hass, mock_sense):
+async def test_form_mfa_required(hass: HomeAssistant, mock_sense) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -115,7 +115,7 @@ async def test_form_mfa_required(hass, mock_sense):
     assert result3["data"] == MOCK_CONFIG
 
 
-async def test_form_mfa_required_wrong(hass, mock_sense):
+async def test_form_mfa_required_wrong(hass: HomeAssistant, mock_sense) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -143,7 +143,7 @@ async def test_form_mfa_required_wrong(hass, mock_sense):
     assert result3["step_id"] == "validation"
 
 
-async def test_form_mfa_required_timeout(hass, mock_sense):
+async def test_form_mfa_required_timeout(hass: HomeAssistant, mock_sense) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -169,7 +169,7 @@ async def test_form_mfa_required_timeout(hass, mock_sense):
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_mfa_required_exception(hass, mock_sense):
+async def test_form_mfa_required_exception(hass: HomeAssistant, mock_sense) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -252,7 +252,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_reauth_no_form(hass, mock_sense):
+async def test_reauth_no_form(hass: HomeAssistant, mock_sense) -> None:
     """Test reauth where no form needed."""
 
     # set up initially
@@ -273,7 +273,7 @@ async def test_reauth_no_form(hass, mock_sense):
     assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_password(hass, mock_sense):
+async def test_reauth_password(hass: HomeAssistant, mock_sense) -> None:
     """Test reauth form."""
 
     # set up initially

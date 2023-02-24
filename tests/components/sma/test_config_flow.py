@@ -116,7 +116,7 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_already_configured(hass, mock_config_entry):
+async def test_form_already_configured(hass: HomeAssistant, mock_config_entry) -> None:
     """Test starting a flow by user when already configured."""
     mock_config_entry.add_to_hass(hass)
 

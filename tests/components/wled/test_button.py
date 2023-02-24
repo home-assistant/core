@@ -21,22 +21,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_button_restart(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_wled: MagicMock
 ) -> None:
     """Test the creation and values of the WLED button."""
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("button.wled_rgb_light_restart")
-    assert state
+    assert (state := hass.states.get("button.wled_rgb_light_restart"))
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.RESTART
 
-    entry = entity_registry.async_get("button.wled_rgb_light_restart")
-    assert entry
+    assert (entry := entity_registry.async_get("button.wled_rgb_light_restart"))
     assert entry.unique_id == "aabbccddeeff_restart"
     assert entry.entity_category is EntityCategory.CONFIG
 
@@ -46,7 +42,6 @@ async def test_button_restart(
         {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert mock_wled.reset.call_count == 1
     mock_wled.reset.assert_called_with()
 
@@ -54,7 +49,6 @@ async def test_button_restart(
 @freeze_time("2021-11-04 17:37:00", tz_offset=-1)
 async def test_button_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED buttons."""
@@ -69,14 +63,12 @@ async def test_button_error(
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("button.wled_rgb_light_restart")
-    assert state
+    assert (state := hass.states.get("button.wled_rgb_light_restart"))
     assert state.state == "2021-11-04T16:37:00+00:00"
 
 
 async def test_button_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test error handling of the WLED buttons."""
@@ -89,8 +81,6 @@ async def test_button_connection_error(
             {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("button.wled_rgb_light_restart")
-    assert state
+    assert (state := hass.states.get("button.wled_rgb_light_restart"))
     assert state.state == STATE_UNAVAILABLE

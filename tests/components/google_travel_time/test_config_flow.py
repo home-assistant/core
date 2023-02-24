@@ -136,7 +136,7 @@ async def test_malformed_api_key(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
@@ -197,7 +197,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config) -> None:
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,

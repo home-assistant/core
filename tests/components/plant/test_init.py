@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 
 import homeassistant.components.plant as plant
+from homeassistant.components.recorder import Recorder
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
@@ -144,7 +145,7 @@ async def test_state_problem_if_unavailable(hass: HomeAssistant) -> None:
     assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
 
-async def test_load_from_db(recorder_mock, hass):
+async def test_load_from_db(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test bootstrapping the brightness history from the database.
 
     This test can should only be executed if the loading of the history
