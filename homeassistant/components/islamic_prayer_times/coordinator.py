@@ -23,7 +23,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Islamic Prayer client."""
         self.event_unsub: CALLBACK_TYPE | None = None
         super().__init__(
