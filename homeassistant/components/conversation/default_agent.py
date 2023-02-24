@@ -28,7 +28,7 @@ from homeassistant.helpers import (
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
-from .const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
+from .const import DEFAULT_EXPOSED_ATTRIBUTES, DEFAULT_EXPOSED_DOMAINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -467,6 +467,12 @@ class DefaultAgent(AbstractConversationAgent):
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
+            if state.attributes:
+                # Include some attributes
+                for attr_key, attr_value in state.attributes.items():
+                    if attr_key not in DEFAULT_EXPOSED_ATTRIBUTES:
+                        continue
+                    context[attr_key] = attr_value
 
             entity = entities.async_get(state.entity_id)
             if entity is not None:
@@ -505,6 +511,9 @@ class DefaultAgent(AbstractConversationAgent):
             if area.aliases:
                 for alias in area.aliases:
                     area_names.append((alias, area.id))
+
+        _LOGGER.debug("Exposed areas: %s", area_names)
+        _LOGGER.debug("Exposed entities: %s", entity_names)
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
