@@ -133,7 +133,7 @@ class SunWEGInverter(SensorEntity):
         inverter_id: int = 0,
         deep_name: str | None = None,
     ) -> None:
-        """Initialize a PVOutput sensor."""
+        """Initialize a sensor."""
         self.probe = probe
         self.entity_description = description
         self.device_type = device_type
