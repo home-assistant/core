@@ -15,6 +15,7 @@ import zigpy.types
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp, usb, zeroconf
+from homeassistant.components.hassio import AddonState
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.core.const import (
@@ -1840,3 +1841,46 @@ async def test_options_flow_migration_reset_old_adapter(
         user_input={},
     )
     assert result4["step_id"] == "choose_serial_port"
+
+
+async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
+    """Test config flow serial port name for Yellow Zigbee radio."""
+    port = com_port(device="/dev/ttyAMA1")
+    port.serial_number = None
+    port.manufacturer = None
+    port.description = None
+
+    with patch(
+        "homeassistant.components.zha.config_flow.yellow_hardware.async_info"
+    ), patch("serial.tools.list_ports.comports", MagicMock(return_value=[port])):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+        )
+
+    assert (
+        result["data_schema"].schema["path"].container[0]
+        == "/dev/ttyAMA1 - Yellow Zigbee module - Nabu Casa"
+    )
+
+
+async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> None:
+    """Test config flow serial port name for multiprotocol add-on."""
+
+    with patch(
+        "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
+    ) as async_get_addon_info, patch(
+        "serial.tools.list_ports.comports", MagicMock(return_value=[])
+    ):
+        async_get_addon_info.return_value.state = AddonState.RUNNING
+        async_get_addon_info.return_value.hostname = "core-silabs-multiprotocol"
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+        )
+
+    assert (
+        result["data_schema"].schema["path"].container[0]
+        == "socket://core-silabs-multiprotocol:9999 - Multiprotocol add-on - Nabu Casa"
+    )
