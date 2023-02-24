@@ -31,7 +31,10 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
@@ -108,6 +111,7 @@ class UniFiController:
         self.load_config_entry_options()
 
         self.entities = {}
+        self.known_objects: set[tuple[str, str]] = set()
 
     def load_config_entry_options(self):
         """Store attributes to avoid property call overhead since they are called frequently."""
@@ -207,6 +211,7 @@ class UniFiController:
                     [
                         unifi_platform_entity(obj_id, self, description)
                         for obj_id in obj_ids
+                        if (description.key, obj_id) not in self.known_objects
                         if description.allowed_fn(self, obj_id)
                         if description.supported_fn(self, obj_id)
                     ]
@@ -220,6 +225,17 @@ class UniFiController:
                 async_add_unifi_entity([obj_id])
 
             api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
+
+            @callback
+            def async_options_updated() -> None:
+                """Create new UniFi entity on event."""
+                async_add_unifi_entity(list(api_handler))
+
+            self.config_entry.async_on_unload(
+                async_dispatcher_connect(
+                    self.hass, self.signal_options_update, async_options_updated
+                )
+            )
 
         for description in descriptions:
             async_load_entities(description)
