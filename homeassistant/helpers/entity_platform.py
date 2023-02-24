@@ -833,7 +833,7 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            updates: dict[str, asyncio.Task[Any]] = {
+            updates = {
                 entity.entity_id: asyncio.create_task(
                     entity.async_update_ha_state(force_refresh=True, warning=False)
                 )
