@@ -230,7 +230,7 @@ async def test_discovery_link_unavailable(
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "homeassistant.components.nanoleaf.config_flow.load_json_object",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -353,7 +353,7 @@ async def test_import_discovery_integration(
     Test updating the .nanoleaf_conf file if it was not the only device in the file.
     """
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "homeassistant.components.nanoleaf.config_flow.load_json_object",
         return_value=dict(nanoleaf_conf_file),
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
@@ -402,7 +402,7 @@ async def test_import_discovery_integration(
 async def test_ssdp_discovery(hass: HomeAssistant) -> None:
     """Test SSDP discovery."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.load_json",
+        "homeassistant.components.nanoleaf.config_flow.load_json_object",
         return_value={},
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf",

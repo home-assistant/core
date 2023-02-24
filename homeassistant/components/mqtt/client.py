@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable
-from functools import lru_cache, partial, wraps
+from functools import lru_cache
 import inspect
 from itertools import chain, groupby
 import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 import uuid
 
 import async_timeout
@@ -72,7 +72,6 @@ from .models import (
     PublishMessage,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .util import get_file_path, get_mqtt_data, mqtt_config_entry_enabled
 
@@ -148,55 +147,11 @@ async def async_publish(
     )
 
 
-AsyncDeprecatedMessageCallbackType = Callable[
-    [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
-]
-DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
-DeprecatedMessageCallbackTypes = (
-    AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType
-)
-
-
-# Support for a deprecated callback type will be removed from HA core 2023.2.0
-def wrap_msg_callback(
-    msg_callback: DeprecatedMessageCallbackTypes,
-) -> AsyncMessageCallbackType | MessageCallbackType:
-    """Wrap an MQTT message callback to support deprecated signature."""
-    # Check for partials to properly determine if coroutine function
-    check_func = msg_callback
-    while isinstance(check_func, partial):
-        check_func = check_func.func  # type: ignore[unreachable]
-
-    wrapper_func: AsyncMessageCallbackType | MessageCallbackType
-    if asyncio.iscoroutinefunction(check_func):
-
-        @wraps(msg_callback)
-        async def async_wrapper(msg: ReceiveMessage) -> None:
-            """Call with deprecated signature."""
-            await cast(AsyncDeprecatedMessageCallbackType, msg_callback)(
-                msg.topic, msg.payload, msg.qos
-            )
-
-        wrapper_func = async_wrapper
-        return wrapper_func
-
-    @wraps(msg_callback)
-    def wrapper(msg: ReceiveMessage) -> None:
-        """Call with deprecated signature."""
-        msg_callback(msg.topic, msg.payload, msg.qos)
-
-    wrapper_func = wrapper
-
-    return wrapper_func
-
-
 @bind_hass
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
-    msg_callback: AsyncMessageCallbackType
-    | MessageCallbackType
-    | DeprecatedMessageCallbackTypes,
+    msg_callback: AsyncMessageCallbackType | MessageCallbackType,
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
@@ -209,8 +164,8 @@ async def async_subscribe(
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
-    # Support for a deprecated callback type will be removed from HA core 2023.2.0
-    # Count callback parameters which don't have a default value
+    # Support for a deprecated callback type was removed with HA core 2023.3.0
+    # The signature validation code can be removed from HA core 2023.5.0
     non_default = 0
     if msg_callback:
         non_default = sum(
@@ -218,26 +173,20 @@ async def async_subscribe(
             for _, p in inspect.signature(msg_callback).parameters.items()
         )
 
-    wrapped_msg_callback = msg_callback
-    # If we have 3 parameters with no default value, wrap the callback
-    if non_default == 3:
+    # Check for not supported callback signatures
+    # Can be removed from HA core 2023.5.0
+    if non_default != 1:
         module = inspect.getmodule(msg_callback)
-        _LOGGER.warning(
-            (
-                "Signature of MQTT msg_callback '%s.%s' is deprecated, "
-                "this will stop working with HA core 2023.2"
-            ),
-            module.__name__ if module else "<unknown>",
-            msg_callback.__name__,
-        )
-        wrapped_msg_callback = wrap_msg_callback(
-            cast(DeprecatedMessageCallbackTypes, msg_callback)
+        raise HomeAssistantError(
+            "Signature for MQTT msg_callback '{}.{}' is not supported".format(
+                module.__name__ if module else "<unknown>", msg_callback.__name__
+            )
         )
 
     async_remove = await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(
-            wrapped_msg_callback,
+            msg_callback,
             lambda msg: (
                 f"Exception in {msg_callback.__name__} when handling msg on "
                 f"'{msg.topic}': '{msg.payload}'"

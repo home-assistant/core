@@ -31,7 +31,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.3
+  HA_SHORT_VERSION: 2023.4
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
   # 10.3 is the oldest supported version
@@ -76,7 +76,7 @@ jobs:
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.3.0
@@ -195,7 +195,7 @@ jobs:
 
   pre-commit:
     name: Prepare pre-commit base
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -212,7 +212,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: venv
           key: >-
@@ -227,7 +227,7 @@ jobs:
           pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -241,7 +241,7 @@ jobs:
 
   lint-black:
     name: Check black
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -256,7 +256,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -265,7 +265,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -287,7 +287,7 @@ jobs:
 
   lint-flake8:
     name: Check flake8
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -302,7 +302,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -311,7 +311,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -336,7 +336,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -351,7 +351,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -360,7 +360,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -385,7 +385,7 @@ jobs:
 
   lint-isort:
     name: Check isort
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -400,7 +400,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -409,7 +409,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -423,7 +423,7 @@ jobs:
 
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pre-commit
@@ -438,7 +438,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -447,7 +447,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -540,7 +540,7 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: info
     timeout-minutes: 60
     strategy:
@@ -562,7 +562,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: venv
           key: >-
@@ -570,7 +570,7 @@ jobs:
             needs.info.outputs.python_cache_key }}
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -606,7 +606,7 @@ jobs:
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -624,7 +624,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -638,7 +638,7 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -656,7 +656,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -670,7 +670,7 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
@@ -689,7 +689,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -715,7 +715,7 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       || github.event.inputs.mypy-only == 'true'
@@ -740,7 +740,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -748,7 +748,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: .mypy_cache
           key: >-
@@ -776,7 +776,7 @@ jobs:
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   pip-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
@@ -799,7 +799,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -812,7 +812,7 @@ jobs:
           ./script/pip_check $PIP_CACHE
 
   pytest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -852,7 +852,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -929,7 +929,7 @@ jobs:
           ./script/check_dirty
 
   pytest-mariadb:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -978,7 +978,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v3.2.5
+        uses: actions/cache/restore@v3.2.6
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1033,7 +1033,7 @@ jobs:
           ./script/check_dirty
 
   pytest-postgres:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     services:
       postgres:
         image: ${{ matrix.postgresql-group }}
@@ -1071,7 +1071,7 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg \
-            postgresql-server-dev-12
+            postgresql-server-dev-14
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
@@ -1082,16 +1082,12 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v3.2.5
+        uses: actions/cache@v3.2.6
         with:
           path: venv
+          fail-on-cache-miss: true
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
-      - name: Fail job if Python cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          echo "Failed to restore Python virtual environment from cache"
-          exit 1
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1143,7 +1139,7 @@ jobs:
 
   coverage:
     name: Upload test coverage to Codecov
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - info
       - pytest

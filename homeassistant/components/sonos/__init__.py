@@ -392,7 +392,7 @@ class SonosDiscoveryManager:
                 )
             elif not known_speaker.available:
                 try:
-                    known_speaker.ping()
+                    await self.hass.async_add_executor_job(known_speaker.ping)
                 except SonosUpdateError:
                     _LOGGER.debug(
                         "Manual poll to %s failed, keeping unavailable", ip_addr
