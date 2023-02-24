@@ -12,9 +12,10 @@ from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
-from homeassistant.core import callback
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import entity_registry
 
 from .const import (
     CONF_ALT_NIGHT_MODE,
@@ -154,6 +155,7 @@ class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
             OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS
         )
         self.selected_zone: str | None = None
+        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
@@ -203,7 +205,7 @@ class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_zone_select(self, user_input=None) -> FlowResult:
         """Zone selection form."""
-        errors = _validate_zone_input(user_input)
+        errors = _validate_zone_input(self.hass, self.config_entry, user_input)
 
         if user_input is not None and not errors:
             self.selected_zone = str(
@@ -219,7 +221,7 @@ class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_zone_details(self, user_input=None) -> FlowResult:
         """Zone details form."""
-        errors = _validate_zone_input(user_input)
+        errors = _validate_zone_input(self.hass, self.config_entry, user_input)
 
         if user_input is not None and not errors:
             zone_options = self.zone_options.copy()
@@ -294,7 +296,9 @@ class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def _validate_zone_input(zone_input):
+def _validate_zone_input(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry, zone_input: dict
+):
     if not zone_input:
         return {}
     errors = {}
@@ -325,7 +329,28 @@ def _validate_zone_input(zone_input):
     ):
         errors[CONF_ZONE_LOOP] = "loop_range"
 
+    if CONF_ZONE_RFID in zone_input:
+        unique_id = zone_input[CONF_ZONE_RFID]
+        if CONF_ZONE_LOOP in zone_input:
+            unique_id += "_" + zone_input[CONF_ZONE_LOOP]
+        if _binary_sensor_already_exists(hass, config_entry, unique_id):
+            errors["base"] = "duplicate_sensor"
+
     return errors
+
+
+def _binary_sensor_already_exists(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry, unique_id: str
+) -> bool:
+    """Determine if the integration already has an entity registered with the given unique id."""
+    ent_reg = entity_registry.async_get(hass)
+
+    return (
+        ent_reg.async_get_entity_id(
+            Platform.BINARY_SENSOR, config_entry.domain, unique_id
+        )
+        is not None
+    )
 
 
 def _fix_input_types(zone_input):
@@ -342,7 +367,7 @@ def _fix_input_types(zone_input):
     return zone_input
 
 
-def _device_already_added(current_entries, user_input, protocol):
+def _device_already_added(current_entries, user_input, protocol) -> bool:
     """Determine if entry has already been added to HA."""
     user_host = user_input.get(CONF_HOST)
     user_port = user_input.get(CONF_PORT)
