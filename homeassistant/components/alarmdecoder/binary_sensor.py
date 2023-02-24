@@ -88,9 +88,11 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
             CONF_ZONE_NUMBER: self._zone_number,
         }
 
-        # For RFID sensors we have a serial number which can be used as a unique id
+        # For RF sensors we have a serial number which can be used as a unique id
         if zone_rfid is not None:
-            self._attr_unique_id = "alarmdecoder_" + zone_rfid
+            self._attr_unique_id = zone_rfid
+            if zone_loop is not None:
+                self._attr_unique_id += "_" + str(zone_loop)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
