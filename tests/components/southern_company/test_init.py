@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from . import async_init_integration, create_entry
 
 
-async def test_unload_entry(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_unload_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = await async_init_integration(hass)
 
@@ -34,7 +34,7 @@ async def test_unload_entry(recorder_mock: Recorder, hass: HomeAssistant):
 
 async def test_setup_entry_cant_reach_southern_company(
     recorder_mock: Recorder, hass: HomeAssistant
-):
+) -> None:
     """Ensures Southern Company being down retries setup."""
     entry = create_entry(hass)
     with patch(
@@ -45,7 +45,9 @@ async def test_setup_entry_cant_reach_southern_company(
         assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_no_token_found(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_setup_entry_no_token_found(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Ensures no token found causes entry to retry."""
     entry = create_entry(hass)
     with patch(
@@ -64,7 +66,9 @@ async def test_setup_entry_no_token_found(recorder_mock: Recorder, hass: HomeAss
         assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_account_error(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_setup_entry_account_error(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Ensures that if we have an error while trying to get accounts, config entry retries."""
     with patch(
         "homeassistant.components.southern_company.SouthernCompanyAPI.authenticate"
@@ -86,7 +90,9 @@ async def test_setup_entry_account_error(recorder_mock: Recorder, hass: HomeAssi
             assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_invalid_login(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_setup_entry_invalid_login(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Ensures Config setup is error if login is wrong."""
     entry = create_entry(hass)
     with patch(

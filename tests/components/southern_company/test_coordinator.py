@@ -20,7 +20,7 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test setup southern_company."""
     await async_init_integration(hass)
     await async_wait_recording_done(hass)
@@ -49,7 +49,7 @@ async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
         assert stat["max"] is None
         assert stat["last_reset"] is None
 
-        _sum += hourly_data[k].cost
+        _sum += hourly_data[k].usage
         assert stat["sum"] == _sum
 
     cost_stats = await hass.async_add_executor_job(
@@ -82,7 +82,9 @@ async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant):
     await hass.async_block_till_done()
 
 
-async def test_update_coordinator_no_jwt(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_update_coordinator_no_jwt(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Ensure if a coordinator update happens, and there is no jwt, then we report update failed."""
     api_mock = MockedApi(None, [])
     coordinator = SouthernCompanyCoordinator(hass, api_mock)
@@ -90,7 +92,7 @@ async def test_update_coordinator_no_jwt(recorder_mock: Recorder, hass: HomeAssi
         await coordinator._async_update_data()
 
 
-async def test_statistics_no_jwt(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_statistics_no_jwt(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Ensure if a statistic update happens, and there is no jwt, then we report update failed."""
     api_mock = MockedApi(None, [])
     coordinator = SouthernCompanyCoordinator(hass, api_mock)
@@ -98,7 +100,9 @@ async def test_statistics_no_jwt(recorder_mock: Recorder, hass: HomeAssistant):
         await coordinator._insert_statistics()
 
 
-async def test_statistics_missing_data(recorder_mock: Recorder, hass: HomeAssistant):
+async def test_statistics_missing_data(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
     """Ensure that if a piece of data is missing, i.e. cost or usage, we should not add that to the statistics."""
     await async_init_integration(hass, hourly_data=HOURLY_DATA_MISSING)
     await async_wait_recording_done(hass)
@@ -127,7 +131,7 @@ async def test_statistics_missing_data(recorder_mock: Recorder, hass: HomeAssist
         assert stat["max"] is None
         assert stat["last_reset"] is None
 
-        _sum += hourly_data[k].cost
+        _sum += hourly_data[k].usage
         assert stat["sum"] == _sum
 
     cost_stats = await hass.async_add_executor_job(

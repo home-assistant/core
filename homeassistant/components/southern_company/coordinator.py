@@ -47,18 +47,25 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
         self,
     ) -> dict[str, southern_company_api.account.MonthlyUsage]:
         """Update data via API."""
-        if await self._southern_company_connection.jwt is not None:
-            account_month_data: dict[
-                str, southern_company_api.account.MonthlyUsage
-            ] = {}
-            for account in await self._southern_company_connection.accounts:
-                _LOGGER.debug("Updating monthly data for %s", account.number)
-                account_month_data[account.number] = await account.get_month_data(
-                    await self._southern_company_connection.jwt
-                )
-            # Note: insert statistics can be somewhat slow on first setup.
-            await self._insert_statistics()
-            return account_month_data
+        try:
+            if await self._southern_company_connection.jwt is not None:
+                account_month_data: dict[
+                    str, southern_company_api.account.MonthlyUsage
+                ] = {}
+                for account in await self._southern_company_connection.accounts:
+                    _LOGGER.debug("Updating sensor data for %s", account.number)
+                    account_month_data[account.number] = await account.get_month_data(
+                        await self._southern_company_connection.jwt
+                    )
+                # Note: insert statistics can be somewhat slow on first setup.
+                await self._insert_statistics()
+                return account_month_data
+        except (
+            southern_company_api.exceptions.NoJwtTokenFound,
+            southern_company_api.exceptions.NoScTokenFound,
+        ) as ex:
+            raise UpdateFailed("Jwt is None") from ex
+
         raise UpdateFailed("No jwt token")
 
     async def _insert_statistics(self) -> None:

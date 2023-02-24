@@ -1676,7 +1676,7 @@ solax==0.3.0
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.southern_company
-southern-company-api==0.3.7
+southern-company-api==0.5.1
 
 # homeassistant.components.marytts
 speak2mary==1.4.0

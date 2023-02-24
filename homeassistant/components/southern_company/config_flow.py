@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 
@@ -37,7 +38,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any], errors: dict[str, str]
     ) -> FlowResult | None:
         """Handle authentication for all flows to reduce repetition of code."""
-        sca = SouthernCompanyAPI(user_input["username"], user_input["password"])
+        sca = SouthernCompanyAPI(
+            user_input["username"],
+            user_input["password"],
+            aiohttp_client.async_get_clientsession(self.hass),
+        )
         try:
             await sca.authenticate()
         except CantReachSouthernCompany:

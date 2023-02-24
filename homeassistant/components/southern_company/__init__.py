@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 from .coordinator import SouthernCompanyCoordinator
@@ -23,10 +24,10 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Southern Company from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     sca = SouthernCompanyAPI(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
+        aiohttp_client.async_get_clientsession(hass),
     )
     try:
         await sca.authenticate()
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed("Login incorrect") from err
     coordinator = SouthernCompanyCoordinator(hass, sca)
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
