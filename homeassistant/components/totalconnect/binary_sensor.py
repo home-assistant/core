@@ -94,7 +94,6 @@ class TotalConnectZoneSecurityBinarySensor(TotalConnectZoneBinarySensor):
         return None
 
     def update(self):
-    def update(self) -> None:
         """Return the state of the device."""
         if self._zone.is_faulted() or self._zone.is_triggered():
             self._attr_is_on = True
