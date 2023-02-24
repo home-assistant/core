@@ -83,24 +83,14 @@ def json_bytes(data: Any) -> bytes:
     )
 
 
-def _strip_null_process_dict(_dict: dict[Any, Any]) -> dict[Any, Any]:
-    """Strip NUL from items in a dict."""
-    return {key: _strip_null(o) for key, o in _dict.items()}
-
-
-def _strip_null_process_list(_list: list[Any]) -> list[Any]:
-    """Strip NUL from items in a list."""
-    return [_strip_null(o) for o in _list]
-
-
 def _strip_null(obj: Any) -> Any:
     """Strip NUL from an object."""
     if isinstance(obj, str):
         return obj.split("\0", 1)[0]
     if isinstance(obj, dict):
-        return _strip_null_process_dict(obj)
+        return {key: _strip_null(o) for key, o in obj.items()}
     if isinstance(obj, list):
-        return _strip_null_process_list(obj)
+        return [_strip_null(o) for o in obj]
     return obj
 
 
