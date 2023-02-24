@@ -871,7 +871,7 @@ habitipy==0.2.0
 hass-nabucasa==0.61.0
 
 # homeassistant.components.splunk
-hass_splunk==0.1.1
+hass_splunk==0.1.2
 
 # homeassistant.components.conversation
 hassil==1.0.5
