@@ -1,13 +1,12 @@
 """Test bluetooth diagnostics."""
-
-
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BaseHaRemoteScanner, HaBluetoothConnector
+from homeassistant.core import HomeAssistant
 
 from . import (
     MockBleakClient,
@@ -18,11 +17,16 @@ from . import (
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass, hass_client, mock_bleak_scanner_start, enable_bluetooth, two_adapters
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bleak_scanner_start: MagicMock,
+    enable_bluetooth: None,
+    two_adapters: None,
+) -> None:
     """Test we can setup and unsetup bluetooth with multiple adapters."""
     # Normally we do not want to patch our classes, but since bleak will import
     # a different scanner based on the operating system, we need to patch here
@@ -104,10 +108,10 @@ async def test_diagnostics(
                 "org.bluez": {
                     "/org/bluez/hci0": {
                         "org.bluez.Adapter1": {
-                            "Alias": "BlueZ " "5.63",
+                            "Alias": "BlueZ 5.63",
                             "Discovering": False,
                             "Modalias": "usb:v1D6Bp0246d0540",
-                            "Name": "BlueZ " "5.63",
+                            "Name": "BlueZ 5.63",
                         },
                         "org.bluez.AdvertisementMonitorManager1": {
                             "SupportedFeatures": [],
@@ -241,8 +245,12 @@ async def test_diagnostics(
 
 
 async def test_diagnostics_macos(
-    hass, hass_client, mock_bleak_scanner_start, mock_bluetooth_adapters, macos_adapter
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+    macos_adapter,
+) -> None:
     """Test diagnostics for macos."""
     # Normally we do not want to patch our classes, but since bleak will import
     # a different scanner based on the operating system, we need to patch here
@@ -323,7 +331,7 @@ async def test_diagnostics_macos(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -331,12 +339,12 @@ async def test_diagnostics_macos(
                             [[]],
                         ],
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -351,7 +359,7 @@ async def test_diagnostics_macos(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -359,12 +367,12 @@ async def test_diagnostics_macos(
                             [[]],
                         ],
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "connectable": True,
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -384,7 +392,7 @@ async def test_diagnostics_macos(
                                     "wohand",
                                     {
                                         "1": {
-                                            "__type": "<class " "'bytes'>",
+                                            "__type": "<class 'bytes'>",
                                             "repr": "b'\\x01'",
                                         }
                                     },
@@ -413,13 +421,13 @@ async def test_diagnostics_macos(
 
 
 async def test_diagnostics_remote_adapter(
-    hass,
-    hass_client,
-    mock_bleak_scanner_start,
-    mock_bluetooth_adapters,
-    enable_bluetooth,
-    one_adapter,
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+    enable_bluetooth: None,
+    one_adapter: None,
+) -> None:
     """Test diagnostics for remote adapter."""
     manager = _get_manager()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
@@ -450,7 +458,6 @@ async def test_diagnostics_remote_adapter(
         "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
         return_value={},
     ):
-
         entry1 = MockConfigEntry(
             domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
         )
@@ -515,7 +522,7 @@ async def test_diagnostics_remote_adapter(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -524,11 +531,11 @@ async def test_diagnostics_remote_adapter(
                         ],
                         "connectable": False,
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -543,7 +550,7 @@ async def test_diagnostics_remote_adapter(
                         "address": "44:44:33:11:23:45",
                         "advertisement": [
                             "wohand",
-                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {"1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}},
                             {},
                             [],
                             -127,
@@ -552,11 +559,11 @@ async def test_diagnostics_remote_adapter(
                         ],
                         "connectable": True,
                         "device": {
-                            "__type": "<class " "'bleak.backends.device.BLEDevice'>",
-                            "repr": "BLEDevice(44:44:33:11:23:45, " "wohand)",
+                            "__type": "<class 'bleak.backends.device.BLEDevice'>",
+                            "repr": "BLEDevice(44:44:33:11:23:45, wohand)",
                         },
                         "manufacturer_data": {
-                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                            "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
                         "rssi": -127,
@@ -600,7 +607,7 @@ async def test_diagnostics_remote_adapter(
                                     "wohand",
                                     {
                                         "1": {
-                                            "__type": "<class " "'bytes'>",
+                                            "__type": "<class 'bytes'>",
                                             "repr": "b'\\x01'",
                                         }
                                     },

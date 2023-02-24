@@ -118,7 +118,6 @@ AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     name="AC",
     state_fn=lambda data: data.ac_power,
     attributes_fn=lambda data: {"time": data.ac_power_timestamp},
-    state_class=SensorStateClass.MEASUREMENT,
 )
 
 ZONE_SENSORS = {

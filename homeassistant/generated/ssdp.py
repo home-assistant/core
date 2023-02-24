@@ -155,20 +155,6 @@ SSDP = {
             "manufacturer": "SOYEA TECHNOLOGY CO., LTD.",
         },
     ],
-    "hue": [
-        {
-            "manufacturer": "Royal Philips Electronics",
-            "modelName": "Philips hue bridge 2012",
-        },
-        {
-            "manufacturer": "Royal Philips Electronics",
-            "modelName": "Philips hue bridge 2015",
-        },
-        {
-            "manufacturer": "Signify",
-            "modelName": "Philips hue bridge 2015",
-        },
-    ],
     "hyperion": [
         {
             "manufacturer": "Hyperion Open Source Ambient Lighting",

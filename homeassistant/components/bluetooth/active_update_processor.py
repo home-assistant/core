@@ -1,4 +1,7 @@
-"""A Bluetooth passive processor coordinator that collects data from advertisements but can also poll."""
+"""A Bluetooth passive processor coordinator.
+
+Collects data from advertisements but can also poll.
+"""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -23,23 +26,27 @@ _T = TypeVar("_T")
 class ActiveBluetoothProcessorCoordinator(
     Generic[_T], PassiveBluetoothProcessorCoordinator[_T]
 ):
-    """
-    A processor coordinator that parses passive data from advertisements but can also poll.
+    """A processor coordinator that parses passive data.
+
+    Parses passive data from advertisements but can also poll.
 
     Every time an advertisement is received, needs_poll_method is called to work
     out if a poll is needed. This should return True if it is and False if it is
     not needed.
 
-    def needs_poll_method(svc_info: BluetoothServiceInfoBleak, last_poll: float | None) -> bool:
+    def needs_poll_method(
+        svc_info: BluetoothServiceInfoBleak,
+        last_poll: float | None
+    ) -> bool:
         return True
 
-    If there has been no poll since HA started, `last_poll` will be None. Otherwise it is
-    the number of seconds since one was last attempted.
+    If there has been no poll since HA started, `last_poll` will be None.
+    Otherwise it is the number of seconds since one was last attempted.
 
     If a poll is needed, the coordinator will call poll_method. This is a coroutine.
-    It should return the same type of data as your update_method. The expectation is that
-    data from advertisements and from polling are being parsed and fed into a shared
-    object that represents the current state of the device.
+    It should return the same type of data as your update_method. The expectation is
+    that data from advertisements and from polling are being parsed and fed into a
+    shared object that represents the current state of the device.
 
     async def poll_method(svc_info: BluetoothServiceInfoBleak) -> YourDataType:
         return YourDataType(....)

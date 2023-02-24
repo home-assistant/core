@@ -202,7 +202,9 @@ async def async_build_source_set(hass: HomeAssistant) -> set[IPv4Address | IPv6A
     return {
         source_ip
         for source_ip in await network.async_get_enabled_source_ips(hass)
-        if not source_ip.is_loopback and not source_ip.is_global
+        if not source_ip.is_loopback
+        and not source_ip.is_global
+        and (source_ip.version == 6 and source_ip.scope_id or source_ip.version == 4)
     }
 
 
@@ -516,7 +518,11 @@ class Scanner:
                 CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
 
-        if not callbacks and not matching_domains:
+        if (
+            not callbacks
+            and not matching_domains
+            and source != SsdpSource.ADVERTISEMENT_BYEBYE
+        ):
             return
 
         discovery_info = discovery_info_from_headers_and_description(
@@ -532,6 +538,7 @@ class Scanner:
 
         # Config flows should only be created for alive/update messages from alive devices
         if source == SsdpSource.ADVERTISEMENT_BYEBYE:
+            self._async_dismiss_discoveries(discovery_info)
             return
 
         _LOGGER.debug("Discovery info: %s", discovery_info)
@@ -545,6 +552,19 @@ class Scanner:
                 {"source": config_entries.SOURCE_SSDP},
                 discovery_info,
             )
+
+    def _async_dismiss_discoveries(
+        self, byebye_discovery_info: SsdpServiceInfo
+    ) -> None:
+        """Dismiss all discoveries for the given address."""
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            SsdpServiceInfo,
+            lambda service_info: bool(
+                service_info.ssdp_st == byebye_discovery_info.ssdp_st
+                and service_info.ssdp_location == byebye_discovery_info.ssdp_location
+            ),
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     async def _async_get_description_dict(
         self, location: str | None
@@ -706,11 +726,12 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
     test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     for port in range(UPNP_SERVER_MIN_PORT, UPNP_SERVER_MAX_PORT):
+        addr = (source[0],) + (port,) + source[2:]
         try:
-            test_socket.bind(source)
+            test_socket.bind(addr)
             return port
         except OSError:
-            if port == UPNP_SERVER_MAX_PORT:
+            if port == UPNP_SERVER_MAX_PORT - 1:
                 raise
 
     raise RuntimeError("unreachable")

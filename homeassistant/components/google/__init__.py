@@ -191,8 +191,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed from err
         except ApiException as err:
             raise ConfigEntryNotReady from err
-        else:
-            hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
+
+        hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:
@@ -327,7 +327,7 @@ def load_config(path: str) -> dict[str, Any]:
     calendars = {}
     try:
         with open(path, encoding="utf8") as file:
-            data = yaml.safe_load(file)
+            data = yaml.safe_load(file) or []
             for calendar in data:
                 calendars[calendar[CONF_CAL_ID]] = DEVICE_SCHEMA(calendar)
     except FileNotFoundError as err:

@@ -1,4 +1,4 @@
-"""Test zha analog output."""
+"""Test ZHA analog output."""
 from unittest.mock import call, patch
 
 import pytest
@@ -9,9 +9,9 @@ import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -28,7 +28,7 @@ from tests.common import mock_coro
 
 @pytest.fixture(autouse=True)
 def number_platform_only():
-    """Only setup the number and required base platforms to speed up tests."""
+    """Only set up the number and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -82,8 +82,10 @@ async def light(zigpy_device_mock):
     return zigpy_device
 
 
-async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_device):
-    """Test zha number platform."""
+async def test_number(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_analog_output_device
+) -> None:
+    """Test ZHA number platform."""
 
     cluster = zigpy_analog_output_device.endpoints.get(1).analog_output
     cluster.PLUGGED_ATTR_READS = {
@@ -187,7 +189,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
 
 
 @pytest.mark.parametrize(
-    "attr, initial_value, new_value",
+    ("attr", "initial_value", "new_value"),
     (
         ("on_off_transition_time", 20, 5),
         ("on_level", 255, 50),
@@ -198,9 +200,9 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     ),
 )
 async def test_level_control_number(
-    hass, light, zha_device_joined, attr, initial_value, new_value
-):
-    """Test zha level control number entities - new join."""
+    hass: HomeAssistant, light, zha_device_joined, attr, initial_value, new_value
+) -> None:
+    """Test ZHA level control number entities - new join."""
 
     entity_registry = er.async_get(hass)
     level_control_cluster = light.endpoints[1].level
@@ -327,13 +329,13 @@ async def test_level_control_number(
 
 
 @pytest.mark.parametrize(
-    "attr, initial_value, new_value",
+    ("attr", "initial_value", "new_value"),
     (("start_up_color_temperature", 500, 350),),
 )
 async def test_color_number(
-    hass, light, zha_device_joined, attr, initial_value, new_value
-):
-    """Test zha color number entities - new join."""
+    hass: HomeAssistant, light, zha_device_joined, attr, initial_value, new_value
+) -> None:
+    """Test ZHA color number entities - new join."""
 
     entity_registry = er.async_get(hass)
     color_cluster = light.endpoints[1].light_color
@@ -358,6 +360,7 @@ async def test_color_number(
                 "color_temp_physical_max",
                 "color_capabilities",
                 "start_up_color_temperature",
+                "options",
             ],
             allow_cache=True,
             only_cache=False,

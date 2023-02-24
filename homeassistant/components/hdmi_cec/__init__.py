@@ -261,14 +261,8 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         if ATTR_RAW in data:
             command = CecCommand(data[ATTR_RAW])
         else:
-            if ATTR_SRC in data:
-                src = data[ATTR_SRC]
-            else:
-                src = ADDR_UNREGISTERED
-            if ATTR_DST in data:
-                dst = data[ATTR_DST]
-            else:
-                dst = ADDR_BROADCAST
+            src = data.get(ATTR_SRC, ADDR_UNREGISTERED)
+            dst = data.get(ATTR_DST, ADDR_BROADCAST)
             if ATTR_CMD in data:
                 cmd = data[ATTR_CMD]
             else:
@@ -314,8 +308,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     def _update(call: ServiceCall) -> None:
-        """
-        Update if device update is needed.
+        """Update if device update is needed.
 
         Called by service, requests CEC network to update data.
         """
@@ -374,10 +367,7 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
-        if self._device.type in ICONS_BY_TYPE:
-            self._attr_icon = ICONS_BY_TYPE[self._device.type]
-        else:
-            self._attr_icon = ICON_UNKNOWN
+        self._attr_icon = ICONS_BY_TYPE.get(self._device.type, ICON_UNKNOWN)
 
     def _set_attr_name(self):
         """Set name."""

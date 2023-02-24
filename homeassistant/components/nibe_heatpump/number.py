@@ -5,8 +5,8 @@ from nibe.coil import Coil
 
 from homeassistant.components.number import ENTITY_ID_FORMAT, NumberEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, CoilEntity, Coordinator
@@ -54,6 +54,7 @@ class Number(CoilEntity, NumberEntity):
             self._attr_native_min_value = float(coil.min)
             self._attr_native_max_value = float(coil.max)
 
+        self._attr_native_step = 1 / coil.factor
         self._attr_native_unit_of_measurement = coil.unit
         self._attr_native_value = None
 

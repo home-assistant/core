@@ -2,7 +2,7 @@
 import json
 from unittest.mock import patch
 
-from brother import SnmpError, UnsupportedModel
+from brother import SnmpError, UnsupportedModelError
 
 from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
@@ -116,9 +116,8 @@ async def test_snmp_error(hass: HomeAssistant) -> None:
 async def test_unsupported_model_error(hass: HomeAssistant) -> None:
     """Test unsupported printer model error."""
     with patch("brother.Brother.initialize"), patch(
-        "brother.Brother._get_data", side_effect=UnsupportedModel("error")
+        "brother.Brother._get_data", side_effect=UnsupportedModelError("error")
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
@@ -149,7 +148,6 @@ async def test_zeroconf_snmp_error(hass: HomeAssistant) -> None:
     with patch("brother.Brother.initialize"), patch(
         "brother.Brother._get_data", side_effect=SnmpError("error")
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
@@ -259,7 +257,6 @@ async def test_zeroconf_confirm_create_entry(hass: HomeAssistant) -> None:
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},

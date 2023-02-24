@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -21,7 +22,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -183,9 +183,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator[dict[str, OncueDevice]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     entities: list[OncueSensorEntity] = []
-    devices: dict[str, OncueDevice] = coordinator.data
+    devices = coordinator.data
     for device_id, device in devices.items():
         entities.extend(
             OncueSensorEntity(coordinator, device_id, device, sensor, SENSOR_MAP[key])
@@ -201,7 +203,7 @@ class OncueSensorEntity(OncueEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, OncueDevice]],
         device_id: str,
         device: OncueDevice,
         sensor: OncueSensor,

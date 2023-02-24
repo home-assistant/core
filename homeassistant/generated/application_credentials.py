@@ -7,6 +7,7 @@ APPLICATION_CREDENTIALS = [
     "geocaching",
     "google",
     "google_assistant_sdk",
+    "google_mail",
     "google_sheets",
     "home_connect",
     "lametric",

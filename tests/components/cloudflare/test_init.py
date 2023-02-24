@@ -4,11 +4,13 @@ from unittest.mock import patch
 from pycfdns.exceptions import (
     CloudflareAuthenticationException,
     CloudflareConnectionException,
+    CloudflareZoneException,
 )
 import pytest
 
 from homeassistant.components.cloudflare.const import DOMAIN, SERVICE_UPDATE_RECORDS
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.location import LocationInfo
 
@@ -17,7 +19,7 @@ from . import ENTRY_CONFIG, init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass, cfupdate):
+async def test_unload_entry(hass: HomeAssistant, cfupdate) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 
@@ -31,20 +33,31 @@ async def test_unload_entry(hass, cfupdate):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_raises_entry_not_ready(hass, cfupdate):
+@pytest.mark.parametrize(
+    "side_effect",
+    (
+        CloudflareConnectionException(),
+        CloudflareZoneException(),
+    ),
+)
+async def test_async_setup_raises_entry_not_ready(
+    hass: HomeAssistant, cfupdate, side_effect
+) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     instance = cfupdate.return_value
 
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
 
-    instance.get_zone_id.side_effect = CloudflareConnectionException()
+    instance.get_zone_id.side_effect = side_effect
     await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_raises_entry_auth_failed(hass, cfupdate):
+async def test_async_setup_raises_entry_auth_failed(
+    hass: HomeAssistant, cfupdate
+) -> None:
     """Test that it throws ConfigEntryAuthFailed when exception occurs during setup."""
     instance = cfupdate.return_value
 
@@ -68,7 +81,7 @@ async def test_async_setup_raises_entry_auth_failed(hass, cfupdate):
     assert flow["context"]["entry_id"] == entry.entry_id
 
 
-async def test_integration_services(hass, cfupdate):
+async def test_integration_services(hass: HomeAssistant, cfupdate) -> None:
     """Test integration services."""
     instance = cfupdate.return_value
 
@@ -91,7 +104,6 @@ async def test_integration_services(hass, cfupdate):
             True,
         ),
     ):
-
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_RECORDS,
@@ -103,7 +115,7 @@ async def test_integration_services(hass, cfupdate):
     instance.update_records.assert_called_once()
 
 
-async def test_integration_services_with_issue(hass, cfupdate):
+async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) -> None:
     """Test integration services with issue."""
     instance = cfupdate.return_value
 

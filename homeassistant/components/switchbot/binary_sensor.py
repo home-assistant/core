@@ -7,8 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -43,6 +43,28 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         key="is_light",
         name="Light",
         device_class=BinarySensorDeviceClass.LIGHT,
+    ),
+    "door_open": BinarySensorEntityDescription(
+        key="door_status",
+        name="Door status",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    "unclosed_alarm": BinarySensorEntityDescription(
+        key="unclosed_alarm",
+        name="Door unclosed alarm",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "unlocked_alarm": BinarySensorEntityDescription(
+        key="unlocked_alarm",
+        name="Door unlocked alarm",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "auto_lock_paused": BinarySensorEntityDescription(
+        key="auto_lock_paused",
+        name="Door auto-lock paused",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
