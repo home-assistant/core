@@ -8,9 +8,7 @@ from .const import PLATFORMS
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
+    return await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
