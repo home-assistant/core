@@ -406,7 +406,7 @@ DISCOVERY_SCHEMAS = [
         assumed_state=True,
     ),
     # Merten 507801 Connect Roller Shutter.
-    # Disable endpoint 2, as it has no practical function
+    # Disable endpoint 2, as it has no practical function. CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="window_shutter",
@@ -423,7 +423,7 @@ DISCOVERY_SCHEMAS = [
         entity_registry_enabled_default=False,
     ),
     # Merten 507801 Connect Roller Shutter.
-    # Disable endpoint 2, as it has no practical function
+    # Disable endpoint 2, as it has no practical function. CC: Protection
     ZWaveDiscoverySchema(
         platform=Platform.SELECT,
         manufacturer_id={0x007A},
