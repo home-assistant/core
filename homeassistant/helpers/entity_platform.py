@@ -53,6 +53,7 @@ SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 SLOW_ADD_ENTITY_MAX_WAIT = 15  # Per Entity
 SLOW_ADD_MIN_TIMEOUT = 500
+SLOW_UPDATE_WARNING = 10
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
@@ -132,6 +133,7 @@ class EntityPlatform:
         # Method to cancel the retry of setup
         self._async_cancel_retry_setup: CALLBACK_TYPE | None = None
         self._process_updates: asyncio.Lock | None = None
+        self._updates_in_progress: dict[str, asyncio.Task[Any]] = {}
 
         self.parallel_updates: asyncio.Semaphore | None = None
 
@@ -819,23 +821,39 @@ class EntityPlatform:
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
-            self.logger.warning(
-                "Updating %s %s took longer than the scheduled update interval %s",
-                self.platform_name,
-                self.domain,
-                self.scan_interval,
-            )
+            for entity_id, task in self._updates_in_progress.items():
+                if not task.done():
+                    self.logger.warning(
+                        "Updating %s %s %s is taking over %s seconds",
+                        self.platform_name,
+                        self.domain,
+                        entity_id,
+                        self.scan_interval.total_seconds(),
+                    )
             return
 
         async with self._process_updates:
-            tasks: list[Coroutine[Any, Any, None]] = []
+            updates: dict[str, asyncio.Task[Any]] = {}
             for entity in self.entities.values():
                 if not entity.should_poll:
                     continue
-                tasks.append(entity.async_update_ha_state(True))
+                updates[entity.entity_id] = asyncio.create_task(
+                    entity.async_device_update(warning=False)
+                )
 
-            if tasks:
-                await asyncio.gather(*tasks)
+            self._updates_in_progress = updates
+            if not updates:
+                return
+
+            results = await asyncio.gather(*updates.values(), return_exceptions=True)
+            for idx, entity_id in enumerate(updates):
+                result = results[idx]
+                if isinstance(result, Exception):
+                    self.logger.exception(
+                        "Error while updating entity %s: %s", entity_id, result
+                    )
+
+            self._updates_in_progress = {}
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(
