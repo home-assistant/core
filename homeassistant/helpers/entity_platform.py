@@ -838,7 +838,7 @@ class EntityPlatform:
                 if not entity.should_poll:
                     continue
                 updates[entity.entity_id] = asyncio.create_task(
-                    entity.async_device_update(warning=False)
+                    entity.async_update_ha_state(force_refresh=True, warning=False)
                 )
 
             self._updates_in_progress = updates

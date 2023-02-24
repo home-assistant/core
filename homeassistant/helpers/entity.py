@@ -520,7 +520,9 @@ class Entity(ABC):
         self._context = context
         self._context_set = dt_util.utcnow()
 
-    async def async_update_ha_state(self, force_refresh: bool = False) -> None:
+    async def async_update_ha_state(
+        self, force_refresh: bool = False, warning: bool = True
+    ) -> None:
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -538,7 +540,7 @@ class Entity(ABC):
         # update entity data
         if force_refresh:
             try:
-                await self.async_device_update()
+                await self.async_device_update(warning)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
