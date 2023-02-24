@@ -3,10 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.prosegur import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -17,7 +15,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         ConnectionError,
     ],
 )
-async def test_setup_entry_fail_retrieve(hass: HomeAssistant, error) -> None:
+async def test_setup_entry_fail_retrieve(
+    hass: HomeAssistant, mock_config_entry, error
+) -> None:
     """Test loading the Prosegur entry."""
 
     mock_config_entry.add_to_hass(hass)
@@ -32,35 +32,11 @@ async def test_setup_entry_fail_retrieve(hass: HomeAssistant, error) -> None:
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    init_integration,
+    mock_config_entry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test unloading the Prosegur entry."""
 
-    aioclient_mock.post(
-        "https://smart.prosegur.com/smart-server/ws/access/login",
-        json={"data": {"token": "123456789"}},
-    )
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "username": "test-username",
-            "password": "test-password",
-            "country": "PT",
-            "contract": "xpto",
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    install = MagicMock()
-    install.contract = "123"
-
-    with patch(
-        "homeassistant.components.prosegur.config_flow.Installation.retrieve",
-        return_value=install,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-        await hass.async_block_till_done()
-
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
