@@ -14,6 +14,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+import concurrent.futures
 from contextlib import suppress
 from contextvars import ContextVar
 import datetime
@@ -79,11 +80,7 @@ from .exceptions import (
 )
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .util import dt as dt_util, location, ulid as ulid_util
-from .util.async_ import (
-    fire_coroutine_threadsafe,
-    run_callback_threadsafe,
-    shutdown_run_callback_threadsafe,
-)
+from .util.async_ import run_callback_threadsafe, shutdown_run_callback_threadsafe
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import (
@@ -294,6 +291,7 @@ class HomeAssistant:
         self._stopped: asyncio.Event | None = None
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
+        self._stop_future: concurrent.futures.Future[None] | None = None
 
     @property
     def is_running(self) -> bool:
@@ -312,12 +310,14 @@ class HomeAssistant:
         For regular use, use "await hass.run()".
         """
         # Register the async start
-        fire_coroutine_threadsafe(self.async_start(), self.loop)
-
+        _future = asyncio.run_coroutine_threadsafe(self.async_start(), self.loop)
         # Run forever
         # Block until stopped
         _LOGGER.info("Starting Home Assistant core loop")
         self.loop.run_forever()
+        # The future is never retrieved but we still hold a reference to it
+        # to prevent the task from being garbage collected prematurely.
+        del _future
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -514,7 +514,8 @@ class HomeAssistant:
     def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
 
         target: target to call.
         """
@@ -533,8 +534,7 @@ class HomeAssistant:
 
         This is a background task which will not block startup and will be
         automatically cancelled on shutdown. If you are using this in your
-        integration, make sure you also cancel the task when the config entry
-        your task belongs to is unloaded.
+        integration, use the create task methods on the config entry instead.
 
         This method must be run in the event loop.
         """
@@ -682,7 +682,11 @@ class HomeAssistant:
         """Stop Home Assistant and shuts down all threads."""
         if self.state == CoreState.not_running:  # just ignore
             return
-        fire_coroutine_threadsafe(self.async_stop(), self.loop)
+        # The future is never retrieved, and we only hold a reference
+        # to it to prevent it from being garbage collected.
+        self._stop_future = asyncio.run_coroutine_threadsafe(
+            self.async_stop(), self.loop
+        )
 
     async def async_stop(self, exit_code: int = 0, *, force: bool = False) -> None:
         """Stop Home Assistant and shuts down all threads.
@@ -712,6 +716,8 @@ class HomeAssistant:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
             task.cancel()
+
+        self.exit_code = exit_code
 
         # stage 1
         self.state = CoreState.stopping
@@ -756,8 +762,6 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
-
-        self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
@@ -1813,7 +1817,10 @@ class Config:
 
         self.latitude: float = 0
         self.longitude: float = 0
+
         self.elevation: int = 0
+        """Elevation (always in meters regardless of the unit system)."""
+
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM

@@ -73,6 +73,8 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) 
             network_name="OpenThread HC",
             server="core-silabs-multiprotocol.local.",
             vendor_name="HomeAssistant",
+            thread_version="1.3.0",
+            addresses=["192.168.0.115"],
         ),
     )
 
@@ -95,6 +97,8 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) 
             network_name="NEST-PAN-E1AF",
             server="2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",
             vendor_name="Google Inc.",
+            thread_version="1.3.0",
+            addresses=["192.168.0.124"],
         ),
     )
 
@@ -163,6 +167,8 @@ async def test_discover_routers_bad_data(
             network_name="OpenThread HC",
             server="core-silabs-multiprotocol.local.",
             vendor_name=None,
+            thread_version="1.3.0",
+            addresses=["192.168.0.115"],
         ),
     )
 
