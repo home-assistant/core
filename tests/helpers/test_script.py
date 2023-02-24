@@ -2406,13 +2406,7 @@ async def test_repeat_var_in_condition(hass: HomeAssistant, condition) -> None:
     script_obj = script.Script(
         hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
     )
-
-    with mock.patch(
-        "homeassistant.helpers.condition._LOGGER.error",
-        side_effect=AssertionError("Template Error"),
-    ):
-        await script_obj.async_run(context=Context())
-
+    await script_obj.async_run(context=Context())
     assert len(events) == 2
 
     if condition == "while":
@@ -2545,13 +2539,7 @@ async def test_repeat_nested(
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
-
-    with mock.patch(
-        "homeassistant.helpers.condition._LOGGER.error",
-        side_effect=AssertionError("Template Error"),
-    ):
-        await script_obj.async_run(variables, Context())
-
+    await script_obj.async_run(variables, Context())
     assert len(events) == 10
     assert events[0].data == first_last
     assert events[-1].data == first_last
