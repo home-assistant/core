@@ -299,9 +299,9 @@ async def test_extended_color_light(
             call(
                 node_id=1,
                 endpoint_id=1,
-                command=clusters.ColorControl.Commands.MoveToColor(
-                    colorX=21168,
-                    colorY=21561,
+                command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
+                    hue=0,
+                    saturation=0,
                     transitionTime=0,
                     optionsMask=0,
                     optionsOverride=0,
