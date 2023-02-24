@@ -99,14 +99,12 @@ def json_bytes_strip_null(data: Any) -> bytes:
     # We expect null-characters to be very rare, hence try encoding first and look
     # for an escaped null-character in the output.
     result = json_bytes(data)
-    if b"\\u0000" in result:
-        # We work on the processed result so we don't need to worry about
-        # Home Assistant extensions which allows encoding sets, tuples, etc.
-        data_processed = orjson.loads(result)
-        data_processed = _strip_null(data_processed)
-        result = json_bytes(data_processed)
+    if b"\\u0000" not in result:
+        return result
 
-    return result
+    # We work on the processed result so we don't need to worry about
+    # Home Assistant extensions which allows encoding sets, tuples, etc.
+    return json_bytes(_strip_null(orjson.loads(result)))
 
 
 def json_dumps(data: Any) -> str:
