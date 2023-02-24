@@ -779,9 +779,10 @@ def _apply_update(  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        _LOGGER.debug("Deleting duplicated statistics entries")
-        with session_scope(session=session_maker()) as session:
-            delete_statistics_duplicates(hass, session)
+        # This used to create the unique indexes for start and metadata_id
+        # but we changed the format in schema 34 which will now take care
+        # of removing any duplicate if they still exist.
+        pass
     elif new_version == 25:
         _add_columns(session_maker, "states", [f"attributes_id {big_int}"])
         _create_index(session_maker, "states", "ix_states_attributes_id")
