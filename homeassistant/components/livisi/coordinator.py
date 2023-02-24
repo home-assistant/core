@@ -70,15 +70,14 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 livisi_connection_data=livisi_connection_data
             )
         controller_data = await self.aiolivisi.async_get_controller()
-        if controller_data["controllerType"] == AVATAR:
+        if (controller_type := controller_data["controllerType"]) == AVATAR:
             self.port = AVATAR_PORT
             self.is_avatar = True
         else:
             self.port = CLASSIC_PORT
             self.is_avatar = False
-        controller_type = controller_data["controllerType"]
-        self.serial_number = controller_data["serialNumber"]
         self.controller_type = controller_type
+        self.serial_number = controller_data["serialNumber"]
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Set the discovered devices list."""
@@ -99,33 +98,23 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
-        if response is None:
-            return None
         if self.is_avatar:
-            temperature = response["setpointTemperature"]
-        else:
-            temperature = response["pointTemperature"]
-        return temperature["value"]
+            return response["setpointTemperature"]["value"]
+        return response["pointTemperature"]["value"]
 
     async def async_get_vrcc_temperature(self, capability: str) -> float | None:
         """Get the temperature of the climate device."""
         response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
-        if response is None:
-            return None
-        temperature = response["temperature"]
-        return temperature["value"]
+        return response["temperature"]["value"]
 
     async def async_get_vrcc_humidity(self, capability: str) -> int | None:
         """Get the humidity of the climate device."""
         response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
-        if response is None:
-            return None
-        humidity = response["humidity"]
-        return humidity["value"]
+        return response["humidity"]["value"]
 
     async def async_set_all_rooms(self) -> None:
         """Set the room list."""
