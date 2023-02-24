@@ -13,7 +13,7 @@ coverage==7.1.0
 freezegun==1.2.2
 mock-open==1.4.0
 mypy==1.0.1
-pre-commit==3.0.0
+pre-commit==3.1.0
 pydantic==1.10.5
 pylint==2.16.0
 pylint-per-file-ignores==1.1.0
