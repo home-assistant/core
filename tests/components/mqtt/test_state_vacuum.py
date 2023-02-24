@@ -482,31 +482,34 @@ async def test_discovery_update_attr(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: [
+                    {
+                        "schema": "state",
+                        "name": "Test 1",
+                        "command_topic": "command-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                    {
+                        "schema": "state",
+                        "name": "Test 2",
+                        "command_topic": "command-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                ]
+            }
+        }
+    ],
+)
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one vacuum per unique_id."""
-    config = {
-        mqtt.DOMAIN: {
-            vacuum.DOMAIN: [
-                {
-                    "schema": "state",
-                    "name": "Test 1",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-                {
-                    "schema": "state",
-                    "name": "Test 2",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-            ]
-        }
-    }
-    await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, vacuum.DOMAIN, config
-    )
+    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, vacuum.DOMAIN)
 
 
 async def test_discovery_removal_vacuum(

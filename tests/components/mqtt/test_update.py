@@ -529,31 +529,34 @@ async def test_discovery_update_attr(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: [
+                    {
+                        "name": "Bear",
+                        "state_topic": "installed-topic",
+                        "latest_version_topic": "latest-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                    {
+                        "name": "Milk",
+                        "state_topic": "installed-topic",
+                        "latest_version_topic": "latest-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                    },
+                ]
+            }
+        }
+    ],
+)
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one update per unique_id."""
-    config = {
-        mqtt.DOMAIN: {
-            update.DOMAIN: [
-                {
-                    "name": "Bear",
-                    "state_topic": "installed-topic",
-                    "latest_version_topic": "latest-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-                {
-                    "name": "Milk",
-                    "state_topic": "installed-topic",
-                    "latest_version_topic": "latest-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-            ]
-        }
-    }
-    await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, config
-    )
+    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, update.DOMAIN)
 
 
 async def test_discovery_removal_update(

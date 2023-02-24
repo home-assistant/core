@@ -698,14 +698,12 @@ async def help_test_discovery_update_attr(
 
 async def help_test_unique_id(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
-    config: ConfigType,
 ) -> None:
     """Test unique id option only creates one entity per unique_id."""
-    assert await async_setup_component(hass, mqtt.DOMAIN, config)
+    await mqtt_mock_entry_no_yaml_config()
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
     assert len(hass.states.async_entity_ids(domain)) == 1
 
 

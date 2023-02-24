@@ -436,33 +436,36 @@ async def test_discovery_update_attr(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                select.DOMAIN: [
+                    {
+                        "name": "Test 1",
+                        "state_topic": "test-topic",
+                        "command_topic": "test-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                        "options": ["milk", "beer"],
+                    },
+                    {
+                        "name": "Test 2",
+                        "state_topic": "test-topic",
+                        "command_topic": "test-topic",
+                        "unique_id": "TOTALLY_UNIQUE",
+                        "options": ["milk", "beer"],
+                    },
+                ]
+            }
+        }
+    ],
+)
 async def test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test unique id option only creates one select per unique_id."""
-    config = {
-        mqtt.DOMAIN: {
-            select.DOMAIN: [
-                {
-                    "name": "Test 1",
-                    "state_topic": "test-topic",
-                    "command_topic": "test-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                    "options": ["milk", "beer"],
-                },
-                {
-                    "name": "Test 2",
-                    "state_topic": "test-topic",
-                    "command_topic": "test-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                    "options": ["milk", "beer"],
-                },
-            ]
-        }
-    }
-    await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, config
-    )
+    await help_test_unique_id(hass, mqtt_mock_entry_no_yaml_config, select.DOMAIN)
 
 
 async def test_discovery_removal_select(
