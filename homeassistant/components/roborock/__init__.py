@@ -34,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up roborock from a config entry."""
     _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
-    hass.data.setdefault(DOMAIN, {})
 
     user_data = UserData(entry.data.get(CONF_USER_DATA))
     base_url = entry.data.get(CONF_BASE_URL)
@@ -73,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     for platform in PLATFORMS:
         if entry.options.get(platform, True):

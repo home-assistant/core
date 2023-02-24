@@ -381,6 +381,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity, ABC):
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Send a command to a vacuum cleaner."""
         return await self.send(command, params)
