@@ -111,15 +111,16 @@ async def websocket_supervisor_api(
     ):
         raise Unauthorized()
     supervisor: HassIO = hass.data[DOMAIN]
+
+    command = msg[ATTR_ENDPOINT]
+    payload = msg.get(ATTR_DATA, {})
+
+    if command == "/ingress/session":
+        # Send user ID on session creation, so the supervisor can correlate session tokens with users
+        # for every request that is authenticated with the given ingress session token.
+        payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
+
     try:
-        command = msg[ATTR_ENDPOINT]
-        payload = msg.get(ATTR_DATA, {})
-
-        if command == "/ingress/session":
-            # Send user ID on session creation, so the supervisor can correlate session tokens with users
-            # for every request that is authenticated with the given ingress session token.
-            payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
-
         result = await supervisor.send_command(
             command,
             method=msg[ATTR_METHOD],
