@@ -50,9 +50,6 @@ async def async_setup_platform(
         translation_key="manual_migration",
     )
 
-    if discovery_info:
-        config = PLATFORM_SCHEMA(discovery_info)
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,

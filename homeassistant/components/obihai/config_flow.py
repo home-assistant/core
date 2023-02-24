@@ -56,14 +56,15 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
-        if user_input is not None and not (
-            errors := await async_validate_credentials(self.hass, user_input)
-        ):
+
+        if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            return self.async_create_entry(
-                title=user_input[CONF_HOST],
-                data=user_input,
-            )
+
+            if not (errors := await async_validate_credentials(self.hass, user_input)):
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST],
+                    data=user_input,
+                )
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
