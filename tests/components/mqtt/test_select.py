@@ -687,13 +687,13 @@ async def test_mqtt_payload_not_an_option_warning(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    service,
-    topic,
-    parameters,
-    payload,
-    template,
+    service: str,
+    topic: str,
+    parameters: dict[str, Any],
+    payload: str,
+    template: str | None,
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = select.DOMAIN
@@ -702,7 +702,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_with_yaml_config,
+        mqtt_mock_entry_no_yaml_config,
         caplog,
         domain,
         config,

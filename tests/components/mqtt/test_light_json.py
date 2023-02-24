@@ -88,6 +88,7 @@ from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.light.schema_basic import (
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
+from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -2251,15 +2252,15 @@ async def test_max_mireds(
 )
 async def test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
-    service,
-    topic,
-    parameters,
-    payload,
-    template,
-    tpl_par,
-    tpl_output,
+    service: str,
+    topic: str,
+    parameters: dict[str, Any],
+    payload: str,
+    template: str | None,
+    tpl_par: str,
+    tpl_output: PublishPayloadType,
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = light.DOMAIN
@@ -2269,7 +2270,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry_with_yaml_config,
+        mqtt_mock_entry_no_yaml_config,
         caplog,
         domain,
         config,

@@ -17,6 +17,7 @@ from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.config_integration import PLATFORM_CONFIG_SCHEMA_BASE
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.config import async_log_exception
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -1633,7 +1634,7 @@ async def help_test_entity_category(
 
 async def help_test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     domain: str,
     config: ConfigType,
@@ -1643,7 +1644,7 @@ async def help_test_publishing_with_custom_encoding(
     payload: str,
     template: str | None,
     tpl_par: str = "value",
-    tpl_output: str | None = None,
+    tpl_output: PublishPayloadType = None,
 ) -> None:
     """Test a service with publishing MQTT payload with different encoding."""
     # prepare config for tests
@@ -1677,14 +1678,16 @@ async def help_test_publishing_with_custom_encoding(
         if parameters:
             service_data[test_id].update(parameters)
 
-    # setup test entities
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        {mqtt.DOMAIN: {domain: setup_config}},
-    )
+    # setup test entities using discovery
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    item: int = 0
+    for component_config in setup_config:
+        conf = json.dumps(component_config)
+        item += 1
+        async_fire_mqtt_message(
+            hass, f"homeassistant/{domain}/component_{item}/config", conf
+        )
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     # 1) test with default encoding
     await hass.services.async_call(
@@ -1693,6 +1696,7 @@ async def help_test_publishing_with_custom_encoding(
         service_data["test1"],
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_any_call("cmd/test1", str(payload), 0, False)
     mqtt_mock.async_publish.reset_mock()
