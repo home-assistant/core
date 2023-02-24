@@ -12,8 +12,19 @@ from homeassistant.exceptions import HomeAssistantError
 
 from python_otbr_api.tlv_parser import TLVError
 
-from .const import DOMAIN, SERVICE_ADD_DATASET, SERVICE_DELETE_DATASET, ATTR_TLV, ATTR_ID
-from .dataset_store import DatasetEntry, async_add_dataset, async_get_preferred_dataset, async_delete_dataset
+from .const import (
+    DOMAIN,
+    SERVICE_ADD_DATASET,
+    SERVICE_DELETE_DATASET,
+    ATTR_TLV,
+    ATTR_ID,
+)
+from .dataset_store import (
+    DatasetEntry,
+    async_add_dataset,
+    async_get_preferred_dataset,
+    async_delete_dataset,
+)
 from .websocket_api import async_setup as async_setup_ws_api
 
 __all__ = [
@@ -57,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {
                 vol.Required(ATTR_TLV): cv.string,
             }
-        )
+        ),
     )
 
     async_register_admin_service(
@@ -69,7 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {
                 vol.Required(ATTR_ID): cv.string,
             }
-        )
+        ),
     )
 
     return True
