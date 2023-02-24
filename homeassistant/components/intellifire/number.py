@@ -25,17 +25,24 @@ async def async_setup_entry(
     """Set up the fans."""
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    description = NumberEntityDescription(
-        key="flame_control",
-        name="Flame control",
-        icon="mdi:arrow-expand-vertical",
-    )
-
     async_add_entities(
         [
             IntellifireFlameControlEntity(
-                coordinator=coordinator, description=description
-            )
+                coordinator=coordinator,
+                description=NumberEntityDescription(
+                    key="flame_control",
+                    name="Flame control",
+                    icon="mdi:arrow-expand-vertical",
+                ),
+            ),
+            IntellifireTimerControlEntity(
+                coordinator=coordinator,
+                description=NumberEntityDescription(
+                    key="sleep_control",
+                    name="Sleep timer",
+                    icon="mdi:bed-clock",
+                ),
+            ),
         ]
     )
 
@@ -59,11 +66,6 @@ class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
         super().__init__(coordinator, description)
 
     @property
-    def enabled(self) -> bool:
-        """Only enable this entity if the sleep timer is turned on."""
-        return self.coordinator.read_api.data.timer_on
-
-    @property
     def native_value(self) -> float | None:
         """Return the current Timer value in minutes."""
         # UI uses 1-5 for flame height, backing lib uses 0-4
@@ -73,7 +75,10 @@ class IntellifireTimerControlEntity(IntellifireEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Slider change."""
         minutes: int = int(value)
-        await self.coordinator.control_api.set_sleep_timer(minutes=minutes)
+        if minutes == 0:
+            await self.coordinator.control_api.stop_sleep_timer()
+        else:
+            await self.coordinator.control_api.set_sleep_timer(minutes=minutes)
         LOGGER.debug(
             "%s set sleep timer to %d ",
             self._attr_name,
