@@ -841,10 +841,10 @@ class EntityPlatform:
                     entity.async_update_ha_state(force_refresh=True, warning=False)
                 )
 
-            self._updates_in_progress = updates
             if not updates:
                 return
 
+            self._updates_in_progress = updates
             results = await asyncio.gather(*updates.values(), return_exceptions=True)
             for idx, entity_id in enumerate(updates):
                 result = results[idx]
@@ -852,7 +852,6 @@ class EntityPlatform:
                     self.logger.exception(
                         "Error while updating entity %s: %s", entity_id, result
                     )
-
             self._updates_in_progress = {}
 
 
