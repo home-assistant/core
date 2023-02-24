@@ -137,6 +137,5 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], RestoreSensor
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_sensor_data()
-        if state:
+        if state := await self.async_get_last_sensor_data():
             self._state = state.native_value

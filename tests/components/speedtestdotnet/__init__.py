@@ -53,3 +53,8 @@ MOCK_RESULTS = {
 }
 
 MOCK_STATES = {"ping": "18", "download": "1.02", "upload": "1.02"}
+MOCK_PREVIOUS_STATES = {
+    "ping": {"state": "10", "native_value": 10, "uom": "ms"},
+    "download": {"state": "100", "native_value": 100, "uom": "Mbit/s"},
+    "upload": {"state": "80", "native_value": 80, "uom": "Mbit/s"},
+}
