@@ -101,25 +101,16 @@ def async_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
 
 
 @callback
-def async_client_heartbeat_timedelta_fn(
-    controller: UniFiController, obj_id: str
-) -> timedelta:
-    """Check if device object is disabled."""
-    return controller.option_detection_time
-
-
-@callback
 def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bool:
     """Check if device object is disabled."""
     client = controller.api.clients[obj_id]
 
-    if client.is_wired != (is_wired := client.mac not in controller.wireless_clients):
+    if client.is_wired != (obj_id not in controller.wireless_clients):
         if not controller.option_ignore_wired_bug:
             return False  # Wired bug in action
-        is_wired = client.is_wired
 
     if (
-        not is_wired
+        not client.is_wired
         and client.essid
         and controller.option_ssid_filter
         and client.essid not in controller.option_ssid_filter
@@ -177,7 +168,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
             + WIRELESS_CONNECTION
             + WIRELESS_DISCONNECTION
         ),
-        heartbeat_timedelta_fn=async_client_heartbeat_timedelta_fn,
+        heartbeat_timedelta_fn=lambda controller, _: controller.option_detection_time,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -362,6 +353,5 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, DataT], ScannerEntity):
             attributes_to_check = CLIENT_CONNECTED_ALL_ATTRIBUTES
 
         attributes = {k: raw[k] for k in attributes_to_check if k in raw}
-        attributes["is_wired"] = client.mac not in self.controller.wireless_clients
 
         return attributes
