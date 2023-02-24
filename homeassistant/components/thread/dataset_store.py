@@ -158,6 +158,10 @@ async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
     store = await async_get_store(hass)
     store.async_add(source, tlv)
 
+async def async_delete_dataset(hass: HomeAssistant, id: str) -> None:
+    """Delete a dataset."""
+    store = await async_get_store(hass)
+    store.async_delete(id)
 
 async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
     """Get the preferred dataset."""
