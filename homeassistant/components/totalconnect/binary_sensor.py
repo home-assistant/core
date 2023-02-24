@@ -8,8 +8,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -31,7 +31,6 @@ async def async_setup_entry(
     client_locations = hass.data[DOMAIN][entry.entry_id].client.locations
 
     for location_id, location in client_locations.items():
-
         sensors.append(TotalConnectAlarmLowBatteryBinarySensor(location))
         sensors.append(TotalConnectAlarmTamperBinarySensor(location))
         sensors.append(TotalConnectAlarmPowerBinarySensor(location))
