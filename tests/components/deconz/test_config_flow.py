@@ -357,7 +357,7 @@ async def test_manual_configuration_timeout_get_bridge(
 
 
 @pytest.mark.parametrize(
-    "raised_error, error_string",
+    ("raised_error", "error_string"),
     [
         (pydeconz.errors.LinkButtonNotPressed, "linking_not_possible"),
         (asyncio.TimeoutError, "no_key"),
@@ -365,7 +365,9 @@ async def test_manual_configuration_timeout_get_bridge(
         (pydeconz.errors.RequestError, "no_key"),
     ],
 )
-async def test_link_step_fails(hass, aioclient_mock, raised_error, error_string):
+async def test_link_step_fails(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, raised_error, error_string
+) -> None:
     """Test config flow should abort if no API key was possible to retrieve."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -534,8 +536,8 @@ async def test_ssdp_discovery_dont_update_configuration(
 
 
 async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
-    hass, aioclient_mock
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
     config_entry = await setup_deconz_integration(
         hass, aioclient_mock, source=SOURCE_HASSIO

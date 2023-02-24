@@ -11,9 +11,9 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +33,11 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_actions(hass, device_registry, entity_registry):
+async def test_get_actions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected actions from a light."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -74,7 +78,7 @@ async def test_get_actions(hass, device_registry, entity_registry):
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -83,12 +87,12 @@ async def test_get_actions(hass, device_registry, entity_registry):
     ),
 )
 async def test_get_actions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -123,7 +127,11 @@ async def test_get_actions_hidden_auxiliary(
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_action_capabilities(hass, device_registry, entity_registry):
+async def test_get_action_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected capabilities from a light action."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -160,7 +168,15 @@ async def test_get_action_capabilities(hass, device_registry, entity_registry):
 
 
 @pytest.mark.parametrize(
-    "set_state,expected_actions,supported_features_reg,supported_features_state,capabilities_reg,attributes_state,expected_capabilities",
+    (
+        "set_state",
+        "expected_actions",
+        "supported_features_reg",
+        "supported_features_state",
+        "capabilities_reg",
+        "attributes_state",
+        "expected_capabilities",
+    ),
     [
         (
             False,
@@ -251,9 +267,9 @@ async def test_get_action_capabilities(hass, device_registry, entity_registry):
     ],
 )
 async def test_get_action_capabilities_features(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     expected_actions,
     supported_features_reg,
@@ -261,7 +277,7 @@ async def test_get_action_capabilities_features(
     capabilities_reg,
     attributes_state,
     expected_capabilities,
-):
+) -> None:
     """Test we get the expected capabilities from a light action."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -298,7 +314,9 @@ async def test_get_action_capabilities_features(
         assert capabilities == expected
 
 
-async def test_action(hass, calls, enable_custom_integrations):
+async def test_action(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for turn_on and turn_off actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

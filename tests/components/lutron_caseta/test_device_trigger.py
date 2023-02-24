@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -130,7 +131,7 @@ async def _async_setup_lutron_with_picos(hass):
     return config_entry.entry_id
 
 
-async def test_get_triggers(hass):
+async def test_get_triggers(hass: HomeAssistant) -> None:
     """Test we get the expected triggers from a lutron pico."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
     data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
@@ -167,7 +168,9 @@ async def test_get_triggers(hass):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_for_invalid_device_id(hass, device_registry):
+async def test_get_triggers_for_invalid_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test error raised for invalid lutron device_id."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
 
@@ -183,7 +186,9 @@ async def test_get_triggers_for_invalid_device_id(hass, device_registry):
     assert triggers == []
 
 
-async def test_get_triggers_for_non_button_device(hass, device_registry):
+async def test_get_triggers_for_non_button_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test error raised for invalid lutron device_id."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
 
@@ -199,7 +204,9 @@ async def test_get_triggers_for_non_button_device(hass, device_registry):
     assert triggers == []
 
 
-async def test_none_serial_keypad(hass, device_registry):
+async def test_none_serial_keypad(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test serial assignment for keypads without serials."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
 
@@ -211,7 +218,9 @@ async def test_none_serial_keypad(hass, device_registry):
     assert keypad_device is not None
 
 
-async def test_if_fires_on_button_event(hass, calls, device_registry):
+async def test_if_fires_on_button_event(
+    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+) -> None:
     """Test for press trigger firing."""
     await _async_setup_lutron_with_picos(hass)
 
@@ -260,7 +269,9 @@ async def test_if_fires_on_button_event(hass, calls, device_registry):
     assert calls[0].data["some"] == "test_trigger_button_press"
 
 
-async def test_if_fires_on_button_event_without_lip(hass, calls, device_registry):
+async def test_if_fires_on_button_event_without_lip(
+    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+) -> None:
     """Test for press trigger firing on a device that does not support lip."""
     await _async_setup_lutron_with_picos(hass)
     device = MOCK_BUTTON_DEVICES[1]
@@ -307,7 +318,7 @@ async def test_if_fires_on_button_event_without_lip(hass, calls, device_registry
     assert calls[0].data["some"] == "test_trigger_button_press"
 
 
-async def test_validate_trigger_config_no_device(hass, calls):
+async def test_validate_trigger_config_no_device(hass: HomeAssistant, calls) -> None:
     """Test for no press with no device."""
 
     assert await async_setup_component(
@@ -345,7 +356,9 @@ async def test_validate_trigger_config_no_device(hass, calls):
     assert len(calls) == 0
 
 
-async def test_validate_trigger_config_unknown_device(hass, calls):
+async def test_validate_trigger_config_unknown_device(
+    hass: HomeAssistant, calls
+) -> None:
     """Test for no press with an unknown device."""
 
     config_entry_id = await _async_setup_lutron_with_picos(hass)
@@ -391,7 +404,9 @@ async def test_validate_trigger_config_unknown_device(hass, calls):
     assert len(calls) == 0
 
 
-async def test_validate_trigger_invalid_triggers(hass, caplog):
+async def test_validate_trigger_invalid_triggers(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for click_event with invalid triggers."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
     data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
@@ -425,7 +440,9 @@ async def test_validate_trigger_invalid_triggers(hass, caplog):
     assert "value must be one of ['press', 'release']" in caplog.text
 
 
-async def test_if_fires_on_button_event_late_setup(hass, calls, device_registry):
+async def test_if_fires_on_button_event_late_setup(
+    hass: HomeAssistant, calls, device_registry: dr.DeviceRegistry
+) -> None:
     """Test for press trigger firing with integration getting setup late."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
     await hass.config_entries.async_unload(config_entry_id)

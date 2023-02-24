@@ -8,10 +8,9 @@ import homeassistant.components.automation as automation
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -32,8 +31,11 @@ def calls(hass):
 
 
 async def test_get_conditions(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected conditions from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -73,21 +75,21 @@ async def test_get_conditions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
-        (RegistryEntryHider.INTEGRATION, None),
-        (RegistryEntryHider.USER, None),
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
-    hidden_by,
-    entity_category,
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hidden_by: er.RegistryEntryHider | None,
+    entity_category: EntityCategory | None,
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -120,7 +122,11 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_get_conditions_no_state(hass, device_registry, entity_registry):
+async def test_get_conditions_no_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a binary_sensor."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -158,7 +164,11 @@ async def test_get_conditions_no_state(hass, device_registry, entity_registry):
     assert conditions == expected_conditions
 
 
-async def test_get_condition_capabilities(hass, device_registry, entity_registry):
+async def test_get_condition_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected capabilities from a binary_sensor condition."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -184,7 +194,9 @@ async def test_get_condition_capabilities(hass, device_registry, entity_registry
         assert capabilities == expected_capabilities
 
 
-async def test_if_state(hass, calls, enable_custom_integrations):
+async def test_if_state(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for turn_on and turn_off conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -257,7 +269,9 @@ async def test_if_state(hass, calls, enable_custom_integrations):
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
-async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_for_condition(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for firing if condition is on with delay."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=10)

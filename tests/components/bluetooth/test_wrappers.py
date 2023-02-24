@@ -193,8 +193,12 @@ def _generate_scanners_with_fake_devices(hass):
 
 
 async def test_test_switch_adapters_when_out_of_slots(
-    hass, two_adapters, enable_bluetooth, install_bleak_catcher, mock_platform_client
-):
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
+    install_bleak_catcher,
+    mock_platform_client,
+) -> None:
     """Ensure we try another scanner when one runs out of slots."""
     manager = _get_manager()
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
@@ -246,12 +250,12 @@ async def test_test_switch_adapters_when_out_of_slots(
 
 
 async def test_release_slot_on_connect_failure(
-    hass,
-    two_adapters,
-    enable_bluetooth,
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client_that_fails_to_connect,
-):
+) -> None:
     """Ensure the slot gets released on connection failure."""
     manager = _get_manager()
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
@@ -274,12 +278,12 @@ async def test_release_slot_on_connect_failure(
 
 
 async def test_release_slot_on_connect_exception(
-    hass,
-    two_adapters,
-    enable_bluetooth,
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client_that_raises_on_connect,
-):
+) -> None:
     """Ensure the slot gets released on connection exception."""
     manager = _get_manager()
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
@@ -303,11 +307,11 @@ async def test_release_slot_on_connect_exception(
 
 
 async def test_we_switch_adapters_on_failure(
-    hass,
-    two_adapters,
-    enable_bluetooth,
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
     install_bleak_catcher,
-):
+) -> None:
     """Ensure we try the next best adapter after a failure."""
     hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
         hass

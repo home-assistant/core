@@ -16,6 +16,7 @@ from homeassistant.components.stream.const import (
 )
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -43,7 +44,7 @@ def filename(tmpdir):
     return f"{tmpdir}/test.mp4"
 
 
-async def test_record_stream(hass, filename, h264_video):
+async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:
     """Test record stream."""
 
     worker_finished = asyncio.Event()
@@ -77,7 +78,7 @@ async def test_record_stream(hass, filename, h264_video):
     assert os.path.exists(filename)
 
 
-async def test_record_lookback(hass, filename, h264_video):
+async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:
     """Exercise record with lookback."""
 
     stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
@@ -94,7 +95,7 @@ async def test_record_lookback(hass, filename, h264_video):
     await stream.stop()
 
 
-async def test_record_path_not_allowed(hass, h264_video):
+async def test_record_path_not_allowed(hass: HomeAssistant, h264_video) -> None:
     """Test where the output path is not allowed by home assistant configuration."""
 
     stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
@@ -118,7 +119,9 @@ def add_parts_to_segment(segment, source):
     ]
 
 
-async def test_recorder_discontinuity(hass, filename, h264_video):
+async def test_recorder_discontinuity(
+    hass: HomeAssistant, filename, h264_video
+) -> None:
     """Test recorder save across a discontinuity."""
 
     # Run
@@ -164,7 +167,7 @@ async def test_recorder_discontinuity(hass, filename, h264_video):
     assert os.path.exists(filename)
 
 
-async def test_recorder_no_segments(hass, filename):
+async def test_recorder_no_segments(hass: HomeAssistant, filename) -> None:
     """Test recorder behavior with a stream failure which causes no segments."""
 
     stream = create_stream(hass, BytesIO(), {}, dynamic_stream_settings())
@@ -184,7 +187,7 @@ def h264_mov_video():
 
 
 @pytest.mark.parametrize(
-    "audio_codec,expected_audio_streams",
+    ("audio_codec", "expected_audio_streams"),
     [
         ("aac", 1),  # aac is a valid mp4 codec
         ("pcm_mulaw", 0),  # G.711 is not a valid mp4 codec
@@ -193,12 +196,12 @@ def h264_mov_video():
     ],
 )
 async def test_record_stream_audio(
-    hass,
+    hass: HomeAssistant,
     filename,
     audio_codec,
     expected_audio_streams,
     h264_mov_video,
-):
+) -> None:
     """Test treatment of different audio inputs.
 
     Record stream output should have an audio channel when input has
@@ -250,7 +253,9 @@ async def test_record_stream_audio(
     await hass.async_block_till_done()
 
 
-async def test_recorder_log(hass, filename, caplog):
+async def test_recorder_log(
+    hass: HomeAssistant, filename, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test starting a stream to record logs the url without username and password."""
     stream = create_stream(
         hass, "https://abcd:efgh@foo.bar", {}, dynamic_stream_settings()
@@ -261,7 +266,7 @@ async def test_recorder_log(hass, filename, caplog):
     assert "https://****:****@foo.bar" in caplog.text
 
 
-async def test_record_stream_rotate(hass, filename, h264_video):
+async def test_record_stream_rotate(hass: HomeAssistant, filename, h264_video) -> None:
     """Test record stream with rotation."""
 
     worker_finished = asyncio.Event()

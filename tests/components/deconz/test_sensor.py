@@ -14,10 +14,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -620,10 +619,14 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_sensors(
-    hass, aioclient_mock, mock_deconz_websocket, sensor_data, expected
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
+    sensor_data,
+    expected,
+) -> None:
     """Test successful creation of sensor entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -788,7 +791,9 @@ async def test_allow_clip_sensors(
     assert hass.states.get("sensor.clip_flur").state == "0"
 
 
-async def test_add_new_sensor(hass, aioclient_mock, mock_deconz_websocket):
+async def test_add_new_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
         "t": "event",
@@ -824,10 +829,13 @@ BAD_SENSOR_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_type, sensor_property", BAD_SENSOR_DATA)
+@pytest.mark.parametrize(("sensor_type", "sensor_property"), BAD_SENSOR_DATA)
 async def test_dont_add_sensor_if_state_is_none(
-    hass, aioclient_mock, sensor_type, sensor_property
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    sensor_type,
+    sensor_property,
+) -> None:
     """Test sensor with scaled data is not created if state is None."""
     data = {
         "sensors": {
@@ -879,7 +887,9 @@ async def test_air_quality_sensor_without_ppb(
     assert len(hass.states.async_all()) == 1
 
 
-async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
+async def test_add_battery_later(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that a battery sensor can be created later on.
 
     Without an initial battery state a battery sensor
@@ -936,7 +946,9 @@ async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
 
 
 @pytest.mark.parametrize("model_id", ["0x8030", "0x8031", "0x8034", "0x8035"])
-async def test_special_danfoss_battery_creation(hass, aioclient_mock, model_id):
+async def test_special_danfoss_battery_creation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, model_id
+) -> None:
     """Test the special Danfoss battery creation works.
 
     Normally there should only be one battery sensor per device from deCONZ.

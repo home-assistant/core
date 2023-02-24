@@ -6,13 +6,13 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.select import DOMAIN
 from homeassistant.components.select.device_action import async_get_action_capabilities
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -61,7 +61,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),
@@ -70,12 +70,12 @@ async def test_get_actions(
     ),
 )
 async def test_get_actions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

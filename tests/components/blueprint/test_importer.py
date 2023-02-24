@@ -120,7 +120,7 @@ def test_get_github_import_url() -> None:
     )
 
 
-def test_extract_blueprint_from_community_topic(community_post):
+def test_extract_blueprint_from_community_topic(community_post) -> None:
     """Test extracting blueprint."""
     imported_blueprint = importer._extract_blueprint_from_community_topic(
         "http://example.com", json.loads(community_post)
@@ -160,7 +160,9 @@ def test_extract_blueprint_from_community_topic_wrong_lang() -> None:
         )
 
 
-async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, community_post):
+async def test_fetch_blueprint_from_community_url(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, community_post
+) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
         "https://community.home-assistant.io/t/test-topic/123.json", text=community_post
@@ -189,7 +191,9 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
         "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
     ),
 )
-async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
+async def test_fetch_blueprint_from_github_url(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url: str
+) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",

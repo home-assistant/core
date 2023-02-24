@@ -38,7 +38,7 @@ def mock_setup():
         yield
 
 
-async def test_user(hass, client):
+async def test_user(hass: HomeAssistant, client) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

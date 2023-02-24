@@ -16,10 +16,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -32,7 +32,7 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_action_types",
+    ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
         (False, 0, 0, ["disarm"]),
         (
@@ -127,7 +127,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),

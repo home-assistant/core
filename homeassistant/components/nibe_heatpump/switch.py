@@ -7,8 +7,8 @@ from nibe.coil import Coil
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, CoilEntity, Coordinator

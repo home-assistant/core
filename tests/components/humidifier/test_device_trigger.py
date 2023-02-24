@@ -7,10 +7,19 @@ import voluptuous_serialize
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
-from homeassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -31,7 +40,11 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_registry, entity_registry):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a humidifier device."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -76,7 +89,7 @@ async def test_get_triggers(hass, device_registry, entity_registry):
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -85,12 +98,12 @@ async def test_get_triggers(hass, device_registry, entity_registry):
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -128,7 +141,7 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "humidifier.entity",
@@ -302,7 +315,7 @@ async def test_if_fires_on_state_change(hass, calls):
     }
 
 
-async def test_invalid_config(hass, calls):
+async def test_invalid_config(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "humidifier.entity",

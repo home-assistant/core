@@ -1,7 +1,6 @@
 """The unifiprotect integration discovery."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import asdict
 from datetime import timedelta
 import logging
@@ -34,7 +33,7 @@ def async_start_discovery(hass: HomeAssistant) -> None:
         async_trigger_discovery(hass, await async_discover_devices())
 
     # Do not block startup since discovery takes 31s or more
-    asyncio.create_task(_async_discovery())
+    hass.async_create_background_task(_async_discovery(), "unifiprotect-discovery")
 
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
 

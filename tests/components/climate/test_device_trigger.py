@@ -11,10 +11,13 @@ from homeassistant.components.climate import (
     device_trigger,
 )
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +36,11 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_registry, entity_registry):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a climate device."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -76,7 +83,7 @@ async def test_get_triggers(hass, device_registry, entity_registry):
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -85,12 +92,12 @@ async def test_get_triggers(hass, device_registry, entity_registry):
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -137,7 +144,7 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "climate.entity",
@@ -281,7 +288,7 @@ async def test_get_trigger_capabilities_hvac_mode(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "type", ["current_temperature_changed", "current_humidity_changed"]
 )
-async def test_get_trigger_capabilities_temp_humid(hass, type):
+async def test_get_trigger_capabilities_temp_humid(hass: HomeAssistant, type) -> None:
     """Test we get the expected capabilities from a climate trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,

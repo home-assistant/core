@@ -17,10 +17,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -42,7 +42,7 @@ def calls(hass: HomeAssistant) -> list[ServiceCall]:
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_trigger_types",
+    ("set_state", "features_reg", "features_state", "expected_trigger_types"),
     [
         (False, 0, 0, ["triggered", "disarmed", "arming"]),
         (
@@ -125,7 +125,7 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (er.RegistryEntryHider.INTEGRATION, None),
         (er.RegistryEntryHider.USER, None),

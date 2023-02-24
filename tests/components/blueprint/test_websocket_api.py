@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import parse_yaml
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
@@ -84,7 +85,11 @@ async def test_list_blueprints_non_existing_domain(
     assert blueprints == {}
 
 
-async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
+async def test_import_blueprint(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test importing blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/test_event_service.yaml")
@@ -127,7 +132,11 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
     }
 
 
-async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
+async def test_save_blueprint(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test saving blueprints."""
     raw_data = Path(
         hass.config.path("blueprints/automation/test_event_service.yaml")
@@ -177,7 +186,11 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
         assert len(parse_yaml(output_yaml)) > 1
 
 
-async def test_save_existing_file(hass, aioclient_mock, hass_ws_client):
+async def test_save_existing_file(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test saving blueprints."""
 
     client = await hass_ws_client(hass)
@@ -199,7 +212,11 @@ async def test_save_existing_file(hass, aioclient_mock, hass_ws_client):
     assert msg["error"] == {"code": "already_exists", "message": "File already exists"}
 
 
-async def test_save_file_error(hass, aioclient_mock, hass_ws_client):
+async def test_save_file_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test saving blueprints with OS error."""
     with patch("pathlib.Path.write_text", side_effect=OSError):
         client = await hass_ws_client(hass)
@@ -220,7 +237,11 @@ async def test_save_file_error(hass, aioclient_mock, hass_ws_client):
         assert not msg["success"]
 
 
-async def test_save_invalid_blueprint(hass, aioclient_mock, hass_ws_client):
+async def test_save_invalid_blueprint(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test saving invalid blueprints."""
 
     client = await hass_ws_client(hass)
@@ -245,7 +266,11 @@ async def test_save_invalid_blueprint(hass, aioclient_mock, hass_ws_client):
     }
 
 
-async def test_delete_blueprint(hass, aioclient_mock, hass_ws_client):
+async def test_delete_blueprint(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test deleting blueprints."""
 
     with patch("pathlib.Path.unlink", return_value=Mock()) as unlink_mock:
@@ -266,7 +291,11 @@ async def test_delete_blueprint(hass, aioclient_mock, hass_ws_client):
         assert msg["success"]
 
 
-async def test_delete_non_exist_file_blueprint(hass, aioclient_mock, hass_ws_client):
+async def test_delete_non_exist_file_blueprint(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test deleting non existing blueprints."""
 
     client = await hass_ws_client(hass)
@@ -303,8 +332,10 @@ async def test_delete_non_exist_file_blueprint(hass, aioclient_mock, hass_ws_cli
     ),
 )
 async def test_delete_blueprint_in_use_by_automation(
-    hass, aioclient_mock, hass_ws_client
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test deleting a blueprint which is in use."""
 
     with patch("pathlib.Path.unlink", return_value=Mock()) as unlink_mock:
@@ -346,7 +377,11 @@ async def test_delete_blueprint_in_use_by_automation(
         },
     ),
 )
-async def test_delete_blueprint_in_use_by_script(hass, aioclient_mock, hass_ws_client):
+async def test_delete_blueprint_in_use_by_script(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test deleting a blueprint which is in use."""
 
     with patch("pathlib.Path.unlink", return_value=Mock()) as unlink_mock:
