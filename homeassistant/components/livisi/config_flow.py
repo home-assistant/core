@@ -12,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import AVATAR, AVATAR_VERSION, CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
+from .const import CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
 
 
 class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,8 +74,6 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (controller_data := controller_info.get("gateway")) is None:
             controller_data = controller_info
         controller_type = controller_data["controllerType"]
-        if controller_type == AVATAR:
-            controller_type = AVATAR_VERSION
         LOGGER.debug(
             "Integrating SHC %s with serial number: %s",
             controller_type,

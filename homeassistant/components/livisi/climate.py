@@ -1,7 +1,10 @@
 """Code to handle a Livisi Virtual Climate Control."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
+
+from aiolivisi.const import CAPABILITY_MAP
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -66,24 +69,18 @@ def create_entity(
     coordinator: LivisiDataUpdateCoordinator,
 ) -> ClimateEntity:
     """Create Climate Entity."""
-    capabilities: list = device["capabilities"]
+    capabilities: Mapping[str, Any] = device[CAPABILITY_MAP]
     room_id: str = device["location"]
     room_name: str = coordinator.rooms[room_id]
-    if coordinator.is_avatar:
-        temperature_capability = capabilities[0]
-        target_temperature_capability = capabilities[1]
-    else:
-        temperature_capability = capabilities[1]
-        target_temperature_capability = capabilities[0]
     livisi_climate = LivisiClimate(
         config_entry,
         coordinator,
         unique_id=device["id"],
         manufacturer=device["manufacturer"],
         device_type=device["type"],
-        target_temperature_capability=target_temperature_capability,
-        temperature_capability=temperature_capability,
-        humidity_capability=capabilities[2],
+        target_temperature_capability=capabilities["RoomSetpoint"],
+        temperature_capability=capabilities["RoomTemperature"],
+        humidity_capability=capabilities["RoomHumidity"],
         room=room_name,
     )
     return livisi_climate

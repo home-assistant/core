@@ -8,7 +8,6 @@ DOMAIN = "livisi"
 CONF_HOST = "host"
 CONF_PASSWORD: Final = "password"
 AVATAR = "Avatar"
-AVATAR_VERSION = "2.0"
 AVATAR_PORT: Final = 9090
 CLASSIC_PORT: Final = 8080
 DEVICE_POLLING_DELAY: Final = 60

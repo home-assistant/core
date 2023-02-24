@@ -15,7 +15,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     AVATAR,
     AVATAR_PORT,
-    AVATAR_VERSION,
     CLASSIC_PORT,
     CONF_HOST,
     CONF_PASSWORD,
@@ -74,11 +73,10 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         if controller_data["controllerType"] == AVATAR:
             self.port = AVATAR_PORT
             self.is_avatar = True
-            controller_type = AVATAR_VERSION
         else:
             self.port = CLASSIC_PORT
             self.is_avatar = False
-            controller_type = controller_data["controllerType"]
+        controller_type = controller_data["controllerType"]
         self.serial_number = controller_data["serialNumber"]
         self.controller_type = controller_type
 
