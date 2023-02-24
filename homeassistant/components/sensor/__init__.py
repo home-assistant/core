@@ -462,7 +462,7 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> Any:  # noqa: C901
+    def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
