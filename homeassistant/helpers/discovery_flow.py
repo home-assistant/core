@@ -47,6 +47,9 @@ def _async_init_flow(
     if hass.config_entries.flow.async_has_matching_flow(domain, context, data):
         return None
 
+    if hass.is_stopping:
+        return None
+
     return hass.config_entries.flow.async_init(domain, context=context, data=data)
 
 
