@@ -690,11 +690,11 @@ async def test_default_availability_payload(
 
 
 async def test_default_availability_list_payload(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_list_payload(
-        hass, mqtt_mock_entry_with_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
 

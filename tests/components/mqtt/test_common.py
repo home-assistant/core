@@ -200,7 +200,7 @@ async def help_test_default_availability_payload(
 
 async def help_test_default_availability_list_payload(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_with_no_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
     no_assumed_state: bool = False,
@@ -217,13 +217,7 @@ async def help_test_default_availability_list_payload(
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        config,
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+    await help_setup_component(hass, mqtt_mock_entry_with_no_config, domain, config)
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state == STATE_UNAVAILABLE
