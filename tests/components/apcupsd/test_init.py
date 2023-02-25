@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.apcupsd import DOMAIN, APCUPSdData
+from homeassistant.components.apcupsd import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -31,20 +31,20 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
 async def test_multiple_integrations(hass: HomeAssistant) -> None:
     """Test successful setup for multiple entries."""
     # Load two integrations from two mock hosts.
+    status1 = MOCK_STATUS | {"LOADPCT": "15.0 Percent", "SERIALNO": "XXXXX1"}
+    status2 = MOCK_STATUS | {"LOADPCT": "16.0 Percent", "SERIALNO": "XXXXX2"}
     entries = (
-        await init_integration(hass, host="test1", status=MOCK_STATUS),
-        await init_integration(hass, host="test2", status=MOCK_MINIMAL_STATUS),
+        await init_integration(hass, host="test1", status=status1),
+        await init_integration(hass, host="test2", status=status2),
     )
 
-    # Data dict should contain different API objects.
-    assert len(hass.data[DOMAIN]) == len(entries)
-    for entry in entries:
-        assert entry.entry_id in hass.data[DOMAIN]
-        assert isinstance(hass.data[DOMAIN][entry.entry_id], APCUPSdData)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
 
-    assert (
-        hass.data[DOMAIN][entries[0].entry_id] != hass.data[DOMAIN][entries[1].entry_id]
-    )
+    state1 = hass.states.get("sensor.ups_load")
+    state2 = hass.states.get("sensor.ups_load_2")
+    assert state1 is not None and state2 is not None
+    assert state1.state != state2.state
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
@@ -83,19 +83,14 @@ async def test_unload_remove(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert entries[0].state is ConfigEntryState.NOT_LOADED
     assert entries[1].state is ConfigEntryState.LOADED
-    assert len(hass.data[DOMAIN]) == 1
 
     # Unload the second entry.
     assert await hass.config_entries.async_unload(entries[1].entry_id)
     await hass.async_block_till_done()
     assert all(entry.state is ConfigEntryState.NOT_LOADED for entry in entries)
 
-    # We should never leave any garbage in the data dict.
-    assert len(hass.data[DOMAIN]) == 0
-
     # Remove both entries.
     for entry in entries:
         await hass.config_entries.async_remove(entry.entry_id)
-        await hass.async_block_till_done()
-        state = hass.states.get(entry.entry_id)
-        assert state is None
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
