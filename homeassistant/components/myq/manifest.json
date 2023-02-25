@@ -1,14 +1,18 @@
 {
   "domain": "myq",
   "name": "MyQ",
-  "documentation": "https://www.home-assistant.io/integrations/myq",
-  "requirements": ["pymyq==3.1.4"],
   "codeowners": ["@bdraco", "@ehendrix23"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "645299*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/myq",
   "homekit": {
     "models": ["819LMB", "MYQ"]
   },
   "iot_class": "cloud_polling",
-  "dhcp": [{ "macaddress": "645299*" }],
-  "loggers": ["pkce", "pymyq"]
+  "loggers": ["pkce", "pymyq"],
+  "requirements": ["pymyq==3.1.4"]
 }

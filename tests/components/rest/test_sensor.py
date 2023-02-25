@@ -20,10 +20,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_JSON,
-    DATA_MEGABYTES,
     SERVICE_RELOAD,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -182,7 +182,9 @@ async def test_setup_duplicate_resource_template(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_setup_get(hass: HomeAssistant) -> None:
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK, json={"key": "123"}
+    )
     assert await async_setup_component(
         hass,
         "sensor",
@@ -193,7 +195,7 @@ async def test_setup_get(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "name": "foo",
-                "unit_of_measurement": TEMP_CELSIUS,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "authentication": "basic",
@@ -210,7 +212,7 @@ async def test_setup_get(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 1
 
-    assert hass.states.get("sensor.foo").state == ""
+    assert hass.states.get("sensor.foo").state == "123"
     await hass.services.async_call(
         "homeassistant",
         SERVICE_UPDATE_ENTITY,
@@ -219,8 +221,8 @@ async def test_setup_get(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     state = hass.states.get("sensor.foo")
-    assert state.state == ""
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.state == "123"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
@@ -325,7 +327,9 @@ async def test_setup_get_templated_headers_params(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK, json={"key": "123"}
+    )
     assert await async_setup_component(
         hass,
         "sensor",
@@ -336,7 +340,7 @@ async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "authentication": "digest",
@@ -354,7 +358,9 @@ async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
 @respx.mock
 async def test_setup_post(hass: HomeAssistant) -> None:
     """Test setup with valid configuration."""
-    respx.post("http://localhost").respond(status_code=HTTPStatus.OK, json={})
+    respx.post("http://localhost").respond(
+        status_code=HTTPStatus.OK, json={"key": "123"}
+    )
     assert await async_setup_component(
         hass,
         "sensor",
@@ -366,7 +372,7 @@ async def test_setup_post(hass: HomeAssistant) -> None:
                 "value_template": "{{ value_json.key }}",
                 "payload": '{ "device": "toaster"}',
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "authentication": "basic",
@@ -386,7 +392,7 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content="<dog>abc</dog>",
+        content="<dog>123</dog>",
     )
     assert await async_setup_component(
         hass,
@@ -398,7 +404,7 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "value_template": "{{ value_json.dog }}",
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -408,8 +414,8 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 1
 
     state = hass.states.get("sensor.foo")
-    assert state.state == "abc"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == DATA_MEGABYTES
+    assert state.state == "123"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.MEGABYTES
 
 
 @respx.mock
@@ -438,7 +444,7 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
 
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
-        json={"key": "some_json_value"},
+        json={"key": "123", "other_key": "some_json_value"},
     )
     assert await async_setup_component(
         hass,
@@ -449,9 +455,9 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
-                "json_attributes": ["key"],
+                "json_attributes": ["other_key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -461,8 +467,8 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 1
 
     state = hass.states.get("sensor.foo")
-    assert state.state == "some_json_value"
-    assert state.attributes["key"] == "some_json_value"
+    assert state.state == "123"
+    assert state.attributes["other_key"] == "some_json_value"
 
 
 @respx.mock
@@ -483,7 +489,6 @@ async def test_update_with_no_template(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -519,7 +524,7 @@ async def test_update_with_json_attrs_no_data(
                 "value_template": "{{ value_json.key }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -556,7 +561,6 @@ async def test_update_with_json_attrs_not_dict(
                 "value_template": "{{ value_json.key }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -568,7 +572,7 @@ async def test_update_with_json_attrs_not_dict(
 
     state = hass.states.get("sensor.foo")
     assert state.state == ""
-    assert state.attributes == {"unit_of_measurement": "MB", "friendly_name": "foo"}
+    assert state.attributes == {"friendly_name": "foo"}
     assert "not a dictionary or list" in caplog.text
 
 
@@ -594,7 +598,7 @@ async def test_update_with_json_attrs_bad_JSON(
                 "value_template": "{{ value_json.key }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -618,7 +622,7 @@ async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) 
         status_code=HTTPStatus.OK,
         json={
             "toplevel": {
-                "master_value": "master",
+                "master_value": "123",
                 "second_level": {
                     "some_json_key": "some_json_value",
                     "some_json_key2": "some_json_value2",
@@ -638,7 +642,7 @@ async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) 
                 "json_attributes_path": "$.toplevel.second_level",
                 "json_attributes": ["some_json_key", "some_json_key2"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -649,7 +653,7 @@ async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) 
     assert len(hass.states.async_all("sensor")) == 1
     state = hass.states.get("sensor.foo")
 
-    assert state.state == "master"
+    assert state.state == "123"
     assert state.attributes["some_json_key"] == "some_json_value"
     assert state.attributes["some_json_key2"] == "some_json_value2"
 
@@ -663,7 +667,7 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content="<toplevel><master_value>master</master_value><second_level><some_json_key>some_json_value</some_json_key><some_json_key2>some_json_value2</some_json_key2></second_level></toplevel>",
+        content="<toplevel><master_value>123</master_value><second_level><some_json_key>some_json_value</some_json_key><some_json_key2>some_json_value2</some_json_key2></second_level></toplevel>",
     )
     assert await async_setup_component(
         hass,
@@ -677,7 +681,7 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
                 "json_attributes_path": "$.toplevel.second_level",
                 "json_attributes": ["some_json_key", "some_json_key2"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -687,7 +691,7 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
     assert len(hass.states.async_all("sensor")) == 1
     state = hass.states.get("sensor.foo")
 
-    assert state.state == "master"
+    assert state.state == "123"
     assert state.attributes["some_json_key"] == "some_json_value"
     assert state.attributes["some_json_key2"] == "some_json_value2"
 
@@ -701,7 +705,7 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content='<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>bogus</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>',
+        content='<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>123</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>',
     )
     assert await async_setup_component(
         hass,
@@ -715,7 +719,7 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
                 "json_attributes_path": "$.response",
                 "json_attributes": ["led0", "led1", "temp0", "time0", "ver"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -725,7 +729,7 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
     assert len(hass.states.async_all("sensor")) == 1
     state = hass.states.get("sensor.foo")
 
-    assert state.state == "bogus"
+    assert state.state == "123"
     assert state.attributes["led0"] == "0"
     assert state.attributes["led1"] == "0"
     assert state.attributes["temp0"] == "0x0XF0x0XF"
@@ -756,7 +760,7 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
                 "json_attributes_path": "$.main",
                 "json_attributes": ["dog", "cat"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -793,7 +797,7 @@ async def test_update_with_xml_convert_bad_xml(
                 "value_template": "{{ value_json.toplevel.master_value }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -830,7 +834,7 @@ async def test_update_with_failed_get(
                 "value_template": "{{ value_json.toplevel.master_value }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -906,7 +910,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         },
     }
 
-    respx.get("http://localhost") % HTTPStatus.OK
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, text="123")
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
@@ -914,7 +918,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert entity_registry.async_get("sensor.rest_sensor").unique_id == "very_unique"
 
     state = hass.states.get("sensor.rest_sensor")
-    assert state.state == ""
+    assert state.state == "123"
     assert state.attributes == {
         "device_class": "temperature",
         "entity_picture": "blabla.png",

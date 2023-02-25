@@ -46,22 +46,14 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_twentemilieu_config_flow() -> Generator[None, MagicMock, None]:
-    """Return a mocked Twente Milieu client."""
-    with patch(
-        "homeassistant.components.twentemilieu.config_flow.TwenteMilieu", autospec=True
-    ) as twentemilieu_mock:
-        twentemilieu = twentemilieu_mock.return_value
-        twentemilieu.unique_id.return_value = 12345
-        yield twentemilieu
-
-
-@pytest.fixture
-def mock_twentemilieu() -> Generator[None, MagicMock, None]:
+def mock_twentemilieu() -> Generator[MagicMock, None, None]:
     """Return a mocked Twente Milieu client."""
     with patch(
         "homeassistant.components.twentemilieu.TwenteMilieu", autospec=True
-    ) as twentemilieu_mock:
+    ) as twentemilieu_mock, patch(
+        "homeassistant.components.twentemilieu.config_flow.TwenteMilieu",
+        new=twentemilieu_mock,
+    ):
         twentemilieu = twentemilieu_mock.return_value
         twentemilieu.unique_id.return_value = 12345
         twentemilieu.update.return_value = {

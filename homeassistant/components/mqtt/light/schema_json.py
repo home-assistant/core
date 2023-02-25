@@ -47,10 +47,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
+from homeassistant.util.json import json_loads_object
 
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
@@ -83,7 +84,6 @@ DEFAULT_EFFECT = False
 DEFAULT_FLASH_TIME_LONG = 10
 DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_NAME = "MQTT JSON Light"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_RGB = False
 DEFAULT_XY = False
 DEFAULT_HS = False
@@ -135,7 +135,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
                 vol.Coerce(int), vol.In([0, 1, 2])
             ),
@@ -156,12 +155,6 @@ _PLATFORM_SCHEMA_BASE = (
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
-)
-
-# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA_JSON = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-    valid_color_configuration,
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
@@ -351,7 +344,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            values: dict[str, Any] = json_loads(msg.payload)
+            values = json_loads_object(msg.payload)
 
             if values["state"] == "ON":
                 self._attr_is_on = True
@@ -377,7 +370,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if brightness_supported(self.supported_color_modes):
                 try:
                     self._attr_brightness = int(
-                        values["brightness"]
+                        values["brightness"]  # type: ignore[operator]
                         / float(self._config[CONF_BRIGHTNESS_SCALE])
                         * 255
                     )
@@ -399,7 +392,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     if values["color_temp"] is None:
                         self._attr_color_temp = None
                     else:
-                        self._attr_color_temp = int(values["color_temp"])
+                        self._attr_color_temp = int(values["color_temp"])  # type: ignore[arg-type]
                 except KeyError:
                     pass
                 except ValueError:
@@ -410,7 +403,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if self.supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
-                    self._attr_effect = values["effect"]
+                    self._attr_effect = cast(str, values["effect"])
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 

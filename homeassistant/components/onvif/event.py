@@ -19,7 +19,7 @@ from .const import LOGGER
 from .models import Event
 from .parsers import PARSERS
 
-UNHANDLED_TOPICS = set()
+UNHANDLED_TOPICS: set[str] = set()
 SUBSCRIPTION_ERRORS = (
     Fault,
     asyncio.TimeoutError,

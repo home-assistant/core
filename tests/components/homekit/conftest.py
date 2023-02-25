@@ -20,7 +20,7 @@ def iid_storage(hass):
         yield AccessoryIIDStorage(hass, "")
 
 
-@pytest.fixture()
+@pytest.fixture
 def run_driver(hass, event_loop, iid_storage):
     """Return a custom AccessoryDriver instance for HomeKit accessory init.
 

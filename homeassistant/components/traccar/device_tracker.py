@@ -251,7 +251,11 @@ class TraccarScanner:
         """Update info from Traccar."""
         _LOGGER.debug("Updating device data")
         try:
-            (self._devices, self._positions, self._geofences,) = await asyncio.gather(
+            (
+                self._devices,
+                self._positions,
+                self._geofences,
+            ) = await asyncio.gather(
                 self._api.get_devices(),
                 self._api.get_positions(),
                 self._api.get_geofences(),

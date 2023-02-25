@@ -1,8 +1,11 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The number component allows control of charging current."""
+"""Home Assistant component for accessing the Wallbox Portal API.
+
+The number component allows control of charging current.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -95,7 +98,7 @@ class WallboxNumber(WallboxEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the value of the entity."""
         return cast(
-            Optional[float], self._coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
+            float | None, self._coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
         )
 
     async def async_set_native_value(self, value: float) -> None:

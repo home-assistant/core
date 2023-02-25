@@ -6,12 +6,15 @@ class AlexaGlobalCatalog:
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#global-alexa-catalog
 
-    You can use the global Alexa catalog for pre-defined names of devices, settings, values, and units.
-    This catalog is localized into all the languages that Alexa supports.
+    You can use the global Alexa catalog for pre-defined names of devices, settings,
+    values, and units.
 
+    This catalog is localized into all the languages that Alexa supports.
     You can reference the following catalog of pre-defined friendly names.
-    Each item in the following list is an asset identifier followed by its supported friendly names.
-    The first friendly name for each identifier is the one displayed in the Alexa mobile app.
+
+    Each item in the following list is an asset identifier followed by its
+    supported friendly names. The first friendly name for each identifier is
+    the one displayed in the Alexa mobile app.
     """
 
     # Air Purifier, Air Cleaner,Clean Air Machine
@@ -23,7 +26,8 @@ class AlexaGlobalCatalog:
     # Router, Internet Router, Network Router, Wifi Router, Net Router
     DEVICE_NAME_ROUTER = "Alexa.DeviceName.Router"
 
-    # Shade, Blind, Curtain, Roller, Shutter, Drape, Awning, Window shade, Interior blind
+    # Shade, Blind, Curtain, Roller, Shutter, Drape, Awning,
+    # Window shade, Interior blind
     DEVICE_NAME_SHADE = "Alexa.DeviceName.Shade"
 
     # Shower
@@ -190,10 +194,13 @@ class AlexaGlobalCatalog:
 
 
 class AlexaCapabilityResource:
-    """Base class for Alexa capabilityResources, modeResources, and presetResources objects.
+    """Base class for Alexa capabilityResources, modeResources, and presetResources.
 
-    Resources objects labels must be unique across all modeResources and presetResources within the same device.
-    To provide support for all supported locales, include one label from the AlexaGlobalCatalog in the labels array.
+    Resources objects labels must be unique across all modeResources and
+    presetResources within the same device. To provide support for all
+    supported locales, include one label from the AlexaGlobalCatalog in the
+    labels array.
+
     You cannot use any words from the following list as friendly names:
     https://developer.amazon.com/docs/alexa/device-apis/resources-and-assets.html#names-you-cannot-use
 
@@ -211,11 +218,17 @@ class AlexaCapabilityResource:
         return self.serialize_labels(self._resource_labels)
 
     def serialize_configuration(self):
-        """Return ModeResources, PresetResources friendlyNames serialized for an API response."""
+        """Return serialized configuration for an API response.
+
+        Return ModeResources, PresetResources friendlyNames serialized.
+        """
         return []
 
     def serialize_labels(self, resources):
-        """Return resource label objects for friendlyNames serialized for an API response."""
+        """Return serialized labels for an API response.
+
+        Returns resource label objects for friendlyNames serialized.
+        """
         labels = []
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
@@ -245,7 +258,10 @@ class AlexaModeResource(AlexaCapabilityResource):
         self._supported_modes.append({"value": value, "labels": labels})
 
     def serialize_configuration(self):
-        """Return configuration for ModeResources friendlyNames serialized for an API response."""
+        """Return serialized configuration for an API response.
+
+        Returns configuration for ModeResources friendlyNames serialized.
+        """
         mode_resources = []
         for mode in self._supported_modes:
             result = {
@@ -260,7 +276,8 @@ class AlexaModeResource(AlexaCapabilityResource):
 class AlexaPresetResource(AlexaCapabilityResource):
     """Implements Alexa PresetResources.
 
-    Use presetResources with RangeController to provide a set of friendlyNames for each RangeController preset.
+    Use presetResources with RangeController to provide a set of
+    friendlyNamesfor each RangeController preset.
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#presetresources
     """
@@ -281,7 +298,10 @@ class AlexaPresetResource(AlexaCapabilityResource):
         self._presets.append({"value": value, "labels": labels})
 
     def serialize_configuration(self):
-        """Return configuration for PresetResources friendlyNames serialized for an API response."""
+        """Return serialized configuration for an API response.
+
+        Returns configuration for PresetResources friendlyNames serialized.
+        """
         configuration = {
             "supportedRange": {
                 "minimumValue": self._minimum_value,
@@ -309,18 +329,23 @@ class AlexaPresetResource(AlexaCapabilityResource):
 class AlexaSemantics:
     """Class for Alexa Semantics Object.
 
-    You can optionally enable additional utterances by using semantics. When you use semantics,
-    you manually map the phrases "open", "close", "raise", and "lower" to directives.
+    You can optionally enable additional utterances by using semantics. When
+    you use semantics, you manually map the phrases "open", "close", "raise",
+    and "lower" to directives.
 
-    Semantics is supported for the following interfaces only: ModeController, RangeController, and ToggleController.
+    Semantics is supported for the following interfaces only: ModeController,
+    RangeController, and ToggleController.
 
-    Semantics stateMappings are only supported for one interface of the same type on the same device. If a device has
-    multiple RangeControllers only one interface may use stateMappings otherwise discovery will fail.
+    Semantics stateMappings are only supported for one interface of the same
+    type on the same device. If a device has multiple RangeControllers only
+    one interface may use stateMappings otherwise discovery will fail.
 
-    You can support semantics actionMappings on different controllers for the same device, however each controller must
-    support different phrases. For example, you can support "raise" on a RangeController, and "open" on a ModeController,
-    but you can't support "open" on both RangeController and ModeController. Semantics stateMappings are only supported
-    for one interface on the same device.
+    You can support semantics actionMappings on different controllers for the
+    same device, however each controller must support different phrases.
+    For example, you can support "raise" on a RangeController, and "open"
+    on a ModeController, but you can't support "open" on both RangeController
+    and ModeController. Semantics stateMappings are only supported for one
+    interface on the same device.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#semantics-object
     """

@@ -10,9 +10,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfDataRate, UnitOfInformation, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -178,7 +182,8 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
-        value = self.coordinator.data[self.entity_description.value_key]
-        if value is None:
+        if (key := self.entity_description.value_key) is None:
+            return None
+        if (value := self.coordinator.data[key]) is None:
             return None
         return format(value, self.entity_description.format)
