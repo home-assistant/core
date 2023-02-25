@@ -1,6 +1,7 @@
 """Test the Lifetime Total integration."""
 
 from homeassistant.components.lifetime_total.const import DOMAIN
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -36,7 +37,9 @@ async def test_setup_and_remove_config_entry(
     state = hass.states.get(lifetime_total_entity_id)
     assert state.state == "0.0"
     assert state.attributes == {
-        "last_reading": 0,
+        "friendly_name": "My lifetime_total",
+        "last_reading": 0.0,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
     }
 
     # Remove the config entry
