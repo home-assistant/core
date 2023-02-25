@@ -74,7 +74,7 @@ MQTT_YAML_SCHEMA = vol.Schema({mqtt.DOMAIN: PLATFORM_CONFIG_SCHEMA_BASE})
 
 
 def help_test_validate_platform_config(
-    hass: HomeAssistant, domain: str, config: ConfigType
+    hass: HomeAssistant, config: ConfigType
 ) -> ConfigType | None:
     """Test the schema validation."""
     try:
@@ -83,7 +83,7 @@ def help_test_validate_platform_config(
         return True
     except vol.Error as exc:
         # log schema exceptions
-        async_log_exception(exc, domain, config, hass)
+        async_log_exception(exc, mqtt.DOMAIN, config, hass)
         return False
 
 
@@ -395,10 +395,10 @@ async def help_test_default_availability_list_single(
         {"topic": "availability-topic1"},
     ]
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
-    help_test_validate_platform_config(hass, domain, config)
+    help_test_validate_platform_config(hass, config)
 
     assert (
-        f"Invalid config for [{domain}]: two or more values in the same group of exclusion 'availability'"
+        "Invalid config for [mqtt]: two or more values in the same group of exclusion 'availability'"
         in caplog.text
     )
 
@@ -1851,23 +1851,6 @@ async def help_test_reloadable(
     assert hass.states.get(f"{domain}.test_new_1")
     assert hass.states.get(f"{domain}.test_new_2")
     assert hass.states.get(f"{domain}.test_new_3")
-
-
-async def help_test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, config: ConfigType
-) -> None:
-    """Help to test setup from yaml through configuration entry."""
-    # until `async_setup` does the initial config setup, we need to use
-    # async_setup_component to test with other yaml config
-    assert await async_setup_component(hass, mqtt.DOMAIN, config)
-    # Mock config entry
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
-    entry.add_to_hass(hass)
-
-    with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = lambda *args: 0
-        assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def help_test_unload_config_entry(hass: HomeAssistant) -> None:

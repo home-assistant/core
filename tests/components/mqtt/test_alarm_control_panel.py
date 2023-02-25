@@ -173,10 +173,7 @@ async def test_fail_setup_without_state_or_command_topic(
     hass: HomeAssistant, config, valid
 ) -> None:
     """Test for failing setup with no state or command topic."""
-    assert (
-        help_test_validate_platform_config(hass, alarm_control_panel.DOMAIN, config)
-        == valid
-    )
+    assert help_test_validate_platform_config(hass, config) == valid
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
