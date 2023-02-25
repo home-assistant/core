@@ -22,6 +22,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import condition
@@ -175,6 +177,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         async def _async_startup(event):
             """Init on startup."""
             sensor_state = self.hass.states.get(self._sensor_entity_id)
+            if sensor_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                _LOGGER.debug("The sensor state is %s, initialization is delayed", sensor_state.state)
+                return
             await self._async_sensor_changed(self._sensor_entity_id, None, sensor_state)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
