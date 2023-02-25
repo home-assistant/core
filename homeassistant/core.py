@@ -499,7 +499,7 @@ class HomeAssistant:
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+        task.add_done_callback(self._tasks.discard)
 
         return task
 
@@ -521,7 +521,7 @@ class HomeAssistant:
         """
         task = self.loop.create_task(target)
         self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+        task.add_done_callback(self._tasks.discard)
         return task
 
     @callback
@@ -550,7 +550,7 @@ class HomeAssistant:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
         self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
+        task.add_done_callback(self._tasks.discard)
 
         return task
 
@@ -720,7 +720,7 @@ class HomeAssistant:
         # Cancel all background tasks
         for task in self._background_tasks:
             self._tasks.add(task)
-            task.add_done_callback(self._tasks.remove)
+            task.add_done_callback(self._tasks.discard)
             task.cancel()
 
         self.exit_code = exit_code
