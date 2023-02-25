@@ -23,7 +23,7 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import entity_service_call
 
-from .const import _LOGGER, CONF_NETWORK, DOMAIN, ISY_CONF_NAME, ISY_CONF_NETWORKING
+from .const import _LOGGER, CONF_NETWORK, DOMAIN, ISY_CONF_NAME
 from .util import _async_cleanup_registry_entries
 
 # Common Services for All Platforms:
@@ -233,7 +233,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             isy = isy_data.root
             if isy_name and isy_name != isy.conf[ISY_CONF_NAME]:
                 continue
-            if isy.networking is None or not isy.conf[ISY_CONF_NETWORKING]:
+            if isy.networking is None:
                 continue
             command = None
             if address:

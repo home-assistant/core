@@ -20,6 +20,7 @@ from homeassistant.components.airvisual import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
+from homeassistant.core import HomeAssistant
 
 from .conftest import (
     COORDS_CONFIG,
@@ -33,7 +34,7 @@ from .conftest import (
 
 
 @pytest.mark.parametrize(
-    "integration_type,input_form_step,patched_method,config,entry_title",
+    ("integration_type", "input_form_step", "patched_method", "config", "entry_title"),
     [
         (
             INTEGRATION_TYPE_GEOGRAPHY_COORDS,
@@ -52,7 +53,7 @@ from .conftest import (
     ],
 )
 @pytest.mark.parametrize(
-    "response,errors",
+    ("response", "errors"),
     [
         (AsyncMock(side_effect=AirVisualError), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidKeyError), {CONF_API_KEY: "invalid_api_key"}),
@@ -62,7 +63,7 @@ from .conftest import (
     ],
 )
 async def test_create_entry(
-    hass,
+    hass: HomeAssistant,
     cloud_api,
     config,
     entry_title,
@@ -72,7 +73,7 @@ async def test_create_entry(
     mock_pyairvisual,
     patched_method,
     response,
-):
+) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -103,7 +104,7 @@ async def test_create_entry(
     assert result["data"] == {**config, CONF_INTEGRATION_TYPE: integration_type}
 
 
-async def test_duplicate_error(hass, config, setup_config_entry):
+async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -126,7 +127,9 @@ async def test_duplicate_error(hass, config, setup_config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass, config_entry, setup_config_entry):
+async def test_options_flow(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
     """Test config flow options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -139,7 +142,9 @@ async def test_options_flow(hass, config_entry, setup_config_entry):
     assert config_entry.options == {CONF_SHOW_ON_MAP: False}
 
 
-async def test_step_reauth(hass, config_entry, setup_config_entry):
+async def test_step_reauth(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
     """Test that the reauth step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config_entry.data

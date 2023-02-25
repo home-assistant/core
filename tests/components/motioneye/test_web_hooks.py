@@ -1,7 +1,6 @@
 """Test the motionEye camera web hooks."""
 import copy
 from http import HTTPStatus
-from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from motioneye_client.const import (
@@ -15,6 +14,7 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
     KEY_WEB_HOOK_STORAGE_URL,
 )
+import pytest
 
 from homeassistant.components.motioneye.const import (
     ATTR_EVENT_TYPE,
@@ -250,8 +250,7 @@ async def test_setup_camera_with_correct_webhook(
 
 
 async def test_setup_camera_with_no_home_assistant_urls(
-    hass: HomeAssistant,
-    caplog: Any,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Verify setup works without Home Assistant internal/external URLs."""
 

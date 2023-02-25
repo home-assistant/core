@@ -1,13 +1,15 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
-
 from homeassistant.components.light import ColorMode
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 from .const import FAKE_DEVICE, FAKE_LIGHT, FAKE_ZIGBEE_CONNECTIVITY
 
 
-async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_lights(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test if all v2 lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -73,7 +75,9 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_4.attributes["supported_color_modes"] == []
 
 
-async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_light_turn_on_service(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the turn on service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -201,7 +205,9 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["duration"] == 6000
 
 
-async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_light_turn_off_service(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the turn off service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -271,7 +277,7 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     assert mock_bridge_v2.mock_requests[3]["json"]["identify"]["action"] == "identify"
 
 
-async def test_light_added(hass, mock_bridge_v2):
+async def test_light_added(hass: HomeAssistant, mock_bridge_v2) -> None:
     """Test new light added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
 
@@ -293,7 +299,9 @@ async def test_light_added(hass, mock_bridge_v2):
     assert test_entity.attributes["friendly_name"] == FAKE_DEVICE["metadata"]["name"]
 
 
-async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_light_availability(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test light availability property."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -323,7 +331,9 @@ async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
         assert test_light.state == "on" if status == "connected" else "unavailable"
 
 
-async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_grouped_lights(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test if all v2 grouped lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 

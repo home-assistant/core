@@ -31,7 +31,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_migration_device_online_end_to_end(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test migration from single config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
@@ -84,7 +84,7 @@ async def test_migration_device_online_end_to_end(
 
 async def test_discovery_is_more_frequent_during_migration(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test that discovery is more frequent during migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
@@ -157,7 +157,7 @@ async def test_discovery_is_more_frequent_during_migration(
 
 async def test_migration_device_online_end_to_end_after_downgrade(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test migration from single config entry can happen again after a downgrade."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
@@ -206,7 +206,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
 
 async def test_migration_device_online_end_to_end_ignores_other_devices(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
-):
+) -> None:
     """Test migration from single config entry."""
     legacy_config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN

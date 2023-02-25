@@ -27,7 +27,7 @@ def _patch_init_agent(mocked_agent):
 
 async def test_setup_config_and_unload(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test setup and unload."""
     entry = await init_integration(hass, aioclient_mock)
     assert entry.state == ConfigEntryState.LOADED
@@ -41,7 +41,7 @@ async def test_setup_config_and_unload(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_not_ready(hass: HomeAssistant):
+async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = create_entry(hass)
     with patch(

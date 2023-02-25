@@ -53,7 +53,7 @@ async def async_setup_entry(
 class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     """Base class for all Wolf entities."""
 
-    def __init__(self, coordinator, wolf_object: Parameter, device_id):
+    def __init__(self, coordinator, wolf_object: Parameter, device_id) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.wolf_object = wolf_object

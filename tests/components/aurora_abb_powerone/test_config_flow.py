@@ -13,11 +13,12 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -75,7 +76,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_no_comports(hass):
+async def test_form_no_comports(hass: HomeAssistant) -> None:
     """Test we display correct info when there are no com ports.."""
 
     fakecomports = []
@@ -90,7 +91,7 @@ async def test_form_no_comports(hass):
     assert result["reason"] == "no_serial_ports"
 
 
-async def test_form_invalid_com_ports(hass):
+async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
     """Test we display correct info when the comport is invalid.."""
 
     fakecomports = []

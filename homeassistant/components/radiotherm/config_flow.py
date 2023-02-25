@@ -39,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize ConfigFlow."""
         self.discovered_ip: str | None = None
         self.discovered_init_data: RadioThermInitData | None = None

@@ -1,5 +1,6 @@
 """The tests for the androidtv platform."""
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
@@ -66,12 +67,14 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import slugify
 
 from . import patchers
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 HOST = "127.0.0.1"
 
@@ -217,7 +220,9 @@ def _setup(config):
         CONFIG_FIRETV_ADB_SERVER,
     ],
 )
-async def test_reconnect(hass, caplog, config):
+async def test_reconnect(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config: dict[str, Any]
+) -> None:
     """Test that the error and reconnection attempts are logged correctly.
 
     "Handles device/service unavailable. Log a warning once when
@@ -276,7 +281,9 @@ async def test_reconnect(hass, caplog, config):
         CONFIG_FIRETV_ADB_SERVER,
     ],
 )
-async def test_adb_shell_returns_none(hass, config):
+async def test_adb_shell_returns_none(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
     """Test the case that the ADB shell command returns `None`.
 
     The state should be `None` and the device should be unavailable.
@@ -304,7 +311,7 @@ async def test_adb_shell_returns_none(hass, config):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_setup_with_adbkey(hass):
+async def test_setup_with_adbkey(hass: HomeAssistant) -> None:
     """Test that setup succeeds when using an ADB key."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_PYTHON_ADB_KEY)
     config_entry.add_to_hass(hass)
@@ -328,7 +335,7 @@ async def test_setup_with_adbkey(hass):
         CONFIG_FIRETV_DEFAULT,
     ],
 )
-async def test_sources(hass, config):
+async def test_sources(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that sources (i.e., apps) are handled correctly for Android TV and Fire TV devices."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -388,13 +395,15 @@ async def test_sources(hass, config):
 
 
 @pytest.mark.parametrize(
-    ["config", "expected_sources"],
+    ("config", "expected_sources"),
     [
         (CONFIG_ANDROIDTV_DEFAULT, ["TEST 1"]),
         (CONFIG_FIRETV_DEFAULT, ["TEST 1"]),
     ],
 )
-async def test_exclude_sources(hass, config, expected_sources):
+async def test_exclude_sources(
+    hass: HomeAssistant, config: dict[str, Any], expected_sources: list[str]
+) -> None:
     """Test that sources (i.e., apps) are handled correctly when the `exclude_unnamed_apps` config parameter is provided."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -473,7 +482,7 @@ async def _test_select_source(
 
 
 @pytest.mark.parametrize(
-    ["source", "expected_arg", "method_patch"],
+    ("source", "expected_arg", "method_patch"),
     [
         ("com.app.test1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
         ("TEST 1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
@@ -485,7 +494,9 @@ async def _test_select_source(
         ("!com.app.test3", "com.app.test3", patchers.PATCH_STOP_APP),
     ],
 )
-async def test_select_source_androidtv(hass, source, expected_arg, method_patch):
+async def test_select_source_androidtv(
+    hass: HomeAssistant, source, expected_arg, method_patch
+) -> None:
     """Test that an app can be launched for AndroidTV."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -496,7 +507,7 @@ async def test_select_source_androidtv(hass, source, expected_arg, method_patch)
     )
 
 
-async def test_androidtv_select_source_overridden_app_name(hass):
+async def test_androidtv_select_source_overridden_app_name(hass: HomeAssistant) -> None:
     """Test that when an app name is overridden via the `apps` configuration parameter, the app is launched correctly."""
     # Evidence that the default YouTube app ID will be overridden
     conf_apps = {
@@ -515,7 +526,7 @@ async def test_androidtv_select_source_overridden_app_name(hass):
 
 
 @pytest.mark.parametrize(
-    ["source", "expected_arg", "method_patch"],
+    ("source", "expected_arg", "method_patch"),
     [
         ("com.app.test1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
         ("TEST 1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
@@ -527,7 +538,9 @@ async def test_androidtv_select_source_overridden_app_name(hass):
         ("!com.app.test3", "com.app.test3", patchers.PATCH_STOP_APP),
     ],
 )
-async def test_select_source_firetv(hass, source, expected_arg, method_patch):
+async def test_select_source_firetv(
+    hass: HomeAssistant, source, expected_arg, method_patch
+) -> None:
     """Test that an app can be launched for FireTV."""
     conf_apps = {
         "com.app.test1": "TEST 1",
@@ -539,7 +552,7 @@ async def test_select_source_firetv(hass, source, expected_arg, method_patch):
 
 
 @pytest.mark.parametrize(
-    ["config", "connect"],
+    ("config", "connect"),
     [
         (CONFIG_ANDROIDTV_DEFAULT, False),
         (CONFIG_FIRETV_DEFAULT, False),
@@ -547,7 +560,9 @@ async def test_select_source_firetv(hass, source, expected_arg, method_patch):
         (CONFIG_FIRETV_DEFAULT, True),
     ],
 )
-async def test_setup_fail(hass, config, connect):
+async def test_setup_fail(
+    hass: HomeAssistant, config: dict[str, Any], connect: bool
+) -> None:
     """Test that the entity is not created when the ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
@@ -564,7 +579,7 @@ async def test_setup_fail(hass, config, connect):
         assert state is None
 
 
-async def test_adb_command(hass):
+async def test_adb_command(hass: HomeAssistant) -> None:
     """Test sending a command via the `androidtv.adb_command` service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -593,7 +608,7 @@ async def test_adb_command(hass):
             assert state.attributes["adb_response"] == response
 
 
-async def test_adb_command_unicode_decode_error(hass):
+async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
     """Test sending a command via the `androidtv.adb_command` service that raises a UnicodeDecodeError exception."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -622,7 +637,7 @@ async def test_adb_command_unicode_decode_error(hass):
             assert state.attributes["adb_response"] is None
 
 
-async def test_adb_command_key(hass):
+async def test_adb_command_key(hass: HomeAssistant) -> None:
     """Test sending a key command via the `androidtv.adb_command` service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -651,7 +666,7 @@ async def test_adb_command_key(hass):
             assert state.attributes["adb_response"] is None
 
 
-async def test_adb_command_get_properties(hass):
+async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
     """Test sending the "GET_PROPERTIES" command via the `androidtv.adb_command` service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -681,7 +696,7 @@ async def test_adb_command_get_properties(hass):
             assert state.attributes["adb_response"] == str(response)
 
 
-async def test_learn_sendevent(hass):
+async def test_learn_sendevent(hass: HomeAssistant) -> None:
     """Test the `androidtv.learn_sendevent` service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -710,7 +725,7 @@ async def test_learn_sendevent(hass):
             assert state.attributes["adb_response"] == response
 
 
-async def test_update_lock_not_acquired(hass):
+async def test_update_lock_not_acquired(hass: HomeAssistant) -> None:
     """Test that the state does not get updated when a `LockNotAcquiredException` is raised."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -743,7 +758,7 @@ async def test_update_lock_not_acquired(hass):
         assert state.state == STATE_STANDBY
 
 
-async def test_download(hass):
+async def test_download(hass: HomeAssistant) -> None:
     """Test the `androidtv.download` service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -789,7 +804,7 @@ async def test_download(hass):
             patch_pull.assert_called_with(local_path, device_path)
 
 
-async def test_upload(hass):
+async def test_upload(hass: HomeAssistant) -> None:
     """Test the `androidtv.upload` service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -835,7 +850,7 @@ async def test_upload(hass):
             patch_push.assert_called_with(local_path, device_path)
 
 
-async def test_androidtv_volume_set(hass):
+async def test_androidtv_volume_set(hass: HomeAssistant) -> None:
     """Test setting the volume for an Android TV device."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -859,7 +874,9 @@ async def test_androidtv_volume_set(hass):
         patch_set_volume_level.assert_called_with(0.5)
 
 
-async def test_get_image_http(hass, hass_client_no_auth):
+async def test_get_image_http(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test taking a screen capture.
 
     This is based on `test_get_image_http` in tests/components/media_player/test_init.py.
@@ -904,7 +921,7 @@ async def test_get_image_http(hass, hass_client_no_auth):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_get_image_disabled(hass):
+async def test_get_image_disabled(hass: HomeAssistant) -> None:
     """Test that the screencap option can disable entity_picture."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -959,7 +976,7 @@ async def _test_service(
         assert service_call.called
 
 
-async def test_services_androidtv(hass):
+async def test_services_androidtv(hass: HomeAssistant) -> None:
     """Test media player services for an Android TV device."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -1000,7 +1017,7 @@ async def test_services_androidtv(hass):
             )
 
 
-async def test_services_firetv(hass):
+async def test_services_firetv(hass: HomeAssistant) -> None:
     """Test media player services for a Fire TV device."""
     patch_key, entity_id, config_entry = _setup(CONFIG_FIRETV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -1023,7 +1040,7 @@ async def test_services_firetv(hass):
             await _test_service(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
 
 
-async def test_volume_mute(hass):
+async def test_volume_mute(hass: HomeAssistant) -> None:
     """Test the volume mute service."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -1066,7 +1083,7 @@ async def test_volume_mute(hass):
                     assert mute_volume.called
 
 
-async def test_connection_closed_on_ha_stop(hass):
+async def test_connection_closed_on_ha_stop(hass: HomeAssistant) -> None:
     """Test that the ADB socket connection is closed when HA stops."""
     patch_key, _, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -1083,7 +1100,7 @@ async def test_connection_closed_on_ha_stop(hass):
             assert adb_close.called
 
 
-async def test_exception(hass):
+async def test_exception(hass: HomeAssistant) -> None:
     """Test that the ADB connection gets closed when there is an unforeseen exception.
 
     HA will attempt to reconnect on the next update.
@@ -1116,7 +1133,7 @@ async def test_exception(hass):
         assert state.state == STATE_OFF
 
 
-async def test_options_reload(hass):
+async def test_options_reload(hass: HomeAssistant) -> None:
     """Test changing an option that will cause integration reload."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)

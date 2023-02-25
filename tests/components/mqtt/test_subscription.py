@@ -8,9 +8,10 @@ from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClientGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +21,11 @@ def no_platforms():
         yield
 
 
-async def test_subscribe_topics(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_subscribe_topics(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test subscription to topics."""
     await mqtt_mock_entry_no_yaml_config()
     calls1 = []
@@ -69,7 +74,11 @@ async def test_subscribe_topics(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert len(calls2) == 1
 
 
-async def test_modify_topics(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_modify_topics(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test modification of topics."""
     await mqtt_mock_entry_no_yaml_config()
     calls1 = []
@@ -132,7 +141,11 @@ async def test_modify_topics(hass, mqtt_mock_entry_no_yaml_config, caplog):
     assert len(calls2) == 1
 
 
-async def test_qos_encoding_default(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_qos_encoding_default(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test default qos and encoding."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
@@ -150,7 +163,11 @@ async def test_qos_encoding_default(hass, mqtt_mock_entry_no_yaml_config, caplog
     mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8")
 
 
-async def test_qos_encoding_custom(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_qos_encoding_custom(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test custom qos and encoding."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 
@@ -175,7 +192,11 @@ async def test_qos_encoding_custom(hass, mqtt_mock_entry_no_yaml_config, caplog)
     mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16")
 
 
-async def test_no_change(hass, mqtt_mock_entry_no_yaml_config, caplog):
+async def test_no_change(
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test subscription to topics without change."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
 

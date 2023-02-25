@@ -1,7 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "already_configured_device": "Ier\u012bce jau pievienota Home Assistant."
-        }
-    }
-}

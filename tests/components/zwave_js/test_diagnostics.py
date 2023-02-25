@@ -13,6 +13,7 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_value_id_from_unique_id,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
@@ -22,15 +23,16 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
-    hass,
-    hass_client,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     integration,
     config_entry_diagnostics,
     config_entry_diagnostics_redacted,
-):
+) -> None:
     """Test the config entry level diagnostics data dump."""
     with patch(
         "homeassistant.components.zwave_js.diagnostics.dump_msgs",
@@ -43,13 +45,13 @@ async def test_config_entry_diagnostics(
 
 
 async def test_device_diagnostics(
-    hass,
+    hass: HomeAssistant,
     client,
     multisensor_6,
     integration,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     version_state,
-):
+) -> None:
     """Test the device level diagnostics data dump."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
@@ -102,7 +104,7 @@ async def test_device_diagnostics(
     }
 
 
-async def test_device_diagnostics_error(hass, integration):
+async def test_device_diagnostics_error(hass: HomeAssistant, integration) -> None:
     """Test the device diagnostics raises exception when an invalid device is used."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_or_create(
@@ -112,19 +114,19 @@ async def test_device_diagnostics_error(hass, integration):
         await async_get_device_diagnostics(hass, integration, device)
 
 
-async def test_empty_zwave_value_matcher():
+async def test_empty_zwave_value_matcher() -> None:
     """Test empty ZwaveValueMatcher is invalid."""
     with pytest.raises(ValueError):
         ZwaveValueMatcher()
 
 
 async def test_device_diagnostics_missing_primary_value(
-    hass,
+    hass: HomeAssistant,
     client,
     multisensor_6,
     integration,
-    hass_client,
-):
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that the device diagnostics handles an entity with a missing primary value."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})

@@ -10,7 +10,7 @@ from homeassistant.helpers import area_registry, device_registry, intent
 from tests.common import MockConfigEntry
 
 
-async def test_default_prompt(hass, mock_init_component):
+async def test_default_prompt(hass: HomeAssistant, mock_init_component) -> None:
     """Test that the default prompt works."""
     device_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
@@ -69,7 +69,21 @@ async def test_default_prompt(hass, mock_init_component):
     device_reg.async_update_device(
         device.id, disabled_by=device_registry.DeviceEntryDisabler.USER
     )
-
+    device_reg.async_get_or_create(
+        config_entry_id="1234",
+        connections={("test", "9876-no-name")},
+        manufacturer="Test Manufacturer NoName",
+        model="Test Model NoName",
+        suggested_area="Test Area 2",
+    )
+    device_reg.async_get_or_create(
+        config_entry_id="1234",
+        connections={("test", "9876-integer-values")},
+        name=1,
+        manufacturer=2,
+        model=3,
+        suggested_area="Test Area 2",
+    )
     with patch("openai.Completion.acreate") as mock_create:
         result = await conversation.async_converse(hass, "hello", None, Context())
 
@@ -87,8 +101,9 @@ Test Area 2:
 - Test Device 2
 - Test Device 3 (Test Model 3A)
 - Test Device 4
+- 1 (3)
 
-Answer the users questions about the world truthfully.
+Answer the user's questions about the world truthfully.
 
 If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 
@@ -100,7 +115,7 @@ Smart home: """
     )
 
 
-async def test_error_handling(hass, mock_init_component):
+async def test_error_handling(hass: HomeAssistant, mock_init_component) -> None:
     """Test that the default prompt works."""
     with patch("openai.Completion.acreate", side_effect=error.ServiceUnavailableError):
         result = await conversation.async_converse(hass, "hello", None, Context())

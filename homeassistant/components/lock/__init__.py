@@ -90,7 +90,7 @@ async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
     code: str = service_call.data.get(ATTR_CODE, "")
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
-            f"Code '{code}' for locking {entity.name} doesn't match pattern {entity.code_format}"
+            f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
     await entity.async_lock(**service_call.data)
 
@@ -100,7 +100,7 @@ async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
     code: str = service_call.data.get(ATTR_CODE, "")
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
-            f"Code '{code}' for unlocking {entity.name} doesn't match pattern {entity.code_format}"
+            f"Code '{code}' for unlocking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
     await entity.async_unlock(**service_call.data)
 
@@ -110,7 +110,7 @@ async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     code: str = service_call.data.get(ATTR_CODE, "")
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
-            f"Code '{code}' for opening {entity.name} doesn't match pattern {entity.code_format}"
+            f"Code '{code}' for opening {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
     await entity.async_open(**service_call.data)
 
