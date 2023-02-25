@@ -24,7 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_TRACK_HOME,
@@ -100,9 +99,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Met data updater."""
         self._unsub_track_home: Callable[[], None] | None = None
-        self.weather = MetWeatherData(
-            hass, config_entry.data, hass.config.units is METRIC_SYSTEM
-        )
+        self.weather = MetWeatherData(hass, config_entry.data)
         self.weather.set_coordinates()
 
         update_interval = timedelta(minutes=randrange(55, 65))
@@ -140,13 +137,10 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
-    def __init__(
-        self, hass: HomeAssistant, config: MappingProxyType[str, Any], is_metric: bool
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config: MappingProxyType[str, Any]) -> None:
         """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
-        self._is_metric = is_metric
         self._weather_data: metno.MetWeatherData
         self.current_weather_data: dict = {}
         self.daily_forecast: list[dict] = []
