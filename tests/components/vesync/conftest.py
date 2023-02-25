@@ -64,9 +64,6 @@ def manager_fixture() -> VeSync:
     mock = Mock(return_value=mock_vesync)
 
     with patch("homeassistant.components.vesync.VeSync", new=mock):
-        # , patch(
-        #     "pyvesync.vesync.VeSync", new=mock
-        # ):
         yield mock_vesync
 
 

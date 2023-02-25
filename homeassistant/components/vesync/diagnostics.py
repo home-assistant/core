@@ -7,7 +7,7 @@ from pyvesync import VeSync
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -49,20 +49,13 @@ async def async_get_config_entry_diagnostics(
     data.update(
         {
             "devices": {
-                "bulbs": [
-                    _async_device_as_dict(hass, None, device)
-                    for device in manager.bulbs
-                ],
-                "fans": [
-                    _async_device_as_dict(hass, None, device) for device in manager.fans
-                ],
+                "bulbs": [_redact_device_values(device) for device in manager.bulbs],
+                "fans": [_redact_device_values(device) for device in manager.fans],
                 "outlets": [
-                    _async_device_as_dict(hass, None, device)
-                    for device in manager.outlets
+                    _redact_device_values(device) for device in manager.outlets
                 ],
                 "switches": [
-                    _async_device_as_dict(hass, None, device)
-                    for device in manager.switches
+                    _redact_device_values(device) for device in manager.switches
                 ],
             }
         }
@@ -76,65 +69,53 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
-
     device_dict = _build_device_dict(manager)
-    vesync_device_id = next(iter(device.identifiers))[1]
-    return _async_device_as_dict(hass, device, device_dict[vesync_device_id])
-
-
-@callback
-def _async_device_as_dict(
-    hass: HomeAssistant,
-    hass_device: DeviceEntry | None,
-    vesync_device: VeSyncBaseDevice,
-) -> dict[str, Any]:
-    """Represent a VeSync device as a dictionary."""
+    vesync_device_id = next(iden[1] for iden in device.identifiers if iden[0] == DOMAIN)
 
     # Base device information, without sensitive information.
-    data = _redact_device_values(vesync_device)
+    data = _redact_device_values(device_dict[vesync_device_id])
 
-    if hass_device:
-        data["home_assistant"] = {
-            "name": hass_device.name,
-            "name_by_user": hass_device.name_by_user,
-            "disabled": hass_device.disabled,
-            "disabled_by": hass_device.disabled_by,
-            "entities": [],
-        }
+    data["home_assistant"] = {
+        "name": device.name,
+        "name_by_user": device.name_by_user,
+        "disabled": device.disabled,
+        "disabled_by": device.disabled_by,
+        "entities": [],
+    }
 
-        # Gather information how this VeSync device is represented in Home Assistant
-        entity_registry = er.async_get(hass)
-        hass_entities = er.async_entries_for_device(
-            entity_registry,
-            device_id=hass_device.id,
-            include_disabled_entities=True,
+    # Gather information how this VeSync device is represented in Home Assistant
+    entity_registry = er.async_get(hass)
+    hass_entities = er.async_entries_for_device(
+        entity_registry,
+        device_id=device.id,
+        include_disabled_entities=True,
+    )
+
+    for entity_entry in hass_entities:
+        state = hass.states.get(entity_entry.entity_id)
+        state_dict = None
+        if state:
+            state_dict = dict(state.as_dict())
+            # The context doesn't provide useful information in this case.
+            state_dict.pop("context", None)
+
+        data["home_assistant"]["entities"].append(
+            {
+                "domain": entity_entry.domain,
+                "entity_id": entity_entry.entity_id,
+                "entity_category": entity_entry.entity_category,
+                "device_class": entity_entry.device_class,
+                "original_device_class": entity_entry.original_device_class,
+                "name": entity_entry.name,
+                "original_name": entity_entry.original_name,
+                "icon": entity_entry.icon,
+                "original_icon": entity_entry.original_icon,
+                "unit_of_measurement": entity_entry.unit_of_measurement,
+                "state": state_dict,
+                "disabled": entity_entry.disabled,
+                "disabled_by": entity_entry.disabled_by,
+            }
         )
-
-        for entity_entry in hass_entities:
-            state = hass.states.get(entity_entry.entity_id)
-            state_dict = None
-            if state:
-                state_dict = dict(state.as_dict())
-                # The context doesn't provide useful information in this case.
-                state_dict.pop("context", None)
-
-            data["home_assistant"]["entities"].append(
-                {
-                    "domain": entity_entry.domain,
-                    "entity_id": entity_entry.entity_id,
-                    "entity_category": entity_entry.entity_category,
-                    "device_class": entity_entry.device_class,
-                    "original_device_class": entity_entry.original_device_class,
-                    "name": entity_entry.name,
-                    "original_name": entity_entry.original_name,
-                    "icon": entity_entry.icon,
-                    "original_icon": entity_entry.original_icon,
-                    "unit_of_measurement": entity_entry.unit_of_measurement,
-                    "state": state_dict,
-                    "disabled": entity_entry.disabled,
-                    "disabled_by": entity_entry.disabled_by,
-                }
-            )
 
     return data
 
