@@ -195,16 +195,3 @@ async def test_async_setup_entry__loads_outlets(
     assert not hass.data[DOMAIN][VS_FANS]
     assert not hass.data[DOMAIN][VS_LIGHTS]
     assert hass.data[DOMAIN][VS_SENSORS] == [outlet]
-
-
-# async def test_unload_entry(hass, config_entry, manager)->None:
-#     """Test entries are unloaded correctly."""
-#     hass.data[DOMAIN] = {VS_MANAGER: manager}
-#     with patch.object(
-#         hass.config_entries, "async_forward_entry_unload", return_value=True
-#     ) as unload:
-#         assert await async_unload_entry(hass, config_entry)
-#         await hass.async_block_till_done()
-#         #        assert controller_manager.disconnect.call_count == 1
-#         assert unload.call_count == 1
-#     assert DOMAIN not in hass.data
