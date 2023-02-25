@@ -711,6 +711,12 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Keep holding the reference to the tasks but do not allow them
+        # to block shutdown. Only tasks created after this point will
+        # be waited for.
+        running_tasks = self._tasks.copy()
+        self._tasks.clear()
+
         # Cancel all background tasks
         for task in self._background_tasks:
             self._tasks.add(task)
@@ -747,6 +753,8 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
+        for task in running_tasks:
+            task.cancel()
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
         # it returns will never run after the final `self.async_block_till_done`
