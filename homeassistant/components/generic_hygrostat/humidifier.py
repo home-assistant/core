@@ -178,7 +178,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             """Init on startup."""
             sensor_state = self.hass.states.get(self._sensor_entity_id)
             if sensor_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                _LOGGER.debug("The sensor state is %s, initialization is delayed", sensor_state.state)
+                _LOGGER.debug(
+                    "The sensor state is %s, initialization is delayed",
+                    sensor_state.state,
+                )
                 return
             await self._async_sensor_changed(self._sensor_entity_id, None, sensor_state)
 
