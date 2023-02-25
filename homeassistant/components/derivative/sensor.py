@@ -8,7 +8,11 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -131,6 +135,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
 
     _attr_icon = ICON
     _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -245,7 +250,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 derivative = new_derivative
             else:
                 derivative = Decimal(0)
-                for (start, end, value) in self._state_list:
+                for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
 

@@ -1,11 +1,15 @@
 """Test august diagnostics."""
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client):
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for a config entry."""
     entry = await async_init_integration(hass)
 
@@ -15,28 +19,39 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3467876",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3467876"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=472ae0d2-5d7c-4a1c-9e47-4d9035fdace5"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=472ae0d2-5d7c-4a1c-9e47-4d9035fdace5"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3467876"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "?automation_id=3467876"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3467876"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will permanently hold the heat to "
-                "62.0 and cool to 83.0 AND Downstairs East "
-                "Wing will permanently hold the heat to 62.0 "
-                "and cool to 83.0 AND Downstairs West Wing "
-                "will permanently hold the heat to 62.0 and "
-                "cool to 83.0 AND Activate the mode named "
-                "'Away 12' AND Master Suite will permanently "
-                "hold the heat to 62.0 and cool to 83.0",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will permanently hold the heat to "
+                    "62.0 and cool to 83.0 AND Downstairs East "
+                    "Wing will permanently hold the heat to 62.0 "
+                    "and cool to 83.0 AND Downstairs West Wing "
+                    "will permanently hold the heat to 62.0 and "
+                    "cool to 83.0 AND Activate the mode named "
+                    "'Away 12' AND Master Suite will permanently "
+                    "hold the heat to 62.0 and cool to 83.0"
+                ),
                 "enabled": True,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -54,28 +69,39 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3467870",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3467870"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=f63ee20c-3146-49a1-87c5-47429a063d15"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=f63ee20c-3146-49a1-87c5-47429a063d15"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3467870"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?automation_id=3467870"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3467870"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will permanently hold the heat to "
-                "60.0 and cool to 85.0 AND Downstairs East "
-                "Wing will permanently hold the heat to 60.0 "
-                "and cool to 85.0 AND Downstairs West Wing "
-                "will permanently hold the heat to 60.0 and "
-                "cool to 85.0 AND Activate the mode named "
-                "'Away 24' AND Master Suite will permanently "
-                "hold the heat to 60.0 and cool to 85.0",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will permanently hold the heat to "
+                    "60.0 and cool to 85.0 AND Downstairs East "
+                    "Wing will permanently hold the heat to 60.0 "
+                    "and cool to 85.0 AND Downstairs West Wing "
+                    "will permanently hold the heat to 60.0 and "
+                    "cool to 85.0 AND Activate the mode named "
+                    "'Away 24' AND Master Suite will permanently "
+                    "hold the heat to 60.0 and cool to 85.0"
+                ),
                 "enabled": True,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -93,35 +119,46 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3452469",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3452469"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=e5c59b93-efca-4937-9499-3f4c896ab17c"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=e5c59b93-efca-4937-9499-3f4c896ab17c"
+                        ),
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3452469"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?automation_id=3452469"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3452469"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will permanently hold the heat to "
-                "63.0 and cool to 80.0 AND Downstairs East "
-                "Wing will permanently hold the heat to 63.0 "
-                "and cool to 79.0 AND Downstairs West Wing "
-                "will permanently hold the heat to 63.0 and "
-                "cool to 79.0 AND Upstairs West Wing will "
-                "permanently hold the heat to 63.0 and cool "
-                "to 81.0 AND Upstairs West Wing will change "
-                "Fan Mode to Auto AND Downstairs East Wing "
-                "will change Fan Mode to Auto AND Downstairs "
-                "West Wing will change Fan Mode to Auto AND "
-                "Activate the mode named 'Away Short' AND "
-                "Master Suite will permanently hold the heat "
-                "to 63.0 and cool to 79.0 AND Master Suite "
-                "will change Fan Mode to Auto",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will permanently hold the heat to "
+                    "63.0 and cool to 80.0 AND Downstairs East "
+                    "Wing will permanently hold the heat to 63.0 "
+                    "and cool to 79.0 AND Downstairs West Wing "
+                    "will permanently hold the heat to 63.0 and "
+                    "cool to 79.0 AND Upstairs West Wing will "
+                    "permanently hold the heat to 63.0 and cool "
+                    "to 81.0 AND Upstairs West Wing will change "
+                    "Fan Mode to Auto AND Downstairs East Wing "
+                    "will change Fan Mode to Auto AND Downstairs "
+                    "West Wing will change Fan Mode to Auto AND "
+                    "Activate the mode named 'Away Short' AND "
+                    "Master Suite will permanently hold the heat "
+                    "to 63.0 and cool to 79.0 AND Master Suite "
+                    "will change Fan Mode to Auto"
+                ),
                 "enabled": False,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -144,25 +181,36 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3452472",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3452472"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=861b9fec-d259-4492-a798-5712251666c4"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=861b9fec-d259-4492-a798-5712251666c4"
+                        ),
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3452472"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?automation_id=3452472"
+                        ),
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3452472"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will Run Schedule AND Downstairs "
-                "East Wing will Run Schedule AND Downstairs "
-                "West Wing will Run Schedule AND Activate the "
-                "mode named 'Home' AND Master Suite will Run "
-                "Schedule",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will Run Schedule AND Downstairs "
+                    "East Wing will Run Schedule AND Downstairs "
+                    "West Wing will Run Schedule AND Activate the "
+                    "mode named 'Home' AND Master Suite will Run "
+                    "Schedule"
+                ),
                 "enabled": True,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -180,32 +228,43 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3454776",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3454776"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=96c71d37-66aa-4cbb-84ff-a90412fd366a"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=96c71d37-66aa-4cbb-84ff-a90412fd366a"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3454776"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?automation_id=3454776"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3454776"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will permanently hold the heat to "
-                "60.0 and cool to 85.0 AND Downstairs East "
-                "Wing will permanently hold the heat to 60.0 "
-                "and cool to 85.0 AND Downstairs West Wing "
-                "will permanently hold the heat to 60.0 and "
-                "cool to 85.0 AND Upstairs West Wing will "
-                "change Fan Mode to Auto AND Downstairs East "
-                "Wing will change Fan Mode to Auto AND "
-                "Downstairs West Wing will change Fan Mode to "
-                "Auto AND Master Suite will permanently hold "
-                "the heat to 60.0 and cool to 85.0 AND Master "
-                "Suite will change Fan Mode to Auto",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will permanently hold the heat to "
+                    "60.0 and cool to 85.0 AND Downstairs East "
+                    "Wing will permanently hold the heat to 60.0 "
+                    "and cool to 85.0 AND Downstairs West Wing "
+                    "will permanently hold the heat to 60.0 and "
+                    "cool to 85.0 AND Upstairs West Wing will "
+                    "change Fan Mode to Auto AND Downstairs East "
+                    "Wing will change Fan Mode to Auto AND "
+                    "Downstairs West Wing will change Fan Mode to "
+                    "Auto AND Master Suite will permanently hold "
+                    "the heat to 60.0 and cool to 85.0 AND Master "
+                    "Suite will change Fan Mode to Auto"
+                ),
                 "enabled": True,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -226,24 +285,35 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3454774",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3454774"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=880c5287-d92c-4368-8494-e10975e92733"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=880c5287-d92c-4368-8494-e10975e92733"
+                        ),
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3454774"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?automation_id=3454774"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3454774"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will Run Schedule AND Downstairs "
-                "East Wing will Run Schedule AND Downstairs "
-                "West Wing will Run Schedule AND Master Suite "
-                "will Run Schedule",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will Run Schedule AND Downstairs "
+                    "East Wing will Run Schedule AND Downstairs "
+                    "West Wing will Run Schedule AND Master Suite "
+                    "will Run Schedule"
+                ),
                 "enabled": False,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -260,27 +330,38 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3486078",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3486078"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=d33c013b-2357-47a9-8c66-d2c3693173b0"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=d33c013b-2357-47a9-8c66-d2c3693173b0"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3486078"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?automation_id=3486078"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3486078"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will permanently hold the heat to "
-                "55.0 and cool to 90.0 AND Downstairs East "
-                "Wing will permanently hold the heat to 55.0 "
-                "and cool to 90.0 AND Downstairs West Wing "
-                "will permanently hold the heat to 55.0 and "
-                "cool to 90.0 AND Activate the mode named "
-                "'Power Outage'",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will permanently hold the heat to "
+                    "55.0 and cool to 90.0 AND Downstairs East "
+                    "Wing will permanently hold the heat to 55.0 "
+                    "and cool to 90.0 AND Downstairs West Wing "
+                    "will permanently hold the heat to 55.0 and "
+                    "cool to 90.0 AND Activate the mode named "
+                    "'Power Outage'"
+                ),
                 "enabled": True,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -297,24 +378,35 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "edit": {
-                        "href": "https://www.mynexia.com/mobile/automation_edit_buffers?automation_id=3486091",
+                        "href": (
+                            "https://www.mynexia.com/mobile"
+                            "/automation_edit_buffers?automation_id=3486091"
+                        ),
                         "method": "POST",
                     },
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=b9141df8-2e5e-4524-b8ef-efcbf48d775a"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=b9141df8-2e5e-4524-b8ef-efcbf48d775a"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?automation_id=3486091"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?automation_id=3486091"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/automations/3486091"
                     },
                 },
-                "description": "When IFTTT activates the automation Upstairs "
-                "West Wing will Run Schedule AND Downstairs "
-                "East Wing will Run Schedule AND Downstairs "
-                "West Wing will Run Schedule AND Activate the "
-                "mode named 'Home'",
+                "description": (
+                    "When IFTTT activates the automation Upstairs "
+                    "West Wing will Run Schedule AND Downstairs "
+                    "East Wing will Run Schedule AND Downstairs "
+                    "West Wing will Run Schedule AND Activate the "
+                    "mode named 'Home'"
+                ),
                 "enabled": True,
                 "icon": [
                     {"modifiers": [], "name": "gears"},
@@ -333,13 +425,22 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=cd9a70e8-fd0d-4b58-b071-05a202fd8953"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=cd9a70e8-fd0d-4b58-b071-05a202fd8953"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?device_id=2059661"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?device_id=2059661"
+                        )
                     },
                     "pending_request": {
-                        "polling_path": "https://www.mynexia.com/backstage/announcements/be6d8ede5cac02fe8be18c334b04d539c9200fa9230eef63"
+                        "polling_path": (
+                            "https://www.mynexia.com/backstage/announcements"
+                            "/be6d8ede5cac02fe8be18c334b04d539c9200fa9230eef63"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661"
@@ -403,7 +504,9 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones/83261002"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -412,10 +515,14 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile/xxl_zones/83261002/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile/xxl_zones/83261002/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -430,7 +537,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 71,
                                     },
                                     {
@@ -441,7 +548,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261002/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -452,7 +562,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -465,7 +575,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261002/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -476,25 +589,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -504,24 +615,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile/xxl_zones"
+                                                    "/83261002/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261002",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261002"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261002",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261002"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261002",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261002"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261002&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/schedules"
+                                            "?device_identifier=XxlZone-83261002"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -542,7 +679,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261002"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -560,7 +701,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261002/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -578,21 +722,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261002/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -603,7 +750,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261002"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -624,7 +775,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -633,10 +787,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -651,7 +811,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 77,
                                     },
                                     {
@@ -662,7 +822,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -673,7 +836,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -686,7 +849,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -697,25 +863,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -725,24 +889,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261005",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261005"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261005",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261005"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261005",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261005"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261005&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83261005"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -763,7 +953,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -781,7 +975,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -799,21 +996,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -824,7 +1024,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261005"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -845,7 +1049,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261008"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -854,10 +1061,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -872,7 +1085,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 72,
                                     },
                                     {
@@ -883,7 +1096,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -894,7 +1110,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -907,7 +1123,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -918,25 +1137,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -946,24 +1163,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261008",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261008"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261008",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261008"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261008",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261008"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261008&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83261008"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -984,7 +1227,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -1002,7 +1249,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -1020,21 +1270,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -1045,7 +1298,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261008"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -1066,7 +1323,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261011"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -1075,10 +1335,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -1093,7 +1359,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 78,
                                     },
                                     {
@@ -1104,7 +1370,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -1115,7 +1384,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -1128,7 +1397,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -1139,25 +1411,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -1167,24 +1437,52 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261011",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261011"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261011",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261011"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261011",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261011"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261011&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/schedules"
+                                            "?device_identifier"
+                                            "=XxlZone-83261011"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -1205,7 +1503,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -1223,7 +1525,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -1241,21 +1546,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -1266,7 +1574,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261011"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -1290,7 +1602,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "update_thermostat_fan_mode": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661/fan_mode",
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059661/fan_mode"
+                                ),
                                 "method": "POST",
                             }
                         },
@@ -1315,11 +1630,17 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "get_monthly_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2059661?report_type=monthly",
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/runtime_history/2059661?report_type=monthly"
+                                ),
                                 "method": "GET",
                             },
                             "get_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2059661?report_type=daily",
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/runtime_history/2059661?report_type=daily"
+                                ),
                                 "method": "GET",
                             },
                         },
@@ -1344,7 +1665,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661/fan_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059661/fan_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -1361,7 +1685,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661/fan_speed"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059661/fan_speed"
+                                )
                             }
                         },
                         "current_value": 0.35,
@@ -1419,7 +1746,11 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661/fan_circulation_time"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059661"
+                                    "/fan_circulation_time"
+                                )
                             }
                         },
                         "current_value": 30,
@@ -1454,7 +1785,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661/air_cleaner_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059661/air_cleaner_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -1471,7 +1805,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661/dehumidify"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059661/dehumidify"
+                                )
                             }
                         },
                         "current_value": 0.5,
@@ -1492,7 +1829,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059661/scale"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059661/scale"
+                                )
                             }
                         },
                         "current_value": "f",
@@ -1514,7 +1854,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261002"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83261002"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -1523,10 +1865,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -1552,7 +1900,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -1576,7 +1927,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -1593,9 +1947,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -1610,24 +1962,44 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261002",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83261002"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261002",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83261002"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261002",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/set_active_schedule"
+                                            "?device_identifier=XxlZone-83261002"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261002&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83261002"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -1645,7 +2017,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261002/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -1663,7 +2038,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -1681,7 +2059,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -1700,7 +2081,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261002/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261002/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -1721,7 +2105,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261005"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83261005"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -1730,10 +2116,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -1759,7 +2151,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -1783,7 +2178,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -1800,9 +2198,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -1817,24 +2213,46 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261005/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261005",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_active_schedule"
+                                            "?device_identifier=XxlZone-83261005"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261005",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_default_schedule"
+                                            "?device_identifier=XxlZone-83261005"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261005",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/set_active_schedule"
+                                            "?device_identifier=XxlZone-83261005"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261005&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83261005"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -1852,7 +2270,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -1870,7 +2291,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -1888,7 +2312,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -1907,7 +2334,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261005/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261005/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -1928,7 +2358,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261008"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83261008"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -1937,10 +2369,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261008/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261008/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -1966,7 +2404,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261008/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -1990,7 +2431,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261008/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -2007,9 +2451,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -2024,24 +2466,43 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261008/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261008",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83261008"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261008",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83261008"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261008",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/set_active_schedule"
+                                            "?device_identifier=XxlZone-83261008"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261008&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83261008"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -2059,7 +2520,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261008/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -2077,7 +2541,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261008/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -2095,7 +2562,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261008/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -2114,7 +2584,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261008/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261008/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -2135,7 +2608,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261011"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83261011"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -2144,10 +2619,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -2173,7 +2654,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -2197,7 +2681,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -2214,9 +2701,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -2231,24 +2716,43 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261011",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83261011"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261011",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83261011"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261011",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/set_active_schedule"
+                                            "?device_identifier=XxlZone-83261011"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261011&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83261011"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -2266,7 +2770,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -2284,7 +2791,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -2302,7 +2812,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -2321,7 +2834,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261011/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261011/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -2344,13 +2860,22 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=5aae72a6-1bd0-4d84-9bfd-673e7bc4907c"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=5aae72a6-1bd0-4d84-9bfd-673e7bc4907c"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?device_id=2059676"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?device_id=2059676"
+                        )
                     },
                     "pending_request": {
-                        "polling_path": "https://www.mynexia.com/backstage/announcements/3412f1d96eb0c5edb5466c3c0598af60c06f8443f21e9bcb"
+                        "polling_path": (
+                            "https://www.mynexia.com/backstage/announcements"
+                            "/3412f1d96eb0c5edb5466c3c0598af60c06f8443f21e9bcb"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676"
@@ -2418,7 +2943,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261015"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -2427,10 +2955,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -2445,7 +2979,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 75,
                                     },
                                     {
@@ -2456,7 +2990,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -2467,7 +3004,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -2480,7 +3017,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -2491,25 +3031,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -2519,24 +3057,49 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261015",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261015"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261015",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261015"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261015",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261015"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261015&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83261015"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -2557,7 +3120,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -2575,7 +3142,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -2593,21 +3163,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -2618,7 +3191,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261015"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -2639,7 +3216,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -2648,10 +3228,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -2666,7 +3252,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 75,
                                     },
                                     {
@@ -2677,7 +3263,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -2688,7 +3277,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -2701,7 +3290,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -2712,25 +3304,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -2740,24 +3330,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261018",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261018"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261018",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261018"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261018",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83261018"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261018&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83261018"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -2778,7 +3394,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -2796,7 +3416,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -2814,21 +3437,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -2839,7 +3465,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83261018"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -2863,7 +3493,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "update_thermostat_fan_mode": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676/fan_mode",
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2059676/fan_mode"
+                                ),
                                 "method": "POST",
                             }
                         },
@@ -2888,11 +3521,17 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "get_monthly_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2059676?report_type=monthly",
+                                "href": (
+                                    "https://www.mynexia.com/mobile/runtime_history"
+                                    "/2059676?report_type=monthly"
+                                ),
                                 "method": "GET",
                             },
                             "get_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2059676?report_type=daily",
+                                "href": (
+                                    "https://www.mynexia.com/mobile/runtime_history"
+                                    "/2059676?report_type=daily"
+                                ),
                                 "method": "GET",
                             },
                         },
@@ -2915,7 +3554,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676/fan_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2059676/fan_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -2932,7 +3574,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676/fan_speed"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2059676/fan_speed"
+                                )
                             }
                         },
                         "current_value": 0.35,
@@ -2990,7 +3635,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676/fan_circulation_time"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2059676/fan_circulation_time"
+                                )
                             }
                         },
                         "current_value": 30,
@@ -3025,7 +3673,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676/air_cleaner_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2059676/air_cleaner_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -3042,7 +3693,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676/dehumidify"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2059676/dehumidify"
+                                )
                             }
                         },
                         "current_value": 0.45,
@@ -3063,7 +3717,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059676/scale"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2059676/scale"
+                                )
                             }
                         },
                         "current_value": "f",
@@ -3085,7 +3742,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261015"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83261015"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -3094,10 +3753,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261015/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261015/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -3123,7 +3788,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261015/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -3147,7 +3815,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261015/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -3164,9 +3835,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -3181,24 +3850,43 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261015/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261015",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83261015"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261015",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83261015"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261015",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/set_active_schedule"
+                                            "?device_identifier=XxlZone-83261015"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261015&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83261015"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -3216,7 +3904,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261015/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -3234,7 +3925,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261015/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -3252,7 +3946,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261015/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -3271,7 +3968,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261015/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261015/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -3292,7 +3992,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83261018"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83261018"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -3301,10 +4003,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -3330,7 +4038,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -3354,7 +4065,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -3371,9 +4085,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -3388,24 +4100,43 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83261018/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83261018",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83261018"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83261018",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83261018"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83261018",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/set_active_schedule"
+                                            "?device_identifier=XxlZone-83261018"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83261018&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83261018"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -3423,7 +4154,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -3441,7 +4175,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -3459,7 +4196,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -3478,7 +4218,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83261018/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83261018/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -3501,13 +4244,22 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=e3fc90c7-2885-4f57-ae76-99e9ec81eef0"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=e3fc90c7-2885-4f57-ae76-99e9ec81eef0"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?device_id=2293892"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?device_id=2293892"
+                        )
                     },
                     "pending_request": {
-                        "polling_path": "https://www.mynexia.com/backstage/announcements/967361e8aed874aa5230930fd0e0bbd8b653261e982a6e0e"
+                        "polling_path": (
+                            "https://www.mynexia.com/backstage/announcements"
+                            "/967361e8aed874aa5230930fd0e0bbd8b653261e982a6e0e"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892"
@@ -3575,7 +4327,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -3584,10 +4339,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -3600,7 +4361,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_heat_max": 90,
                                         "setpoint_heat_min": 55,
                                         "setpoint_increment": 1.0,
-                                        "status": "Relieving " "Air",
+                                        "status": "Relieving Air",
                                         "status_icon": {
                                             "modifiers": [],
                                             "name": "cooling",
@@ -3616,7 +4377,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -3627,7 +4391,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -3640,7 +4404,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -3651,25 +4418,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -3679,24 +4444,45 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394133",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier=XxlZone-83394133"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394133",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier=XxlZone-83394133"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394133",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules/set_active_schedule"
+                                                    "?device_identifier=XxlZone-83394133"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394133&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83394133"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -3717,7 +4503,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -3735,7 +4524,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -3753,21 +4545,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -3778,7 +4573,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394133/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -3799,7 +4597,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 71,
@@ -3808,10 +4609,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -3840,7 +4647,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -3851,7 +4661,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -3864,7 +4674,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -3875,25 +4688,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -3903,24 +4714,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394130",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394130"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394130",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394130"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394130",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394130"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394130&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83394130"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -3941,7 +4778,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -3959,7 +4800,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -3977,21 +4821,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -4002,7 +4849,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394130"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -4023,7 +4874,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -4032,10 +4886,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -4048,7 +4908,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_heat_max": 90,
                                         "setpoint_heat_min": 55,
                                         "setpoint_increment": 1.0,
-                                        "status": "Relieving " "Air",
+                                        "status": "Relieving Air",
                                         "status_icon": {
                                             "modifiers": [],
                                             "name": "cooling",
@@ -4064,7 +4924,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -4075,7 +4938,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -4088,7 +4951,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -4099,25 +4965,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -4127,24 +4991,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394136",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394136"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394136",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394136"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394136",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394136"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394136&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83394136"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -4165,7 +5055,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -4183,7 +5076,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -4201,21 +5097,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -4226,7 +5125,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394136/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -4247,7 +5149,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -4256,10 +5161,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -4272,7 +5183,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_heat_max": 90,
                                         "setpoint_heat_min": 55,
                                         "setpoint_increment": 1.0,
-                                        "status": "Damper " "Closed",
+                                        "status": "Damper Closed",
                                         "status_icon": {
                                             "modifiers": [],
                                             "name": "cooling",
@@ -4288,7 +5199,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -4299,7 +5213,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -4312,7 +5226,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -4323,25 +5240,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -4351,24 +5266,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394127",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394127"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394127",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394127"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394127",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394127"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394127&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83394127"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -4389,7 +5330,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -4407,7 +5352,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -4425,21 +5373,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -4450,7 +5401,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394127"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -4471,7 +5426,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 79,
@@ -4480,10 +5438,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -4496,7 +5460,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_heat_max": 90,
                                         "setpoint_heat_min": 55,
                                         "setpoint_increment": 1.0,
-                                        "status": "Damper " "Closed",
+                                        "status": "Damper Closed",
                                         "status_icon": {
                                             "modifiers": [],
                                             "name": "cooling",
@@ -4512,7 +5476,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -4523,7 +5490,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -4536,7 +5503,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -4547,25 +5517,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -4575,24 +5543,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394139",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394139"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394139",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394139"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394139",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83394139"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394139&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83394139"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -4613,7 +5607,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -4631,7 +5629,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -4649,21 +5650,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -4674,7 +5678,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83394139"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -4698,7 +5706,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "update_thermostat_fan_mode": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_mode",
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2293892/fan_mode"
+                                ),
                                 "method": "POST",
                             }
                         },
@@ -4723,11 +5734,17 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "get_monthly_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2293892?report_type=monthly",
+                                "href": (
+                                    "https://www.mynexia.com/mobile/runtime_history"
+                                    "/2293892?report_type=monthly"
+                                ),
                                 "method": "GET",
                             },
                             "get_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2293892?report_type=daily",
+                                "href": (
+                                    "https://www.mynexia.com/mobile/runtime_history"
+                                    "/2293892?report_type=daily"
+                                ),
                                 "method": "GET",
                             },
                         },
@@ -4753,7 +5770,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2293892/fan_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -4770,7 +5790,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_speed"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2293892/fan_speed"
+                                )
                             }
                         },
                         "current_value": 0.35,
@@ -4828,7 +5851,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/fan_circulation_time"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2293892/fan_circulation_time"
+                                )
                             }
                         },
                         "current_value": 30,
@@ -4863,7 +5889,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/air_cleaner_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_thermostats"
+                                    "/2293892/air_cleaner_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -4880,7 +5909,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/dehumidify"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2293892/dehumidify"
+                                )
                             }
                         },
                         "current_value": 0.45,
@@ -4901,7 +5933,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2293892/scale"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2293892/scale"
+                                )
                             }
                         },
                         "current_value": "f",
@@ -4923,7 +5958,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394133"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83394133"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -4932,10 +5969,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -4961,7 +6004,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -4985,7 +6031,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5002,9 +6051,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -5019,24 +6066,49 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83394133/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394133",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_active_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394133"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394133",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_default_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394133"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394133",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/set_active_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394133"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394133&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83394133"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -5054,7 +6126,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -5072,7 +6147,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -5090,7 +6168,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -5109,7 +6190,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394133/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394133/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -5130,7 +6214,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394130"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83394130"
+                                )
                             }
                         },
                         "cooling_setpoint": 71,
@@ -5139,10 +6225,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -5168,7 +6260,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5192,7 +6287,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5209,9 +6307,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -5226,24 +6322,50 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130"
+                                            "/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394130",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_active_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394130"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394130",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_default_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394130"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394130",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/set_active_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394130"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394130&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83394130"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -5261,7 +6383,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -5279,7 +6404,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -5297,7 +6425,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -5316,7 +6447,11 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394130/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394130"
+                                            "/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -5337,7 +6472,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394136"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83394136"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -5346,10 +6483,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -5375,7 +6518,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5399,7 +6545,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5416,9 +6565,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -5433,24 +6580,49 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394136",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_active_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394136"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394136",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_default_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394136"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394136",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/set_active_schedule"
+                                            "?device_identifier"
+                                            "=XxlZone-83394136"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394136&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83394136"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -5468,7 +6640,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -5486,7 +6661,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -5504,7 +6682,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -5523,7 +6704,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394136/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394136/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -5544,7 +6728,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394127"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83394127"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -5553,10 +6739,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -5582,7 +6774,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5606,7 +6801,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5623,9 +6821,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -5640,24 +6836,43 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83394127/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394127",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83394127"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394127",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83394127"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394127",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/set_active_schedule"
+                                            "?device_identifier=XxlZone-83394127"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394127&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83394127"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -5675,7 +6890,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -5693,7 +6911,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -5711,7 +6932,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -5730,7 +6954,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394127/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394127/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -5751,7 +6978,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83394139"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83394139"
+                                )
                             }
                         },
                         "cooling_setpoint": 79,
@@ -5760,10 +6989,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -5789,7 +7024,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5813,7 +7051,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -5830,9 +7071,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -5847,24 +7086,43 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83394139/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83394139",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83394139"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83394139",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83394139"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83394139",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/set_active_schedule"
+                                            "?device_identifier=XxlZone-83394139"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83394139&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83394139"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -5882,7 +7140,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -5900,7 +7161,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -5918,7 +7182,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -5937,7 +7204,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83394139/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83394139/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -5960,13 +7230,22 @@ async def test_diagnostics(hass, hass_client):
             {
                 "_links": {
                     "filter_events": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events/collection?sys_guid=3679e95b-7337-48ae-aff4-e0522e9dd0eb"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456/events"
+                            "/collection?sys_guid=3679e95b-7337-48ae-aff4-e0522e9dd0eb"
+                        )
                     },
                     "nexia:history": {
-                        "href": "https://www.mynexia.com/mobile/houses/123456/events?device_id=2059652"
+                        "href": (
+                            "https://www.mynexia.com/mobile/houses/123456"
+                            "/events?device_id=2059652"
+                        )
                     },
                     "pending_request": {
-                        "polling_path": "https://www.mynexia.com/backstage/announcements/c6627726f6339d104ee66897028d6a2ea38215675b336650"
+                        "polling_path": (
+                            "https://www.mynexia.com/backstage/announcements"
+                            "/c6627726f6339d104ee66897028d6a2ea38215675b336650"
+                        )
                     },
                     "self": {
                         "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652"
@@ -6034,7 +7313,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 80,
@@ -6052,7 +7334,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 77,
                                     },
                                     {
@@ -6063,7 +7345,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260991/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -6074,7 +7359,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -6087,7 +7372,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260991/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -6098,25 +7386,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -6126,24 +7412,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260991"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83260991",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260991"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83260991",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260991"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83260991",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260991"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83260991&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83260991"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -6164,7 +7476,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260991/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -6182,7 +7497,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260991/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "OFF",
@@ -6200,21 +7518,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260991/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -6225,7 +7546,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260991"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -6246,7 +7571,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260994"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 81,
@@ -6255,10 +7583,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -6273,7 +7607,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 74,
                                     },
                                     {
@@ -6284,7 +7618,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -6295,7 +7632,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -6308,7 +7645,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -6319,25 +7659,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -6347,24 +7685,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83260994",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260994"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83260994",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260994"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83260994",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260994"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83260994&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83260994"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -6385,7 +7749,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994"
+                                                    "/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -6403,7 +7771,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -6421,21 +7792,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -6446,7 +7820,11 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260994"
+                                                    "/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -6467,7 +7845,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260997"
+                                        )
                                     }
                                 },
                                 "cooling_setpoint": 81,
@@ -6476,10 +7857,16 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "set_cool_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/setpoints"
+                                                )
                                             },
                                             "set_heat_setpoint": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/setpoints"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/setpoints"
+                                                )
                                             },
                                         },
                                         "name": "thermostat",
@@ -6494,7 +7881,7 @@ async def test_diagnostics(hass, hass_client):
                                         "setpoint_increment": 1.0,
                                         "status": "",
                                         "status_icon": None,
-                                        "system_status": "System " "Idle",
+                                        "system_status": "System Idle",
                                         "temperature": 75,
                                     },
                                     {
@@ -6505,7 +7892,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/zone_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/zone_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -6516,7 +7906,7 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_mode",
-                                                "label": "Zone " "Mode",
+                                                "label": "Zone Mode",
                                                 "value": "thermostat_mode",
                                             },
                                             {"label": "Auto", "value": "AUTO"},
@@ -6529,7 +7919,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "actions": {
                                             "update_thermostat_run_mode": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/run_mode",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/run_mode"
+                                                ),
                                                 "method": "POST",
                                             }
                                         },
@@ -6540,25 +7933,23 @@ async def test_diagnostics(hass, hass_client):
                                             {
                                                 "header": True,
                                                 "id": "thermostat_run_mode",
-                                                "label": "Run " "Mode",
+                                                "label": "Run Mode",
                                                 "value": "thermostat_run_mode",
                                             },
                                             {
                                                 "id": "info_text",
                                                 "info": True,
-                                                "label": "Follow "
-                                                "or "
-                                                "override "
-                                                "the "
-                                                "schedule.",
+                                                "label": (
+                                                    "Follow or override the schedule."
+                                                ),
                                                 "value": "info_text",
                                             },
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -6568,24 +7959,50 @@ async def test_diagnostics(hass, hass_client):
                                         "actions": {
                                             "enable_scheduling": {
                                                 "data": {"value": True},
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/scheduling_enabled",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997"
+                                                    "/scheduling_enabled"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83260997",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260997"
+                                                ),
                                                 "method": "POST",
                                             },
                                             "get_default_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83260997",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/get_default_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260997"
+                                                ),
                                                 "method": "GET",
                                             },
                                             "set_active_schedule": {
-                                                "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83260997",
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/thermostat_schedules"
+                                                    "/set_active_schedule"
+                                                    "?device_identifier"
+                                                    "=XxlZone-83260997"
+                                                ),
                                                 "method": "POST",
                                             },
                                         },
                                         "can_add_remove_periods": True,
-                                        "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83260997&house_id=123456",
+                                        "collection_url": (
+                                            "https://www.mynexia.com/mobile/schedules"
+                                            "?device_identifier=XxlZone-83260997"
+                                            "&house_id=123456"
+                                        ),
                                         "enabled": True,
                                         "max_period_name_length": 10,
                                         "max_periods_per_day": 4,
@@ -6606,7 +8023,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/preset_selected"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/preset_selected"
+                                                )
                                             }
                                         },
                                         "current_value": 0,
@@ -6624,7 +8044,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/zone_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/zone_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "AUTO",
@@ -6642,21 +8065,24 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/run_mode"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/run_mode"
+                                                )
                                             }
                                         },
                                         "current_value": "permanent_hold",
                                         "labels": [
-                                            "Permanent " "Hold",
-                                            "Run " "Schedule",
+                                            "Permanent Hold",
+                                            "Run Schedule",
                                         ],
                                         "options": [
                                             {
-                                                "label": "Permanent " "Hold",
+                                                "label": "Permanent Hold",
                                                 "value": "permanent_hold",
                                             },
                                             {
-                                                "label": "Run " "Schedule",
+                                                "label": "Run Schedule",
                                                 "value": "run_schedule",
                                             },
                                         ],
@@ -6667,7 +8093,10 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "_links": {
                                             "self": {
-                                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/scheduling_enabled"
+                                                "href": (
+                                                    "https://www.mynexia.com/mobile"
+                                                    "/xxl_zones/83260997/scheduling_enabled"
+                                                )
                                             }
                                         },
                                         "current_value": True,
@@ -6691,7 +8120,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "update_thermostat_fan_mode": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652/fan_mode",
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059652/fan_mode"
+                                ),
                                 "method": "POST",
                             }
                         },
@@ -6716,11 +8148,17 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "actions": {
                             "get_monthly_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2059652?report_type=monthly",
+                                "href": (
+                                    "https://www.mynexia.com/mobile/runtime_history"
+                                    "/2059652?report_type=monthly"
+                                ),
                                 "method": "GET",
                             },
                             "get_runtime_history": {
-                                "href": "https://www.mynexia.com/mobile/runtime_history/2059652?report_type=daily",
+                                "href": (
+                                    "https://www.mynexia.com/mobile/runtime_history"
+                                    "/2059652?report_type=daily"
+                                ),
                                 "method": "GET",
                             },
                         },
@@ -6744,7 +8182,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652/fan_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059652/fan_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -6761,7 +8202,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652/fan_speed"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059652/fan_speed"
+                                )
                             }
                         },
                         "current_value": 0.35,
@@ -6819,7 +8263,11 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652/fan_circulation_time"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059652"
+                                    "/fan_circulation_time"
+                                )
                             }
                         },
                         "current_value": 30,
@@ -6854,7 +8302,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652/air_cleaner_mode"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059652/air_cleaner_mode"
+                                )
                             }
                         },
                         "current_value": "auto",
@@ -6871,7 +8322,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652/dehumidify"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059652/dehumidify"
+                                )
                             }
                         },
                         "current_value": 0.5,
@@ -6892,7 +8346,10 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_thermostats/2059652/scale"
+                                "href": (
+                                    "https://www.mynexia.com/mobile"
+                                    "/xxl_thermostats/2059652/scale"
+                                )
                             }
                         },
                         "current_value": "f",
@@ -6914,7 +8371,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260991"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83260991"
+                                )
                             }
                         },
                         "cooling_setpoint": 80,
@@ -6943,7 +8402,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -6967,7 +8429,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -6984,9 +8449,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -7001,24 +8464,43 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83260991",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_active_schedule"
+                                            "?device_identifier=XxlZone-83260991"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83260991",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/get_default_schedule"
+                                            "?device_identifier=XxlZone-83260991"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83260991",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules/set_active_schedule"
+                                            "?device_identifier=XxlZone-83260991"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83260991&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83260991"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -7036,7 +8518,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -7054,7 +8539,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "OFF",
@@ -7072,7 +8560,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -7091,7 +8582,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260991/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260991/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -7112,7 +8606,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260994"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83260994"
+                                )
                             }
                         },
                         "cooling_setpoint": 81,
@@ -7121,10 +8617,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -7150,7 +8652,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -7174,7 +8679,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -7191,9 +8699,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -7208,24 +8714,46 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83260994",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_active_schedule"
+                                            "?device_identifier=XxlZone-83260994"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83260994",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_default_schedule"
+                                            "?device_identifier=XxlZone-83260994"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83260994",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/set_active_schedule"
+                                            "?device_identifier=XxlZone-83260994"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83260994&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83260994"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -7243,7 +8771,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -7261,7 +8792,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -7279,7 +8813,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -7298,7 +8835,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260994/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260994/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,
@@ -7319,7 +8859,9 @@ async def test_diagnostics(hass, hass_client):
                     {
                         "_links": {
                             "self": {
-                                "href": "https://www.mynexia.com/mobile/xxl_zones/83260997"
+                                "href": (
+                                    "https://www.mynexia.com/mobile/xxl_zones/83260997"
+                                )
                             }
                         },
                         "cooling_setpoint": 81,
@@ -7328,10 +8870,16 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "set_cool_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/setpoints"
+                                        )
                                     },
                                     "set_heat_setpoint": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/setpoints"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/setpoints"
+                                        )
                                     },
                                 },
                                 "name": "thermostat",
@@ -7357,7 +8905,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/zone_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/zone_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -7381,7 +8932,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "actions": {
                                     "update_thermostat_run_mode": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/run_mode",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/xxl_zones/83260997/run_mode"
+                                        ),
                                         "method": "POST",
                                     }
                                 },
@@ -7398,9 +8952,7 @@ async def test_diagnostics(hass, hass_client):
                                     {
                                         "id": "info_text",
                                         "info": True,
-                                        "label": "Follow or "
-                                        "override the "
-                                        "schedule.",
+                                        "label": "Follow or override the schedule.",
                                         "value": "info_text",
                                     },
                                     {
@@ -7415,24 +8967,46 @@ async def test_diagnostics(hass, hass_client):
                                 "actions": {
                                     "enable_scheduling": {
                                         "data": {"value": True},
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/scheduling_enabled",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/scheduling_enabled"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_active_schedule?device_identifier=XxlZone-83260997",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_active_schedule"
+                                            "?device_identifier=XxlZone-83260997"
+                                        ),
                                         "method": "POST",
                                     },
                                     "get_default_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/get_default_schedule?device_identifier=XxlZone-83260997",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/get_default_schedule"
+                                            "?device_identifier=XxlZone-83260997"
+                                        ),
                                         "method": "GET",
                                     },
                                     "set_active_schedule": {
-                                        "href": "https://www.mynexia.com/mobile/thermostat_schedules/set_active_schedule?device_identifier=XxlZone-83260997",
+                                        "href": (
+                                            "https://www.mynexia.com/mobile"
+                                            "/thermostat_schedules"
+                                            "/set_active_schedule"
+                                            "?device_identifier=XxlZone-83260997"
+                                        ),
                                         "method": "POST",
                                     },
                                 },
                                 "can_add_remove_periods": True,
-                                "collection_url": "https://www.mynexia.com/mobile/schedules?device_identifier=XxlZone-83260997&house_id=123456",
+                                "collection_url": (
+                                    "https://www.mynexia.com/mobile/schedules"
+                                    "?device_identifier=XxlZone-83260997"
+                                    "&house_id=123456"
+                                ),
                                 "enabled": True,
                                 "max_period_name_length": 10,
                                 "max_periods_per_day": 4,
@@ -7450,7 +9024,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/preset_selected"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/preset_selected"
+                                        )
                                     }
                                 },
                                 "current_value": 0,
@@ -7468,7 +9045,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/zone_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/zone_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "AUTO",
@@ -7486,7 +9066,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/run_mode"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/run_mode"
+                                        )
                                     }
                                 },
                                 "current_value": "permanent_hold",
@@ -7505,7 +9088,10 @@ async def test_diagnostics(hass, hass_client):
                             {
                                 "_links": {
                                     "self": {
-                                        "href": "https://www.mynexia.com/mobile/xxl_zones/83260997/scheduling_enabled"
+                                        "href": (
+                                            "https://www.mynexia.com/mobile/xxl_zones"
+                                            "/83260997/scheduling_enabled"
+                                        )
                                     }
                                 },
                                 "current_value": True,

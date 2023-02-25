@@ -5,7 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from pysensibo.model import SensiboData
-from pytest import MonkeyPatch
+import pytest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,7 @@ async def test_binary_sensor(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: AsyncMock,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo binary sensor."""

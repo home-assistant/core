@@ -10,6 +10,7 @@ from homeassistant.components.nina.const import (
     ATTR_EXPIRES,
     ATTR_HEADLINE,
     ATTR_ID,
+    ATTR_RECOMMENDED_ACTIONS,
     ATTR_SENDER,
     ATTR_SENT,
     ATTR_SEVERITY,
@@ -45,7 +46,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA
         )
@@ -69,6 +69,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         )
         assert state_w1.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
         assert state_w1.attributes.get(ATTR_SEVERITY) == "Minor"
+        assert state_w1.attributes.get(ATTR_RECOMMENDED_ACTIONS) == ""
         assert state_w1.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
         assert state_w1.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
         assert state_w1.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
@@ -85,6 +86,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w2.attributes.get(ATTR_DESCRIPTION) is None
         assert state_w2.attributes.get(ATTR_SENDER) is None
         assert state_w2.attributes.get(ATTR_SEVERITY) is None
+        assert state_w2.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
         assert state_w2.attributes.get(ATTR_ID) is None
         assert state_w2.attributes.get(ATTR_SENT) is None
         assert state_w2.attributes.get(ATTR_START) is None
@@ -101,6 +103,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w3.attributes.get(ATTR_DESCRIPTION) is None
         assert state_w3.attributes.get(ATTR_SENDER) is None
         assert state_w3.attributes.get(ATTR_SEVERITY) is None
+        assert state_w3.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
         assert state_w3.attributes.get(ATTR_START) is None
@@ -117,6 +120,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w4.attributes.get(ATTR_DESCRIPTION) is None
         assert state_w4.attributes.get(ATTR_SENDER) is None
         assert state_w4.attributes.get(ATTR_SEVERITY) is None
+        assert state_w4.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
         assert state_w4.attributes.get(ATTR_START) is None
@@ -133,6 +137,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get(ATTR_DESCRIPTION) is None
         assert state_w5.attributes.get(ATTR_SENDER) is None
         assert state_w5.attributes.get(ATTR_SEVERITY) is None
+        assert state_w5.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None
         assert state_w5.attributes.get(ATTR_START) is None
@@ -149,7 +154,6 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_CORONA
         )
@@ -176,6 +180,10 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         )
         assert state_w1.attributes.get(ATTR_SENDER) == ""
         assert state_w1.attributes.get(ATTR_SEVERITY) == "Minor"
+        assert (
+            state_w1.attributes.get(ATTR_RECOMMENDED_ACTIONS)
+            == "Es besteht keine Gefahr."
+        )
         assert state_w1.attributes.get(ATTR_ID) == "mow.DE-BW-S-SE018-20211102-18-001"
         assert state_w1.attributes.get(ATTR_SENT) == "2021-11-02T20:07:16+01:00"
         assert state_w1.attributes.get(ATTR_START) == ""
@@ -195,6 +203,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         )
         assert state_w2.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
         assert state_w2.attributes.get(ATTR_SEVERITY) == "Minor"
+        assert state_w2.attributes.get(ATTR_RECOMMENDED_ACTIONS) == ""
         assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
         assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
         assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
@@ -211,6 +220,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w3.attributes.get(ATTR_DESCRIPTION) is None
         assert state_w3.attributes.get(ATTR_SENDER) is None
         assert state_w3.attributes.get(ATTR_SEVERITY) is None
+        assert state_w3.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
         assert state_w3.attributes.get(ATTR_START) is None
@@ -227,6 +237,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w4.attributes.get(ATTR_DESCRIPTION) is None
         assert state_w4.attributes.get(ATTR_SENDER) is None
         assert state_w4.attributes.get(ATTR_SEVERITY) is None
+        assert state_w4.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
         assert state_w4.attributes.get(ATTR_START) is None
@@ -243,6 +254,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get(ATTR_DESCRIPTION) is None
         assert state_w5.attributes.get(ATTR_SENDER) is None
         assert state_w5.attributes.get(ATTR_SEVERITY) is None
+        assert state_w5.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None
         assert state_w5.attributes.get(ATTR_START) is None

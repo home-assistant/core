@@ -31,8 +31,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         *args: list[str],
         **kwargs: dict[str, Any],
     ) -> None:
-        """
-        Execute a Fully service call.
+        """Execute a Fully service call.
 
         :param call: {ServiceCall} HA service call.
         :param fully_method: {Callable} A method of the FullyKiosk class.
@@ -47,10 +46,19 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for target in call.data[ATTR_DEVICE_ID]:
             device = registry.async_get(target)
             if device:
-                coordinator = hass.data[DOMAIN][list(device.config_entries)[0]]
-                # fully_method(coordinator.fully, *args, **kwargs) would make
-                # test_services.py fail.
-                await getattr(coordinator.fully, fully_method.__name__)(*args, **kwargs)
+                for key in device.config_entries:
+                    entry = hass.config_entries.async_get_entry(key)
+                    if not entry:
+                        continue
+                    if entry.domain != DOMAIN:
+                        continue
+                    coordinator = hass.data[DOMAIN][key]
+                    # fully_method(coordinator.fully, *args, **kwargs) would make
+                    # test_services.py fail.
+                    await getattr(coordinator.fully, fully_method.__name__)(
+                        *args, **kwargs
+                    )
+                    break
 
     async def async_load_url(call: ServiceCall) -> None:
         """Load a URL on the Fully Kiosk Browser."""

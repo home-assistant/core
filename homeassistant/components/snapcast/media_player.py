@@ -88,21 +88,21 @@ async def async_setup_platform(
 async def handle_async_join(entity, service_call):
     """Handle the entity service join."""
     if not isinstance(entity, SnapcastClientDevice):
-        raise ValueError("Entity is not a client. Can only join clients.")
+        raise TypeError("Entity is not a client. Can only join clients.")
     await entity.async_join(service_call.data[ATTR_MASTER])
 
 
 async def handle_async_unjoin(entity, service_call):
     """Handle the entity service unjoin."""
     if not isinstance(entity, SnapcastClientDevice):
-        raise ValueError("Entity is not a client. Can only unjoin clients.")
+        raise TypeError("Entity is not a client. Can only unjoin clients.")
     await entity.async_unjoin()
 
 
 async def handle_set_latency(entity, service_call):
     """Handle the entity service set_latency."""
     if not isinstance(entity, SnapcastClientDevice):
-        raise ValueError("Latency can only be set for a Snapcast client.")
+        raise TypeError("Latency can only be set for a Snapcast client.")
     await entity.async_set_latency(service_call.data[ATTR_LATENCY])
 
 
@@ -226,8 +226,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
 
     @property
     def unique_id(self):
-        """
-        Return the ID of this snapcast client.
+        """Return the ID of this snapcast client.
 
         Note: Host part is needed, when using multiple snapservers
         """
@@ -309,7 +308,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
             entity for entity in self.hass.data[DATA_KEY] if entity.entity_id == master
         )
         if not isinstance(master_entity, SnapcastClientDevice):
-            raise ValueError("Master is not a client device. Can only join clients.")
+            raise TypeError("Master is not a client device. Can only join clients.")
 
         master_group = next(
             group

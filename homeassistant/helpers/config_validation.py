@@ -303,7 +303,7 @@ def entity_id_or_uuid(value: Any) -> str:
 def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
     """Help validate entity IDs or UUIDs."""
     if value is None:
-        raise vol.Invalid("Entity IDs can not be None")
+        raise vol.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
@@ -386,6 +386,8 @@ def icon(value: Any) -> str:
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
+_TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
+
 time_period_dict = vol.All(
     dict,
     vol.Schema(
@@ -397,7 +399,7 @@ time_period_dict = vol.All(
             "milliseconds": vol.Coerce(float),
         }
     ),
-    has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
+    has_at_least_one_key(*_TIME_PERIOD_DICT_KEYS),
     lambda value: timedelta(**value),
 )
 
@@ -537,7 +539,7 @@ def schema_with_slug_keys(
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
 
-        for key in value.keys():
+        for key in value:
             slug_validator(key)
 
         return cast(dict, schema(value))
@@ -639,8 +641,24 @@ def template_complex(value: Any) -> Any:
     return value
 
 
+def _positive_time_period_template_complex(value: Any) -> Any:
+    """Do basic validation of a positive time period expressed as a templated dict."""
+    if not isinstance(value, dict) or not value:
+        raise vol.Invalid("template should be a dict")
+    for key, element in value.items():
+        if not isinstance(key, str):
+            raise vol.Invalid("key should be a string")
+        if not template_helper.is_template_string(key):
+            vol.In(_TIME_PERIOD_DICT_KEYS)(key)
+        if not isinstance(element, str) or (
+            isinstance(element, str) and not template_helper.is_template_string(element)
+        ):
+            vol.All(vol.Coerce(float), vol.Range(min=0))(element)
+    return template_complex(value)
+
+
 positive_time_period_template = vol.Any(
-    positive_time_period, template, template_complex
+    positive_time_period, dynamic_template, _positive_time_period_template_complex
 )
 
 
@@ -778,12 +796,12 @@ def _deprecated_or_removed(
     raise_if_present: bool,
     option_removed: bool,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists) or fail.
+    """Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
         - Outputs or throws the appropriate deprecation warning if key is detected
-        - Outputs or throws the appropriate error if key is detected and removed from support
+        - Outputs or throws the appropriate error if key is detected
+          and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -809,7 +827,10 @@ def _deprecated_or_removed(
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
+                near = (
+                    f"near {config.__config_file__}"  # type: ignore[attr-defined]
+                    f":{config.__line__} "
+                )
             except AttributeError:
                 near = ""
             arguments: tuple[str, ...]
@@ -851,11 +872,11 @@ def deprecated(
     default: Any | None = None,
     raise_if_present: bool | None = False,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists).
+    """Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Outputs the appropriate deprecation warning if key is detected
+          or raises an exception
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -876,11 +897,11 @@ def removed(
     default: Any | None = None,
     raise_if_present: bool | None = True,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and fail the config validation.
+    """Log key as deprecated and fail the config validation.
 
     Expected behavior:
-        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+        - Outputs the appropriate error if key is detected and removed from
+          support or raises an exception.
     """
     return _deprecated_or_removed(
         key,
@@ -1071,7 +1092,7 @@ def make_entity_service_schema(
 
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
-    # pylint: disable=unnecessary-lambda
+    # pylint: disable-next=unnecessary-lambda
     lambda val: script_variables_helper.ScriptVariables(val),
 )
 
@@ -1163,7 +1184,7 @@ STATE_CONDITION_BASE_SCHEMA = {
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
-    vol.Optional(CONF_FOR): positive_time_period,
+    vol.Optional(CONF_FOR): positive_time_period_template,
     # To support use_trigger_value in automation
     # Deprecated 2016/04/25
     vol.Optional("from"): str,
@@ -1264,7 +1285,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1275,7 +1296,7 @@ AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("and"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1287,7 +1308,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1298,7 +1319,7 @@ OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("or"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1310,7 +1331,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1321,7 +1342,7 @@ NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("not"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1353,7 +1374,7 @@ CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }

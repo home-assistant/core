@@ -1,0 +1,47 @@
+{
+  "config": {
+    "flow_title": "{short_mac} ({ip_address})",
+    "step": {
+      "user": {
+        "description": "{error}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "use_https": "Enable HTTPS",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Reolink integration needs to re-authenticate your connection details"
+      }
+    },
+    "error": {
+      "api_error": "API error occurred",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "protocol": "Protocol"
+        }
+      }
+    }
+  },
+  "issues": {
+    "https_webhook": {
+      "title": "Reolink webhook URL uses HTTPS (SSL)",
+      "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`"
+    }
+  }
+}

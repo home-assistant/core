@@ -19,7 +19,7 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPOR
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -37,14 +37,25 @@ from .const import (
     CONF_EVENT,
     EVENT_DESCRIPTION,
     EVENT_END,
+    EVENT_END_DATE,
+    EVENT_END_DATETIME,
+    EVENT_IN,
+    EVENT_IN_DAYS,
+    EVENT_IN_WEEKS,
     EVENT_RECURRENCE_ID,
     EVENT_RECURRENCE_RANGE,
     EVENT_RRULE,
     EVENT_START,
+    EVENT_START_DATE,
+    EVENT_START_DATETIME,
     EVENT_SUMMARY,
+    EVENT_TIME_FIELDS,
+    EVENT_TYPES,
     EVENT_UID,
     CalendarEntityFeature,
 )
+
+# mypy: disallow-any-generics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +67,91 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
 
-# mypy: disallow-any-generics
+def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that all datetime values have a consistent timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys that are datetime values have the same timezone."""
+        tzinfos = []
+        for key in keys:
+            if not (value := obj.get(key)) or not isinstance(value, datetime.datetime):
+                return obj
+            tzinfos.append(value.tzinfo)
+        uniq_values = groupby(tzinfos)
+        if len(list(uniq_values)) > 1:
+            raise vol.Invalid("Expected all values to have the same timezone")
+        return obj
+
+    return validate
+
+
+def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Convert all datetime values to the local timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys that are datetime values have the same timezone."""
+        for k in keys:
+            if (value := obj.get(k)) and isinstance(value, datetime.datetime):
+                obj[k] = dt.as_local(value)
+        return obj
+
+    return validate
+
+
+def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that the specified values are sequential."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys in the dict are in order."""
+        values = []
+        for k in keys:
+            if not (value := obj.get(k)):
+                return obj
+            values.append(value)
+        if all(values) and values != sorted(values):
+            raise vol.Invalid(f"Values were not in order: {values}")
+        return obj
+
+    return validate
+
+
+CREATE_EVENT_SERVICE = "create_event"
+CREATE_EVENT_SCHEMA = vol.All(
+    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.make_entity_service_schema(
+        {
+            vol.Required(EVENT_SUMMARY): cv.string,
+            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+            vol.Inclusive(
+                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_START_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Inclusive(
+                EVENT_END_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Optional(EVENT_IN): vol.Schema(
+                {
+                    vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES): cv.positive_int,
+                    vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES): cv.positive_int,
+                }
+            ),
+        },
+    ),
+    _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _is_sorted(EVENT_START_DATE, EVENT_END_DATE),
+    _is_sorted(EVENT_START_DATETIME, EVENT_END_DATETIME),
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -74,6 +169,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, handle_calendar_event_create)
     websocket_api.async_register_command(hass, handle_calendar_event_delete)
+    websocket_api.async_register_command(hass, handle_calendar_event_update)
+
+    component.async_register_entity_service(
+        CREATE_EVENT_SERVICE,
+        CREATE_EVENT_SCHEMA,
+        async_create_event,
+        required_features=[CalendarEntityFeature.CREATE_EVENT],
+    )
 
     await component.async_setup(config)
     return True
@@ -297,6 +400,16 @@ class CalendarEntity(Entity):
         """Delete an event on the calendar."""
         raise NotImplementedError()
 
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event on the calendar."""
+        raise NotImplementedError()
+
 
 class CalendarEventView(http.HomeAssistantView):
     """View to retrieve calendar content."""
@@ -325,6 +438,8 @@ class CalendarEventView(http.HomeAssistantView):
         except (ValueError, AttributeError):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+        if start_date > end_date:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         try:
@@ -379,36 +494,6 @@ def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     return validate
 
 
-def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that all datetime values have a consistent timezone."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys that are datetime values have the same timezone."""
-        values = [obj[k] for k in keys]
-        if all(isinstance(value, datetime.datetime) for value in values):
-            uniq_values = groupby(value.tzinfo for value in values)
-            if len(list(uniq_values)) > 1:
-                raise vol.Invalid(
-                    f"Expected all values to have the same timezone: {values}"
-                )
-        return obj
-
-    return validate
-
-
-def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that the specified values are sequential."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys in the dict are in order."""
-        values = [obj[k] for k in keys]
-        if values != sorted(values):
-            raise vol.Invalid(f"Values were not in order: {values}")
-        return obj
-
-    return validate
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "calendar/event/create",
@@ -424,6 +509,7 @@ def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
                 },
                 _has_same_type(EVENT_START, EVENT_END),
                 _has_consistent_timezone(EVENT_START, EVENT_END),
+                _as_local_timezone(EVENT_START, EVENT_END),
                 _is_sorted(EVENT_START, EVENT_END),
             )
         ),
@@ -500,3 +586,102 @@ async def handle_calendar_event_delete(
         connection.send_error(msg["id"], "failed", str(ex))
     else:
         connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "calendar/event/update",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required(EVENT_UID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_ID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        vol.Required(CONF_EVENT): vol.Schema(
+            vol.All(
+                {
+                    vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
+                    vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
+                    vol.Required(EVENT_SUMMARY): cv.string,
+                    vol.Optional(EVENT_DESCRIPTION): cv.string,
+                    vol.Optional(EVENT_RRULE): _validate_rrule,
+                },
+                _has_same_type(EVENT_START, EVENT_END),
+                _has_consistent_timezone(EVENT_START, EVENT_END),
+                _as_local_timezone(EVENT_START, EVENT_END),
+                _is_sorted(EVENT_START, EVENT_END),
+            )
+        ),
+    }
+)
+@websocket_api.async_response
+async def handle_calendar_event_update(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle creation of a calendar event."""
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
+    if not (entity := component.get_entity(msg["entity_id"])):
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
+        return
+
+    if (
+        not entity.supported_features
+        or not entity.supported_features & CalendarEntityFeature.UPDATE_EVENT
+    ):
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], ERR_NOT_SUPPORTED, "Calendar does not support event update"
+            )
+        )
+        return
+
+    try:
+        await entity.async_update_event(
+            msg[EVENT_UID],
+            msg[CONF_EVENT],
+            recurrence_id=msg.get(EVENT_RECURRENCE_ID),
+            recurrence_range=msg.get(EVENT_RECURRENCE_RANGE),
+        )
+    except (HomeAssistantError, ValueError) as ex:
+        _LOGGER.error("Error handling Calendar Event call: %s", ex)
+        connection.send_error(msg["id"], "failed", str(ex))
+    else:
+        connection.send_result(msg["id"])
+
+
+def _validate_timespan(
+    values: dict[str, Any]
+) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
+    """Parse a create event service call and convert the args ofr a create event entity call.
+
+    This converts the input service arguments into a `start` and `end` date or date time. This
+    exists because service calls use `start_date` and `start_date_time` whereas the
+    normal entity methods can take either a `datetim` or `date` as a single `start` argument.
+    It also handles the other service call variations like "in days" as well.
+    """
+
+    if event_in := values.get(EVENT_IN):
+        days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
+        today = datetime.date.today()
+        return (
+            today + datetime.timedelta(days=days),
+            today + datetime.timedelta(days=days + 1),
+        )
+
+    if EVENT_START_DATE in values and EVENT_END_DATE in values:
+        return (values[EVENT_START_DATE], values[EVENT_END_DATE])
+
+    if EVENT_START_DATETIME in values and EVENT_END_DATETIME in values:
+        return (values[EVENT_START_DATETIME], values[EVENT_END_DATETIME])
+
+    raise ValueError("Missing required fields to set start or end date/datetime")
+
+
+async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
+    """Add a new event to calendar."""
+    # Convert parameters to format used by async_create_event
+    (start, end) = _validate_timespan(call.data)
+    params = {
+        **{k: v for k, v in call.data.items() if k not in EVENT_TIME_FIELDS},
+        EVENT_START: start,
+        EVENT_END: end,
+    }
+    await entity.async_create_event(**params)

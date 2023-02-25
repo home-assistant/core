@@ -28,7 +28,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     mock_youless = _get_mock_youless_api(
         initialize={"homes": [{"id": 1, "name": "myhome"}]}
@@ -56,7 +55,6 @@ async def test_not_found(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     mock_youless = _get_mock_youless_api(initialize=URLError(""))
     with patch(

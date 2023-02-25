@@ -1,4 +1,5 @@
 """Tests for the Velbus config flow."""
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -36,8 +37,18 @@ def com_port():
     return port
 
 
+@pytest.fixture(name="controller")
+def mock_controller() -> Generator[MagicMock, None, None]:
+    """Mock a successful velbus controller."""
+    with patch(
+        "homeassistant.components.velbus.config_flow.velbusaio.controller.Velbus",
+        autospec=True,
+    ) as controller:
+        yield controller
+
+
 @pytest.fixture(autouse=True)
-def override_async_setup_entry() -> AsyncMock:
+def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.velbus.async_setup_entry", return_value=True
@@ -53,7 +64,7 @@ def mock_controller_connection_failed():
 
 
 @pytest.mark.usefixtures("controller")
-async def test_user(hass: HomeAssistant):
+async def test_user(hass: HomeAssistant) -> None:
     """Test user config."""
     # simple user form
     result = await hass.config_entries.flow.async_init(
@@ -74,6 +85,7 @@ async def test_user(hass: HomeAssistant):
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == "velbus_test_serial"
     data = result.get("data")
+    assert data
     assert data[CONF_PORT] == PORT_SERIAL
 
     # try with a ip:port combination
@@ -86,11 +98,12 @@ async def test_user(hass: HomeAssistant):
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == "velbus_test_tcp"
     data = result.get("data")
+    assert data
     assert data[CONF_PORT] == PORT_TCP
 
 
 @pytest.mark.usefixtures("controller_connection_failed")
-async def test_user_fail(hass: HomeAssistant):
+async def test_user_fail(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -112,7 +125,7 @@ async def test_user_fail(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("config_entry")
-async def test_abort_if_already_setup(hass: HomeAssistant):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Velbus is already setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -126,7 +139,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
 
 @pytest.mark.usefixtures("controller")
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_flow_usb(hass: HomeAssistant):
+async def test_flow_usb(hass: HomeAssistant) -> None:
     """Test usb discovery flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -162,7 +175,7 @@ async def test_flow_usb(hass: HomeAssistant):
 
 @pytest.mark.usefixtures("controller_connection_failed")
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_flow_usb_failed(hass: HomeAssistant):
+async def test_flow_usb_failed(hass: HomeAssistant) -> None:
     """Test usb discovery flow with a failed velbus test."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

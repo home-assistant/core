@@ -1,7 +1,6 @@
 """Config flow for HomeKit integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from copy import deepcopy
 import random
@@ -37,7 +36,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
 )
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import async_get_integrations
 
 from .const import (
     CONF_ENTITY_CONFIG,
@@ -163,17 +162,14 @@ def _async_cameras_from_entities(entities: list[str]) -> dict[str, str]:
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     """Create a mapping of types of devices/entities HomeKit can support."""
-    integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in SUPPORTED_DOMAINS),
-        return_exceptions=True,
-    )
-    name_to_type_map = {
-        domain: domain
-        if isinstance(integrations[idx], Exception)
-        else integrations[idx].name
-        for idx, domain in enumerate(SUPPORTED_DOMAINS)
+    integrations = await async_get_integrations(hass, SUPPORTED_DOMAINS)
+    return {
+        domain: integration_or_exception.name
+        if (integration_or_exception := integrations[domain])
+        and not isinstance(integration_or_exception, Exception)
+        else domain
+        for domain in SUPPORTED_DOMAINS
     }
-    return name_to_type_map
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

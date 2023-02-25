@@ -219,8 +219,7 @@ class EmailContentSensor(SensorEntity):
 
     @staticmethod
     def get_msg_text(email_message):
-        """
-        Get the message text from the email.
+        """Get the message text from the email.
 
         Will look for text/plain or use text/html if not found.
         """

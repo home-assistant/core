@@ -16,8 +16,6 @@ from tests.common import MockConfigEntry
 
 MAIN_ENTITY_ID = f"{REMOTE_DOMAIN}.my_roku_3"
 
-# pylint: disable=redefined-outer-name
-
 
 async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:
     """Test setup with basic config."""

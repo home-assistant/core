@@ -125,6 +125,7 @@ class OppleRemote(ZigbeeChannel):
         elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
             self.ZCL_INIT_ATTRS = {
                 "power_outage_memory": True,
+                "consumer_connected": True,
             }
         elif self.cluster.endpoint.model == "aqara.feeder.acn001":
             self.ZCL_INIT_ATTRS = {
@@ -224,7 +225,8 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         "switch_type": False,
         "button_delay": False,
         "smart_bulb_mode": False,
-        "double_tap_up_for_full_brightness": True,
+        "double_tap_up_for_max_brightness": True,
+        "double_tap_down_for_min_brightness": True,
         "led_color_when_on": True,
         "led_color_when_off": True,
         "led_intensity_when_on": True,
