@@ -177,7 +177,7 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 
     def __init__(
         self, tado, device_info, entity_description: TadoBinarySensorEntityDescription
-    ):
+    ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
         self._tado = tado
@@ -235,7 +235,7 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
         zone_name,
         zone_id,
         entity_description: TadoBinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
         self._tado = tado

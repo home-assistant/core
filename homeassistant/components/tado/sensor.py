@@ -242,7 +242,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         zone_name,
         zone_id,
         entity_description: TadoSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
         self._tado = tado
