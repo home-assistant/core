@@ -234,13 +234,13 @@ async def test_setting_attribute_with_template(
 
 async def test_update_with_json_attrs_not_dict(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
         hass,
-        mqtt_mock_entry_with_yaml_config,
+        mqtt_mock_entry_no_yaml_config,
         caplog,
         button.DOMAIN,
         DEFAULT_CONFIG,
