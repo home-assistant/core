@@ -183,7 +183,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             ):
                 _LOGGER.debug(
                     "The sensor state is %s, initialization is delayed",
-                    sensor_state.state,
+                    sensor_state.state if sensor_state is not None else "None",
                 )
                 return
             await self._async_sensor_changed(self._sensor_entity_id, None, sensor_state)
