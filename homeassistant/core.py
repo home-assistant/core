@@ -774,8 +774,7 @@ class HomeAssistant:
     def _async_log_running_tasks(self, stage: int) -> None:
         """Log all running tasks."""
         for task in self._tasks:
-            if not task.done():
-                _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
+            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
 
 
 class Context:
