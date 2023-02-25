@@ -492,6 +492,13 @@ async def test_state_children_only(hass: HomeAssistant, mock_states) -> None:
     await ump.async_update()
     assert ump.state == STATE_PLAYING
 
+    mock_states.mock_mp_1._state = STATE_ON
+    mock_states.mock_mp_1._attr_assumed_state = True
+    mock_states.mock_mp_1.async_schedule_update_ha_state()
+    await hass.async_block_till_done()
+    await ump.async_update()
+    assert ump.assumed_state is True
+
 
 async def test_state_with_children_and_attrs(
     hass: HomeAssistant, config_children_and_attr, mock_states
