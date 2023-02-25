@@ -1126,7 +1126,7 @@ async def help_test_entity_device_info_update(
 
 async def help_test_entity_id_update_subscriptions(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
     topics: list[str] | None = None,
@@ -1144,13 +1144,10 @@ async def help_test_entity_id_update_subscriptions(
     assert len(topics) > 0
     entity_registry = er.async_get(hass)
 
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        config,
+    mqtt_mock = await help_setup_component(
+        hass, mqtt_mock_entry_no_yaml_config, domain, config, True
     )
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    assert mqtt_mock is not None
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None

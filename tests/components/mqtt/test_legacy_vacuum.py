@@ -870,7 +870,7 @@ async def test_entity_device_info_remove(
 
 
 async def test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
@@ -886,7 +886,7 @@ async def test_entity_id_update_subscriptions(
     }
     await help_test_entity_id_update_subscriptions(
         hass,
-        mqtt_mock_entry_with_yaml_config,
+        mqtt_mock_entry_no_yaml_config,
         vacuum.DOMAIN,
         config,
         ["test-topic", "avty-topic"],
