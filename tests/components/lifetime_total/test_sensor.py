@@ -7,9 +7,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfEnergy,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_update_input_sensor(
@@ -75,3 +75,39 @@ async def test_update_input_sensor(
     state = hass.states.get(lifetime_total_entity_id)
     assert state.state == "25.0"
     assert state.attributes["last_reading"] == 5.0
+
+
+async def test_restore_state_failed(hass: HomeAssistant) -> None:
+    """Test sensor state is restored correctly."""
+    input_sensor_entity_id = "sensor.input"
+    lifetime_total_entity_id = "sensor.my_lifetime_total"
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                lifetime_total_entity_id,
+                "INVALID",
+                {
+                    "last_reading": "abcde",
+                },
+            ),
+        ),
+    )
+
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entity_id": input_sensor_entity_id,
+            "name": "My lifetime_total",
+        },
+        title="My lifetime_total",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(lifetime_total_entity_id)
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes.get("last_reading") == 0.0
