@@ -1,5 +1,4 @@
 """The tests for the MQTT lock platform."""
-from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
@@ -51,7 +50,6 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -1011,12 +1009,13 @@ async def test_encoding_subscribable_topics(
     )
 
 
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_setup_manual_entity_from_yaml(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test setup manual configured MQTT entity."""
+    await mqtt_mock_entry_no_yaml_config()
     platform = lock.DOMAIN
-    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
     assert hass.states.get(f"{platform}.test")
 
 

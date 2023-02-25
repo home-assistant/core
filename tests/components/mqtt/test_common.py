@@ -1818,8 +1818,7 @@ async def help_test_reloadable(
     # We should call await mqtt.async_setup_entry(hass, entry) when async_setup
     # is removed (this is planned with #87987). Until then we set up the mqtt component
     # to test reload after the async_setup setup has set the initial config
-    await async_setup_component(hass, mqtt.DOMAIN, old_config)
-    await hass.async_block_till_done()
+    await help_setup_component(hass, None, domain, old_config, use_discovery=False)
 
     assert hass.states.get(f"{domain}.test_old_1")
     assert hass.states.get(f"{domain}.test_old_2")
@@ -1894,9 +1893,9 @@ async def help_test_unload_config_entry_with_platform(
     config_setup: dict[str, dict[str, Any]] = copy.deepcopy(config)
     config_setup[mqtt.DOMAIN][domain]["name"] = "config_setup"
     config_name = config_setup
-    # To be replaced with entry setup when `async_setup` is removed.
-    assert await async_setup_component(hass, mqtt.DOMAIN, config_setup)
-    await hass.async_block_till_done()
+    await help_setup_component(
+        hass, mqtt_mock_entry_no_yaml_config, domain, config_setup
+    )
 
     # prepare setup through discovery
     discovery_setup = copy.deepcopy(config[mqtt.DOMAIN][domain])
