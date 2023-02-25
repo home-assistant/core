@@ -27,7 +27,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.generated.mqtt import MQTT
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
@@ -82,6 +86,37 @@ def help_test_validate_platform_config(
         return False
 
 
+async def help_setup_component(
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_no_config: MqttMockHAClientGenerator,
+    domain: str,
+    config: ConfigType,
+    use_discovery: bool = False,
+) -> bool:
+    """Help to set up the MQTT component."""
+    # `async_setup_component` will call `async_setup` and
+    # after that it will also start the entry `async_start_entry`
+    # when `async_setup` removed mqtt_mock_entry_with_no_config should be awaited.
+
+    if use_discovery:
+        status = help_test_validate_platform_config(hass, domain, config)
+        comp_config = cv.ensure_list(config[mqtt.DOMAIN][domain])
+        item = 0
+        await mqtt_mock_entry_with_no_config()
+        for comp in comp_config:
+            item += 1
+            topic = f"homeassistant/{domain}/item_{item}/config"
+            async_fire_mqtt_message(hass, topic, json.dumps(comp))
+    else:
+        status = await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            config,
+        )
+    await hass.async_block_till_done()
+    return status
+
+
 async def help_test_availability_when_connection_lost(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
@@ -119,7 +154,7 @@ async def help_test_availability_without_topic(
 
 async def help_test_default_availability_payload(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry_with_no_config: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
     no_assumed_state: bool = False,
@@ -133,13 +168,8 @@ async def help_test_default_availability_payload(
     # Add availability settings to config
     config = copy.deepcopy(config)
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
-    assert await async_setup_component(
-        hass,
-        mqtt.DOMAIN,
-        config,
-    )
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
+
+    await help_setup_component(hass, mqtt_mock_entry_with_no_config, domain, config)
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state == STATE_UNAVAILABLE
