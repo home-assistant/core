@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .services import async_setup_lock_services
 
 VALUE_TO_STATE = {0: False, 100: True}
 
@@ -33,6 +34,7 @@ async def async_setup_entry(
         entities.append(ISYLockProgramEntity(name, status, actions))
 
     async_add_entities(entities)
+    async_setup_lock_services(hass)
 
 
 class ISYLockEntity(ISYNodeEntity, LockEntity):
