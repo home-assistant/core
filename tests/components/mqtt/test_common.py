@@ -394,10 +394,10 @@ async def help_test_default_availability_list_single(
         {"topic": "availability-topic1"},
     ]
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
-    await help_setup_component(hass, None, domain, config)
+    help_test_validate_platform_config(hass, domain, config)
 
     assert (
-        "Invalid config for [mqtt]: two or more values in the same group of exclusion 'availability'"
+        f"Invalid config for [{domain}]: two or more values in the same group of exclusion 'availability'"
         in caplog.text
     )
 
