@@ -58,14 +58,14 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
             raise HomeAssistantError(f"Unable to unlock device {self._node.address}")
 
     async def async_set_zwave_lock_user_code(self, user_num: int, code: int) -> None:
-        """Set the ON Level for a device."""
+        """Set a user lock code for a Z-Wave Lock."""
         if not await self._node.set_zwave_lock_code(user_num, code):
             raise HomeAssistantError(
                 f"Could not set user code {user_num} for {self._node.address}"
             )
 
     async def async_delete_zwave_lock_user_code(self, user_num: int) -> None:
-        """Set the Ramp Rate for a device."""
+        """Delete a user lock code for a Z-Wave Lock."""
         if not await self._node.delete_zwave_lock_code(user_num):
             raise HomeAssistantError(
                 f"Could not delete user code {user_num} for {self._node.address}"
