@@ -498,8 +498,11 @@ class HomeAssistant:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
+        # Hold a reference to self._tasks since
+        # we will swap it out in async_stop
+        tasks = self._tasks
+        tasks.add(task)
+        task.add_done_callback(tasks.remove)
 
         return task
 
@@ -520,8 +523,11 @@ class HomeAssistant:
         target: target to call.
         """
         task = self.loop.create_task(target)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
+        # Hold a reference to self._tasks since
+        # we will swap it out in async_stop
+        tasks = self._tasks
+        tasks.add(task)
+        task.add_done_callback(tasks.remove)
         return task
 
     @callback
@@ -549,8 +555,11 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
+        # Hold a reference to self._tasks since
+        # we will swap it out in async_stop
+        tasks = self._tasks
+        tasks.add(task)
+        task.add_done_callback(tasks.remove)
 
         return task
 
@@ -714,13 +723,15 @@ class HomeAssistant:
         # Keep holding the reference to the tasks but do not allow them
         # to block shutdown. Only tasks created after this point will
         # be waited for.
-        running_tasks = self._tasks.copy()
-        self._tasks.clear()
+        running_tasks = self._tasks
+        # Avoid clearing here since we want the remove callbacks to fire
+        # and remove the tasks from the original set which is now running_tasks
+        self._tasks = set()
 
         # Cancel all background tasks
         for task in self._background_tasks:
             self._tasks.add(task)
-            task.add_done_callback(self._tasks.discard)
+            task.add_done_callback(self._tasks.remove)
             task.cancel()
 
         self.exit_code = exit_code
