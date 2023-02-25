@@ -15,7 +15,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "binary_sensor.doorway_motion_sensor",

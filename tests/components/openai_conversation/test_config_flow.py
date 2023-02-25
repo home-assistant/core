@@ -76,7 +76,7 @@ async def test_options(
 
 
 @pytest.mark.parametrize(
-    "side_effect, error",
+    ("side_effect", "error"),
     [
         (APIConnectionError(""), "cannot_connect"),
         (AuthenticationError, "invalid_auth"),

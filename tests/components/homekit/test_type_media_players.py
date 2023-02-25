@@ -1,5 +1,4 @@
 """Test different accessory types: Media Players."""
-
 import pytest
 
 from homeassistant.components.homekit.const import (
@@ -38,13 +37,13 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
 
-async def test_media_player_set_state(hass, hk_driver, events):
+async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if accessory and HA are updated accordingly."""
     config = {
         CONF_FEATURE_LIST: {
@@ -171,7 +170,9 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_media_player_television(hass, hk_driver, events, caplog):
+async def test_media_player_television(
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
 
@@ -350,7 +351,9 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert events[0].data[ATTR_KEY_NAME] == KEY_ARROW_RIGHT
 
 
-async def test_media_player_television_basic(hass, hk_driver, events, caplog):
+async def test_media_player_television_basic(
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if basic television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
 
@@ -385,8 +388,8 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
 
 
 async def test_media_player_television_supports_source_select_no_sources(
-    hass, hk_driver, events, caplog
-):
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if basic tv that supports source select but is missing a source list."""
     entity_id = "media_player.television"
 
@@ -404,7 +407,7 @@ async def test_media_player_television_supports_source_select_no_sources(
     assert acc.support_select_source is False
 
 
-async def test_tv_restore(hass, hk_driver, events):
+async def test_tv_restore(hass: HomeAssistant, hk_driver, events) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
@@ -457,7 +460,9 @@ async def test_tv_restore(hass, hk_driver, events):
     assert acc.char_input_source is not None
 
 
-async def test_media_player_television_max_sources(hass, hk_driver, events, caplog):
+async def test_media_player_television_max_sources(
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if television accessory that reaches the maximum number of sources."""
     entity_id = "media_player.television"
     sources = [f"HDMI {i}" for i in range(1, 101)]
@@ -515,8 +520,8 @@ async def test_media_player_television_max_sources(hass, hk_driver, events, capl
 
 
 async def test_media_player_television_duplicate_sources(
-    hass, hk_driver, events, caplog
-):
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if television accessory with duplicate sources."""
     entity_id = "media_player.television"
     sources = ["MUSIC", "HDMI", "SCREEN MIRRORING", "HDMI", "MUSIC"]
@@ -557,3 +562,70 @@ async def test_media_player_television_duplicate_sources(
     )
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 0
+
+
+async def test_media_player_television_unsafe_chars(
+    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if television accessory with unsafe characters."""
+    entity_id = "media_player.television"
+    sources = ["MUSIC", "HDMI 3/ARC", "SCREEN MIRRORING", "HDMI 2/MHL", "HDMI", "MUSIC"]
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "HDMI 2/MHL",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 31  # Television
+
+    assert acc.char_active.value == 0
+    assert acc.char_remote_key.value == 0
+    assert acc.char_input_source.value == 3
+    assert acc.char_mute.value is False
+
+    hass.states.async_set(
+        entity_id,
+        None,
+        {
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
+            ATTR_SUPPORTED_FEATURES: 3469,
+            ATTR_MEDIA_VOLUME_MUTED: False,
+            ATTR_INPUT_SOURCE: "HDMI 3/ARC",
+            ATTR_INPUT_SOURCE_LIST: sources,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_input_source.value == 1
+
+    call_select_source = async_mock_service(hass, DOMAIN, "select_source")
+
+    acc.char_input_source.client_update_value(3)
+    await hass.async_block_till_done()
+    assert call_select_source
+    assert call_select_source[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_select_source[0].data[ATTR_INPUT_SOURCE] == "HDMI 2/MHL"
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    assert acc.char_input_source.value == 3
+
+    acc.char_input_source.client_update_value(4)
+    await hass.async_block_till_done()
+    assert call_select_source
+    assert call_select_source[1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_select_source[1].data[ATTR_INPUT_SOURCE] == "HDMI"
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
+
+    assert acc.char_input_source.value == 4

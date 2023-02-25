@@ -1,4 +1,5 @@
 """Test the Energy websocket API."""
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -60,7 +61,9 @@ async def test_get_preferences_no_data(
 
 
 async def test_get_preferences_default(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_storage
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we get preferences."""
     assert not await is_configured(hass)
@@ -82,7 +85,7 @@ async def test_get_preferences_default(
 async def test_save_preferences(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    hass_storage,
+    hass_storage: dict[str, Any],
     mock_energy_platform,
 ) -> None:
     """Test we can save preferences."""

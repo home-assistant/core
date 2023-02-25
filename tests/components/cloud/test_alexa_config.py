@@ -170,7 +170,7 @@ async def test_alexa_config_invalidate_token(
 
 
 @pytest.mark.parametrize(
-    "reject_reason,expected_exception",
+    ("reject_reason", "expected_exception"),
     [
         ("RefreshTokenNotFound", errors.RequireRelink),
         ("UnknownRegion", errors.RequireRelink),

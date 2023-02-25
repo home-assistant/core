@@ -63,7 +63,7 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [
         (ServerDisconnectedError, "cannot_connect"),
         (ClientResponseError(Mock(), None, status=403), "invalid_auth"),
@@ -86,7 +86,7 @@ async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> No
 
 
 @pytest.mark.parametrize(
-    "side_effect, result_type, password, step_id, reason",
+    ("side_effect", "result_type", "password", "step_id", "reason"),
     [
         (None, data_entry_flow.FlowResultType.ABORT, "test", None, "reauth_successful"),
         (

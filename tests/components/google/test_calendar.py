@@ -548,7 +548,7 @@ async def test_http_api_all_day_event(
 
 
 @pytest.mark.parametrize(
-    "calendars_config_ignore_availability,transparency,expect_visible_event",
+    ("calendars_config_ignore_availability", "transparency", "expect_visible_event"),
     [
         # Look at visibility to determine if entity is created
         (False, "opaque", True),
@@ -798,7 +798,7 @@ async def test_invalid_unique_id_cleanup(
 
 
 @pytest.mark.parametrize(
-    "time_zone,event_order,calendar_access_role",
+    ("time_zone", "event_order", "calendar_access_role"),
     # This only tests the reader role to force testing against the local
     # database filtering based on start/end time. (free busy reader would
     # just use the API response which this test is not exercising)
@@ -1075,7 +1075,7 @@ async def test_websocket_delete_recurring_event_instance(
 
 
 @pytest.mark.parametrize(
-    "calendar_access_role,token_scopes,config_entry_options",
+    ("calendar_access_role", "token_scopes", "config_entry_options"),
     [
         (
             "reader",

@@ -39,6 +39,7 @@ CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
 CONF_KNX_LOCAL_IP: Final = "local_ip"
 CONF_KNX_MCAST_GRP: Final = "multicast_group"
 CONF_KNX_MCAST_PORT: Final = "multicast_port"
+CONF_KNX_TUNNEL_ENDPOINT_IA: Final = "tunnel_endpoint_ia"
 
 CONF_KNX_RATE_LIMIT: Final = "rate_limit"
 CONF_KNX_ROUTE_BACK: Final = "route_back"
@@ -89,6 +90,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     rate_limit: int
     host: str
     port: int
+    tunnel_endpoint_ia: str | None
 
     user_id: int | None
     user_password: str | None

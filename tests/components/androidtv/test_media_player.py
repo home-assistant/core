@@ -395,7 +395,7 @@ async def test_sources(hass: HomeAssistant, config: dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize(
-    ["config", "expected_sources"],
+    ("config", "expected_sources"),
     [
         (CONFIG_ANDROIDTV_DEFAULT, ["TEST 1"]),
         (CONFIG_FIRETV_DEFAULT, ["TEST 1"]),
@@ -482,7 +482,7 @@ async def _test_select_source(
 
 
 @pytest.mark.parametrize(
-    ["source", "expected_arg", "method_patch"],
+    ("source", "expected_arg", "method_patch"),
     [
         ("com.app.test1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
         ("TEST 1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
@@ -526,7 +526,7 @@ async def test_androidtv_select_source_overridden_app_name(hass: HomeAssistant) 
 
 
 @pytest.mark.parametrize(
-    ["source", "expected_arg", "method_patch"],
+    ("source", "expected_arg", "method_patch"),
     [
         ("com.app.test1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
         ("TEST 1", "com.app.test1", patchers.PATCH_LAUNCH_APP),
@@ -552,7 +552,7 @@ async def test_select_source_firetv(
 
 
 @pytest.mark.parametrize(
-    ["config", "connect"],
+    ("config", "connect"),
     [
         (CONFIG_ANDROIDTV_DEFAULT, False),
         (CONFIG_FIRETV_DEFAULT, False),
