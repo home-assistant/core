@@ -75,10 +75,17 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 else SERVICE_CLOSE_COVER,
                 {ATTR_ENTITY_ID: state.entity_id},
                 context=intent_obj.context,
+                blocking=True,
+                limit=self.service_timeout,
             )
-        else:
-            # Fall back to homeassistant.turn_on/off
-            await super().async_call_service(intent_obj, state)
+
+        elif not hass.services.has_service(state.domain, self.service):
+            raise intent.IntentHandleError(
+                f"Service {self.service} does not support entity {state.entity_id}"
+            )
+
+        # Fall back to homeassistant.turn_on/off
+        await super().async_call_service(intent_obj, state)
 
 
 class GetStateIntentHandler(intent.IntentHandler):

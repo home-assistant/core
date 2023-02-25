@@ -1,5 +1,4 @@
 """The tests for the Script component."""
-
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta
@@ -139,7 +138,9 @@ def async_watch_for_action(script_obj, message):
     return flag
 
 
-async def test_firing_event_basic(hass, caplog):
+async def test_firing_event_basic(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the firing of events."""
     event = "test_event"
     context = Context()
@@ -237,7 +238,9 @@ async def test_firing_event_template(hass: HomeAssistant) -> None:
     )
 
 
-async def test_calling_service_basic(hass, caplog):
+async def test_calling_service_basic(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the calling of a service."""
     context = Context()
     calls = async_mock_service(hass, "test", "script")
@@ -441,7 +444,9 @@ async def test_multiple_runs_no_wait(hass: HomeAssistant) -> None:
     assert len(calls) == 4
 
 
-async def test_activating_scene(hass, caplog):
+async def test_activating_scene(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the activation of a scene."""
     context = Context()
     calls = async_mock_service(hass, scene.DOMAIN, SERVICE_TURN_ON)
@@ -466,7 +471,7 @@ async def test_activating_scene(hass, caplog):
 
 
 @pytest.mark.parametrize("count", [1, 3])
-async def test_stop_no_wait(hass, count):
+async def test_stop_no_wait(hass: HomeAssistant, count) -> None:
     """Test stopping script."""
     service_started_sem = asyncio.Semaphore(0)
     finish_service_event = asyncio.Event()
@@ -616,7 +621,9 @@ async def test_delay_template_ok(hass: HomeAssistant) -> None:
     )
 
 
-async def test_delay_template_invalid(hass, caplog):
+async def test_delay_template_invalid(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the delay as a template that fails."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -677,7 +684,9 @@ async def test_delay_template_complex_ok(hass: HomeAssistant) -> None:
     )
 
 
-async def test_delay_template_complex_invalid(hass, caplog):
+async def test_delay_template_complex_invalid(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the delay with a complex template that fails."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -751,7 +760,7 @@ async def test_cancel_delay(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
-async def test_wait_basic(hass, action_type):
+async def test_wait_basic(hass: HomeAssistant, action_type) -> None:
     """Test wait actions."""
     wait_alias = "wait step"
     action = {"alias": wait_alias}
@@ -847,7 +856,7 @@ async def test_wait_for_trigger_variables(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
-async def test_wait_basic_times_out(hass, action_type):
+async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
     """Test wait actions times out when the action does not happen."""
     wait_alias = "wait step"
     action = {"alias": wait_alias}
@@ -896,7 +905,7 @@ async def test_wait_basic_times_out(hass, action_type):
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
-async def test_multiple_runs_wait(hass, action_type):
+async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
     """Test multiple runs with wait in script."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -951,7 +960,7 @@ async def test_multiple_runs_wait(hass, action_type):
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
-async def test_cancel_wait(hass, action_type):
+async def test_cancel_wait(hass: HomeAssistant, action_type) -> None:
     """Test the cancelling while wait is present."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1047,7 +1056,9 @@ async def test_wait_template_not_schedule(hass: HomeAssistant) -> None:
     "timeout_param", [5, "{{ 5 }}", {"seconds": 5}, {"seconds": "{{ 5 }}"}]
 )
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
-async def test_wait_timeout(hass, caplog, timeout_param, action_type):
+async def test_wait_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, timeout_param, action_type
+) -> None:
     """Test the wait timeout option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1113,8 +1124,8 @@ async def test_wait_timeout(hass, caplog, timeout_param, action_type):
 )
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_wait_continue_on_timeout(
-    hass, continue_on_timeout, n_events, action_type
-):
+    hass: HomeAssistant, continue_on_timeout, n_events, action_type
+) -> None:
     """Test the wait continue_on_timeout option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1274,7 +1285,7 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("mode", ["no_timeout", "timeout_finish", "timeout_not_finish"])
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
-async def test_wait_variables_out(hass, mode, action_type):
+async def test_wait_variables_out(hass: HomeAssistant, mode, action_type) -> None:
     """Test the wait output variable."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1342,7 +1353,9 @@ async def test_wait_variables_out(hass, mode, action_type):
             assert float(remaining) == 0.0
 
 
-async def test_wait_for_trigger_bad(hass, caplog):
+async def test_wait_for_trigger_bad(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test bad wait_for_trigger."""
     sequence = cv.SCRIPT_SCHEMA(
         {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
@@ -1374,7 +1387,9 @@ async def test_wait_for_trigger_bad(hass, caplog):
     )
 
 
-async def test_wait_for_trigger_generated_exception(hass, caplog):
+async def test_wait_for_trigger_generated_exception(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test bad wait_for_trigger."""
     sequence = cv.SCRIPT_SCHEMA(
         {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
@@ -1408,7 +1423,9 @@ async def test_wait_for_trigger_generated_exception(hass, caplog):
     )
 
 
-async def test_condition_warning(hass, caplog):
+async def test_condition_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning on condition."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1447,7 +1464,9 @@ async def test_condition_warning(hass, caplog):
     )
 
 
-async def test_condition_basic(hass, caplog):
+async def test_condition_basic(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use conditions in a script."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1502,7 +1521,9 @@ async def test_condition_basic(hass, caplog):
     )
 
 
-async def test_condition_subscript(hass, caplog):
+async def test_condition_subscript(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test failing conditions in a subscript don't stop the parent script."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1551,7 +1572,9 @@ async def test_condition_subscript(hass, caplog):
     )
 
 
-async def test_and_default_condition(hass, caplog):
+async def test_and_default_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that a list of conditions evaluates as AND."""
     alias = "condition step"
     sequence = cv.SCRIPT_SCHEMA(
@@ -1587,7 +1610,9 @@ async def test_and_default_condition(hass, caplog):
     assert f"Test condition {alias}: False" in caplog.text
 
 
-async def test_shorthand_template_condition(hass, caplog):
+async def test_shorthand_template_condition(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use shorthand template conditions in a script."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1641,7 +1666,9 @@ async def test_shorthand_template_condition(hass, caplog):
     )
 
 
-async def test_condition_validation(hass, caplog):
+async def test_condition_validation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use conditions which validate late in a script."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -1716,7 +1743,7 @@ async def test_condition_validation(hass, caplog):
 
 
 @patch("homeassistant.helpers.script.condition.async_from_config")
-async def test_condition_created_once(async_from_config, hass):
+async def test_condition_created_once(async_from_config, hass: HomeAssistant) -> None:
     """Test that the conditions do not get created multiple times."""
     sequence = cv.SCRIPT_SCHEMA(
         {
@@ -1764,7 +1791,9 @@ async def test_condition_all_cached(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("count", [3, script.ACTION_TRACE_NODE_MAX_LEN * 2])
-async def test_repeat_count(hass, caplog, count):
+async def test_repeat_count(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, count
+) -> None:
     """Test repeat action w/ count option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1827,7 +1856,9 @@ async def test_repeat_count(hass, caplog, count):
     )
 
 
-async def test_repeat_count_0(hass, caplog):
+async def test_repeat_count_0(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test repeat action w/ count option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -2058,7 +2089,9 @@ async def test_repeat_for_each_non_list_template(hass: HomeAssistant) -> None:
     )
 
 
-async def test_repeat_for_each_invalid_template(hass: HomeAssistant, caplog) -> None:
+async def test_repeat_for_each_invalid_template(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test repeat action using for each with an invalid template."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
@@ -2092,7 +2125,9 @@ async def test_repeat_for_each_invalid_template(hass: HomeAssistant, caplog) -> 
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
-async def test_repeat_condition_warning(hass, caplog, condition):
+async def test_repeat_condition_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition
+) -> None:
     """Test warning on repeat conditions."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -2154,7 +2189,9 @@ async def test_repeat_condition_warning(hass, caplog, condition):
 
 @pytest.mark.parametrize("condition", ["while", "until"])
 @pytest.mark.parametrize("direct_template", [False, True])
-async def test_repeat_conditional(hass, condition, direct_template):
+async def test_repeat_conditional(
+    hass: HomeAssistant, condition, direct_template
+) -> None:
     """Test repeat action w/ while option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -2226,7 +2263,9 @@ async def test_repeat_conditional(hass, condition, direct_template):
         assert event.data.get("index") == index + 1
 
 
-async def test_repeat_until_condition_validation(hass, caplog):
+async def test_repeat_until_condition_validation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use conditions in repeat until conditions which validate late."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -2286,7 +2325,9 @@ async def test_repeat_until_condition_validation(hass, caplog):
     )
 
 
-async def test_repeat_while_condition_validation(hass, caplog):
+async def test_repeat_while_condition_validation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use conditions in repeat while conditions which validate late."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -2347,7 +2388,7 @@ async def test_repeat_while_condition_validation(hass, caplog):
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
-async def test_repeat_var_in_condition(hass, condition):
+async def test_repeat_var_in_condition(hass: HomeAssistant, condition) -> None:
     """Test repeat action w/ while option."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -2365,13 +2406,7 @@ async def test_repeat_var_in_condition(hass, condition):
     script_obj = script.Script(
         hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
     )
-
-    with mock.patch(
-        "homeassistant.helpers.condition._LOGGER.error",
-        side_effect=AssertionError("Template Error"),
-    ):
-        await script_obj.async_run(context=Context())
-
+    await script_obj.async_run(context=Context())
     assert len(events) == 2
 
     if condition == "while":
@@ -2439,7 +2474,9 @@ async def test_repeat_var_in_condition(hass, condition):
         (MappingProxyType({"x": 1}), {"repeat": None, "x": 1}, 1),
     ],
 )
-async def test_repeat_nested(hass, variables, first_last, inside_x):
+async def test_repeat_nested(
+    hass: HomeAssistant, variables, first_last, inside_x
+) -> None:
     """Test nested repeats."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -2502,13 +2539,7 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
-
-    with mock.patch(
-        "homeassistant.helpers.condition._LOGGER.error",
-        side_effect=AssertionError("Template Error"),
-    ):
-        await script_obj.async_run(variables, Context())
-
+    await script_obj.async_run(variables, Context())
     assert len(events) == 10
     assert events[0].data == first_last
     assert events[-1].data == first_last
@@ -2576,7 +2607,9 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
     assert_action_trace(expected_trace)
 
 
-async def test_choose_warning(hass, caplog):
+async def test_choose_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test warning on choose."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -2628,7 +2661,9 @@ async def test_choose_warning(hass, caplog):
 @pytest.mark.parametrize(
     ("var", "result"), [(1, "first"), (2, "second"), (3, "default")]
 )
-async def test_choose(hass, caplog, var, result):
+async def test_choose(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, var, result
+) -> None:
     """Test choose action."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -2711,7 +2746,9 @@ async def test_choose(hass, caplog, var, result):
     assert_action_trace(expected_trace)
 
 
-async def test_choose_condition_validation(hass, caplog):
+async def test_choose_condition_validation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use conditions in choose actions which validate late."""
     registry = er.async_get(hass)
     entry = registry.async_get_or_create(
@@ -2801,7 +2838,9 @@ async def test_choose_condition_validation(hass, caplog):
         {"choose": [], "default": {"event": "abc"}},
     ],
 )
-async def test_multiple_runs_repeat_choose(hass, caplog, action):
+async def test_multiple_runs_repeat_choose(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, action
+) -> None:
     """Test parallel runs with repeat & choose actions & max_runs > default."""
     max_runs = script.DEFAULT_MAX + 1
     script_obj = script.Script(
@@ -3786,7 +3825,9 @@ def does_not_raise():
     yield
 
 
-async def test_script_mode_single(hass, caplog):
+async def test_script_mode_single(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test overlapping runs with max_runs = 1."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -3831,7 +3872,13 @@ async def test_script_mode_single(hass, caplog):
 @pytest.mark.parametrize(
     ("script_mode", "max_runs"), [("single", 1), ("parallel", 2), ("queued", 2)]
 )
-async def test_max_exceeded(hass, caplog, max_exceeded, script_mode, max_runs):
+async def test_max_exceeded(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    max_exceeded,
+    script_mode,
+    max_runs,
+) -> None:
     """Test max_exceeded option."""
     sequence = cv.SCRIPT_SCHEMA(
         {"wait_template": "{{ states.switch.test.state == 'off' }}"}
@@ -3885,7 +3932,13 @@ async def test_max_exceeded(hass, caplog, max_exceeded, script_mode, max_runs):
     ("script_mode", "messages", "last_events"),
     [("restart", ["Restarting"], [2]), ("parallel", [], [2, 2])],
 )
-async def test_script_mode_2(hass, caplog, script_mode, messages, last_events):
+async def test_script_mode_2(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    script_mode,
+    messages,
+    last_events,
+) -> None:
     """Test overlapping runs with max_runs > 1."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -4119,7 +4172,9 @@ async def test_script_mode_queued_stop(hass: HomeAssistant) -> None:
     assert script_obj.runs == 0
 
 
-async def test_script_logging(hass, caplog):
+async def test_script_logging(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test script logging."""
     script_obj = script.Script(hass, [], "Script with % Name", "test_domain")
     script_obj._log("Test message with name %s", 1)
@@ -4127,7 +4182,9 @@ async def test_script_logging(hass, caplog):
     assert "Script with % Name: Test message with name 1" in caplog.text
 
 
-async def test_shutdown_at(hass, caplog):
+async def test_shutdown_at(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test stopping scripts at shutdown."""
     delay_alias = "delay step"
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
@@ -4156,7 +4213,9 @@ async def test_shutdown_at(hass, caplog):
     assert_action_trace(expected_trace)
 
 
-async def test_shutdown_after(hass, caplog):
+async def test_shutdown_after(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test stopping scripts at shutdown."""
     delay_alias = "delay step"
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
@@ -4192,7 +4251,9 @@ async def test_shutdown_after(hass, caplog):
     assert_action_trace(expected_trace)
 
 
-async def test_start_script_after_shutdown(hass, caplog):
+async def test_start_script_after_shutdown(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test starting scripts after shutdown is blocked."""
     delay_alias = "delay step"
     sequence = cv.SCRIPT_SCHEMA({"delay": {"seconds": 120}, "alias": delay_alias})
@@ -4212,7 +4273,9 @@ async def test_start_script_after_shutdown(hass, caplog):
     assert "Home Assistant is shutting down, starting script blocked" in caplog.text
 
 
-async def test_update_logger(hass, caplog):
+async def test_update_logger(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test updating logger."""
     sequence = cv.SCRIPT_SCHEMA({"event": "test_event"})
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -4231,7 +4294,9 @@ async def test_update_logger(hass, caplog):
     assert log_name in caplog.text
 
 
-async def test_started_action(hass, caplog):
+async def test_started_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the callback of started_action."""
     event = "test_event"
     log_message = "The script started!"
@@ -4250,7 +4315,9 @@ async def test_started_action(hass, caplog):
     assert log_message in caplog.text
 
 
-async def test_set_variable(hass, caplog):
+async def test_set_variable(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting variables in scripts."""
     alias = "variables step"
     sequence = cv.SCRIPT_SCHEMA(
@@ -4290,7 +4357,9 @@ async def test_set_variable(hass, caplog):
     assert_action_trace(expected_trace)
 
 
-async def test_set_redefines_variable(hass, caplog):
+async def test_set_redefines_variable(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting variables based on their current value."""
     sequence = cv.SCRIPT_SCHEMA(
         [
@@ -4685,7 +4754,9 @@ async def test_platform_async_validate_action_config(hass: HomeAssistant) -> Non
         device_automation_validate_action_mock.assert_awaited()
 
 
-async def test_stop_action(hass, caplog):
+async def test_stop_action(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if automation stops on calling the stop action."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -4726,8 +4797,13 @@ async def test_stop_action(hass, caplog):
     ),
 )
 async def test_stop_action_subscript(
-    hass, caplog, error, error_type, logmsg, script_execution
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    error,
+    error_type,
+    logmsg,
+    script_execution,
+) -> None:
     """Test if automation stops on calling the stop action from a sub-script."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -4777,7 +4853,9 @@ async def test_stop_action_subscript(
     )
 
 
-async def test_stop_action_with_error(hass, caplog):
+async def test_stop_action_with_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if automation fails on calling the error action."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -5038,7 +5116,9 @@ async def test_disabled_actions(
     )
 
 
-async def test_condition_and_shorthand(hass, caplog):
+async def test_condition_and_shorthand(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use the shorthand and conditions in a script."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
@@ -5077,7 +5157,9 @@ async def test_condition_and_shorthand(hass, caplog):
     )
 
 
-async def test_condition_or_shorthand(hass, caplog):
+async def test_condition_or_shorthand(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use the shorthand or conditions in a script."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(
@@ -5116,7 +5198,9 @@ async def test_condition_or_shorthand(hass, caplog):
     )
 
 
-async def test_condition_not_shorthand(hass, caplog):
+async def test_condition_not_shorthand(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if we can use the shorthand not conditions in a script."""
     events = async_capture_events(hass, "test_event")
     sequence = cv.SCRIPT_SCHEMA(

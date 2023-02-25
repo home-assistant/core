@@ -14,6 +14,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+import concurrent.futures
 from contextlib import suppress
 from contextvars import ContextVar
 import datetime
@@ -79,11 +80,7 @@ from .exceptions import (
 )
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .util import dt as dt_util, location, ulid as ulid_util
-from .util.async_ import (
-    fire_coroutine_threadsafe,
-    run_callback_threadsafe,
-    shutdown_run_callback_threadsafe,
-)
+from .util.async_ import run_callback_threadsafe, shutdown_run_callback_threadsafe
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import (
@@ -279,6 +276,7 @@ class HomeAssistant:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
+        self._background_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -293,6 +291,7 @@ class HomeAssistant:
         self._stopped: asyncio.Event | None = None
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
+        self._stop_future: concurrent.futures.Future[None] | None = None
 
     @property
     def is_running(self) -> bool:
@@ -311,12 +310,14 @@ class HomeAssistant:
         For regular use, use "await hass.run()".
         """
         # Register the async start
-        fire_coroutine_threadsafe(self.async_start(), self.loop)
-
+        _future = asyncio.run_coroutine_threadsafe(self.async_start(), self.loop)
         # Run forever
         # Block until stopped
         _LOGGER.info("Starting Home Assistant core loop")
         self.loop.run_forever()
+        # The future is never retrieved but we still hold a reference to it
+        # to prevent the task from being garbage collected prematurely.
+        del _future
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -513,14 +514,33 @@ class HomeAssistant:
     def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
 
         target: target to call.
         """
         task = self.loop.create_task(target)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
+        return task
 
+    @callback
+    def async_create_background_task(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the eventloop.
+
+        This is a background task which will not block startup and will be
+        automatically cancelled on shutdown. If you are using this in your
+        integration, use the create task methods on the config entry instead.
+
+        This method must be run in the event loop.
+        """
+        task = self.loop.create_task(target, name=name)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
     @callback
@@ -662,7 +682,11 @@ class HomeAssistant:
         """Stop Home Assistant and shuts down all threads."""
         if self.state == CoreState.not_running:  # just ignore
             return
-        fire_coroutine_threadsafe(self.async_stop(), self.loop)
+        # The future is never retrieved, and we only hold a reference
+        # to it to prevent it from being garbage collected.
+        self._stop_future = asyncio.run_coroutine_threadsafe(
+            self.async_stop(), self.loop
+        )
 
     async def async_stop(self, exit_code: int = 0, *, force: bool = False) -> None:
         """Stop Home Assistant and shuts down all threads.
@@ -687,6 +711,14 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Cancel all background tasks
+        for task in self._background_tasks:
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.remove)
+            task.cancel()
+
+        self.exit_code = exit_code
+
         # stage 1
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -698,6 +730,7 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(1)
 
         # stage 2
         self.state = CoreState.final_write
@@ -710,6 +743,7 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(2)
 
         # stage 3
         self.state = CoreState.not_running
@@ -730,12 +764,17 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(3)
 
-        self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
+
+    def _async_log_running_tasks(self, stage: int) -> None:
+        """Log all running tasks."""
+        for task in self._tasks:
+            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
 
 
 class Context:
@@ -1787,7 +1826,10 @@ class Config:
 
         self.latitude: float = 0
         self.longitude: float = 0
+
         self.elevation: int = 0
+        """Elevation (always in meters regardless of the unit system)."""
+
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM

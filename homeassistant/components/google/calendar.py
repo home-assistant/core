@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
@@ -246,6 +245,8 @@ async def async_setup_entry(
 class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls that use an efficient sync."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -299,6 +300,8 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     This sends a polling RPC, not using sync, as a workaround
     for limitations in the calendar API for supporting search.
     """
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -435,7 +438,9 @@ class GoogleCalendarEntity(
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        asyncio.create_task(refresh())
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, refresh(), "google.calendar-refresh"
+        )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
