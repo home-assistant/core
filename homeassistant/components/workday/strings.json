@@ -1,0 +1,39 @@
+{
+  "config": {
+    "flow_title": "Workday Sensor",
+    "step": {
+      "user": {
+        "title": "Create work day sensor",
+        "description": "Create a new working day sensor",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "country": "Country"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Workday Sensor",
+        "data": {
+          "province": "Province/State",
+          "days_offset": "Offset Days",
+          "workdays": "Working Days",
+          "excludes": "Non-Working Days",
+          "add_holidays": "Add holiday days (yyyy-mm-dd)",
+          "remove_holidays": "Remove holidays"
+        }
+      }
+    },
+    "error": {
+      "no_province": "Province/State doesn't exist in the chosen country",
+      "bad_holiday": "Added holidays must be dates formatted year-month-day",
+      "no_such_holiday": "Tried to remove a holiday that doesn't exist",
+      "invalid_holidays": "No holidays to remove or invalid holidays"
+    }
+  }
+}
