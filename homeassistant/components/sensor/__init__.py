@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
-from math import floor, log10
+from math import ceil, floor, log10
 import re
 from typing import Any, Final, cast, final
 
@@ -99,6 +99,7 @@ __all__ = [
     "ATTR_OPTIONS",
     "ATTR_STATE_CLASS",
     "CONF_STATE_CLASS",
+    "DEVICE_CLASS_STATE_CLASSES",
     "DOMAIN",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
@@ -547,7 +548,7 @@ class SensorEntity(Entity):
         numerical_value: int | float | Decimal
         if not isinstance(value, (int, float, Decimal)):
             try:
-                if isinstance(value, str) and "." not in value:
+                if isinstance(value, str) and "." not in value and "e" not in value:
                     numerical_value = int(value)
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
@@ -679,11 +680,40 @@ class SensorEntity(Entity):
         """Update suggested display precision stored in registry."""
         assert self.registry_entry
 
+        device_class = self.device_class
         display_precision = self.suggested_display_precision
+        default_unit_of_measurement = (
+            self.suggested_unit_of_measurement or self.native_unit_of_measurement
+        )
+        unit_of_measurement = self.unit_of_measurement
 
         if (
-            sensor_options := self.registry_entry.options.get(DOMAIN, {})
-        ) and sensor_options.get("suggested_display_precision") == display_precision:
+            display_precision is not None
+            and default_unit_of_measurement != unit_of_measurement
+            and device_class in UNIT_CONVERTERS
+        ):
+            converter = UNIT_CONVERTERS[device_class]
+
+            # Scale the precision when converting to a larger or smaller unit
+            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
+            ratio_log = log10(
+                converter.get_unit_ratio(
+                    default_unit_of_measurement, unit_of_measurement
+                )
+            )
+            ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
+            display_precision = max(0, display_precision + ratio_log)
+
+        if display_precision is None and (
+            DOMAIN not in self.registry_entry.options
+            or "suggested_display_precision" not in self.registry_entry.options
+        ):
+            return
+        sensor_options = self.registry_entry.options.get(DOMAIN, {})
+        if (
+            "suggested_display_precision" in sensor_options
+            and sensor_options["suggested_display_precision"] == display_precision
+        ):
             return
 
         registry = er.async_get(self.hass)
@@ -716,6 +746,7 @@ class SensorEntity(Entity):
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_read_entity_options()
+        self._update_suggested_precision()
 
     @callback
     def _async_read_entity_options(self) -> None:

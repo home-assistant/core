@@ -490,7 +490,7 @@ async def test_valid_device_class(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (button.SERVICE_PRESS, "command_topic", None, "PRESS", "command_template"),
     ],

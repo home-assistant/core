@@ -1,5 +1,6 @@
 """Test the Emulated Hue component."""
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.emulated_hue.config import (
@@ -18,7 +19,7 @@ from tests.common import async_fire_time_changed
 
 
 async def test_config_google_home_entity_id_to_number(
-    hass: HomeAssistant, hass_storage
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
@@ -51,7 +52,7 @@ async def test_config_google_home_entity_id_to_number(
 
 
 async def test_config_google_home_entity_id_to_number_altered(
-    hass: HomeAssistant, hass_storage
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
@@ -84,7 +85,7 @@ async def test_config_google_home_entity_id_to_number_altered(
 
 
 async def test_config_google_home_entity_id_to_number_empty(
-    hass: HomeAssistant, hass_storage
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")

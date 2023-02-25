@@ -154,7 +154,7 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
 
 
 @pytest.mark.parametrize(
-    "fc_data, expected_wifi_names",
+    ("fc_data", "expected_wifi_names"),
     [
         (
             {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_SAME_SSID},

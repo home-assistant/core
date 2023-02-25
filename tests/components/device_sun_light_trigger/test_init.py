@@ -239,5 +239,6 @@ async def test_initialize_start(hass: HomeAssistant) -> None:
     ) as mock_activate:
         hass.bus.fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert len(mock_activate.mock_calls) == 1

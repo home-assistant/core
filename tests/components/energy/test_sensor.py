@@ -2,6 +2,7 @@
 import copy
 from datetime import timedelta
 import gc
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -71,7 +72,7 @@ def get_statistics_for_entity(statistics_results, entity_id):
 
 
 async def test_cost_sensor_no_states(
-    setup_integration, hass: HomeAssistant, hass_storage
+    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test sensors are created."""
     energy_data = data.EnergyManager.default_preferences()
@@ -99,7 +100,7 @@ async def test_cost_sensor_no_states(
 
 
 async def test_cost_sensor_attributes(
-    setup_integration, hass: HomeAssistant, hass_storage
+    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test sensor attributes."""
     energy_data = data.EnergyManager.default_preferences()
@@ -133,12 +134,14 @@ async def test_cost_sensor_attributes(
     assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
+)
+@pytest.mark.parametrize(
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -151,7 +154,7 @@ async def test_cost_sensor_attributes(
 async def test_cost_sensor_price_entity_total_increasing(
     setup_integration,
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
     initial_energy,
     initial_cost,
@@ -335,12 +338,14 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert statistics["stat"]["sum"] == 38.0
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
+)
+@pytest.mark.parametrize(
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -354,7 +359,7 @@ async def test_cost_sensor_price_entity_total_increasing(
 async def test_cost_sensor_price_entity_total(
     setup_integration,
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
     initial_energy,
     initial_cost,
@@ -541,12 +546,14 @@ async def test_cost_sensor_price_entity_total(
     assert statistics["stat"]["sum"] == 38.0
 
 
-@pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
 @pytest.mark.parametrize(
-    "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
+    ("initial_energy", "initial_cost"), [(0, "0.0"), (None, "unknown")]
 )
 @pytest.mark.parametrize(
-    "usage_sensor_entity_id,cost_sensor_entity_id,flow_type",
+    ("price_entity", "fixed_price"), [("sensor.energy_price", None), (None, 1)]
+)
+@pytest.mark.parametrize(
+    ("usage_sensor_entity_id", "cost_sensor_entity_id", "flow_type"),
     [
         ("sensor.energy_consumption", "sensor.energy_consumption_cost", "flow_from"),
         (
@@ -560,7 +567,7 @@ async def test_cost_sensor_price_entity_total(
 async def test_cost_sensor_price_entity_total_no_reset(
     setup_integration,
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
     hass_ws_client: WebSocketGenerator,
     initial_energy,
     initial_cost,
@@ -723,7 +730,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
 
 
 @pytest.mark.parametrize(
-    "energy_unit,factor",
+    ("energy_unit", "factor"),
     [
         (UnitOfEnergy.WATT_HOUR, 1000),
         (UnitOfEnergy.KILO_WATT_HOUR, 1),
@@ -732,7 +739,11 @@ async def test_cost_sensor_price_entity_total_no_reset(
     ],
 )
 async def test_cost_sensor_handle_energy_units(
-    setup_integration, hass: HomeAssistant, hass_storage, energy_unit, factor
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    energy_unit,
+    factor,
 ) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
@@ -789,7 +800,7 @@ async def test_cost_sensor_handle_energy_units(
 
 
 @pytest.mark.parametrize(
-    "price_unit,factor",
+    ("price_unit", "factor"),
     [
         (f"EUR/{UnitOfEnergy.WATT_HOUR}", 0.001),
         (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
@@ -798,7 +809,11 @@ async def test_cost_sensor_handle_energy_units(
     ],
 )
 async def test_cost_sensor_handle_price_units(
-    setup_integration, hass: HomeAssistant, hass_storage, price_unit, factor
+    setup_integration,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    price_unit,
+    factor,
 ) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
@@ -864,7 +879,7 @@ async def test_cost_sensor_handle_price_units(
     (UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
 )
 async def test_cost_sensor_handle_gas(
-    setup_integration, hass: HomeAssistant, hass_storage, unit
+    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any], unit
 ) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
@@ -914,7 +929,7 @@ async def test_cost_sensor_handle_gas(
 
 
 async def test_cost_sensor_handle_gas_kwh(
-    setup_integration, hass: HomeAssistant, hass_storage
+    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
@@ -964,7 +979,7 @@ async def test_cost_sensor_handle_gas_kwh(
 
 
 @pytest.mark.parametrize(
-    "unit_system,usage_unit,growth",
+    ("unit_system", "usage_unit", "growth"),
     (
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),
@@ -975,7 +990,7 @@ async def test_cost_sensor_handle_gas_kwh(
 async def test_cost_sensor_handle_water(
     setup_integration,
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
     unit_system,
     usage_unit,
     growth,
@@ -1032,7 +1047,7 @@ async def test_cost_sensor_handle_water(
 async def test_cost_sensor_wrong_state_class(
     setup_integration,
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
     state_class,
 ) -> None:
@@ -1097,7 +1112,7 @@ async def test_cost_sensor_wrong_state_class(
 async def test_cost_sensor_state_class_measurement_no_reset(
     setup_integration,
     hass: HomeAssistant,
-    hass_storage,
+    hass_storage: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
     state_class,
 ) -> None:
@@ -1155,7 +1170,7 @@ async def test_cost_sensor_state_class_measurement_no_reset(
 
 
 async def test_inherit_source_unique_id(
-    setup_integration, hass: HomeAssistant, hass_storage
+    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test sensor inherits unique ID from source."""
     energy_data = data.EnergyManager.default_preferences()

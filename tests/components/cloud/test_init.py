@@ -1,4 +1,5 @@
 """Test the cloud component."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -105,7 +106,9 @@ async def test_startup_shutdown_events(hass: HomeAssistant, mock_cloud_fixture) 
     assert mock_stop.called
 
 
-async def test_setup_existing_cloud_user(hass: HomeAssistant, hass_storage) -> None:
+async def test_setup_existing_cloud_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Cloud test")
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": user.id}}

@@ -11,6 +11,7 @@ import itertools
 import logging
 import sqlite3
 import ssl
+import sys
 import threading
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -29,6 +30,7 @@ import multidict
 import pytest
 import pytest_socket
 import requests_mock
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -42,6 +44,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
@@ -54,12 +57,13 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
 )
-from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
+from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .syrupy import HomeAssistantSnapshotExtension
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -87,6 +91,7 @@ from .common import (  # noqa: E402, isort:skip
     get_test_home_assistant,
     init_recorder_component,
     mock_storage,
+    patch_yaml_files,
 )
 from .test_util.aiohttp import (  # noqa: E402, isort:skip
     AiohttpClientMocker,
@@ -96,9 +101,17 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+if sys.version_info[:2] >= (3, 11):
+    from .asyncio_legacy import legacy_coroutine
+
+    setattr(asyncio, "coroutine", legacy_coroutine)
 
 
 def _utcnow() -> datetime.datetime:
@@ -121,10 +134,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
     if config.getoption("verbose") > 0:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+        logging.getLogger().setLevel(logging.DEBUG)
 
 
 def pytest_runtest_setup() -> None:
@@ -302,7 +312,7 @@ def bcrypt_cost() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def hass_storage():
+def hass_storage() -> Generator[dict[str, Any], None, None]:
     """Fixture to mock storage."""
     with mock_storage() as stored_data:
         yield stored_data
@@ -910,6 +920,66 @@ async def _mqtt_mock_entry(
 
 
 @pytest.fixture
+def hass_config() -> ConfigType:
+    """Fixture to parametrize the content of main configuration using mock_hass_config.
+
+    To set a configuration, tests can be marked with:
+    @pytest.mark.parametrize("hass_config", [{integration: {...}}])
+    Add the `mock_hass_config: None` fixture to the test.
+    """
+    return {}
+
+
+@pytest.fixture
+def mock_hass_config(
+    hass: HomeAssistant, hass_config: ConfigType
+) -> Generator[None, None, None]:
+    """Fixture to mock the content of main configuration.
+
+    Patches homeassistant.config.load_yaml_config_file with `hass_config` parameterized as content.
+    """
+    with patch("homeassistant.config.load_yaml_config_file", return_value=hass_config):
+        yield
+
+
+@pytest.fixture
+def hass_config_yaml() -> str:
+    """Fixture to parametrize the content of configuration.yaml file.
+
+    To set yaml content, tests can be marked with:
+    @pytest.mark.parametrize("hass_config_yaml", ["..."])
+    Add the `mock_hass_config_yaml: None` fixture to the test.
+    """
+    return ""
+
+
+@pytest.fixture
+def hass_config_yaml_files(hass_config_yaml: str) -> dict[str, str]:
+    """Fixture to parametrize multiple yaml configuration files.
+
+    To set the YAML files to patch, tests can be marked with:
+    @pytest.mark.parametrize(
+        "hass_config_yaml_files", [{"configuration.yaml": "..."}]
+    )
+    Add the `mock_hass_config_yaml: None` fixture to the test.
+    """
+    return {YAML_CONFIG_FILE: hass_config_yaml}
+
+
+@pytest.fixture
+def mock_hass_config_yaml(
+    hass: HomeAssistant, hass_config_yaml_files: dict[str, str]
+) -> Generator[None, None, None]:
+    """Fixture to mock the content of the yaml configuration files.
+
+    Patches yaml configuration files using the `hass_config_yaml`
+    and `hass_config_yaml_files` fixtures.
+    """
+    with patch_yaml_files(hass_config_yaml_files):
+        yield
+
+
+@pytest.fixture
 async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1067,24 +1137,6 @@ def recorder_db_url(
     assert not hass_fixture_setup
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
-    if db_url.startswith(("postgresql://", "mysql://")):
-        # pylint: disable-next=import-outside-toplevel
-        import sqlalchemy_utils
-
-        def _ha_orm_quote(mixed, ident):
-            """Conditionally quote an identifier.
-
-            Modified to include https://github.com/kvesteri/sqlalchemy-utils/pull/677
-            """
-            if isinstance(mixed, sqlalchemy_utils.functions.orm.Dialect):
-                dialect = mixed
-            elif hasattr(mixed, "dialect"):
-                dialect = mixed.dialect
-            else:
-                dialect = sqlalchemy_utils.functions.orm.get_bind(mixed).dialect
-            return dialect.preparer(dialect).quote(ident)
-
-        sqlalchemy_utils.functions.database.quote = _ha_orm_quote
     if db_url.startswith("mysql://"):
         # pylint: disable-next=import-outside-toplevel
         import sqlalchemy_utils
@@ -1376,3 +1428,9 @@ def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
     """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
+
+
+@pytest.fixture
+def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+    """Return snapshot assertion fixture with the Home Assistant extension."""
+    return snapshot.use_extension(HomeAssistantSnapshotExtension)

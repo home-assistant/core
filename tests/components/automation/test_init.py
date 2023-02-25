@@ -1354,7 +1354,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "broken_config, problem, details",
+    ("broken_config", "problem", "details"),
     (
         (
             {},
@@ -1984,7 +1984,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
 
 
 @pytest.mark.parametrize(
-    "blueprint_inputs, problem, details",
+    ("blueprint_inputs", "problem", "details"),
     (
         (
             # No input
@@ -2193,7 +2193,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
 
 
 @pytest.mark.parametrize(
-    "automation_mode,automation_runs",
+    ("automation_mode", "automation_runs"),
     (
         (SCRIPT_MODE_PARALLEL, 2),
         (SCRIPT_MODE_QUEUED, 2),
@@ -2202,7 +2202,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
     ),
 )
 @pytest.mark.parametrize(
-    "script_mode,script_warning_msg",
+    ("script_mode", "script_warning_msg"),
     (
         (SCRIPT_MODE_PARALLEL, "script1: Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "script1: Disallowed recursion detected"),
