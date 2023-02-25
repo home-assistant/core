@@ -53,7 +53,6 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -524,14 +523,6 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 )
 
 EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
-    ProtectSensorEventEntityDescription(
-        key="detected_object",
-        name="Detected Object",
-        device_class=DEVICE_CLASS_DETECTION,
-        entity_registry_enabled_default=False,
-        ufp_value="is_smart_detected",
-        ufp_event_obj="last_smart_detect_event",
-    ),
     ProtectSensorEventEntityDescription(
         key="smart_obj_licenseplate",
         name="License Plate Detected",

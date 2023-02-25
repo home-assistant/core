@@ -1376,3 +1376,28 @@ def test_language() -> None:
 
     for value in ("en", "sv"):
         assert schema(value)
+
+
+def test_positive_time_period_template() -> None:
+    """Test positive time period template validation."""
+    schema = vol.Schema(cv.positive_time_period_template)
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema({})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({5: 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema({"invalid": 5})
+    with pytest.raises(vol.MultipleInvalid):
+        schema("invalid")
+
+    # Time periods pass
+    schema("00:01")
+    schema("00:00:01")
+    schema("00:00:00.500")
+    schema({"minutes": 5})
+
+    # Templates are not evaluated and will pass
+    schema("{{ 'invalid' }}")
+    schema({"{{ 'invalid' }}": 5})
+    schema({"minutes": "{{ 'invalid' }}"})

@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -80,7 +81,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                 (
                     "cover.test_state",
                     "cat",
-                    STATE_OPEN,
+                    STATE_UNKNOWN,
                     {},
                     -1,
                     "Received invalid cover is_on state: cat",
@@ -89,7 +90,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                 (
                     "cover.test_state",
                     "bear",
-                    STATE_OPEN,
+                    STATE_UNKNOWN,
                     {},
                     -1,
                     "Received invalid cover is_on state: bear",
@@ -112,8 +113,8 @@ OPEN_CLOSE_COVER_CONFIG = {
                 }
             },
             [
-                ("cover.test_state", STATE_OPEN, STATE_OPEN, {}, -1, ""),
-                ("cover.test_state", STATE_CLOSED, STATE_OPEN, {}, -1, ""),
+                ("cover.test_state", STATE_OPEN, STATE_UNKNOWN, {}, -1, ""),
+                ("cover.test_state", STATE_CLOSED, STATE_UNKNOWN, {}, -1, ""),
                 ("cover.test_state", STATE_OPENING, STATE_OPENING, {}, -1, ""),
                 ("cover.test_state", STATE_CLOSING, STATE_CLOSING, {}, -1, ""),
                 ("cover.test", STATE_CLOSED, STATE_CLOSING, {"position": 0}, 0, ""),
@@ -136,7 +137,7 @@ async def test_template_state_text(
 ) -> None:
     """Test the state text of a template."""
     state = hass.states.get("cover.test_template_cover")
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_UNKNOWN
 
     for entity, set_state, test_state, attr, pos, text in states:
         hass.states.async_set(entity, set_state, attributes=attr)
@@ -205,6 +206,29 @@ async def test_template_position(hass: HomeAssistant, start_ha) -> None:
         state = hass.states.get("cover.test_template_cover")
         assert state.attributes.get("current_position") == pos
         assert state.state == test_state
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            DOMAIN: {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover": {
+                        **OPEN_CLOSE_COVER_CONFIG,
+                        "optimistic": False,
+                    }
+                },
+            }
+        },
+    ],
+)
+async def test_template_not_optimistic(hass, start_ha):
+    """Test the is_closed attribute."""
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
@@ -428,7 +452,7 @@ async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     state = hass.states.async_set("input_number.test", 42)
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
