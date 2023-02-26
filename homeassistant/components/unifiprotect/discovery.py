@@ -32,6 +32,7 @@ def async_start_discovery(hass: HomeAssistant) -> None:
     async def _async_discovery() -> None:
         async_trigger_discovery(hass, await async_discover_devices())
 
+    @callback
     def _async_start_background_discovery(*_: Any) -> None:
         """Run discovery in the background."""
         hass.async_create_background_task(_async_discovery(), "unifiprotect-discovery")
