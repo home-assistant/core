@@ -5,7 +5,6 @@
     "onboarding",
     "usb",
     "zeroconf",
-    "homeassistant_hardware",
     "homeassistant_yellow"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
