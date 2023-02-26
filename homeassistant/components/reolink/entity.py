@@ -1,6 +1,8 @@
 """Reolink parent entity class."""
 from __future__ import annotations
 
+from typing import TypeVar
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -11,8 +13,10 @@ from homeassistant.helpers.update_coordinator import (
 from . import ReolinkData
 from .const import DOMAIN
 
+_T = TypeVar("_T")
 
-class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
+
+class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
     """Parent class for entities that control the Reolink NVR itself, without a channel.
 
     A camera connected directly to HomeAssistant without using a NVR is in the reolink API
@@ -24,11 +28,9 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
     def __init__(
         self,
         reolink_data: ReolinkData,
-        coordinator: DataUpdateCoordinator | None = None,
+        coordinator: DataUpdateCoordinator[_T],
     ) -> None:
         """Initialize ReolinkBaseCoordinatorEntity for a NVR entity without a channel."""
-        if coordinator is None:
-            coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)
 
         self._host = reolink_data.host
@@ -52,17 +54,16 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity):
         return self._host.api.session_active and super().available
 
 
-class ReolinkCoordinatorEntity(ReolinkBaseCoordinatorEntity):
+class ReolinkCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
 
     def __init__(
         self,
         reolink_data: ReolinkData,
         channel: int,
-        coordinator: DataUpdateCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
-        super().__init__(reolink_data, coordinator)
+        super().__init__(reolink_data, reolink_data.device_coordinator)
 
         self._channel = channel
 
