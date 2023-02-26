@@ -136,7 +136,9 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, False)
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, False
+        )
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
@@ -149,5 +151,7 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
                 self._host.api, self._channel, brightness_pct
             )
 
-        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, True)
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, True
+        )
         self.async_write_ha_state()
