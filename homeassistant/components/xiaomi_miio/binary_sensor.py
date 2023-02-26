@@ -25,6 +25,7 @@ from .const import (
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_FAN_ZA5,
+    MODELS_HUMIDIFIER_JSQS,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -43,6 +44,8 @@ ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 ATTR_MOP_ATTACHED = "is_water_box_carriage_attached"
 ATTR_WATER_BOX_ATTACHED = "is_water_box_attached"
 ATTR_WATER_SHORTAGE = "is_water_shortage"
+ATTR_TANK_FILED = "tank_filed"
+ATTR_WATER_SHORTAGE_FAULT = "water_shortage_fault"
 
 
 @dataclass
@@ -78,6 +81,20 @@ BINARY_SENSOR_TYPES = (
         key=ATTR_POWERSUPPLY_ATTACHED,
         name="Power supply",
         device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key=ATTR_TANK_FILED,
+        name="Water tank",
+        icon="mdi:car-coolant-level",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value=lambda value: not value,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XiaomiMiioBinarySensorDescription(
+        key=ATTR_WATER_SHORTAGE_FAULT,
+        name="Water shortage fault",
+        icon="mdi:water-off-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -131,6 +148,7 @@ VACUUM_SENSORS_SEPARATE_MOP = {
 HUMIDIFIER_MIIO_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MIOT_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MJJSQ_BINARY_SENSORS = (ATTR_NO_WATER, ATTR_WATER_TANK_DETACHED)
+HUMIDIFIER_JSQS_BINARY_SENSORS = (ATTR_WATER_SHORTAGE_FAULT, ATTR_TANK_FILED)
 
 
 def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
@@ -189,6 +207,8 @@ async def async_setup_entry(
             sensors = HUMIDIFIER_MIOT_BINARY_SENSORS
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
+        elif model in MODELS_HUMIDIFIER_JSQS:
+            sensors = HUMIDIFIER_JSQS_BINARY_SENSORS
         elif model in MODELS_VACUUM:
             return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
 

@@ -77,6 +77,7 @@ from .const import (
     MODEL_FAN_ZA4,
     MODEL_FAN_ZA5,
     MODELS_AIR_QUALITY_MONITOR,
+    MODELS_HUMIDIFIER_JSQS,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -113,6 +114,7 @@ ATTR_UPPER_FILTER_LIFE_REMAINING = "upper_filter_life_remaining"
 ATTR_UPPER_FILTER_LIFE_REMAINING_DAYS = "upper_filter_life_remaining_days"
 ATTR_FILTER_USE = "filter_use"
 ATTR_HUMIDITY = "humidity"
+ATTR_RELATIVE_HUMIDITY = "relative_humidity"
 ATTR_ILLUMINANCE = "illuminance"
 ATTR_ILLUMINANCE_LUX = "illuminance_lux"
 ATTR_LOAD_POWER = "load_power"
@@ -167,6 +169,13 @@ SENSOR_TYPES = {
     ATTR_HUMIDITY: XiaomiMiioSensorDescription(
         key=ATTR_HUMIDITY,
         name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ATTR_RELATIVE_HUMIDITY: XiaomiMiioSensorDescription(
+        key=ATTR_RELATIVE_HUMIDITY,
+        name="Relative humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -399,6 +408,8 @@ HUMIDIFIER_MIOT_SENSORS = (
     ATTR_WATER_LEVEL,
 )
 HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
+
+HUMIDIFIER_JSQS_SENSORS = (ATTR_RELATIVE_HUMIDITY, ATTR_TEMPERATURE)
 
 PURIFIER_MIIO_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
@@ -811,6 +822,8 @@ async def async_setup_entry(
                 sensors = HUMIDIFIER_MIOT_SENSORS
             elif model in MODELS_HUMIDIFIER_MJJSQ:
                 sensors = HUMIDIFIER_MJJSQ_SENSORS
+            elif model in MODELS_HUMIDIFIER_JSQS:
+                sensors = HUMIDIFIER_JSQS_SENSORS
             elif model in MODELS_HUMIDIFIER_MIIO:
                 sensors = HUMIDIFIER_MIIO_SENSORS
             elif model in MODELS_PURIFIER_MIIO:

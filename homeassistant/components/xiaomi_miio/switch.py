@@ -42,6 +42,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
+    FEATURE_FLAGS_AIRHUMIDIFIER_JSQS,
     FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ,
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
@@ -70,6 +71,7 @@ from .const import (
     FEATURE_SET_IONIZER,
     FEATURE_SET_LEARN_MODE,
     FEATURE_SET_LED,
+    FEATURE_SET_LED_LIGHT,
     FEATURE_SET_PTC,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -103,6 +105,7 @@ from .const import (
     MODEL_FAN_ZA5,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
+    MODELS_HUMIDIFIER_JSQS,
     MODELS_HUMIDIFIER_MJJSQ,
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
@@ -139,6 +142,7 @@ ATTR_DISPLAY = "display"
 ATTR_DRY = "dry"
 ATTR_LEARN_MODE = "learn_mode"
 ATTR_LED = "led"
+ATTR_LED_LIGHT = "led_light"
 ATTR_IONIZER = "ionizer"
 ATTR_ANION = "anion"
 ATTR_LOAD_POWER = "load_power"
@@ -294,6 +298,15 @@ SWITCH_TYPES = (
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
+        key=ATTR_LED_LIGHT,
+        feature=FEATURE_SET_LED_LIGHT,
+        name="LED",
+        icon="mdi:led-outline",
+        method_on="async_set_led_light_on",
+        method_off="async_set_led_light_off",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSwitchDescription(
         key=ATTR_LEARN_MODE,
         feature=FEATURE_SET_LEARN_MODE,
         name="Learn mode",
@@ -370,6 +383,8 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
         device_features = MODEL_TO_FEATURES_MAP[model]
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_MJSSQ
+    elif model in MODELS_HUMIDIFIER_JSQS:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_JSQS
     elif model in MODELS_HUMIDIFIER:
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
     elif model in MODELS_PURIFIER_MIIO:
@@ -657,6 +672,22 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         return await self._try_command(
             "Turning the led of the miio device off failed.",
             self._device.set_led,
+            False,
+        )
+
+    async def async_set_led_light_on(self) -> bool:
+        """Turn the led on."""
+        return await self._try_command(
+            "Turning the led of the miio device on failed.",
+            self._device.set_light,
+            True,
+        )
+
+    async def async_set_led_light_off(self) -> bool:
+        """Turn the led off."""
+        return await self._try_command(
+            "Turning the led of the miio device off failed.",
+            self._device.set_light,
             False,
         )
 
