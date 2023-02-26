@@ -185,7 +185,6 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
 
     async def async_update_signal(self) -> None:
         """Update the camera node."""
-        # self.update_node()
         self.update_node(self._router.home_devices[self._id])
 
     def update_node(self, node):

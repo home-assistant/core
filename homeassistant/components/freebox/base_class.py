@@ -19,7 +19,7 @@ class FreeboxHomeBaseClass(Entity):
 
     def __init__(
         self,
-        hass: HomeAssistant | None,
+        hass: HomeAssistant,
         router: FreeboxRouter,
         node: dict[str, Any],
         sub_node: dict[str, Any] | None = None,
@@ -114,7 +114,6 @@ class FreeboxHomeBaseClass(Entity):
             )
             return False
         await self._router.api.home.set_home_endpoint_value(self._id, command_id, value)
-        return True
 
     async def get_home_endpoint_value(self, command_id):
         """Get Home endpoint value."""
