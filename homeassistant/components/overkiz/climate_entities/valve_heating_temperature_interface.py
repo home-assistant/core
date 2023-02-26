@@ -6,6 +6,10 @@ from typing import Any, cast
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
+    PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -17,22 +21,24 @@ from homeassistant.const import ATTR_TEMPERATURE
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
+PRESET_MANUAL = "manual"
+PRESET_FROSTPROTECTION = "frostprotection"
+
 OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
     OverkizCommandParam.OPEN: HVACAction.HEATING,
     OverkizCommandParam.CLOSED: HVACAction.IDLE,
 }
 
-PRESET_MODE_TO_OVERKIZ: dict[str, str] = {
-    "away": OverkizCommandParam.AWAY_MODE,
-    "comfort": OverkizCommandParam.COMFORT,
-    "eco": OverkizCommandParam.ECO,
-    "frostprotection": OverkizCommandParam.FROSTPROTECTION,
-    "geofencing": OverkizCommandParam.GEOFENCING_MODE,
-    "manual": OverkizCommandParam.MANUAL,
-    "suddenDrop": OverkizCommandParam.SUDDEN_DROP_MODE,
+OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
+    OverkizCommandParam.SUDDEN_DROP_MODE: PRESET_NONE,
+    OverkizCommandParam.GEOFENCING_MODE: PRESET_NONE,
+    OverkizCommandParam.AWAY_MODE: PRESET_AWAY,
+    OverkizCommandParam.COMFORT: PRESET_COMFORT,
+    OverkizCommandParam.ECO: PRESET_ECO,
+    OverkizCommandParam.FROSTPROTECTION: PRESET_FROSTPROTECTION,
+    OverkizCommandParam.MANUAL: PRESET_MANUAL,
 }
-
-OVERKIZ_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_OVERKIZ.items()}
+PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
 
 TEMPERATURE_SENSOR_DEVICE_INDEX = 2
 
