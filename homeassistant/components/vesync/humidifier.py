@@ -1,8 +1,10 @@
 """Support for VeSync humidifiers."""
 import logging
 
-from homeassistant.components.humidifier import HumidifierEntity
-from homeassistant.components.humidifier.const import SUPPORT_MODES
+from homeassistant.components.humidifier import (
+    HumidifierEntity,
+    HumidifierEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -24,20 +26,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the VeSync humidifier platform."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), async_discover
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), discover)
     )
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    _async_setup_entities(hass.data[DOMAIN][VS_HUMIDIFIERS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_HUMIDIFIERS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
@@ -71,7 +73,7 @@ class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_MODES
+        return HumidifierEntityFeature.MODES
 
     @property
     def target_humidity(self):

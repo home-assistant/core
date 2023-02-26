@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 )
 
 from .common import VeSyncDevice
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_FANS
+from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 

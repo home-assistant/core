@@ -9,9 +9,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice, is_humidifier
@@ -180,26 +180,6 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         )
         # ensure value between minimum and maximum Mireds
         return max(self.min_mireds, min(color_temp_value, self.max_mireds))
-
-    @property
-    def min_mireds(self):
-        """Set device coldest white temperature."""
-        return 154  # 154 Mireds ( 1,000,000 divided by 6500 Kelvin = 154 Mireds)
-
-    @property
-    def max_mireds(self):
-        """Set device warmest white temperature."""
-        return 370  # 370 Mireds  ( 1,000,000 divided by 2700 Kelvin = 370 Mireds)
-
-    @property
-    def color_mode(self):
-        """Set color mode for this entity."""
-        return COLOR_MODE_COLOR_TEMP
-
-    @property
-    def supported_color_modes(self):
-        """Flag supported color_modes (in an array format)."""
-        return [COLOR_MODE_COLOR_TEMP]
 
 
 class VeSyncHumidifierNightLightHA(VeSyncDimmableLightHA):

@@ -65,8 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     sensors = hass.data[DOMAIN][VS_SENSORS] = []
     humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS] = []
     numbers = hass.data[DOMAIN][VS_NUMBERS] = []
-
-    hass.data[DOMAIN][VS_DISPATCHERS] = []
+    platforms = []
 
     if device_dict[VS_SWITCHES]:
         switches.extend(device_dict[VS_SWITCHES])
@@ -76,20 +75,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         fans.extend(device_dict[VS_FANS])
         platforms.append(Platform.FAN)
 
+    if device_dict[VS_HUMIDIFIERS]:
+        humidifiers.extend(device_dict[VS_HUMIDIFIERS])
+        platforms.append(Platform.HUMIDIFIER)
+
     if device_dict[VS_LIGHTS]:
         lights.extend(device_dict[VS_LIGHTS])
         platforms.append(Platform.LIGHT)
 
     if device_dict[VS_SENSORS]:
         sensors.extend(device_dict[VS_SENSORS])
-        hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
-    if device_dict[VS_HUMIDIFIERS]:
-        humidifiers.extend(device_dict[VS_HUMIDIFIERS])
-        hass.async_create_task(forward_setup(config_entry, Platform.HUMIDIFIER))
+        platforms.append(Platform.SENSOR)
 
     if device_dict[VS_NUMBERS]:
         numbers.extend(device_dict[VS_NUMBERS])
-        hass.async_create_task(forward_setup(config_entry, Platform.NUMBER))
+        platforms.append(Platform.NUMBER)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""

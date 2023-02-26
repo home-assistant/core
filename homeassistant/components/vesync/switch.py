@@ -4,9 +4,9 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncBaseEntity, VeSyncDevice, is_humidifier
@@ -66,7 +66,7 @@ class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
 class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
     """Representation of a VeSync switch."""
 
-    def __init__(self, plug):
+    def __init__(self, plug) -> None:
         """Initialize the VeSync switch device."""
         super().__init__(plug)
         self.smartplug = plug
@@ -80,7 +80,7 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
 class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
 
-    def __init__(self, switch):
+    def __init__(self, switch) -> None:
         """Initialize Light Switch device class."""
         super().__init__(switch)
         self.switch = switch
@@ -89,7 +89,7 @@ class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
 class VeSyncHumidifierSwitchEntity(VeSyncBaseEntity, SwitchEntity):
     """Representation of a switch for configuring a VeSync humidifier."""
 
-    def __init__(self, humidifier):
+    def __init__(self, humidifier) -> None:
         """Initialize the VeSync humidifier device."""
         super().__init__(humidifier)
         self.smarthumidifier = humidifier
