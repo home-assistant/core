@@ -3,7 +3,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from nibe.coil import Coil
+from nibe.coil import CoilData
 from nibe.coil_groups import UNIT_COILGROUPS
 from nibe.heatpump import Model
 import pytest
@@ -91,6 +91,6 @@ async def test_reset_button(
     # Verify reset was written
     args = mock_connection.write_coil.call_args
     assert args
-    coil: Coil = args.args[0]
-    assert coil.address == unit.alarm_reset
+    coil: CoilData = args.args[0]
+    assert coil.coil.address == unit.alarm_reset
     assert coil.value == 1
