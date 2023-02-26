@@ -1708,7 +1708,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.13
+pyisy==3.1.14
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2518,7 +2518,7 @@ tololib==0.1.0b4
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2023.1
+total_connect_client==2023.2
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
