@@ -135,12 +135,12 @@ SERVICE_SET_ZWAVE_PARAMETER_SCHEMA = {
     vol.Required(CONF_SIZE): vol.All(vol.Coerce(int), vol.In(VALID_PARAMETER_SIZES)),
 }
 
-SERVICE_SET_USER_CODE_SCHEMA = {vol.Required(CONF_USER_NUM): vol.Coerce(int)}
-
-SERVICE_DELETE_USER_CODE_SCHEMA = {
+SERVICE_SET_USER_CODE_SCHEMA = {
     vol.Required(CONF_USER_NUM): vol.Coerce(int),
     vol.Required(CONF_CODE): vol.Coerce(int),
 }
+
+SERVICE_DELETE_USER_CODE_SCHEMA = {vol.Required(CONF_USER_NUM): vol.Coerce(int)}
 
 SERVICE_SET_VARIABLE_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_ADDRESS, CONF_TYPE, CONF_NAME),
