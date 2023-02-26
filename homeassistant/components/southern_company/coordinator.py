@@ -165,7 +165,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
             cost_metadata = StatisticMetaData(
                 has_mean=False,
                 has_sum=True,
-                name=f"{account.name} cost",
+                name=f"Southern Company {account.name} cost",
                 source=DOMAIN,
                 statistic_id=cost_statistic_id,
                 unit_of_measurement=None,
@@ -173,7 +173,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
             usage_metadata = StatisticMetaData(
                 has_mean=False,
                 has_sum=True,
-                name=f"{account.name} usage",
+                name=f"Southern Company {account.name} usage",
                 source=DOMAIN,
                 statistic_id=usage_statistic_id,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
