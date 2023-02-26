@@ -49,7 +49,7 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
         """Initialize a Netgear device."""
         super().__init__(reolink_data, reolink_data.firmware_coordinator)
 
-        self._attr_unique_id = f"{self._host.unique_id}_update"
+        self._attr_unique_id = f"{self._host.unique_id}"
 
     @property
     def installed_version(self) -> str | None:
