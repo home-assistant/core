@@ -79,7 +79,7 @@ async def test_http_processing_intent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on my cool light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -127,7 +127,7 @@ async def test_http_processing_intent_target_ha_agent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on my cool light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -176,7 +176,7 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on my cool light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -210,7 +210,7 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on friendly light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -243,7 +243,7 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on late added light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -278,7 +278,7 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Sorry, I couldn't understand " "that",
+                    "speech": "Sorry, I couldn't understand that",
                 }
             },
         },
@@ -783,7 +783,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
         )
     )
     assert len(calls) == 1
-    assert result.response.speech["plain"]["speech"] == "Opened front door"
+    assert result.response.speech["plain"]["speech"] == "Opened"
 
 
 async def test_turn_on_area(hass: HomeAssistant, init_components) -> None:
