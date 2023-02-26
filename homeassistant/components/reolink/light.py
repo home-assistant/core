@@ -26,8 +26,8 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkLightEntityDescriptionMixin:
     """Mixin values for Reolink light entities."""
 
-    is_on: Callable[[Host, int | None], bool]
-    turn_on_off: Callable[[Host, int | None, bool], Any]
+    is_on_fn: Callable[[Host, int | None], bool]
+    turn_on_off_fn: Callable[[Host, int | None, bool], Any]
 
 
 @dataclass
@@ -36,9 +36,9 @@ class ReolinkLightEntityDescription(
 ):
     """A class that describes light entities."""
 
-    supported: Callable[[Host, int | None], bool] = lambda api, ch: True
-    get_brightness: Callable[[Host, int | None], int] | None = None
-    set_brightness: Callable[[Host, int | None, float], Any] | None = None
+    supported_fn: Callable[[Host, int | None], bool] = lambda api, ch: True
+    get_brightness_fn: Callable[[Host, int | None], int] | None = None
+    set_brightness_fn: Callable[[Host, int | None, float], Any] | None = None
 
 
 LIGHT_ENTITIES = (
@@ -46,11 +46,11 @@ LIGHT_ENTITIES = (
         key="floodlight",
         name="Floodlight",
         icon="mdi:spotlight-beam",
-        supported=lambda api, ch: api.supported(ch, "floodLight"),
-        is_on=lambda api, ch: api.whiteled_state(ch),
-        turn_on_off=lambda api, ch, value: api.set_whiteled(ch, state=value),
-        get_brightness=lambda api, ch: api.whiteled_brightness(ch),
-        set_brightness=lambda api, ch, value: api.set_whiteled(
+        supported_fn=lambda api, ch: api.supported(ch, "floodLight"),
+        is_on_fn=lambda api, ch: api.whiteled_state(ch),
+        turn_on_off_fn=lambda api, ch, value: api.set_whiteled(ch, state=value),
+        get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
+        set_brightness_fn=lambda api, ch, value: api.set_whiteled(
             ch, brightness=int(value)
         ),
     ),
@@ -58,17 +58,17 @@ LIGHT_ENTITIES = (
         key="ir_lights",
         name="Infra red lights in night mode",
         icon="mdi:led-off",
-        supported=lambda api, ch: api.supported(ch, "ir_lights"),
-        is_on=lambda api, ch: api.ir_enabled(ch),
-        turn_on_off=lambda api, ch, value: api.set_ir_lights(ch, value),
+        supported_fn=lambda api, ch: api.supported(ch, "ir_lights"),
+        is_on_fn=lambda api, ch: api.ir_enabled(ch),
+        turn_on_off_fn=lambda api, ch, value: api.set_ir_lights(ch, value),
     ),
     ReolinkLightEntityDescription(
         key="status_led",
         name="Status LED",
         icon="mdi:lightning-bolt-circle",
-        supported=lambda api, ch: api.supported(ch, "status_led"),
-        is_on=lambda api, ch: api.status_led_enabled(ch),
-        turn_on_off=lambda api, ch, value: api.set_status_led(ch, value),
+        supported_fn=lambda api, ch: api.supported(ch, "status_led"),
+        is_on_fn=lambda api, ch: api.status_led_enabled(ch),
+        turn_on_off_fn=lambda api, ch, value: api.set_status_led(ch, value),
     ),
 )
 
@@ -85,7 +85,7 @@ async def async_setup_entry(
         ReolinkLightEntity(reolink_data, channel, entity_description)
         for entity_description in LIGHT_ENTITIES
         for channel in reolink_data.host.api.channels
-        if entity_description.supported(reolink_data.host.api, channel)
+        if entity_description.supported_fn(reolink_data.host.api, channel)
     )
 
 
@@ -108,7 +108,7 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
 
-        if self.entity_description.set_brightness is None:
+        if self.entity_description.set_brightness_fn is None:
             self._attr_supported_color_modes = {ColorMode.ONOFF}
             self._attr_color_mode = ColorMode.ONOFF
         else:
@@ -118,36 +118,36 @@ class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.entity_description.is_on(self._host.api, self._channel)
+        return self.entity_description.is_on_fn(self._host.api, self._channel)
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0.255."""
-        if self.entity_description.get_brightness is None:
+        if self.entity_description.get_brightness_fn is None:
             return None
 
         return round(
             255
             * (
-                self.entity_description.get_brightness(self._host.api, self._channel)
+                self.entity_description.get_brightness_fn(self._host.api, self._channel)
                 / 100.0
             )
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await self.entity_description.turn_on_off(self._host.api, self._channel, False)
+        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, False)
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Turn light on."""
         if (
             brightness := kwargs.get(ATTR_BRIGHTNESS)
-        ) is not None and self.entity_description.set_brightness is not None:
+        ) is not None and self.entity_description.set_brightness_fn is not None:
             brightness_pct = int(brightness / 255.0 * 100)
-            await self.entity_description.set_brightness(
+            await self.entity_description.set_brightness_fn(
                 self._host.api, self._channel, brightness_pct
             )
 
-        await self.entity_description.turn_on_off(self._host.api, self._channel, True)
+        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, True)
         self.async_write_ha_state()
