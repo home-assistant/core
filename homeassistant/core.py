@@ -773,12 +773,12 @@ class HomeAssistant:
             except asyncio.TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
-                    "Task %s could not be canceled during stage 2 shutdown", task
+                    "Task %s could not be canceled during stage 3 shutdown", task
                 )
             except asyncio.CancelledError:
                 pass
             except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Task %s error during state 2 shutdown: %s", task, ex)
+                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
