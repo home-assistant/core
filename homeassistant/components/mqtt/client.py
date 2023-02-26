@@ -314,6 +314,7 @@ class MQTT:
         self.conf = conf
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
+        self._retained_init: dict[Subscription, bool] = {}
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -613,6 +614,7 @@ class MQTT:
         # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
+        self._retained_init.clear()
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
@@ -695,6 +697,12 @@ class MQTT:
         subscriptions = self._matching_subscriptions(msg.topic)
 
         for subscription in subscriptions:
+            if (init_status := self._retained_init.get(subscription)) is None:
+                self._retained_init[subscription] = msg.retain
+            if msg.retain and init_status is True:
+                # do not replay already initialized subscriptions
+                continue
+
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:
