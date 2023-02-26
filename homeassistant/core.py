@@ -38,6 +38,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import async_timeout
 from typing_extensions import Self
 import voluptuous as vol
 import yarl
@@ -766,6 +767,19 @@ class HomeAssistant:
 
         for task in running_tasks:
             task.cancel()
+            try:
+                async with async_timeout.timeout(0.1):
+                    await task
+            except asyncio.TimeoutError:
+                # Task may be shielded from cancellation.
+                _LOGGER.exception(
+                    "Task %s could not be canceled during stage 2 shutdown", task
+                )
+            except asyncio.CancelledError:
+                pass
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Task %s error during state 2 shutdown: %s", task, ex)
+
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
         # it returns will never run after the final `self.async_block_till_done`
