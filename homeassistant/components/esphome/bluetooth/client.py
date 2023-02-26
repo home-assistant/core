@@ -390,14 +390,29 @@ class ESPHomeClient(BaseBleakClient):
             raise NotImplementedError(
                 "Pairing is not available in ESPHome with version {self._connection_version}."
             )
-        await self._client.bluetooth_device_pair(self._address_as_int)
-        return True
+        response = await self._client.bluetooth_device_pair(self._address_as_int)
+        if response.paired:
+            return True
+        _LOGGER.error(
+            "Pairing with %s failed due to error: %s", self.address, response.error
+        )
+        return False
 
     @verify_connected
     @api_error_as_bleak_error
     async def unpair(self) -> bool:
         """Attempt to unpair."""
-        raise NotImplementedError("Unpairing is not available in ESPHome.")
+        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+            raise NotImplementedError(
+                "Unpairing is not available in ESPHome with version {self._connection_version}."
+            )
+        response = await self._client.bluetooth_device_unpair(self._address_as_int)
+        if response.success:
+            return True
+        _LOGGER.error(
+            "Unpairing with %s failed due to error: %s", self.address, response.error
+        )
+        return False
 
     @api_error_as_bleak_error
     async def get_services(
