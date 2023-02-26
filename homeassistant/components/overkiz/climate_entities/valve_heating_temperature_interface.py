@@ -18,6 +18,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
@@ -30,9 +31,9 @@ OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
 }
 
 OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
-    OverkizCommandParam.SUDDEN_DROP_MODE: PRESET_NONE,
     OverkizCommandParam.GEOFENCING_MODE: PRESET_NONE,
-    OverkizCommandParam.AWAY_MODE: PRESET_AWAY,
+    OverkizCommandParam.SUDDEN_DROP_MODE: PRESET_NONE,
+    OverkizCommandParam.AWAY: PRESET_AWAY,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
     OverkizCommandParam.ECO: PRESET_ECO,
     OverkizCommandParam.FROSTPROTECTION: PRESET_FROSTPROTECTION,
@@ -53,6 +54,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
