@@ -119,8 +119,19 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_DEROGATION,
-            PRESET_MODE_TO_OVERKIZ[preset_mode],
-            OverkizCommandParam.FURTHER_NOTICE,
-        )
+
+        # If we want to switch to manual mode via a preset, we need to pass in a temperature
+        # Manual mode will be on automatically if an user sets a temperature
+        if preset_mode == PRESET_MANUAL:
+            if current_temperature := self.current_temperature:
+                await self.executor.async_execute_command(
+                    OverkizCommand.SET_DEROGATION,
+                    current_temperature,
+                    OverkizCommandParam.FURTHER_NOTICE,
+                )
+        else:
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_DEROGATION,
+                PRESET_MODE_TO_OVERKIZ[preset_mode],
+                OverkizCommandParam.FURTHER_NOTICE,
+            )
