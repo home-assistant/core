@@ -34,7 +34,7 @@
           "preset_mode": {
             "state": {
               "manual": "Manual",
-              "frostprotection": "Frost Protection"
+              "frost_protection": "Frost protection"
             }
           }
         }

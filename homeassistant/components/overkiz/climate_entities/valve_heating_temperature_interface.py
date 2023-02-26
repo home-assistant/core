@@ -23,7 +23,7 @@ from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 PRESET_MANUAL = "manual"
-PRESET_FROSTPROTECTION = "frostprotection"
+PRESET_FROST_PROTECTION = "frost_protection"
 
 OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
     OverkizCommandParam.OPEN: HVACAction.HEATING,
@@ -36,7 +36,7 @@ OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
     OverkizCommandParam.AWAY: PRESET_AWAY,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
     OverkizCommandParam.ECO: PRESET_ECO,
-    OverkizCommandParam.FROSTPROTECTION: PRESET_FROSTPROTECTION,
+    OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
     OverkizCommandParam.MANUAL: PRESET_MANUAL,
 }
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
@@ -90,7 +90,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]:
-            return cast(float, temperature.value)
+            return temperature.value_as_float
 
         return None
 
