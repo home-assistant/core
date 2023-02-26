@@ -651,7 +651,7 @@ class DarkSkySensor(SensorEntity):
         name,
         forecast_day=None,
         forecast_hour=None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.forecast_data = forecast_data
@@ -794,7 +794,7 @@ class DarkSkyAlertSensor(SensorEntity):
 
     def __init__(
         self, forecast_data, description: DarkskySensorEntityDescription, name
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.forecast_data = forecast_data

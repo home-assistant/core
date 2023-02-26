@@ -1,5 +1,4 @@
 """Test the Advantage Air Sensor Platform."""
-
 from datetime import timedelta
 from json import loads
 
@@ -10,6 +9,7 @@ from homeassistant.components.advantage_air.sensor import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
@@ -22,9 +22,12 @@ from . import (
 )
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_sensor_platform(hass, aioclient_mock):
+async def test_sensor_platform(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sensor platform."""
 
     aioclient_mock.get(

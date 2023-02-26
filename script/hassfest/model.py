@@ -130,6 +130,7 @@ class Integration:
 
     path: pathlib.Path
     _manifest: dict[str, Any] | None = None
+    manifest_path: pathlib.Path | None = None
     errors: list[Error] = field(default_factory=list)
     warnings: list[Error] = field(default_factory=list)
     translated_name: bool = False
@@ -223,3 +224,4 @@ class Integration:
             return
 
         self._manifest = manifest
+        self.manifest_path = manifest_path

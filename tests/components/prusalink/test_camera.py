@@ -1,5 +1,4 @@
 """Test Prusalink camera."""
-
 from unittest.mock import patch
 
 import pytest
@@ -7,6 +6,8 @@ import pytest
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +21,7 @@ async def test_camera_no_job(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
-    hass_client,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test camera while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
@@ -38,8 +39,8 @@ async def test_camera_active_job(
     mock_config_entry,
     mock_api,
     mock_job_api_printing,
-    hass_client,
-):
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test camera while job active."""
     assert await async_setup_component(hass, "prusalink", {})
     state = hass.states.get("camera.mock_title_job_preview")
