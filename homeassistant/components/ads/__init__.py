@@ -32,6 +32,7 @@ ADSTYPE_DINT = "dint"
 ADSTYPE_INT = "int"
 ADSTYPE_UDINT = "udint"
 ADSTYPE_UINT = "uint"
+ADSTYPE_REAL = "real"
 
 ADS_TYPEMAP = {
     ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
@@ -40,6 +41,7 @@ ADS_TYPEMAP = {
     ADSTYPE_INT: pyads.PLCTYPE_INT,
     ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
     ADSTYPE_UINT: pyads.PLCTYPE_UINT,
+    ADSTYPE_REAL: pyads.PLCTYPE_REAL,
 }
 
 CONF_ADS_FACTOR = "factor"
@@ -80,6 +82,7 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
                 ADSTYPE_BOOL,
                 ADSTYPE_DINT,
                 ADSTYPE_UDINT,
+                ADSTYPE_REAL,
             ]
         ),
         vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
@@ -252,6 +255,8 @@ class AdsHub:
             value = struct.unpack("<i", bytearray(data))[0]
         elif notification_item.plc_datatype == pyads.PLCTYPE_UDINT:
             value = struct.unpack("<I", bytearray(data))[0]
+        elif notification_item.plc_datatype == pyads.PLCTYPE_REAL:
+            value = struct.unpack("<f", bytearray(data))[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")

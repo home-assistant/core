@@ -32,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 ads.ADSTYPE_BYTE,
                 ads.ADSTYPE_DINT,
                 ads.ADSTYPE_UDINT,
+                ads.ADSTYPE_REAL,
             ]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
