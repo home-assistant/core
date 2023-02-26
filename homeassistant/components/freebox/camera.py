@@ -185,6 +185,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
 
     async def async_update_signal(self) -> None:
         """Update the camera node."""
+        # self.update_node()
         self.update_node(self._router.home_devices[self._id])
 
     def update_node(self, node):
@@ -195,7 +196,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         if self._node["status"] == "active":
             self._attr_is_streaming = True
         else:
-            self._attr_is_streaming = True
+            self._attr_is_streaming = False
         # Parse all endpoints values & needed commands
         for endpoint in filter(
             lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
