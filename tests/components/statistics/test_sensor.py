@@ -466,6 +466,125 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         assert state.attributes.get("age_coverage_ratio") is None
 
 
+async def test_age_limit_expiry_with_preserve_last_val(hass: HomeAssistant) -> None:
+    """Test that values are removed with given max age."""
+    now = dt_util.utcnow()
+    mock_data = {
+        "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+    }
+
+    def mock_now():
+        return mock_data["return_time"]
+
+    with patch(
+        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
+                        "sampling_size": 20,
+                        "max_age": {"minutes": 4},
+                        "preserve_last_val": True,
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        for value in VALUES_NUMERIC:
+            mock_data["return_time"] += timedelta(minutes=1)
+            async_fire_time_changed(hass, mock_data["return_time"])
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+            )
+        await hass.async_block_till_done()
+
+        # After adding all values, we should only see 5 values in memory
+
+        state = hass.states.get("sensor.test")
+        new_mean = round(sum(VALUES_NUMERIC[-5:]) / len(VALUES_NUMERIC[-5:]), 2)
+        assert state is not None
+        assert state.state == str(new_mean)
+        assert state.attributes.get("buffer_usage_ratio") == round(5 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 1.0
+
+        # Values expire over time. Only two are left
+
+        mock_data["return_time"] += timedelta(minutes=3)
+        async_fire_time_changed(hass, mock_data["return_time"])
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        new_mean = round(sum(VALUES_NUMERIC[-2:]) / len(VALUES_NUMERIC[-2:]), 2)
+        assert state is not None
+        assert state.state == str(new_mean)
+        assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 1 / 4
+
+        # Values expire over time. Only one is left
+
+        mock_data["return_time"] += timedelta(minutes=1)
+        async_fire_time_changed(hass, mock_data["return_time"])
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        new_mean = float(VALUES_NUMERIC[-1])
+        assert state is not None
+        assert state.state == str(new_mean)
+        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 0
+
+        # Values expire over time. All values expired, but preserve expired last value
+
+        mock_data["return_time"] += timedelta(minutes=1)
+        async_fire_time_changed(hass, mock_data["return_time"])
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.state == str(float(VALUES_NUMERIC[-1]))
+        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 0
+
+        # Indefinitely preserve expired last value
+
+        mock_data["return_time"] += timedelta(minutes=1)
+        async_fire_time_changed(hass, mock_data["return_time"])
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.state == str(float(VALUES_NUMERIC[-1]))
+        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 0
+
+        # New sensor value within max_age, preserved expired value should be dropped
+        last_update_val = 123.0
+        mock_data["return_time"] += timedelta(minutes=1)
+        async_fire_time_changed(hass, mock_data["return_time"])
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(last_update_val),
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.state == str(last_update_val)
+        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+        assert state.attributes.get("age_coverage_ratio") == 0
+
+
 async def test_precision(hass: HomeAssistant) -> None:
     """Test correct results with precision set."""
     assert await async_setup_component(
