@@ -94,7 +94,7 @@ class OralbActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordinat
 
     @property
     def needs_active_update(self) -> bool:
-        """Determines if there are any subscriptions that require an active update."""
+        """Determine if there are any subscriptions that require an active update."""
         return self._active_subscriptions is None or bool(self._active_subscriptions)
 
 
