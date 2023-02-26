@@ -765,18 +765,26 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
-        for task in running_tasks:
+        # Make a copy of running_tasks since a task can finish
+        # while we are awaiting canceled tasks to get their result
+        # which will result in the set size changing during iteration
+        for task in list(running_tasks):
+            if task.done():
+                # Since we made a copy we need to check
+                # to see if the task finished while we
+                # were awaiting another task
+                continue
             task.cancel()
             try:
                 async with async_timeout.timeout(0.1):
                     await task
+            except asyncio.CancelledError:
+                pass
             except asyncio.TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
                     "Task %s could not be canceled during stage 3 shutdown", task
                 )
-            except asyncio.CancelledError:
-                pass
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
 
