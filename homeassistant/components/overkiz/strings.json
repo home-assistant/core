@@ -28,6 +28,18 @@
     }
   },
   "entity": {
+    "climate": {
+      "overkiz": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manual",
+              "frostprotection": "Frost Protection"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "open_closed_pedestrian": {
         "state": {

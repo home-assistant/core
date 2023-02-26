@@ -118,5 +118,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.executor.async_execute_command(
-            OverkizCommand.SET_DEROGATION, PRESET_MODE_TO_OVERKIZ[preset_mode]
+            OverkizCommand.SET_DEROGATION,
+            PRESET_MODE_TO_OVERKIZ[preset_mode],
+            OverkizCommandParam.FURTHER_NOTICE,
         )
