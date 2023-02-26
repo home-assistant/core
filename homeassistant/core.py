@@ -730,6 +730,7 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(1)
 
         # stage 2
         self.state = CoreState.final_write
@@ -742,6 +743,7 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(2)
 
         # stage 3
         self.state = CoreState.not_running
@@ -762,10 +764,17 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(3)
+
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
+
+    def _async_log_running_tasks(self, stage: int) -> None:
+        """Log all running tasks."""
+        for task in self._tasks:
+            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
 
 
 class Context:

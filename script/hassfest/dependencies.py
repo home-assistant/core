@@ -146,6 +146,8 @@ IGNORE_VIOLATIONS = {
     ("demo", "openalpr_local"),
     # This would be a circular dep
     ("http", "network"),
+    # This would be a circular dep
+    ("zha", "homeassistant_hardware"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),

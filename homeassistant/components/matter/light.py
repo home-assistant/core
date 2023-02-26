@@ -1,6 +1,7 @@
 """Matter light."""
 from __future__ import annotations
 
+from enum import IntFlag
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -260,12 +261,16 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if hs_color is not None and self.supports_color:
-            await self._set_hs_color(hs_color)
-        elif xy_color is not None:
-            await self._set_xy_color(xy_color)
-        elif color_temp is not None and self.supports_color_temperature:
-            await self._set_color_temp(color_temp)
+        if self.supported_color_modes is not None:
+            if hs_color is not None and ColorMode.HS in self.supported_color_modes:
+                await self._set_hs_color(hs_color)
+            elif xy_color is not None and ColorMode.XY in self.supported_color_modes:
+                await self._set_xy_color(xy_color)
+            elif (
+                color_temp is not None
+                and ColorMode.COLOR_TEMP in self.supported_color_modes
+            ):
+                await self._set_color_temp(color_temp)
 
         if brightness is not None and self.supports_brightness:
             await self._set_brightness(brightness)
@@ -284,7 +289,6 @@ class MatterLight(MatterEntity, LightEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-
         if self._attr_supported_color_modes is None:
             # work out what (color)features are supported
             supported_color_modes: set[ColorMode] = set()
@@ -297,30 +301,19 @@ class MatterLight(MatterEntity, LightEntity):
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.ColorControl.Attributes.ColorMode
             ):
-                # device has some color support, check which color modes
-                # are supported with the featuremap on the ColorControl cluster
-                color_feature_map = self.get_matter_attribute_value(
-                    clusters.ColorControl.Attributes.FeatureMap,
+                capabilities = self.get_matter_attribute_value(
+                    clusters.ColorControl.Attributes.ColorCapabilities
                 )
-                if (
-                    color_feature_map
-                    & clusters.ColorControl.Attributes.CurrentHue.attribute_id
-                ):
+
+                assert capabilities is not None
+
+                if capabilities & ColorCapabilities.kHueSaturationSupported:
                     supported_color_modes.add(ColorMode.HS)
-                if (
-                    color_feature_map
-                    & clusters.ColorControl.Attributes.CurrentX.attribute_id
-                ):
+
+                if capabilities & ColorCapabilities.kXYAttributesSupported:
                     supported_color_modes.add(ColorMode.XY)
 
-                # color temperature support detection using the featuremap is not reliable
-                # (temporary?) fallback to checking the value
-                if (
-                    self.get_matter_attribute_value(
-                        clusters.ColorControl.Attributes.ColorTemperatureMireds
-                    )
-                    is not None
-                ):
+                if capabilities & ColorCapabilities.kColorTemperatureSupported:
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
 
             self._attr_supported_color_modes = supported_color_modes
@@ -351,11 +344,23 @@ class MatterLight(MatterEntity, LightEntity):
             self._attr_brightness = self._get_brightness()
 
 
+# This enum should be removed once the ColorControlCapabilities enum is added to the CHIP (Matter) library
+# clusters.ColorControl.Bitmap.ColorCapabilities
+class ColorCapabilities(IntFlag):
+    """Color control capabilities bitmap."""
+
+    kHueSaturationSupported = 0x1
+    kEnhancedHueSupported = 0x2
+    kColorLoopSupported = 0x4
+    kXYAttributesSupported = 0x8
+    kColorTemperatureSupported = 0x10
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(key="ExtendedMatterLight"),
+        entity_description=LightEntityDescription(key="MatterLight"),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         optional_attributes=(

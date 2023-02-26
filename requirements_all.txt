@@ -249,7 +249,7 @@ aiopvpc==4.0.1
 aiopyarr==22.11.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.1
+aioqsw==0.3.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230223.0
+home-assistant-frontend==20230224.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.2.22
@@ -1201,7 +1201,7 @@ nextcord==2.0.0a8
 nextdns==1.3.0
 
 # homeassistant.components.nibe_heatpump
-nibe==1.6.0
+nibe==2.0.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1708,7 +1708,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.13
+pyisy==3.1.14
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2518,7 +2518,7 @@ tololib==0.1.0b4
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2023.1
+total_connect_client==2023.2
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
