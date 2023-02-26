@@ -159,7 +159,7 @@ class FreeboxRouter:
         new_device = False
         # Home sensors (alarm,pir,switch,kfb...)
         try:
-            home_nodes: Any | list[Any] = await self._api.home.get_home_nodes() or []
+            home_nodes: list[Any] = await self._api.home.get_home_nodes() or []
         except InsufficientPermissionsError:
             _LOGGER.warning("Home access is not granted")
             return

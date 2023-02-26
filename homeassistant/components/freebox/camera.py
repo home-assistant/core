@@ -152,7 +152,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         """Update flip."""
         self._flip = state
 
-    async def async_flip(self, entity: "FreeboxCamera") -> None:
+    async def async_flip(self, entity: FreeboxCamera) -> None:
         """Flip the camera stream."""
         entity.set_flip(not entity.flip)
         await entity.set_home_endpoint_value(
@@ -164,7 +164,6 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         """Return the camera motion detection status."""
         return self._attr_motion_detection_enabled
 
-    # OK
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         await self.set_home_endpoint_value(
@@ -172,7 +171,6 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         )
         self._attr_motion_detection_enabled = True
 
-    # OK
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         await self.set_home_endpoint_value(
@@ -187,7 +185,6 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
 
     async def async_update_signal(self) -> None:
         """Update the camera node."""
-        # self.update_node()
         self.update_node(self._router.home_devices[self._id])
 
     def update_node(self, node):
