@@ -9,6 +9,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 import aiounifi
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.messages import DATA_CLIENT_REMOVED, DATA_EVENT
 from aiounifi.models.event import EventKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
@@ -31,6 +32,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
@@ -62,6 +64,7 @@ from .const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
+from .entity import UnifiEntity, UnifiEntityDescription
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
@@ -184,10 +187,47 @@ class UniFiController:
         return None
 
     @callback
+    def register_platform_add_entities(
+        self,
+        unifi_platform_entity: type[UnifiEntity],
+        descriptions: tuple[UnifiEntityDescription, ...],
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Subscribe to UniFi API handlers and create entities."""
+
+        @callback
+        def async_load_entities(description: UnifiEntityDescription) -> None:
+            """Load and subscribe to UniFi endpoints."""
+            api_handler = description.api_handler_fn(self.api)
+
+            @callback
+            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+                """Add UniFi entity."""
+                async_add_entities(
+                    [
+                        unifi_platform_entity(obj_id, self, description)
+                        for obj_id in obj_ids
+                        if description.allowed_fn(self, obj_id)
+                        if description.supported_fn(self, obj_id)
+                    ]
+                )
+
+            async_add_unifi_entity(list(api_handler))
+
+            @callback
+            def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+                """Create new UniFi entity on event."""
+                async_add_unifi_entity([obj_id])
+
+            api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
+
+        for description in descriptions:
+            async_load_entities(description)
+
+    @callback
     def async_unifi_signalling_callback(self, signal, data):
         """Handle messages back from UniFi library."""
         if signal == WebsocketSignal.CONNECTION_STATE:
-
             if data == WebsocketState.DISCONNECTED and self.available:
                 LOGGER.warning("Lost connection to UniFi Network")
 
@@ -203,14 +243,12 @@ class UniFiController:
                     LOGGER.info("Connected to UniFi Network")
 
         elif signal == WebsocketSignal.DATA and data:
-
             if DATA_EVENT in data:
                 clients_connected = set()
                 devices_connected = set()
                 wireless_clients_connected = False
 
                 for event in data[DATA_EVENT]:
-
                     if event.key in CLIENT_CONNECTED:
                         clients_connected.add(event.mac)
 
@@ -443,12 +481,12 @@ async def get_unifi_controller(
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
-    sslcontext = None
+    ssl_context = False
 
     if verify_ssl := bool(config.get(CONF_VERIFY_SSL)):
         session = aiohttp_client.async_get_clientsession(hass)
         if isinstance(verify_ssl, str):
-            sslcontext = ssl.create_default_context(cafile=verify_ssl)
+            ssl_context = ssl.create_default_context(cafile=verify_ssl)
     else:
         session = aiohttp_client.async_create_clientsession(
             hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True)
@@ -461,7 +499,7 @@ async def get_unifi_controller(
         port=config[CONF_PORT],
         site=config[CONF_SITE_ID],
         websession=session,
-        sslcontext=sslcontext,
+        ssl_context=ssl_context,
     )
 
     try:

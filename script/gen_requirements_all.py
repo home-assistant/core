@@ -71,8 +71,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.48.0
-grpcio-status==1.48.0
+grpcio==1.51.1
+grpcio-status==1.51.1
+grpcio-reflection==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -81,6 +82,9 @@ libcst==0.3.23
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# This is a old unmaintained library and is replaced with faust-cchardet
+cchardet==1000000000.0.0
 
 # To remove reliance on typing
 btlewrap>=0.0.10
@@ -101,7 +105,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.2
+httpcore==0.16.3
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -142,8 +146,21 @@ iso4217!=1.10.20220401
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
 pandas==1.4.3
 
-# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
-uamqp==1.6.0
+# Matplotlib 3.6.2 has issues building wheels on armhf/armv7
+# We need at least >=2.1.0 (tensorflow integration -> pycocotools)
+matplotlib==3.6.1
+
+# pyOpenSSL 23.0.0 or later required to avoid import errors when
+# cryptography 39.0.0 is installed with botocore
+pyOpenSSL>=23.0.0
+
+# uamqp newer versions we currently can't build for armv7/armhf
+# Limit this to Python 3.10, to not block Python 3.11 dev for now
+uamqp==1.6.0;python_version<'3.11'
+
+# faust-cchardet: Ensure we have a version we can build wheels
+# 2.1.18 is the first version that works with our wheel builder
+faust-cchardet>=2.1.18
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

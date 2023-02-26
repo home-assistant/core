@@ -5,6 +5,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, cast
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -297,7 +298,7 @@ class Zone(collection.CollectionEntity):
         self._persons_in_zone: set[str] = set()
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> Zone:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         zone = cls(config)
         zone.editable = True
@@ -305,7 +306,7 @@ class Zone(collection.CollectionEntity):
         return zone
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> Zone:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False

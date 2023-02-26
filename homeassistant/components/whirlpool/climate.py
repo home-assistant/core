@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiohttp import ClientSession
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
@@ -22,9 +23,10 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WhirlpoolData
@@ -71,9 +73,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
-    if not (aircons := whirlpool_data.appliances_manager.aircons):
-        _LOGGER.debug("No aircons found")
-        return
 
     aircons = [
         AirConEntity(
@@ -82,8 +81,9 @@ async def async_setup_entry(
             ac_data["NAME"],
             whirlpool_data.backend_selector,
             whirlpool_data.auth,
+            async_get_clientsession(hass),
         )
-        for ac_data in aircons
+        for ac_data in whirlpool_data.appliances_manager.aircons
     ]
     async_add_entities(aircons, True)
 
@@ -92,9 +92,11 @@ class AirConEntity(ClimateEntity):
     """Representation of an air conditioner."""
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
+    _attr_has_entity_name = True
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
+    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -102,20 +104,38 @@ class AirConEntity(ClimateEntity):
     )
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
-    _attr_temperature_unit = TEMP_CELSIUS
-    _attr_should_poll = False
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hass, said, name, backend_selector: BackendSelector, auth: Auth):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        said: str,
+        name: str | None,
+        backend_selector: BackendSelector,
+        auth: Auth,
+        session: ClientSession,
+    ) -> None:
         """Initialize the entity."""
-        self._aircon = Aircon(backend_selector, auth, said, self.async_write_ha_state)
-
+        self._aircon = Aircon(backend_selector, auth, said, session)
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
-        self._attr_name = name if name is not None else said
         self._attr_unique_id = said
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, said)},
+            name=name if name is not None else said,
+            manufacturer="Whirlpool",
+            model="Sixth Sense",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
+        self._aircon.register_attr_callback(self.async_write_ha_state)
         await self._aircon.connect()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Close Whrilpool Appliance sockets before removing."""
+        self._aircon.unregister_attr_callback(self.async_write_ha_state)
+        await self._aircon.disconnect()
 
     @property
     def available(self) -> bool:

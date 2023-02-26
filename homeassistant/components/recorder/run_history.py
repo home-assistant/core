@@ -64,8 +64,18 @@ class RunHistory:
     @property
     def current(self) -> RecorderRuns:
         """Get the current run."""
-        assert self._current_run_info is not None
-        return self._current_run_info
+        # If start has not been called yet because the recorder is
+        # still starting up we want history to use the current time
+        # as the created time to ensure we can still return results
+        # and we do not try to pull data from the previous run.
+        return self._current_run_info or RecorderRuns(
+            start=self.recording_start, created=dt_util.utcnow()
+        )
+
+    @property
+    def active(self) -> bool:
+        """Return if a run is active."""
+        return self._current_run_info is not None
 
     def get(self, start: datetime) -> RecorderRuns | None:
         """Return the recorder run that started before or at start.
@@ -117,7 +127,8 @@ class RunHistory:
         for run in session.query(RecorderRuns).order_by(RecorderRuns.start.asc()).all():
             session.expunge(run)
             if run_dt := process_timestamp(run.start):
-                timestamp = run_dt.timestamp()
+                # Not sure if this is correct or runs_by_timestamp annotation should be changed
+                timestamp = int(run_dt.timestamp())
                 run_timestamps.append(timestamp)
                 runs_by_timestamp[timestamp] = run
 
@@ -136,6 +147,5 @@ class RunHistory:
 
         Must run in the recorder thread.
         """
-        assert self._current_run_info is not None
-        assert self._current_run_info.end is not None
-        self._current_run_info = None
+        if self._current_run_info:
+            self._current_run_info = None

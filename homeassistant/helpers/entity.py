@@ -12,11 +12,10 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -32,6 +31,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
@@ -40,9 +40,11 @@ from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
-from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
 from .typing import StateType
+
+if TYPE_CHECKING:
+    from .entity_platform import EntityPlatform
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -56,10 +58,17 @@ FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) 
 
 
 @callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up entity sources."""
+    hass.data[DATA_ENTITY_SOURCE] = {}
+
+
+@callback
 @bind_hass
 def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
     """Get the entity sources."""
-    return hass.data.get(DATA_ENTITY_SOURCE, {})
+    _entity_sources: dict[str, dict[str, str]] = hass.data[DATA_ENTITY_SOURCE]
+    return _entity_sources
 
 
 def generate_entity_id(
@@ -177,34 +186,22 @@ class DeviceInfo(TypedDict, total=False):
     via_device: tuple[str, str]
 
 
-class EntityCategory(StrEnum):
-    """Category of an entity.
-
-    An entity with a category will:
-    - Not be exposed to cloud, Alexa, or Google Assistant components
-    - Not be included in indirect service calls to devices or areas
-    """
-
-    # Config: An entity which allows changing the configuration of a device
-    CONFIG = "config"
-
-    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
-    DIAGNOSTIC = "diagnostic"
-
-
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
 
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
-    # Not Added: Not yet added to a platform, polling updates are written to the state machine
+    # Not Added: Not yet added to a platform, polling updates
+    # are written to the state machine.
     NOT_ADDED = auto()
 
-    # Added: Added to a platform, polling updates are written to the state machine
+    # Added: Added to a platform, polling updates
+    # are written to the state machine.
     ADDED = auto()
 
-    # Removed: Removed from a platform, polling updates are not written to the state machine
+    # Removed: Removed from a platform, polling updates
+    # are not written to the state machine.
     REMOVED = auto()
 
 
@@ -223,6 +220,7 @@ class EntityDescription:
     icon: str | None = None
     has_entity_name: bool = False
     name: str | None = None
+    translation_key: str | None = None
     unit_of_measurement: str | None = None
 
 
@@ -290,6 +288,7 @@ class Entity(ABC):
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
+    _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -456,7 +455,10 @@ class Entity(ABC):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         if hasattr(self, "_attr_entity_registry_enabled_default"):
             return self._attr_entity_registry_enabled_default
         if hasattr(self, "entity_description"):
@@ -465,7 +467,10 @@ class Entity(ABC):
 
     @property
     def entity_registry_visible_default(self) -> bool:
-        """Return if the entity should be visible when first added to the entity registry."""
+        """Return if the entity should be visible when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         if hasattr(self, "_attr_entity_registry_visible_default"):
             return self._attr_entity_registry_visible_default
         if hasattr(self, "entity_description"):
@@ -484,6 +489,15 @@ class Entity(ABC):
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
+        return None
+
+    @property
+    def translation_key(self) -> str | None:
+        """Return the translation key to translate the entity's states."""
+        if hasattr(self, "_attr_translation_key"):
+            return self._attr_translation_key
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_key
         return None
 
     # DO NOT OVERWRITE
@@ -568,7 +582,10 @@ class Entity(ABC):
                 self._disabled_reported = True
                 assert self.platform is not None
                 _LOGGER.warning(
-                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration",
+                    (
+                        "Entity %s is incorrectly being triggered for updates while it"
+                        " is disabled. This is a bug in the %s integration"
+                    ),
                     self.entity_id,
                     self.platform.platform_name,
                 )
@@ -756,7 +773,8 @@ class Entity(ABC):
         """Start adding an entity to a platform."""
         if self._platform_state == EntityPlatformState.ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+                f"Entity {self.entity_id} cannot be added a second time to an entity"
+                " platform"
             )
 
         self.hass = hass
@@ -857,7 +875,7 @@ class Entity(ABC):
             else:
                 info["source"] = SOURCE_PLATFORM_CONFIG
 
-            self.hass.data.setdefault(DATA_ENTITY_SOURCE, {})[self.entity_id] = info
+            self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
@@ -932,7 +950,7 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<Entity {self.name}: {self.state}>"
+        return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
     async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Process request batched."""

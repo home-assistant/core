@@ -95,7 +95,9 @@ class ShadeEntity(HDEntity):
             manufacturer=MANUFACTURER,
             model=str(self._shade.raw_data[ATTR_TYPE]),
             via_device=(DOMAIN, self._device_info.serial_number),
-            configuration_url=f"http://{self._device_info.hub_address}/api/shades/{self._shade.id}",
+            configuration_url=(
+                f"http://{self._device_info.hub_address}/api/shades/{self._shade.id}"
+            ),
         )
 
         for shade in self._shade.shade_types:

@@ -8,13 +8,14 @@ from aioesphomeapi import CoverInfo, CoverOperation, CoverState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASSES,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
@@ -54,11 +55,9 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         return flags
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._static_info.device_class not in DEVICE_CLASSES:
-            return None
-        return self._static_info.device_class
+        return try_parse_enum(CoverDeviceClass, self._static_info.device_class)
 
     @property
     def assumed_state(self) -> bool:

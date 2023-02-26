@@ -92,7 +92,7 @@ def full_device(mock_scan, dmap_pin):
             airplay_service(),
         )
     )
-    yield mock_scan
+    return mock_scan
 
 
 @pytest.fixture
@@ -112,7 +112,7 @@ def mrp_device(mock_scan):
             ),
         ]
     )
-    yield mock_scan
+    return mock_scan
 
 
 @pytest.fixture
@@ -132,7 +132,7 @@ def airplay_with_disabled_mrp(mock_scan):
             ),
         )
     )
-    yield mock_scan
+    return mock_scan
 
 
 @pytest.fixture
@@ -152,7 +152,7 @@ def dmap_device(mock_scan):
             ),
         )
     )
-    yield mock_scan
+    return mock_scan
 
 
 @pytest.fixture
@@ -172,7 +172,7 @@ def dmap_device_with_credentials(mock_scan):
             ),
         )
     )
-    yield mock_scan
+    return mock_scan
 
 
 @pytest.fixture
@@ -187,7 +187,7 @@ def airplay_device_with_password(mock_scan):
             ),
         )
     )
-    yield mock_scan
+    return mock_scan
 
 
 @pytest.fixture
@@ -206,4 +206,4 @@ def dmap_with_requirement(mock_scan, pairing_requirement):
             ),
         )
     )
-    yield mock_scan
+    return mock_scan

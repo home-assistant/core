@@ -121,7 +121,7 @@ class IPMAWeather(WeatherEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, location: Location, api: IPMA_API, config):
+    def __init__(self, location: Location, api: IPMA_API, config) -> None:
         """Initialise the platform with a data instance and station name."""
         self._api = api
         self._location_name = config.get(CONF_NAME, location.name)
@@ -158,7 +158,10 @@ class IPMAWeather(WeatherEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id."""
-        return f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
+        return (
+            f"{self._location.station_latitude}, {self._location.station_longitude},"
+            f" {self._mode}"
+        )
 
     @property
     def name(self):

@@ -1,7 +1,7 @@
 """Switch platform for MicroBot."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -11,10 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import DOMAIN
+from .coordinator import MicroBotDataUpdateCoordinator
 from .entity import MicroBotEntity
-
-if TYPE_CHECKING:
-    from . import MicroBotDataUpdateCoordinator
 
 CALIBRATE = "calibrate"
 CALIBRATE_SCHEMA = {

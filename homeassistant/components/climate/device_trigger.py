@@ -174,12 +174,15 @@ async def async_get_trigger_capabilities(
     if trigger_type == "hvac_mode_changed":
         return {
             "extra_fields": vol.Schema(
-                {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+                {
+                    vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
+                    vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                }
             )
         }
 
     if trigger_type == "current_temperature_changed":
-        unit_of_measurement = hass.config.units.temperature_unit
+        unit_of_measurement: str = hass.config.units.temperature_unit
     else:
         unit_of_measurement = PERCENTAGE
 

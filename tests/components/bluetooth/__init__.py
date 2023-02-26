@@ -17,6 +17,7 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     models,
 )
+from homeassistant.components.bluetooth.base_scanner import BaseHaScanner
 from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -219,3 +220,23 @@ class MockBleakClient(BleakClient):
     async def get_services(self, *args, **kwargs):
         """Mock get_services."""
         return []
+
+    async def clear_cache(self, *args, **kwargs):
+        """Mock clear_cache."""
+        return True
+
+
+class FakeScanner(BaseHaScanner):
+    """Fake scanner."""
+
+    @property
+    def discovered_devices(self) -> list[BLEDevice]:
+        """Return a list of discovered devices."""
+        return []
+
+    @property
+    def discovered_devices_and_advertisement_data(
+        self,
+    ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
+        """Return a list of discovered devices and their advertisement data."""
+        return {}

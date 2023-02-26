@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 from pydeconz.models.event import EventType
 from pydeconz.models.light.lock import Lock
@@ -50,7 +50,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzLock(DeconzDevice[Union[DoorLock, Lock]], LockEntity):
+class DeconzLock(DeconzDevice[DoorLock | Lock], LockEntity):
     """Representation of a deCONZ lock."""
 
     TYPE = DOMAIN

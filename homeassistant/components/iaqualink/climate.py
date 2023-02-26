@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -68,8 +68,8 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self.dev.unit == "F":
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def min_temp(self) -> int:

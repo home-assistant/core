@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
@@ -102,7 +102,7 @@ class SwitcherClimateEntity(
         self._attr_min_temp = remote.min_temperature
         self._attr_max_temp = remote.max_temperature
         self._attr_target_temperature_step = 1
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_hvac_modes = [HVACMode.OFF]
         for mode in remote.modes_features:

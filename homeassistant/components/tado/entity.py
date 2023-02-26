@@ -67,7 +67,9 @@ class TadoZoneEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
-            configuration_url=f"https://app.tado.com/en/main/home/zoneV2/{self.zone_id}",
+            configuration_url=(
+                f"https://app.tado.com/en/main/home/zoneV2/{self.zone_id}"
+            ),
             identifiers={(DOMAIN, self._device_zone_id)},
             name=self.zone_name,
             manufacturer=DEFAULT_NAME,

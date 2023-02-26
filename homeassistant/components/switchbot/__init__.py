@@ -19,6 +19,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
+    CONF_ENCRYPTION_KEY,
+    CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
@@ -42,6 +44,17 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
+    SupportedModels.LOCK.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.BLIND_TILT.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -50,6 +63,9 @@ CLASS_BY_DEVICE = {
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
     SupportedModels.BULB.value: switchbot.SwitchbotBulb,
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
+    SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
+    SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
 }
 
 
@@ -61,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
-        # Bleak uses addresses not mac addresses which are are actually
+        # Bleak uses addresses not mac addresses which are actually
         # UUIDs on some platforms (MacOS).
         mac = entry.data[CONF_MAC]
         if "-" not in mac:
@@ -84,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable
-    ) or await switchbot.get_device(address)
+    )
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"
@@ -92,11 +108,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await switchbot.close_stale_connections(ble_device)
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
-    device = cls(
-        device=ble_device,
-        password=entry.data.get(CONF_PASSWORD),
-        retry_count=entry.options[CONF_RETRY_COUNT],
-    )
+    if cls is switchbot.SwitchbotLock:
+        try:
+            device = switchbot.SwitchbotLock(
+                device=ble_device,
+                key_id=entry.data.get(CONF_KEY_ID),
+                encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
+                retry_count=entry.options[CONF_RETRY_COUNT],
+            )
+        except ValueError as error:
+            raise ConfigEntryNotReady(
+                "Invalid encryption configuration provided"
+            ) from error
+    else:
+        device = cls(
+            device=ble_device,
+            password=entry.data.get(CONF_PASSWORD),
+            retry_count=entry.options[CONF_RETRY_COUNT],
+        )
 
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
         hass,

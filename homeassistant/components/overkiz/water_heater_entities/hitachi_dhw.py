@@ -1,7 +1,7 @@
 """Support for Hitachi DHW."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -15,7 +15,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 
 from ..entity import OverkizEntity
@@ -36,7 +36,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_max_temp = 70.0
     _attr_precision = PRECISION_WHOLE
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -63,9 +63,10 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
+
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE, int(temperature)
+            OverkizCommand.SET_CONTROL_DHW_SETTING_TEMPERATURE,
+            int(kwargs[ATTR_TEMPERATURE]),
         )
 
     @property

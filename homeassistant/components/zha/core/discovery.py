@@ -129,7 +129,7 @@ class ProbeEndpoint:
 
             self.probe_single_cluster(component, channel, channel_pool)
 
-        # until we can get rid off registries
+        # until we can get rid of registries
         self.handle_on_off_output_cluster_exception(channel_pool)
 
     @staticmethod
@@ -210,7 +210,8 @@ class ProbeEndpoint:
         for component, ent_n_chan_list in matches.items():
             for entity_and_channel in ent_n_chan_list:
                 if component == cmpt_by_dev_type:
-                    # for well known device types, like thermostats we'll take only 1st class
+                    # for well known device types, like thermostats
+                    # we'll take only 1st class
                     channel_pool.async_new_entity(
                         component,
                         entity_and_channel.entity_class,
@@ -254,7 +255,7 @@ class GroupProbe:
         )
 
     def cleanup(self) -> None:
-        """Clean up on when zha shuts down."""
+        """Clean up on when ZHA shuts down."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)

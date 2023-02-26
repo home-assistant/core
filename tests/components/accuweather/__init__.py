@@ -1,10 +1,13 @@
 """Tests for AccuWeather."""
-import json
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import DOMAIN
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 async def init_integration(
@@ -28,8 +31,8 @@ async def init_integration(
         options=options,
     )
 
-    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
-    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
+    forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
     if unsupported_icon:
         current["WeatherIcon"] = 999

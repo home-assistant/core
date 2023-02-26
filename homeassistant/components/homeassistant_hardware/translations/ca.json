@@ -1,9 +1,0 @@
-{
-    "silabs_multiprotocol_hardware": {
-        "options": {
-            "error": {
-                "unknown": "Error inesperat"
-            }
-        }
-    }
-}

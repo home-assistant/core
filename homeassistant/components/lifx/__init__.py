@@ -143,7 +143,10 @@ class LIFXDiscoveryManager:
                 if migration_complete and migrating_was_in_progress:
                     self.migrating = False
                     _LOGGER.debug(
-                        "LIFX migration complete, switching to normal discovery interval: %s",
+                        (
+                            "LIFX migration complete, switching to normal discovery"
+                            " interval: %s"
+                        ),
                         DISCOVERY_INTERVAL,
                     )
                     self.async_setup_discovery_interval()

@@ -17,6 +17,7 @@ from homeassistant.components.bluetooth.const import (
 from homeassistant.components.bluetooth.scanner import NEED_RESET_ERRORS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import _get_manager, async_setup_with_one_adapter, generate_advertisement_data
@@ -25,8 +26,11 @@ from tests.common import async_fire_time_changed
 
 
 async def test_config_entry_can_be_reloaded_when_stop_raises(
-    hass, caplog, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
     """Test we can reload if stopping the scanner raises."""
     entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
     assert entry.state == ConfigEntryState.LOADED
@@ -42,7 +46,9 @@ async def test_config_entry_can_be_reloaded_when_stop_raises(
     assert "Error stopping scanner" in caplog.text
 
 
-async def test_dbus_socket_missing_in_container(hass, caplog, one_adapter):
+async def test_dbus_socket_missing_in_container(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+) -> None:
     """Test we handle dbus being missing in the container."""
 
     with patch(
@@ -62,7 +68,9 @@ async def test_dbus_socket_missing_in_container(hass, caplog, one_adapter):
     assert "docker" in caplog.text
 
 
-async def test_dbus_socket_missing(hass, caplog, one_adapter):
+async def test_dbus_socket_missing(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+) -> None:
     """Test we handle dbus being missing."""
 
     with patch(
@@ -82,7 +90,9 @@ async def test_dbus_socket_missing(hass, caplog, one_adapter):
     assert "docker" not in caplog.text
 
 
-async def test_dbus_broken_pipe_in_container(hass, caplog, one_adapter):
+async def test_dbus_broken_pipe_in_container(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+) -> None:
     """Test we handle dbus broken pipe in the container."""
 
     with patch(
@@ -103,7 +113,9 @@ async def test_dbus_broken_pipe_in_container(hass, caplog, one_adapter):
     assert "container" in caplog.text
 
 
-async def test_dbus_broken_pipe(hass, caplog, one_adapter):
+async def test_dbus_broken_pipe(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+) -> None:
     """Test we handle dbus broken pipe."""
 
     with patch(
@@ -124,7 +136,9 @@ async def test_dbus_broken_pipe(hass, caplog, one_adapter):
     assert "container" not in caplog.text
 
 
-async def test_invalid_dbus_message(hass, caplog, one_adapter):
+async def test_invalid_dbus_message(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+) -> None:
     """Test we handle invalid dbus message."""
 
     with patch(
@@ -142,7 +156,9 @@ async def test_invalid_dbus_message(hass, caplog, one_adapter):
 
 
 @pytest.mark.parametrize("error", NEED_RESET_ERRORS)
-async def test_adapter_needs_reset_at_start(hass, caplog, one_adapter, error):
+async def test_adapter_needs_reset_at_start(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None, error: str
+) -> None:
     """Test we cycle the adapter when it needs a restart."""
 
     with patch(
@@ -162,7 +178,9 @@ async def test_adapter_needs_reset_at_start(hass, caplog, one_adapter, error):
     await hass.async_block_till_done()
 
 
-async def test_recovery_from_dbus_restart(hass, one_adapter):
+async def test_recovery_from_dbus_restart(
+    hass: HomeAssistant, one_adapter: None
+) -> None:
     """Test we can recover when DBus gets restarted out from under us."""
 
     called_start = 0
@@ -204,7 +222,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic + 10,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -214,7 +232,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
 
     # Fire a callback to reset the timer
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic,
     ):
         _callback(
@@ -224,7 +242,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic + 20,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -234,7 +252,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
 
     # We hit the timer, so we restart the scanner
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT + 20,
     ):
         async_fire_time_changed(
@@ -245,7 +263,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     assert called_start == 2
 
 
-async def test_adapter_recovery(hass, one_adapter):
+async def test_adapter_recovery(hass: HomeAssistant, one_adapter: None) -> None:
     """Test we can recover when the adapter stops responding."""
 
     called_start = 0
@@ -279,7 +297,7 @@ async def test_adapter_recovery(hass, one_adapter):
     start_time_monotonic = time.monotonic()
 
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic,
     ), patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
@@ -294,7 +312,7 @@ async def test_adapter_recovery(hass, one_adapter):
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic + 10,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -304,7 +322,7 @@ async def test_adapter_recovery(hass, one_adapter):
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic + 20,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -314,7 +332,7 @@ async def test_adapter_recovery(hass, one_adapter):
 
     # We hit the timer with no detections, so we reset the adapter and restart the scanner
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
@@ -328,7 +346,9 @@ async def test_adapter_recovery(hass, one_adapter):
     assert called_start == 2
 
 
-async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
+async def test_adapter_scanner_fails_to_start_first_time(
+    hass: HomeAssistant, one_adapter: None
+) -> None:
     """Test we can recover when the adapter stops responding and the first recovery fails."""
 
     called_start = 0
@@ -366,7 +386,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
     start_time_monotonic = time.monotonic()
 
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic,
     ), patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
@@ -381,7 +401,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic + 10,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -391,7 +411,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic + 20,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -401,7 +421,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
 
     # We hit the timer with no detections, so we reset the adapter and restart the scanner
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
@@ -417,7 +437,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
     # We hit the timer again the previous start call failed, make sure
     # we try again
     with patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
@@ -432,8 +452,8 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
 
 
 async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
-    hass, one_adapter, caplog
-):
+    hass: HomeAssistant, one_adapter: None, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we can recover the adapter at startup and we wait for Dbus to init."""
 
     called_start = 0
@@ -474,7 +494,7 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
         "homeassistant.components.bluetooth.scanner.ADAPTER_INIT_TIME",
         0,
     ), patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic,
     ), patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
@@ -490,7 +510,9 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
     assert "Waiting for adapter to initialize" in caplog.text
 
 
-async def test_restart_takes_longer_than_watchdog_time(hass, one_adapter, caplog):
+async def test_restart_takes_longer_than_watchdog_time(
+    hass: HomeAssistant, one_adapter: None, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we do not try to recover the adapter again if the restart is still in progress."""
 
     release_start_event = asyncio.Event()
@@ -523,7 +545,7 @@ async def test_restart_takes_longer_than_watchdog_time(hass, one_adapter, caplog
         "homeassistant.components.bluetooth.scanner.ADAPTER_INIT_TIME",
         0,
     ), patch(
-        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=start_time_monotonic,
     ), patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
@@ -538,7 +560,7 @@ async def test_restart_takes_longer_than_watchdog_time(hass, one_adapter, caplog
         # Now force a recover adapter 2x
         for _ in range(2):
             with patch(
-                "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+                "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
                 return_value=start_time_monotonic
                 + SCANNER_WATCHDOG_TIMEOUT
                 + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
