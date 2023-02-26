@@ -177,6 +177,18 @@ class NoPresenceStatusResetButton(
     _attr_entity_category = EntityCategory.CONFIG
 
 
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraSelftestButton(ZHAAttributeButton, id_suffix="selftest"):
+    """Defines a ZHA self-test button for Aqara smoke sensors."""
+
+    _attribute_name = "selftest"
+    _attr_name = "Self-test"
+    _attribute_value = True
+    _attr_entity_category = EntityCategory.CONFIG
+
+
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
     """Defines a feed button for the aqara c1 pet feeder."""

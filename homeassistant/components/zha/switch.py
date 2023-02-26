@@ -506,3 +506,59 @@ class AqaraThermostatChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lo
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraHeartbeatIndicator(
+    ZHASwitchConfigurationEntity, id_suffix="heartbeat_indicator"
+):
+    """Representation of a heartbeat indicator configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "heartbeat_indicator"
+    _attr_name = "Heartbeat indicator"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraLinkageAlarm(ZHASwitchConfigurationEntity, id_suffix="linkage_alarm"):
+    """Representation of a linkage alarm configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "linkage_alarm"
+    _attr_name = "Linkage alarm"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraBuzzerManualMute(
+    ZHASwitchConfigurationEntity, id_suffix="buzzer_manual_mute"
+):
+    """Representation of a buzzer manual mute configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "buzzer_manual_mute"
+    _attr_name = "Buzzer manual mute"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraBuzzerManualAlarm(
+    ZHASwitchConfigurationEntity, id_suffix="buzzer_manual_alarm"
+):
+    """Representation of a buzzer manual mute configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "buzzer_manual_alarm"
+    _attr_name = "Buzzer manual alarm"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraSelftest(ZHASwitchConfigurationEntity, id_suffix="selftest"):
+    """Representation of a self-test configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "selftest"
+    _attr_name = "Self-test"
