@@ -19,10 +19,10 @@ class FreeboxHomeBaseClass(Entity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        hass: HomeAssistant | None,
         router: FreeboxRouter,
         node: dict[str, Any],
-        sub_node=None,
+        sub_node: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a Freebox entity."""
         self._hass = hass
@@ -35,7 +35,7 @@ class FreeboxHomeBaseClass(Entity):
         self._unique_id = f"{self._router.mac}-node_{self._id}"
 
         if sub_node is not None:
-            self._name = f"{self._name} {sub_node["label"].strip()}"
+            self._name += " " + sub_node["label"].strip()
             self._unique_id += "-" + sub_node["name"].strip()
 
         self._available = True
@@ -104,14 +104,17 @@ class FreeboxHomeBaseClass(Entity):
             )
         self.async_write_ha_state()
 
-    async def set_home_endpoint_value(self, command_id, value={"value": None}):
+    async def set_home_endpoint_value(self, command_id, value=None):
         """Set Home endpoint value."""
+        if value is None:
+            value = {"value": None}
         if command_id == VALUE_NOT_SET:
             _LOGGER.error(
                 "Unable to SET a value through the API. Command is VALUE_NOT_SET"
             )
             return False
         await self._router.api.home.set_home_endpoint_value(self._id, command_id, value)
+        return True
 
     async def get_home_endpoint_value(self, command_id):
         """Get Home endpoint value."""
