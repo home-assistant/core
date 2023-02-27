@@ -86,14 +86,6 @@ async def async_setup_entry(
 
     async_add_entities(sensors, update_before_add=True)
 
-    # register service
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        "reboot",
-        {},
-        "reboot",
-    )
-
 
 class ObihaiServiceSensors(SensorEntity):
     """Get the status of each Obihai Lines."""
@@ -163,10 +155,6 @@ class ObihaiServiceSensors(SensorEntity):
                 return "mdi:restart-off"
             return "mdi:restart-alert"
         return "mdi:phone"
-
-    def reboot(self) -> None:
-        """Reboot the Obihai."""
-        self._pyobihai.call_reboot()
 
     def update(self) -> None:
         """Update the sensor."""
