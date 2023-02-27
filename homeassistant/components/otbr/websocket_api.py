@@ -83,7 +83,7 @@ async def websocket_create_network(
             python_otbr_api.OperationalDataSet(network_name="home-assistant")
         )
     except HomeAssistantError as exc:
-        connection.send_error(msg["id"], "create_active_dataset", str(exc))
+        connection.send_error(msg["id"], "create_active_dataset_failed", str(exc))
         return
 
     try:
