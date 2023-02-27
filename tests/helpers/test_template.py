@@ -1130,12 +1130,6 @@ def test_base64_encode(hass: HomeAssistant) -> None:
         template.Template('{{ "homeassistant" | base64_encode }}', hass).async_render()
         == "aG9tZWFzc2lzdGFudA=="
     )
-    assert (
-        template.Template(
-            '{{ "homeassistant" | base64_encode(raw=True) }}', hass
-        ).async_render()
-        == b"aG9tZWFzc2lzdGFudA=="
-    )
 
 
 def test_base64_decode(hass: HomeAssistant) -> None:
@@ -1148,7 +1142,7 @@ def test_base64_decode(hass: HomeAssistant) -> None:
     )
     assert (
         template.Template(
-            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode(raw=True) }}', hass
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode("raw") }}', hass
         ).async_render()
         == b"homeassistant"
     )
