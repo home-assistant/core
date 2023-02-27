@@ -6978,7 +6978,7 @@
       "supported": true,
       "type": "EXTERNAL"
     },
-"3014F711A000DIN_RAIL_DIMMER3": {
+    "3014F711A000DIN_RAIL_DIMMER3": {
       "availableFirmwareVersion": "1.2.0",
       "connectionType": "HMIP_RF",
       "firmwareVersion": "1.2.0",
