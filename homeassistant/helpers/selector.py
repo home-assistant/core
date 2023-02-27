@@ -84,7 +84,7 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Integration that provided the entity
         vol.Optional("integration"): str,
         # Domain the entity belongs to
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
         # Device class of the entity
         vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
     }
