@@ -846,12 +846,14 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
 @pytest.fixture
 async def mqtt_mock(
     hass: HomeAssistant,
+    mock_hass_config: None,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient, None]:
     """Fixture to mock MQTT component."""
-    return await mqtt_mock_entry_no_yaml_config()
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        return await mqtt_mock_entry_no_yaml_config()
 
 
 @asynccontextmanager

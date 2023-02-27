@@ -13,16 +13,23 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
-        """Set up because the user has border routers."""
-        await self._async_handle_discovery_without_unique_id()
-        return self.async_create_entry(title="Thread", data={})
-
     async def async_step_import(
         self, import_data: dict[str, str] | None = None
     ) -> FlowResult:
         """Set up by import from async_setup."""
+        await self._async_handle_discovery_without_unique_id()
+        return self.async_create_entry(title="Thread", data={})
+
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Set up by import from async_setup."""
+        await self._async_handle_discovery_without_unique_id()
+        return self.async_create_entry(title="Thread", data={})
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Set up because the user has border routers."""
         await self._async_handle_discovery_without_unique_id()
         return self.async_create_entry(title="Thread", data={})

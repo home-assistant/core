@@ -1,7 +1,7 @@
 """The Nibe Heat Pump sensors."""
 from __future__ import annotations
 
-from nibe.coil import Coil
+from nibe.coil import Coil, CoilData
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -146,5 +146,5 @@ class Sensor(CoilEntity, SensorEntity):
             self._attr_native_unit_of_measurement = coil.unit
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def _async_read_coil(self, coil: Coil):
-        self._attr_native_value = coil.value
+    def _async_read_coil(self, data: CoilData):
+        self._attr_native_value = data.value
