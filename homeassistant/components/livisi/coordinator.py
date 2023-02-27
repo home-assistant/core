@@ -85,7 +85,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     async def async_get_pss_state(self, capability: str) -> bool | None:
         """Set the PSS state."""
-        response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
         if response is None:
@@ -95,25 +95,31 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     async def async_get_vrcc_target_temperature(self, capability: str) -> float | None:
         """Get the target temperature of the climate device."""
-        response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
+        if response is None:
+            return None
         if self.is_avatar:
             return response["setpointTemperature"]["value"]
         return response["pointTemperature"]["value"]
 
     async def async_get_vrcc_temperature(self, capability: str) -> float | None:
         """Get the temperature of the climate device."""
-        response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
+        if response is None:
+            return None
         return response["temperature"]["value"]
 
     async def async_get_vrcc_humidity(self, capability: str) -> int | None:
         """Get the humidity of the climate device."""
-        response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
+        response: dict[str, Any] | None = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
+        if response is None:
+            return None
         return response["humidity"]["value"]
 
     async def async_set_all_rooms(self) -> None:
