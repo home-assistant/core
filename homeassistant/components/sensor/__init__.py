@@ -207,8 +207,8 @@ class SensorEntity(Entity):
 
         # If the sensor has 'unit_of_measurement' in its sensor options, the user has
         # overridden the unit.
-        # If the sensor has 'sensor.private' in its entity options, it was added after
-        # automatic unit conversion was implemented.
+        # If the sensor has 'sensor.private' in its entity options, it already has a
+        # suggested_unit.
         registry_unit = registry_entry.unit_of_measurement
         if (
             (
@@ -416,7 +416,7 @@ class SensorEntity(Entity):
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
-        if not self.registry_entry and self.suggested_unit_of_measurement:
+        if not self.unique_id and self.suggested_unit_of_measurement:
             return self.suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies

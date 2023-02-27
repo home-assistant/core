@@ -1154,13 +1154,17 @@ async def test_unit_conversion_priority_suggested_unit_change(
     platform.init(empty=True)
 
     # Pre-register entities
-    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", unit_of_measurement=original_unit
+    )
     entity_registry.async_update_entity_options(
         entry.entity_id,
         "sensor.private",
         {"suggested_unit_of_measurement": original_unit},
     )
-    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique_2")
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique_2", unit_of_measurement=original_unit
+    )
     entity_registry.async_update_entity_options(
         entry.entity_id,
         "sensor.private",
@@ -1198,6 +1202,105 @@ async def test_unit_conversion_priority_suggested_unit_change(
     state = hass.states.get(entity1.entity_id)
     assert float(state.state) == pytest.approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
+
+
+@pytest.mark.parametrize(
+    (
+        "native_unit_1",
+        "native_unit_2",
+        "suggested_unit",
+        "native_value",
+        "original_value",
+        "device_class",
+    ),
+    [
+        # Distance
+        (
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.METERS,
+            UnitOfLength.KILOMETERS,
+            1000000,
+            1000,
+            SensorDeviceClass.DISTANCE,
+        ),
+        # Energy
+        (
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            1000000,
+            1000,
+            SensorDeviceClass.ENERGY,
+        ),
+    ],
+)
+async def test_unit_conversion_priority_suggested_unit_change_2(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    native_unit_1,
+    native_unit_2,
+    suggested_unit,
+    native_value,
+    original_value,
+    device_class,
+) -> None:
+    """Test priority of unit conversion."""
+
+    hass.config.units = METRIC_SYSTEM
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    # Pre-register entities
+    entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", unit_of_measurement=native_unit_1
+    )
+    entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique_2", unit_of_measurement=native_unit_1
+    )
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit_2,
+        native_value=str(native_value),
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit_2,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow unit in entity registry
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit_1
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": native_unit_1},
+    }
+
+    # Registered entity -> Follow unit in entity registry
+    state = hass.states.get(entity1.entity_id)
+    assert float(state.state) == pytest.approx(float(original_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit_1
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": native_unit_1},
+    }
 
 
 @pytest.mark.parametrize(
