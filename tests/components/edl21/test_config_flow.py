@@ -67,7 +67,8 @@ async def test_create_entry_by_import(hass: HomeAssistant) -> None:
     assert result["data"][CONF_NAME] == VALID_LEGACY_CONFIG[CONF_NAME]
     assert result["data"][CONF_SERIAL_PORT] == VALID_LEGACY_CONFIG[CONF_SERIAL_PORT]
 
-    # Test the import step with an empty string as name (the name is optional in the old schema and defaults to "")
+    # Test the import step with an empty string as name
+    # (the name is optional in the old schema and defaults to "")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
