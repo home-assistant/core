@@ -52,6 +52,8 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
 
