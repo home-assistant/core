@@ -27,7 +27,6 @@ from .const import (
     ATTR_API_CAT_DESCRIPTION,
     ATTR_API_CAT_LEVEL,
     ATTR_API_CATEGORY,
-    ATTR_API_DATE_FORECAST,
     ATTR_API_PM25,
     ATTR_API_POLLUTANT,
     ATTR_API_REPORT_DATE,
@@ -39,8 +38,6 @@ from .const import (
     CONF_FORECAST,
     DOMAIN,
     SENSOR_AQI_ATTR_FORECAST,
-    SENSOR_AQI_ATTR_FORECAST_DATE,
-    SENSOR_AQI_ATTR_FORECAST_LEVEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -183,15 +180,6 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
             if not forecast:
                 raise UpdateFailed("No forecast data was returned from AirNow")
 
-            data[SENSOR_AQI_ATTR_FORECAST] = [
-                {
-                    SENSOR_AQI_ATTR_FORECAST_DATE: fc[ATTR_API_DATE_FORECAST].strip(),
-                    ATTR_API_AQI: fc[ATTR_API_AQI],
-                    SENSOR_AQI_ATTR_FORECAST_LEVEL: fc[ATTR_API_CATEGORY][
-                        ATTR_API_CAT_LEVEL
-                    ],
-                }
-                for fc in forecast
-            ]
+            data[SENSOR_AQI_ATTR_FORECAST] = forecast
 
         return data

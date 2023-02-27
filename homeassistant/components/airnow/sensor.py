@@ -20,11 +20,16 @@ from .const import (
     ATTR_API_AQI,
     ATTR_API_AQI_DESCRIPTION,
     ATTR_API_AQI_LEVEL,
+    ATTR_API_CAT_LEVEL,
+    ATTR_API_CATEGORY,
+    ATTR_API_DATE_FORECAST,
     ATTR_API_O3,
     ATTR_API_PM25,
     DOMAIN,
     SENSOR_AQI_ATTR_DESCR,
     SENSOR_AQI_ATTR_FORECAST,
+    SENSOR_AQI_ATTR_FORECAST_DATE,
+    SENSOR_AQI_ATTR_FORECAST_LEVEL,
     SENSOR_AQI_ATTR_LEVEL,
 )
 
@@ -111,8 +116,18 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
                 SENSOR_AQI_ATTR_FORECAST in self.coordinator.data
                 and self.coordinator.data[SENSOR_AQI_ATTR_FORECAST]
             ):
-                self._attrs[SENSOR_AQI_ATTR_FORECAST] = self.coordinator.data[
-                    SENSOR_AQI_ATTR_FORECAST
+                forecast = self.coordinator.data[SENSOR_AQI_ATTR_FORECAST]
+                self._attrs[SENSOR_AQI_ATTR_FORECAST] = [
+                    {
+                        SENSOR_AQI_ATTR_FORECAST_DATE: fc[
+                            ATTR_API_DATE_FORECAST
+                        ].strip(),
+                        ATTR_API_AQI: fc[ATTR_API_AQI],
+                        SENSOR_AQI_ATTR_FORECAST_LEVEL: fc[ATTR_API_CATEGORY][
+                            ATTR_API_CAT_LEVEL
+                        ],
+                    }
+                    for fc in forecast
                 ]
 
         return self._attrs
