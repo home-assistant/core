@@ -7,13 +7,12 @@ from typing import Any
 
 from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi, errors as livisi_errors
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
+from .const import CONF_HOST, CONF_PASSWORD, DATA_SCHEMA, DOMAIN, LOGGER
 
 
 class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -23,24 +22,17 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Create the configuration file."""
-        self.aio_livisi: AioLivisi = None
-        self.data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
-        )
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=self.data_schema)
+            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
         errors = {}
         try:
-            await self._login(user_input)
+            aio_livisi = await self._login(user_input)
         except livisi_errors.WrongCredentialException:
             errors["base"] = "wrong_password"
         except livisi_errors.ShcUnreachableException:
@@ -50,12 +42,12 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             controller_info: dict[str, Any] = {}
             with suppress(ClientConnectorError):
-                controller_info = await self.aio_livisi.async_get_controller()
+                controller_info = await aio_livisi.async_get_controller()
             if controller_info:
                 return await self.create_entity(user_input, controller_info)
 
         return self.async_show_form(
-            step_id="user", data_schema=self.data_schema, errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
@@ -72,20 +64,21 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=self.data_schema,
+                data_schema=DATA_SCHEMA,
             )
         return await self.async_step_user(user_input)
 
-    async def _login(self, user_input: dict[str, str]) -> None:
+    async def _login(self, user_input: dict[str, str]) -> AioLivisi:
         """Login into Livisi Smart Home."""
         web_session = aiohttp_client.async_get_clientsession(self.hass)
-        self.aio_livisi = AioLivisi(web_session)
+        aio_livisi = AioLivisi(web_session)
         livisi_connection_data = {
             "ip_address": user_input[CONF_HOST],
             "password": user_input[CONF_PASSWORD],
         }
 
-        await self.aio_livisi.async_set_token(livisi_connection_data)
+        await aio_livisi.async_set_token(livisi_connection_data)
+        return aio_livisi
 
     async def create_entity(
         self, user_input: dict[str, str], controller_info: dict[str, Any]
@@ -93,7 +86,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Create LIVISI entity."""
         if self.reauth_entry:
             self.hass.config_entries.async_update_entry(
-                self.reauth_entry, data=controller_info
+                self.reauth_entry, data=user_input
             )
             await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
