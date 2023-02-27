@@ -53,10 +53,11 @@ class ObihaiConnection:
 
     def update(self) -> bool:
         """Validate connection and retrieve a list of sensors."""
-        self.pyobihai = get_pyobihai(self.host, self.username, self.password)
+        if not self.pyobihai:
+            self.pyobihai = get_pyobihai(self.host, self.username, self.password)
 
-        if not self.pyobihai.check_account():
-            return False
+            if not self.pyobihai.check_account():
+                return False
 
         self.serial = self.pyobihai.get_device_serial()
         self.services = self.pyobihai.get_state()
