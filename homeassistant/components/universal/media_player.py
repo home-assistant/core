@@ -189,18 +189,18 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         @callback
         def _async_on_template_update(event, updates):
             """Update ha state when dependencies update."""
-            data = updates.pop()
-            template = data.template
-            result = data.result
+            for data in updates:
+                template = data.template
+                result = data.result
 
-            if template == self._state_template:
-                self._state_template_result = (
-                    None if isinstance(result, TemplateError) else result
-                )
-            if template == self._active_children_template:
-                self._active_children_template_result = (
-                    None if isinstance(result, TemplateError) else result
-                )
+                if template == self._state_template:
+                    self._state_template_result = (
+                        None if isinstance(result, TemplateError) else result
+                    )
+                if template == self._active_children_template:
+                    self._active_children_template_result = (
+                        None if isinstance(result, TemplateError) else result
+                    )
 
             if event:
                 self.async_set_context(event.context)
