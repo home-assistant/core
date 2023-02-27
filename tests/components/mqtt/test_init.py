@@ -1273,8 +1273,8 @@ async def test_subscribe_same_topic(
 
     await mqtt.async_subscribe(hass, "test/state", _callback_a, qos=0)
     async_fire_mqtt_message(
-        hass, "test/state", "online"
-    )  # Simulate a (retained) message replaying
+        hass, "test/state", "online", qos=0, retain=False
+    )  # Simulate a non retained message after the first subscription
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(calls_a) == 1
@@ -1286,15 +1286,98 @@ async def test_subscribe_same_topic(
     await hass.async_block_till_done()
     await mqtt.async_subscribe(hass, "test/state", _callback_b, qos=1)
     async_fire_mqtt_message(
-        hass, "test/state", "online"
-    )  # Simulate a (retained) message replaying
+        hass, "test/state", "online", qos=0, retain=False
+    )  # Simulate an other non retained message after the second subscription
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
+    # Both subscriptions should receive updates
     assert len(calls_a) == 1
     assert len(calls_b) == 1
     mqtt_client_mock.subscribe.assert_called()
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_replaying_payload_same_topic(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+) -> None:
+    """Test replaying retained messages.
+
+    When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
+    for it to resend any retained messages for new subscriptions.
+    Retained messages must only be replayed for new subscriptions, except
+    when the MQTT client is reconnection.
+    """
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    calls_a: list[ReceiveMessage] = []
+    calls_b: list[ReceiveMessage] = []
+
+    def _callback_a(msg: ReceiveMessage) -> None:
+        calls_a.append(msg)
+
+    def _callback_b(msg: ReceiveMessage) -> None:
+        calls_b.append(msg)
+
+    await mqtt.async_subscribe(hass, "test/state", _callback_a)
+    async_fire_mqtt_message(
+        hass, "test/state", "online", qos=0, retain=True
+    )  # Simulate a (retained) message played back
+    await hass.async_block_till_done()
+    assert len(calls_a) == 1
+    mqtt_client_mock.subscribe.assert_called()
+    calls_a = []
+    mqtt_client_mock.reset_mock()
+
+    await mqtt.async_subscribe(hass, "test/state", _callback_b)
+    async_fire_mqtt_message(
+        hass, "test/state", "online", qos=0, retain=True
+    )  # Simulate a (retained) message played back on new subscriptions
+    await hass.async_block_till_done()
+    # The retained message playback should only be processed by the new subscription
+    # The existing subscription already got the latest update,
+    # hence the existing subscription should not receive the replayed payload.
+    assert len(calls_a) == 0
+    assert len(calls_b) == 1
+    mqtt_client_mock.subscribe.assert_called()
+
+    calls_a = []
+    calls_b = []
+    mqtt_client_mock.reset_mock()
+
+    async_fire_mqtt_message(
+        hass, "test/state", "online", qos=0, retain=False
+    )  # Simulate new message played back on new subscriptions
+    # After connecting the retain f.lag will not be set, even if the
+    # payload published was retained, we cannot see that
+    await hass.async_block_till_done()
+    assert len(calls_a) == 1
+    assert len(calls_b) == 1
+
+    # Now simulate the broker was disconnected shortly
+    calls_a = []
+    calls_b = []
+    mqtt_client_mock.reset_mock()
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
+        mqtt_client_mock.on_connect(None, None, None, 0)
+        await hass.async_block_till_done()
+    mqtt_client_mock.subscribe.assert_called()
+    async_fire_mqtt_message(
+        hass, "test/state", "online", qos=0, retain=True
+    )  # Simulate a (retained) message played back after reconnecting
+    await hass.async_block_till_done()
+    # Both subscriptions should replay
+    assert len(calls_a) == 1
+    assert len(calls_b) == 1
 
 
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
