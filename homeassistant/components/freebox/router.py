@@ -237,6 +237,6 @@ class FreeboxRouter:
         return self._api.wifi
 
     @property
-    def api(self) -> Freepybox:
-        """Return the call."""
-        return self._api
+    def home(self) -> Home:
+        """Return the home."""
+        return self._api.home
