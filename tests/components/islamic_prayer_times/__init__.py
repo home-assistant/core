@@ -1,9 +1,10 @@
 """Tests for the islamic_prayer_times component."""
-import re
 from datetime import datetime
+import re
+
+from prayer_times_calculator import PrayerTimesCalculator
 
 import homeassistant.util.dt as dt_util
-from prayer_times_calculator import PrayerTimesCalculator
 
 REQUEST_URL = re.compile(PrayerTimesCalculator.API_URL + ".+")
 
