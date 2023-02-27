@@ -16,7 +16,7 @@ class EnvisalinkDevice(Entity):
         self._state_update_key = state_update_key
 
     async def async_added_to_hass(self) -> None:
-        """Register this entity to receive state change updates from the underly device."""
+        """Register this entity to receive state change updates from the underlying device."""
 
         def state_updated():
             LOGGER.debug("state_updated for '%s'", self._attr_name)
@@ -37,7 +37,7 @@ class EnvisalinkDevice(Entity):
             manufacturer="eyezon",
             model=(
                 f"Envisalink {self._controller.controller.envisalink_version}: "
-                "{self._controller.controller.panel_type}"
+                f"{self._controller.controller.panel_type}"
             ),
             sw_version=self._controller.controller.firmware_version,
             hw_version=self._controller.controller.envisalink_version,

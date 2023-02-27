@@ -300,12 +300,12 @@ async def _validate_input(
 
     max_zones = EnvisalinkAlarmPanel.get_max_zones_by_version(panel.envisalink_version)
 
-    zone_set = data.get(CONF_ZONE_SET)
-    partition_set = data.get(CONF_PARTITION_SET)
-    if not parse_range_string(str(zone_set), 1, max_zones):
+    zone_set: str = data.get(CONF_ZONE_SET, "")
+    partition_set: str = data.get(CONF_PARTITION_SET, "")
+    if not parse_range_string(zone_set, 1, max_zones):
         raise PanelError("invalid_zone_spec")
     if not parse_range_string(
-        str(partition_set), 1, EnvisalinkAlarmPanel.get_max_partitions()
+        partition_set, 1, EnvisalinkAlarmPanel.get_max_partitions()
     ):
         raise PanelError("invalid_partition_spec")
 

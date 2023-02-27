@@ -27,9 +27,9 @@ async def async_setup_entry(
     """Set up the alarm keypad entity based on a config entry."""
     controller = hass.data[DOMAIN][entry.entry_id]
 
-    partition_spec = entry.data.get(CONF_PARTITION_SET)
+    partition_spec: str = entry.data.get(CONF_PARTITION_SET, "")
     partition_set = parse_range_string(
-        str(partition_spec), min_val=1, max_val=controller.controller.max_partitions
+        partition_spec, min_val=1, max_val=controller.controller.max_partitions
     )
     partition_info = entry.data.get(CONF_PARTITIONS)
     if partition_set is not None:

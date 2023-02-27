@@ -33,9 +33,9 @@ async def async_setup_entry(
     """Set up the zone binary sensors based on a config entry."""
     controller = hass.data[DOMAIN][entry.entry_id]
 
-    zone_spec = entry.data.get(CONF_ZONE_SET)
+    zone_spec: str = entry.data.get(CONF_ZONE_SET, "")
     zone_set = parse_range_string(
-        str(zone_spec), min_val=1, max_val=controller.controller.max_zones
+        zone_spec, min_val=1, max_val=controller.controller.max_zones
     )
 
     zone_info = entry.data.get(CONF_ZONES)

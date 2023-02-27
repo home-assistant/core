@@ -64,9 +64,9 @@ async def async_setup_entry(
     code = entry.data.get(CONF_CODE)
     panic_type = entry.options.get(CONF_PANIC)
     partition_info = entry.data.get(CONF_PARTITIONS)
-    partition_spec = entry.data.get(CONF_PARTITION_SET, DEFAULT_PARTITION_SET)
+    partition_spec: str = entry.data.get(CONF_PARTITION_SET, DEFAULT_PARTITION_SET)
     partition_set = parse_range_string(
-        str(partition_spec), min_val=1, max_val=controller.controller.max_partitions
+        partition_spec, min_val=1, max_val=controller.controller.max_partitions
     )
 
     arm_night_mode = None
