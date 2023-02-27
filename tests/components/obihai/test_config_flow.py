@@ -71,3 +71,19 @@ async def test_yaml_import(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert "errors" not in result
+
+
+async def test_yaml_import_fail(hass: HomeAssistant) -> None:
+    """Test we get the YAML imported."""
+    with patch(
+        "homeassistant.components.obihai.config_flow.validate_auth", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert "errors" not in result
