@@ -35,7 +35,6 @@ async def test_islamic_prayer_times_sensors(
         "new_prayer_times.json", "islamic_prayer_times"
     )
     new_prayer_times = json.loads(new_prayer_times_json)
-    print(new_prayer_times)
 
     requests_mock.register_uri(
         "GET",
