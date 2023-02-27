@@ -74,8 +74,6 @@ class FreeboxRouter:
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_devices: dict[str, Any] = {}
-        self._unsub_dispatcher = None
-        self._option_listener = None
         self.listeners: list[dict[str, Any]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
