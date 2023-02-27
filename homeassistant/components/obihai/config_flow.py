@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .connectivity import validate_auth
@@ -28,24 +27,6 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_credentials(
-    hass: HomeAssistant, user_input: dict[str, Any]
-) -> dict[str, str]:
-    """Manage Obihai options."""
-    errors = {}
-    result = await hass.async_add_executor_job(
-        validate_auth,
-        user_input[CONF_HOST],
-        user_input[CONF_USERNAME],
-        user_input[CONF_PASSWORD],
-    )
-
-    if not result:
-        errors["base"] = "cannot_connect"
-
-    return errors
-
-
 class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Obihai."""
 
@@ -59,8 +40,14 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
-            if not (errors := await async_validate_credentials(self.hass, user_input)):
+            if not await self.hass.async_add_executor_job(
+                validate_auth,
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            ):
+                errors["base"] = "cannot_connect"
+            else:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data=user_input,
