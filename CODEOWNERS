@@ -825,7 +825,8 @@ build.json @home-assistant/supervisor
 /tests/components/nws/ @MatthewFlamm @kamiyo
 /homeassistant/components/nzbget/ @chriscla
 /tests/components/nzbget/ @chriscla
-/homeassistant/components/obihai/ @dshokouhi
+/homeassistant/components/obihai/ @dshokouhi @ejpenney
+/tests/components/obihai/ @dshokouhi @ejpenney
 /homeassistant/components/octoprint/ @rfleming71
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480

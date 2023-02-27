@@ -1,13 +1,7 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
-  "after_dependencies": [
-    "onboarding",
-    "usb",
-    "zeroconf",
-    "homeassistant_hardware",
-    "homeassistant_yellow"
-  ],
+  "after_dependencies": ["onboarding", "usb"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
   "config_flow": true,
   "dependencies": ["file_upload"],
@@ -26,15 +20,15 @@
     "zigpy_znp"
   ],
   "requirements": [
-    "bellows==0.34.7",
+    "bellows==0.34.9",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
     "zha-quirks==0.0.93",
     "zigpy-deconz==0.19.2",
-    "zigpy==0.53.0",
+    "zigpy==0.53.2",
     "zigpy-xbee==0.16.2",
     "zigpy-zigate==0.10.3",
-    "zigpy-znp==0.9.2"
+    "zigpy-znp==0.9.3"
   ],
   "usb": [
     {
