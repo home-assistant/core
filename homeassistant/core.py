@@ -499,11 +499,8 @@ class HomeAssistant:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
-        # Hold a reference to self._tasks since
-        # we will swap it out in async_stop
-        tasks = self._tasks
-        tasks.add(task)
-        task.add_done_callback(tasks.remove)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
 
@@ -524,11 +521,8 @@ class HomeAssistant:
         target: target to call.
         """
         task = self.loop.create_task(target)
-        # Hold a reference to self._tasks since
-        # we will swap it out in async_stop
-        tasks = self._tasks
-        tasks.add(task)
-        task.add_done_callback(tasks.remove)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
         return task
 
     @callback
@@ -556,11 +550,8 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-        # Hold a reference to self._tasks since
-        # we will swap it out in async_stop
-        tasks = self._tasks
-        tasks.add(task)
-        task.add_done_callback(tasks.remove)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
 
