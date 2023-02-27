@@ -89,6 +89,13 @@ def create_entity(
 class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntity):
     """Represents the Livisi Climate."""
 
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_target_temperature_high = MAX_TEMPERATURE
+    _attr_target_temperature_low = MIN_TEMPERATURE
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -109,12 +116,6 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
         self._humidity_capability = humidity_capability
         self.aio_livisi = coordinator.aiolivisi
         self._attr_available = False
-        _attr_hvac_modes = [HVACMode.HEAT]
-        _attr_hvac_mode = HVACMode.HEAT
-        _attr_temperature_unit = UnitOfTemperature.CELSIUS
-        _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        _attr_target_temperature_high = MAX_TEMPERATURE
-        _attr_target_temperature_low = MIN_TEMPERATURE
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=manufacturer,
