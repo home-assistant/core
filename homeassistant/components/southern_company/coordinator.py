@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 import southern_company_api
+from southern_company_api.exceptions import SouthernCompanyException
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
@@ -60,11 +61,8 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
                 # Note: insert statistics can be somewhat slow on first setup.
                 await self._insert_statistics()
                 return account_month_data
-        except (
-            southern_company_api.exceptions.NoJwtTokenFound,
-            southern_company_api.exceptions.NoScTokenFound,
-        ) as ex:
-            raise UpdateFailed("Jwt is None") from ex
+        except SouthernCompanyException as ex:
+            raise UpdateFailed("Failed updating jwt token") from ex
 
         raise UpdateFailed("No jwt token")
 
