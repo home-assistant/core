@@ -445,6 +445,10 @@ class ConfigEntry:
 
             async def setup_again(*_: Any) -> None:
                 """Run setup again."""
+                # Check again when we fire in case shutdown
+                # has started so we do not block shutdown
+                if hass.is_stopping:
+                    return
                 self._async_cancel_retry_setup = None
                 await self.async_setup(hass, integration=integration, tries=tries)
 
