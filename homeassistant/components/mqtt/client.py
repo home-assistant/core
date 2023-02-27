@@ -549,7 +549,7 @@ class MQTT:
             raise HomeAssistantError("Can't remove subscription twice") from ex
 
     async def _async_queue_subscriptions(
-        self, subscriptions: Iterable[tuple[str, int]]
+        self, subscriptions: Iterable[tuple[str, int]], queue_only: bool = False
     ) -> None:
         """Queue requested subscriptions."""
         async with self._paho_lock:
@@ -558,6 +558,8 @@ class MQTT:
                 if self._pending_subscriptions.setdefault(topic, qos) < qos:
                     # update the qos if the existing value has a lower qos
                     self._pending_subscriptions[topic] = qos
+        if queue_only:
+            return
         await self._subscribe_debouncer.async_execute()
 
     async def async_subscribe(
@@ -727,7 +729,8 @@ class MQTT:
                 for topic, subs in groupby(
                     sorted(self.subscriptions, key=keyfunc), keyfunc
                 )
-            ]
+            ],
+            queue_only=True,
         )
         await self._async_perform_subscriptions()
 
