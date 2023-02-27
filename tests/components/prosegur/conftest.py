@@ -1,5 +1,5 @@
 """Define test fixtures for Prosegur."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyprosegur.installation import Camera
 import pytest
@@ -30,9 +30,12 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_install() -> AsyncMock:
     """Return the mocked alarm install."""
-    install = AsyncMock()
+    install = MagicMock()
     install.contract = CONTRACT
     install.cameras = [Camera("1", "test_cam")]
+    install.arm = AsyncMock()
+    install.disarm = AsyncMock()
+    install.arm_partially = AsyncMock()
     install.get_image = AsyncMock(return_value=b"ABC")
     install.request_image = AsyncMock()
 
