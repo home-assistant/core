@@ -276,7 +276,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.8
+aiosomecomfort==0.0.10
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -504,7 +504,7 @@ btsmarthub_devicelist==0.2.3
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.1.3
+caldav==1.2.0
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
@@ -661,7 +661,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.28
+env_canada==0.5.29
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
