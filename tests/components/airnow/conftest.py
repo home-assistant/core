@@ -32,7 +32,7 @@ def config_fixture(hass):
         CONF_LATITUDE: 34.053718,
         CONF_LONGITUDE: -118.244842,
         CONF_RADIUS: 75,
-        CONF_FORECAST: True,
+        CONF_FORECAST: False,
     }
 
 
