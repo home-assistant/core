@@ -20,6 +20,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch("pyobihai.PyObihai.check_account"):
