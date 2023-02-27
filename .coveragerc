@@ -639,6 +639,10 @@ omit =
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
+    homeassistant/components/livisi/__init__.py
+    homeassistant/components/livisi/climate.py
+    homeassistant/components/livisi/coordinator.py
+    homeassistant/components/livisi/switch.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/logi_circle/__init__.py
     homeassistant/components/logi_circle/camera.py

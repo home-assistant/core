@@ -9,6 +9,7 @@ import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
+import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -2003,3 +2004,49 @@ async def test_background_task(hass: HomeAssistant) -> None:
     await asyncio.sleep(0)
     await hass.async_stop()
     assert result.result() == ha.CoreState.stopping
+
+
+async def test_shutdown_does_not_block_on_normal_tasks(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure shutdown does not block on normal tasks."""
+    result = asyncio.Future()
+    unshielded_task = asyncio.sleep(10)
+
+    async def test_task():
+        try:
+            await unshielded_task
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+
+    start = time.monotonic()
+    task = hass.async_create_task(test_task())
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    await asyncio.sleep(0)
+    assert result.done()
+    assert task.done()
+    assert time.monotonic() - start < 0.5
+
+
+async def test_shutdown_does_not_block_on_shielded_tasks(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure shutdown does not block on shielded tasks."""
+    result = asyncio.Future()
+    shielded_task = asyncio.shield(asyncio.sleep(10))
+
+    async def test_task():
+        try:
+            await shielded_task
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+
+    start = time.monotonic()
+    task = hass.async_create_task(test_task())
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    await asyncio.sleep(0)
+    assert result.done()
+    assert task.done()
+    assert time.monotonic() - start < 0.5
