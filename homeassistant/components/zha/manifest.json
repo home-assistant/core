@@ -1,13 +1,7 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
-  "after_dependencies": [
-    "onboarding",
-    "usb",
-    "zeroconf",
-    "homeassistant_hardware",
-    "homeassistant_yellow"
-  ],
+  "after_dependencies": ["onboarding", "usb"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
   "config_flow": true,
   "dependencies": ["file_upload"],
