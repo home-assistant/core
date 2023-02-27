@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.airnow import DOMAIN
+from homeassistant.components.airnow.const import CONF_FORECAST
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.setup import async_setup_component
 
@@ -31,6 +32,7 @@ def config_fixture(hass):
         CONF_LATITUDE: 34.053718,
         CONF_LONGITUDE: -118.244842,
         CONF_RADIUS: 75,
+        CONF_FORECAST: True,
     }
 
 

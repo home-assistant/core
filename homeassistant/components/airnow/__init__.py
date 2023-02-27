@@ -27,6 +27,7 @@ from .const import (
     ATTR_API_CAT_DESCRIPTION,
     ATTR_API_CAT_LEVEL,
     ATTR_API_CATEGORY,
+    ATTR_API_DATE_FORECAST,
     ATTR_API_PM25,
     ATTR_API_POLLUTANT,
     ATTR_API_REPORT_DATE,
@@ -35,7 +36,11 @@ from .const import (
     ATTR_API_STATION,
     ATTR_API_STATION_LATITUDE,
     ATTR_API_STATION_LONGITUDE,
+    CONF_FORECAST,
     DOMAIN,
+    SENSOR_AQI_ATTR_FORECAST,
+    SENSOR_AQI_ATTR_FORECAST_DATE,
+    SENSOR_AQI_ATTR_FORECAST_LEVEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     distance = entry.data[CONF_RADIUS]
+    forecast_attrs = entry.data[CONF_FORECAST] if CONF_FORECAST in entry.data else False
 
     # Reports are published hourly but update twice per hour
     update_interval = datetime.timedelta(minutes=30)
@@ -55,7 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Setup the Coordinator
     session = async_get_clientsession(hass)
     coordinator = AirNowDataUpdateCoordinator(
-        hass, session, api_key, latitude, longitude, distance, update_interval
+        hass,
+        session,
+        api_key,
+        latitude,
+        longitude,
+        distance,
+        forecast_attrs,
+        update_interval,
     )
 
     # Sync with Coordinator
@@ -84,12 +97,21 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Airly data."""
 
     def __init__(
-        self, hass, session, api_key, latitude, longitude, distance, update_interval
+        self,
+        hass,
+        session,
+        api_key,
+        latitude,
+        longitude,
+        distance,
+        forecast_attrs,
+        update_interval,
     ):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
         self.distance = distance
+        self.forecast_attrs = forecast_attrs
 
         self.airnow = WebServiceAPI(api_key, session=session)
 
@@ -145,5 +167,31 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
         data[ATTR_API_AQI_LEVEL] = max_aqi_level
         data[ATTR_API_AQI_DESCRIPTION] = max_aqi_desc
         data[ATTR_API_POLLUTANT] = max_aqi_poll
+
+        if self.forecast_attrs:
+            try:
+                forecast = await self.airnow.forecast.latLong(
+                    latitude=self.latitude,
+                    longitude=self.longitude,
+                    date=datetime.datetime.now() + datetime.timedelta(days=1),
+                    distance=self.distance,
+                )
+
+            except (AirNowError, ClientConnectorError) as error:
+                raise UpdateFailed(error) from error
+
+            if not forecast:
+                raise UpdateFailed("No forecast data was returned from AirNow")
+
+            data[SENSOR_AQI_ATTR_FORECAST] = [
+                {
+                    SENSOR_AQI_ATTR_FORECAST_DATE: fc[ATTR_API_DATE_FORECAST].strip(),
+                    ATTR_API_AQI: fc[ATTR_API_AQI],
+                    SENSOR_AQI_ATTR_FORECAST_LEVEL: fc[ATTR_API_CATEGORY][
+                        ATTR_API_CAT_LEVEL
+                    ],
+                }
+                for fc in forecast
+            ]
 
         return data

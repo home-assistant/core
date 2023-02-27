@@ -24,6 +24,7 @@ from .const import (
     ATTR_API_PM25,
     DOMAIN,
     SENSOR_AQI_ATTR_DESCR,
+    SENSOR_AQI_ATTR_FORECAST,
     SENSOR_AQI_ATTR_LEVEL,
 )
 
@@ -106,5 +107,12 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
             self._attrs[SENSOR_AQI_ATTR_LEVEL] = self.coordinator.data[
                 ATTR_API_AQI_LEVEL
             ]
+            if (
+                SENSOR_AQI_ATTR_FORECAST in self.coordinator.data
+                and self.coordinator.data[SENSOR_AQI_ATTR_FORECAST]
+            ):
+                self._attrs[SENSOR_AQI_ATTR_FORECAST] = self.coordinator.data[
+                    SENSOR_AQI_ATTR_FORECAST
+                ]
 
         return self._attrs

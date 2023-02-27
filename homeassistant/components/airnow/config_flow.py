@@ -10,7 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import CONF_FORECAST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
                     vol.Optional(CONF_RADIUS, default=150): int,
+                    vol.Required(CONF_FORECAST, default=False): bool,
                 }
             ),
             errors=errors,
