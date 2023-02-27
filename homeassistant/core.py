@@ -767,6 +767,11 @@ class HomeAssistant:
                 # to see if the task finished while we
                 # were awaiting another task
                 continue
+            _LOGGER.warning(
+                "Task %s was still running after stage 2 shutdown, "
+                "this will block shutdown starting in Home Assistant 2023.6.0 and later",
+                task,
+            )
             task.cancel()
             try:
                 async with async_timeout.timeout(0.1):
