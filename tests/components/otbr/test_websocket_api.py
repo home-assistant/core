@@ -2,9 +2,9 @@
 from unittest.mock import patch
 
 import pytest
+import python_otbr_api
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from . import BASE_URL
@@ -82,8 +82,8 @@ async def test_get_info_fetch_fails(
     await async_setup_component(hass, "otbr", {})
 
     with patch(
-        "homeassistant.components.otbr.OTBRData.get_active_dataset_tlvs",
-        side_effect=HomeAssistantError,
+        "python_otbr_api.OTBR.get_active_dataset_tlvs",
+        side_effect=python_otbr_api.OTBRError,
     ):
         await websocket_client.send_json(
             {
