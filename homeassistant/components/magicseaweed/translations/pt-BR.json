@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "A integra\u00e7\u00e3o do Magicseaweed est\u00e1 pendente de remo\u00e7\u00e3o do Home Assistant e n\u00e3o estar\u00e1 mais dispon\u00edvel a partir do Home Assistant 2023.3. \n\n Remova a configura\u00e7\u00e3o YAML do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
-            "title": "A integra\u00e7\u00e3o do Magicseaweed est\u00e1 sendo removida"
-        }
-    }
-}

@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.demo import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 
@@ -22,7 +23,7 @@ def mock_device_tracker_update_config():
         yield
 
 
-async def test_setting_up_demo(mock_history, hass):
+async def test_setting_up_demo(mock_history, hass: HomeAssistant) -> None:
     """Test if we can set up the demo and dump it to JSON."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

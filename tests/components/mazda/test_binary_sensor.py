@@ -1,13 +1,13 @@
 """The binary sensor tests for the Mazda Connected Services integration."""
-
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(hass: HomeAssistant) -> None:
     """Test creation of the binary sensors."""
     await init_integration(hass)
 
@@ -80,7 +80,7 @@ async def test_binary_sensors(hass):
     assert entry.unique_id == "JM000000000000000_hood"
 
 
-async def test_electric_vehicle_binary_sensors(hass):
+async def test_electric_vehicle_binary_sensors(hass: HomeAssistant) -> None:
     """Test sensors which are specific to electric vehicles."""
 
     await init_integration(hass, electric_vehicle=True)

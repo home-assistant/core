@@ -23,6 +23,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -37,7 +38,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
@@ -231,7 +231,10 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # UV index (-)
-    (BTHomeSensorDeviceClass.UV_INDEX, None,): SensorEntityDescription(
+    (
+        BTHomeSensorDeviceClass.UV_INDEX,
+        None,
+    ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.UV_INDEX}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -256,7 +259,10 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Volume (L)
-    (BTHomeSensorDeviceClass.VOLUME, Units.VOLUME_LITERS,): SensorEntityDescription(
+    (
+        BTHomeSensorDeviceClass.VOLUME,
+        Units.VOLUME_LITERS,
+    ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.VOLUME}_{Units.VOLUME_LITERS}",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,

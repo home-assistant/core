@@ -1,5 +1,4 @@
 """Test ZHA device discovery."""
-
 import re
 from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
@@ -28,6 +27,7 @@ import homeassistant.components.zha.lock
 import homeassistant.components.zha.sensor
 import homeassistant.components.zha.switch
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
@@ -102,7 +102,7 @@ async def test_devices(
     hass_disable_services,
     zigpy_device_mock,
     zha_device_joined_restored,
-):
+) -> None:
     """Test device discovery."""
     entity_registry = homeassistant.helpers.entity_registry.async_get(
         hass_disable_services
@@ -219,7 +219,7 @@ def _get_first_identify_cluster(zigpy_device):
 @mock.patch(
     "homeassistant.components.zha.core.discovery.ProbeEndpoint.discover_by_cluster_id"
 )
-def test_discover_entities(m1, m2):
+def test_discover_entities(m1, m2) -> None:
     """Test discover endpoint class method."""
     ep_channels = mock.MagicMock()
     disc.PROBE.discover_entities(ep_channels)
@@ -230,7 +230,7 @@ def test_discover_entities(m1, m2):
 
 
 @pytest.mark.parametrize(
-    "device_type, component, hit",
+    ("device_type", "component", "hit"),
     [
         (zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT, Platform.LIGHT, True),
         (zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST, Platform.SWITCH, True),
@@ -238,7 +238,7 @@ def test_discover_entities(m1, m2):
         (0xFFFF, None, False),
     ],
 )
-def test_discover_by_device_type(device_type, component, hit):
+def test_discover_by_device_type(device_type, component, hit) -> None:
     """Test entity discovery by device type."""
 
     ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
@@ -264,7 +264,7 @@ def test_discover_by_device_type(device_type, component, hit):
         assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
-def test_discover_by_device_type_override():
+def test_discover_by_device_type_override() -> None:
     """Test entity discovery by device type overriding."""
 
     ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
@@ -290,7 +290,7 @@ def test_discover_by_device_type_override():
         assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
-def test_discover_probe_single_cluster():
+def test_discover_probe_single_cluster() -> None:
     """Test entity discovery by single cluster."""
 
     ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
@@ -319,7 +319,9 @@ def test_discover_probe_single_cluster():
 
 
 @pytest.mark.parametrize("device_info", DEVICES)
-async def test_discover_endpoint(device_info, channels_mock, hass):
+async def test_discover_endpoint(
+    device_info, channels_mock, hass: HomeAssistant
+) -> None:
     """Test device discovery."""
 
     with mock.patch(
@@ -424,7 +426,7 @@ def _test_single_input_cluster_device_class(probe_mock):
         assert call[0][1] == ch
 
 
-def test_single_input_cluster_device_class_by_cluster_class():
+def test_single_input_cluster_device_class_by_cluster_class() -> None:
     """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
     mock_reg = {
         zigpy.zcl.clusters.closures.DoorLock.cluster_id: Platform.LOCK,
@@ -441,7 +443,7 @@ def test_single_input_cluster_device_class_by_cluster_class():
 
 
 @pytest.mark.parametrize(
-    "override, entity_id",
+    ("override", "entity_id"),
     [
         (None, "light.manufacturer_model_light"),
         ("switch", "switch.manufacturer_model_switch"),
@@ -449,7 +451,7 @@ def test_single_input_cluster_device_class_by_cluster_class():
 )
 async def test_device_override(
     hass_disable_services, zigpy_device_mock, setup_zha, override, entity_id
-):
+) -> None:
     """Test device discovery override."""
 
     zigpy_device = zigpy_device_mock(
@@ -481,7 +483,7 @@ async def test_device_override(
 
 async def test_group_probe_cleanup_called(
     hass_disable_services, setup_zha, config_entry
-):
+) -> None:
     """Test cleanup happens when ZHA is unloaded."""
     await setup_zha()
     disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
@@ -502,7 +504,7 @@ async def test_channel_with_empty_ep_attribute_cluster(
     hass_disable_services,
     zigpy_device_mock,
     zha_device_joined_restored,
-):
+) -> None:
     """Test device discovery for cluster which does not have em_attribute."""
     entity_registry = homeassistant.helpers.entity_registry.async_get(
         hass_disable_services

@@ -17,12 +17,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.intent import IntentHandleError, async_handle
 
 from tests.common import async_mock_service
 
 
-async def test_intent_set_humidity(hass):
+async def test_intent_set_humidity(hass: HomeAssistant) -> None:
     """Test the set humidity intent."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier", STATE_ON, {ATTR_HUMIDITY: 40}
@@ -50,7 +51,7 @@ async def test_intent_set_humidity(hass):
     assert call.data.get(ATTR_HUMIDITY) == 50
 
 
-async def test_intent_set_humidity_and_turn_on(hass):
+async def test_intent_set_humidity_and_turn_on(hass: HomeAssistant) -> None:
     """Test the set humidity intent for turned off humidifier."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier", STATE_OFF, {ATTR_HUMIDITY: 40}
@@ -85,7 +86,7 @@ async def test_intent_set_humidity_and_turn_on(hass):
     assert call.data.get(ATTR_HUMIDITY) == 50
 
 
-async def test_intent_set_mode(hass):
+async def test_intent_set_mode(hass: HomeAssistant) -> None:
     """Test the set mode intent."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
@@ -123,7 +124,7 @@ async def test_intent_set_mode(hass):
     assert call.data.get(ATTR_MODE) == "away"
 
 
-async def test_intent_set_mode_and_turn_on(hass):
+async def test_intent_set_mode_and_turn_on(hass: HomeAssistant) -> None:
     """Test the set mode intent."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
@@ -165,7 +166,7 @@ async def test_intent_set_mode_and_turn_on(hass):
     assert call.data.get(ATTR_MODE) == "away"
 
 
-async def test_intent_set_mode_tests_feature(hass):
+async def test_intent_set_mode_tests_feature(hass: HomeAssistant) -> None:
     """Test the set mode intent where modes are not supported."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier", STATE_ON, {ATTR_HUMIDITY: 40}
@@ -187,7 +188,7 @@ async def test_intent_set_mode_tests_feature(hass):
     assert len(mode_calls) == 0
 
 
-async def test_intent_set_unknown_mode(hass):
+async def test_intent_set_unknown_mode(hass: HomeAssistant) -> None:
     """Test the set mode intent for unsupported mode."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier",

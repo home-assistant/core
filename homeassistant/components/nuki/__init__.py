@@ -163,8 +163,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
                 self.hass.bus.async_fire("nuki_event", event_data)
 
     def update_devices(self, devices: list[NukiDevice]) -> dict[str, set[str]]:
-        """
-        Update the Nuki devices.
+        """Update the Nuki devices.
 
         Returns:
             A dict with the events to be fired. The event type is the key and the device ids are the value

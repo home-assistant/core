@@ -111,7 +111,7 @@ async def test_server_failure(hass: HomeAssistant) -> None:
         assert result.get("errors") == {"base": "server_failure"}
 
 
-async def test_hassio_discovery(hass):
+async def test_hassio_discovery(hass: HomeAssistant) -> None:
     """Test supervisor add-on discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

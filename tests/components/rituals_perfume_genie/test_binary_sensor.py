@@ -1,10 +1,9 @@
 """Tests for the Rituals Perfume Genie binary sensor platform."""
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.rituals_perfume_genie.binary_sensor import CHARGING_SUFFIX
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     init_integration,

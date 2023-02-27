@@ -1,6 +1,8 @@
 """Test HomeKit initialization."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_VALUE,
@@ -13,6 +15,7 @@ from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_STARTED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT
@@ -21,7 +24,9 @@ from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_homekit_changed_event(hass, hk_driver, mock_get_source_ip):
+async def test_humanify_homekit_changed_event(
+    hass: HomeAssistant, hk_driver, mock_get_source_ip
+) -> None:
     """Test humanifying HomeKit changed event."""
     hass.config.components.add("recorder")
     with patch("homeassistant.components.homekit.HomeKit"):
@@ -63,8 +68,12 @@ async def test_humanify_homekit_changed_event(hass, hk_driver, mock_get_source_i
 
 
 async def test_bridge_with_triggers(
-    hass, hk_driver, mock_async_zeroconf, entity_reg, caplog
-):
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    entity_reg,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we can setup a bridge with triggers and we ignore numeric states.
 
     Since numeric states are not supported by HomeKit as they require
