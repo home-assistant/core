@@ -9,11 +9,11 @@ from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
 import pytest
 from requests.exceptions import ConnectTimeout
 
+from homeassistant import data_entry_flow
 from homeassistant.components.abode.const import CONF_POLLING, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +26,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -41,7 +41,7 @@ async def test_one_config_allowed(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert step_user_result["type"] == FlowResultType.ABORT
+    assert step_user_result["type"] == data_entry_flow.FlowResultType.ABORT
     assert step_user_result["reason"] == "single_instance_allowed"
 
 
@@ -62,7 +62,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=conf
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "invalid_auth"}
 
@@ -84,7 +84,7 @@ async def test_connection_auth_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=conf
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -104,7 +104,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=conf
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -122,7 +122,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=conf
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "user@email.com"
         assert result["data"] == {
             CONF_USERNAME: "user@email.com",
@@ -147,7 +147,7 @@ async def test_step_mfa(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=conf
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
 
     with patch(
@@ -159,7 +159,7 @@ async def test_step_mfa(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"mfa_code": "123456"}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["errors"] == {"base": "invalid_mfa_code"}
 
@@ -168,7 +168,7 @@ async def test_step_mfa(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={"mfa_code": "123456"}
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "user@email.com"
         assert result["data"] == {
             CONF_USERNAME: "user@email.com",
@@ -194,7 +194,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
             data=conf,
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
         with patch(
@@ -205,7 +205,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
                 user_input=conf,
             )
 
-            assert result["type"] == FlowResultType.ABORT
+            assert result["type"] == data_entry_flow.FlowResultType.ABORT
             assert result["reason"] == "reauth_successful"
 
         assert len(hass.config_entries.async_entries()) == 1
