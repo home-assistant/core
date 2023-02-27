@@ -257,6 +257,26 @@ def test_import(hass: HomeAssistant) -> None:
     )
 
 
+def test_loop_controls(hass: HomeAssistant) -> None:
+    """Test that loop controls are enabled."""
+    assert (
+        template.Template(
+            """
+            {%- for v in range(10) %}
+                {%- if v == 1 -%}
+                    {%- continue -%}
+                {%- elif v == 3 -%}
+                    {%- break -%}
+                {%- endif -%}
+                {{ v }}
+            {%- endfor -%}
+            """,
+            hass,
+        ).async_render()
+        == "02"
+    )
+
+
 def test_float_function(hass: HomeAssistant) -> None:
     """Test float function."""
     hass.states.async_set("sensor.temperature", "12")

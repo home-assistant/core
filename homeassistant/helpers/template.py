@@ -2119,6 +2119,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         if hass is not None:
             self.loader = self._loader
+        self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm

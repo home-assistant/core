@@ -96,3 +96,20 @@ async def test_async_create_flow_checks_existing_flows_before_startup(
             data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
     ]
+
+
+async def test_async_create_flow_does_nothing_after_stop(
+    hass: HomeAssistant, mock_flow_init
+) -> None:
+    """Test we no longer create flows when hass is stopping."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    hass.state = CoreState.stopping
+    mock_flow_init.reset_mock()
+    discovery_flow.async_create_flow(
+        hass,
+        "hue",
+        {"source": config_entries.SOURCE_HOMEKIT},
+        {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+    )
+    assert len(mock_flow_init.mock_calls) == 0

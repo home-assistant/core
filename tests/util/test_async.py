@@ -10,43 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import async_ as hasync
 
 
-@patch("asyncio.coroutines.iscoroutine")
-@patch("concurrent.futures.Future")
-@patch("threading.get_ident")
-def test_fire_coroutine_threadsafe_from_inside_event_loop(
-    mock_ident, _, mock_iscoroutine
-) -> None:
-    """Testing calling fire_coroutine_threadsafe from inside an event loop."""
-    coro = MagicMock()
-    loop = MagicMock()
-
-    loop._thread_ident = None
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = True
-    hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 1
-
-    loop._thread_ident = 5
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = True
-    with pytest.raises(RuntimeError):
-        hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 1
-
-    loop._thread_ident = 1
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = False
-    with pytest.raises(TypeError):
-        hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 1
-
-    loop._thread_ident = 1
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = True
-    hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 2
-
-
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
 def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _) -> None:
