@@ -109,7 +109,7 @@
             'warm_mist',
             'nightlight',
           ]),
-          'mac_id': '00:00:00:00:00:00',
+          'mac_id': '**REDACTED**',
           'manager': '**REDACTED**',
           'mist_levels': list([
             1,
@@ -132,7 +132,7 @@
           'speed': None,
           'sub_device_no': None,
           'type': 'wifi-air',
-          'uuid': '00000000-1111-2222-3333-444444444444',
+          'uuid': '**REDACTED**',
           'warm_mist_feature': True,
           'warm_mist_levels': list([
             0,
@@ -263,12 +263,12 @@
       'name': 'Fan',
       'name_by_user': None,
     }),
-    'mac_id': '00:00:00:00:00:00',
+    'mac_id': '**REDACTED**',
     'manager': '**REDACTED**',
     'mode': None,
     'speed': None,
     'sub_device_no': None,
     'type': 'wifi-air',
-    'uuid': '00000000-1111-2222-3333-444444444444',
+    'uuid': '**REDACTED**',
   })
 # ---
