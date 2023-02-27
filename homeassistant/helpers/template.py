@@ -2084,7 +2084,7 @@ class HassLoader(jinja2.BaseLoader):
 
     @property
     def sources(self) -> dict[str, str]:
-        """A map of filename to jinja source."""
+        """Map filename to jinja source."""
         return self._sources
 
     @sources.setter
