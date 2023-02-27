@@ -333,6 +333,14 @@ class EnsureJobAfterCooldown:
                 self._task.cancel()
             self._task = asyncio.ensure_future(self._async_job())
 
+    async def async_cleanup(self) -> None:
+        """Cleanup any pending task."""
+        async with self._lock:
+            # Cancel the current waiting task (if it exists) and start a new one
+            if self._task:
+                self._task.cancel()
+            self._task = None
+
 
 class MQTT:
     """Home Assistant MQTT client."""
@@ -484,6 +492,9 @@ class MQTT:
         def no_more_acks() -> bool:
             """Return False if there are unprocessed ACKs."""
             return not any(not op.is_set() for op in self._pending_operations.values())
+
+        # stop waiting for any pending subscriptions
+        await self._subscribe_debouncer.async_cleanup()
 
         # wait for ACKs to be processed
         async with self._pending_operations_condition:
