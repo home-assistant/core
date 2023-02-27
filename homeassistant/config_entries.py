@@ -459,7 +459,8 @@ class ConfigEntry:
 
             await self._async_process_on_unload()
             return
-        except (asyncio.CancelledError, Exception):  # pylint: disable=broad-except
+        # pylint: disable-next=broad-except
+        except (asyncio.CancelledError, SystemExit, Exception):
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )

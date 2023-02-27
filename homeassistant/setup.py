@@ -264,7 +264,8 @@ async def _async_setup_component(
                 SLOW_SETUP_MAX_WAIT,
             )
             return False
-        except (asyncio.CancelledError, Exception):  # pylint: disable=broad-except
+        # pylint: disable-next=broad-except
+        except (asyncio.CancelledError, SystemExit, Exception):
             _LOGGER.exception("Error during setup of component %s", domain)
             async_notify_setup_error(hass, domain, integration.documentation)
             return False
