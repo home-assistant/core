@@ -21,6 +21,7 @@ async def test_entry_diagnostics(
                 "latitude": REDACTED,
                 "longitude": REDACTED,
                 "radius": 75,
+                "forecast": False,
             },
             "options": {},
             "pref_disable_new_entities": False,
