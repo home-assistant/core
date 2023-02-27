@@ -157,7 +157,7 @@ class FreeboxRouter:
     async def update_home_devices(self) -> None:
         """Update Home devices (light, cover, alarm, sensors ...)."""
         new_device = False
-        # Home sensors (alarm,pir,switch,kfb...)
+        # Home sensors (alarm, pir, switch, remote ...)
         try:
             home_nodes: list[Any] = await self._api.home.get_home_nodes() or []
         except InsufficientPermissionsError:
