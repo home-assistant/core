@@ -46,7 +46,7 @@ async def async_setup_platform(
         "manual_migration",
         breaks_in_ha_version="2023.6.0",
         is_fixable=False,
-        severity=issue_registry.IssueSeverity.ERROR,
+        severity=issue_registry.IssueSeverity.WARNING,
         translation_key="manual_migration",
     )
 
