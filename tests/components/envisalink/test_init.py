@@ -2,6 +2,8 @@
 
 from unittest.mock import PropertyMock, patch
 
+from pyenvisalink.alarm_panel import EnvisalinkAlarmPanel
+from pyenvisalink.const import PANEL_TYPE_HONEYWELL
 import pytest
 
 from homeassistant.components.envisalink.const import (
@@ -10,10 +12,6 @@ from homeassistant.components.envisalink.const import (
     DEFAULT_HONEYWELL_ARM_NIGHT_MODE,
     DOMAIN,
 )
-from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
-    EnvisalinkAlarmPanel,
-)
-from homeassistant.components.envisalink.pyenvisalink.const import PANEL_TYPE_HONEYWELL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -123,7 +121,7 @@ async def test_init_fail(
 ) -> None:
     """Test startup failures."""
     with patch(
-        "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.start",
+        "pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.start",
         return_value=alarm_error,
     ):
         mock_config_entry.add_to_hass(hass)

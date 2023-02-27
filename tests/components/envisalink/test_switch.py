@@ -2,11 +2,10 @@
 
 from unittest.mock import patch
 
+from pyenvisalink.alarm_panel import EnvisalinkAlarmPanel
+
 from homeassistant.components.envisalink.const import DOMAIN
 from homeassistant.components.envisalink.controller import EnvisalinkController
-from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
-    EnvisalinkAlarmPanel,
-)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TOGGLE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant

@@ -1151,6 +1151,9 @@ pyefergy==22.1.1
 # homeassistant.components.eight_sleep
 pyeight==0.3.2
 
+# homeassistant.components.envisalink
+pyenvisalink==5.0.0b1
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 

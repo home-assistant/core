@@ -2,73 +2,84 @@
 from __future__ import annotations
 
 import datetime
-import logging
+
+from pyenvisalink.const import STATE_CHANGE_ZONE
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LAST_TRIP_TIME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import (
+from .const import (
+    CONF_ZONE_SET,
     CONF_ZONENAME,
+    CONF_ZONES,
     CONF_ZONETYPE,
-    DATA_EVL,
-    SIGNAL_ZONE_UPDATE,
-    ZONE_SCHEMA,
-    EnvisalinkDevice,
+    DEFAULT_ZONETYPE,
+    DOMAIN,
+    LOGGER,
 )
+from .helpers import find_yaml_info, parse_range_string
+from .models import EnvisalinkDevice
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Envisalink binary sensor entities."""
-    if not discovery_info:
-        return
-    configured_zones = discovery_info["zones"]
+    """Set up the zone binary sensors based on a config entry."""
+    controller = hass.data[DOMAIN][entry.entry_id]
 
+    zone_spec = entry.data.get(CONF_ZONE_SET)
+    zone_set = parse_range_string(
+        str(zone_spec), min_val=1, max_val=controller.controller.max_zones
+    )
+
+    zone_info = entry.data.get(CONF_ZONES)
     entities = []
-    for zone_num in configured_zones:
-        entity_config_data = ZONE_SCHEMA(configured_zones[zone_num])
-        entity = EnvisalinkBinarySensor(
-            hass,
-            zone_num,
-            entity_config_data[CONF_ZONENAME],
-            entity_config_data[CONF_ZONETYPE],
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
-        )
-        entities.append(entity)
+    if zone_set is not None:
+        for zone_num in zone_set:
+            zone_entry = find_yaml_info(zone_num, zone_info)
 
-    async_add_entities(entities)
+            entity = EnvisalinkBinarySensor(
+                hass,
+                zone_num,
+                zone_entry,
+                controller,
+            )
+            entities.append(entity)
+
+        async_add_entities(entities)
 
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     """Representation of an Envisalink binary sensor."""
 
-    def __init__(self, hass, zone_number, zone_name, zone_type, info, controller):
+    def __init__(self, hass, zone_number, zone_info, controller):
         """Initialize the binary_sensor."""
-        self._zone_type = zone_type
         self._zone_number = zone_number
+        name = f"Zone {self._zone_number}"
+        self._attr_unique_id = f"{controller.unique_id}_{name}"
 
-        _LOGGER.debug("Setting up zone: %s", zone_name)
-        super().__init__(zone_name, info, controller)
+        self._zone_type = DEFAULT_ZONETYPE
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_ZONE_UPDATE, self.async_update_callback
-            )
-        )
+        self._attr_has_entity_name = True
+        if zone_info:
+            # Override the name and type if there is info from the YAML configuration
+            self._zone_type = zone_info.get(CONF_ZONETYPE, DEFAULT_ZONETYPE)
+            if CONF_ZONENAME in zone_info:
+                name = zone_info[CONF_ZONENAME]
+                self._attr_has_entity_name = False
+
+        LOGGER.debug("Setting up zone: %s", name)
+        super().__init__(name, controller, STATE_CHANGE_ZONE, zone_number)
+
+    @property
+    def _info(self):
+        return self._controller.controller.alarm_state["zone"][self._zone_number]
 
     @property
     def extra_state_attributes(self):
@@ -84,6 +95,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
         # interval, so we subtract it from the current second-accurate time
         # unless it is already at the maximum value, in which case we set it
         # to None since we can't determine the actual value.
+
         seconds_ago = self._info["last_fault"]
         if seconds_ago < 65536 * 5:
             now = dt_util.now().replace(microsecond=0)
@@ -110,9 +122,3 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
-
-    @callback
-    def async_update_callback(self, zone):
-        """Update the zone's state, if needed."""
-        if zone is None or int(zone) == self._zone_number:
-            self.async_write_ha_state()

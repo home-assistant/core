@@ -2,8 +2,13 @@
   "domain": "envisalink",
   "name": "Envisalink",
   "codeowners": ["@ufodone"],
+  "config_flow": true,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/envisalink",
+  "homekit": {},
   "iot_class": "local_push",
   "loggers": ["pyenvisalink"],
-  "requirements": ["pyenvisalink==4.6"]
+  "requirements": ["pyenvisalink==5.0.0b1"],
+  "ssdp": [],
+  "zeroconf": []
 }

@@ -1,88 +1,88 @@
 """Support for Envisalink zone bypass switches."""
 from __future__ import annotations
 
-import logging
-from typing import Any
+from pyenvisalink.const import STATE_CHANGE_ZONE_BYPASS
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
+    CONF_CREATE_ZONE_BYPASS_SWITCHES,
+    CONF_ZONE_SET,
     CONF_ZONENAME,
-    DATA_EVL,
-    SIGNAL_ZONE_BYPASS_UPDATE,
-    ZONE_SCHEMA,
-    EnvisalinkDevice,
+    CONF_ZONES,
+    DOMAIN,
+    LOGGER,
 )
+from .helpers import find_yaml_info, parse_range_string
+from .models import EnvisalinkDevice
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Envisalink switch entities."""
-    if not discovery_info:
-        return
-    configured_zones = discovery_info["zones"]
+    """Set up the zone bypass switches based on a config entry."""
+    controller = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for zone_num in configured_zones:
-        entity_config_data = ZONE_SCHEMA(configured_zones[zone_num])
-        zone_name = f"{entity_config_data[CONF_ZONENAME]}_bypass"
-        _LOGGER.debug("Setting up zone_bypass switch: %s", zone_name)
-
-        entity = EnvisalinkSwitch(
-            hass,
-            zone_num,
-            zone_name,
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+    create_bypass_switches = entry.options.get(CONF_CREATE_ZONE_BYPASS_SWITCHES)
+    if create_bypass_switches:
+        zone_spec = entry.data.get(CONF_ZONE_SET)
+        zone_set = parse_range_string(
+            str(zone_spec), min_val=1, max_val=controller.controller.max_zones
         )
-        entities.append(entity)
+        zone_info = entry.data.get(CONF_ZONES)
+        if zone_set is not None:
+            entities = []
+            for zone_num in zone_set:
+                zone_entry = find_yaml_info(zone_num, zone_info)
 
-    async_add_entities(entities)
+                entity = EnvisalinkSwitch(
+                    hass,
+                    zone_num,
+                    zone_entry,
+                    controller,
+                )
+                entities.append(entity)
+
+            async_add_entities(entities)
 
 
 class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
     """Representation of an Envisalink switch."""
 
-    def __init__(self, hass, zone_number, zone_name, info, controller):
+    def __init__(self, hass, zone_number, zone_info, controller):
         """Initialize the switch."""
         self._zone_number = zone_number
+        name = f"Zone {self._zone_number} Bypass"
+        self._attr_unique_id = f"{controller.unique_id}_{name}"
 
-        super().__init__(zone_name, info, controller)
+        self._attr_has_entity_name = True
+        if zone_info:
+            # Override the name if there is info from the YAML configuration
+            if CONF_ZONENAME in zone_info:
+                name = f"{zone_info[CONF_ZONENAME]}_bypass"
+                self._attr_has_entity_name = False
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_ZONE_BYPASS_UPDATE, self.async_update_callback
-            )
-        )
+        LOGGER.debug("Setting up zone: %s", name)
+        super().__init__(name, controller, STATE_CHANGE_ZONE_BYPASS, zone_number)
+
+    @property
+    def _info(self):
+        return self._controller.controller.alarm_state["zone"][self._zone_number]
 
     @property
     def is_on(self):
         """Return the boolean response if the zone is bypassed."""
         return self._info["bypassed"]
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs):
         """Send the bypass keypress sequence to toggle the zone bypass."""
-        self._controller.toggle_zone_bypass(self._zone_number)
+        await self._controller.controller.toggle_zone_bypass(self._zone_number)
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs):
         """Send the bypass keypress sequence to toggle the zone bypass."""
-        self._controller.toggle_zone_bypass(self._zone_number)
-
-    @callback
-    def async_update_callback(self, bypass_map):
-        """Update the zone bypass state in HA, if needed."""
-        if bypass_map is None or self._zone_number in bypass_map:
-            _LOGGER.debug("Bypass state changed for zone %d", self._zone_number)
-            self.async_write_ha_state()
+        await self._controller.controller.toggle_zone_bypass(self._zone_number)

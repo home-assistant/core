@@ -1,59 +1,56 @@
-"""Support for Envisalink devices."""
-import asyncio
-import logging
+"""The Envisalink integration."""
+from __future__ import annotations
 
-from pyenvisalink import EnvisalinkAlarmPanel
+from copy import deepcopy
+from typing import Any
+
+from pyenvisalink.const import PANEL_TYPE_DSC, PANEL_TYPE_HONEYWELL
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_HOST,
-    CONF_TIMEOUT,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant import config_entries
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_TIMEOUT, Platform
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_ALARM_NAME,
+    CONF_CREATE_ZONE_BYPASS_SWITCHES,
+    CONF_EVL_KEEPALIVE,
+    CONF_EVL_PORT,
+    CONF_EVL_VERSION,
+    CONF_PANEL_TYPE,
+    CONF_PANIC,
+    CONF_PARTITION_SET,
+    CONF_PARTITIONNAME,
+    CONF_PARTITIONS,
+    CONF_PASS,
+    CONF_USERNAME,
+    CONF_YAML_OPTIONS,
+    CONF_ZONE_SET,
+    CONF_ZONEDUMP_INTERVAL,
+    CONF_ZONENAME,
+    CONF_ZONES,
+    CONF_ZONETYPE,
+    DEFAULT_ALARM_NAME,
+    DEFAULT_EVL_VERSION,
+    DEFAULT_KEEPALIVE,
+    DEFAULT_PANIC,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_ZONEDUMP_INTERVAL,
+    DEFAULT_ZONETYPE,
+    DOMAIN,
+)
+from .controller import EnvisalinkController
+from .helpers import generate_range_string
 
-DOMAIN = "envisalink"
-
-DATA_EVL = "envisalink"
-
-CONF_EVL_KEEPALIVE = "keepalive_interval"
-CONF_EVL_PORT = "port"
-CONF_EVL_VERSION = "evl_version"
-CONF_PANEL_TYPE = "panel_type"
-CONF_PANIC = "panic_type"
-CONF_PARTITIONNAME = "name"
-CONF_PARTITIONS = "partitions"
-CONF_PASS = "password"
-CONF_USERNAME = "user_name"
-CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
-CONF_ZONENAME = "name"
-CONF_ZONES = "zones"
-CONF_ZONETYPE = "type"
-
-PANEL_TYPE_HONEYWELL = "HONEYWELL"
-PANEL_TYPE_DSC = "DSC"
-
-DEFAULT_PORT = 4025
-DEFAULT_EVL_VERSION = 3
-DEFAULT_KEEPALIVE = 60
-DEFAULT_ZONEDUMP_INTERVAL = 30
-DEFAULT_ZONETYPE = "opening"
-DEFAULT_PANIC = "Police"
-DEFAULT_TIMEOUT = 10
-
-SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
-SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
-SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
-SIGNAL_ZONE_BYPASS_UPDATE = "envisalink.zone_bypass_updated"
+PLATFORMS: list[Platform] = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -95,168 +92,200 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
-ATTR_CUSTOM_FUNCTION = "pgm"
-ATTR_PARTITION = "partition"
-
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
-        vol.Required(ATTR_PARTITION): cv.string,
-    }
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up for Envisalink devices."""
-    conf = config[DOMAIN]
+    """Set up the Envisalink integration from YAML."""
+    evl_config: ConfigType | None = config.get(DOMAIN)
+    hass.data.setdefault(DOMAIN, {})
 
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_EVL_PORT)
-    code = conf.get(CONF_CODE)
-    panel_type = conf.get(CONF_PANEL_TYPE)
-    panic_type = conf.get(CONF_PANIC)
-    version = conf.get(CONF_EVL_VERSION)
-    user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASS)
-    keep_alive = conf.get(CONF_EVL_KEEPALIVE)
-    zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
-    zones = conf.get(CONF_ZONES)
-    partitions = conf.get(CONF_PARTITIONS)
-    connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect: asyncio.Future[bool] = asyncio.Future()
+    if not evl_config:
+        return True
 
-    controller = EnvisalinkAlarmPanel(
-        host,
-        port,
-        panel_type,
-        version,
-        user,
-        password,
-        zone_dump,
-        keep_alive,
-        hass.loop,
-        connection_timeout,
-        False,
-    )
-    hass.data[DATA_EVL] = controller
+    transformed_evl_config = _transform_yaml_to_config_entry(dict(evl_config))
 
-    @callback
-    def async_login_fail_callback(data):
-        """Handle when the evl rejects our login."""
-        _LOGGER.error("The Envisalink rejected your credentials")
-        if not sync_connect.done():
-            sync_connect.set_result(False)
-
-    @callback
-    def async_connection_fail_callback(data):
-        """Network failure callback."""
-        _LOGGER.error("Could not establish a connection with the Envisalink- retrying")
-        if not sync_connect.done():
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
-            sync_connect.set_result(True)
-
-    @callback
-    def async_connection_success_callback(data):
-        """Handle a successful connection."""
-        _LOGGER.info("Established a connection with the Envisalink")
-        if not sync_connect.done():
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
-            sync_connect.set_result(True)
-
-    @callback
-    def async_zones_updated_callback(data):
-        """Handle zone timer updates."""
-        _LOGGER.debug("Envisalink sent a zone update event. Updating zones")
-        async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
-
-    @callback
-    def async_alarm_data_updated_callback(data):
-        """Handle non-alarm based info updates."""
-        _LOGGER.debug("Envisalink sent new alarm info. Updating alarms")
-        async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
-
-    @callback
-    def async_partition_updated_callback(data):
-        """Handle partition changes thrown by evl (including alarms)."""
-        _LOGGER.debug("The envisalink sent a partition update event")
-        async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
-
-    @callback
-    def stop_envisalink(event):
-        """Shutdown envisalink connection and thread on exit."""
-        _LOGGER.info("Shutting down Envisalink")
-        controller.stop()
-
-    async def handle_custom_function(call: ServiceCall) -> None:
-        """Handle custom/PGM service."""
-        custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
-        partition = call.data.get(ATTR_PARTITION)
-        controller.command_output(code, partition, custom_function)
-
-    controller.callback_zone_timer_dump = async_zones_updated_callback
-    controller.callback_zone_state_change = async_zones_updated_callback
-    controller.callback_partition_state_change = async_partition_updated_callback
-    controller.callback_keypad_update = async_alarm_data_updated_callback
-    controller.callback_login_failure = async_login_fail_callback
-    controller.callback_login_timeout = async_connection_fail_callback
-    controller.callback_login_success = async_connection_success_callback
-
-    _LOGGER.info("Start envisalink")
-    controller.start()
-
-    if not await sync_connect:
-        return False
-
-    # Load sub-components for Envisalink
-    if partitions:
+    # Only import if we haven't before.
+    config_entry = _async_find_matching_config_entry(hass)
+    if not config_entry:
         hass.async_create_task(
-            async_load_platform(
-                hass,
-                Platform.ALARM_CONTROL_PANEL,
-                "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
-                config,
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=transformed_evl_config,
             )
         )
-        hass.async_create_task(
-            async_load_platform(
-                hass,
-                Platform.SENSOR,
-                "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code},
-                config,
-            )
-        )
-    if zones:
-        hass.async_create_task(
-            async_load_platform(
-                hass, Platform.BINARY_SENSOR, "envisalink", {CONF_ZONES: zones}, config
-            )
-        )
+        return True
 
-        # Zone bypass switches are not currently created due to an issue with some panels.
-        # These switches will be re-added in the future after some further refactoring of the integration.
+    # Update the entry based on the YAML configuration, in case it changed.
+    hass.config_entries.async_update_entry(config_entry, data=transformed_evl_config)
+    return True
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
-    )
+
+@callback
+def _async_find_matching_config_entry(
+    hass: HomeAssistant,
+) -> config_entries.ConfigEntry | None:
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.source == config_entries.SOURCE_IMPORT:
+            return entry
+    return None
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Set up Envisalink from a config entry."""
+
+    # As there currently is no way to import options from yaml
+    # when setting up a config entry, we fallback to adding
+    # the options to the config entry and pull them out here if
+    # they are missing from the options
+    _async_import_options_from_data_if_missing(hass, entry)
+
+    controller = EnvisalinkController(hass, entry)
+    await controller.start()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = controller
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Reload entry when its updated.
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
 
-class EnvisalinkDevice(Entity):
-    """Representation of an Envisalink device."""
+async def async_unload_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        controller = hass.data[DOMAIN][entry.entry_id]
 
-    _attr_should_poll = False
+        await controller.stop()
 
-    def __init__(self, name, info, controller):
-        """Initialize the device."""
-        self._controller = controller
-        self._info = info
-        self._name = name
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
+    return unload_ok
+
+
+async def async_reload_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    """Reload the config entry when it changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _transform_yaml_to_config_entry(yaml: dict[str, Any]) -> dict[str, Any]:
+    # The yaml config schema is different than the ConfigEntry schema so transform it
+    # before sending it along to the config import flow.
+
+    config_data = {}
+    for key in (
+        CONF_CODE,
+        CONF_EVL_PORT,
+        CONF_EVL_VERSION,
+        CONF_HOST,
+        CONF_PANEL_TYPE,
+        CONF_PASS,
+        CONF_USERNAME,
+    ):
+        if key in yaml:
+            config_data[key] = yaml[key]
+
+    zones = yaml.get(CONF_ZONES)
+    if zones:
+        zone_set = set()
+        for zone_num in zones.keys():
+            zone_set.add(int(zone_num))
+        zone_spec = generate_range_string(zone_set)
+        if zone_spec is not None:
+            config_data[CONF_ZONE_SET] = zone_spec
+
+        # Save off the zone names and types so we can update the corresponding
+        # entities later.
+        config_data[CONF_ZONES] = zones
+
+    partitions = yaml.get(CONF_PARTITIONS)
+    if partitions:
+        partition_set = set()
+        for part_num in partitions.keys():
+            partition_set.add(int(part_num))
+        partition_spec = generate_range_string(partition_set)
+        if partition_spec is not None:
+            config_data[CONF_PARTITION_SET] = partition_spec
+
+        # Same off the parittion names so we can update the corresponding entities later
+        config_data[CONF_PARTITIONS] = partitions
+
+    config_data[CONF_ALARM_NAME] = choose_alarm_name(partitions)
+
+    # Extract config items that will now be treated as options in the ConfigEntry
+    # and # store them temporarily in the config entry so they can later be transferred
+    # into options since it is apparently not possible to create options as part of
+    # the import flow.
+    options = {}
+    for key in (
+        CONF_PANIC,
+        CONF_EVL_KEEPALIVE,
+        CONF_ZONEDUMP_INTERVAL,
+        CONF_TIMEOUT,
+        CONF_CREATE_ZONE_BYPASS_SWITCHES,
+    ):
+        if key in yaml:
+            options[key] = yaml[key]
+
+    if options:
+        config_data[CONF_YAML_OPTIONS] = options
+
+    return config_data
+
+
+def choose_alarm_name(partitions) -> str:
+    """Choose the alarm name based on what partitions are present in configuration.yaml."""
+
+    # If there is only a single partition defined, then use it
+    name = DEFAULT_ALARM_NAME
+
+    if partitions:
+        # Multiple partitions so choose the smallest value
+        part_num = min(partitions, key=int)
+        part_info = partitions[part_num]
+
+        name = part_info.get(CONF_PARTITIONNAME, DEFAULT_ALARM_NAME)
+
+    return name
+
+
+@callback
+def _async_import_options_from_data_if_missing(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    yaml_options = entry.data.get(CONF_YAML_OPTIONS)
+    if not yaml_options:
+        return
+
+    options = dict(entry.options)
+
+    modified = False
+    for importable_option in (
+        CONF_PANIC,
+        CONF_EVL_KEEPALIVE,
+        CONF_ZONEDUMP_INTERVAL,
+        CONF_TIMEOUT,
+        CONF_CREATE_ZONE_BYPASS_SWITCHES,
+    ):
+        if importable_option in yaml_options:
+            item = yaml_options[importable_option]
+            if (importable_option not in entry.options) or (
+                item != entry.options[importable_option]
+            ):
+                options[importable_option] = item
+                modified = True
+
+    if modified:
+        # Remove the temporary options storage now that they are being transferred
+        # to the correct place.
+        data = deepcopy(dict(entry.data))
+        data.pop(CONF_YAML_OPTIONS)
+
+        hass.config_entries.async_update_entry(entry, options=options, data=data)

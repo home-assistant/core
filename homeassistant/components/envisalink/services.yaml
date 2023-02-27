@@ -3,15 +3,11 @@
 alarm_keypress:
   name: Alarm keypress
   description: Send custom keypresses to the alarm.
+  target:
+    entity:
+      integration: envisalink
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      name: Entity
-      description: Name of the alarm control panel to trigger.
-      required: true
-      selector:
-        entity:
-          integration: envisalink
-          domain: alarm_control_panel
     keypress:
       name: Keypress
       description: "String to send to the alarm panel (1-6 characters)."
@@ -24,17 +20,13 @@ invoke_custom_function:
   name: Invoke custom function
   description: >
     Allows users with DSC panels to trigger a PGM output (1-4).
-    Note that you need to specify the alarm panel's "code" parameter for this to work.
+    Note that you need to specify the alarm panel's "code" parameter for
+    this to work.
+  target:
+    entity:
+      integration: envisalink
+      domain: alarm_control_panel
   fields:
-    partition:
-      name: Partition
-      description: >
-        The alarm panel partition to trigger the PGM output on.
-        Typically this is just "1".
-      required: true
-      example: "1"
-      selector:
-        text:
     pgm:
       name: PGM
       description: The PGM number to trigger on the alarm panel.
@@ -43,3 +35,9 @@ invoke_custom_function:
         number:
           min: 1
           max: 4
+    code:
+      name: Alarm Code
+      description: The alarm code for the selected partition
+      required: false
+      selector:
+        text:

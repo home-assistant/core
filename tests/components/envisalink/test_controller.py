@@ -3,15 +3,14 @@
 from functools import partial
 from unittest.mock import patch
 
+from pyenvisalink.alarm_panel import EnvisalinkAlarmPanel
+
 from homeassistant.components.envisalink.const import (
     CONF_PARTITION_SET,
     CONF_ZONE_SET,
     DOMAIN,
 )
 from homeassistant.components.envisalink.helpers import parse_range_string
-from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
-    EnvisalinkAlarmPanel,
-)
 from homeassistant.const import STATE_ALARM_DISARMED, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 

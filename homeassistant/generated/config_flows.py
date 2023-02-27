@@ -119,6 +119,7 @@ FLOWS = {
         "enocean",
         "enphase_envoy",
         "environment_canada",
+        "envisalink",
         "epson",
         "escea",
         "esphome",

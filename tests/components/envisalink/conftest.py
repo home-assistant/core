@@ -2,6 +2,14 @@
 from typing import Any
 from unittest.mock import PropertyMock, patch
 
+from pyenvisalink.alarm_panel import EnvisalinkAlarmPanel
+from pyenvisalink.alarm_state import AlarmState
+from pyenvisalink.const import (
+    EVL4_MAX_ZONES,
+    MAX_PARTITIONS,
+    PANEL_TYPE_DSC,
+    PANEL_TYPE_HONEYWELL,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -23,16 +31,6 @@ from homeassistant.components.envisalink.const import (
     CONF_ZONEDUMP_INTERVAL,
     DEFAULT_HONEYWELL_ARM_NIGHT_MODE,
     DOMAIN,
-)
-from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
-    EnvisalinkAlarmPanel,
-)
-from homeassistant.components.envisalink.pyenvisalink.alarm_state import AlarmState
-from homeassistant.components.envisalink.pyenvisalink.const import (
-    EVL4_MAX_ZONES,
-    MAX_PARTITIONS,
-    PANEL_TYPE_DSC,
-    PANEL_TYPE_HONEYWELL,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
@@ -88,7 +86,7 @@ def mock_envisalink_alarm_panel(mock_unique_id):
         new_callable=PropertyMock,
         return_value=AlarmState.get_initial_alarm_state(EVL4_MAX_ZONES, MAX_PARTITIONS),
     ), patch(
-        "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.get_max_zones_by_version",
+        "pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.get_max_zones_by_version",
         return_value=128,
     ):
         yield

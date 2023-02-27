@@ -1,6 +1,8 @@
 """Test the Envisalink config flow."""
 from unittest.mock import patch
 
+# from homeassistant.components.envisalink import async_setup
+from pyenvisalink.alarm_panel import EnvisalinkAlarmPanel
 import pytest
 
 from homeassistant import config_entries
@@ -9,11 +11,6 @@ from homeassistant.components.envisalink.const import (
     CONF_PARTITION_SET,
     CONF_ZONE_SET,
     DOMAIN,
-)
-
-# from homeassistant.components.envisalink import async_setup
-from homeassistant.components.envisalink.pyenvisalink.alarm_panel import (
-    EnvisalinkAlarmPanel,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -76,7 +73,7 @@ async def test_form_discover_error(
     )
 
     with patch(
-        "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
+        "pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
         return_value=alarm_error,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -131,7 +128,7 @@ async def test_form_unexpected_error(hass: HomeAssistant, mock_config_data) -> N
     )
 
     with patch(
-        "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
+        "pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
         side_effect=KeyError("unexpected"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -233,7 +230,7 @@ async def test_options_basic_form_discovery_error(
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
+        "pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
         return_value=EnvisalinkAlarmPanel.ConnectionResult.CONNECTION_FAILED,
     ):
         mock_config_data.pop(CONF_ALARM_NAME)
@@ -272,7 +269,7 @@ async def test_options_basic_form_unexpected_error(
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.envisalink.pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
+        "pyenvisalink.alarm_panel.EnvisalinkAlarmPanel.discover",
         side_effect=KeyError("unexpected"),
     ):
         mock_config_data.pop(CONF_ALARM_NAME)
