@@ -101,6 +101,9 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
@@ -131,10 +134,7 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
     if config.getoption("verbose") > 0:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+        logging.getLogger().setLevel(logging.DEBUG)
 
 
 def pytest_runtest_setup() -> None:
@@ -846,12 +846,14 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient, None,
 @pytest.fixture
 async def mqtt_mock(
     hass: HomeAssistant,
+    mock_hass_config: None,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient, None]:
     """Fixture to mock MQTT component."""
-    return await mqtt_mock_entry_no_yaml_config()
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        return await mqtt_mock_entry_no_yaml_config()
 
 
 @asynccontextmanager
@@ -943,18 +945,18 @@ def mock_hass_config(
 
 
 @pytest.fixture
-def hass_config_yaml() -> str | None:
+def hass_config_yaml() -> str:
     """Fixture to parametrize the content of configuration.yaml file.
 
     To set yaml content, tests can be marked with:
     @pytest.mark.parametrize("hass_config_yaml", ["..."])
     Add the `mock_hass_config_yaml: None` fixture to the test.
     """
-    return None
+    return ""
 
 
 @pytest.fixture
-def hass_config_yaml_files(hass_config_yaml: str | None) -> dict[str, str] | None:
+def hass_config_yaml_files(hass_config_yaml: str) -> dict[str, str]:
     """Fixture to parametrize multiple yaml configuration files.
 
     To set the YAML files to patch, tests can be marked with:
@@ -963,12 +965,12 @@ def hass_config_yaml_files(hass_config_yaml: str | None) -> dict[str, str] | Non
     )
     Add the `mock_hass_config_yaml: None` fixture to the test.
     """
-    return None if hass_config_yaml is None else {YAML_CONFIG_FILE: hass_config_yaml}
+    return {YAML_CONFIG_FILE: hass_config_yaml}
 
 
 @pytest.fixture
 def mock_hass_config_yaml(
-    hass: HomeAssistant, hass_config_yaml_files: dict[str, str] | None
+    hass: HomeAssistant, hass_config_yaml_files: dict[str, str]
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of the yaml configuration files.
 

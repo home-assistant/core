@@ -848,6 +848,23 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
+                b"\x40\x4b\x13\x8a\x14",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_gas",
+                    "friendly_name": "Test Device 18B2 Gas",
+                    "unit_of_measurement": "m³",
+                    "state_class": "total_increasing",
+                    "expected_state": "1346.067",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
                 b"\x40\x02\xca\x09\x02\xcf\x09",
             ),
             None,
