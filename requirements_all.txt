@@ -661,7 +661,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.28
+env_canada==0.5.29
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
