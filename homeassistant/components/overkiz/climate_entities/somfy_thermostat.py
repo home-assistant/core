@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
@@ -60,6 +61,8 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     )
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
+    _attr_translation_key = DOMAIN
+
     # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0
     _attr_max_temp = 26.0
