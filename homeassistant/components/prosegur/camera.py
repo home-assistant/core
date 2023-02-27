@@ -73,8 +73,8 @@ class ProsegurCamera(Camera):
     ) -> bytes | None:
         """Return bytes of camera image."""
 
+        _LOGGER.debug("Get image for %s", self._camera.description)
         try:
-            _LOGGER.debug("Get image for %s", self._camera.description)
             return await self._installation.get_image(self._auth, self._camera.id)
 
         except ProsegurException as err:
