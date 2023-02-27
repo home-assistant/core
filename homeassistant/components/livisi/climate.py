@@ -139,9 +139,6 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as LIVISI devices do not support changing the hvac mode."""
-        raise HomeAssistantError(
-            "This feature is not supported with the LIVISI climate devices"
-        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
