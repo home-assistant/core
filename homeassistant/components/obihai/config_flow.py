@@ -40,18 +40,17 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            if not await self.hass.async_add_executor_job(
+            if await self.hass.async_add_executor_job(
                 validate_auth,
                 user_input[CONF_HOST],
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
             ):
-                errors["base"] = "cannot_connect"
-            else:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data=user_input,
                 )
+            errors["base"] = "cannot_connect"
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
