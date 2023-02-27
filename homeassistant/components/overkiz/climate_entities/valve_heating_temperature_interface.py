@@ -104,7 +104,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
             OverkizCommandParam.FURTHER_NOTICE,
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         return
 
