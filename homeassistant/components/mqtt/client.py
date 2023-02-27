@@ -317,9 +317,7 @@ class EnsureJobAfterCooldown:
         await asyncio.sleep(self._timeout)
         # Ensure we do not cancel a running task
         async with self._lock:
-            task = self._task
             self._task = None
-
         try:
             await self._callback()
         except HomeAssistantError as ha_error:
