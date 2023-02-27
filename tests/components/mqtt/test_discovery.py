@@ -1375,6 +1375,7 @@ async def test_complex_discovery_topic_prefix(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1392,6 +1393,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
@@ -1419,6 +1421,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_discovery_unsubscribe_once(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1436,6 +1439,7 @@ async def test_mqtt_discovery_unsubscribe_once(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
