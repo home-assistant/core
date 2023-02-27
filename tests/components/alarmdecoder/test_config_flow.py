@@ -1,5 +1,5 @@
 """Test the AlarmDecoder config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from alarmdecoder.util import NoDeviceError
 import pytest
@@ -28,7 +28,7 @@ from homeassistant.components.alarmdecoder.const import (
     PROTOCOL_SOCKET,
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -363,9 +363,54 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
     assert result["step_id"] == "zone_details"
     assert result["errors"] == {CONF_ZONE_LOOP: "loop_range"}
 
-    # All valid settings
+    # Duplicate sensor with loop
+    er_mock = MagicMock()
+    er_mock.async_get_entity_id = Mock(return_value=True)
     with patch(
-        "homeassistant.components.alarmdecoder.async_setup_entry", return_value=True
+        "homeassistant.helpers.entity_registry.async_get",
+        return_value=er_mock,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                **zone_settings,
+                CONF_ZONE_RFID: "rfid123",
+                CONF_ZONE_LOOP: "4",
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "zone_details"
+        assert result["errors"] == {"base": "duplicate_sensor"}
+        er_mock.async_get_entity_id.assert_called_once_with(
+            Platform.BINARY_SENSOR, "alarmdecoder", "rfid123_4"
+        )
+
+    # Duplicate sensor no loop
+    er_mock = MagicMock()
+    er_mock.async_get_entity_id = Mock(return_value=True)
+    with patch(
+        "homeassistant.helpers.entity_registry.async_get",
+        return_value=er_mock,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                **zone_settings,
+                CONF_ZONE_RFID: "rfid123",
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "zone_details"
+        assert result["errors"] == {"base": "duplicate_sensor"}
+        er_mock.async_get_entity_id.assert_called_once_with(
+            Platform.BINARY_SENSOR, "alarmdecoder", "rfid123"
+        )
+
+    # All valid settings
+
+    with patch(
+        "homeassistant.components.alarmdecoder.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
