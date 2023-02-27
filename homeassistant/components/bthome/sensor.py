@@ -119,6 +119,16 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    # Gas (m3)
+    (
+        BTHomeSensorDeviceClass.GAS,
+        Units.VOLUME_CUBIC_METERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.GAS}_{Units.VOLUME_CUBIC_METERS}",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     # Humidity in (percent)
     (BTHomeSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",

@@ -22,13 +22,10 @@ from ..entity import OverkizEntity
 PRESET_FREEZE = "freeze"
 PRESET_NIGHT = "night"
 
-STATE_DEROGATION_ACTIVE = "active"
-STATE_DEROGATION_INACTIVE = "inactive"
-
 
 OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
-    STATE_DEROGATION_ACTIVE: HVACMode.HEAT,
-    STATE_DEROGATION_INACTIVE: HVACMode.AUTO,
+    OverkizCommandParam.ACTIVE: HVACMode.HEAT,
+    OverkizCommandParam.INACTIVE: HVACMode.AUTO,
 }
 HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
