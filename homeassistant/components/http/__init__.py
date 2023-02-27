@@ -350,8 +350,11 @@ class HomeAssistantHTTP:
         async def serve_file(request: web.Request) -> web.FileResponse:
             """Serve file from disk."""
             if cache_headers:
-                return web.FileResponse(path, headers=CACHE_HEADERS)
-            return web.FileResponse(path)
+                response = web.FileResponse(path, headers=CACHE_HEADERS)
+            else:
+                response = web.FileResponse(path)
+            response.enable_compression()
+            return response
 
         self.app["allow_configured_cors"](
             self.app.router.add_route("GET", url_path, serve_file)
