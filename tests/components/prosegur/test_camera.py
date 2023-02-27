@@ -27,9 +27,11 @@ async def test_camera_fail(hass, init_integration, mock_install, caplog):
         return_value=b"ABC", side_effect=ProsegurException()
     )
 
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.prosegur"):
-        with pytest.raises(HomeAssistantError) as exc:
-            await camera.async_get_image(hass, "camera.test_cam")
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.prosegur"
+    ), pytest.raises(HomeAssistantError) as exc:
+        await camera.async_get_image(hass, "camera.test_cam")
+
         assert "Unable to get image" in str(exc.value)
 
         assert "Image test_cam doesn't exist" in caplog.text

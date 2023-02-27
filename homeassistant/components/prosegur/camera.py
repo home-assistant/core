@@ -85,8 +85,8 @@ class ProsegurCamera(Camera):
     async def async_request_image(self):
         """Request new image from the camera."""
 
+        _LOGGER.debug("Request image for %s", self._camera.description)
         try:
-            _LOGGER.debug("Request image for %s", self._camera.description)
             await self._installation.request_image(self._auth, self._camera.id)
 
         except ProsegurException as err:
