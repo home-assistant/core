@@ -30,7 +30,7 @@ async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry_enabled_by_default: AsyncMock,
-):
+) -> None:
     """Test we get sensor data."""
     await async_init_integration(hass, aioclient_mock)
 

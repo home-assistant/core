@@ -17,6 +17,7 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
+    InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     ReconnectLogic,
     RequiresEncryptionAPIError,
@@ -35,6 +36,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    EntityCategory,
     __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -44,7 +46,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
@@ -347,7 +349,14 @@ async def async_setup_entry(  # noqa: C901
 
     async def on_connect_error(err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
-        if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
+        if isinstance(
+            err,
+            (
+                RequiresEncryptionAPIError,
+                InvalidEncryptionKeyAPIError,
+                InvalidAuthAPIError,
+            ),
+        ):
             entry.async_start_reauth(hass)
 
     reconnect_logic = ReconnectLogic(
@@ -638,9 +647,10 @@ async def platform_async_setup_entry(
         # Add entities to Home Assistant
         async_add_entities(add_entities)
 
-    signal = f"esphome_{entry.entry_id}_on_list"
     entry_data.cleanup_callbacks.append(
-        async_dispatcher_connect(hass, signal, async_list_entities)
+        async_dispatcher_connect(
+            hass, entry_data.signal_static_info_updated, async_list_entities
+        )
     )
 
 

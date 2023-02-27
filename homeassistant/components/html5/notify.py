@@ -1,4 +1,6 @@
 """HTML5 Push Messaging notification service."""
+from __future__ import annotations
+
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial
@@ -27,11 +29,13 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_NAME, URL_ROOT
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import save_json
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .const import DOMAIN, SERVICE_DISMISS
 
@@ -161,14 +165,15 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = (
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> HTML5NotificationService | None:
     """Get the HTML5 push notification service."""
     json_path = hass.config.path(REGISTRATIONS_FILE)
 
     registrations = _load_config(json_path)
-
-    if registrations is None:
-        return None
 
     vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
     vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
@@ -189,10 +194,10 @@ def get_service(hass, config, discovery_info=None):
     )
 
 
-def _load_config(filename):
+def _load_config(filename: str) -> JsonObjectType:
     """Load configuration."""
     with suppress(HomeAssistantError):
-        return load_json(filename)
+        return load_json_object(filename)
     return {}
 
 

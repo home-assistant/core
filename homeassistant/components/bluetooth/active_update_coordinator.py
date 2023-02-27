@@ -26,8 +26,7 @@ _T = TypeVar("_T")
 class ActiveBluetoothDataUpdateCoordinator(
     PassiveBluetoothDataUpdateCoordinator, Generic[_T]
 ):
-    """
-    A coordinator that receives passive data from advertisements but can also poll.
+    """A coordinator that receives passive data from advertisements but can also poll.
 
     Unlike the passive processor coordinator, this coordinator does call a parser
     method to parse the data from the advertisement.
@@ -107,6 +106,8 @@ class ActiveBluetoothDataUpdateCoordinator(
 
     def needs_poll(self, service_info: BluetoothServiceInfoBleak) -> bool:
         """Return true if time to try and poll."""
+        if self.hass.is_stopping:
+            return False
         poll_age: float | None = None
         if self._last_poll:
             poll_age = monotonic_time_coarse() - self._last_poll

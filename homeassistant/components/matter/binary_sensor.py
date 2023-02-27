@@ -1,11 +1,9 @@
 """Matter binary sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from functools import partial
-
 from chip.clusters import Objects as clusters
-from matter_server.common.models import device_types
+from chip.clusters.Objects import uint
+from chip.clusters.Types import Nullable, NullValue
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,8 +15,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import MatterEntity, MatterEntityDescriptionBaseClass
+from .entity import MatterEntity
 from .helpers import get_matter
+from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
@@ -34,55 +33,70 @@ async def async_setup_entry(
 class MatterBinarySensor(MatterEntity, BinarySensorEntity):
     """Representation of a Matter binary sensor."""
 
-    entity_description: MatterBinarySensorEntityDescription
-
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        cluster = self._device_type_instance.get_cluster(clusters.BooleanState)
-        self._attr_is_on = cluster.stateValue if cluster else None
+        value: bool | uint | int | Nullable | None
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value in (None, NullValue):
+            value = None
+        elif value_convert := self._entity_info.measurement_to_ha:
+            value = value_convert(value)
+        self._attr_is_on = value
 
 
-class MatterOccupancySensor(MatterBinarySensor):
-    """Representation of a Matter occupancy sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
-
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
-        cluster = self._device_type_instance.get_cluster(clusters.OccupancySensing)
+# Discovery schema(s) to map Matter Attributes to HA entities
+DISCOVERY_SCHEMAS = [
+    # device specific: translate Hue motion to sensor to HA Motion sensor
+    # instead of generic occupancy sensor
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=BinarySensorEntityDescription(
+            key="HueMotionSensor",
+            device_class=BinarySensorDeviceClass.MOTION,
+            name="Motion",
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.OccupancySensing.Attributes.Occupancy,),
+        vendor_id=(4107,),
+        product_name=("Hue motion sensor",),
+        measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=BinarySensorEntityDescription(
+            key="ContactSensor",
+            device_class=BinarySensorDeviceClass.DOOR,
+            name="Contact",
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        # value is inverted on matter to what we expect
+        measurement_to_ha=lambda x: not x,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=BinarySensorEntityDescription(
+            key="OccupancySensor",
+            device_class=BinarySensorDeviceClass.OCCUPANCY,
+            name="Occupancy",
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.OccupancySensing.Attributes.Occupancy,),
         # The first bit = if occupied
-        self._attr_is_on = cluster.occupancy & 1 == 1 if cluster else None
-
-
-@dataclass
-class MatterBinarySensorEntityDescription(
-    BinarySensorEntityDescription,
-    MatterEntityDescriptionBaseClass,
-):
-    """Matter Binary Sensor entity description."""
-
-
-# You can't set default values on inherited data classes
-MatterSensorEntityDescriptionFactory = partial(
-    MatterBinarySensorEntityDescription, entity_cls=MatterBinarySensor
-)
-
-DEVICE_ENTITY: dict[
-    type[device_types.DeviceType],
-    MatterEntityDescriptionBaseClass | list[MatterEntityDescriptionBaseClass],
-] = {
-    device_types.ContactSensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.ContactSensor,
-        name="Contact",
-        subscribe_attributes=(clusters.BooleanState.Attributes.StateValue,),
-        device_class=BinarySensorDeviceClass.DOOR,
+        measurement_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
     ),
-    device_types.OccupancySensor: MatterSensorEntityDescriptionFactory(
-        key=device_types.OccupancySensor,
-        name="Occupancy",
-        entity_cls=MatterOccupancySensor,
-        subscribe_attributes=(clusters.OccupancySensing.Attributes.Occupancy,),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=BinarySensorEntityDescription(
+            key="BatteryChargeLevel",
+            device_class=BinarySensorDeviceClass.BATTERY,
+            name="Battery Status",
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
+        # only add binary battery sensor if a regular percentage based is not available
+        absent_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
+        measurement_to_ha=lambda x: x != clusters.PowerSource.Enums.BatChargeLevel.kOk,
     ),
-}
+]

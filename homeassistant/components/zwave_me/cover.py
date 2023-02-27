@@ -51,6 +51,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
     )
 
     def close_cover(self, **kwargs: Any) -> None:
@@ -68,13 +69,18 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
             self.device.id, f"exact?level={str(min(value, 99))}"
         )
 
+    def stop_cover(self, **kwargs: Any) -> None:
+        """Stop cover."""
+        self.controller.zwave_api.send_command(self.device.id, "stop")
+
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
 
-        Allow small calibration errors (some devices after a long time become not well calibrated)
+        Allow small calibration errors (some devices after a long time
+        become not well calibrated).
         """
         if self.device.level > 95:
             return 100
@@ -87,7 +93,8 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
 
         None is unknown.
 
-        Allow small calibration errors (some devices after a long time become not well calibrated)
+        Allow small calibration errors (some devices after a long time
+        become not well calibrated).
         """
         if self.device.level is None:
             return None

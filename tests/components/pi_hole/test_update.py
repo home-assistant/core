@@ -9,7 +9,7 @@ from . import CONFIG_DATA_DEFAULTS, _create_mocked_hole, _patch_init_hole
 from tests.common import MockConfigEntry
 
 
-async def test_update(hass: HomeAssistant):
+async def test_update(hass: HomeAssistant) -> None:
     """Tests update entity."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
@@ -50,7 +50,7 @@ async def test_update(hass: HomeAssistant):
     )
 
 
-async def test_update_no_versions(hass: HomeAssistant):
+async def test_update_no_versions(hass: HomeAssistant) -> None:
     """Tests update entity when no version data available."""
     mocked_hole = _create_mocked_hole(has_versions=False)
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)

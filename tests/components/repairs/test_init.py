@@ -25,10 +25,13 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
+from tests.typing import WebSocketGenerator
 
 
 @freeze_time("2022-07-19 07:53:05")
-async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_create_update_issue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test creating and updating issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -125,7 +128,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
 
 @pytest.mark.parametrize("ha_version", ("2022.9.cat", "In the future: 2023.1.1"))
 async def test_create_issue_invalid_version(
-    hass: HomeAssistant, hass_ws_client, ha_version
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, ha_version
 ) -> None:
     """Test creating an issue with invalid breaks in version."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -165,7 +168,9 @@ async def test_create_issue_invalid_version(
 
 
 @freeze_time("2022-07-19 07:53:05")
-async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_ignore_issue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test ignoring issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -331,7 +336,9 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
     }
 
 
-async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> None:
+async def test_delete_issue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, freezer
+) -> None:
     """Test we can delete an issue."""
     freezer.move_to("2022-07-19 07:53:05")
     assert await async_setup_component(hass, DOMAIN, {})
@@ -455,7 +462,9 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
     }
 
 
-async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_non_compliant_platform(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test non-compliant platforms are not registered."""
 
     hass.config.components.add("fake_integration")

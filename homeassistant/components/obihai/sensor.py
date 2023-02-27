@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
-from pyobihai import PyObihai
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -12,19 +10,18 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .connectivity import ObihaiConnection
+from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, OBIHAI
 
 SCAN_INTERVAL = timedelta(seconds=5)
-
-OBIHAI = "Obihai"
-DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "admin"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -35,46 +32,58 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+# DEPRECATED
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Obihai sensor platform."""
+    issue_registry.async_create_issue(
+        hass,
+        DOMAIN,
+        "manual_migration",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=issue_registry.IssueSeverity.ERROR,
+        translation_key="manual_migration",
+    )
 
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    host = config[CONF_HOST]
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Obihai sensor entries."""
+
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    host = entry.data[CONF_HOST]
+    requester = ObihaiConnection(host, username, password)
+
+    await hass.async_add_executor_job(requester.update)
     sensors = []
+    for key in requester.services:
+        sensors.append(ObihaiServiceSensors(requester.pyobihai, requester.serial, key))
 
-    pyobihai = PyObihai(host, username, password)
+    if requester.line_services is not None:
+        for key in requester.line_services:
+            sensors.append(
+                ObihaiServiceSensors(requester.pyobihai, requester.serial, key)
+            )
 
-    login = pyobihai.check_account()
-    if not login:
-        _LOGGER.error("Invalid credentials")
-        return
+    for key in requester.call_direction:
+        sensors.append(ObihaiServiceSensors(requester.pyobihai, requester.serial, key))
 
-    serial = pyobihai.get_device_serial()
-
-    services = pyobihai.get_state()
-
-    line_services = pyobihai.get_line_state()
-
-    call_direction = pyobihai.get_call_direction()
-
-    for key in services:
-        sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
-
-    if line_services is not None:
-        for key in line_services:
-            sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
-
-    for key in call_direction:
-        sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
-
-    add_entities(sensors)
+    async_add_entities(sensors, update_before_add=True)
 
 
 class ObihaiServiceSensors(SensorEntity):
@@ -148,6 +157,10 @@ class ObihaiServiceSensors(SensorEntity):
 
     def update(self) -> None:
         """Update the sensor."""
+        if not self._pyobihai.check_account():
+            self._state = None
+            return
+
         services = self._pyobihai.get_state()
 
         if self._service_name in services:

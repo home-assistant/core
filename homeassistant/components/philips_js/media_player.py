@@ -437,7 +437,6 @@ class PhilipsTVMediaPlayer(
 
     @callback
     def _update_from_coordinator(self):
-
         if self._tv.on:
             if self._tv.powerstate in ("Standby", "StandbyKeep"):
                 self._attr_state = MediaPlayerState.OFF

@@ -1,0 +1,224 @@
+# serializer version: 1
+# name: test_extract_blueprint_from_community_topic
+  OrderedDict({
+    'remote': OrderedDict({
+      'name': 'Remote',
+      'description': 'IKEA remote to use',
+      'selector': dict({
+        'device': OrderedDict({
+          'integration': 'zha',
+          'manufacturer': 'IKEA of Sweden',
+          'model': 'TRADFRI remote control',
+          'multiple': False,
+        }),
+      }),
+    }),
+    'light': OrderedDict({
+      'name': 'Light(s)',
+      'description': 'The light(s) to control',
+      'selector': dict({
+        'target': OrderedDict({
+          'entity': list([
+            OrderedDict({
+              'domain': list([
+                'light',
+              ]),
+            }),
+          ]),
+        }),
+      }),
+    }),
+    'force_brightness': OrderedDict({
+      'name': 'Force turn on brightness',
+      'description': '''
+        Force the brightness to the set level below, when the "on" button on the remote is pushed and lights turn on.
+  
+      ''',
+      'default': False,
+      'selector': dict({
+        'boolean': dict({
+        }),
+      }),
+    }),
+    'brightness': OrderedDict({
+      'name': 'Brightness',
+      'description': 'Brightness of the light(s) when turning on',
+      'default': 50,
+      'selector': dict({
+        'number': OrderedDict({
+          'min': 0.0,
+          'max': 100.0,
+          'mode': 'slider',
+          'step': 1.0,
+          'unit_of_measurement': '%',
+        }),
+      }),
+    }),
+    'button_left_short': OrderedDict({
+      'name': 'Left button - short press',
+      'description': 'Action to run on short left button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+    'button_left_long': OrderedDict({
+      'name': 'Left button - long press',
+      'description': 'Action to run on long left button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+    'button_right_short': OrderedDict({
+      'name': 'Right button - short press',
+      'description': 'Action to run on short right button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+    'button_right_long': OrderedDict({
+      'name': 'Right button - long press',
+      'description': 'Action to run on long right button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_fetch_blueprint_from_community_url
+  OrderedDict({
+    'remote': OrderedDict({
+      'name': 'Remote',
+      'description': 'IKEA remote to use',
+      'selector': dict({
+        'device': OrderedDict({
+          'integration': 'zha',
+          'manufacturer': 'IKEA of Sweden',
+          'model': 'TRADFRI remote control',
+          'multiple': False,
+        }),
+      }),
+    }),
+    'light': OrderedDict({
+      'name': 'Light(s)',
+      'description': 'The light(s) to control',
+      'selector': dict({
+        'target': OrderedDict({
+          'entity': list([
+            OrderedDict({
+              'domain': list([
+                'light',
+              ]),
+            }),
+          ]),
+        }),
+      }),
+    }),
+    'force_brightness': OrderedDict({
+      'name': 'Force turn on brightness',
+      'description': '''
+        Force the brightness to the set level below, when the "on" button on the remote is pushed and lights turn on.
+  
+      ''',
+      'default': False,
+      'selector': dict({
+        'boolean': dict({
+        }),
+      }),
+    }),
+    'brightness': OrderedDict({
+      'name': 'Brightness',
+      'description': 'Brightness of the light(s) when turning on',
+      'default': 50,
+      'selector': dict({
+        'number': OrderedDict({
+          'min': 0.0,
+          'max': 100.0,
+          'mode': 'slider',
+          'step': 1.0,
+          'unit_of_measurement': '%',
+        }),
+      }),
+    }),
+    'button_left_short': OrderedDict({
+      'name': 'Left button - short press',
+      'description': 'Action to run on short left button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+    'button_left_long': OrderedDict({
+      'name': 'Left button - long press',
+      'description': 'Action to run on long left button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+    'button_right_short': OrderedDict({
+      'name': 'Right button - short press',
+      'description': 'Action to run on short right button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+    'button_right_long': OrderedDict({
+      'name': 'Right button - long press',
+      'description': 'Action to run on long right button press',
+      'default': NodeListClass([
+      ]),
+      'selector': dict({
+        'action': dict({
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_fetch_blueprint_from_github_gist_url
+  OrderedDict({
+    'motion_entity': OrderedDict({
+      'name': 'Motion Sensor',
+      'selector': dict({
+        'entity': OrderedDict({
+          'domain': list([
+            'binary_sensor',
+          ]),
+          'device_class': list([
+            'motion',
+          ]),
+          'multiple': False,
+        }),
+      }),
+    }),
+    'light_entity': OrderedDict({
+      'name': 'Light',
+      'selector': dict({
+        'entity': OrderedDict({
+          'domain': list([
+            'light',
+          ]),
+          'multiple': False,
+        }),
+      }),
+    }),
+  })
+# ---
