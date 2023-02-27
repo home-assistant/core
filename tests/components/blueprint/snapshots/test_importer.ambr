@@ -18,9 +18,13 @@
       'description': 'The light(s) to control',
       'selector': dict({
         'target': OrderedDict({
-          'entity': OrderedDict({
-            'domain': 'light',
-          }),
+          'entity': list([
+            OrderedDict({
+              'domain': list([
+                'light',
+              ]),
+            }),
+          ]),
         }),
       }),
     }),
@@ -111,9 +115,13 @@
       'description': 'The light(s) to control',
       'selector': dict({
         'target': OrderedDict({
-          'entity': OrderedDict({
-            'domain': 'light',
-          }),
+          'entity': list([
+            OrderedDict({
+              'domain': list([
+                'light',
+              ]),
+            }),
+          ]),
         }),
       }),
     }),
@@ -191,8 +199,12 @@
       'name': 'Motion Sensor',
       'selector': dict({
         'entity': OrderedDict({
-          'domain': 'binary_sensor',
-          'device_class': 'motion',
+          'domain': list([
+            'binary_sensor',
+          ]),
+          'device_class': list([
+            'motion',
+          ]),
           'multiple': False,
         }),
       }),
@@ -201,7 +213,9 @@
       'name': 'Light',
       'selector': dict({
         'entity': OrderedDict({
-          'domain': 'light',
+          'domain': list([
+            'light',
+          ]),
           'multiple': False,
         }),
       }),
