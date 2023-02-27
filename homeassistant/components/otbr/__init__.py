@@ -47,9 +47,21 @@ class OTBRData:
     api: python_otbr_api.OTBR
 
     @_handle_otbr_error
+    async def set_enabled(self, enabled: bool) -> None:
+        """Enable or disable the router."""
+        return await self.api.set_enabled(enabled)
+
+    @_handle_otbr_error
     async def get_active_dataset_tlvs(self) -> bytes | None:
         """Get current active operational dataset in TLVS format, or None."""
         return await self.api.get_active_dataset_tlvs()
+
+    @_handle_otbr_error
+    async def create_active_dataset(
+        self, dataset: python_otbr_api.OperationalDataSet
+    ) -> None:
+        """Create an active operational dataset."""
+        return await self.api.create_active_dataset(dataset)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
