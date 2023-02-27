@@ -28,7 +28,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_credentials(
+async def async_credential_errors(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, str]:
     """Manage Obihai options."""
@@ -59,7 +59,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            if not (errors := await async_validate_credentials(self.hass, user_input)):
+            if not (errors := await async_credential_errors(self.hass, user_input)):
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data=user_input,
@@ -76,7 +76,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle a flow initialized by importing a config."""
         self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        if await async_validate_credentials(self.hass, config):
+        if await async_credential_errors(self.hass, config):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
