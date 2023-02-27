@@ -23,43 +23,22 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
 
-    data = {}
-    data.update(
-        {
-            DOMAIN: {
-                "account_id": manager.account_id,
-                "bulb_count": len(manager.bulbs),
-                "fan_count": len(manager.fans),
-                "outlets_count": len(manager.outlets),
-                "switch_count": len(manager.switches),
-                "timezone": manager.time_zone,
-            }
-        }
-    )
-
-    data.update(
-        {
-            "home_assistant": {
-                "disabled_by": entry.disabled_by,
-                "disabled_polling": entry.pref_disable_polling,
-            }
-        }
-    )
-
-    data.update(
-        {
-            "devices": {
-                "bulbs": [_redact_device_values(device) for device in manager.bulbs],
-                "fans": [_redact_device_values(device) for device in manager.fans],
-                "outlets": [
-                    _redact_device_values(device) for device in manager.outlets
-                ],
-                "switches": [
-                    _redact_device_values(device) for device in manager.switches
-                ],
-            }
-        }
-    )
+    data = {
+        DOMAIN: {
+            "account_id": manager.account_id,
+            "bulb_count": len(manager.bulbs),
+            "fan_count": len(manager.fans),
+            "outlets_count": len(manager.outlets),
+            "switch_count": len(manager.switches),
+            "timezone": manager.time_zone,
+        },
+        "devices": {
+            "bulbs": [_redact_device_values(device) for device in manager.bulbs],
+            "fans": [_redact_device_values(device) for device in manager.fans],
+            "outlets": [_redact_device_values(device) for device in manager.outlets],
+            "switches": [_redact_device_values(device) for device in manager.switches],
+        },
+    }
 
     return data
 
