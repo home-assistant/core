@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/fido",
   "iot_class": "cloud_polling",
   "loggers": ["pyfido"],
-  "requirements": ["pyfido==2.1.1"]
+  "requirements": ["pyfido==2.1.2"]
 }

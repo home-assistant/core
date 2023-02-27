@@ -138,7 +138,7 @@ TEST_IDS = [
 
 
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "tzname",
         "latitude",
@@ -147,12 +147,12 @@ TEST_IDS = [
         "sensor",
         "diaspora",
         "result",
-    ],
+    ),
     TEST_PARAMS,
     ids=TEST_IDS,
 )
 async def test_jewish_calendar_sensor(
-    hass,
+    hass: HomeAssistant,
     now,
     tzname,
     latitude,
@@ -161,7 +161,7 @@ async def test_jewish_calendar_sensor(
     sensor,
     diaspora,
     result,
-):
+) -> None:
     """Test Jewish calendar sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
@@ -481,7 +481,7 @@ SHABBAT_TEST_IDS = [
 
 @pytest.mark.parametrize("language", ["english", "hebrew"])
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "candle_lighting",
         "havdalah",
@@ -490,12 +490,12 @@ SHABBAT_TEST_IDS = [
         "latitude",
         "longitude",
         "result",
-    ],
+    ),
     SHABBAT_PARAMS,
     ids=SHABBAT_TEST_IDS,
 )
 async def test_shabbat_times_sensor(
-    hass,
+    hass: HomeAssistant,
     language,
     now,
     candle_lighting,
@@ -505,7 +505,7 @@ async def test_shabbat_times_sensor(
     latitude,
     longitude,
     result,
-):
+) -> None:
     """Test sensor output for upcoming shabbat/yomtov times."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
@@ -591,8 +591,8 @@ OMER_TEST_IDS = [
 ]
 
 
-@pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
-async def test_omer_sensor(hass, test_time, result):
+@pytest.mark.parametrize(("test_time", "result"), OMER_PARAMS, ids=OMER_TEST_IDS)
+async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Omer Count sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
@@ -625,8 +625,8 @@ DAFYOMI_TEST_IDS = [
 ]
 
 
-@pytest.mark.parametrize(["test_time", "result"], DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
-async def test_dafyomi_sensor(hass, test_time, result):
+@pytest.mark.parametrize(("test_time", "result"), DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
+async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Daf Yomi sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 

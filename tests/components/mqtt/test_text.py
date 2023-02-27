@@ -639,7 +639,7 @@ async def test_entity_debug_info_message(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             text.SERVICE_SET_VALUE,
@@ -693,7 +693,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "some text", None, "some text"),
     ],

@@ -69,7 +69,7 @@ async def test_subscribing_config_topic(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.parametrize(
-    "topic, log",
+    ("topic", "log"),
     [
         ("homeassistant/binary_sensor/bla/not_config", False),
         ("homeassistant/binary_sensor/rörkrökare/config", True),
@@ -239,7 +239,7 @@ async def test_discover_alarm_control_panel(
 
 
 @pytest.mark.parametrize(
-    "topic, config, entity_id, name, domain",
+    ("topic", "config", "entity_id", "name", "domain"),
     [
         (
             "homeassistant/alarm_control_panel/object/bla/config",

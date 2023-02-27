@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import aiohttp
 from pushover_complete import BadAPIRequestError
 import pytest
-from requests_mock import Mocker
+import requests_mock
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.pushover.const import DOMAIN
@@ -112,7 +112,7 @@ async def test_async_setup_entry_failed_conn_error(
 
 
 async def test_async_setup_entry_failed_json_error(
-    hass: HomeAssistant, requests_mock: Mocker
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test pushover failed setup due to bad json response from library."""
     entry = MockConfigEntry(
