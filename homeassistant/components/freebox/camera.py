@@ -18,7 +18,6 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import FreeboxHomeBaseClass
 from .const import (
     ATTR_ACTIVATION,
     ATTR_DETECTION,
@@ -34,6 +33,8 @@ from .const import (
     ATTR_VOLUME,
     DOMAIN,
 )
+from .home_base import FreeboxHomeBaseClass
+from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +83,9 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
 
     _attr_should_poll = True
 
-    def __init__(self, hass: HomeAssistant, router, node) -> None:
+    def __init__(
+        self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
+    ) -> None:
         """Initialize a camera."""
 
         super().__init__(hass, router, node)
@@ -99,37 +102,31 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         )
 
         self._command_motion_detection = self.get_command_id(
-            node["type"]["endpoints"], "slot", ATTR_DETECTION
+            node["type"]["endpoints"], ATTR_DETECTION
         )
         self._high_quality_video = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_QUALITY
+            node["show_endpoints"], ATTR_QUALITY
         )
-        self._command_flip = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_FLIP
-        )
+        self._command_flip = self.get_command_id(node["show_endpoints"], ATTR_FLIP)
         self._motion_threshold = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_THRESHOLD
+            node["show_endpoints"], ATTR_THRESHOLD
         )
         self._motion_sensitivity = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_SENSITIVITY
+            node["show_endpoints"], ATTR_SENSITIVITY
         )
         self._activation_with_alarm = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_ACTIVATION
+            node["show_endpoints"], ATTR_ACTIVATION
         )
-        self._timestamp = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_TIMESTAMP
-        )
-        self._volume_micro = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_VOLUME
-        )
+        self._timestamp = self.get_command_id(node["show_endpoints"], ATTR_TIMESTAMP)
+        self._volume_micro = self.get_command_id(node["show_endpoints"], ATTR_VOLUME)
         self._sound_detection = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_SOUND_DETECTION
+            node["show_endpoints"], ATTR_SOUND_DETECTION
         )
         self._sound_trigger = self.get_command_id(
-            node["show_endpoints"], "slot", ATTR_SOUND_TRIGGER
+            node["show_endpoints"], ATTR_SOUND_TRIGGER
         )
-        self._rstp = self.get_command_id(node["show_endpoints"], "slot", ATTR_RTSP)
-        self._disk = self.get_command_id(node["show_endpoints"], "slot", ATTR_DISK)
+        self._rstp = self.get_command_id(node["show_endpoints"], ATTR_RTSP)
+        self._disk = self.get_command_id(node["show_endpoints"], ATTR_DISK)
 
         self.update_node(node)
 
@@ -155,9 +152,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
     async def async_flip(self, entity: FreeboxCamera) -> None:
         """Flip the camera stream."""
         entity.set_flip(not entity.flip)
-        await entity.set_home_endpoint_value(
-            entity.command_flip, {"value": entity.flip}
-        )
+        await entity.set_home_endpoint_value(entity.command_flip, entity.flip)
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -166,16 +161,12 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        await self.set_home_endpoint_value(
-            self._command_motion_detection, {"value": True}
-        )
+        await self.set_home_endpoint_value(self._command_motion_detection, True)
         self._attr_motion_detection_enabled = True
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        await self.set_home_endpoint_value(
-            self._command_motion_detection, {"value": False}
-        )
+        await self.set_home_endpoint_value(self._command_motion_detection, False)
         self._attr_motion_detection_enabled = False
 
     @property

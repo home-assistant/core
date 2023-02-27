@@ -13,7 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import BINARY_SENSOR_SCAN_INTERVAL_SECS, DOMAIN, PLATFORMS, SERVICE_REBOOT
+from .const import DOMAIN, PLATFORMS, SERVICE_REBOOT
 from .router import FreeboxRouter, get_api
 
 FREEBOX_SCHEMA = vol.Schema(
@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, VALUE_NOT_SET
+from .const import DOMAIN
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,11 +77,6 @@ class FreeboxHomeBaseClass(Entity):
         return False
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
     def device_info(self):
         """Return the device info."""
         return {
@@ -104,78 +99,27 @@ class FreeboxHomeBaseClass(Entity):
             )
         self.async_write_ha_state()
 
-    async def set_home_endpoint_value(self, command_id, value=None):
+    async def set_home_endpoint_value(self, command_id: Any, value=None) -> None:
         """Set Home endpoint value."""
         if value is None:
             value = {"value": None}
-        if command_id == VALUE_NOT_SET:
-            _LOGGER.error(
-                "Unable to SET a value through the API. Command is VALUE_NOT_SET"
-            )
-            return False
-        await self._router.api.home.set_home_endpoint_value(self._id, command_id, value)
+        if command_id is None:
+            _LOGGER.error("Unable to SET a value through the API. Command is None")
+            return
+        await self._router.api.home.set_home_endpoint_value(
+            self._id, command_id, {"value": value}
+        )
 
-    async def get_home_endpoint_value(self, command_id):
-        """Get Home endpoint value."""
-        if command_id == VALUE_NOT_SET:
-            _LOGGER.error(
-                "Unable to GET a value through the API. Command is VALUE_NOT_SET"
-            )
-            return VALUE_NOT_SET
-        try:
-            node = await self._router.api.home.get_home_endpoint_value(
-                self._id, command_id
-            )
-        except TimeoutError:
-            _LOGGER.warning("The Freebox API Timeout during a value retrieval")
-            return VALUE_NOT_SET
-        return node.get("value", VALUE_NOT_SET)
-
-    def get_command_id(self, nodes, ep_type, name):
+    def get_command_id(self, nodes, name) -> int | None:
         """Get the command id."""
         node = next(
-            filter(lambda x: (x["name"] == name and x["ep_type"] == ep_type), nodes),
+            filter(lambda x: (x["name"] == name), nodes),
             None,
         )
         if node is None:
-            _LOGGER.warning(
-                "The Freebox Home device has no value for: " + ep_type + "/" + name
-            )
-            return VALUE_NOT_SET
+            _LOGGER.warning("The Freebox Home device has no value for: %s", name)
+            return None
         return node["id"]
-
-    def get_value(self, ep_type, name):
-        """Get the value."""
-        node = next(
-            filter(
-                lambda x: (x["name"] == name and x["ep_type"] == ep_type),
-                self._node["show_endpoints"],
-            ),
-            None,
-        )
-        if node is None:
-            _LOGGER.warning(
-                "The Freebox Home device has no node for: " + ep_type + "/" + name
-            )
-            return VALUE_NOT_SET
-        return node.get("value", VALUE_NOT_SET)
-
-    async def async_set_value(self, ep_type, name, value):
-        """Set the value."""
-        node = next(
-            filter(
-                lambda x: (x["name"] == name and x["ep_type"] == ep_type),
-                self._node["show_endpoints"],
-            ),
-            None,
-        )
-        if node is None:
-            _LOGGER.warning(
-                "The Freebox Home device has no node for: " + ep_type + "/" + name
-            )
-            return
-        node["value"] = value
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""

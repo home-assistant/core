@@ -34,8 +34,6 @@ STORAGE_VERSION = 1
 
 CONNECTION_SENSORS_KEYS = {"rate_down", "rate_up"}
 
-BINARY_SENSOR_SCAN_INTERVAL_SECS = 5
-
 # Icons
 DEVICE_ICONS = {
     "freebox_delta": "mdi:television-guide",
