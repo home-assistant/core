@@ -3,14 +3,15 @@
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.edl21.const import CONF_SERIAL_PORT, DEFAULT_NAME, DOMAIN
+from homeassistant.components.edl21.const import CONF_SERIAL_PORT, DEFAULT_TITLE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-VALID_CONFIG = {CONF_NAME: "My Smart Meter", CONF_SERIAL_PORT: "/dev/ttyUSB1"}
+VALID_CONFIG = {CONF_SERIAL_PORT: "/dev/ttyUSB1"}
+VALID_LEGACY_CONFIG = {CONF_NAME: "My Smart Meter", CONF_SERIAL_PORT: "/dev/ttyUSB1"}
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -22,11 +23,20 @@ async def test_show_form(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        VALID_CONFIG,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_TITLE
+    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG[CONF_SERIAL_PORT]
 
 
 async def test_integration_already_exists(hass: HomeAssistant) -> None:
-    """Test that a new entry must not have the same name or serial port as an existing entry."""
+    """Test that a new entry must not have the same serial port as an existing entry."""
 
     MockConfigEntry(
         domain=DOMAIN,
@@ -42,42 +52,6 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_NAME: "Other Smart Meter",
-            CONF_SERIAL_PORT: VALID_CONFIG[CONF_SERIAL_PORT],
-        },
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_NAME: VALID_CONFIG[CONF_NAME], CONF_SERIAL_PORT: "/dev/ttyUSB2"},
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_create_entry_by_user(hass: HomeAssistant) -> None:
-    """Test that the user step works."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == VALID_CONFIG[CONF_NAME]
-    assert result["data"][CONF_NAME] == VALID_CONFIG[CONF_NAME]
-    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG[CONF_SERIAL_PORT]
-
 
 async def test_create_entry_by_import(hass: HomeAssistant) -> None:
     """Test that the import step works."""
@@ -85,13 +59,13 @@ async def test_create_entry_by_import(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=VALID_CONFIG,
+        data=VALID_LEGACY_CONFIG,
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == VALID_CONFIG[CONF_NAME]
-    assert result["data"][CONF_NAME] == VALID_CONFIG[CONF_NAME]
-    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG[CONF_SERIAL_PORT]
+    assert result["title"] == VALID_LEGACY_CONFIG[CONF_NAME]
+    assert result["data"][CONF_NAME] == VALID_LEGACY_CONFIG[CONF_NAME]
+    assert result["data"][CONF_SERIAL_PORT] == VALID_LEGACY_CONFIG[CONF_SERIAL_PORT]
 
     # Test the import step with an empty string as name (the name is optional in the old schema and defaults to "")
     result = await hass.config_entries.flow.async_init(
@@ -101,6 +75,6 @@ async def test_create_entry_by_import(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
+    assert result["title"] == DEFAULT_TITLE
     assert result["data"][CONF_NAME] == ""
     assert result["data"][CONF_SERIAL_PORT] == "/dev/ttyUSB2"

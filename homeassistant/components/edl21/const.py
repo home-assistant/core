@@ -9,4 +9,4 @@ CONF_SERIAL_PORT = "serial_port"
 
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
-DEFAULT_NAME = "Smart Meter"
+DEFAULT_TITLE = "Smart Meter"

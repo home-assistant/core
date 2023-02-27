@@ -7,7 +7,6 @@
       "user": {
         "title": "Add your EDL21 smart meter",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "serial_port": "[%key:common::config_flow::data::usb_path%]"
         }
       }

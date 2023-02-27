@@ -326,7 +326,7 @@ class EDL21:
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._name = config[CONF_NAME]
+        self._name = config.get(CONF_NAME)
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
