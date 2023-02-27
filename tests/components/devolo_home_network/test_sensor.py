@@ -127,7 +127,9 @@ async def test_sensor(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_plc_phyrates(hass: HomeAssistant, mock_device: MockDevice):
+async def test_update_plc_phyrates(
+    hass: HomeAssistant, mock_device: MockDevice
+) -> None:
     """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensor devices."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -139,7 +141,7 @@ async def test_update_plc_phyrates(hass: HomeAssistant, mock_device: MockDevice)
 
     state = hass.states.get(state_key_downlink)
     assert state is not None
-    assert state.state == str(round(PLCNET.data_rates[0].rx_rate))
+    assert state.state == str(PLCNET.data_rates[0].rx_rate)
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{entry.title} PLC downlink phyrate ({PLCNET.devices[1].user_device_name})"
@@ -148,7 +150,7 @@ async def test_update_plc_phyrates(hass: HomeAssistant, mock_device: MockDevice)
 
     state = hass.states.get(state_key_uplink)
     assert state is not None
-    assert state.state == str(round(PLCNET.data_rates[0].tx_rate))
+    assert state.state == str(PLCNET.data_rates[0].tx_rate)
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{entry.title} PLC uplink phyrate ({PLCNET.devices[1].user_device_name})"
@@ -177,10 +179,10 @@ async def test_update_plc_phyrates(hass: HomeAssistant, mock_device: MockDevice)
 
     state = hass.states.get(state_key_downlink)
     assert state is not None
-    assert state.state == str(round(PLCNET.data_rates[0].rx_rate))
+    assert state.state == str(PLCNET.data_rates[0].rx_rate)
 
     state = hass.states.get(state_key_uplink)
     assert state is not None
-    assert state.state == str(round(PLCNET.data_rates[0].tx_rate))
+    assert state.state == str(PLCNET.data_rates[0].tx_rate)
 
     await hass.config_entries.async_unload(entry.entry_id)
