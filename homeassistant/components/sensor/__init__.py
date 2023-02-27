@@ -196,14 +196,25 @@ class SensorEntity(Entity):
         if self.unique_id is None or self.device_class is None:
             return
         registry = er.async_get(self.hass)
+
+        # Bail out if the entity is not yet registered
         if not (
             entity_id := registry.async_get_entity_id(
                 platform.domain, platform.platform_name, self.unique_id
             )
         ):
+            # Prime _sensor_option_unit_of_measurement to ensure the correct unit
+            # is stored in the entity registry.
+            self._sensor_option_unit_of_measurement = self._get_initial_suggested_unit()
             return
+
         registry_entry = registry.async_get(entity_id)
         assert registry_entry
+
+        # Prime _sensor_option_unit_of_measurement to ensure the correct unit
+        # is stored in the entity registry.
+        self.registry_entry = registry_entry
+        self._async_read_entity_options()
 
         # If the sensor has 'unit_of_measurement' in its sensor options, the user has
         # overridden the unit.
@@ -230,11 +241,14 @@ class SensorEntity(Entity):
 
         # Set suggested_unit_of_measurement to the old unit to enable automatic
         # conversion
-        registry.async_update_entity_options(
+        self.registry_entry = registry.async_update_entity_options(
             entity_id,
             f"{DOMAIN}.private",
             {"suggested_unit_of_measurement": registry_unit},
         )
+        # Update _sensor_option_unit_of_measurement to ensure the correct unit
+        # is stored in the entity registry.
+        self._async_read_entity_options()
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
@@ -305,12 +319,8 @@ class SensorEntity(Entity):
 
         return None
 
-    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
-        """Return initial entity options.
-
-        These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
-        """
+    def _get_initial_suggested_unit(self) -> str | UndefinedType:
+        """Return the initial unit."""
         # Unit suggested by the integration
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
 
@@ -321,6 +331,19 @@ class SensorEntity(Entity):
             )
 
         if suggested_unit_of_measurement is None:
+            return UNDEFINED
+
+        return suggested_unit_of_measurement
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+        """
+        suggested_unit_of_measurement = self._get_initial_suggested_unit()
+
+        if suggested_unit_of_measurement is UNDEFINED:
             return None
 
         return {
