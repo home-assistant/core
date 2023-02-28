@@ -28,13 +28,9 @@ class AuroraSensor(AuroraEntity, SensorEntity):
     """Implementation of an aurora sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
         """Return % chance the aurora is visible."""
         return self.coordinator.data
-
-    @property
-    def state_class(self):
-        """Return state class for measurement."""
-        return SensorStateClass.MEASUREMENT
