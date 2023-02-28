@@ -1,5 +1,10 @@
 """The test for the attribute sensor platform."""
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -36,7 +41,8 @@ async def test_attribute_sensor(hass: HomeAssistant) -> None:
             "name": "test_attribute_sensor",
             "source": "sensor.sensor_one",
             "attribute": "attribute2",
-            "device_class": SensorDeviceClass.HUMIDITY,
+            "device_class": SensorDeviceClass.TEMPERATURE,
+            "unit_of_measurement": UnitOfTemperature.CELSIUS,
             "unique_id": "very_unique_id",
         }
     }
@@ -52,7 +58,8 @@ async def test_attribute_sensor(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_attribute_sensor")
 
     assert state.state == "100"
-    assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
     entity_reg = er.async_get(hass)
     entity = entity_reg.async_get("sensor.test_attribute_sensor")
