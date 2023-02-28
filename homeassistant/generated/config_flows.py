@@ -293,6 +293,7 @@ FLOWS = {
         "nut",
         "nws",
         "nzbget",
+        "obihai",
         "octoprint",
         "omnilogic",
         "oncue",
