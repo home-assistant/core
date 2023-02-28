@@ -72,7 +72,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                 (
                     "cover.test_state",
                     "dog",
-                    STATE_CLOSING,
+                    STATE_UNKNOWN,
                     {},
                     -1,
                     "Received invalid cover is_on state: dog",
