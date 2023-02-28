@@ -940,10 +940,7 @@ def mock_hass_config(
     with `hass_config` as parameterized.
     """
     if hass_config:
-        hass.config_entries = ConfigEntries(
-            hass,
-            hass_config,
-        )
+        hass.config_entries = ConfigEntries(hass, hass_config)
     with patch("homeassistant.config.load_yaml_config_file", return_value=hass_config):
         yield
 
