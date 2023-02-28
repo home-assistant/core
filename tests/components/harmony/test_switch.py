@@ -1,5 +1,4 @@
 """Test the Logitech Harmony Hub activity switches."""
-
 from datetime import timedelta
 
 from homeassistant.components.harmony.const import DOMAIN
@@ -16,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.util import utcnow
 
@@ -25,8 +25,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_connection_state_changes(
-    harmony_client, mock_hc, hass, mock_write_config
-):
+    harmony_client, mock_hc, hass: HomeAssistant, mock_write_config
+) -> None:
     """Ensure connection changes are reflected in the switch states."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -80,7 +80,7 @@ async def test_connection_state_changes(
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
 
 
-async def test_switch_toggles(mock_hc, hass, mock_write_config):
+async def test_switch_toggles(mock_hc, hass: HomeAssistant, mock_write_config) -> None:
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}

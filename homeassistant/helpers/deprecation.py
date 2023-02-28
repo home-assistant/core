@@ -5,9 +5,7 @@ from collections.abc import Callable
 import functools
 import inspect
 import logging
-from typing import Any, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 

@@ -94,17 +94,22 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
-        attrs: dict[str, Any] = {}
-        if self.data.temperature and self.data.temperature.isnumeric():
-            attrs[ATTR_TEMPERATURE] = self.hass.config.units.temperature(
+        try:
+            temperature = self.hass.config.units.temperature(
                 int(self.data.temperature), UnitOfTemperature.CELSIUS
             )
-        else:
-            attrs[ATTR_TEMPERATURE] = None
-        if self.data.total_consumption and self.data.total_consumption.isnumeric():
-            attrs[ATTR_TOTAL_CONSUMPTION] = float(self.data.total_consumption)
-        else:
-            attrs[ATTR_TOTAL_CONSUMPTION] = None
+        except ValueError:
+            temperature = None
+
+        try:
+            total_consumption = float(self.data.total_consumption)
+        except ValueError:
+            total_consumption = None
+
+        attrs = {
+            ATTR_TOTAL_CONSUMPTION: total_consumption,
+            ATTR_TEMPERATURE: temperature,
+        }
 
         return attrs
 

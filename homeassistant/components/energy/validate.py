@@ -23,6 +23,7 @@ ENERGY_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.WATT_HOUR,
     )
@@ -40,6 +41,7 @@ GAS_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.WATT_HOUR,
     ),

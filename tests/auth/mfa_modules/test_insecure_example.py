@@ -2,11 +2,12 @@
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.auth.models import Credentials
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockUser
 
 
-async def test_validate(hass):
+async def test_validate(hass: HomeAssistant) -> None:
     """Test validating pin."""
     auth_module = await auth_mfa_module_from_config(
         hass,
@@ -26,7 +27,7 @@ async def test_validate(hass):
     assert result is False
 
 
-async def test_setup_user(hass):
+async def test_setup_user(hass: HomeAssistant) -> None:
     """Test setup user."""
     auth_module = await auth_mfa_module_from_config(
         hass, {"type": "insecure_example", "data": []}
@@ -39,7 +40,7 @@ async def test_setup_user(hass):
     assert result is True
 
 
-async def test_depose_user(hass):
+async def test_depose_user(hass: HomeAssistant) -> None:
     """Test despose user."""
     auth_module = await auth_mfa_module_from_config(
         hass,
@@ -54,7 +55,7 @@ async def test_depose_user(hass):
     assert len(auth_module._data) == 0
 
 
-async def test_is_user_setup(hass):
+async def test_is_user_setup(hass: HomeAssistant) -> None:
     """Test is user setup."""
     auth_module = await auth_mfa_module_from_config(
         hass,
@@ -67,7 +68,7 @@ async def test_is_user_setup(hass):
     assert await auth_module.async_is_user_setup("invalid-user") is False
 
 
-async def test_login(hass):
+async def test_login(hass: HomeAssistant) -> None:
     """Test login flow with auth module."""
     hass.auth = await auth.auth_manager_from_config(
         hass,
@@ -134,7 +135,7 @@ async def test_login(hass):
     assert result["data"].id == "mock-id"
 
 
-async def test_setup_flow(hass):
+async def test_setup_flow(hass: HomeAssistant) -> None:
     """Test validating pin."""
     auth_module = await auth_mfa_module_from_config(
         hass,

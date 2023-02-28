@@ -6,8 +6,13 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_tracker import DOMAIN, device_trigger
 import homeassistant.components.zone as zone
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -16,8 +21,6 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
@@ -26,18 +29,6 @@ AWAY_LONGITUDE = -117.234758
 
 HOME_LATITUDE = 32.880837
 HOME_LONGITUDE = -117.237561
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -65,15 +56,21 @@ def setup_zone(hass):
     )
 
 
-async def test_get_triggers(hass, device_reg, entity_reg):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a device_tracker."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_triggers = [
         {
             "platform": "device",
@@ -92,7 +89,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -101,20 +98,20 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -139,7 +136,7 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_zone_change(hass, calls):
+async def test_if_fires_on_zone_change(hass: HomeAssistant, calls) -> None:
     """Test for enter and leave triggers firing."""
     hass.states.async_set(
         "device_tracker.entity",
@@ -165,9 +162,13 @@ async def test_if_fires_on_zone_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "enter - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.attributes.longitude|round(3)}} - "
-                                "{{ trigger.to_state.attributes.longitude|round(3)}}"
+                                "enter "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ "
+                                "    trigger.from_state.attributes.longitude|round(3) "
+                                "  }} "
+                                "- {{ trigger.to_state.attributes.longitude|round(3) }}"
                             )
                         },
                     },
@@ -185,9 +186,13 @@ async def test_if_fires_on_zone_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "leave - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.attributes.longitude|round(3)}} - "
-                                "{{ trigger.to_state.attributes.longitude|round(3)}}"
+                                "leave "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ "
+                                "    trigger.from_state.attributes.longitude|round(3) "
+                                "  }} "
+                                "- {{ trigger.to_state.attributes.longitude|round(3)}}"
                             )
                         },
                     },
@@ -221,15 +226,21 @@ async def test_if_fires_on_zone_change(hass, calls):
     )
 
 
-async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected capabilities from a device_tracker trigger."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
         {

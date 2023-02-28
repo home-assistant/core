@@ -192,8 +192,7 @@ class LocalSource(MediaSource):
 
 
 class LocalMediaView(http.HomeAssistantView):
-    """
-    Local Media Finder View.
+    """Local Media Finder View.
 
     Returns media files in config/media.
     """

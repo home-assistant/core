@@ -10,7 +10,7 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: 3.9
+  DEFAULT_PYTHON: "3.10"
 
 jobs:
   init:
@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.4.0
+        uses: actions/setup-python@v4.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -70,9 +70,14 @@ jobs:
         uses: actions/checkout@v3.3.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.4.0
+        uses: actions/setup-python@v4.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
 
       - name: Build package
         shell: bash
@@ -126,7 +131,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v4.4.0
+        uses: actions/setup-python@v4.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -163,8 +168,16 @@ jobs:
               '.requirements += ["home-assistant-intents=="+env(intents_version)]' \
               homeassistant/components/conversation/manifest.json
 
+            sed -i "s|home-assistant-intents==.*|home-assistant-intents==${BASH_REMATCH[1]}|" \
+              homeassistant/package_constraints.txt
+
             python -m script.gen_requirements_all
           fi
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
 
       - name: Write meta info file
         shell: bash
@@ -194,6 +207,17 @@ jobs:
             --generic ${{ needs.init.outputs.version }}
         env:
           CAS_API_KEY: ${{ secrets.CAS_TOKEN }}
+
+      - name: Archive translations
+        shell: bash
+        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
+
+      - name: Upload translations
+        uses: actions/upload-artifact@v3
+        with:
+          name: translations
+          path: translations.tar.gz
+          if-no-files-found: error
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image

@@ -4,12 +4,14 @@ from math import sin
 import random
 from unittest.mock import patch
 
-from homeassistant.const import POWER_WATT, TIME_HOURS, TIME_MINUTES, TIME_SECONDS
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.const import UnitOfPower, UnitOfTime
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 
-async def test_state(hass):
+async def test_state(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     config = {
         "sensor": {
@@ -77,73 +79,74 @@ async def setup_tests(hass, config, times, values, expected_state):
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == expected_state
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
 
     return state
 
 
-async def test_dataSet1(hass):
+async def test_dataSet1(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30, 40, 50],
         values=[10, 30, 5, 0],
         expected_state=-0.5,
     )
 
 
-async def test_dataSet2(hass):
+async def test_dataSet2(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 0],
         expected_state=-0.5,
     )
 
 
-async def test_dataSet3(hass):
+async def test_dataSet3(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     state = await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 10],
         expected_state=0.5,
     )
 
-    assert state.attributes.get("unit_of_measurement") == f"/{TIME_SECONDS}"
+    assert state.attributes.get("unit_of_measurement") == f"/{UnitOfTime.SECONDS}"
 
 
-async def test_dataSet4(hass):
+async def test_dataSet4(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 5],
         expected_state=0,
     )
 
 
-async def test_dataSet5(hass):
+async def test_dataSet5(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[10, -10],
         expected_state=-2,
     )
 
 
-async def test_dataSet6(hass):
+async def test_dataSet6(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     await setup_tests(hass, {}, times=[0, 60], values=[0, 1 / 60], expected_state=1)
 
 
-async def test_data_moving_average_for_discrete_sensor(hass):
+async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     # We simulate the following situation:
     # The temperature rises 1 °C per minute for 30 minutes long.
@@ -162,7 +165,7 @@ async def test_data_moving_average_for_discrete_sensor(hass):
         hass,
         {
             "time_window": {"seconds": time_window},
-            "unit_time": TIME_MINUTES,
+            "unit_time": UnitOfTime.MINUTES,
             "round": 1,
         },
     )  # two minute window
@@ -182,7 +185,7 @@ async def test_data_moving_average_for_discrete_sensor(hass):
             assert abs(1 - derivative) <= 0.1 + 1e-6
 
 
-async def test_data_moving_average_for_irregular_times(hass):
+async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     # We simulate the following situation:
     # The temperature rises 1 °C per minute for 30 minutes long.
@@ -205,7 +208,7 @@ async def test_data_moving_average_for_irregular_times(hass):
         hass,
         {
             "time_window": {"seconds": time_window},
-            "unit_time": TIME_MINUTES,
+            "unit_time": UnitOfTime.MINUTES,
             "round": 3,
         },
     )
@@ -225,7 +228,7 @@ async def test_data_moving_average_for_irregular_times(hass):
             assert abs(0.1 - derivative) <= 0.01 + 1e-6
 
 
-async def test_double_signal_after_delay(hass):
+async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     # The old algorithm would produce extreme values if, after a delay longer than the time window
     # there would be two signals, a large spike would be produced. Check explicitly for this situation
@@ -245,7 +248,7 @@ async def test_double_signal_after_delay(hass):
         hass,
         {
             "time_window": {"seconds": time_window},
-            "unit_time": TIME_MINUTES,
+            "unit_time": UnitOfTime.MINUTES,
             "round": 3,
         },
     )
@@ -266,7 +269,7 @@ async def test_double_signal_after_delay(hass):
         previous = derivative
 
 
-async def test_prefix(hass):
+async def test_prefix(hass: HomeAssistant) -> None:
     """Test derivative sensor state using a power source."""
     config = {
         "sensor": {
@@ -285,13 +288,19 @@ async def test_prefix(hass):
     with patch("homeassistant.util.dt.utcnow") as now:
         now.return_value = base
         hass.states.async_set(
-            entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
+            entity_id,
+            1000,
+            {"unit_of_measurement": UnitOfPower.WATT},
+            force_update=True,
         )
         await hass.async_block_till_done()
 
         now.return_value += timedelta(seconds=3600)
         hass.states.async_set(
-            entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
+            entity_id,
+            1000,
+            {"unit_of_measurement": UnitOfPower.WATT},
+            force_update=True,
         )
         await hass.async_block_till_done()
 
@@ -300,10 +309,10 @@ async def test_prefix(hass):
 
     # Testing a power sensor at 1000 Watts for 1hour = 0kW/h
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
-    assert state.attributes.get("unit_of_measurement") == f"kW/{TIME_HOURS}"
+    assert state.attributes.get("unit_of_measurement") == f"kW/{UnitOfTime.HOURS}"
 
 
-async def test_suffix(hass):
+async def test_suffix(hass: HomeAssistant) -> None:
     """Test derivative sensor state using a network counter source."""
     config = {
         "sensor": {
@@ -312,7 +321,7 @@ async def test_suffix(hass):
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
-            "unit_time": TIME_SECONDS,
+            "unit_time": UnitOfTime.SECONDS,
         }
     }
 

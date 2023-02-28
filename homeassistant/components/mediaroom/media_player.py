@@ -93,7 +93,6 @@ async def async_setup_platform(
         async_add_entities([new_stb])
 
     if not config[CONF_OPTIMISTIC]:
-
         already_installed = hass.data.get(DISCOVERY_MEDIAROOM)
         if not already_installed:
             hass.data[DISCOVERY_MEDIAROOM] = await install_mediaroom_protocol(

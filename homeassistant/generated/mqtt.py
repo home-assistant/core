@@ -10,6 +10,9 @@ MQTT = {
     "dsmr_reader": [
         "dsmr/#",
     ],
+    "fully_kiosk": [
+        "fully/deviceInfo/+",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],

@@ -45,7 +45,7 @@ class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Select
         self._attr_unique_id = f"{bed.id}_preset"
         if preset.side != Side.NONE:
             self._attr_name += f" {preset.side_full}"
-            self._attr_unique_id += f"_{preset.side}"
+            self._attr_unique_id += f"_{preset.side.value}"
 
         super().__init__(coordinator, bed)
         self._async_update_attrs()

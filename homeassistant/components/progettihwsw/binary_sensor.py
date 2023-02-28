@@ -59,7 +59,7 @@ async def async_setup_entry(
 class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represent a binary sensor."""
 
-    def __init__(self, coordinator, name, sensor: Input):
+    def __init__(self, coordinator, name, sensor: Input) -> None:
         """Set initializing values."""
         super().__init__(coordinator)
         self._name = name

@@ -4,9 +4,9 @@ from contextlib import ExitStack
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from nibe.coil import Coil
+from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
-from nibe.exceptions import CoilReadException
+from nibe.exceptions import ReadException
 import pytest
 
 
@@ -39,12 +39,11 @@ async def fixture_coils(mock_connection):
     """Return a dict with coil data."""
     coils: dict[int, Any] = {}
 
-    async def read_coil(coil: Coil, timeout: float = 0) -> Coil:
+    async def read_coil(coil: Coil, timeout: float = 0) -> CoilData:
         nonlocal coils
         if (data := coils.get(coil.address, None)) is None:
-            raise CoilReadException()
-        coil.value = data
-        return coil
+            raise ReadException()
+        return CoilData(coil, data)
 
     async def read_coils(
         coils: Iterable[Coil], timeout: float = 0
@@ -54,4 +53,4 @@ async def fixture_coils(mock_connection):
 
     mock_connection.read_coil = read_coil
     mock_connection.read_coils = read_coils
-    yield coils
+    return coils
