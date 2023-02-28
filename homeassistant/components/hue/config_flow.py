@@ -152,7 +152,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({"host": user_input["host"]})
         bridge = await self._get_bridge(user_input[CONF_HOST])
         if bridge is None:
-            LOGGER.error("Error connecting to the Hue bridge at %s", user_input["host"])
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
         return await self.async_step_link()
@@ -235,9 +234,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.host, discovery_info.properties["bridgeid"]
         )
         if bridge is None:
-            LOGGER.error(
-                "Error connecting to the Hue bridge at %s", discovery_info.host
-            )
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
         return await self.async_step_link()
@@ -253,9 +249,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         bridge = await self._get_bridge(discovery_info.host)
         if bridge is None:
-            LOGGER.error(
-                "Error connecting to the Hue bridge at %s", discovery_info.host
-            )
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
         await self._async_handle_discovery_without_unique_id()
@@ -275,9 +268,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         bridge = await self._get_bridge(import_info["host"])
         if bridge is None:
-            LOGGER.error(
-                "Error connecting to the Hue bridge at %s", import_info["host"]
-            )
             return self.async_abort(reason="cannot_connect")
         self.bridge = bridge
         return await self.async_step_link()
