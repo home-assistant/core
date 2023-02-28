@@ -314,7 +314,8 @@ class MQTT:
         self.conf = conf
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
-        self._retained_init: dict[Subscription, bool] = {}
+        self._init_payload: dict[Subscription, bool] = {}
+        self._last_payload: dict[str, tuple[bytes | bytearray, int]] = {}
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -515,8 +516,17 @@ class MQTT:
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
+        if self._init_payload.get(subscription, False) and topic in self._last_payload:
+            # replay last payload of retained topics we already discovered and
+            # skip subscribing at the broker
+            self._last_subscribe = time.time()
+            msg = mqtt.MQTTMessage()
+            msg.topic = topic
+            msg.retain = True
+            msg.payload, msg.qos = self._last_payload[topic]
+            self._mqtt_on_message(self._mqttc, None, msg)
         # Only subscribe if currently connected.
-        if self.connected:
+        elif self.connected:
             self._last_subscribe = time.time()
             await self._async_perform_subscriptions(((topic, qos),))
 
@@ -614,7 +624,8 @@ class MQTT:
         # pylint: disable-next=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
-        self._retained_init.clear()
+        self._init_payload.clear()
+        self._last_payload.clear()
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
@@ -693,12 +704,17 @@ class MQTT:
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
+        # Cache last payload
+        if len(msg.payload):
+            self._last_payload["topic"] = (msg.payload, msg.qos)
+        elif msg.topic in self._last_payload:
+            del self._last_payload[msg.topic]
 
         subscriptions = self._matching_subscriptions(msg.topic)
 
         for subscription in subscriptions:
-            if (init_status := self._retained_init.get(subscription)) is None:
-                self._retained_init[subscription] = msg.retain
+            if (init_status := self._init_payload.get(subscription)) is None:
+                self._init_payload[subscription] = msg.retain
             if msg.retain and init_status is True:
                 # do not replay already initialized subscriptions
                 continue
