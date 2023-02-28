@@ -6,9 +6,6 @@
   "dependencies": ["network"],
   "dhcp": [
     {
-      "registered_devices": true
-    },
-    {
       "hostname": "motion_*"
     },
     {
