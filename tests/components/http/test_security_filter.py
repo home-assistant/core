@@ -49,7 +49,17 @@ async def test_ok_requests(
         ("/", {"test": "test/../../api"}, True),
         ("/", {"test": "/test/%2E%2E%2f%2E%2E%2fapi"}, True),
         ("/", {"test": "test/%2E%2E%2f%2E%2E%2fapi"}, True),
+        ("/", {"test": "test/%252E%252E/api"}, True),
+        ("/", {"test": "test/%252E%252E%2fapi"}, True),
+        (
+            "/",
+            {"test": "test/%2525252E%2525252E%2525252f%2525252E%2525252E%2525252fapi"},
+            True,
+        ),
+        ("/test/.%252E/api", {}, False),
+        ("/test/%252E%252E/api", {}, False),
         ("/test/%2E%2E%2f%2E%2E%2fapi", {}, False),
+        ("/test/%2525252E%2525252E%2525252f%2525252E%2525252E/api", {}, False),
         ("/", {"sql": ";UNION SELECT (a, b"}, True),
         ("/", {"sql": "UNION%20SELECT%20%28a%2C%20b"}, True),
         ("/UNION%20SELECT%20%28a%2C%20b", {}, False),
@@ -87,7 +97,7 @@ async def test_bad_requests(
         None,
         http.request,
         "GET",
-        f"http://{mock_api_client.host}:{mock_api_client.port}/{request_path}{man_params}",
+        f"http://{mock_api_client.host}:{mock_api_client.port}{request_path}{man_params}",
         request_params,
     )
 
