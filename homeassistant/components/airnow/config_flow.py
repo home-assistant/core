@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
                     vol.Optional(CONF_RADIUS, default=150): int,
-                    vol.Required(CONF_FORECAST, default=False): bool,
+                    vol.Optional(CONF_FORECAST, default=False): bool,
                 }
             ),
             errors=errors,
