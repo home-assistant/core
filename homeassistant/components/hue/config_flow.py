@@ -75,7 +75,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             bridge = await discover_bridge(
                 host, websession=aiohttp_client.async_get_clientsession(self.hass)
             )
-        except aiohttp.ClientError:
+        except aiohttp.ClientError as err:
+            LOGGER.warning(
+                "Error while attempting to retrieve discovery information, "
+                "is there a bridge alive on IP %s ?",
+                host,
+                exc_info=err,
+            )
             return None
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
@@ -144,7 +150,11 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._async_abort_entries_match({"host": user_input["host"]})
-        self.bridge = await self._get_bridge(user_input[CONF_HOST])
+        bridge = await self._get_bridge(user_input[CONF_HOST])
+        if bridge is None:
+            LOGGER.error("Error connecting to the Hue bridge at %s", user_input["host"])
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         return await self.async_step_link()
 
     async def async_step_link(
@@ -221,9 +231,15 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # we need to query the other capabilities too
-        self.bridge = await self._get_bridge(
+        bridge = await self._get_bridge(
             discovery_info.host, discovery_info.properties["bridgeid"]
         )
+        if bridge is None:
+            LOGGER.error(
+                "Error connecting to the Hue bridge at %s", discovery_info.host
+            )
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         return await self.async_step_link()
 
     async def async_step_homekit(
@@ -235,7 +251,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         as the unique identifier. Therefore, this method uses discovery without
         a unique ID.
         """
-        self.bridge = await self._get_bridge(discovery_info.host)
+        bridge = await self._get_bridge(discovery_info.host)
+        if bridge is None:
+            LOGGER.error(
+                "Error connecting to the Hue bridge at %s", discovery_info.host
+            )
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
@@ -251,7 +273,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Check if host exists, abort if so.
         self._async_abort_entries_match({"host": import_info["host"]})
 
-        self.bridge = await self._get_bridge(import_info["host"])
+        bridge = await self._get_bridge(import_info["host"])
+        if bridge is None:
+            LOGGER.error(
+                "Error connecting to the Hue bridge at %s", import_info["host"]
+            )
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         return await self.async_step_link()
 
 
