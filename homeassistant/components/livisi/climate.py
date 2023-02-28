@@ -97,6 +97,7 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_high = MAX_TEMPERATURE
     _attr_target_temperature_low = MIN_TEMPERATURE
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -119,7 +120,7 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
         self._humidity_capability = humidity_capability
         self.aio_livisi = coordinator.aiolivisi
         self._attr_available = False
-        self._attr_name = f"{name} {room}"
+        self._attr_name = name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=manufacturer,
