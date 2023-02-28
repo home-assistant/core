@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -90,13 +90,11 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             # key not needed for GetDeviceList request
             await self.hass.async_add_executor_job(gateway.GetDeviceList)
-        except Exception as ex:  # pylint: disable=broad-except
-            raise AbortFlow(
-                "DHCP discovered device is not a Motion Blinds gateway"
-            ) from ex
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="dhcp_no_motionblinds")
 
         if not gateway.available:
-            raise AbortFlow("DHCP discovered device is not a Motion Blinds gateway")
+            return self.async_abort(reason="dhcp_no_motionblinds")
 
         short_mac = mac_address[-6:].upper()
         self.context["title_placeholders"] = {
