@@ -45,11 +45,12 @@ async def async_setup_entry(
 class ObihaiButton(ButtonEntity):
     """Obihai Reboot button."""
 
+    entity_description = BUTTON_DESCRIPTION
+
     def __init__(self, pyobihai: PyObihai, serial: str) -> None:
         """Initialize monitor sensor."""
         self._pyobihai = pyobihai
         self._attr_unique_id = f"{serial}-reboot"
-        self.entity_description = BUTTON_DESCRIPTION
 
     def press(self) -> None:
         """Press button."""
