@@ -30,7 +30,7 @@ TEST_NVR_NAME = "test_reolink_name"
 TEST_USE_HTTPS = True
 
 
-def get_mock_info(error=None, user_level="admin", sw_ver=MINIMUM_FIRMWARE["RLN8-410"]["N3MB01"]):
+def get_mock_info(error=None, user_level="admin", sw_required=False):
     """Return a mock gateway info instance."""
     host_mock = Mock()
     if error is None:
@@ -49,12 +49,10 @@ def get_mock_info(error=None, user_level="admin", sw_ver=MINIMUM_FIRMWARE["RLN8-
     host_mock.use_https = TEST_USE_HTTPS
     host_mock.is_admin = user_level == "admin"
     host_mock.user_level = user_level
+    host_mock.sw_version_update_required = sw_required
     host_mock.timeout = 60
     host_mock.renewtimer = 600
     host_mock.get_states = AsyncMock(return_value=None)
-    host_mock.model = "RLN8-410"
-    host_mock.hardware_version = "N3MB01"
-    host_mock._nvr_sw_version_object = SoftwareVersion(sw_ver)
     return host_mock
 
 
@@ -455,7 +453,7 @@ async def test_http_no_repair_issue(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 0
+    assert (const.DOMAIN, 'https_webhook') not in issue_registry.issues
 
 
 async def test_https_repair_issue(hass: HomeAssistant) -> None:
@@ -485,7 +483,33 @@ async def test_https_repair_issue(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 1
+    assert (const.DOMAIN, 'https_webhook') in issue_registry.issues
+
+
+async def test_no_firmware_repair_issue(hass: HomeAssistant) -> None:
+    """Test no firmware issue is raised when firmware is new enough."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert (const.DOMAIN, 'firmware_update') not in issue_registry.issues
 
 
 async def test_firmware_repair_issue(hass: HomeAssistant) -> None:
@@ -507,10 +531,10 @@ async def test_firmware_repair_issue(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    host_mock = get_mock_info(sw_ver="v1.0.0.000_00010100")
+    host_mock = get_mock_info(sw_required=True)
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 1
+    assert (const.DOMAIN, 'firmware_update') in issue_registry.issues
