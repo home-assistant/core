@@ -28,22 +28,17 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def async_credential_errors(
-    hass: HomeAssistant, user_input: dict[str, Any]
-) -> dict[str, str]:
+async def async_validate_creds(hass: HomeAssistant, user_input: dict[str, Any]) -> bool:
     """Manage Obihai options."""
-    errors = {}
-    result = await hass.async_add_executor_job(
+    if await hass.async_add_executor_job(
         validate_auth,
         user_input[CONF_HOST],
         user_input[CONF_USERNAME],
         user_input[CONF_PASSWORD],
-    )
+    ):
+        return True
 
-    if not result:
-        errors["base"] = "cannot_connect"
-
-    return errors
+    return False
 
 
 class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -59,11 +54,12 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            if not (errors := await async_credential_errors(self.hass, user_input)):
+            if await async_validate_creds(self.hass, user_input):
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data=user_input,
                 )
+            errors["base"] = "cannot_connect"
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
@@ -76,14 +72,14 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle a flow initialized by importing a config."""
         self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        if await async_credential_errors(self.hass, config):
-            return self.async_abort(reason="cannot_connect")
+        if await async_validate_creds(self.hass, config):
+            return self.async_create_entry(
+                title=config.get(CONF_NAME, config[CONF_HOST]),
+                data={
+                    CONF_HOST: config[CONF_HOST],
+                    CONF_PASSWORD: config[CONF_PASSWORD],
+                    CONF_USERNAME: config[CONF_USERNAME],
+                },
+            )
 
-        return self.async_create_entry(
-            title=config.get(CONF_NAME, config[CONF_HOST]),
-            data={
-                CONF_HOST: config[CONF_HOST],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_USERNAME: config[CONF_USERNAME],
-            },
-        )
+        return self.async_abort(reason="cannot_connect")
