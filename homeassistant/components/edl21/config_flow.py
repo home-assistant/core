@@ -27,8 +27,6 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(
             {CONF_SERIAL_PORT: import_config[CONF_SERIAL_PORT]}
         )
-        if import_config[CONF_NAME]:
-            self._async_abort_entries_match({CONF_NAME: import_config[CONF_NAME]})
         return self.async_create_entry(
             title=import_config[CONF_NAME] or DEFAULT_TITLE,
             data=import_config,
