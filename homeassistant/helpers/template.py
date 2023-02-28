@@ -2111,7 +2111,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             support_limited: bool = True,
             require_hass: bool = False,
         ) -> None:
-
             valid = True
 
             if not hass and require_hass:
