@@ -2034,7 +2034,8 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
 ) -> None:
     """Ensure shutdown does not block on shielded tasks."""
     result = asyncio.Future()
-    shielded_task = asyncio.shield(asyncio.sleep(10))
+    sleep_task = asyncio.ensure_future(asyncio.sleep(10))
+    shielded_task = asyncio.shield(sleep_task)
 
     async def test_task():
         try:
@@ -2050,3 +2051,6 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
     assert result.done()
     assert task.done()
     assert time.monotonic() - start < 0.5
+
+    # Cleanup lingering task after test is done
+    sleep_task.cancel()
