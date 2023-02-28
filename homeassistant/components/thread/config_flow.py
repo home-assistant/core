@@ -1,7 +1,7 @@
 """Config flow for the Thread integration."""
 from __future__ import annotations
 
-from homeassistant.components import zeroconf
+from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 
@@ -32,4 +32,10 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Set up because the user has border routers."""
         await self._async_handle_discovery_without_unique_id()
-        return self.async_create_entry(title="Thread", data={})
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self, user_input=None):
+        """Confirm the setup."""
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            return self.async_create_entry(title="Thread", data={})
+        return self.async_show_form(step_id="confirm")
