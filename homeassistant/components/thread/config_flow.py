@@ -1,6 +1,8 @@
 """Config flow for the Thread integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
@@ -34,7 +36,9 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm the setup."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(title="Thread", data={})
