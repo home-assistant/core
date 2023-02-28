@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pyobihai import PyObihai
 
 from homeassistant.components.button import (
@@ -34,8 +32,6 @@ async def async_setup_entry(
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
     """Set up the Obihai sensor entries."""
-    buttons: list[Any]
-
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     host = entry.data[CONF_HOST]
