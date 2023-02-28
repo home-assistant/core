@@ -91,10 +91,10 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # key not needed for GetDeviceList request
             await self.hass.async_add_executor_job(gateway.GetDeviceList)
         except Exception as ex:  # pylint: disable=broad-except
-            raise AbortFlow("DCHP discovered device is not a Motion Blinds gateway") from ex
+            raise AbortFlow("DHCP discovered device is not a Motion Blinds gateway") from ex
 
         if not gateway.available:
-            raise AbortFlow("DCHP discovered device is not a Motion Blinds gateway")
+            raise AbortFlow("DHCP discovered device is not a Motion Blinds gateway")
 
         short_mac = mac_address[-6:].upper()
         self.context["title_placeholders"] = {
