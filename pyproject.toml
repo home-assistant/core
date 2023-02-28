@@ -278,6 +278,7 @@ ignore = [
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
+"homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
 "homeassistant.helpers.issue_registry" = "ir"
 
