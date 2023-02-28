@@ -243,8 +243,9 @@ def test_iterating_domain_states(hass: HomeAssistant) -> None:
     )
 
 
-def test_import(hass: HomeAssistant) -> None:
+async def async_test_import(hass: HomeAssistant) -> None:
     """Test that imports work from the config/custom_jinja folder."""
+    await template.async_materialize_hass_loader
     assert (
         template.Template(
             """

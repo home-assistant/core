@@ -2306,6 +2306,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     @property
     def _loader(self):
+        if _HASS_LOADER not in self.hass.data:
+            self.hass.data[_HASS_LOADER] = HassLoader({})
         return self.hass.data[_HASS_LOADER]
 
     def is_safe_callable(self, obj):
