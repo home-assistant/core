@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from hashlib import md5
 from random import randint
 
 from enturclient import EnturPublicTransportData
@@ -20,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -32,7 +30,6 @@ CONF_EXPAND_PLATFORMS = "expand_platforms"
 CONF_WHITELIST_LINES = "line_whitelist"
 CONF_OMIT_NON_BOARDING = "omit_non_boarding"
 CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
-CONF_UUID = "uuid"
 
 DEFAULT_NAME = "Entur"
 DEFAULT_ICON_KEY = "bus"
@@ -59,8 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NUMBER_OF_DEPARTURES, default=2): vol.All(
             cv.positive_int, vol.Range(min=2, max=10)
         ),
-        # Default doesn't really matter here, we'll always overwrite it anyway:
-        vol.Optional(CONF_UUID, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -106,19 +101,12 @@ async def async_setup_platform(
     stop_ids = config[CONF_STOP_IDS]
     omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
     number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
-    # Prepare uuid for API request. Needs to be encoded for hashing:
-    url = (get_url(hass) + str(randint(100, 999))).encode(
-        encoding="UTF-8", errors="strict"
-    )
-    uuid = (
-        md5(url).hexdigest() if config[CONF_UUID] == DEFAULT_NAME else config[CONF_UUID]
-    )
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
 
     data = EnturPublicTransportData(
-        API_CLIENT_NAME.format(uuid),
+        API_CLIENT_NAME.format(str(randint(100000, 999999))),
         stops=stops,
         quays=quays,
         line_whitelist=line_whitelist,
