@@ -18,13 +18,13 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.sensor_one", "home", {"attribute1": 75, "attribute2": 100}
+        "sensor.sensor_one", "home", {"attribute1": "75", "attribute2": "100"}
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.attribute1_sensor")
 
-    assert str(75) == state.state
+    assert state.state == "75"
 
 
 async def test_min_sensor(hass: HomeAssistant) -> None:
@@ -49,7 +49,7 @@ async def test_min_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_attribute_sensor")
 
-    assert str(100) == state.state
+    assert state.state == "100"
 
     entity_reg = er.async_get(hass)
     entity = entity_reg.async_get("sensor.test_attribute_sensor")

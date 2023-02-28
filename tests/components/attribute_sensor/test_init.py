@@ -14,20 +14,18 @@ async def test_setup_and_remove_config_entry(
     platform: str,
 ) -> None:
     """Test setting up and removing a config entry."""
-    hass.states.async_set(
-        "sensor.sensor_one", 50, {"attribute1": 75, "attribute2": 100}
-    )
+    hass.states.async_set("sensor.one", "10", {"attribute1": "100"})
 
     registry = er.async_get(hass)
-    attribute_sensor_entity_id = f"{platform}.test_attribute_sensor"
+    attribute_sensor_entity_id = f"{platform}.my_attribute_sensor"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            "name": "test_attribute_sensor",
-            "source": "sensor.sensor_one",
+            "name": "My attribute sensor",
+            "source": "sensor.one",
             "attribute": "attribute1",
         },
         title="My attribute sensor",
@@ -41,7 +39,7 @@ async def test_setup_and_remove_config_entry(
 
     # Check the platform is setup correctly
     state = hass.states.get(attribute_sensor_entity_id)
-    assert state.state == 75
+    assert state.state == "100"
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)
