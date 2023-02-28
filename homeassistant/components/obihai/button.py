@@ -52,10 +52,7 @@ class ObihaiButton(ButtonEntity):
             entity_category=EntityCategory.CONFIG,
         )
 
-    def press(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def press(self) -> None:
         """Press button."""
 
         try:
