@@ -92,9 +92,10 @@ def _warn_on_default_network_settings(
     dataset = tlv_parser.parse_tlv(dataset_tlvs.hex())
     insecure = False
 
-    if (network_key := dataset.get(tlv_parser.MeshcopTLVType.NETWORKKEY)) is not None:
-        if bytes.fromhex(network_key) in INSECURE_NETWORK_KEYS:
-            insecure = True
+    if (
+        network_key := dataset.get(tlv_parser.MeshcopTLVType.NETWORKKEY)
+    ) is not None and bytes.fromhex(network_key) in INSECURE_NETWORK_KEYS:
+        insecure = True
     if (
         not insecure
         and tlv_parser.MeshcopTLVType.EXTPANID in dataset
@@ -123,7 +124,7 @@ def _warn_on_default_network_settings(
         ir.async_delete_issue(
             hass,
             DOMAIN,
-            f"otbr_insecure_thread_network_{entry.entry_id}",
+            f"insecure_thread_network_{entry.entry_id}",
         )
 
 
