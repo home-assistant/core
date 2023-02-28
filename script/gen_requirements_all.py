@@ -57,6 +57,11 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
+# Constrain to v3.8.3 due to segmentation faults in v3.8.4 to at least v3.8.6
+# on musl builds.
+# See: https://github.com/home-assistant/core/issues/87283
+orjson==3.8.3
+
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6

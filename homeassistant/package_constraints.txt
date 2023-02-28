@@ -30,7 +30,7 @@ ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.8.6
+orjson==3.8.3
 paho-mqtt==1.6.1
 pillow==9.4.0
 pip>=21.0,<23.1
@@ -48,6 +48,11 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 yarl==1.8.1
 zeroconf==0.47.3
+
+# Constrain to v3.8.3 due to segmentation faults in v3.8.4 to at least v3.8.6
+# on musl builds.
+# See: https://github.com/home-assistant/core/issues/87283
+orjson==3.8.3
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
