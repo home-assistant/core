@@ -12,4 +12,4 @@ OBIHAI = "Obihai"
 
 LOGGER = logging.getLogger(__package__)
 
-PLATFORMS: Final = [Platform.SENSOR, Platform.BUTTON]
+PLATFORMS: Final = [Platform.BUTTON, Platform.SENSOR]
