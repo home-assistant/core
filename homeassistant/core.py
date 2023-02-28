@@ -1533,7 +1533,7 @@ class StateMachine:
         now = dt_util.utcnow()
 
         if context is None:
-            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
+            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
         state = State(
             entity_id,
             new_state,
