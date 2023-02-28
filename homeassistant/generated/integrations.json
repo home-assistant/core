@@ -2202,6 +2202,12 @@
       "integration_type": "virtual",
       "supported_by": "gree"
     },
+    "heltun": {
+      "name": "HELTUN",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "here_travel_time": {
       "name": "HERE Travel Time",
       "integration_type": "hub",
