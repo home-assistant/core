@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
-from reolink_aio.software_version import SoftwareVersion, MINIMUM_FIRMWARE
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
@@ -453,7 +452,7 @@ async def test_http_no_repair_issue(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert (const.DOMAIN, 'https_webhook') not in issue_registry.issues
+    assert (const.DOMAIN, "https_webhook") not in issue_registry.issues
 
 
 async def test_https_repair_issue(hass: HomeAssistant) -> None:
@@ -483,7 +482,7 @@ async def test_https_repair_issue(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert (const.DOMAIN, 'https_webhook') in issue_registry.issues
+    assert (const.DOMAIN, "https_webhook") in issue_registry.issues
 
 
 async def test_no_firmware_repair_issue(hass: HomeAssistant) -> None:
@@ -509,7 +508,7 @@ async def test_no_firmware_repair_issue(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert (const.DOMAIN, 'firmware_update') not in issue_registry.issues
+    assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
 
 
 async def test_firmware_repair_issue(hass: HomeAssistant) -> None:
@@ -537,4 +536,4 @@ async def test_firmware_repair_issue(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert (const.DOMAIN, 'firmware_update') in issue_registry.issues
+    assert (const.DOMAIN, "firmware_update") in issue_registry.issues
