@@ -7,12 +7,20 @@ from typing import Any
 
 from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi, errors as livisi_errors
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_HOST, CONF_PASSWORD, DATA_SCHEMA, DOMAIN, LOGGER
+from .const import CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
+
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -61,12 +69,12 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=DATA_SCHEMA,
-            )
-        return await self.async_step_user(user_input)
+        if user_input:
+            return await self.async_step_user(user_input)
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=DATA_SCHEMA,
+        )
 
     async def _login(self, user_input: dict[str, str]) -> AioLivisi:
         """Login into Livisi Smart Home."""

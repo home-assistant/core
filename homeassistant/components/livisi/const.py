@@ -2,18 +2,11 @@
 import logging
 from typing import Final
 
-import voluptuous as vol
-
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "livisi"
 CONF_HOST = "host"
 CONF_PASSWORD: Final = "password"
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
+
 AVATAR = "Avatar"
 AVATAR_PORT: Final = 9090
 CLASSIC_PORT: Final = 8080
