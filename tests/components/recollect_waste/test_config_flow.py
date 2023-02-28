@@ -12,12 +12,13 @@ from homeassistant.components.recollect_waste import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_PLACE_ID, TEST_SERVICE_ID
 
 
 @pytest.mark.parametrize(
-    "get_pickup_events_mock,get_pickup_events_errors",
+    ("get_pickup_events_mock", "get_pickup_events_errors"),
     [
         (
             AsyncMock(side_effect=RecollectError),
@@ -26,13 +27,13 @@ from .conftest import TEST_PLACE_ID, TEST_SERVICE_ID
     ],
 )
 async def test_create_entry(
-    hass,
+    hass: HomeAssistant,
     client,
     config,
     get_pickup_events_errors,
     get_pickup_events_mock,
     mock_aiorecollect,
-):
+) -> None:
     """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -59,7 +60,7 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass, config, setup_config_entry):
+async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -68,7 +69,9 @@ async def test_duplicate_error(hass, config, setup_config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass, config, config_entry, setup_config_entry):
+async def test_options_flow(
+    hass: HomeAssistant, config, config_entry, setup_config_entry
+) -> None:
     """Test config flow options."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.FORM

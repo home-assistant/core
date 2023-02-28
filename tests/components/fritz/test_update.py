@@ -24,7 +24,7 @@ async def test_update_entities_initialized(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test update entities."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -43,7 +43,7 @@ async def test_update_available(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test update entities."""
 
     with patch(
@@ -70,7 +70,7 @@ async def test_no_update_available(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test update entities."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -92,7 +92,7 @@ async def test_available_update_can_be_installed(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
-):
+) -> None:
     """Test update entities."""
 
     with patch(

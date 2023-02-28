@@ -71,7 +71,7 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=600)
+                vol.Coerce(float), vol.Range(min=0, max=3600)
             ),
             vol.Optional(ATTR_BRIGHTNESS): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=255)
@@ -118,13 +118,14 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         """Return device (service) info."""
         # we create a virtual service/device for Hue scenes
         # so we have a parent for grouped lights and scenes
+        group_type = self.group.type.value.title()
         return DeviceInfo(
             identifiers={(DOMAIN, self.group.id)},
             entry_type=DeviceEntryType.SERVICE,
             name=self.group.metadata.name,
             manufacturer=self.bridge.api.config.bridge_device.product_data.manufacturer_name,
             model=self.group.type.value.title(),
-            suggested_area=self.group.metadata.name,
+            suggested_area=self.group.metadata.name if group_type == "Room" else None,
             via_device=(DOMAIN, self.bridge.api.config.bridge_device.id),
         )
 

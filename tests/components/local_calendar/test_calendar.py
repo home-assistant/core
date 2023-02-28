@@ -48,8 +48,12 @@ class FakeStore(LocalCalendarStore):
 def mock_store() -> None:
     """Test cleanup, remove any media storage persisted during the test."""
 
+    stores: dict[Path, FakeStore] = {}
+
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
-        return FakeStore(hass, path)
+        if path not in stores:
+            stores[path] = FakeStore(hass, path)
+        return stores[path]
 
     with patch(
         "homeassistant.components.local_calendar.LocalCalendarStore", new=new_store
@@ -163,7 +167,7 @@ async def ws_client(
 
 async def test_empty_calendar(
     hass: HomeAssistant, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test querying the API and fetching events."""
     events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
     assert len(events) == 0
@@ -179,7 +183,7 @@ async def test_empty_calendar(
 
 async def test_api_date_time_event(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test an event with a start/end date time."""
     client = await ws_client()
     await client.cmd_result(
@@ -220,7 +224,7 @@ async def test_api_date_time_event(
 
 async def test_api_date_event(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test an event with a start/end date all day event."""
     client = await ws_client()
     await client.cmd_result(
@@ -263,7 +267,7 @@ async def test_active_event(
     hass: HomeAssistant,
     ws_client: ClientFixture,
     setup_integration: None,
-):
+) -> None:
     """Test an event with a start/end date time."""
     start = dt_util.now() - datetime.timedelta(minutes=30)
     end = dt_util.now() + datetime.timedelta(minutes=30)
@@ -299,7 +303,7 @@ async def test_upcoming_event(
     hass: HomeAssistant,
     ws_client: ClientFixture,
     setup_integration: None,
-):
+) -> None:
     """Test an event with a start/end date time."""
     start = dt_util.now() + datetime.timedelta(days=1)
     end = dt_util.now() + datetime.timedelta(days=1, hours=1)
@@ -336,7 +340,7 @@ async def test_recurring_event(
     setup_integration: None,
     hass: HomeAssistant,
     get_events: GetEventsFn,
-):
+) -> None:
     """Test an event with a recurrence rule."""
     client = await ws_client()
     await client.cmd_result(
@@ -383,7 +387,7 @@ async def test_recurring_event(
 
 async def test_websocket_delete(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test websocket delete command."""
     client = await ws_client()
     await client.cmd_result(
@@ -422,7 +426,7 @@ async def test_websocket_delete(
 
 async def test_websocket_delete_recurring(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test deleting a recurring event."""
     client = await ws_client()
     await client.cmd_result(
@@ -522,7 +526,7 @@ async def test_websocket_delete_recurring(
 
 async def test_websocket_update(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test websocket update command."""
     client = await ws_client()
     await client.cmd_result(
@@ -572,7 +576,7 @@ async def test_websocket_update(
 
 async def test_websocket_update_recurring_this_and_future(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test updating a recurring event."""
     client = await ws_client()
     await client.cmd_result(
@@ -664,7 +668,7 @@ async def test_websocket_update_recurring_this_and_future(
 
 async def test_websocket_update_recurring(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Test updating a recurring event."""
     client = await ws_client()
     await client.cmd_result(
@@ -768,7 +772,7 @@ async def test_invalid_rrule(
     hass: HomeAssistant,
     get_events: GetEventsFn,
     rrule: str,
-):
+) -> None:
     """Test an event with a recurrence rule."""
     client = await ws_client()
     resp = await client.cmd(
@@ -789,7 +793,7 @@ async def test_invalid_rrule(
 
 
 @pytest.mark.parametrize(
-    "time_zone,event_order",
+    ("time_zone", "event_order"),
     [
         ("America/Los_Angeles", ["One", "Two", "All Day Event"]),
         ("America/Regina", ["One", "Two", "All Day Event"]),
@@ -847,7 +851,7 @@ async def test_all_day_iter_order(
 async def test_start_end_types(
     ws_client: ClientFixture,
     setup_integration: None,
-):
+) -> None:
     """Test a start and end with different date and date time types."""
     client = await ws_client()
     result = await client.cmd(
@@ -870,7 +874,7 @@ async def test_start_end_types(
 async def test_end_before_start(
     ws_client: ClientFixture,
     setup_integration: None,
-):
+) -> None:
     """Test an event with a start/end date time."""
     client = await ws_client()
     result = await client.cmd(
@@ -893,7 +897,7 @@ async def test_end_before_start(
 async def test_invalid_recurrence_rule(
     ws_client: ClientFixture,
     setup_integration: None,
-):
+) -> None:
     """Test an event with a recurrence rule."""
     client = await ws_client()
     result = await client.cmd(
@@ -916,7 +920,7 @@ async def test_invalid_recurrence_rule(
 
 async def test_invalid_date_formats(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
+) -> None:
     """Exercises a validation error within rfc5545 parsing in ical."""
     client = await ws_client()
     result = await client.cmd(
@@ -941,7 +945,7 @@ async def test_update_invalid_event_id(
     ws_client: ClientFixture,
     setup_integration: None,
     hass: HomeAssistant,
-):
+) -> None:
     """Test updating an event with an invalid event uid."""
     client = await ws_client()
     resp = await client.cmd(
@@ -961,22 +965,36 @@ async def test_update_invalid_event_id(
     assert resp.get("error").get("code") == "failed"
 
 
+@pytest.mark.parametrize(
+    ("start_date_time", "end_date_time"),
+    [
+        ("1997-07-14T17:00:00+00:00", "1997-07-15T04:00:00+00:00"),
+        ("1997-07-14T11:00:00-06:00", "1997-07-14T22:00:00-06:00"),
+    ],
+)
 async def test_create_event_service(
-    hass: HomeAssistant, setup_integration: None, get_events: GetEventsFn
-):
+    hass: HomeAssistant,
+    setup_integration: None,
+    get_events: GetEventsFn,
+    start_date_time: str,
+    end_date_time: str,
+    config_entry: MockConfigEntry,
+) -> None:
     """Test creating an event using the create_event service."""
 
     await hass.services.async_call(
         "calendar",
         "create_event",
         {
-            "start_date_time": "1997-07-14T17:00:00+00:00",
-            "end_date_time": "1997-07-15T04:00:00+00:00",
+            "start_date_time": start_date_time,
+            "end_date_time": end_date_time,
             "summary": "Bastille Day Party",
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
+    # Ensure data is written to disk
+    await hass.async_block_till_done()
 
     events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
     assert list(map(event_fields, events)) == [
@@ -986,6 +1004,20 @@ async def test_create_event_service(
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
         }
     ]
+
+    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+
+    # Reload the config entry, which reloads the content from the store and
+    # verifies that the persisted data can be parsed correctly.
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
     assert list(map(event_fields, events)) == [

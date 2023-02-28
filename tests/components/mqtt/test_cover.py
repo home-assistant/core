@@ -444,7 +444,7 @@ async def test_position_via_template_and_entity_id(
 
 
 @pytest.mark.parametrize(
-    "config, assumed_state",
+    ("config", "assumed_state"),
     [
         ({"command_topic": "abc"}, True),
         ({"command_topic": "abc", "state_topic": "abc"}, False),
@@ -889,7 +889,7 @@ async def test_position_update(
 
 
 @pytest.mark.parametrize(
-    "pos_template,pos_call,pos_message",
+    ("pos_template", "pos_call", "pos_message"),
     [("{{position-1}}", 43, "42"), ("{{100-62}}", 100, "38")],
 )
 async def test_set_position_templated(
@@ -3441,7 +3441,7 @@ async def test_tilt_status_template_without_tilt_status_topic_topic(
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload,template",
+    ("service", "topic", "parameters", "payload", "template"),
     [
         (
             SERVICE_OPEN_COVER,
@@ -3510,7 +3510,7 @@ async def test_reloadable(
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute,attribute_value",
+    ("topic", "value", "attribute", "attribute_value"),
     [
         ("state_topic", "open", None, None),
         ("state_topic", "closing", None, None),

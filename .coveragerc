@@ -212,6 +212,11 @@ omit =
     homeassistant/components/doorbird/camera.py
     homeassistant/components/doorbird/entity.py
     homeassistant/components/doorbird/util.py
+    homeassistant/components/dormakaba_dkey/__init__.py
+    homeassistant/components/dormakaba_dkey/binary_sensor.py
+    homeassistant/components/dormakaba_dkey/entity.py
+    homeassistant/components/dormakaba_dkey/lock.py
+    homeassistant/components/dormakaba_dkey/sensor.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
     homeassistant/components/dsmr_reader/__init__.py
@@ -409,6 +414,7 @@ omit =
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/button.py
+    homeassistant/components/goodwe/coordinator.py
     homeassistant/components/goodwe/number.py
     homeassistant/components/goodwe/select.py
     homeassistant/components/goodwe/sensor.py
@@ -633,6 +639,10 @@ omit =
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
+    homeassistant/components/livisi/__init__.py
+    homeassistant/components/livisi/climate.py
+    homeassistant/components/livisi/coordinator.py
+    homeassistant/components/livisi/switch.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/logi_circle/__init__.py
     homeassistant/components/logi_circle/camera.py
@@ -797,7 +807,8 @@ omit =
     homeassistant/components/nuki/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/oasa_telematics/sensor.py
-    homeassistant/components/obihai/*
+    homeassistant/components/obihai/connectivity.py
+    homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
     homeassistant/components/oem/climate.py
     homeassistant/components/ohmconnect/sensor.py
@@ -892,7 +903,6 @@ omit =
     homeassistant/components/ping/binary_sensor.py
     homeassistant/components/ping/device_tracker.py
     homeassistant/components/pioneer/media_player.py
-    homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/__init__.py
     homeassistant/components/plaato/binary_sensor.py
     homeassistant/components/plaato/entity.py
@@ -967,6 +977,7 @@ omit =
     homeassistant/components/reolink/entity.py
     homeassistant/components/reolink/host.py
     homeassistant/components/reolink/number.py
+    homeassistant/components/reolink/update.py
     homeassistant/components/repetier/__init__.py
     homeassistant/components/repetier/sensor.py
     homeassistant/components/rest/notify.py
