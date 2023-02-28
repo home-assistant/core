@@ -233,6 +233,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             if not self._position_template:
                 self._position = None
 
+            self._is_opening = False
+            self._is_closing = False
+
     @callback
     def _update_position(self, result):
         try:
