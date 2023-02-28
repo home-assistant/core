@@ -30,6 +30,7 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
+from homeassistant.helpers.template import async_materialize_hass_loader
 from homeassistant.helpers.typing import ConfigType
 
 ATTR_ENTRY_ID = "entry_id"
@@ -38,6 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
 SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
+SERVICE_RELOAD_CUSTOM_JINJA = "reload_custom_jinja"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
@@ -258,6 +260,14 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
     )
 
+    async def async_handle_reload_jinja(call: ha.ServiceCall) -> None:
+        """Service handler to reload custom Jinja."""
+        await async_materialize_hass_loader(hass)
+
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_RELOAD_CUSTOM_JINJA, async_handle_reload_jinja
+    )
+
     async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for reloading a config entry."""
         reload_entries = set()
@@ -288,8 +298,10 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         reload of YAML configurations for the domain that support it.
 
         Additionally, it also calls the `homeasssitant.reload_core_config`
-        service, as that reloads the core YAML configuration, and the
-        `frontend.reload_themes` service, as that reloads the themes.
+        service, as that reloads the core YAML configuration, the
+        `frontend.reload_themes` service that reloads the themes, and the
+        `homeassistant.reload_custom_jinja` service that reloads any custom
+        jinja into memory.
 
         We only do so, if there are no configuration errors.
         """
@@ -305,21 +317,32 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         services = hass.services.async_services()
-        tasks = [
-            hass.services.async_call(
-                domain, SERVICE_RELOAD, context=call.context, blocking=True
-            )
-            for domain, domain_services in services.items()
-            if domain != "notify" and SERVICE_RELOAD in domain_services
-        ] + [
-            hass.services.async_call(
-                domain, service, context=call.context, blocking=True
-            )
-            for domain, service in {
-                ha.DOMAIN: SERVICE_RELOAD_CORE_CONFIG,
-                "frontend": "reload_themes",
-            }.items()
-        ]
+        tasks = (
+            [
+                hass.services.async_call(
+                    domain, SERVICE_RELOAD, context=call.context, blocking=True
+                )
+                for domain, domain_services in services.items()
+                if domain != "notify" and SERVICE_RELOAD in domain_services
+            ]
+            + [
+                hass.services.async_call(
+                    domain, service, context=call.context, blocking=True
+                )
+                for domain, service in {
+                    ha.DOMAIN: SERVICE_RELOAD_CORE_CONFIG,
+                    "frontend": "reload_themes",
+                }.items()
+            ]
+            + [
+                hass.services.async_call(
+                    ha.DOMAIN,
+                    SERVICE_RELOAD_CUSTOM_JINJA,
+                    context=call.context,
+                    blocking=True,
+                )
+            ]
+        )
 
         await asyncio.gather(*tasks)
 
