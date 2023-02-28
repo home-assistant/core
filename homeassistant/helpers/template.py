@@ -2068,10 +2068,13 @@ def _materialize_hass_loader(hass: HomeAssistant) -> None:
         path = str(file.relative_to(jinja_path))
         result[path] = content
 
+    _get_hass_loader(hass).sources = result
+
+
+def _get_hass_loader(hass: HomeAssistant) -> HassLoader:
     if _HASS_LOADER not in hass.data:
-        hass.data[_HASS_LOADER] = HassLoader(result)
-    else:
-        hass.data[_HASS_LOADER].sources = result
+        hass.data[_HASS_LOADER] = HassLoader({})
+    return cast(HassLoader, hass.data[_HASS_LOADER])
 
 
 class HassLoader(jinja2.BaseLoader):
@@ -2118,7 +2121,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | str | None
         ] = weakref.WeakValueDictionary()
         if hass is not None:
-            self.loader = self._loader
+            self.loader = _get_hass_loader(hass)
         self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
@@ -2303,12 +2306,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["states"] = self.globals["states"]
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
-
-    @property
-    def _loader(self):
-        if _HASS_LOADER not in self.hass.data:
-            self.hass.data[_HASS_LOADER] = HassLoader({})
-        return self.hass.data[_HASS_LOADER]
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
