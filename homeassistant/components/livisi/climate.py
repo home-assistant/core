@@ -70,6 +70,7 @@ def create_entity(
 ) -> ClimateEntity:
     """Create Climate Entity."""
     capabilities: Mapping[str, Any] = device[CAPABILITY_MAP]
+    config_details: Mapping[str, Any] = device["config"]
     room_id: str = device["location"]
     room_name: str = coordinator.rooms[room_id]
     livisi_climate = LivisiClimate(
@@ -82,6 +83,7 @@ def create_entity(
         temperature_capability=capabilities["RoomTemperature"],
         humidity_capability=capabilities["RoomHumidity"],
         room=room_name,
+        name=config_details["name"],
     )
     return livisi_climate
 
@@ -95,6 +97,7 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_high = MAX_TEMPERATURE
     _attr_target_temperature_low = MIN_TEMPERATURE
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -107,6 +110,7 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
         temperature_capability: str,
         humidity_capability: str,
         room: str,
+        name: str,
     ) -> None:
         """Initialize the Livisi Climate."""
         self.config_entry = config_entry
@@ -116,6 +120,7 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
         self._humidity_capability = humidity_capability
         self.aio_livisi = coordinator.aiolivisi
         self._attr_available = False
+        self._attr_name = name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=manufacturer,
