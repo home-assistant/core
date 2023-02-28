@@ -45,7 +45,7 @@ from homeassistant.components.websocket_api.auth import (
 )
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
@@ -938,8 +938,11 @@ def mock_hass_config(
 ) -> Generator[None, None, None]:
     """Fixture to mock the content of main configuration.
 
-    Patches homeassistant.config.load_yaml_config_file with `hass_config` parameterized as content.
+    Patches homeassistant.config.load_yaml_config_file and hass.config_entries
+    with `hass_config` as parameterized.
     """
+    if hass_config:
+        hass.config_entries = ConfigEntries(hass, hass_config)
     with patch("homeassistant.config.load_yaml_config_file", return_value=hass_config):
         yield
 
