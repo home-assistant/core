@@ -709,3 +709,12 @@ async def test_bridge_connection_failed(
         )
         assert result["type"] == "abort"
         assert result["reason"] == "cannot_connect"
+
+        # repeat test with import flow
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "blah"},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
