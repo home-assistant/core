@@ -1,5 +1,7 @@
 """PyTest fixtures and test helpers."""
 from collections.abc import Awaitable, Callable, Coroutine
+import json
+import os
 import time
 from typing import Any
 
@@ -85,13 +87,43 @@ async def mock_setup_integration(
     return func
 
 
-class ExpectedCredentials:
-    """Assert credentials have the expected access token."""
+@pytest.fixture
+def credentials_json(hass: HomeAssistant) -> dict:
+    """Fixture for setting up and tearing down config/google_assistant_sdk_credentials.json."""
+    credentials_json = {
+        "refresh_token": "a refresh token",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": "a client id",
+        "client_secret": "a client secret",
+    }
+    credentials_json_filename = os.path.join(
+        hass.config.config_dir, "google_assistant_sdk_credentials.json"
+    )
+    with open(
+        credentials_json_filename, "w", encoding="utf-8"
+    ) as credentials_json_file:
+        json.dump(credentials_json, credentials_json_file)
 
-    def __init__(self, expected_access_token: str = ACCESS_TOKEN) -> None:
+    yield credentials_json
+
+    os.remove(credentials_json_filename)
+
+
+class ExpectedCredentials:
+    """Assert credentials have the expected tokens."""
+
+    def __init__(
+        self,
+        expected_access_token: str = ACCESS_TOKEN,
+        expected_refresh_token: str = None,
+    ) -> None:
         """Initialize ExpectedCredentials."""
         self.expected_access_token = expected_access_token
+        self.expected_refresh_token = expected_refresh_token
 
     def __eq__(self, other: Credentials):
         """Return true if credentials have the expected access token."""
-        return other.token == self.expected_access_token
+        return (
+            other.token == self.expected_access_token
+            and other.refresh_token == self.expected_refresh_token
+        )

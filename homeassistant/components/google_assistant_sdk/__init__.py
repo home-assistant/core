@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import aiohttp
 from gassist_text import TextAssistant
-from google.oauth2.credentials import Credentials
 import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery, intent
@@ -29,6 +28,7 @@ from .helpers import (
     GoogleAssistantSDKAudioView,
     InMemoryStorage,
     async_send_text_commands,
+    create_credentials,
     default_language_code,
 )
 
@@ -123,7 +123,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
     )
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     if entry.options.get(CONF_ENABLE_CONVERSATION_AGENT, False):
         agent = GoogleAssistantConversationAgent(hass, entry)
@@ -163,7 +163,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             await session.async_ensure_token_valid()
             self.assistant = None
         if not self.assistant:
-            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
+            credentials = await create_credentials(self.hass, self.entry)
             language_code = self.entry.options.get(
                 CONF_LANGUAGE_CODE, default_language_code(self.hass)
             )

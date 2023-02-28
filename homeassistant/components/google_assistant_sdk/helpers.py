@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+import json
 import logging
+import os
 from typing import Any
 import uuid
 
@@ -28,6 +30,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_LANGUAGE_CODE,
+    DATA_CREDENTIALS,
     DATA_MEM_STORAGE,
     DATA_SESSION,
     DOMAIN,
@@ -48,13 +51,27 @@ DEFAULT_LANGUAGE_CODES = {
 }
 
 
-async def async_send_text_commands(
-    hass: HomeAssistant, commands: list[str], media_players: list[str] | None = None
-) -> None:
-    """Send text commands to Google Assistant Service."""
-    # There can only be 1 entry (config_flow has single_instance_allowed)
-    entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+async def create_credentials(hass: HomeAssistant, entry: ConfigEntry) -> Credentials:
+    """Create credentials to pass to TextAssistant."""
+    # Credentials already exist in memory, return that.
+    if DATA_CREDENTIALS in hass.data[DOMAIN][entry.entry_id]:
+        return hass.data[DOMAIN][entry.entry_id][DATA_CREDENTIALS]
 
+    # Check if there is a json file created with google-oauthlib-tool with application type of Desktop app.
+    # This is needed for personal results to work.
+    credentials_json_filename = hass.config.path(
+        "google_assistant_sdk_credentials.json"
+    )
+    if os.path.isfile(credentials_json_filename):
+        with open(credentials_json_filename, encoding="utf-8") as credentials_json_file:
+            credentials = Credentials(token=None, **json.load(credentials_json_file))
+            # Store credentials in memory to avoid reading the file every time.
+            hass.data[DOMAIN][entry.entry_id][DATA_CREDENTIALS] = credentials
+            return credentials
+
+    # Create credentials using only the access token, application type of Web application,
+    # using the LocalOAuth2Implementation.
+    # Personal results don't work with this.
     session: OAuth2Session = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
     try:
         await session.async_ensure_token_valid()
@@ -62,8 +79,17 @@ async def async_send_text_commands(
         if 400 <= err.status < 500:
             entry.async_start_reauth(hass)
         raise err
+    return Credentials(session.token[CONF_ACCESS_TOKEN])
 
-    credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
+
+async def async_send_text_commands(
+    hass: HomeAssistant, commands: list[str], media_players: list[str] | None = None
+) -> None:
+    """Send text commands to Google Assistant Service."""
+    # There can only be 1 entry (config_flow has single_instance_allowed)
+    entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    credentials = await create_credentials(hass, entry)
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
     with TextAssistant(
         credentials, language_code, audio_out=bool(media_players)

@@ -232,6 +232,36 @@ async def test_send_text_command_expired_token_refresh_failure(
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
 
 
+async def test_send_text_command_credentials_from_json(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    credentials_json: dict,
+) -> None:
+    """Test service call send_text_command with config/google_assistant_sdk_credentials.json."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    command = "turn on home assistant unsupported device"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {"command": [command]},
+            blocking=True,
+        )
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(None, credentials_json["refresh_token"]),
+        "en-US",
+        audio_out=False,
+    )
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
+
+
 async def test_send_text_command_media_player(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,

@@ -8,6 +8,7 @@ DEFAULT_NAME: Final = "Google Assistant SDK"
 CONF_ENABLE_CONVERSATION_AGENT: Final = "enable_conversation_agent"
 CONF_LANGUAGE_CODE: Final = "language_code"
 
+DATA_CREDENTIALS: Final = "credentials"
 DATA_MEM_STORAGE: Final = "mem_storage"
 DATA_SESSION: Final = "session"
 
