@@ -5,7 +5,7 @@ import time
 
 from ulid_transform import ulid_at_time, ulid_hex
 
-__all__ = ["ulid", "ulid_hex"]
+__all__ = ["ulid", "ulid_hex", "ulid_at_time"]
 
 
 def ulid(timestamp: float | None = None) -> str:
