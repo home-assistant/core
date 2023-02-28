@@ -181,7 +181,7 @@ aiohomekit==2.6.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.6.1
+aiohue==4.6.2
 
 # homeassistant.components.imap
 aioimaplib==1.0.1
