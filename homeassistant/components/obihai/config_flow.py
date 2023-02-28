@@ -30,15 +30,12 @@ DATA_SCHEMA = vol.Schema(
 
 async def async_validate_creds(hass: HomeAssistant, user_input: dict[str, Any]) -> bool:
     """Manage Obihai options."""
-    if await hass.async_add_executor_job(
+    return await hass.async_add_executor_job(
         validate_auth,
         user_input[CONF_HOST],
         user_input[CONF_USERNAME],
         user_input[CONF_PASSWORD],
-    ):
-        return True
-
-    return False
+    )
 
 
 class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
