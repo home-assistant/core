@@ -181,7 +181,7 @@ aiohomekit==2.6.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.6.1
+aiohue==4.6.2
 
 # homeassistant.components.imap
 aioimaplib==1.0.1
@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230224.0
+home-assistant-frontend==20230227.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.2.22
@@ -2097,7 +2097,7 @@ python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.4
+python-otbr-api==1.0.5
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2653,7 +2653,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.16.4
 
 # homeassistant.components.knx
-xknx==2.5.0
+xknx==2.6.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
