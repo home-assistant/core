@@ -278,6 +278,7 @@ def verify_cleanup(
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
+        pytest.fail(f"Linger task after test {repr(task)}")
         _LOGGER.warning("Linger task after test %r", task)
         task.cancel()
     if tasks:
