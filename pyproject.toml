@@ -280,6 +280,7 @@ ignore = [
 voluptuous = "vol"
 "homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
+"homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.issue_registry" = "ir"
 
 [tool.ruff.flake8-pytest-style]
