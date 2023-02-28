@@ -1,5 +1,5 @@
 """Support for Aurora Forecast sensor."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
@@ -33,3 +33,8 @@ class AuroraSensor(AuroraEntity, SensorEntity):
     def native_value(self):
         """Return % chance the aurora is visible."""
         return self.coordinator.data
+
+    @property
+    def state_class(self):
+        """Return state class for measurement."""
+        return SensorStateClass.MEASUREMENT
