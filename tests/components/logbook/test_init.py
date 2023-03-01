@@ -1027,7 +1027,7 @@ async def test_logbook_entity_context_id(
 
     # A service call
     light_turn_off_service_context = ha.Context(
-        id="9c5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X476W5TVBFC",
         user_id="9400facee45711eaa9308bfd3d19e474",
     )
     hass.states.async_set("light.switch", STATE_ON)
@@ -1274,7 +1274,7 @@ async def test_logbook_entity_context_parent_id(
 
     # A state change via service call with the script as the parent
     light_turn_off_service_context = ha.Context(
-        id="9c5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X476W5TVBFC",
         parent_id="2798bfedf8234b5e9f4009c91f48f30c",
         user_id="9400facee45711eaa9308bfd3d19e474",
     )
@@ -1423,7 +1423,7 @@ async def test_logbook_context_from_template(
     await hass.async_block_till_done()
 
     switch_turn_off_context = ha.Context(
-        id="9c5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X476W5TVBFC",
         user_id="9400facee45711eaa9308bfd3d19e474",
     )
     hass.states.async_set(
@@ -1506,7 +1506,7 @@ async def test_logbook_(
     await hass.async_block_till_done()
 
     switch_turn_off_context = ha.Context(
-        id="9c5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X476W5TVBFC",
         user_id="9400facee45711eaa9308bfd3d19e474",
     )
     hass.states.async_set(
@@ -1692,7 +1692,7 @@ async def test_logbook_multiple_entities(
     await hass.async_block_till_done()
 
     switch_turn_off_context = ha.Context(
-        id="9c5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X476W5TVBFC",
         user_id="9400facee45711eaa9308bfd3d19e474",
     )
     hass.states.async_set(
@@ -2797,7 +2797,7 @@ async def test_logbook_select_entities_context_id(
 
     # A service call
     light_turn_off_service_context = ha.Context(
-        id="9c5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X476W5TVBFC",
         user_id="9400facee45711eaa9308bfd3d19e474",
     )
     hass.states.async_set("light.switch", STATE_ON)

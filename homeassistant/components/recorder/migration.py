@@ -949,7 +949,6 @@ def _apply_update(  # noqa: C901
                 table,
                 [
                     f"context_id_bin {context_bin_type}",
-                    f"context_user_id_bin {context_bin_type}",
                     f"context_parent_id_bin {context_bin_type}",
                 ],
             )

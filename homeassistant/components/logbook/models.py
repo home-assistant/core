@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 from typing import Any, cast
 
 from sqlalchemy.engine.row import Row
 
+from homeassistant.components.recorder.db_schema import _ulid_to_bytes_or_none
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads
+from homeassistant.util.ulid import ulid_to_bytes
 
 
 class LazyEventPartialState:
@@ -22,9 +24,9 @@ class LazyEventPartialState:
         "event_type",
         "entity_id",
         "state",
-        "context_id",
+        "context_id_bin",
         "context_user_id",
-        "context_parent_id",
+        "context_parent_id_bin",
         "data",
     ]
 
@@ -40,9 +42,9 @@ class LazyEventPartialState:
         self.event_type: str | None = self.row.event_type
         self.entity_id: str | None = self.row.entity_id
         self.state = self.row.state
-        self.context_id: str | None = self.row.context_id
+        self.context_id_bin: bytes | None = self.row.context_id_bin
         self.context_user_id: str | None = self.row.context_user_id
-        self.context_parent_id: str | None = self.row.context_parent_id
+        self.context_parent_id_bin: bytes | None = self.row.context_parent_id_bin
         if data := getattr(row, "data", None):
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
@@ -55,7 +57,7 @@ class LazyEventPartialState:
             self.data = event_data
         else:
             self.data = self._event_data_cache[source] = cast(
-                dict[str, Any], json.loads(source)
+                dict[str, Any], json_loads(source)
             )
 
 
@@ -65,7 +67,7 @@ class EventAsRow:
 
     data: dict[str, Any]
     context: Context
-    context_id: str
+    context_id_bin: bytes
     time_fired_ts: float
     state_id: int
     event_data: str | None = None
@@ -74,7 +76,7 @@ class EventAsRow:
     entity_id: str | None = None
     icon: str | None = None
     context_user_id: str | None = None
-    context_parent_id: str | None = None
+    context_parent_id_bin: bytes | None = None
     event_type: str | None = None
     state: str | None = None
     shared_data: str | None = None
@@ -89,9 +91,9 @@ def async_event_to_row(event: Event) -> EventAsRow:
             data=event.data,
             context=event.context,
             event_type=event.event_type,
-            context_id=event.context.id,
+            context_id_bin=ulid_to_bytes(event.context.id),
             context_user_id=event.context.user_id,
-            context_parent_id=event.context.parent_id,
+            context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             state_id=hash(event),
         )
@@ -104,9 +106,9 @@ def async_event_to_row(event: Event) -> EventAsRow:
         context=event.context,
         entity_id=new_state.entity_id,
         state=new_state.state,
-        context_id=new_state.context.id,
+        context_id_bin=ulid_to_bytes(new_state.context.id),
         context_user_id=new_state.context.user_id,
-        context_parent_id=new_state.context.parent_id,
+        context_parent_id_bin=_ulid_to_bytes_or_none(new_state.context.parent_id),
         time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
         state_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),

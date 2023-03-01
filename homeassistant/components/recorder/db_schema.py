@@ -207,13 +207,13 @@ class Events(Base):
         DATETIME_TYPE
     )  # no longer used for new rows
     time_fired_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
-    context_id: Mapped[str | None] = mapped_column(
+    context_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
     )
     context_user_id: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_CONTEXT_ID)
     )
-    context_parent_id: Mapped[str | None] = mapped_column(
+    context_parent_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID)
     )
     data_id: Mapped[int | None] = mapped_column(
@@ -221,9 +221,6 @@ class Events(Base):
     )
     context_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
-    )
-    context_user_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
@@ -262,8 +259,7 @@ class Events(Base):
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             context_id=None,
             context_id_bin=_ulid_to_bytes_or_none(event.context.id),
-            context_user_id=None,
-            context_user_id_bin=_ulid_to_bytes_or_none(event.context.user_id),
+            context_user_id=event.context.user_id,
             context_parent_id=None,
             context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
         )
@@ -272,7 +268,7 @@ class Events(Base):
         """Convert to a native HA Event."""
         context = Context(
             id=_bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=_bytes_to_ulid_or_none(self.context_user_id_bin),
+            user_id=self.context_user_id,
             parent_id=_bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
@@ -373,13 +369,13 @@ class States(Base):
     attributes_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
     )
-    context_id: Mapped[str | None] = mapped_column(
+    context_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
     )
     context_user_id: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_CONTEXT_ID)
     )
-    context_parent_id: Mapped[str | None] = mapped_column(
+    context_parent_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID)
     )
     origin_idx: Mapped[int | None] = mapped_column(
@@ -389,9 +385,6 @@ class States(Base):
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
     context_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
-    )
-    context_user_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
@@ -428,8 +421,7 @@ class States(Base):
             attributes=None,
             context_id=None,
             context_id_bin=_ulid_to_bytes_or_none(event.context.id),
-            context_user_id=None,
-            context_user_id_bin=_ulid_to_bytes_or_none(event.context.user_id),
+            context_user_id=event.context.user_id,
             context_parent_id=None,
             context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
@@ -456,7 +448,7 @@ class States(Base):
         """Convert to an HA state object."""
         context = Context(
             id=_bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=_bytes_to_ulid_or_none(self.context_user_id_bin),
+            user_id=self.context_user_id,
             parent_id=_bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:

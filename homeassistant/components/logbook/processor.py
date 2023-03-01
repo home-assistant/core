@@ -261,14 +261,14 @@ class ContextLookup:
         """Memorize context origin."""
         self.hass = hass
         self._memorize_new = True
-        self._lookup: dict[str | None, Row | EventAsRow | None] = {None: None}
+        self._lookup: dict[bytes | None, Row | EventAsRow | None] = {None: None}
 
-    def memorize(self, row: Row | EventAsRow) -> str | None:
+    def memorize(self, row: Row | EventAsRow) -> bytes | None:
         """Memorize a context from the database."""
         if self._memorize_new:
-            context_id: str = row.context_id
-            self._lookup.setdefault(context_id, row)
-            return context_id
+            context_id_bin: bytes = row.context_id_bin
+            self._lookup.setdefault(context_id_bin, row)
+            return context_id_bin
         return None
 
     def clear(self) -> None:
@@ -276,9 +276,9 @@ class ContextLookup:
         self._lookup.clear()
         self._memorize_new = False
 
-    def get(self, context_id: str) -> Row | EventAsRow | None:
+    def get(self, context_id_bin: bytes) -> Row | EventAsRow | None:
         """Get the context origin."""
-        return self._lookup.get(context_id)
+        return self._lookup.get(context_id_bin)
 
 
 class ContextAugmenter:
@@ -293,7 +293,7 @@ class ContextAugmenter:
         self.include_entity_name = logbook_run.include_entity_name
 
     def _get_context_row(
-        self, context_id: str | None, row: Row | EventAsRow
+        self, context_id: bytes | None, row: Row | EventAsRow
     ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
         if context_id:
@@ -305,7 +305,7 @@ class ContextAugmenter:
         return None
 
     def augment(
-        self, data: dict[str, Any], row: Row | EventAsRow, context_id: str | None
+        self, data: dict[str, Any], row: Row | EventAsRow, context_id: bytes | None
     ) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
@@ -317,11 +317,12 @@ class ContextAugmenter:
         if _rows_match(row, context_row):
             # This is the first event with the given ID. Was it directly caused by
             # a parent event?
+            context_parent_id_bin = row.context_parent_id_bin
             if (
-                not row.context_parent_id
+                not context_parent_id_bin
                 or (
                     context_row := self._get_context_row(
-                        row.context_parent_id, context_row
+                        context_parent_id_bin, context_row
                     )
                 )
                 is None
