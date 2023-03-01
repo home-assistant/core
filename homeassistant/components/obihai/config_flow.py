@@ -5,6 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -43,6 +44,10 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize."""
+        self._host: str | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -50,13 +55,44 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            await self.async_set_unique_id(user_input[CONF_HOST])
+            self._abort_if_unique_id_configured()
+
             if await async_validate_creds(self.hass, user_input):
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data=user_input,
                 )
             errors["base"] = "cannot_connect"
+
+        user_input = {CONF_HOST: self._host if self._host else ""}
+        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
+        return self.async_show_form(
+            step_id="user",
+            errors=errors,
+            data_schema=data_schema,
+        )
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Prepare configuration for a DHCP discovered Obihai."""
+        errors: dict[str, str] = {}
+        self._host = discovery_info.ip
+
+        await self.async_set_unique_id(self._host)
+        self._abort_if_unique_id_configured()
+
+        user_input = {
+            CONF_HOST: self._host,
+            CONF_PASSWORD: DEFAULT_PASSWORD,
+            CONF_USERNAME: DEFAULT_USERNAME,
+        }
+
+        if await async_validate_creds(self.hass, user_input):
+            return self.async_create_entry(
+                title=user_input[CONF_HOST],
+                data=user_input,
+            )
+        errors["base"] = "cannot_connect"
 
         data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
         return self.async_show_form(
@@ -68,7 +104,8 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     # DEPRECATED
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle a flow initialized by importing a config."""
-        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
+        await self.async_set_unique_id(config[CONF_HOST])
+        self._abort_if_unique_id_configured()
         if await async_validate_creds(self.hass, config):
             return self.async_create_entry(
                 title=config.get(CONF_NAME, config[CONF_HOST]),

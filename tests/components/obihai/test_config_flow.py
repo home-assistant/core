@@ -6,9 +6,9 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.obihai.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, FlowResultType
 
-from . import USER_INPUT
+from . import DHCP_SERVICE_INFO, USER_INPUT
 
 VALIDATE_AUTH_PATCH = "homeassistant.components.obihai.config_flow.validate_auth"
 
@@ -84,3 +84,37 @@ async def test_yaml_import_fail(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     assert "errors" not in result
+
+
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery works."""
+
+    with patch(
+        VALIDATE_AUTH_PATCH,
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]["host"] == DHCP_SERVICE_INFO.ip
+
+
+async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
+    """Test that DHCP fails if creds aren't default."""
+
+    with patch(
+        VALIDATE_AUTH_PATCH,
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
