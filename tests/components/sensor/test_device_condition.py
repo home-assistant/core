@@ -51,12 +51,14 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "CONF_IS_BATTERY_LEVEL",
         SensorDeviceClass.CO: "CONF_IS_CO",
         SensorDeviceClass.CO2: "CONF_IS_CO2",
+        SensorDeviceClass.ENERGY_STORAGE: "CONF_IS_ENERGY",
     }.get(device_class, f"CONF_IS_{device_class.value.upper()}")
     assert hasattr(device_condition, constant_name), f"Missing constant {constant_name}"
 
     # Ensure it has correct value
     constant_value = {
         SensorDeviceClass.BATTERY: "is_battery_level",
+        SensorDeviceClass.ENERGY_STORAGE: "is_energy",
     }.get(device_class, f"is_{device_class.value}")
     assert getattr(device_condition, constant_name) == constant_value
 

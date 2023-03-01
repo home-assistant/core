@@ -214,7 +214,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="month_cost",
         name="Monthly cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="peak_hour",

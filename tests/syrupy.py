@@ -172,7 +172,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "id": ANY,
             }
         )
-        serialized.pop("_json_repr")
+        serialized.pop("_partial_repr")
+        serialized.pop("_display_repr")
         return serialized
 
     @classmethod
