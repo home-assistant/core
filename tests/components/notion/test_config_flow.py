@@ -109,6 +109,11 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: "password"}
     )
+    # Block to ensure the setup_config_entry fixture does not
+    # get undone before hass is shutdown so we do not try
+    # to setup the config entry via reload.
+    await hass.async_block_till_done()
+
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries()) == 1
