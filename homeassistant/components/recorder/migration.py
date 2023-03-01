@@ -43,7 +43,10 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .models import process_timestamp
-from .queries import find_events_context_ids_to_migrate
+from .queries import (
+    find_events_context_ids_to_migrate,
+    find_states_context_ids_to_migrate,
+)
 from .statistics import (
     correct_db_schema as statistics_correct_db_schema,
     delete_statistics_duplicates,
@@ -1233,7 +1236,7 @@ def migrate_context_ids(instance: Recorder) -> bool:
                     for event_id, context_id, context_parent_id in events
                 ],
             )
-        if states := session.execute(find_events_context_ids_to_migrate()).all():
+        if states := session.execute(find_states_context_ids_to_migrate()).all():
             session.execute(
                 update(States),
                 [
