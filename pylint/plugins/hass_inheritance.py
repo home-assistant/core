@@ -49,11 +49,15 @@ class HassInheritanceChecker(BaseChecker):  # type: ignore[misc]
             return
 
         ancestors = [a.name for a in node.ancestors()]
-        if "RestoreEntity" in ancestors and "SensorEntity" in ancestors:
+        if (
+            "RestoreEntity" in ancestors
+            and "SensorEntity" in ancestors
+            and "RestoreSensor" not in ancestors
+        ):
             self.add_message(
                 "hass-invalid-inheritance",
                 node=node,
-                args="SensorEntity and RestoreEntity should not be combined",
+                args="SensorEntity and RestoreEntity should not be combined, please use RestoreSensor",
             )
 
 
