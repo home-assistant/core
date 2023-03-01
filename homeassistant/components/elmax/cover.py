@@ -121,7 +121,7 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
                 endpoint_id=self._device.endpoint_id, command=command
             )
         else:
-            _LOGGER.warning("Ignoring stop request as the cover is IDLE")
+            _LOGGER.debug("Ignoring stop request as the cover is IDLE")
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
