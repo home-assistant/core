@@ -1216,7 +1216,7 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
     """Convert a context_id to bytes."""
     if context_id is None:
         return None
-    if len(context_id) == 36:
+    if len(context_id) == 32:
         return UUID(context_id).bytes
     if len(context_id) == 26:
         return ulid_to_bytes(context_id)
