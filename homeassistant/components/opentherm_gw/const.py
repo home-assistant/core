@@ -11,7 +11,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
-    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 
 ATTR_GW_ID = "gateway_id"
@@ -295,7 +295,7 @@ SENSOR_INFO: dict[str, list] = {
     ],
     gw_vars.DATA_DHW_FLOW_RATE: [
         None,
-        f"{UnitOfVolume.LITERS}/{UnitOfTime.MINUTES}",
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         "Hot Water Flow Rate {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
