@@ -157,9 +157,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if serialnumber := hub.system.get("serialnumber"):
-                    self._entry = (
-                        await self.async_set_unique_id(serialnumber) or self._entry
-                    )
+                    await self.async_set_unique_id(serialnumber)
+                    if self._entry is None:
+                        self._abort_if_unique_id_configured()
 
                 self._current[CONF_SYSTEM] = hub.system
                 self._current[CONF_API_VERSION] = hub.api_version
