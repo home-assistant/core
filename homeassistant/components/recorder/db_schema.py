@@ -181,8 +181,8 @@ class Events(Base):
         Index(
             EVENTS_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
-            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
-            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mysql_length={"context_id_bin": CONTEXT_ID_BIN_MAX_LENGTH},
+            mariadb_length={"context_id_bin": CONTEXT_ID_BIN_MAX_LENGTH},
         ),
         _DEFAULT_TABLE_ARGS,
     )
@@ -337,8 +337,8 @@ class States(Base):
         Index(
             STATES_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
-            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
-            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mysql_length={"context_id_bin": CONTEXT_ID_BIN_MAX_LENGTH},
+            mariadb_length={"context_id_bin": CONTEXT_ID_BIN_MAX_LENGTH},
         ),
         _DEFAULT_TABLE_ARGS,
     )
