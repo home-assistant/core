@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, Protocol
+from pyoverkiz.models import State
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -21,6 +22,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
@@ -60,6 +62,7 @@ SWING_STATE = {
 OVERKIZ_TO_HVAC_MODES: dict[str, str] = {
     OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,
     OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,
+    OverkizCommandParam.ON: HVACMode.HEAT,
     OverkizCommandParam.OFF: HVACMode.OFF,
     OverkizCommandParam.HEATING: HVACMode.HEAT,
     OverkizCommandParam.FAN: HVACMode.FAN_ONLY,
@@ -83,8 +86,11 @@ SWING_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_SWING_MODES.items()}
 OVERKIZ_TO_FAN_MODES: dict[Protocol, dict[str, str]] = {
     Protocol.OVP: {
         OverkizCommandParam.AUTO: FAN_AUTO,
+        OverkizCommandParam.HIGH: FAN_HIGH,  # fallback, state can be exposed as MEDIUM, new state = med
         OverkizCommandParam.HI: FAN_HIGH,
+        OverkizCommandParam.LOW: FAN_LOW,
         OverkizCommandParam.LO: FAN_LOW,
+        OverkizCommandParam.MEDIUM: FAN_MEDIUM,  # fallback, state can be exposed as MEDIUM, new state = med
         OverkizCommandParam.MED: FAN_MEDIUM,
         OverkizCommandParam.SILENT: FAN_SILENT,
     },
@@ -126,6 +132,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     _attr_swing_modes = [*SWING_MODES_TO_OVERKIZ]
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -139,7 +146,9 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             | ClimateEntityFeature.PRESET_MODE
         )
 
-        if self.device.states.get(SWING_STATE[self.device.protocol]):
+        self.protocol = cast(Protocol, self.device.protocol)
+
+        if self.device.states.get(SWING_STATE[self.protocol]):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         if self._attr_device_info:
@@ -149,7 +158,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            state := self.device.states[MAIN_OPERATION_STATE[self.device.protocol]]
+            state := self.device.states[MAIN_OPERATION_STATE[self.protocol]]
         ) and state.value_as_str:
             if state.value_as_str.lower() == OverkizCommandParam.OFF:
                 return HVACMode.OFF
@@ -172,28 +181,28 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if (
-            state := self.device.states[FAN_SPEED_STATE[self.device.protocol]]
+            state := self.device.states[FAN_SPEED_STATE[self.protocol]]
         ) and state.value_as_str:
-            return OVERKIZ_TO_FAN_MODES[self.device.protocol][state.value_as_str]
+            return OVERKIZ_TO_FAN_MODES[self.protocol][state.value_as_str]
 
         return None
 
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        return [*FAN_MODES_TO_OVERKIZ[self.device.protocol]]
+        return [*FAN_MODES_TO_OVERKIZ[self.protocol]]
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._global_control(
-            fan_mode=FAN_MODES_TO_OVERKIZ[self.device.protocol][fan_mode]
+            fan_mode=FAN_MODES_TO_OVERKIZ[self.protocol][fan_mode]
         )
 
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
         if (
-            state := self.device.states[SWING_STATE[self.device.protocol]]
+            state := self.device.states[SWING_STATE[self.protocol]]
         ) and state.value_as_str:
             return OVERKIZ_TO_SWING_MODES[state.value_as_str]
 
@@ -204,22 +213,22 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         await self._global_control(swing_mode=SWING_MODES_TO_OVERKIZ[swing_mode])
 
     @property
-    def target_temperature(self) -> float | None:
+    def target_temperature(self) -> int | None:
         """Return the temperature."""
         if (
             temperature := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
-        ) and temperature.value_as_float:
-            return temperature.value_as_float
+        ) and temperature.value_as_int:
+            return temperature.value_as_int
 
         return None
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> int | None:
         """Return current temperature."""
         if (
-            state := self.device.states[ROOM_TEMPERATURE_STATE[self.device.protocol]]
-        ) and state.value_as_float:
-            return state.value_as_float
+            state := self.device.states[ROOM_TEMPERATURE_STATE[self.protocol]]
+        ) and state.value_as_int:
+            return state.value_as_int
 
         return None
 
@@ -232,7 +241,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            self.device.protocol == Protocol.OVP
+            self.protocol == Protocol.OVP
             and (state := self.device.states["core:HolidaysModeState"])
             and state.value_as_str
         ):
@@ -243,8 +252,8 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
                 return PRESET_NONE
 
         if (
-            self.device.protocol == Protocol.HLRR_WIFI
-            and (state := self.device.states[LEAVE_HOME_STATE[self.device.protocol]])
+            self.protocol == Protocol.HLRR_WIFI
+            and (state := self.device.states[LEAVE_HOME_STATE[self.protocol]])
             and state.value_as_str
         ):
             if state.value_as_str == OverkizCommandParam.ON:
@@ -258,14 +267,14 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         # OVP uses setHolidays, where HLRRWIFI uses an extra parameter in global control
-        if self.device.protocol == Protocol.HLRR_WIFI:
+        if self.protocol == Protocol.HLRR_WIFI:
             if preset_mode == PRESET_HOLIDAY_MODE:
                 await self._global_control(leave_home=OverkizCommandParam.ON)
 
             if preset_mode == PRESET_NONE:
                 await self._global_control(leave_home=OverkizCommandParam.OFF)
 
-        if self.device.protocol == Protocol.OVP:
+        if self.protocol == Protocol.OVP:
             if preset_mode == PRESET_HOLIDAY_MODE:
                 await self.executor.async_execute_command(
                     "setHolidays", OverkizCommandParam.ON  # add to OverkizCommand
@@ -285,23 +294,55 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         leave_home: str | None = None,
     ) -> None:
         """Execute globalControl command with all parameters. There is no option to only set a single parameter, without passing al other values."""
-        main_operation = main_operation or cast(
-            str, self.device.states[MAIN_OPERATION_STATE[self.device.protocol]]
+        main_operation = (
+            main_operation
+            or cast(
+                State, self.device.states[MAIN_OPERATION_STATE[self.protocol]]
+            ).value_as_str.lower(),
         )
-        target_temperature = target_temperature or cast(
-            int, self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
-        )
-        fan_mode = fan_mode or cast(
-            str, self.device.states[FAN_SPEED_STATE[self.device.protocol]]
-        )
-        hvac_mode = hvac_mode or cast(
-            str, self.device.states[MODE_CHANGE_STATE[self.device.protocol]]
-        )
-        swing_mode = swing_mode or cast(
-            str, self.device.states[SWING_STATE[self.device.protocol]]
+        target_temperature = (
+            target_temperature
+            or cast(
+                State, self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
+            ).value_as_int
         )
 
-        if self.device.protocol == Protocol.OVP:
+        fan_mode = (
+            fan_mode
+            or cast(
+                State, self.device.states[FAN_SPEED_STATE[self.protocol]]
+            ).value_as_str.lower()
+        )
+
+        hvac_mode = (
+            hvac_mode
+            or cast(
+                State, self.device.states[MODE_CHANGE_STATE[self.protocol]]
+            ).value_as_str.lower()
+        )
+
+        if self.device.states.get(SWING_STATE[self.protocol]):
+            swing_mode = (
+                swing_mode
+                or cast(
+                    State, self.device.states[SWING_STATE[self.protocol]]
+                ).value_as_str.lower()
+            )
+
+        else:
+            swing_mode = None  # Exception: globalControl() : Invalid value for command parameter p5 : expected (optional) string value (timer, manu, holidays) but got  (String)
+
+        if self.protocol == Protocol.OVP:
+            # globalControl() : Invalid value for command parameter p3 : expected string value (auto, hi, med, lo, silent) but got medium (String)
+            if fan_mode == OverkizCommandParam.MEDIUM:
+                fan_mode = OverkizCommandParam.MED
+
+            if fan_mode == OverkizCommandParam.HIGH:
+                fan_mode = OverkizCommandParam.HI
+
+            if fan_mode == OverkizCommandParam.LOW:
+                fan_mode = OverkizCommandParam.LO
+
             await self.executor.async_execute_command(
                 OverkizCommand.GLOBAL_CONTROL,
                 main_operation,  # Main Operation
@@ -312,7 +353,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             )
         else:
             leave_home = leave_home or cast(
-                str, self.device.states[LEAVE_HOME_STATE[self.device.protocol]]
+                str, self.device.states[LEAVE_HOME_STATE[self.protocol]]
             )
 
             await self.executor.async_execute_command(
