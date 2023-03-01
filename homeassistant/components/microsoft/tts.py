@@ -77,6 +77,7 @@ SUPPORTED_LANGUAGES = [
     "ru-ru",
     "sk-sk",
     "sl-si",
+    "sq-al",
     "sv-se",
     "sw-ke",
     "ta-in",
