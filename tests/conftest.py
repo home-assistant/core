@@ -258,8 +258,20 @@ def garbage_collection() -> None:
 
 
 @pytest.fixture(autouse=True)
+def expected_lingering_tasks() -> bool:
+    """Temporary ability to bypass test failures.
+
+    Parametrize to True to bypass the pytest failure.
+    @pytest.mark.parametrize("expected_lingering_tasks", [True])
+
+    This should be removed when all lingering tasks have been cleaned up.
+    """
+    return False
+
+
+@pytest.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop,
+    event_loop: asyncio.AbstractEventLoop, expected_lingering_tasks: bool
 ) -> Generator[None, None, None]:
     """Verify that the test has cleaned up resources correctly."""
     threads_before = frozenset(threading.enumerate())
@@ -278,8 +290,10 @@ def verify_cleanup(
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
-        pytest.fail(f"Linger task after test {repr(task)}")
-        _LOGGER.warning("Linger task after test %r", task)
+        if expected_lingering_tasks:
+            _LOGGER.warning("Linger task after test %r", task)
+        else:
+            pytest.fail(f"Linger task after test {repr(task)}")
         task.cancel()
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
