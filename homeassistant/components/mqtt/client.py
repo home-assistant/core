@@ -583,12 +583,16 @@ class MQTT:
         self._async_track_subscription(subscription)
         self._matching_subscriptions.cache_clear()
 
-        if self._init_payload.get(subscription, False) and topic in self._last_payload:
+        if topic in self._last_payload and not self._init_payload.get(
+            subscription, False
+        ):
+            # pylint: disable-next=import-outside-toplevel
+            import paho.mqtt.client as mqtt
+
             # replay last payload of retained topics we already discovered and
             # skip subscribing at the broker
             self._last_subscribe = time.time()
-            msg = mqtt.MQTTMessage()
-            msg.topic = topic
+            msg = mqtt.MQTTMessage(topic=topic.encode("utf-8"))
             msg.retain = True
             msg.payload, msg.qos = self._last_payload[topic]
             self._mqtt_on_message(self._mqttc, None, msg)
@@ -774,7 +778,7 @@ class MQTT:
         timestamp = dt_util.utcnow()
         # Cache last payload
         if len(msg.payload):
-            self._last_payload["topic"] = (msg.payload, msg.qos)
+            self._last_payload[msg.topic] = (msg.payload, msg.qos)
         elif msg.topic in self._last_payload:
             del self._last_payload[msg.topic]
 
