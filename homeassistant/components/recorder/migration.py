@@ -1250,7 +1250,9 @@ def migrate_context_ids(instance: Recorder) -> bool:
                     for state_id, context_id, context_parent_id in states
                 ],
             )
-        return bool(events or states)
+        # If there is more work to do return False
+        # so that we can be called again
+        return not (events or states)
 
 
 def _initialize_database(session: Session) -> bool:
