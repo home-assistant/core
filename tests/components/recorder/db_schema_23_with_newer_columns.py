@@ -27,6 +27,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -92,6 +93,8 @@ DOUBLE_TYPE = (
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
+CONTEXT_ID_BIN_MAX_LENGTH = 16
+
 
 class Events(Base):  # type: ignore
     """Event history data."""
@@ -120,6 +123,12 @@ class Events(Base):  # type: ignore
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     data_id = Column(
         Integer, ForeignKey("event_data.data_id"), index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
     event_data_rel = relationship(
         "EventData"
@@ -212,6 +221,12 @@ class States(Base):  # type: ignore
     )  # *** Not originally in v23, only added for recorder to startup ok
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
 
