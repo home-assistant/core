@@ -1369,7 +1369,6 @@ omit =
     homeassistant/components/verisure/sensor.py
     homeassistant/components/verisure/switch.py
     homeassistant/components/versasense/*
-    homeassistant/components/vesync/__init__.py
     homeassistant/components/vesync/common.py
     homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/light.py

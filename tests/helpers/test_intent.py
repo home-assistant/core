@@ -173,4 +173,4 @@ async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
