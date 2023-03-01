@@ -254,7 +254,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.10
+aiosomecomfort==0.0.11
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -690,7 +690,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230227.0
+home-assistant-frontend==20230301.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.2.28
@@ -903,7 +903,7 @@ notify-events==1.0.4
 nsw-fuel-api-client==1.1.0
 
 # homeassistant.components.nuheat
-nuheat==1.0.0
+nuheat==1.0.1
 
 # homeassistant.components.numato
 numato-gpio==0.10.0

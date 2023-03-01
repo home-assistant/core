@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
@@ -2586,7 +2586,10 @@ async def test_get_events_invalid_filters(
 
 
 async def test_get_events_with_device_ids(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test logbook get_events for device ids."""
     now = dt_util.utcnow()
@@ -2599,10 +2602,9 @@ async def test_get_events_with_device_ids(
 
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_hass(hass)
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         sw_version="sw-version",
         name="device name",

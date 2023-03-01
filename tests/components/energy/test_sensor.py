@@ -1,7 +1,6 @@
 """Test the Energy sensors."""
 import copy
 from datetime import timedelta
-import gc
 from typing import Any
 from unittest.mock import patch
 
@@ -31,18 +30,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture(autouse=True)
-def garbage_collection():
-    """Make sure garbage collection is run between all tests.
-
-    There are unknown issues with GC triggering during a test
-    case, leading to the test breaking down. Make sure we
-    clean up between each testcase to avoid this issue.
-    """
-    yield
-    gc.collect()
 
 
 @pytest.fixture
