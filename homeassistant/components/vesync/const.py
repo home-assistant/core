@@ -37,6 +37,7 @@ DEV_TYPE_TO_HA = {
 }
 
 SKU_TO_BASE_DEVICE = {
+    # Air Purifiers
     "LV-PUR131S": "LV-PUR131S",
     "LV-RH131S": "LV-PUR131S",  # Alt ID Model LV-PUR131S
     "Core200S": "Core200S",
@@ -52,4 +53,20 @@ SKU_TO_BASE_DEVICE = {
     "LAP-C601S-WUS": "Core600S",  # Alt ID Model Core600S
     "LAP-C601S-WUSR": "Core600S",  # Alt ID Model Core600S
     "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S
+    # Humidifiers
+    "Classic200S": "Classic200S",
+    "Classic300S": "Classic300S",
+    "LUH-A601S-WUSB": "Classic300S",  # Alt ID Model Classic300S
+    "Dual200S": "Dual200S",
+    "LUH-D301S-WUSR": "Dual200S",  # Alt ID Model Dual200S
+    "LUH-D301S-WJP": "Dual200S",  # Alt ID Model Dual200S
+    "LUH-D301S-WEU": "Dual200S",  # Alt ID Model Dual200S
+    "LV600S": "LV600S",
+    "LUH-A602S-WUSR": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WUS": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WEUR": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WEU": "LV600S",  # Alt ID Model LV600S
+    "LUH-A602S-WJP": "LV600S",  # Alt ID Model LV600S
+    "OASISMIST": "OASISMIST",
+    "LUH-O451S-WUS": "OASISMIST",  # Alt ID Model OASISMIST
 }

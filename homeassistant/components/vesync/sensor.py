@@ -5,9 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncfan import VeSyncAirBypass
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -39,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
+    value_fn: Callable[[VeSyncBaseDevice], StateType]
 
 
 @dataclass
@@ -48,26 +47,22 @@ class VeSyncSensorEntityDescription(
 ):
     """Describe VeSync sensor entity."""
 
-    exists_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool
-    ] = lambda _: True
-    update_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None
-    ] = lambda _: None
+    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
+    update_fn: Callable[[VeSyncBaseDevice], None] = lambda _: None
 
 
-def update_energy(device):
+def update_energy(device: VeSyncOutlet):
     """Update outlet details and energy usage."""
     device.update()
     device.update_energy()
 
 
-def sku_supported(device, supported):
+def sku_supported(device: VeSyncBaseDevice, supported):
     """Get the base device of which a device is an instance."""
     return SKU_TO_BASE_DEVICE.get(device.device_type) in supported
 
 
-def ha_dev_type(device):
+def ha_dev_type(device: VeSyncBaseDevice):
     """Get the homeassistant device_type for a given device."""
     return DEV_TYPE_TO_HA.get(device.device_type)
 
@@ -171,6 +166,36 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         value_fn=lambda device: device.details["humidity"],
         exists_fn=lambda device: "humidity" in device.details,
     ),
+    # Humidifier - VeSyncHumid200300S
+    VeSyncSensorEntityDescription(
+        key="water_lacks",
+        name="Empty Water Tank",
+        icon="mdi:water-alert",
+        value_fn=lambda device: device.details["water_lacks"],
+        exists_fn=lambda device: "water_lacks" in device.details,
+    ),
+    # Humidifier - VeSyncHumid200300S
+    VeSyncSensorEntityDescription(
+        key="humidity_high",
+        name="Humidity High",
+        icon="mdi:water-percent-alert",
+        value_fn=lambda device: device.details["humidity_high"],
+        exists_fn=lambda device: "humidity_high" in device.details,
+    ),
+    # Humidifier - VeSyncHumid200300S
+    VeSyncSensorEntityDescription(
+        key="water_tank_lifted",
+        name="Water Tank Lifted",
+        icon="mdi:water-alert",
+        value_fn=lambda device: device.details["water_tank_lifted"],
+        exists_fn=lambda device: "water_tank_lifted" in device.details,
+    ),
+    VeSyncSensorEntityDescription(
+        key="firmware_update",
+        name="Firmware Update Available",
+        value_fn=lambda device: device.firmware_update,
+        exists_fn=lambda device: device.current_firm_version,
+    ),
 )
 
 
@@ -212,7 +237,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
+        device: VeSyncBaseDevice,
         description: VeSyncSensorEntityDescription,
     ) -> None:
         """Initialize the VeSync outlet device."""

@@ -1,0 +1,82 @@
+{
+  "code": 0,
+  "result": {
+    "list": [
+      {
+        "cid": "300s-humidifier",
+        "deviceType": "LUH-A601S-WUSB",
+        "deviceName": "Humidifier 300s",
+        "deviceImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444"
+      },
+      {
+        "cid": "air-purifier",
+        "deviceType": "LV-PUR131S",
+        "deviceName": "Air Purifier 131s",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
+        "deviceType": "Core200S",
+        "deviceName": "Air Purifier 200s",
+        "deviceStatus": "on",
+        "type": "wifi-air",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "400s-purifier",
+        "deviceType": "LAP-C401S-WJP",
+        "deviceName": "Air Purifier 400s",
+        "deviceStatus": "on",
+        "type": "wifi-air",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "600s-purifier",
+        "deviceType": "LAP-C601S-WUS",
+        "deviceName": "Air Purifier 600s",
+        "type": "wifi-air",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "dimmable-bulb",
+        "deviceType": "ESL100",
+        "deviceName": "Dimmable Light",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "tunable-bulb",
+        "deviceType": "ESL100CW",
+        "deviceName": "Temperature Light",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "multicolor-bulb",
+        "deviceType": "ESL100MC",
+        "deviceName": "Multicolor Light",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "outlet",
+        "deviceType": "wifi-switch-1.3",
+        "deviceName": "Outlet",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "dimmable-switch",
+        "deviceType": "ESWD16",
+        "deviceName": "Dimmer Switch",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      }
+    ]
+  }
+}
