@@ -254,7 +254,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.10
+aiosomecomfort==0.0.11
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -334,7 +334,7 @@ async-upnp-client==0.33.1
 asyncsleepiq==1.2.3
 
 # homeassistant.components.aurora
-auroranoaa==0.0.2
+auroranoaa==0.0.3
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7
@@ -666,7 +666,7 @@ habitipy==0.2.0
 hass-nabucasa==0.61.0
 
 # homeassistant.components.conversation
-hassil==1.0.5
+hassil==1.0.6
 
 # homeassistant.components.tasmota
 hatasmota==0.6.4
@@ -690,10 +690,10 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230227.0
+home-assistant-frontend==20230301.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.2.22
+home-assistant-intents==2023.2.28
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -903,7 +903,7 @@ notify-events==1.0.4
 nsw-fuel-api-client==1.1.0
 
 # homeassistant.components.nuheat
-nuheat==1.0.0
+nuheat==1.0.1
 
 # homeassistant.components.numato
 numato-gpio==0.10.0
