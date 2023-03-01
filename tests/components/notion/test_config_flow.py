@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.parametrize(
     ("get_client_with_exception", "errors"),
@@ -58,7 +60,7 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
+async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -81,7 +83,7 @@ async def test_reauth(
     config_entry,
     errors,
     get_client_with_exception,
-    setup_config_entry,
+    mock_aionotion,
 ) -> None:
     """Test that re-auth works."""
     result = await hass.config_entries.flow.async_init(
