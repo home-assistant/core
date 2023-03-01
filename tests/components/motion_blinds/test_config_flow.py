@@ -378,7 +378,7 @@ async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "dhcp_no_motionblinds"
+    assert result["reason"] == "not_motionblinds"
 
 
 async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
@@ -398,7 +398,7 @@ async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "dhcp_no_motionblinds"
+    assert result["reason"] == "not_motionblinds"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

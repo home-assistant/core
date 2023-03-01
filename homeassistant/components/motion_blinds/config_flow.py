@@ -91,10 +91,10 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # key not needed for GetDeviceList request
             await self.hass.async_add_executor_job(gateway.GetDeviceList)
         except Exception:  # pylint: disable=broad-except
-            return self.async_abort(reason="dhcp_no_motionblinds")
+            return self.async_abort(reason="not_motionblinds")
 
         if not gateway.available:
-            return self.async_abort(reason="dhcp_no_motionblinds")
+            return self.async_abort(reason="not_motionblinds")
 
         short_mac = mac_address[-6:].upper()
         self.context["title_placeholders"] = {
