@@ -271,6 +271,8 @@ async def test_multiple_servers_with_selection(
     await hass.config_entries.async_unload(result["result"].entry_id)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_adding_last_unconfigured_server(
     hass: HomeAssistant,
     mock_plex_calls,
