@@ -12,9 +12,10 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    EntityCategory,
 )
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -26,22 +27,8 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -51,7 +38,7 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_trigger_types",
+    ("set_state", "features_reg", "features_state", "expected_trigger_types"),
     [
         (False, CoverEntityFeature.OPEN, 0, ["opened", "closed", "opening", "closing"]),
         (
@@ -82,22 +69,22 @@ def calls(hass):
     ],
 )
 async def test_get_triggers(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     features_reg,
     features_state,
     expected_trigger_types,
-):
+) -> None:
     """Test we get the expected triggers from a cover."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -131,7 +118,7 @@ async def test_get_triggers(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -140,20 +127,20 @@ async def test_get_triggers(
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -180,8 +167,11 @@ async def test_get_triggers_hidden_auxiliary(
 
 
 async def test_get_trigger_capabilities(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -191,11 +181,11 @@ async def test_get_trigger_capabilities(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
 
@@ -215,8 +205,11 @@ async def test_get_trigger_capabilities(
 
 
 async def test_get_trigger_capabilities_set_pos(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -226,11 +219,11 @@ async def test_get_trigger_capabilities_set_pos(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
 
@@ -277,8 +270,11 @@ async def test_get_trigger_capabilities_set_pos(
 
 
 async def test_get_trigger_capabilities_set_tilt_pos(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -288,11 +284,11 @@ async def test_get_trigger_capabilities_set_tilt_pos(
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
 
@@ -338,7 +334,7 @@ async def test_get_trigger_capabilities_set_tilt_pos(
             }
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     """Test for state triggers firing."""
     hass.states.async_set("cover.entity", STATE_CLOSED)
 
@@ -472,7 +468,7 @@ async def test_if_fires_on_state_change(hass, calls):
     ] == "closing - device - {} - opening - closing - None".format("cover.entity")
 
 
-async def test_if_fires_on_state_change_with_for(hass, calls):
+async def test_if_fires_on_state_change_with_for(hass: HomeAssistant, calls) -> None:
     """Test for triggers firing with delay."""
     entity_id = "cover.entity"
     hass.states.async_set(entity_id, STATE_CLOSED)
@@ -527,7 +523,9 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     )
 
 
-async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_position(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for position triggers."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -666,7 +664,9 @@ async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
     )
 
 
-async def test_if_fires_on_tilt_position(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_tilt_position(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for tilt position triggers."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

@@ -139,8 +139,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     hass.data[STORAGE_KEY] = refresh_token.id
 
     async def async_validate_auth_header(request: Request) -> bool:
-        """
-        Test authorization header against access token.
+        """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
         """

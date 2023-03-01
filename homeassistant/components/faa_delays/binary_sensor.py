@@ -34,7 +34,7 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     def __init__(
         self, coordinator, entry_id, description: BinarySensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description

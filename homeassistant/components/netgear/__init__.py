@@ -203,3 +203,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    router = hass.data[DOMAIN][config_entry.entry_id][KEY_ROUTER]
+
+    device_mac = None
+    for connection in device_entry.connections:
+        if connection[0] == dr.CONNECTION_NETWORK_MAC:
+            device_mac = connection[1]
+            break
+
+    if device_mac is None:
+        return False
+
+    if device_mac not in router.devices:
+        return True
+
+    return not router.devices[device_mac]["active"]

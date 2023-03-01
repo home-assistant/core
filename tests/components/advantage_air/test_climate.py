@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -33,8 +34,12 @@ from . import (
     add_mock_config,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_climate_async_setup_entry(hass, aioclient_mock):
+
+async def test_climate_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test climate platform."""
 
     aioclient_mock.get(
@@ -172,7 +177,9 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
 
-async def test_climate_async_failed_update(hass, aioclient_mock):
+async def test_climate_async_failed_update(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test climate change failure."""
 
     aioclient_mock.get(

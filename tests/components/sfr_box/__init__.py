@@ -44,10 +44,12 @@ def check_entities(
         assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
         assert state, f"Expected valid state for {entity_id}, got {state}"
-        assert (
-            state.state == expected_entity[ATTR_STATE]
-        ), f"Expected state {expected_entity[ATTR_STATE]}, got {state.state} for {entity_id}"
+        assert state.state == expected_entity[ATTR_STATE], (
+            f"Expected state {expected_entity[ATTR_STATE]}, got {state.state} for"
+            f" {entity_id}"
+        )
         for attr in FIXED_ATTRIBUTES:
-            assert state.attributes.get(attr) == expected_entity.get(
-                attr
-            ), f"Expected attribute {attr} == {expected_entity.get(attr)}, got {state.attributes.get(attr)} for {entity_id}"
+            assert state.attributes.get(attr) == expected_entity.get(attr), (
+                f"Expected attribute {attr} == {expected_entity.get(attr)}, got"
+                f" {state.attributes.get(attr)} for {entity_id}"
+            )

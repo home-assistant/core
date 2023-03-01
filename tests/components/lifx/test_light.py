@@ -1114,7 +1114,7 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
     bulb.set_color.reset_mock()
 
 
-async def test_config_zoned_light_strip_fails(hass):
+async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
     """Test we handle failure to update zones."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -1152,7 +1152,7 @@ async def test_config_zoned_light_strip_fails(hass):
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_white_light_fails(hass):
+async def test_white_light_fails(hass: HomeAssistant) -> None:
     """Test we handle failure to power on off."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL

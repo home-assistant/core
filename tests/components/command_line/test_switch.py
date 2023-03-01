@@ -8,7 +8,7 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -281,7 +281,7 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
 
 
 async def test_switch_command_state_fail(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch failures are handled correctly."""
     await setup_test_entity(
@@ -318,7 +318,7 @@ async def test_switch_command_state_fail(
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -351,7 +351,7 @@ async def test_switch_command_state_code_exceptions(
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -384,14 +384,18 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-async def test_no_switches(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_no_switches(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test with no switches."""
 
     await setup_test_entity(hass, {})
     assert "No switches" in caplog.text
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option and if it only creates one switch per id."""
     await setup_test_entity(
         hass,
@@ -416,17 +420,16 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-
-    assert len(ent_reg.entities) == 2
-    assert ent_reg.async_get_entity_id("switch", "command_line", "unique") is not None
-    assert (
-        ent_reg.async_get_entity_id("switch", "command_line", "not-so-unique-anymore")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id("switch", "command_line", "unique")
+    assert entity_registry.async_get_entity_id(
+        "switch", "command_line", "not-so-unique-anymore"
     )
 
 
-async def test_command_failure(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_command_failure(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test command failure."""
 
     await setup_test_entity(

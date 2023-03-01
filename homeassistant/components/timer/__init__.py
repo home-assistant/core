@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -207,14 +208,14 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._attr_force_update = True
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> Timer:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         timer = cls(config)
         timer.editable = True
         return timer
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> Timer:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         timer = cls(config)
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])

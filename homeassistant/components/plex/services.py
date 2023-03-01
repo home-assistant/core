@@ -20,6 +20,7 @@ from .const import (
 )
 from .errors import MediaNotFound
 from .models import PlexMediaSearchResult
+from .server import PlexServer
 
 REFRESH_LIBRARY_SCHEMA = vol.Schema(
     {vol.Optional("server_name"): str, vol.Required("library_name"): str}
@@ -28,7 +29,7 @@ REFRESH_LIBRARY_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__package__)
 
 
-async def async_setup_services(hass):
+async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the Plex component."""
 
     async def async_refresh_library_service(service_call: ServiceCall) -> None:
@@ -53,8 +54,6 @@ async def async_setup_services(hass):
         DOMAIN, SERVICE_SCAN_CLIENTS, async_scan_clients_service
     )
 
-    return True
-
 
 def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     """Scan a Plex library for new and updated media."""
@@ -77,17 +76,22 @@ def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     library.update()
 
 
-def get_plex_server(hass, plex_server_name=None, plex_server_id=None):
+def get_plex_server(
+    hass: HomeAssistant,
+    plex_server_name: str | None = None,
+    plex_server_id: str | None = None,
+) -> PlexServer:
     """Retrieve a configured Plex server by name."""
     if DOMAIN not in hass.data:
         raise HomeAssistantError("Plex integration not configured")
-    plex_servers = hass.data[DOMAIN][SERVERS].values()
-    if not plex_servers:
+    servers: dict[str, PlexServer] = hass.data[DOMAIN][SERVERS]
+    if not servers:
         raise HomeAssistantError("No Plex servers available")
 
     if plex_server_id:
-        return hass.data[DOMAIN][SERVERS][plex_server_id]
+        return servers[plex_server_id]
 
+    plex_servers = servers.values()
     if plex_server_name:
         plex_server = next(
             (x for x in plex_servers if x.friendly_name == plex_server_name), None
@@ -110,7 +114,11 @@ def get_plex_server(hass, plex_server_name=None, plex_server_id=None):
 
 
 def process_plex_payload(
-    hass, content_type, content_id, default_plex_server=None, supports_playqueues=True
+    hass: HomeAssistant,
+    content_type: str,
+    content_id: str,
+    default_plex_server: PlexServer | None = None,
+    supports_playqueues: bool = True,
 ) -> PlexMediaSearchResult:
     """Look up Plex media using media_player.play_media service payloads."""
     plex_server = default_plex_server

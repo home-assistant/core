@@ -997,7 +997,7 @@
         "denonavr": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling",
+          "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
         },
         "heos": {
@@ -1138,6 +1138,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "dormakaba_dkey": {
+      "name": "Dormakaba dKey",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "dovado": {
       "name": "Dovado",
       "integration_type": "hub",
@@ -1199,6 +1205,12 @@
     },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "easyenergy": {
+      "name": "easyEnergy",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1727,7 +1739,7 @@
       "iot_class": "cloud_polling"
     },
     "forked_daapd": {
-      "name": "Owntone",
+      "name": "OwnTone",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -1869,7 +1881,7 @@
     },
     "geo_json_events": {
       "name": "GeoJSON",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2007,7 +2019,7 @@
           "name": "Google Domains"
         },
         "google_mail": {
-          "integration_type": "device",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Mail"
@@ -2189,6 +2201,12 @@
       "name": "Heiwa",
       "integration_type": "virtual",
       "supported_by": "gree"
+    },
+    "heltun": {
+      "name": "HELTUN",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
@@ -3771,7 +3789,7 @@
     "obihai": {
       "name": "Obihai",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "octoprint": {
@@ -4482,7 +4500,7 @@
       "name": "Reolink IP NVR/camera",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "repetier": {
       "name": "Repetier-Server",
@@ -4717,7 +4735,7 @@
       "name": "Pentair ScreenLogic",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "scsgate": {
       "name": "SCSGate",
@@ -5680,16 +5698,30 @@
       "iot_class": "local_polling"
     },
     "tplink": {
-      "name": "TP-Link Kasa Smart",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "tplink_lte": {
-      "name": "TP-Link LTE",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "name": "TP-Link",
+      "integrations": {
+        "tplink": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "TP-Link Kasa Smart"
+        },
+        "tplink_omada": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "TP-Link Omada"
+        },
+        "tplink_lte": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "TP-Link LTE"
+        }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "traccar": {
       "name": "Traccar",

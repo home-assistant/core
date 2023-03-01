@@ -938,6 +938,8 @@ class AlexaTemperatureSensor(AlexaCapability):
             _LOGGER.warning("Invalid temp value %s for %s", temp, self.entity.entity_id)
             return None
 
+        # Alexa displays temperatures with one decimal digit, we don't need to do
+        # rounding for presentation here.
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
 

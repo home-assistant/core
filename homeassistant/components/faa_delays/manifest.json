@@ -1,10 +1,10 @@
 {
   "domain": "faa_delays",
   "name": "FAA Delays",
+  "codeowners": ["@ntilley905"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/faa_delays",
-  "requirements": ["faadelays==0.0.7"],
-  "codeowners": ["@ntilley905"],
   "iot_class": "cloud_polling",
-  "loggers": ["faadelays"]
+  "loggers": ["faadelays"],
+  "requirements": ["faadelays==0.0.7"]
 }

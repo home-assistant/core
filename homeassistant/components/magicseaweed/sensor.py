@@ -146,7 +146,7 @@ class MagicSeaweedSensor(SensorEntity):
         unit_system,
         description: SensorEntityDescription,
         hour=None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.client_name = name

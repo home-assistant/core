@@ -9,34 +9,31 @@ from typing import Any, Final, cast
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from .const import CONF_SLEEP_PERIOD
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
     RpcEntityDescription,
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import (
-    async_remove_shelly_entity,
-    get_block_device_name,
-    get_device_entry_gen,
-    get_rpc_device_name,
-)
+from .utils import get_device_entry_gen
 
 LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +98,6 @@ RPC_UPDATES: Final = {
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta firmware update",
@@ -123,27 +119,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up update entities for Shelly component."""
     if get_device_entry_gen(config_entry) == 2:
-        # Remove legacy update binary sensor & buttons, remove in 2023.2.0
-        rpc_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
-        assert rpc_coordinator
-        mac = rpc_coordinator.mac
-        async_remove_shelly_entity(hass, "binary_sensor", f"{mac}-sys-fwupdate")
-        device_name = slugify(get_rpc_device_name(rpc_coordinator.device))
-        async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update")
-        async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update_beta")
-
-        return async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
-        )
-
-    # Remove legacy update binary sensor & buttons, remove in 2023.2.0
-    block_coordinator = get_entry_data(hass)[config_entry.entry_id].block
-    assert block_coordinator
-    mac = block_coordinator.mac
-    async_remove_shelly_entity(hass, "binary_sensor", f"{mac}-fwupdate")
-    device_name = slugify(get_block_device_name(block_coordinator.device))
-    async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update")
-    async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update_beta")
+        if config_entry.data[CONF_SLEEP_PERIOD]:
+            async_setup_entry_rpc(
+                hass,
+                config_entry,
+                async_add_entities,
+                RPC_UPDATES,
+                RpcSleepingUpdateEntity,
+            )
+        else:
+            async_setup_entry_rpc(
+                hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
+            )
+        return
 
     if not config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_rest(
@@ -245,7 +233,6 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        assert self.coordinator.device.shelly
         return cast(str, self.coordinator.device.shelly["ver"])
 
     @property
@@ -293,3 +280,35 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             self.coordinator.entry.async_start_reauth(self.hass)
         else:
             LOGGER.debug("OTA update call successful")
+
+
+class RpcSleepingUpdateEntity(ShellySleepingRpcAttributeEntity, UpdateEntity):
+    """Represent a RPC sleeping update entity."""
+
+    entity_description: RpcUpdateDescription
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version currently in use."""
+        if self.coordinator.device.initialized:
+            return cast(str, self.coordinator.device.shelly["ver"])
+
+        if self.last_state is None:
+            return None
+
+        return self.last_state.attributes.get(ATTR_INSTALLED_VERSION)
+
+    @property
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        if self.coordinator.device.initialized:
+            new_version = self.entity_description.latest_version(self.sub_status)
+            if new_version:
+                return cast(str, new_version)
+
+            return self.installed_version
+
+        if self.last_state is None:
+            return None
+
+        return self.last_state.attributes.get(ATTR_LATEST_VERSION)
