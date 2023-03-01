@@ -1,7 +1,7 @@
 """Base entity definitions."""
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
 
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,7 +25,7 @@ class OmadaSwitchDeviceEntity(
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.device.mac)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             identifiers={(DOMAIN, (self.device.mac))},
             manufacturer="TP-Link",
             model=self.device.model_display_name,
