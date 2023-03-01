@@ -65,7 +65,7 @@ if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
-
+_EMPTY_CONTEXT_ID = b"\x00" * 16
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1223,7 +1223,8 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
 def migrate_context_ids(instance: Recorder) -> bool:
     """Migrate context_ids to use binary format."""
     _to_bytes = _context_id_to_bytes
-    with session_scope(session=instance.get_session()) as session:
+    session_maker = instance.get_session
+    with session_scope(session=session_maker()) as session:
         if events := session.execute(find_events_context_ids_to_migrate()).all():
             session.execute(
                 update(Events),
@@ -1232,7 +1233,7 @@ def migrate_context_ids(instance: Recorder) -> bool:
                         "event_id": event_id,
                         "context_id": None,
                         "context_parent_id": None,
-                        "context_id_bin": _to_bytes(context_id),
+                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
                         "context_parent_id_bin": _to_bytes(context_parent_id),
                     }
                     for event_id, context_id, context_parent_id in events
@@ -1246,7 +1247,7 @@ def migrate_context_ids(instance: Recorder) -> bool:
                         "state_id": state_id,
                         "context_id": None,
                         "context_parent_id": None,
-                        "context_id_bin": _to_bytes(context_id),
+                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
                         "context_parent_id_bin": _to_bytes(context_parent_id),
                     }
                     for state_id, context_id, context_parent_id in states
@@ -1254,7 +1255,21 @@ def migrate_context_ids(instance: Recorder) -> bool:
             )
         # If there is more work to do return False
         # so that we can be called again
-        return not (events or states)
+        is_done = not (events or states)
+
+    if is_done:
+        _drop_index(
+            session_maker,
+            "events",
+            "ix_events_context_id",
+        )
+        _drop_index(
+            session_maker,
+            "states",
+            "ix_states_context_id",
+        )
+
+    return is_done
 
 
 def _initialize_database(session: Session) -> bool:

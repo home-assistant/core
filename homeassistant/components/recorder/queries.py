@@ -673,7 +673,7 @@ def find_events_context_ids_to_migrate() -> StatementLambdaElement:
     """Find events context_ids to migrate."""
     return lambda_stmt(
         lambda: select(Events.event_id, Events.context_id, Events.context_parent_id)
-        .filter(Events.context_id.isnot(None))
+        .filter(Events.context_id_bin.is_(None))
         .limit(SQLITE_MAX_BIND_VARS)
     )
 
@@ -682,6 +682,6 @@ def find_states_context_ids_to_migrate() -> StatementLambdaElement:
     """Find events context_ids to migrate."""
     return lambda_stmt(
         lambda: select(States.state_id, States.context_id, States.context_parent_id)
-        .filter(States.context_id.isnot(None))
+        .filter(States.context_id_bin.is_(None))
         .limit(SQLITE_MAX_BIND_VARS)
     )
