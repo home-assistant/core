@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
@@ -125,7 +125,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     _attr_preset_modes = [PRESET_NONE, PRESET_HOLIDAY_MODE]
     _attr_swing_modes = [*SWING_MODES_TO_OVERKIZ]
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -139,7 +139,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             | ClimateEntityFeature.PRESET_MODE
         )
 
-        if self.executor.has_state(*SWING_STATE):
+        if self.device.states.get(SWING_STATE[self.device.protocol]):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         if self._attr_device_info:
