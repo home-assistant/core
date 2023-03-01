@@ -15,6 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -66,7 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_APPS not in hass.data[DOMAIN]
         and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
-        coordinator = VizioAppsDataUpdateCoordinator(hass)
+        store: Store = Store(hass, 1, DOMAIN)
+        # The first time we start with APPS but after that we store each retrieved
+        # list of apps so we aren't starting from scratch on restart. This will
+        # preserve the app list for this HA instance in case the URLs to retrieve
+        # the app list change.
+        initial_data = await store.async_load() or APPS
+        coordinator = VizioAppsDataUpdateCoordinator(hass, initial_data, store)
         await coordinator.async_refresh()
         hass.data[DOMAIN][CONF_APPS] = coordinator
 
@@ -98,7 +105,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Define an object to hold Vizio app config data."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, initial_data: list[dict[str, Any]], store: Store
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
@@ -107,31 +116,34 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
             update_interval=timedelta(days=1),
             update_method=self._async_update_data,
         )
-        self.data = APPS
+        self.data = initial_data
         self.fail_count = 0
         self.fail_threshold = 10
+        self.store = store
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update data via library."""
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
-        if not data:
-            # For every failure, increase the fail count until we reach the threshold.
-            # We then log a warning, increase the threshold, and reset the fail count.
-            # This is here to prevent silent failures but to reduce repeat logs.
-            if self.fail_count == self.fail_threshold:
-                _LOGGER.warning(
-                    (
-                        "Unable to retrieve the apps list from the external server "
-                        "for the last %s days"
-                    ),
-                    self.fail_threshold,
-                )
-                self.fail_count = 0
-                self.fail_threshold += 10
-            else:
-                self.fail_count += 1
-            return self.data
-        # Reset the fail count and threshold when the data is successfully retrieved
-        self.fail_count = 0
-        self.fail_threshold = 10
-        return sorted(data, key=lambda app: app["name"])
+        if data:
+            # Reset the fail count and threshold when the data is successfully retrieved
+            self.fail_count = 0
+            self.fail_threshold = 10
+            # Store the new data so we have it for the next restart
+            await self.store.async_save(data)
+            return data
+        # For every failure, increase the fail count until we reach the threshold.
+        # We then log a warning, increase the threshold, and reset the fail count.
+        # This is here to prevent silent failures but to reduce repeat logs.
+        if self.fail_count == self.fail_threshold:
+            _LOGGER.warning(
+                (
+                    "Unable to retrieve the apps list from the external server for the "
+                    "last %s days"
+                ),
+                self.fail_threshold,
+            )
+            self.fail_count = 0
+            self.fail_threshold += 10
+        else:
+            self.fail_count += 1
+        return self.data
