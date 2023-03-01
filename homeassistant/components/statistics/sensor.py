@@ -452,7 +452,7 @@ class StatisticsSensor(SensorEntity):
             self.entity_id,
             dt_util.as_local(now - max_age),
             self._samples_max_age,
-            self._samples_preserve_last_val
+            self._samples_preserve_last_val,
         )
 
         while self.ages and (now - self.ages[0]) > max_age:
@@ -477,6 +477,12 @@ class StatisticsSensor(SensorEntity):
     def _next_to_purge_timestamp(self) -> datetime | None:
         """Find the timestamp when the next purge would occur."""
         if self.ages and self._samples_max_age:
+            if self._samples_preserve_last_val and len(self.ages) == 1:
+                most_recent_age = dt_util.utcnow() - self.ages[0]
+                if most_recent_age > self._samples_max_age:
+                    # if most recent entry was expired but preserved, do not schedule another update
+                    # when a new source value is inserted it will restart purge cycle
+                    return None
             # Take the oldest entry from the ages list and add the configured max_age.
             # If executed after purging old states, the result is the next timestamp
             # in the future when the oldest state will expire.
