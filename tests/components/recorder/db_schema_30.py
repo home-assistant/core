@@ -98,6 +98,8 @@ ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
+EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
+STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 
 
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
@@ -195,6 +197,12 @@ class Events(Base):  # type: ignore[misc,valid-type]
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        Index(
+            STATES_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -209,7 +217,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
     context_id_bin = Column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
@@ -318,6 +326,12 @@ class States(Base):  # type: ignore[misc,valid-type]
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
+        Index(
+            STATES_CONTEXT_ID_BIN_INDEX,
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
@@ -341,7 +355,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
     context_id_bin = Column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
