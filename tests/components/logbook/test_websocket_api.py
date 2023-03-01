@@ -1802,7 +1802,10 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_device(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with a device."""
     now = dt_util.utcnow()
@@ -1812,7 +1815,7 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
             for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
     device2 = devices[1]
 
@@ -2074,6 +2077,7 @@ async def test_live_stream_with_one_second_commit_interval(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the recorder with a 1s commit interval."""
     config = {recorder.CONF_COMMIT_INTERVAL: 0.5}
@@ -2085,7 +2089,7 @@ async def test_live_stream_with_one_second_commit_interval(
             for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
 
     await hass.async_block_till_done()
@@ -2289,6 +2293,7 @@ async def test_recorder_is_far_behind(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we still start live streaming if the recorder is far behind."""
     now = dt_util.utcnow()
@@ -2299,7 +2304,7 @@ async def test_recorder_is_far_behind(
         ]
     )
     await async_wait_recording_done(hass)
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
     await async_wait_recording_done(hass)
 
@@ -2713,7 +2718,10 @@ async def test_logbook_stream_ignores_forced_updates(
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_all_entities_are_continuous_with_device(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test subscribe/unsubscribe logbook stream with entities that are always filtered and a device."""
     now = dt_util.utcnow()
@@ -2724,7 +2732,7 @@ async def test_subscribe_all_entities_are_continuous_with_device(
         ]
     )
     await async_wait_recording_done(hass)
-    devices = await _async_mock_devices_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass, device_registry)
     device = devices[0]
     device2 = devices[1]
 
