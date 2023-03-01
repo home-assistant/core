@@ -527,9 +527,12 @@ def _apply_update(  # noqa: C901
     """Perform operations to bring schema up to date."""
     dialect = engine.dialect.name
     big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
-    if dialect in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+    if dialect == SupportedDialect.MYSQL:
         timestamp_type = "DOUBLE PRECISION"
         context_bin_type = f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})"
+    if dialect == SupportedDialect.POSTGRESQL:
+        timestamp_type = "DOUBLE PRECISION"
+        context_bin_type = "BYTEA"
     else:
         timestamp_type = "FLOAT"
         context_bin_type = "BLOB"
