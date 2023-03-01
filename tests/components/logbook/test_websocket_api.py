@@ -157,7 +157,7 @@ async def test_get_events(
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
     await hass.async_block_till_done()
     context = core.Context(
-        id="ac5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X276W5TEDDD",
         user_id="b400facee45711eaa9308bfd3d19e474",
     )
 
@@ -237,7 +237,7 @@ async def test_get_events(
             "id": 5,
             "type": "logbook/get_events",
             "start_time": now.isoformat(),
-            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_id": "01GTDGKBCH00GW0X276W5TEDDD",
         }
     )
     response = await client.receive_json()
@@ -443,7 +443,7 @@ async def test_get_events_with_device_ids(
     hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
     await hass.async_block_till_done()
     context = core.Context(
-        id="ac5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X276W5TEDDD",
         user_id="b400facee45711eaa9308bfd3d19e474",
     )
 
@@ -1257,7 +1257,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
     ]
 
     context = core.Context(
-        id="ac5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X276W5TEDDD",
         user_id="b400facee45711eaa9308bfd3d19e474",
     )
     automation_entity_id_test = "automation.alarm"
@@ -1295,7 +1295,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
     assert msg["type"] == "event"
     assert msg["event"]["events"] == [
         {
-            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_id": "01GTDGKBCH00GW0X276W5TEDDD",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
             "domain": "automation",
             "entity_id": "automation.alarm",
@@ -1308,7 +1308,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
-            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_id": "01GTDGKBCH00GW0X276W5TEDDD",
             "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
             "context_source": "state of binary_sensor.dog_food_ready",
@@ -1360,7 +1360,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
-            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_id": "01GTDGKBCH00GW0X276W5TEDDD",
             "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
             "context_source": "state of binary_sensor.dog_food_ready",
@@ -1390,7 +1390,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
-            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_id": "01GTDGKBCH00GW0X276W5TEDDD",
             "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
             "context_source": "state of binary_sensor.dog_food_ready",
@@ -1979,7 +1979,7 @@ async def test_logbook_stream_match_multiple_entities(
     hass.states.async_set("binary_sensor.should_not_appear", STATE_ON)
     hass.states.async_set("binary_sensor.should_not_appear", STATE_OFF)
     context = core.Context(
-        id="ac5bd62de45711eaaeb351041eec8dd9",
+        id="01GTDGKBCH00GW0X276W5TEDDD",
         user_id="b400facee45711eaa9308bfd3d19e474",
     )
     hass.bus.async_fire(
