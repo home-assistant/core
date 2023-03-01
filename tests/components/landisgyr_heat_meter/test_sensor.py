@@ -19,12 +19,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfVolume,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -43,7 +43,7 @@ class MockHeatMeterResponse:
 
 
 @patch("homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
-async def test_create_sensors(mock_heat_meter, hass):
+async def test_create_sensors(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test sensor."""
     entry_data = {
         "device": "/dev/USB0",
@@ -108,7 +108,7 @@ async def test_create_sensors(mock_heat_meter, hass):
 
 
 @patch("homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
-async def test_restore_state(mock_heat_meter, hass):
+async def test_restore_state(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test sensor restore state."""
     # Home assistant is not running yet
     hass.state = CoreState.not_running

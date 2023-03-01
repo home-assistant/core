@@ -1,11 +1,11 @@
 """Tests for the intent helpers."""
-
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import conversation
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry,
     config_validation as cv,
@@ -13,6 +13,7 @@ from homeassistant.helpers import (
     entity_registry,
     intent,
 )
+from homeassistant.setup import async_setup_component
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -23,7 +24,7 @@ class MockIntentHandler(intent.IntentHandler):
         self.slot_schema = slot_schema
 
 
-async def test_async_match_states(hass):
+async def test_async_match_states(hass: HomeAssistant) -> None:
     """Test async_match_state helper."""
     areas = area_registry.async_get(hass)
     area_kitchen = areas.async_get_or_create("kitchen")
@@ -101,7 +102,7 @@ async def test_async_match_states(hass):
     ) == [state2]
 
 
-async def test_match_device_area(hass):
+async def test_match_device_area(hass: HomeAssistant) -> None:
     """Test async_match_state with a device in an area."""
     areas = area_registry.async_get(hass)
     area_kitchen = areas.async_get_or_create("kitchen")
@@ -140,7 +141,7 @@ async def test_match_device_area(hass):
     ) == [state1]
 
 
-def test_async_validate_slots():
+def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
     handler1 = MockIntentHandler({vol.Required("name"): cv.string})
 
@@ -154,3 +155,22 @@ def test_async_validate_slots():
     handler1.async_validate_slots(
         {"name": {"value": "kitchen"}, "probability": {"value": "0.5"}}
     )
+
+
+async def test_cant_turn_on_lock(hass: HomeAssistant) -> None:
+    """Test that we can't turn on entities that don't support it."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "lock", {})
+
+    hass.states.async_set(
+        "lock.test", "123", attributes={ATTR_FRIENDLY_NAME: "Test Lock"}
+    )
+
+    result = await conversation.async_converse(
+        hass, "turn on test lock", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH

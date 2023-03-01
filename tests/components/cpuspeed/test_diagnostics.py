@@ -12,7 +12,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test diagnostics."""
     info = {
         "hz_actual": (3200000001, 0),

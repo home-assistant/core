@@ -1,9 +1,9 @@
 {
   "domain": "shiftr",
   "name": "shiftr.io",
-  "documentation": "https://www.home-assistant.io/integrations/shiftr",
-  "requirements": ["paho-mqtt==1.6.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/shiftr",
   "iot_class": "cloud_push",
-  "loggers": ["paho"]
+  "loggers": ["paho"],
+  "requirements": ["paho-mqtt==1.6.1"]
 }

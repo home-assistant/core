@@ -12,6 +12,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -101,7 +102,7 @@ async def device_inovelli(hass, zigpy_device_mock, zha_device_joined):
     return zigpy_device, zha_device
 
 
-async def test_get_actions(hass, device_ias):
+async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
     """Test we get the expected actions from a ZHA device."""
 
     ieee_address = str(device_ias[0].ieee)
@@ -150,7 +151,7 @@ async def test_get_actions(hass, device_ias):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_inovelli_actions(hass, device_inovelli):
+async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> None:
     """Test we get the expected actions from a ZHA device."""
 
     inovelli_ieee_address = str(device_inovelli[0].ieee)
@@ -230,7 +231,7 @@ async def test_get_inovelli_actions(hass, device_inovelli):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass, device_ias, device_inovelli):
+async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
     """Test for executing a ZHA device action."""
     zigpy_device, zha_device = device_ias
     inovelli_zigpy_device, inovelli_zha_device = device_inovelli
@@ -346,7 +347,7 @@ async def test_action(hass, device_ias, device_inovelli):
         )
 
 
-async def test_invalid_zha_event_type(hass, device_ias):
+async def test_invalid_zha_event_type(hass: HomeAssistant, device_ias) -> None:
     """Test that unexpected types are not passed to `zha_send_event`."""
     zigpy_device, zha_device = device_ias
     channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
