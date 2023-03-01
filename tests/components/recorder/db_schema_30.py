@@ -23,6 +23,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -96,6 +97,7 @@ LAST_UPDATED_INDEX = "ix_states_last_updated"
 ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
+CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
@@ -206,6 +208,12 @@ class Events(Base):  # type: ignore[misc,valid-type]
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
     event_data_rel = relationship("EventData")
 
     def __repr__(self) -> str:
@@ -332,6 +340,12 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
+    context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+    )  # *** Not originally in v30, only added for recorder to startup ok
+    context_parent_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v30, only added for recorder to startup ok
     old_state = relationship("States", remote_side=[state_id])
     state_attributes = relationship("StateAttributes")
 
