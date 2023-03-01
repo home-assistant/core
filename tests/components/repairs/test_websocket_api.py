@@ -16,7 +16,7 @@ from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, mock_platform
@@ -53,7 +53,7 @@ async def create_issues(hass, ws_client, issues=None):
         issues = DEFAULT_ISSUES
 
     for issue in issues:
-        issue_registry.async_create_issue(
+        ir.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
@@ -439,8 +439,8 @@ async def test_list_issues(
     """Test we can list issues."""
 
     # Add an inactive issue, this should not be exposed in the list
-    hass_storage[issue_registry.STORAGE_KEY] = {
-        "version": issue_registry.STORAGE_VERSION_MAJOR,
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
         "data": {
             "issues": [
                 {
@@ -491,7 +491,7 @@ async def test_list_issues(
     ]
 
     for issue in issues:
-        issue_registry.async_create_issue(
+        ir.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
