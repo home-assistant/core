@@ -28,5 +28,5 @@
   "documentation": "https://www.home-assistant.io/integrations/august",
   "iot_class": "cloud_push",
   "loggers": ["pubnub", "yalexs"],
-  "requirements": ["yalexs==1.2.7", "yalexs_ble==2.0.3"]
+  "requirements": ["yalexs==1.2.7", "yalexs_ble==2.0.4"]
 }
