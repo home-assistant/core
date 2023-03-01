@@ -278,7 +278,11 @@ ignore = [
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
+"homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
+"homeassistant.helpers.device_registry" = "dr"
+"homeassistant.helpers.entity_registry" = "er"
+"homeassistant.helpers.issue_registry" = "ir"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
