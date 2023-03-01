@@ -21,6 +21,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -49,6 +50,7 @@ from homeassistant.util.json import (
     json_loads,
     json_loads_object,
 )
+from homeassistant.util.ulid import bytes_to_ulid, ulid_to_bytes
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
@@ -110,6 +112,7 @@ LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
 ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
+CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 _DEFAULT_TABLE_ARGS = {
     "mysql_default_charset": "utf8mb4",
@@ -148,6 +151,20 @@ DOUBLE_TYPE = (
 )
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
+
+
+def _ulid_to_bytes_or_none(ulid: str | None) -> bytes | None:
+    """Convert an ulid to bytes."""
+    if ulid is None:
+        return None
+    return ulid_to_bytes(ulid)
+
+
+def _bytes_to_ulid_or_none(_bytes: bytes | None) -> str | None:
+    """Convert bytes to a ulid."""
+    if _bytes is None:
+        return None
+    return bytes_to_ulid(_bytes)
 
 
 class JSONLiteral(JSON):
@@ -202,6 +219,15 @@ class Events(Base):
     data_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("event_data.data_id"), index=True
     )
+    context_id_bin: Mapped[bytes | None] = mapped_column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+    )
+    context_user_id_bin: Mapped[bytes | None] = mapped_column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )
+    context_parent_id_bin: Mapped[bytes | None] = mapped_column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
 
     def __repr__(self) -> str:
@@ -234,17 +260,20 @@ class Events(Base):
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=None,
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
-            context_id=event.context.id,
-            context_user_id=event.context.user_id,
-            context_parent_id=event.context.parent_id,
+            context_id=None,
+            context_id_bin=_ulid_to_bytes_or_none(event.context.id),
+            context_user_id=None,
+            context_user_id_bin=_ulid_to_bytes_or_none(event.context.user_id),
+            context_parent_id=None,
+            context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
         )
 
     def to_native(self, validate_entity_id: bool = True) -> Event | None:
         """Convert to a native HA Event."""
         context = Context(
-            id=self.context_id,
-            user_id=self.context_user_id,
-            parent_id=self.context_parent_id,
+            id=_bytes_to_ulid_or_none(self.context_id_bin),
+            user_id=_bytes_to_ulid_or_none(self.context_user_id_bin),
+            parent_id=_bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
             return Event(
@@ -358,6 +387,15 @@ class States(Base):
     )  # 0 is local, 1 is remote
     old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
+    context_id_bin: Mapped[bytes | None] = mapped_column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+    )
+    context_user_id_bin: Mapped[bytes | None] = mapped_column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )
+    context_parent_id_bin: Mapped[bytes | None] = mapped_column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -388,9 +426,12 @@ class States(Base):
         dbstate = States(
             entity_id=entity_id,
             attributes=None,
-            context_id=event.context.id,
-            context_user_id=event.context.user_id,
-            context_parent_id=event.context.parent_id,
+            context_id=None,
+            context_id_bin=_ulid_to_bytes_or_none(event.context.id),
+            context_user_id=None,
+            context_user_id_bin=_ulid_to_bytes_or_none(event.context.user_id),
+            context_parent_id=None,
+            context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             last_updated=None,
             last_changed=None,
@@ -414,9 +455,9 @@ class States(Base):
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
         context = Context(
-            id=self.context_id,
-            user_id=self.context_user_id,
-            parent_id=self.context_parent_id,
+            id=_bytes_to_ulid_or_none(self.context_id_bin),
+            user_id=_bytes_to_ulid_or_none(self.context_user_id_bin),
+            parent_id=_bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
             attrs = json_loads_object(self.attributes) if self.attributes else {}

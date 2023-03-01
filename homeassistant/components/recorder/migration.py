@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import SupportedDialect
 from .db_schema import (
+    CONTEXT_ID_BIN_MAX_LENGTH,
     SCHEMA_VERSION,
     STATISTICS_TABLES,
     TABLE_STATES,
@@ -520,8 +521,9 @@ def _apply_update(  # noqa: C901
     big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
     if dialect in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
         timestamp_type = "DOUBLE PRECISION"
+        context_bin_type = f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})"
     else:
-        timestamp_type = "FLOAT"
+        context_bin_type = "BLOB"
 
     if new_version == 1:
         # This used to create ix_events_time_fired, but it was removed in version 32
@@ -940,6 +942,17 @@ def _apply_update(  # noqa: C901
         )
         # ix_statistics_start and ix_statistics_statistic_id_start are still used
         # for the post migration cleanup and can be removed in a future version.
+    elif new_version == 36:
+        for table in ("states", "events"):
+            _add_columns(
+                session_maker,
+                table,
+                [
+                    f"context_id_bin {context_bin_type}",
+                    f"context_user_id_bin {context_bin_type}",
+                    f"context_parent_id_bin {context_bin_type}",
+                ],
+            )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
