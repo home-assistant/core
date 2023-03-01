@@ -21,6 +21,18 @@ from homeassistant.data_entry_flow import FlowResult
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_HOST,
+        ): str,
+        vol.Required(
+            CONF_API_VERSION,
+            default=1,
+        ): vol.In([1, 5, 6]),
+    }
+)
+
 
 async def _validate_input(
     hass: core.HomeAssistant, host: str, api_version: int
@@ -157,21 +169,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_pair()
                 return await self._async_create_current()
 
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_HOST,
-                    description={"suggested_value": self._current.get(CONF_HOST)},
-                ): str,
-                vol.Required(
-                    CONF_API_VERSION,
-                    default=1,
-                    description={
-                        "suggested_value": self._current.get(CONF_API_VERSION)
-                    },
-                ): vol.In([1, 5, 6]),
-            }
-        )
+        schema = self.add_suggested_values_to_schema(USER_SCHEMA, self._current)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     @staticmethod

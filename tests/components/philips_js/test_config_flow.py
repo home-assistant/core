@@ -86,7 +86,8 @@ async def test_reauth(
         data=mock_config_entry.data,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -95,7 +96,7 @@ async def test_reauth(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_config_entry.data == MOCK_CONFIG | {"system": mock_tv.system}
     assert len(mock_setup_entry.mock_calls) == 2
