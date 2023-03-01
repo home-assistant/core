@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components import logbook
 from homeassistant.components.logbook import processor
+from homeassistant.components.recorder.db_schema import _ulid_to_bytes_or_none
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.core import Context
 from homeassistant.helpers import entity_registry as er
@@ -28,9 +29,11 @@ class MockRow:
         self.data = data
         self.time_fired = dt_util.utcnow()
         self.time_fired_ts = dt_util.utc_to_timestamp(self.time_fired)
-        self.context_parent_id = context.parent_id if context else None
+        self.context_parent_id_bin = (
+            _ulid_to_bytes_or_none(context.parent_id) if context else None
+        )
         self.context_user_id = context.user_id if context else None
-        self.context_id = context.id if context else None
+        self.context_id_bin = _ulid_to_bytes_or_none(context.id) if context else None
         self.state = None
         self.entity_id = None
         self.state_id = None

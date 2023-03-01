@@ -6,7 +6,10 @@ from typing import Any, cast
 
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.recorder.db_schema import _ulid_to_bytes_or_none
+from homeassistant.components.recorder.db_schema import (
+    _bytes_to_ulid_or_none,
+    _ulid_to_bytes_or_none,
+)
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
 import homeassistant.util.dt as dt_util
@@ -59,6 +62,16 @@ class LazyEventPartialState:
             self.data = self._event_data_cache[source] = cast(
                 dict[str, Any], json_loads(source)
             )
+
+    @property
+    def context_id(self) -> str | None:
+        """Return the context id."""
+        return _bytes_to_ulid_or_none(self.context_id_bin)
+
+    @property
+    def context_parent_id(self) -> str | None:
+        """Return the context parent id."""
+        return _bytes_to_ulid_or_none(self.context_parent_id_bin)
 
 
 @dataclass(frozen=True)
