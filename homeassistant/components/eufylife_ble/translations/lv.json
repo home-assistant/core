@@ -1,8 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "already_configured": "Ier\u012bce jau pievienota Home Assistant."
-        },
-        "flow_title": "{name}"
-    }
-}

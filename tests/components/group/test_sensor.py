@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from pytest import LogCaptureFixture
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
@@ -49,7 +48,7 @@ SUM_VALUE = sum(VALUES)
 
 
 @pytest.mark.parametrize(
-    "sensor_type, result, attributes",
+    ("sensor_type", "result", "attributes"),
     [
         ("min", MIN_VALUE, {ATTR_MIN_ENTITY_ID: "sensor.test_3"}),
         ("max", MAX_VALUE, {ATTR_MAX_ENTITY_ID: "sensor.test_2"}),
@@ -242,7 +241,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 async def test_sensor_incorrect_state(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the min sensor."""
     config = {

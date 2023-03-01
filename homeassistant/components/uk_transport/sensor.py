@@ -97,8 +97,7 @@ def setup_platform(
 
 
 class UkTransportSensor(SensorEntity):
-    """
-    Sensor that reads the UK transport web API.
+    """Sensor that reads the UK transport web API.
 
     transportapi.com provides comprehensive transport data for UK train, tube
     and bus travel across the UK via simple JSON API. Subclasses of this

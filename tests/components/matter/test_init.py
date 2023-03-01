@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohttp import ClientWebSocketResponse
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.error import MatterError
-from matter_server.common.models.node import MatterNode
+from matter_server.common.models import MatterNodeData
 import pytest
 
 from homeassistant.components.hassio import HassioAPIError
@@ -51,9 +52,11 @@ async def test_entry_setup_unload(
 ) -> None:
     """Test the integration set up and unload."""
     node_data = load_and_parse_node_fixture("onoff-light")
-    node = dataclass_from_dict(
-        MatterNode,
-        node_data,
+    node = MatterNode(
+        dataclass_from_dict(
+            MatterNodeData,
+            node_data,
+        )
     )
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
@@ -89,7 +92,7 @@ async def test_home_assistant_stop(
     assert matter_client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize("error", [CannotConnect("Boom"), Exception("Boom")])
+@pytest.mark.parametrize("error", [CannotConnect(Exception("Boom")), Exception("Boom")])
 async def test_connect_failed(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -349,8 +352,14 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, backup_calls, "
-    "update_addon_side_effect, create_backup_side_effect",
+    (
+        "addon_version",
+        "update_available",
+        "update_calls",
+        "backup_calls",
+        "update_addon_side_effect",
+        "create_backup_side_effect",
+    ),
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
@@ -434,7 +443,7 @@ async def test_issue_registry_invalid_version(
 
 
 @pytest.mark.parametrize(
-    "stop_addon_side_effect, entry_state",
+    ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
         (HassioAPIError("Boom"), ConfigEntryState.LOADED),

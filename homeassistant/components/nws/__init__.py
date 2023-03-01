@@ -43,8 +43,7 @@ def base_unique_id(latitude: float, longitude: float) -> str:
 
 
 class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
-    """
-    NWS data update coordinator.
+    """NWS data update coordinator.
 
     Implements faster data update intervals for failed updates and exposes a last successful update time.
     """

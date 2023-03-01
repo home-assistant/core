@@ -131,8 +131,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     @property
     def hvac_action(self) -> HVACAction | None:
-        """
-        Return the current hvac_action.
+        """Return the current hvac_action.
 
         This is only relevant for radiator thermostats.
         """

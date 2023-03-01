@@ -79,17 +79,22 @@ async def async_setup_platform(
     )
 
 
+_FuncType = Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[
+    Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]
+]
+
+
 def catch_request_errors() -> (
     Callable[
-        [Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]],
-        Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]],
+        [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
     ]
 ):
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
-        func: Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
-    ) -> Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]]:
+        func: _FuncType[_OpenhomeDeviceT, _P, _R]
+    ) -> _ReturnFuncType[_OpenhomeDeviceT, _P, _R]:
         """Call wrapper for decorator."""
 
         @functools.wraps(func)

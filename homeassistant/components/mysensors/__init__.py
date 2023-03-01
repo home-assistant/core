@@ -144,10 +144,14 @@ def setup_mysensors_platform(
 ) -> list[MySensorsDevice] | None:
     """Set up a MySensors platform.
 
-    Sets up a bunch of instances of a single platform that is supported by this integration.
-    The function is given a list of device ids, each one describing an instance to set up.
-    The function is also given a class.
-    A new instance of the class is created for every device id, and the device id is given to the constructor of the class
+    Sets up a bunch of instances of a single platform that is supported by this
+    integration.
+
+    The function is given a list of device ids, each one describing an instance
+    to set up. The function is also given a class.
+
+    A new instance of the class is created for every device id, and the device
+    id is given to the constructor of the class.
     """
     if device_args is None:
         device_args = ()

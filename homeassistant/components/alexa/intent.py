@@ -41,8 +41,7 @@ def async_setup(hass):
 
 
 async def async_setup_intents(hass):
-    """
-    Do intents setup.
+    """Do intents setup.
 
     Right now this module does not expose any, but the intent component breaks
     without it.

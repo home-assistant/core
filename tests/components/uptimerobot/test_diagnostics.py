@@ -2,7 +2,6 @@
 import json
 from unittest.mock import patch
 
-from aiohttp import ClientSession
 from pyuptimerobot import UptimeRobotException
 
 from homeassistant.core import HomeAssistant
@@ -17,11 +16,12 @@ from .common import (
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test config entry diagnostics."""
     entry = await setup_uptimerobot_integration(hass)
@@ -58,7 +58,7 @@ async def test_entry_diagnostics(
 
 async def test_entry_diagnostics_exception(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test config entry diagnostics with exception."""
     entry = await setup_uptimerobot_integration(hass)

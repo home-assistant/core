@@ -5,16 +5,15 @@ from collections import deque
 from collections.abc import Callable
 import contextlib
 from datetime import datetime, timedelta
-from enum import Enum
 import logging
 import statistics
-from typing import Any, Literal, TypeVar, cast
+from typing import Any, Literal, cast
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.sensor import (  # pylint: disable=hass-deprecated-import
+from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -49,6 +48,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, PLATFORMS
 
@@ -481,8 +481,8 @@ class StatisticsSensor(SensorEntity):
         if timestamp := self._next_to_purge_timestamp():
             _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
             if self._update_listener:
-                self._update_listener()  # pragma: no cover
-                self._update_listener = None  # pragma: no cover
+                self._update_listener()
+                self._update_listener = None
 
             @callback
             def _scheduled_update(now: datetime) -> None:
@@ -769,16 +769,3 @@ class StatisticsSensor(SensorEntity):
         if len(self.states) > 0:
             return 100.0 / len(self.states) * self.states.count(True)
         return None
-
-
-_EnumT = TypeVar("_EnumT", bound=Enum)
-
-
-def try_parse_enum(cls: type[_EnumT], value: Any) -> _EnumT | None:
-    """Try to parse the value into an Enum.
-
-    Return None if parsing fails.
-    """
-    with contextlib.suppress(ValueError):
-        return cls(value)
-    return None

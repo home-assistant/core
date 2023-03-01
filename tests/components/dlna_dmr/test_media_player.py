@@ -71,6 +71,7 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
@@ -1001,7 +1002,10 @@ async def test_shuffle_repeat_modes(
 
 
 async def test_browse_media(
-    hass: HomeAssistant, hass_ws_client, dmr_device_mock: Mock, mock_entity_id: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
 ) -> None:
     """Test the async_browse_media method."""
     # Based on cast's test_entity_browse_media
@@ -1106,7 +1110,7 @@ async def test_browse_media(
 
 async def test_browse_media_unfiltered(
     hass: HomeAssistant,
-    hass_ws_client,
+    hass_ws_client: WebSocketGenerator,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
     mock_entity_id: str,

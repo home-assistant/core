@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import numpy
+import numpy as np
 import requests
 import voluptuous as vol
 
@@ -165,7 +165,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+        cv_image = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
         matches = {}
         total_matches = 0

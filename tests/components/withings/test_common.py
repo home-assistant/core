@@ -23,6 +23,7 @@ from .common import ComponentFactory, get_data_manager_by_user_id, new_profile_c
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_withings_api(hass: HomeAssistant) -> None:
@@ -53,7 +54,7 @@ async def test_config_entry_withings_api(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["user_id", "arg_user_id", "arg_appli", "expected_code"],
+    ("user_id", "arg_user_id", "arg_appli", "expected_code"),
     [
         [0, 0, NotifyAppli.WEIGHT.value, 0],  # Success
         [0, None, 1, 0],  # Success, we ignore the user_id.
@@ -67,12 +68,12 @@ async def test_config_entry_withings_api(hass: HomeAssistant) -> None:
 async def test_webhook_post(
     hass: HomeAssistant,
     component_factory: ComponentFactory,
-    aiohttp_client,
+    aiohttp_client: ClientSessionGenerator,
     user_id: int,
     arg_user_id: Any,
     arg_appli: Any,
     expected_code: int,
-    current_request_with_host,
+    current_request_with_host: None,
 ) -> None:
     """Test webhook callback."""
     person0 = new_profile_config("person0", user_id)
@@ -105,8 +106,8 @@ async def test_webhook_post(
 async def test_webhook_head(
     hass: HomeAssistant,
     component_factory: ComponentFactory,
-    aiohttp_client,
-    current_request_with_host,
+    aiohttp_client: ClientSessionGenerator,
+    current_request_with_host: None,
 ) -> None:
     """Test head method on webhook view."""
     person0 = new_profile_config("person0", 0)
@@ -123,8 +124,8 @@ async def test_webhook_head(
 async def test_webhook_put(
     hass: HomeAssistant,
     component_factory: ComponentFactory,
-    aiohttp_client,
-    current_request_with_host,
+    aiohttp_client: ClientSessionGenerator,
+    current_request_with_host: None,
 ) -> None:
     """Test webhook callback."""
     person0 = new_profile_config("person0", 0)
@@ -210,27 +211,21 @@ async def test_data_manager_webhook_subscription(
     api.notify_subscribe.assert_any_call(
         data_manager.webhook_config.url, NotifyAppli.SLEEP
     )
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.USER
         )
-        assert False
-    except AssertionError:
-        pass
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.BED_IN
         )
-        assert False
-    except AssertionError:
-        pass
-    try:
+
+    with pytest.raises(AssertionError):
         api.notify_subscribe.assert_any_call(
             data_manager.webhook_config.url, NotifyAppli.BED_OUT
         )
-        assert False
-    except AssertionError:
-        pass
 
     # Test unsubscribing.
     await data_manager.async_unsubscribe_webhook()

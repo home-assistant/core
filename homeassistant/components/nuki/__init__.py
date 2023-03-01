@@ -1,7 +1,10 @@
 """The nuki component."""
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import timedelta
 import logging
+from typing import Generic, TypeVar
 
 import async_timeout
 from pynuki import NukiBridge, NukiLock, NukiOpener
@@ -30,6 +33,8 @@ from .const import (
     ERROR_STATES,
 )
 from .helpers import parse_id
+
+_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,38 +114,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
-    """An entity using CoordinatorEntity.
-
-    The CoordinatorEntity class provides:
-      should_poll
-      async_update
-      async_added_to_hass
-      available
-
-    """
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator[None], nuki_device: NukiDevice
-    ) -> None:
-        """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator)
-        self._nuki_device = nuki_device
-
-    @property
-    def device_info(self):
-        """Device info for Nuki entities."""
-        return {
-            "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
-            "name": self._nuki_device.name,
-            "manufacturer": "Nuki Home Solutions GmbH",
-            "model": self._nuki_device.device_type_str.capitalize(),
-            "sw_version": self._nuki_device.firmware_version,
-            "via_device": (DOMAIN, self.coordinator.bridge_id),
-        }
-
-
-class NukiCoordinator(DataUpdateCoordinator):
+class NukiCoordinator(DataUpdateCoordinator[None]):
     """Data Update Coordinator for the Nuki integration."""
 
     def __init__(self, hass, bridge, locks, openers):
@@ -189,8 +163,7 @@ class NukiCoordinator(DataUpdateCoordinator):
                 self.hass.bus.async_fire("nuki_event", event_data)
 
     def update_devices(self, devices: list[NukiDevice]) -> dict[str, set[str]]:
-        """
-        Update the Nuki devices.
+        """Update the Nuki devices.
 
         Returns:
             A dict with the events to be fired. The event type is the key and the device ids are the value
@@ -217,3 +190,32 @@ class NukiCoordinator(DataUpdateCoordinator):
                     break
 
         return events
+
+
+class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
+    """An entity using CoordinatorEntity.
+
+    The CoordinatorEntity class provides:
+      should_poll
+      async_update
+      async_added_to_hass
+      available
+
+    """
+
+    def __init__(self, coordinator: NukiCoordinator, nuki_device: _NukiDeviceT) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator)
+        self._nuki_device = nuki_device
+
+    @property
+    def device_info(self):
+        """Device info for Nuki entities."""
+        return {
+            "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
+            "name": self._nuki_device.name,
+            "manufacturer": "Nuki Home Solutions GmbH",
+            "model": self._nuki_device.device_type_str.capitalize(),
+            "sw_version": self._nuki_device.firmware_version,
+            "via_device": (DOMAIN, self.coordinator.bridge_id),
+        }

@@ -38,7 +38,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -60,6 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
+CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -104,6 +105,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_LAST_RESET_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -226,6 +228,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = config[CONF_FORCE_UPDATE]
+        self._attr_suggested_display_precision = config.get(
+            CONF_SUGGESTED_DISPLAY_PRECISION
+        )
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
@@ -267,13 +272,19 @@ class MqttSensor(MqttEntity, RestoreSensor):
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
             if payload is PayloadSentinel.DEFAULT:
                 return
-            if self.device_class not in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.TIMESTAMP,
-            }:
-                self._attr_native_value = str(payload)
+            new_value = str(payload)
+            if self._numeric_state_expected:
+                if new_value == "":
+                    _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
+                elif new_value == PAYLOAD_NONE:
+                    self._attr_native_value = None
+                else:
+                    self._attr_native_value = new_value
                 return
-            if (payload_datetime := dt_util.parse_datetime(str(payload))) is None:
+            if self.device_class is None:
+                self._attr_native_value = new_value
+                return
+            if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
                 _LOGGER.warning(
                     "Invalid state message '%s' from '%s'", msg.payload, msg.topic
                 )

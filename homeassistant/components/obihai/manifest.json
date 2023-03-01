@@ -1,9 +1,9 @@
 {
   "domain": "obihai",
   "name": "Obihai",
-  "documentation": "https://www.home-assistant.io/integrations/obihai",
-  "requirements": ["pyobihai==1.3.2"],
   "codeowners": ["@dshokouhi"],
+  "documentation": "https://www.home-assistant.io/integrations/obihai",
   "iot_class": "local_polling",
-  "loggers": ["pyobihai"]
+  "loggers": ["pyobihai"],
+  "requirements": ["pyobihai==1.3.2"]
 }

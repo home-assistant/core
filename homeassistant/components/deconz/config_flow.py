@@ -87,7 +87,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         If no bridge is found allow user to manually input configuration.
         """
         if user_input is not None:
-            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
+            if user_input[CONF_HOST] == CONF_MANUAL_INPUT:
                 return await self.async_step_manual_input()
 
             for bridge in self.bridges:

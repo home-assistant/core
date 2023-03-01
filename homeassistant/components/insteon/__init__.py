@@ -1,5 +1,4 @@
 """Support for INSTEON Modems (PLM and Hub)."""
-import asyncio
 from contextlib import suppress
 import logging
 
@@ -41,7 +40,8 @@ OPTIONS = "options"
 
 async def async_get_device_config(hass, config_entry):
     """Initiate the connection and services."""
-    # Make a copy of addresses due to edge case where the list of devices could change during status update
+    # Make a copy of addresses due to edge case where the list of devices could
+    # change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
         if devices[address].is_battery:
@@ -172,7 +172,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.async_load_api(hass)
     await api.async_register_insteon_frontend(hass)
 
-    asyncio.create_task(async_get_device_config(hass, entry))
+    entry.async_create_background_task(
+        hass, async_get_device_config(hass, entry), "insteon-get-device-config"
+    )
 
     return True
 

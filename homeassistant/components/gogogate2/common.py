@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import timedelta
 import logging
-from typing import Any, NamedTuple, Union
+from typing import Any, NamedTuple
 
 from ismartgate import (
     AbstractGateApi,
@@ -46,7 +46,7 @@ class StateData(NamedTuple):
 
 
 class DeviceDataUpdateCoordinator(
-    DataUpdateCoordinator[Union[GogoGate2InfoResponse, ISmartGateInfoResponse]]
+    DataUpdateCoordinator[GogoGate2InfoResponse | ISmartGateInfoResponse]
 ):
     """Manages polling for state changes from the device."""
 

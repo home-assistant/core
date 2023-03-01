@@ -5,12 +5,11 @@ from nibe.coil import Coil
 from nibe.exceptions import (
     AddressInUseException,
     CoilNotFoundException,
-    CoilReadException,
-    CoilReadSendException,
-    CoilWriteException,
+    ReadException,
+    ReadSendException,
+    WriteException,
 )
 import pytest
-from pytest import fixture
 
 from homeassistant import config_entries
 from homeassistant.components.nibe_heatpump import DOMAIN
@@ -33,7 +32,7 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-@fixture(autouse=True, name="mock_setup_entry")
+@pytest.fixture(autouse=True, name="mock_setup_entry")
 async def fixture_mock_setup():
     """Make sure we never actually run setup."""
     with patch(
@@ -158,7 +157,7 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -170,7 +169,7 @@ async def test_read_timeout(
     """Test we handle cannot connect error."""
     result = await _get_connection_form(hass, connection_type)
 
-    mock_connection.verify_connectivity.side_effect = CoilReadException()
+    mock_connection.verify_connectivity.side_effect = ReadException()
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
@@ -179,7 +178,7 @@ async def test_read_timeout(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -191,7 +190,7 @@ async def test_write_timeout(
     """Test we handle cannot connect error."""
     result = await _get_connection_form(hass, connection_type)
 
-    mock_connection.verify_connectivity.side_effect = CoilWriteException()
+    mock_connection.verify_connectivity.side_effect = WriteException()
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
@@ -200,7 +199,7 @@ async def test_write_timeout(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -221,7 +220,7 @@ async def test_unexpected_exception(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
@@ -233,7 +232,7 @@ async def test_nibegw_invalid_host(
     """Test we handle cannot connect error."""
     result = await _get_connection_form(hass, connection_type)
 
-    mock_connection.verify_connectivity.side_effect = CoilReadSendException()
+    mock_connection.verify_connectivity.side_effect = ReadSendException()
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
@@ -245,7 +244,7 @@ async def test_nibegw_invalid_host(
 
 
 @pytest.mark.parametrize(
-    "connection_type,data",
+    ("connection_type", "data"),
     (
         ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
         ("modbus", MOCK_FLOW_MODBUS_USERDATA),
