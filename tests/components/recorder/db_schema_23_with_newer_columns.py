@@ -106,7 +106,7 @@ class Events(Base):  # type: ignore
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
         Index(
-            STATES_CONTEXT_ID_BIN_INDEX,
+            EVENTS_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
             mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
             mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
