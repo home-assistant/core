@@ -40,6 +40,7 @@
               "external": "External",
               "freeze": "Freeze",
               "frost_protection": "Frost protection",
+              "holiday_mode": "Holiday mode",
               "manual": "Manual",
               "night": "Night",
               "prog": "Prog"
@@ -50,7 +51,8 @@
               "away": "Away",
               "bypass_boost": "Bypass boost",
               "home_boost": "Home boost",
-              "kitchen_boost": "Kitchen boost"
+              "kitchen_boost": "Kitchen boost",
+              "silent": "Silent"
             }
           }
         }
