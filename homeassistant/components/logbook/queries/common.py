@@ -10,11 +10,11 @@ from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
-    EVENTS_CONTEXT_ID_INDEX,
+    EVENTS_CONTEXT_ID_BIN_INDEX,
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
     SHARED_ATTRS_JSON,
-    STATES_CONTEXT_ID_INDEX,
+    STATES_CONTEXT_ID_BIN_INDEX,
     EventData,
     Events,
     StateAttributes,
@@ -277,12 +277,16 @@ def _not_uom_attributes_matcher() -> BooleanClauseList:
 def apply_states_context_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large context_id selects."""
     return sel.with_hint(
-        States, f"FORCE INDEX ({STATES_CONTEXT_ID_INDEX})", dialect_name="mysql"
+        States, f"FORCE INDEX ({STATES_CONTEXT_ID_BIN_INDEX})", dialect_name="mysql"
+    ).with_hint(
+        States, f"FORCE INDEX ({STATES_CONTEXT_ID_BIN_INDEX})", dialect_name="mariadb"
     )
 
 
 def apply_events_context_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large context_id selects."""
     return sel.with_hint(
-        Events, f"FORCE INDEX ({EVENTS_CONTEXT_ID_INDEX})", dialect_name="mysql"
+        Events, f"FORCE INDEX ({EVENTS_CONTEXT_ID_BIN_INDEX})", dialect_name="mysql"
+    ).with_hint(
+        Events, f"FORCE INDEX ({EVENTS_CONTEXT_ID_BIN_INDEX})", dialect_name="mariadb"
     )

@@ -138,4 +138,8 @@ def apply_entities_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large selects."""
     return sel.with_hint(
         States, f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
+    ).with_hint(
+        States,
+        f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX_TS})",
+        dialect_name="mariadb",
     )

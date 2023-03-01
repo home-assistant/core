@@ -111,8 +111,8 @@ TABLES_TO_CHECK = [
 
 LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
 ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
-EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
-STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
+EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
+STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 _DEFAULT_TABLE_ARGS = {
@@ -179,7 +179,7 @@ class Events(Base):
         # see logbook
         Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
         Index(
-            "ix_events_context_id_bin",
+            EVENTS_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
             mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
             mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
@@ -335,7 +335,7 @@ class States(Base):
         # (get_states in history.py)
         Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
         Index(
-            "ix_states_context_id_bin",
+            STATES_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
             mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
             mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
