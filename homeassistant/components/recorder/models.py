@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.ulid import bytes_to_ulid, ulid_to_bytes
 
 from .const import SupportedDialect
 
@@ -153,6 +154,20 @@ def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:
     if not ts:
         return None
     return dt_util.utc_from_timestamp(ts)
+
+
+def ulid_to_bytes_or_none(ulid: str | None) -> bytes | None:
+    """Convert an ulid to bytes."""
+    if ulid is None:
+        return None
+    return ulid_to_bytes(ulid)
+
+
+def bytes_to_ulid_or_none(_bytes: bytes | None) -> str | None:
+    """Convert bytes to a ulid."""
+    if _bytes is None:
+        return None
+    return bytes_to_ulid(_bytes)
 
 
 class LazyStatePreSchema31(State):

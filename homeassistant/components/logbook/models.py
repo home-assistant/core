@@ -6,9 +6,9 @@ from typing import Any, cast
 
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.recorder.db_schema import (
-    _bytes_to_ulid_or_none,
-    _ulid_to_bytes_or_none,
+from homeassistant.components.recorder.models import (
+    bytes_to_ulid_or_none,
+    ulid_to_bytes_or_none,
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
@@ -66,12 +66,12 @@ class LazyEventPartialState:
     @property
     def context_id(self) -> str | None:
         """Return the context id."""
-        return _bytes_to_ulid_or_none(self.context_id_bin)
+        return bytes_to_ulid_or_none(self.context_id_bin)
 
     @property
     def context_parent_id(self) -> str | None:
         """Return the context parent id."""
-        return _bytes_to_ulid_or_none(self.context_parent_id_bin)
+        return bytes_to_ulid_or_none(self.context_parent_id_bin)
 
 
 @dataclass(frozen=True)
@@ -106,7 +106,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             event_type=event.event_type,
             context_id_bin=ulid_to_bytes(event.context.id),
             context_user_id=event.context.user_id,
-            context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
+            context_parent_id_bin=ulid_to_bytes_or_none(event.context.parent_id),
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             state_id=hash(event),
         )
@@ -121,7 +121,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
         state=new_state.state,
         context_id_bin=ulid_to_bytes(new_state.context.id),
         context_user_id=new_state.context.user_id,
-        context_parent_id_bin=_ulid_to_bytes_or_none(new_state.context.parent_id),
+        context_parent_id_bin=ulid_to_bytes_or_none(new_state.context.parent_id),
         time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
         state_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),

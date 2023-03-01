@@ -50,15 +50,16 @@ from homeassistant.util.json import (
     json_loads,
     json_loads_object,
 )
-from homeassistant.util.ulid import bytes_to_ulid, ulid_to_bytes
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
     StatisticMetaData,
+    bytes_to_ulid_or_none,
     datetime_to_timestamp_or_none,
     process_timestamp,
+    ulid_to_bytes_or_none,
 )
 
 
@@ -153,20 +154,6 @@ DOUBLE_TYPE = (
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
 
-def _ulid_to_bytes_or_none(ulid: str | None) -> bytes | None:
-    """Convert an ulid to bytes."""
-    if ulid is None:
-        return None
-    return ulid_to_bytes(ulid)
-
-
-def _bytes_to_ulid_or_none(_bytes: bytes | None) -> str | None:
-    """Convert bytes to a ulid."""
-    if _bytes is None:
-        return None
-    return bytes_to_ulid(_bytes)
-
-
 class JSONLiteral(JSON):
     """Teach SA how to literalize json."""
 
@@ -258,18 +245,18 @@ class Events(Base):
             time_fired=None,
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             context_id=None,
-            context_id_bin=_ulid_to_bytes_or_none(event.context.id),
+            context_id_bin=ulid_to_bytes_or_none(event.context.id),
             context_user_id=event.context.user_id,
             context_parent_id=None,
-            context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
+            context_parent_id_bin=ulid_to_bytes_or_none(event.context.parent_id),
         )
 
     def to_native(self, validate_entity_id: bool = True) -> Event | None:
         """Convert to a native HA Event."""
         context = Context(
-            id=_bytes_to_ulid_or_none(self.context_id_bin),
+            id=bytes_to_ulid_or_none(self.context_id_bin),
             user_id=self.context_user_id,
-            parent_id=_bytes_to_ulid_or_none(self.context_parent_id_bin),
+            parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
             return Event(
@@ -420,10 +407,10 @@ class States(Base):
             entity_id=entity_id,
             attributes=None,
             context_id=None,
-            context_id_bin=_ulid_to_bytes_or_none(event.context.id),
+            context_id_bin=ulid_to_bytes_or_none(event.context.id),
             context_user_id=event.context.user_id,
             context_parent_id=None,
-            context_parent_id_bin=_ulid_to_bytes_or_none(event.context.parent_id),
+            context_parent_id_bin=ulid_to_bytes_or_none(event.context.parent_id),
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             last_updated=None,
             last_changed=None,
@@ -447,9 +434,9 @@ class States(Base):
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
         context = Context(
-            id=_bytes_to_ulid_or_none(self.context_id_bin),
+            id=bytes_to_ulid_or_none(self.context_id_bin),
             user_id=self.context_user_id,
-            parent_id=_bytes_to_ulid_or_none(self.context_parent_id_bin),
+            parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
             attrs = json_loads_object(self.attributes) if self.attributes else {}
