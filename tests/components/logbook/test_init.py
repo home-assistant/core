@@ -1299,8 +1299,8 @@ async def test_logbook_entity_context_parent_id(
 
     # An event with a parent event, but the parent event isn't available
     missing_parent_context = ha.Context(
-        id="fc40b9a0d1f246f98c34b33c76228ee6",
-        parent_id="c8ce515fe58e442f8664246c65ed964f",
+        id="01GTDGKBCH00GW0X476W5TEDDD",
+        parent_id="01GTDGKBCH00GW0X276W5TEDDD",
         user_id="485cacf93ef84d25a99ced3126b921d2",
     )
     logbook.async_log_entry(
