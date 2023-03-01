@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import make_advertisement
@@ -25,7 +26,7 @@ from tests.components.bluetooth import (
 )
 
 
-async def test_door_problem_sensors(hass):
+async def test_door_problem_sensors(hass: HomeAssistant) -> None:
     """Test setting up a door binary sensor with additional problem sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -69,7 +70,7 @@ async def test_door_problem_sensors(hass):
     await hass.async_block_till_done()
 
 
-async def test_light_motion(hass):
+async def test_light_motion(hass: HomeAssistant) -> None:
     """Test setting up a light and motion binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -105,7 +106,7 @@ async def test_light_motion(hass):
     await hass.async_block_till_done()
 
 
-async def test_moisture(hass):
+async def test_moisture(hass: HomeAssistant) -> None:
     """Test setting up a moisture binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -139,7 +140,7 @@ async def test_moisture(hass):
     await hass.async_block_till_done()
 
 
-async def test_opening(hass):
+async def test_opening(hass: HomeAssistant) -> None:
     """Test setting up a opening binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -174,7 +175,7 @@ async def test_opening(hass):
     await hass.async_block_till_done()
 
 
-async def test_opening_problem_sensors(hass):
+async def test_opening_problem_sensors(hass: HomeAssistant) -> None:
     """Test setting up a opening binary sensor with additional problem sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -229,7 +230,7 @@ async def test_opening_problem_sensors(hass):
     await hass.async_block_till_done()
 
 
-async def test_smoke(hass):
+async def test_smoke(hass: HomeAssistant) -> None:
     """Test setting up a smoke binary sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -261,7 +262,7 @@ async def test_smoke(hass):
     await hass.async_block_till_done()
 
 
-async def test_unavailable(hass):
+async def test_unavailable(hass: HomeAssistant) -> None:
     """Test normal device goes to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 
@@ -313,7 +314,7 @@ async def test_unavailable(hass):
     await hass.async_block_till_done()
 
 
-async def test_sleepy_device(hass):
+async def test_sleepy_device(hass: HomeAssistant) -> None:
     """Test sleepy device does not go to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 

@@ -44,6 +44,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -267,7 +268,7 @@ async def device_climate_zonnsmart(device_climate_mock):
     )
 
 
-def test_sequence_mappings():
+def test_sequence_mappings() -> None:
     """Test correct mapping between control sequence -> HVAC Mode -> Sysmode."""
 
     for hvac_modes in SEQ_OF_OPERATION.values():
@@ -276,7 +277,7 @@ def test_sequence_mappings():
             assert Thermostat.SystemMode(HVAC_MODE_2_SYSTEM[hvac_mode]) is not None
 
 
-async def test_climate_local_temperature(hass, device_climate):
+async def test_climate_local_temperature(hass: HomeAssistant, device_climate) -> None:
     """Test local temperature."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -290,7 +291,9 @@ async def test_climate_local_temperature(hass, device_climate):
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
-async def test_climate_hvac_action_running_state(hass, device_climate_sinope):
+async def test_climate_hvac_action_running_state(
+    hass: HomeAssistant, device_climate_sinope
+) -> None:
     """Test hvac action via running state."""
 
     thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
@@ -353,7 +356,9 @@ async def test_climate_hvac_action_running_state(hass, device_climate_sinope):
     assert hvac_sensor_state.state == HVACAction.FAN
 
 
-async def test_climate_hvac_action_running_state_zen(hass, device_climate_zen):
+async def test_climate_hvac_action_running_state_zen(
+    hass: HomeAssistant, device_climate_zen
+) -> None:
     """Test Zen hvac action via running state."""
 
     thrm_cluster = device_climate_zen.device.endpoints[1].thermostat
@@ -438,7 +443,9 @@ async def test_climate_hvac_action_running_state_zen(hass, device_climate_zen):
     assert hvac_sensor_state.state == HVACAction.IDLE
 
 
-async def test_climate_hvac_action_pi_demand(hass, device_climate):
+async def test_climate_hvac_action_pi_demand(
+    hass: HomeAssistant, device_climate
+) -> None:
     """Test hvac action based on pi_heating/cooling_demand attrs."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -475,7 +482,7 @@ async def test_climate_hvac_action_pi_demand(hass, device_climate):
 
 
 @pytest.mark.parametrize(
-    "sys_mode, hvac_mode",
+    ("sys_mode", "hvac_mode"),
     (
         (Thermostat.SystemMode.Auto, HVACMode.HEAT_COOL),
         (Thermostat.SystemMode.Cool, HVACMode.COOL),
@@ -485,7 +492,9 @@ async def test_climate_hvac_action_pi_demand(hass, device_climate):
         (Thermostat.SystemMode.Dry, HVACMode.DRY),
     ),
 )
-async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
+async def test_hvac_mode(
+    hass: HomeAssistant, device_climate, sys_mode, hvac_mode
+) -> None:
     """Test HVAC mode."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -510,7 +519,7 @@ async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
 
 
 @pytest.mark.parametrize(
-    "seq_of_op, modes",
+    ("seq_of_op", "modes"),
     (
         (0xFF, {HVACMode.OFF}),
         (0x00, {HVACMode.OFF, HVACMode.COOL}),
@@ -521,7 +530,9 @@ async def test_hvac_mode(hass, device_climate, sys_mode, hvac_mode):
         (0x05, {HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL}),
     ),
 )
-async def test_hvac_modes(hass, device_climate_mock, seq_of_op, modes):
+async def test_hvac_modes(
+    hass: HomeAssistant, device_climate_mock, seq_of_op, modes
+) -> None:
     """Test HVAC modes from sequence of operations."""
 
     device_climate = await device_climate_mock(
@@ -533,7 +544,7 @@ async def test_hvac_modes(hass, device_climate_mock, seq_of_op, modes):
 
 
 @pytest.mark.parametrize(
-    "sys_mode, preset, target_temp",
+    ("sys_mode", "preset", "target_temp"),
     (
         (Thermostat.SystemMode.Heat, None, 22),
         (Thermostat.SystemMode.Heat, PRESET_AWAY, 16),
@@ -542,8 +553,8 @@ async def test_hvac_modes(hass, device_climate_mock, seq_of_op, modes):
     ),
 )
 async def test_target_temperature(
-    hass, device_climate_mock, sys_mode, preset, target_temp
-):
+    hass: HomeAssistant, device_climate_mock, sys_mode, preset, target_temp
+) -> None:
     """Test target temperature property."""
 
     device_climate = await device_climate_mock(
@@ -572,7 +583,7 @@ async def test_target_temperature(
 
 
 @pytest.mark.parametrize(
-    "preset, unoccupied, target_temp",
+    ("preset", "unoccupied", "target_temp"),
     (
         (None, 1800, 17),
         (PRESET_AWAY, 1800, 18),
@@ -580,8 +591,8 @@ async def test_target_temperature(
     ),
 )
 async def test_target_temperature_high(
-    hass, device_climate_mock, preset, unoccupied, target_temp
-):
+    hass: HomeAssistant, device_climate_mock, preset, unoccupied, target_temp
+) -> None:
     """Test target temperature high property."""
 
     device_climate = await device_climate_mock(
@@ -608,7 +619,7 @@ async def test_target_temperature_high(
 
 
 @pytest.mark.parametrize(
-    "preset, unoccupied, target_temp",
+    ("preset", "unoccupied", "target_temp"),
     (
         (None, 1600, 21),
         (PRESET_AWAY, 1600, 16),
@@ -616,8 +627,8 @@ async def test_target_temperature_high(
     ),
 )
 async def test_target_temperature_low(
-    hass, device_climate_mock, preset, unoccupied, target_temp
-):
+    hass: HomeAssistant, device_climate_mock, preset, unoccupied, target_temp
+) -> None:
     """Test target temperature low property."""
 
     device_climate = await device_climate_mock(
@@ -644,7 +655,7 @@ async def test_target_temperature_low(
 
 
 @pytest.mark.parametrize(
-    "hvac_mode, sys_mode",
+    ("hvac_mode", "sys_mode"),
     (
         (HVACMode.AUTO, None),
         (HVACMode.COOL, Thermostat.SystemMode.Cool),
@@ -654,7 +665,9 @@ async def test_target_temperature_low(
         (HVACMode.HEAT_COOL, Thermostat.SystemMode.Auto),
     ),
 )
-async def test_set_hvac_mode(hass, device_climate, hvac_mode, sys_mode):
+async def test_set_hvac_mode(
+    hass: HomeAssistant, device_climate, hvac_mode, sys_mode
+) -> None:
     """Test setting hvac mode."""
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
@@ -696,7 +709,7 @@ async def test_set_hvac_mode(hass, device_climate, hvac_mode, sys_mode):
     }
 
 
-async def test_preset_setting(hass, device_climate_sinope):
+async def test_preset_setting(hass: HomeAssistant, device_climate_sinope) -> None:
     """Test preset setting."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
@@ -774,7 +787,9 @@ async def test_preset_setting(hass, device_climate_sinope):
     assert thrm_cluster.write_attributes.call_args[0][0] == {"set_occupancy": 1}
 
 
-async def test_preset_setting_invalid(hass, device_climate_sinope):
+async def test_preset_setting_invalid(
+    hass: HomeAssistant, device_climate_sinope
+) -> None:
     """Test invalid preset setting."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
@@ -795,7 +810,7 @@ async def test_preset_setting_invalid(hass, device_climate_sinope):
     assert thrm_cluster.write_attributes.call_count == 0
 
 
-async def test_set_temperature_hvac_mode(hass, device_climate):
+async def test_set_temperature_hvac_mode(hass: HomeAssistant, device_climate) -> None:
     """Test setting HVAC mode in temperature service call."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
@@ -823,7 +838,9 @@ async def test_set_temperature_hvac_mode(hass, device_climate):
     }
 
 
-async def test_set_temperature_heat_cool(hass, device_climate_mock):
+async def test_set_temperature_heat_cool(
+    hass: HomeAssistant, device_climate_mock
+) -> None:
     """Test setting temperature service call in heating/cooling HVAC mode."""
 
     device_climate = await device_climate_mock(
@@ -909,7 +926,7 @@ async def test_set_temperature_heat_cool(hass, device_climate_mock):
     }
 
 
-async def test_set_temperature_heat(hass, device_climate_mock):
+async def test_set_temperature_heat(hass: HomeAssistant, device_climate_mock) -> None:
     """Test setting temperature service call in heating HVAC mode."""
 
     device_climate = await device_climate_mock(
@@ -988,7 +1005,7 @@ async def test_set_temperature_heat(hass, device_climate_mock):
     }
 
 
-async def test_set_temperature_cool(hass, device_climate_mock):
+async def test_set_temperature_cool(hass: HomeAssistant, device_climate_mock) -> None:
     """Test setting temperature service call in cooling HVAC mode."""
 
     device_climate = await device_climate_mock(
@@ -1067,7 +1084,9 @@ async def test_set_temperature_cool(hass, device_climate_mock):
     }
 
 
-async def test_set_temperature_wrong_mode(hass, device_climate_mock):
+async def test_set_temperature_wrong_mode(
+    hass: HomeAssistant, device_climate_mock
+) -> None:
     """Test setting temperature service call for wrong HVAC mode."""
 
     with patch.object(
@@ -1106,7 +1125,7 @@ async def test_set_temperature_wrong_mode(hass, device_climate_mock):
     assert thrm_cluster.write_attributes.await_count == 0
 
 
-async def test_occupancy_reset(hass, device_climate_sinope):
+async def test_occupancy_reset(hass: HomeAssistant, device_climate_sinope) -> None:
     """Test away preset reset."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
@@ -1133,7 +1152,7 @@ async def test_occupancy_reset(hass, device_climate_sinope):
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
 
-async def test_fan_mode(hass, device_climate_fan):
+async def test_fan_mode(hass: HomeAssistant, device_climate_fan) -> None:
     """Test fan mode."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_fan, hass)
@@ -1162,7 +1181,9 @@ async def test_fan_mode(hass, device_climate_fan):
     assert state.attributes[ATTR_FAN_MODE] == FAN_ON
 
 
-async def test_set_fan_mode_not_supported(hass, device_climate_fan):
+async def test_set_fan_mode_not_supported(
+    hass: HomeAssistant, device_climate_fan
+) -> None:
     """Test fan setting unsupported mode."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_fan, hass)
@@ -1177,7 +1198,7 @@ async def test_set_fan_mode_not_supported(hass, device_climate_fan):
     assert fan_cluster.write_attributes.await_count == 0
 
 
-async def test_set_fan_mode(hass, device_climate_fan):
+async def test_set_fan_mode(hass: HomeAssistant, device_climate_fan) -> None:
     """Test fan mode setting."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_fan, hass)
@@ -1206,7 +1227,7 @@ async def test_set_fan_mode(hass, device_climate_fan):
     assert fan_cluster.write_attributes.call_args[0][0] == {"fan_mode": 5}
 
 
-async def test_set_moes_preset(hass, device_climate_moes):
+async def test_set_moes_preset(hass: HomeAssistant, device_climate_moes) -> None:
     """Test setting preset for moes trv."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_moes, hass)
@@ -1321,7 +1342,9 @@ async def test_set_moes_preset(hass, device_climate_moes):
     }
 
 
-async def test_set_moes_operation_mode(hass, device_climate_moes):
+async def test_set_moes_operation_mode(
+    hass: HomeAssistant, device_climate_moes
+) -> None:
     """Test setting preset for moes trv."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_moes, hass)
@@ -1363,7 +1386,9 @@ async def test_set_moes_operation_mode(hass, device_climate_moes):
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_COMPLEX
 
 
-async def test_set_zonnsmart_preset(hass, device_climate_zonnsmart):
+async def test_set_zonnsmart_preset(
+    hass: HomeAssistant, device_climate_zonnsmart
+) -> None:
     """Test setting preset from homeassistant for zonnsmart trv."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zonnsmart, hass)
@@ -1430,7 +1455,9 @@ async def test_set_zonnsmart_preset(hass, device_climate_zonnsmart):
     }
 
 
-async def test_set_zonnsmart_operation_mode(hass, device_climate_zonnsmart):
+async def test_set_zonnsmart_operation_mode(
+    hass: HomeAssistant, device_climate_zonnsmart
+) -> None:
     """Test setting preset from trv for zonnsmart trv."""
 
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_zonnsmart, hass)

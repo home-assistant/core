@@ -103,13 +103,13 @@ def get_aircon_mock(said):
 @pytest.fixture(name="mock_aircon1_api", autouse=False)
 def fixture_mock_aircon1_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
-    yield get_aircon_mock(MOCK_SAID1)
+    return get_aircon_mock(MOCK_SAID1)
 
 
 @pytest.fixture(name="mock_aircon2_api", autouse=False)
 def fixture_mock_aircon2_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
-    yield get_aircon_mock(MOCK_SAID2)
+    return get_aircon_mock(MOCK_SAID2)
 
 
 @pytest.fixture(name="mock_aircon_api_instances", autouse=False)
@@ -156,13 +156,13 @@ def get_sensor_mock(said):
 @pytest.fixture(name="mock_sensor1_api", autouse=False)
 def fixture_mock_sensor1_api(mock_auth_api, mock_appliances_manager_laundry_api):
     """Set up sensor API fixture."""
-    yield get_sensor_mock(MOCK_SAID3)
+    return get_sensor_mock(MOCK_SAID3)
 
 
 @pytest.fixture(name="mock_sensor2_api", autouse=False)
 def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_laundry_api):
     """Set up sensor API fixture."""
-    yield get_sensor_mock(MOCK_SAID4)
+    return get_sensor_mock(MOCK_SAID4)
 
 
 @pytest.fixture(name="mock_sensor_api_instances", autouse=False)

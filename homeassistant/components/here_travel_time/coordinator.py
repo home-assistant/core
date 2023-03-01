@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import here_routing
 from here_routing import (
@@ -163,7 +163,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
 
 
 class HERETransitDataUpdateCoordinator(
-    DataUpdateCoordinator[Optional[HERETravelTimeData]]
+    DataUpdateCoordinator[HERETravelTimeData | None]
 ):
     """HERETravelTime DataUpdateCoordinator."""
 

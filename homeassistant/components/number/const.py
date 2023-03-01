@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Final
 
+import voluptuous as vol
+
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -342,6 +344,15 @@ class NumberDeviceClass(StrEnum):
     """
 
 
+class NumberMode(StrEnum):
+    """Modes for number entities."""
+
+    AUTO = "auto"
+    BOX = "box"
+    SLIDER = "slider"
+
+
+DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},

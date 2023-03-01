@@ -1,5 +1,4 @@
 """ZHA logbook describe events tests."""
-
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +7,7 @@ import zigpy.zcl.clusters.general as general
 
 from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -59,7 +59,9 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined):
     return zigpy_device, zha_device
 
 
-async def test_zha_logbook_event_device_with_triggers(hass, mock_devices):
+async def test_zha_logbook_event_device_with_triggers(
+    hass: HomeAssistant, mock_devices
+) -> None:
     """Test ZHA logbook events with device and triggers."""
 
     zigpy_device, zha_device = mock_devices
@@ -138,13 +140,15 @@ async def test_zha_logbook_event_device_with_triggers(hass, mock_devices):
 
     assert events[1]["name"] == "FakeManufacturer FakeModel"
     assert events[1]["domain"] == "zha"
-    assert (
-        events[1]["message"]
-        == "Up - Remote Button Double Press event was fired with parameters: {'test': 'test'}"
+    assert events[1]["message"] == (
+        "Up - Remote Button Double Press event was fired with parameters: "
+        "{'test': 'test'}"
     )
 
 
-async def test_zha_logbook_event_device_no_triggers(hass, mock_devices):
+async def test_zha_logbook_event_device_no_triggers(
+    hass: HomeAssistant, mock_devices
+) -> None:
     """Test ZHA logbook events with device and without triggers."""
 
     zigpy_device, zha_device = mock_devices
@@ -231,7 +235,9 @@ async def test_zha_logbook_event_device_no_triggers(hass, mock_devices):
     assert events[3]["message"] == "Zha Event was fired"
 
 
-async def test_zha_logbook_event_device_no_device(hass, mock_devices):
+async def test_zha_logbook_event_device_no_device(
+    hass: HomeAssistant, mock_devices
+) -> None:
     """Test ZHA logbook events without device and without triggers."""
 
     hass.config.components.add("recorder")

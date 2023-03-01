@@ -29,6 +29,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfDataRate,
     UnitOfElectricPotential,
     UnitOfInformation,
@@ -37,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_ADOPT, DOMAIN
@@ -53,7 +53,6 @@ from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
@@ -195,8 +194,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="voltage",
-        # no feature flag, but voltage will be null if device does not have voltage sensor
-        # (i.e. is not G4 Doorbell or not on 1.20.1+)
+        # no feature flag, but voltage will be null if device does not have
+        # voltage sensor (i.e. is not G4 Doorbell or not on 1.20.1+)
         ufp_required_field="voltage",
         precision=2,
     ),
@@ -524,14 +523,6 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 )
 
 EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
-    ProtectSensorEventEntityDescription(
-        key="detected_object",
-        name="Detected Object",
-        device_class=DEVICE_CLASS_DETECTION,
-        entity_registry_enabled_default=False,
-        ufp_value="is_smart_detected",
-        ufp_event_obj="last_smart_detect_event",
-    ),
     ProtectSensorEventEntityDescription(
         key="smart_obj_licenseplate",
         name="License Plate Detected",

@@ -1,6 +1,7 @@
 """The motionEye integration."""
 from __future__ import annotations
 
+from contextlib import suppress
 from types import MappingProxyType
 from typing import Any
 
@@ -198,10 +199,8 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
             # which is not available during entity construction.
             streaming_url = Template(streaming_template).render(**camera)
         else:
-            try:
+            with suppress(MotionEyeClientURLParseError):
                 streaming_url = self._client.get_camera_stream_url(camera)
-            except MotionEyeClientURLParseError:
-                pass
 
         return {
             CONF_NAME: camera[KEY_NAME],

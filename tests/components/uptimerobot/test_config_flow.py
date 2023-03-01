@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 import pytest
-from pytest import LogCaptureFixture
 from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
 from homeassistant import config_entries
@@ -77,7 +76,7 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception,error_key",
+    ("exception", "error_key"),
     [
         (Exception, "unknown"),
         (UptimeRobotException, "cannot_connect"),
@@ -103,7 +102,9 @@ async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) 
     assert result2["errors"]["base"] == error_key
 
 
-async def test_form_api_error(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
+async def test_form_api_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

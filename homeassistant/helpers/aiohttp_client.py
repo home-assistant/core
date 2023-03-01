@@ -20,9 +20,10 @@ from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __v
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.json import json_loads
 
 from .frame import warn_use
-from .json import json_dumps, json_loads
+from .json import json_dumps
 
 if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder

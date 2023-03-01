@@ -127,7 +127,8 @@ class RunHistory:
         for run in session.query(RecorderRuns).order_by(RecorderRuns.start.asc()).all():
             session.expunge(run)
             if run_dt := process_timestamp(run.start):
-                timestamp = run_dt.timestamp()
+                # Not sure if this is correct or runs_by_timestamp annotation should be changed
+                timestamp = int(run_dt.timestamp())
                 run_timestamps.append(timestamp)
                 runs_by_timestamp[timestamp] = run
 

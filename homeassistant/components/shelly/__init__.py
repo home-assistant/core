@@ -74,6 +74,7 @@ RPC_PLATFORMS: Final = [
 RPC_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 COAP_SCHEMA: Final = vol.Schema(

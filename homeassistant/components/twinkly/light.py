@@ -283,7 +283,8 @@ class TwinklyLight(LightEntity):
                 self._model = device_info[DEV_MODEL]
 
                 # If the name has changed, persist it in conf entry,
-                # so we will be able to restore this new name if hass is started while the LED string is offline.
+                # so we will be able to restore this new name if hass
+                # is started while the LED string is offline.
                 self.hass.config_entries.async_update_entry(
                     self._conf,
                     data={
@@ -301,11 +302,12 @@ class TwinklyLight(LightEntity):
             if not self._is_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
 
-            # We don't use the echo API to track the availability since we already have to pull
-            # the device to get its state.
+            # We don't use the echo API to track the availability since
+            # we already have to pull the device to get its state.
             self._is_available = True
         except (asyncio.TimeoutError, ClientError):
-            # We log this as "info" as it's pretty common that the christmas light are not reachable in july
+            # We log this as "info" as it's pretty common that the Christmas
+            # light are not reachable in July
             if self._is_available:
                 _LOGGER.info(
                     "Twinkly '%s' is not reachable (client error)", self._client.host

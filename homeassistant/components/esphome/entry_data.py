@@ -108,6 +108,11 @@ class RuntimeEntryData:
         return self.name
 
     @property
+    def signal_device_updated(self) -> str:
+        """Return the signal to listen to for core device state update."""
+        return f"esphome_{self.entry_id}_on_device_update"
+
+    @property
     def signal_static_info_updated(self) -> str:
         """Return the signal to listen to for updates on static info."""
         return f"esphome_{self.entry_id}_on_list"
@@ -207,8 +212,7 @@ class RuntimeEntryData:
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:
         """Distribute an update of a core device state like availability."""
-        signal = f"esphome_{self.entry_id}_on_device_update"
-        async_dispatcher_send(hass, signal)
+        async_dispatcher_send(hass, self.signal_device_updated)
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
         """Load the retained data from store and return de-serialized data."""

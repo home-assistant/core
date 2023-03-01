@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Xbox Live entegrasyonu, Home Assistant'tan kald\u0131r\u0131lmay\u0131 bekliyor ve Home Assistant 2023.2'den itibaren kullan\u0131lamayacak. \n\n Yaln\u0131zca eski Xbox 360 cihaz\u0131 i\u00e7in kullan\u0131\u015fl\u0131 oldu\u011fundan ve yukar\u0131 ak\u0131\u015f API'si art\u0131k \u00fccretli bir abonelik gerektirdi\u011finden entegrasyon kald\u0131r\u0131l\u0131yor. Daha yeni konsollar, Xbox entegrasyonu taraf\u0131ndan \u00fccretsiz olarak desteklenir. \n\n Bu sorunu \u00e7\u00f6zmek i\u00e7in, configuration.yaml dosyan\u0131zdan Xbox Live YAML yap\u0131land\u0131rmas\u0131n\u0131 kald\u0131r\u0131n ve Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
-            "title": "Xbox Live entegrasyonu kald\u0131r\u0131l\u0131yor"
-        }
-    }
-}
