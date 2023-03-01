@@ -207,7 +207,10 @@ class Events(Base):
         Integer, ForeignKey("event_data.data_id"), index=True
     )
     context_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
+        index=True,
+        mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
     )
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
@@ -371,7 +374,10 @@ class States(Base):
     old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
     context_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), index=True
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
+        index=True,
+        mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
     )
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
