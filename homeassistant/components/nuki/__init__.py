@@ -16,7 +16,7 @@ from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Device registration for the bridge
     info = bridge.info()
     bridge_id = parse_id(info["ids"]["hardwareId"])
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge_id)},
@@ -150,7 +150,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
         except RequestException as err:
             raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
 
-        ent_reg = entity_registry.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
         for event, device_ids in events.items():
             for device_id in device_ids:
                 entity_id = ent_reg.async_get_entity_id(

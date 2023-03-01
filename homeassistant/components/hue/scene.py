@@ -13,9 +13,12 @@ import voluptuous as vol
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .bridge import HueBridge
 from .const import DOMAIN
@@ -31,7 +34,7 @@ ATTR_BRIGHTNESS = "brightness"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -62,7 +65,7 @@ async def async_setup_entry(
     )
 
     # add platform service to turn_on/activate scene with advanced options
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_ACTIVATE_SCENE,
         {
