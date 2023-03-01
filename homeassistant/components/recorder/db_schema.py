@@ -68,7 +68,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 35
+SCHEMA_VERSION = 36
 
 _LOGGER = logging.getLogger(__name__)
 
