@@ -26,28 +26,28 @@ def all_stmt(
     event_types: tuple[str, ...],
     states_entity_filter: ColumnElement | None = None,
     events_entity_filter: ColumnElement | None = None,
-    context_id: str | None = None,
+    context_id_bin: bytes | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
         lambda: select_events_without_states(start_day, end_day, event_types)
     )
-    if context_id is not None:
+    if context_id_bin is not None:
         # Once all the old `state_changed` events
         # are gone from the database remove the
         # _legacy_select_events_context_id()
-        stmt += lambda s: s.where(Events.context_id == context_id).union_all(
+        stmt += lambda s: s.where(Events.context_id_bin == context_id_bin).union_all(
             _states_query_for_context_id(
                 start_day,
                 end_day,
                 # https://github.com/python/mypy/issues/2608
-                context_id,  # type:ignore[arg-type]
+                context_id_bin,  # type:ignore[arg-type]
             ),
             legacy_select_events_context_id(
                 start_day,
                 end_day,
                 # https://github.com/python/mypy/issues/2608
-                context_id,  # type:ignore[arg-type]
+                context_id_bin,  # type:ignore[arg-type]
             ),
         )
     else:
@@ -80,8 +80,8 @@ def _apply_all_hints(sel: Select) -> Select:
 
 
 def _states_query_for_context_id(
-    start_day: float, end_day: float, context_id: str
+    start_day: float, end_day: float, context_id_bin: bytes
 ) -> Select:
     return apply_states_filters(select_states(), start_day, end_day).where(
-        States.context_id == context_id
+        States.context_id_bin == context_id_bin
     )
