@@ -244,6 +244,9 @@ async def test_platform_error_slow_setup(
         assert "test_domain.test_platform" not in hass.config.components
         assert "test_platform is taking longer than 0 seconds" in caplog.text
 
+    # Cleanup lingering (setup_platform) task after test is done
+    await asyncio.sleep(1)
+
 
 async def test_updated_state_used_for_entity_id(hass: HomeAssistant) -> None:
     """Test that first update results used for entity ID generation."""
