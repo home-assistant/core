@@ -523,6 +523,7 @@ def _apply_update(  # noqa: C901
         timestamp_type = "DOUBLE PRECISION"
         context_bin_type = f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})"
     else:
+        timestamp_type = "FLOAT"
         context_bin_type = "BLOB"
 
     if new_version == 1:
