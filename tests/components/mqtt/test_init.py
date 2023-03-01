@@ -1218,6 +1218,7 @@ async def test_subscribe_special_characters(
     assert calls[0].payload == payload
 
 
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_same_topic(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1342,6 +1343,7 @@ async def test_replaying_payload_same_topic(
     assert len(calls_b) == 1
 
 
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_not_calling_unsubscribe_with_active_subscribers(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1356,6 +1358,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
     await mqtt.async_subscribe(hass, "test/state", record_calls)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.called
 
     unsub()
@@ -1363,6 +1366,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     assert not mqtt_client_mock.unsubscribe.called
 
 
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_unsubscribe_race(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1387,13 +1391,15 @@ async def test_unsubscribe_race(
     unsub()
     await mqtt.async_subscribe(hass, "test/state", _callback_b)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test/state", "online")
     await hass.async_block_till_done()
     assert not calls_a
     assert calls_b
 
-    # We allow either calls [subscribe, unsubscribe, subscribe] or [subscribe, subscribe]
+    # We allow either calls [subscribe, unsubscribe, subscribe], [subscribe, subscribe] or
+    # when both subscriptions were combined [subscribe]
     expected_calls_1 = [
         call.subscribe("test/state", 0),
         call.unsubscribe("test/state"),
@@ -1403,13 +1409,21 @@ async def test_unsubscribe_race(
         call.subscribe("test/state", 0),
         call.subscribe("test/state", 0),
     ]
-    assert mqtt_client_mock.mock_calls in (expected_calls_1, expected_calls_2)
+    expected_calls_3 = [
+        call.subscribe("test/state", 0),
+    ]
+    assert mqtt_client_mock.mock_calls in (
+        expected_calls_1,
+        expected_calls_2,
+        expected_calls_3,
+    )
 
 
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_restore_subscriptions_on_reconnect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1423,11 +1437,13 @@ async def test_restore_subscriptions_on_reconnect(
 
     await mqtt.async_subscribe(hass, "test/state", record_calls)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 1
 
     mqtt_client_mock.on_disconnect(None, None, 0)
     with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 2
 
@@ -1436,6 +1452,7 @@ async def test_restore_subscriptions_on_reconnect(
     "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_restore_all_active_subscriptions_on_reconnect(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1451,11 +1468,10 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     await mqtt.async_subscribe(hass, "test/state", record_calls)
     await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     expected = [
         call("test/state", 2),
-        call("test/state", 0),
-        call("test/state", 1),
     ]
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
@@ -1466,6 +1482,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     mqtt_client_mock.on_disconnect(None, None, 0)
     with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     expected.append(call("test/state", 1))
@@ -1611,21 +1628,30 @@ async def test_publish_error(
         assert "Failed to connect to MQTT server: Out of memory." in caplog.text
 
 
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_error(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test publish error."""
     await mqtt_mock_entry_no_yaml_config()
     mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError):
-        # simulate client is not connected error before subscribing
-        mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
-        await mqtt.async_subscribe(hass, "some-topic", record_calls)
+    await hass.async_block_till_done()
+    mqtt_client_mock.reset_mock()
+    # simulate client is not connected error before subscribing
+    mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
+    await mqtt.async_subscribe(hass, "some-topic", record_calls)
+    while mqtt_client_mock.subscribe.call_count == 0:
         await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert (
+        "Error talking to MQTT: The client is not currently connected." in caplog.text
+    )
 
 
 async def test_handle_message_callback(
