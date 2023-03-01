@@ -40,12 +40,16 @@ REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
 
 @pytest.fixture
-def registries(hass: HomeAssistant) -> SimpleNamespace:
+def registries(
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> SimpleNamespace:
     """Registry mock setup."""
     ret = SimpleNamespace()
-    ret.entity = er.async_get(hass)
-    ret.device = dr.async_get(hass)
-    ret.area = ar.async_get(hass)
+    ret.entity = entity_registry
+    ret.device = device_registry
+    ret.area = area_registry
     return ret
 
 
