@@ -212,25 +212,37 @@ class ThresholdSensor(BinarySensorEntity):
 
         if self.sensor_value is None:
             self._state_position = POSITION_UNKNOWN
-            self._state = False
+            self._state = None
+            return
 
-        elif self.threshold_type == TYPE_LOWER:
+        if self.threshold_type == TYPE_LOWER:
+            if self._state is None:
+                self._state = False
+                self._state_position = POSITION_ABOVE
             if below(self._threshold_lower):
                 self._state_position = POSITION_BELOW
                 self._state = True
             elif above(self._threshold_lower):
                 self._state_position = POSITION_ABOVE
                 self._state = False
+            return
 
-        elif self.threshold_type == TYPE_UPPER:
+        if self.threshold_type == TYPE_UPPER:
+            if self._state is None:
+                self._state = False
+                self._state_position = POSITION_BELOW
             if above(self._threshold_upper):
                 self._state_position = POSITION_ABOVE
                 self._state = True
             elif below(self._threshold_upper):
                 self._state_position = POSITION_BELOW
                 self._state = False
+            return
 
-        elif self.threshold_type == TYPE_RANGE:
+        if self.threshold_type == TYPE_RANGE:
+            if self._state is None:
+                self._state = True
+                self._state_position = POSITION_IN_RANGE
             if below(self._threshold_lower):
                 self._state_position = POSITION_BELOW
                 self._state = False
@@ -240,3 +252,4 @@ class ThresholdSensor(BinarySensorEntity):
             elif above(self._threshold_lower) and below(self._threshold_upper):
                 self._state_position = POSITION_IN_RANGE
                 self._state = True
+            return
