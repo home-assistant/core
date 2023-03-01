@@ -961,6 +961,8 @@ def _apply_update(  # noqa: C901
                     f"context_parent_id_bin {context_bin_type}",
                 ],
             )
+        _create_index(session_maker, "events", "ix_events_context_id_bin")
+        _create_index(session_maker, "states", "ix_states_context_id_bin")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

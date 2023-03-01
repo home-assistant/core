@@ -178,6 +178,12 @@ class Events(Base):
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
+        Index(
+            "ix_events_context_id_bin",
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_EVENTS
@@ -208,9 +214,6 @@ class Events(Base):
     )
     context_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
-        index=True,
-        mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
-        mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
     )
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
@@ -331,6 +334,12 @@ class States(Base):
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
+        Index(
+            "ix_states_context_id_bin",
+            "context_id_bin",
+            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+        ),
         _DEFAULT_TABLE_ARGS,
     )
     __tablename__ = TABLE_STATES
@@ -375,9 +384,6 @@ class States(Base):
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
     context_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
-        index=True,
-        mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
-        mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
     )
     context_parent_id_bin: Mapped[bytes | None] = mapped_column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
