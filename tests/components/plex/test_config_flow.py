@@ -47,6 +47,8 @@ from .mock_classes import MockGDM
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 async def test_bad_credentials(
     hass: HomeAssistant, current_request_with_host: None
@@ -203,8 +205,6 @@ async def test_single_available_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
-
 
 async def test_multiple_servers_with_selection(
     hass: HomeAssistant,
@@ -258,8 +258,6 @@ async def test_multiple_servers_with_selection(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
-
 
 async def test_adding_last_unconfigured_server(
     hass: HomeAssistant,
@@ -312,8 +310,6 @@ async def test_adding_last_unconfigured_server(
             == "https://1-2-3-4.123456789001234567890.plex.direct:32400"
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
-
-    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_all_available_servers_configured(
