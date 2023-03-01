@@ -7,9 +7,10 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, cast
+from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
+from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
@@ -24,6 +25,7 @@ from sqlalchemy.schema import AddConstraint, DropConstraint
 from sqlalchemy.sql.expression import true
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.ulid import ulid_to_bytes
 
 from .const import SupportedDialect
 from .db_schema import (
@@ -32,13 +34,16 @@ from .db_schema import (
     STATISTICS_TABLES,
     TABLE_STATES,
     Base,
+    Events,
     SchemaChanges,
+    States,
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
 from .models import process_timestamp
+from .queries import find_events_context_ids_to_migrate
 from .statistics import (
     correct_db_schema as statistics_correct_db_schema,
     delete_statistics_duplicates,
@@ -1197,6 +1202,52 @@ def _migrate_statistics_columns_to_timestamp(
                             " );"
                         )
                     )
+
+
+def _context_id_to_bytes(context_id: str | None) -> bytes | None:
+    """Convert a context_id to bytes."""
+    if context_id is None:
+        return None
+    if len(context_id) == 32:
+        return UUID(context_id).bytes
+    if len(context_id) == 26:
+        return ulid_to_bytes(context_id)
+    return None
+
+
+def migrate_context_ids(instance: Recorder) -> bool:
+    """Migrate context_ids to use binary format."""
+    _to_bytes = _context_id_to_bytes
+    with session_scope(session=instance.get_session()) as session:
+        if events := session.execute(find_events_context_ids_to_migrate()).all():
+            session.execute(
+                update(Events),
+                [
+                    {
+                        "event_id": event_id,
+                        "context_id": None,
+                        "context_parent_id": None,
+                        "context_id_bin": _to_bytes(context_id),
+                        "context_parent_id_bin": _to_bytes(context_parent_id),
+                    }
+                    for event_id, context_id, context_parent_id in events
+                ],
+            )
+        if states := session.execute(find_events_context_ids_to_migrate()).all():
+            session.execute(
+                update(States),
+                [
+                    {
+                        "state_id": state_id,
+                        "context_id": None,
+                        "context_parent_id": None,
+                        "context_id_bin": _to_bytes(context_id),
+                        "context_parent_id_bin": _to_bytes(context_parent_id),
+                    }
+                    for state_id, context_id, context_parent_id in states
+                ],
+            )
+        return bool(events or states)
 
 
 def _initialize_database(session: Session) -> bool:

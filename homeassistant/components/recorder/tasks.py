@@ -339,3 +339,14 @@ class AdjustLRUSizeTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
         instance._adjust_lru_size()  # pylint: disable=[protected-access]
+
+
+@dataclass
+class ContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate context ids."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run context id migration task."""
+        if not instance._migrate_context_ids():  # pylint: disable=[protected-access]
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(ContextIDMigrationTask())
