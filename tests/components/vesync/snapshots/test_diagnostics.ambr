@@ -12,7 +12,6 @@
       ]),
     }),
     'vesync': dict({
-      'account_id': '9999999',
       'bulb_count': 0,
       'fan_count': 0,
       'outlets_count': 0,
@@ -148,7 +147,6 @@
       ]),
     }),
     'vesync': dict({
-      'account_id': '9999999',
       'bulb_count': 0,
       'fan_count': 1,
       'outlets_count': 0,

@@ -25,7 +25,6 @@ async def async_get_config_entry_diagnostics(
 
     data = {
         DOMAIN: {
-            "account_id": manager.account_id,
             "bulb_count": len(manager.bulbs),
             "fan_count": len(manager.fans),
             "outlets_count": len(manager.outlets),
