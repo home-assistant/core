@@ -23,7 +23,7 @@ fnvhash==0.1.0
 hass-nabucasa==0.61.0
 hassil==1.0.6
 home-assistant-bluetooth==1.9.3
-home-assistant-frontend==20230227.0
+home-assistant-frontend==20230301.0
 home-assistant-intents==2023.2.28
 httpx==0.23.3
 ifaddr==0.1.7
