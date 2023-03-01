@@ -666,7 +666,7 @@ habitipy==0.2.0
 hass-nabucasa==0.61.0
 
 # homeassistant.components.conversation
-hassil==1.0.5
+hassil==1.0.6
 
 # homeassistant.components.tasmota
 hatasmota==0.6.4
@@ -693,7 +693,7 @@ holidays==0.18.0
 home-assistant-frontend==20230227.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.2.22
+home-assistant-intents==2023.2.28
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
