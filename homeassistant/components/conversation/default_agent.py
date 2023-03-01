@@ -257,9 +257,9 @@ class DefaultAgent(AbstractConversationAgent):
         # This is available in the response template as "state".
         state1: core.State | None = None
         if intent_response.matched_states:
-            state1 = intent_response.matched_states[0]
+            state1 = matched[0]
         elif intent_response.unmatched_states:
-            state1 = intent_response.unmatched_states[0]
+            state1 = unmatched[0]
 
         # Render response template
         speech = response_template.async_render(
