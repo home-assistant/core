@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from . import SnoozFixture, create_mock_snooz, create_mock_snooz_config_entry
 
@@ -282,16 +282,17 @@ async def test_command_results(
 
 @pytest.fixture(name="snooz_fan_entity_id")
 async def fixture_snooz_fan_entity_id(
-    hass: HomeAssistant, mock_connected_snooz: SnoozFixture
+    hass: HomeAssistant,
+    mock_connected_snooz: SnoozFixture,
 ) -> str:
     """Mock a Snooz fan entity and config entry."""
 
     return get_fan_entity_id(hass, mock_connected_snooz.device)
 
 
-def get_fan_entity_id(hass: HomeAssistant, device: MockSnoozDevice) -> str:
+def get_fan_entity_id(
+    hass: HomeAssistant, device: MockSnoozDevice, entity_registry: er.EntityRegistry
+) -> str:
     """Get the entity ID for a mock device."""
 
-    return entity_registry.async_get(hass).async_get_entity_id(
-        Platform.FAN, DOMAIN, device.address
-    )
+    return entity_registry.async_get_entity_id(Platform.FAN, DOMAIN, device.address)
