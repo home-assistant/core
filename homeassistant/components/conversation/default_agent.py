@@ -18,9 +18,9 @@ import yaml
 
 from homeassistant import core, setup
 from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_registry,
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
     intent,
     template,
     translation,
@@ -95,12 +95,12 @@ class DefaultAgent(AbstractConversationAgent):
             self._config_intents = config_intents
 
         self.hass.bus.async_listen(
-            area_registry.EVENT_AREA_REGISTRY_UPDATED,
+            ar.EVENT_AREA_REGISTRY_UPDATED,
             self._async_handle_area_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._async_handle_entity_registry_changed,
             run_immediately=True,
         )
@@ -257,9 +257,9 @@ class DefaultAgent(AbstractConversationAgent):
         # This is available in the response template as "state".
         state1: core.State | None = None
         if intent_response.matched_states:
-            state1 = intent_response.matched_states[0]
+            state1 = matched[0]
         elif intent_response.unmatched_states:
-            state1 = intent_response.unmatched_states[0]
+            state1 = unmatched[0]
 
         # Render response template
         speech = response_template.async_render(
@@ -471,8 +471,8 @@ class DefaultAgent(AbstractConversationAgent):
         states = [
             state for state in self.hass.states.async_all() if is_entity_exposed(state)
         ]
-        entities = entity_registry.async_get(self.hass)
-        devices = device_registry.async_get(self.hass)
+        entities = er.async_get(self.hass)
+        devices = dr.async_get(self.hass)
 
         # Gather exposed entity names
         entity_names = []
@@ -512,7 +512,7 @@ class DefaultAgent(AbstractConversationAgent):
                 entity_names.append((state.name, state.name, context))
 
         # Gather areas from exposed entities
-        areas = area_registry.async_get(self.hass)
+        areas = ar.async_get(self.hass)
         area_names = []
         for area_id in area_ids_with_entities:
             area = areas.async_get_area(area_id)
