@@ -1,5 +1,4 @@
 """Axis switch platform tests."""
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -13,12 +12,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import API_DISCOVERY_PORT_MANAGEMENT, NAME
 
 
-async def test_platform_manually_configured(hass):
+async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     """Test that nothing happens when platform is manually configured."""
     assert await async_setup_component(
         hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": AXIS_DOMAIN}}
@@ -27,12 +27,14 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_switches(hass, setup_config_entry):
+async def test_no_switches(hass: HomeAssistant, setup_config_entry) -> None:
     """Test that no output events in Axis results in no switch entities."""
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
 
 
-async def test_switches_with_port_cgi(hass, setup_config_entry, mock_rtsp_event):
+async def test_switches_with_port_cgi(
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+) -> None:
     """Test that switches are loaded properly using port.cgi."""
     device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
 
@@ -88,7 +90,9 @@ async def test_switches_with_port_cgi(hass, setup_config_entry, mock_rtsp_event)
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_PORT_MANAGEMENT])
-async def test_switches_with_port_management(hass, setup_config_entry, mock_rtsp_event):
+async def test_switches_with_port_management(
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+) -> None:
     """Test that switches are loaded properly using port management."""
     device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
 

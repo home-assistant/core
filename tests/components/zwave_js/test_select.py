@@ -7,9 +7,8 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 import homeassistant.helpers.entity_registry as er
 
 from .common import replace_value_of_zwave_value
@@ -211,7 +210,9 @@ async def test_protection_select(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integration):
+async def test_multilevel_switch_select(
+    hass: HomeAssistant, client, fortrezz_ssa1_siren, integration
+) -> None:
     """Test Multilevel Switch CC based select entity."""
     node = fortrezz_ssa1_siren
     state = hass.states.get(MULTILEVEL_SWITCH_SELECT_ENTITY)
@@ -272,8 +273,8 @@ async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integ
 
 
 async def test_multilevel_switch_select_no_value(
-    hass, client, fortrezz_ssa1_siren_state, integration
-):
+    hass: HomeAssistant, client, fortrezz_ssa1_siren_state, integration
+) -> None:
     """Test Multilevel Switch CC based select entity with primary value is None."""
     node_state = replace_value_of_zwave_value(
         fortrezz_ssa1_siren_state,

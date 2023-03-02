@@ -71,7 +71,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_adv: SwitchBotAdvertisement | None = None
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
@@ -272,7 +272,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
-            raise AbortFlow("no_unconfigured_devices")
+            raise AbortFlow("no_devices_found")
 
     async def _async_set_device(self, discovery: SwitchBotAdvertisement) -> None:
         """Set the device to work with."""

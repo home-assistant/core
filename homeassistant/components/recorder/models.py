@@ -1,10 +1,12 @@
 """Models for Recorder."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Literal, TypedDict, overload
 
+from awesomeversion import AwesomeVersion
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
@@ -14,8 +16,10 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-from homeassistant.helpers.json import json_loads
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads_object
+
+from .const import SupportedDialect
 
 # pylint: disable=invalid-name
 
@@ -40,21 +44,38 @@ class StatisticResult(TypedDict):
     stat: StatisticData
 
 
+class StatisticDataTimestampBase(TypedDict):
+    """Mandatory fields for statistic data class with a timestamp."""
+
+    start_ts: float
+
+
 class StatisticDataBase(TypedDict):
     """Mandatory fields for statistic data class."""
 
     start: datetime
 
 
-class StatisticData(StatisticDataBase, total=False):
-    """Statistic data class."""
+class StatisticMixIn(TypedDict, total=False):
+    """Mandatory fields for statistic data class."""
 
-    mean: float
-    min: float
-    max: float
-    last_reset: datetime | None
     state: float
     sum: float
+    min: float
+    max: float
+    mean: float
+
+
+class StatisticData(StatisticDataBase, StatisticMixIn, total=False):
+    """Statistic data class."""
+
+    last_reset: datetime | None
+
+
+class StatisticDataTimestamp(StatisticDataTimestampBase, StatisticMixIn, total=False):
+    """Statistic data class with a timestamp."""
+
+    last_reset_ts: float | None
 
 
 class StatisticMetaData(TypedDict):
@@ -118,6 +139,20 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
         return dt_util.utc_to_timestamp(ts)
     return ts.timestamp()
+
+
+def datetime_to_timestamp_or_none(dt: datetime | None) -> float | None:
+    """Convert a datetime to a timestamp."""
+    if dt is None:
+        return None
+    return dt_util.utc_to_timestamp(dt)
+
+
+def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:
+    """Convert a timestamp to a datetime."""
+    if not ts:
+        return None
+    return dt_util.utc_from_timestamp(ts)
 
 
 class LazyStatePreSchema31(State):
@@ -233,15 +268,6 @@ class LazyStatePreSchema31(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (
-            other.__class__ in [self.__class__, State]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )
-
 
 class LazyState(State):
     """A lazy version of core State after schema 31."""
@@ -341,15 +367,6 @@ class LazyState(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (
-            other.__class__ in [self.__class__, State]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )
-
 
 def decode_attributes_from_row(
     row: Row, attr_cache: dict[str, dict[str, Any]]
@@ -361,7 +378,7 @@ def decode_attributes_from_row(
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
     try:
-        attr_cache[source] = attributes = json_loads(source)
+        attr_cache[source] = attributes = json_loads_object(source)
     except ValueError:
         _LOGGER.exception("Error converting row to state attributes: %s", source)
         attr_cache[source] = attributes = {}
@@ -443,3 +460,24 @@ class StatisticPeriod(TypedDict, total=False):
     calendar: CalendarStatisticPeriod
     fixed_period: FixedStatisticPeriod
     rolling_window: RollingWindowStatisticPeriod
+
+
+@dataclass
+class DatabaseEngine:
+    """Properties of the database engine."""
+
+    dialect: SupportedDialect
+    optimizer: DatabaseOptimizer
+    version: AwesomeVersion | None
+
+
+@dataclass
+class DatabaseOptimizer:
+    """Properties of the database optimizer for the configured database engine."""
+
+    # Some MariaDB versions have a bug that causes a slow query when using
+    # a range in a select statement with an IN clause.
+    #
+    # https://jira.mariadb.org/browse/MDEV-25020
+    #
+    slow_range_in_select: bool

@@ -130,7 +130,7 @@ class BboxUptimeSensor(SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def __init__(self, bbox_data, name, description: SensorEntityDescription):
+    def __init__(self, bbox_data, name, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
@@ -149,7 +149,7 @@ class BboxSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, bbox_data, name, description: SensorEntityDescription):
+    def __init__(self, bbox_data, name, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
@@ -184,7 +184,7 @@ class BboxSensor(SensorEntity):
 class BboxData:
     """Get data from the Bbox."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the data object."""
         self.data = None
         self.router_infos = None
