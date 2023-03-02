@@ -6,8 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     API_AP,
@@ -43,13 +42,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     system_info = await ruckus.system_info()
 
-    registry = device_registry.async_get(hass)
+    registry = dr.async_get(hass)
     ap_info = await ruckus.ap_info()
     for device in ap_info[API_AP][API_ID].values():
         registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, device[API_MAC])},
-            identifiers={(CONNECTION_NETWORK_MAC, device[API_MAC])},
+            connections={(dr.CONNECTION_NETWORK_MAC, device[API_MAC])},
+            identifiers={(dr.CONNECTION_NETWORK_MAC, device[API_MAC])},
             manufacturer=MANUFACTURER,
             name=device[API_DEVICE_NAME],
             model=device[API_MODEL],
