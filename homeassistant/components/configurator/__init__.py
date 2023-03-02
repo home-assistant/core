@@ -1,5 +1,4 @@
-"""
-Support to allow pieces of code to request configuration from the user.
+"""Support to allow pieces of code to request configuration from the user.
 
 Initiate a request by calling the `request_config` method with a callback.
 This will return a request id that has to be used for future calls.

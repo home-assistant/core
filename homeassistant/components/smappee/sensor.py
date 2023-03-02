@@ -336,7 +336,7 @@ class SmappeeSensor(SensorEntity):
         smappee_base,
         service_location,
         description: SmappeeSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Smappee sensor."""
         self.entity_description = description
         self._smappee_base = smappee_base

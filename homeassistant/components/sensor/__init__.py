@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
@@ -11,10 +12,13 @@ from math import ceil, floor, log10
 import re
 from typing import Any, Final, cast, final
 
+from typing_extensions import Self
+
 from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable=[hass-deprecated-import]
 from homeassistant.const import (  # noqa: F401
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
@@ -46,7 +50,7 @@ from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_VOLTAGE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
@@ -95,6 +99,7 @@ __all__ = [
     "ATTR_OPTIONS",
     "ATTR_STATE_CLASS",
     "CONF_STATE_CLASS",
+    "DEVICE_CLASS_STATE_CLASSES",
     "DOMAIN",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
@@ -138,10 +143,10 @@ class SensorEntityDescription(EntityDescription):
 
     device_class: SensorDeviceClass | None = None
     last_reset: datetime | None = None
-    native_precision: int | None = None
     native_unit_of_measurement: str | None = None
     options: list[str] | None = None
     state_class: SensorStateClass | str | None = None
+    suggested_display_precision: int | None = None
     suggested_unit_of_measurement: str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
@@ -152,12 +157,12 @@ class SensorEntity(Entity):
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
     _attr_last_reset: datetime | None
-    _attr_native_precision: int | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_options: list[str] | None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
+    _attr_suggested_display_precision: int | None
     _attr_suggested_unit_of_measurement: str | None
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
@@ -166,7 +171,7 @@ class SensorEntity(Entity):
     _invalid_state_class_reported = False
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
-    _sensor_option_precision: int | None = None
+    _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
 
     @callback
@@ -191,19 +196,30 @@ class SensorEntity(Entity):
         if self.unique_id is None or self.device_class is None:
             return
         registry = er.async_get(self.hass)
+
+        # Bail out if the entity is not yet registered
         if not (
             entity_id := registry.async_get_entity_id(
                 platform.domain, platform.platform_name, self.unique_id
             )
         ):
+            # Prime _sensor_option_unit_of_measurement to ensure the correct unit
+            # is stored in the entity registry.
+            self._sensor_option_unit_of_measurement = self._get_initial_suggested_unit()
             return
+
         registry_entry = registry.async_get(entity_id)
         assert registry_entry
 
+        # Prime _sensor_option_unit_of_measurement to ensure the correct unit
+        # is stored in the entity registry.
+        self.registry_entry = registry_entry
+        self._async_read_entity_options()
+
         # If the sensor has 'unit_of_measurement' in its sensor options, the user has
         # overridden the unit.
-        # If the sensor has 'sensor.private' in its entity options, it was added after
-        # automatic unit conversion was implemented.
+        # If the sensor has 'sensor.private' in its entity options, it already has a
+        # suggested_unit.
         registry_unit = registry_entry.unit_of_measurement
         if (
             (
@@ -225,18 +241,22 @@ class SensorEntity(Entity):
 
         # Set suggested_unit_of_measurement to the old unit to enable automatic
         # conversion
-        registry.async_update_entity_options(
+        self.registry_entry = registry.async_update_entity_options(
             entity_id,
             f"{DOMAIN}.private",
             {"suggested_unit_of_measurement": registry_unit},
         )
+        # Update _sensor_option_unit_of_measurement to ensure the correct unit
+        # is stored in the entity registry.
+        self._async_read_entity_options()
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
         if not self.registry_entry:
             return
-        self.async_registry_entry_updated()
+        self._async_read_entity_options()
+        self._update_suggested_precision()
 
     @property
     def device_class(self) -> SensorDeviceClass | None:
@@ -254,7 +274,7 @@ class SensorEntity(Entity):
         if (
             self.state_class is not None
             or self.native_unit_of_measurement is not None
-            or self.native_precision is not None
+            or self.suggested_display_precision is not None
         ):
             return True
         # Sensors with custom device classes are not considered numeric
@@ -299,12 +319,8 @@ class SensorEntity(Entity):
 
         return None
 
-    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
-        """Return initial entity options.
-
-        These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
-        """
+    def _get_initial_suggested_unit(self) -> str | UndefinedType:
+        """Return the initial unit."""
         # Unit suggested by the integration
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
 
@@ -315,6 +331,19 @@ class SensorEntity(Entity):
             )
 
         if suggested_unit_of_measurement is None:
+            return UNDEFINED
+
+        return suggested_unit_of_measurement
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+        """
+        suggested_unit_of_measurement = self._get_initial_suggested_unit()
+
+        if suggested_unit_of_measurement is UNDEFINED:
             return None
 
         return {
@@ -359,58 +388,13 @@ class SensorEntity(Entity):
         return self._attr_native_value
 
     @property
-    def native_precision(self) -> int | None:
-        """Return the number of digits after the decimal point for the sensor's state.
-
-        If native_precision is None, no rounding is done unless the sensor is subject
-        to unit conversion.
-
-        The display precision is influenced by unit conversion, a sensor which has
-        native_unit_of_measurement 'Wh' and is converted to 'kWh' will have its
-        native_precision increased by 3.
-        """
-        if hasattr(self, "_attr_native_precision"):
-            return self._attr_native_precision
+    def suggested_display_precision(self) -> int | None:
+        """Return the suggested number of decimal digits for display."""
+        if hasattr(self, "_attr_suggested_display_precision"):
+            return self._attr_suggested_display_precision
         if hasattr(self, "entity_description"):
-            return self.entity_description.native_precision
+            return self.entity_description.suggested_display_precision
         return None
-
-    @final
-    @property
-    def precision(self) -> int | None:
-        """Return the number of digits after the decimal point for the sensor's state.
-
-        This is the precision after unit conversion.
-        """
-        # Highest priority, for registered entities: precision set by user
-        if self._sensor_option_precision is not None:
-            return self._sensor_option_precision
-
-        # Second priority, native precision
-        if (precision := self.native_precision) is None:
-            return None
-
-        device_class = self.device_class
-        native_unit_of_measurement = self.native_unit_of_measurement
-        unit_of_measurement = self.unit_of_measurement
-
-        if (
-            native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
-        ):
-            converter = UNIT_CONVERTERS[device_class]
-
-            # Scale the precision when converting to a larger or smaller unit
-            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
-            ratio_log = log10(
-                converter.get_unit_ratio(
-                    native_unit_of_measurement, unit_of_measurement
-                )
-            )
-            ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
-            precision = max(0, precision + ratio_log)
-
-        return precision
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -455,7 +439,7 @@ class SensorEntity(Entity):
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
-        if not self.registry_entry and self.suggested_unit_of_measurement:
+        if not self.unique_id and self.suggested_unit_of_measurement:
             return self.suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
@@ -508,12 +492,15 @@ class SensorEntity(Entity):
             _LOGGER.warning(
                 "Entity %s (%s) is using state class '%s' which "
                 "is impossible considering device class ('%s') it is using; "
+                "expected %s%s; "
                 "Please update your configuration if your entity is manually "
                 "configured, otherwise %s",
                 self.entity_id,
                 type(self),
                 state_class,
                 device_class,
+                "None or one of " if classes else "None",
+                ", ".join(f"'{value.value}'" for value in classes),
                 report_issue,
             )
 
@@ -573,7 +560,7 @@ class SensorEntity(Entity):
                 )
             return value
 
-        precision = self.precision
+        suggested_precision = self.suggested_display_precision
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
@@ -584,19 +571,19 @@ class SensorEntity(Entity):
         numerical_value: int | float | Decimal
         if not isinstance(value, (int, float, Decimal)):
             try:
-                if isinstance(value, str) and "." not in value:
+                if isinstance(value, str) and "." not in value and "e" not in value:
                     numerical_value = int(value)
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
             except (TypeError, ValueError) as err:
                 # Raise if precision is not None, for other cases log a warning
-                if precision is not None:
+                if suggested_precision is not None:
                     raise ValueError(
                         f"Sensor {self.entity_id} has device class {device_class}, "
                         f"state class {state_class} unit {unit_of_measurement} and "
-                        f"precision {precision} thus indicating it has a numeric value;"
-                        f" however, it has the non-numeric value: {value} "
-                        f"({type(value)})"
+                        f"suggested precision {suggested_precision} thus indicating it "
+                        f"has a numeric value; however, it has the non-numeric value: "
+                        f"{value} ({type(value)})"
                     ) from err
                 # This should raise in Home Assistant Core 2023.4
                 if not self._invalid_numeric_value_reported:
@@ -626,7 +613,18 @@ class SensorEntity(Entity):
             # Unit conversion needed
             converter = UNIT_CONVERTERS[device_class]
 
-            if precision is None:
+            converted_numerical_value = UNIT_CONVERTERS[device_class].convert(
+                float(numerical_value),
+                native_unit_of_measurement,
+                unit_of_measurement,
+            )
+
+            # If unit conversion is happening, and there's no rounding for display,
+            # do a best effort rounding here.
+            if (
+                suggested_precision is None
+                and self._sensor_option_display_precision is None
+            ):
                 # Deduce the precision by finding the decimal point, if any
                 value_s = str(value)
                 precision = (
@@ -645,20 +643,12 @@ class SensorEntity(Entity):
                 )
                 precision = precision + floor(ratio_log)
 
-            converted_numerical_value = converter.convert(
-                float(numerical_value),
-                native_unit_of_measurement,
-                unit_of_measurement,
-            )
-            value = f"{converted_numerical_value:.{precision}f}"
-            # This can be replaced with adding the z option when we drop support for
-            # Python 3.10
-            value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
-        elif precision is not None:
-            value = f"{numerical_value:.{precision}f}"
-            # This can be replaced with adding the z option when we drop support for
-            # Python 3.10
-            value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+                value = f"{converted_numerical_value:.{precision}f}"
+                # This can be replaced with adding the z option when we drop support for
+                # Python 3.10
+                value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+            else:
+                value = converted_numerical_value
 
         # Validate unit of measurement used for sensors with a device class
         if (
@@ -700,14 +690,63 @@ class SensorEntity(Entity):
 
         return super().__repr__()
 
-    def _custom_precision_or_none(self) -> int | None:
-        """Return a custom precisions or None if not set."""
+    def _suggested_precision_or_none(self) -> int | None:
+        """Return suggested display precision, or None if not set."""
         assert self.registry_entry
         if (sensor_options := self.registry_entry.options.get(DOMAIN)) and (
-            precision := sensor_options.get("precision")
+            precision := sensor_options.get("suggested_display_precision")
         ) is not None:
-            return int(precision)
+            return cast(int, precision)
         return None
+
+    def _update_suggested_precision(self) -> None:
+        """Update suggested display precision stored in registry."""
+        assert self.registry_entry
+
+        device_class = self.device_class
+        display_precision = self.suggested_display_precision
+        default_unit_of_measurement = (
+            self.suggested_unit_of_measurement or self.native_unit_of_measurement
+        )
+        unit_of_measurement = self.unit_of_measurement
+
+        if (
+            display_precision is not None
+            and default_unit_of_measurement != unit_of_measurement
+            and device_class in UNIT_CONVERTERS
+        ):
+            converter = UNIT_CONVERTERS[device_class]
+
+            # Scale the precision when converting to a larger or smaller unit
+            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
+            ratio_log = log10(
+                converter.get_unit_ratio(
+                    default_unit_of_measurement, unit_of_measurement
+                )
+            )
+            ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
+            display_precision = max(0, display_precision + ratio_log)
+
+        if display_precision is None and (
+            DOMAIN not in self.registry_entry.options
+            or "suggested_display_precision" not in self.registry_entry.options
+        ):
+            return
+        sensor_options = self.registry_entry.options.get(DOMAIN, {})
+        if (
+            "suggested_display_precision" in sensor_options
+            and sensor_options["suggested_display_precision"] == display_precision
+        ):
+            return
+
+        registry = er.async_get(self.hass)
+        sensor_options = dict(sensor_options)
+        sensor_options.pop("suggested_display_precision", None)
+        if display_precision is not None:
+            sensor_options["suggested_display_precision"] = display_precision
+        registry.async_update_entity_options(
+            self.entity_id, DOMAIN, sensor_options or None
+        )
 
     def _custom_unit_or_undef(
         self, primary_key: str, secondary_key: str
@@ -729,7 +768,17 @@ class SensorEntity(Entity):
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
-        self._sensor_option_precision = self._custom_precision_or_none()
+        self._async_read_entity_options()
+        self._update_suggested_precision()
+
+    @callback
+    def _async_read_entity_options(self) -> None:
+        """Read entity options from entity registry.
+
+        Called when the entity registry entry has been updated and before the sensor is
+        added to the state machine.
+        """
+        self._sensor_option_display_precision = self._suggested_precision_or_none()
         assert self.registry_entry
         if (
             sensor_options := self.registry_entry.options.get(f"{DOMAIN}.private")
@@ -778,7 +827,7 @@ class SensorExtraStoredData(ExtraStoredData):
         }
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> SensorExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         try:
             native_value = restored["native_value"]
@@ -837,3 +886,31 @@ def async_update_suggested_units(hass: HomeAssistant) -> None:
             f"{DOMAIN}.private",
             sensor_private_options,
         )
+
+
+@callback
+def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> str:
+    """Return the state rounded for presentation."""
+
+    def display_precision() -> int | None:
+        """Return the display precision."""
+        if not (entry := er.async_get(hass).async_get(entity_id)) or not (
+            sensor_options := entry.options.get(DOMAIN)
+        ):
+            return None
+        if (display_precision := sensor_options.get("display_precision")) is not None:
+            return cast(int, display_precision)
+        return sensor_options.get("suggested_display_precision")
+
+    value = state.state
+    if (precision := display_precision()) is None:
+        return value
+
+    with suppress(TypeError, ValueError):
+        numerical_value = float(value)
+        value = f"{numerical_value:.{precision}f}"
+        # This can be replaced with adding the z option when we drop support for
+        # Python 3.10
+        value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+
+    return value

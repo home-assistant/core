@@ -207,8 +207,7 @@ class VacuumCoordinatorData:
 
 @dataclass(init=False, frozen=True)
 class VacuumCoordinatorDataAttributes:
-    """
-    A class that holds attribute names for VacuumCoordinatorData.
+    """A class that holds attribute names for VacuumCoordinatorData.
 
     These attributes can be used in methods like `getattr` when a generic solutions is
     needed.
@@ -352,12 +351,14 @@ async def async_create_miio_device_and_coordinator(
         return
 
     if migrate:
-        # Removing fan platform entity for humidifiers and migrate the name to the config entry for migration
+        # Removing fan platform entity for humidifiers and migrate the name
+        # to the config entry for migration
         entity_registry = er.async_get(hass)
         assert entry.unique_id
         entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
         if entity_id:
-            # This check is entities that have a platform migration only and should be removed in the future
+            # This check is entities that have a platform migration only
+            # and should be removed in the future
             if (entity := entity_registry.async_get(entity_id)) and (
                 migrate_entity_name := entity.name
             ):

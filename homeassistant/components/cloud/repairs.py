@@ -24,8 +24,7 @@ def async_manage_legacy_subscription_issue(
     hass: HomeAssistant,
     subscription_info: dict[str, Any],
 ) -> None:
-    """
-    Manage the legacy subscription issue.
+    """Manage the legacy subscription issue.
 
     If the provider is "legacy" create an issue,
     in all other cases remove the issue.

@@ -494,7 +494,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
                 self.script.last_triggered = parse_datetime(last_triggered)
 
     async def async_will_remove_from_hass(self):
-        """Stop script and remove service when it will be removed from Home Assistant."""
+        """Stop script and remove service when it will be removed from HA."""
         await self.script.async_stop()
 
         # remove service

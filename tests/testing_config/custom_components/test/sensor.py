@@ -1,5 +1,4 @@
-"""
-Provide a mock sensor platform.
+"""Provide a mock sensor platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
@@ -99,9 +98,9 @@ class MockSensor(MockEntity, SensorEntity):
         return self._handle("last_reset")
 
     @property
-    def native_precision(self):
+    def suggested_display_precision(self):
         """Return the number of digits after the decimal point."""
-        return self._handle("native_precision")
+        return self._handle("suggested_display_precision")
 
     @property
     def native_unit_of_measurement(self):

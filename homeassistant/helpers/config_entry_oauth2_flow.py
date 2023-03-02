@@ -438,7 +438,10 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
 
         if state is None:
             return web.Response(
-                text="Invalid state. Is My Home Assistant configured to go to the right instance?",
+                text=(
+                    "Invalid state. Is My Home Assistant configured "
+                    "to go to the right instance?"
+                ),
                 status=400,
             )
 

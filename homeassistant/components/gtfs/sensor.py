@@ -800,9 +800,7 @@ class GTFSDepartureSensor(SensorEntity):
     @staticmethod
     def dict_for_table(resource: Any) -> dict:
         """Return a dictionary for the SQLAlchemy resource given."""
-        return {
-            col: getattr(resource, col) for col in resource.__table__.columns.keys()
-        }
+        return {col: getattr(resource, col) for col in resource.__table__.columns}
 
     def append_keys(self, resource: dict, prefix: str | None = None) -> None:
         """Properly format key val pairs to append to attributes."""

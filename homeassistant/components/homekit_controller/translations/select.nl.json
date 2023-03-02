@@ -1,9 +1,0 @@
-{
-    "state": {
-        "homekit_controller__ecobee_mode": {
-            "away": "Afwezig",
-            "home": "Thuis",
-            "sleep": "Slapen"
-        }
-    }
-}
