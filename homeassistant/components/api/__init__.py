@@ -351,7 +351,10 @@ class APIComponentsView(HomeAssistantView):
         return self.json(request.app["hass"].config.components)
 
 
-_cached_template = lru_cache(template.Template)
+@lru_cache
+def _cached_template(template_str: str, hass: ha.HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
 
 
 class APITemplateView(HomeAssistantView):
@@ -366,8 +369,7 @@ class APITemplateView(HomeAssistantView):
             raise Unauthorized()
         try:
             data = await request.json()
-            tpl = _cached_template(data["template"])
-            tpl.hass = request.app["hass"]
+            tpl = _cached_template(data["template"], request.app["hass"])
             return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
             return self.json_message(

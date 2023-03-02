@@ -365,7 +365,10 @@ async def webhook_stream_camera(
     return webhook_response(resp, registration=config_entry.data)
 
 
-_cached_template = lru_cache(template.Template)
+@lru_cache
+def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
 
 
 @WEBHOOK_COMMANDS.register("render_template")
@@ -384,8 +387,7 @@ async def webhook_render_template(
     resp = {}
     for key, item in data.items():
         try:
-            tpl = _cached_template(item[ATTR_TEMPLATE])
-            tpl.hass = hass
+            tpl = _cached_template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
         except TemplateError as ex:
             resp[key] = {"error": str(ex)}

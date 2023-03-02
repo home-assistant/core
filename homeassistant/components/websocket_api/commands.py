@@ -425,7 +425,10 @@ def handle_ping(
     connection.send_message(pong_message(msg["id"]))
 
 
-_cached_template = lru_cache(template.Template)
+@lru_cache
+def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
 
 
 @decorators.websocket_command(
@@ -444,8 +447,7 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = _cached_template(template_str)
-    template_obj.hass = hass
+    template_obj = _cached_template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
