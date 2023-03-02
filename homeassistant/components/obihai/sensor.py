@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -41,13 +41,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Obihai sensor platform."""
-    issue_registry.async_create_issue(
+    ir.async_create_issue(
         hass,
         DOMAIN,
         "manual_migration",
         breaks_in_ha_version="2023.6.0",
         is_fixable=False,
-        severity=issue_registry.IssueSeverity.ERROR,
+        severity=ir.IssueSeverity.WARNING,
         translation_key="manual_migration",
     )
 
