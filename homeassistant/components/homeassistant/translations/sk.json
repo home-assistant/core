@@ -1,7 +1,0 @@
-{
-    "issues": {
-        "python_version": {
-            "title": "Podpora pre Python {current_python_version} sa odstra\u0148uje"
-        }
-    }
-}

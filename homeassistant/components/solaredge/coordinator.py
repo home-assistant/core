@@ -1,7 +1,7 @@
 """Provides the data update coordinators for SolarEdge."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import date, datetime, timedelta
 from typing import Any
 
@@ -21,10 +21,10 @@ from .const import (
 )
 
 
-class SolarEdgeDataService:
+class SolarEdgeDataService(ABC):
     """Get and update the latest data."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[None]
 
     def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the data object."""
@@ -262,7 +262,8 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         if "connections" not in power_flow:
             LOGGER.debug(
-                "Missing connections in power flow data. Assuming site does not have any"
+                "Missing connections in power flow data. Assuming site does not"
+                " have any"
             )
             return
 

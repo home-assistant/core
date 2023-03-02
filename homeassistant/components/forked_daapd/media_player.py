@@ -653,8 +653,10 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             futures = []
             for output in self._outputs:
                 futures.append(
-                    self.api.change_output(
-                        output["id"], selected=True, volume=self._tts_volume * 100
+                    asyncio.create_task(
+                        self.api.change_output(
+                            output["id"], selected=True, volume=self._tts_volume * 100
+                        )
                     )
                 )
             await asyncio.wait(futures)
@@ -926,7 +928,8 @@ class ForkedDaapdUpdater:
         else:
             _LOGGER.error("Invalid websocket port")
 
-    def _disconnected_callback(self):
+    async def _disconnected_callback(self):
+        """Send update signals when the websocket gets disconnected."""
         async_dispatcher_send(
             self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), False
         )

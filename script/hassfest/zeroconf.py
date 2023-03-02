@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from homeassistant.loader import async_process_zeroconf_match_dict
+from homeassistant.loader import (
+    async_process_zeroconf_match_dict,
+    homekit_always_discover,
+)
 
 from .model import Config, Integration
 from .serializer import format_python_namespace
@@ -12,14 +15,10 @@ from .serializer import format_python_namespace
 def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate zeroconf data."""
     service_type_dict = defaultdict(list)
-    homekit_dict: dict[str, str] = {}
+    homekit_dict: dict[str, dict[str, str]] = {}
 
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
         service_types = integration.manifest.get("zeroconf", [])
         homekit = integration.manifest.get("homekit", {})
         homekit_models = homekit.get("models", [])
@@ -46,7 +45,12 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
                 )
                 break
 
-            homekit_dict[model] = domain
+            homekit_dict[model] = {
+                "domain": domain,
+                "always_discover": homekit_always_discover(
+                    integration.manifest["iot_class"]
+                ),
+            }
 
     # HomeKit models are matched on starting string, make sure none overlap.
     warned = set()

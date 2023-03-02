@@ -1,5 +1,4 @@
-"""
-Support for Rejseplanen information from rejseplanen.dk.
+"""Support for Rejseplanen information from rejseplanen.dk.
 
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
@@ -15,7 +14,7 @@ import rjpl
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -142,7 +141,7 @@ class RejseplanenTransportSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def icon(self):

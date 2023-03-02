@@ -1,9 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",
-            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
-            "oauth_error": "Prijat\u00e9 neplatn\u00e9 \u00fadaje tokenu."
-        }
-    }
-}

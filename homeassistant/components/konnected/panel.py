@@ -145,8 +145,10 @@ class AlarmPanel:
         self.connect_attempts = 0
         self.connected = True
         _LOGGER.info(
-            "Set up Konnected device %s. Open http://%s:%s in a "
-            "web browser to view device status",
+            (
+                "Set up Konnected device %s. Open http://%s:%s in a "
+                "web browser to view device status"
+            ),
             self.device_id,
             self.host,
             self.port,

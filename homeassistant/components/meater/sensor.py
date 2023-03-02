@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -65,7 +65,7 @@ SENSOR_TYPES = (
         key="ambient",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Ambient",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None,
         value=lambda probe: probe.ambient_temperature,
@@ -75,7 +75,7 @@ SENSOR_TYPES = (
         key="internal",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Internal",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None,
         value=lambda probe: probe.internal_temperature,
@@ -100,7 +100,7 @@ SENSOR_TYPES = (
         key="cook_target_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Target",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.target_temperature
@@ -112,7 +112,7 @@ SENSOR_TYPES = (
         key="cook_peak_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         name="Peak",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.peak_temperature

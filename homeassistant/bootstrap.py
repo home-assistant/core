@@ -27,6 +27,7 @@ from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
     device_registry,
+    entity,
     entity_registry,
     issue_registry,
     recorder,
@@ -118,7 +119,8 @@ async def async_setup_hass(
     )
 
     hass.config.skip_pip = runtime_config.skip_pip
-    if runtime_config.skip_pip:
+    hass.config.skip_pip_packages = runtime_config.skip_pip_packages
+    if runtime_config.skip_pip or runtime_config.skip_pip_packages:
         _LOGGER.warning(
             "Skipping pip installation of required modules. This may cause issues"
         )
@@ -176,6 +178,7 @@ async def async_setup_hass(
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
         hass.config.skip_pip = old_config.skip_pip
+        hass.config.skip_pip_packages = old_config.skip_pip_packages
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
         hass.config.config_dir = old_config.config_dir
@@ -234,6 +237,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         platform.uname().processor  # pylint: disable=expression-not-assigned
 
     # Load the registries and cache the result of platform.uname().processor
+    entity.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
@@ -282,8 +286,7 @@ async def async_from_config_dict(
         return None
     except HomeAssistantError:
         _LOGGER.error(
-            "Home Assistant core failed to initialize. "
-            "Further initialization aborted"
+            "Home Assistant core failed to initialize. Further initialization aborted"
         )
         return None
 
@@ -345,7 +348,7 @@ def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from colorlog import ColoredFormatter
 
             # basicConfig must be called after importing colorlog in order to
@@ -384,7 +387,11 @@ def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
-        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),  # type: ignore[arg-type]
+        exc_info=(  # type: ignore[arg-type]
+            args.exc_type,
+            args.exc_value,
+            args.exc_traceback,
+        ),
     )
 
     # Log errors to a file if we have write access to file or config dir
@@ -401,8 +408,10 @@ def async_enable_logging(
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-
-        err_handler: logging.handlers.RotatingFileHandler | logging.handlers.TimedRotatingFileHandler
+        err_handler: (
+            logging.handlers.RotatingFileHandler
+            | logging.handlers.TimedRotatingFileHandler
+        )
         if log_rotate_days:
             err_handler = logging.handlers.TimedRotatingFileHandler(
                 err_log_path, when="midnight", backupCount=log_rotate_days
@@ -461,7 +470,10 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 
 async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
-    """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+    """Periodic log of setups that are pending.
+
+    Pending for longer than LOG_SLOW_STARTUP_INTERVAL.
+    """
     loop_count = 0
     setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
     previous_was_empty = True

@@ -21,6 +21,7 @@ REQUIRED = 1
 REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
+RE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
 
 # Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
@@ -86,9 +87,7 @@ def find_references(
             find_references(value, f"{prefix}::{key}", found)
             continue
 
-        match = re.match(RE_REFERENCE, value)
-
-        if match:
+        if match := re.match(RE_REFERENCE, value):
             found.append({"source": f"{prefix}::{key}", "ref": match.groups()[0]})
 
 
@@ -106,10 +105,13 @@ def removed_title_validator(
     return value
 
 
-def lowercase_validator(value: str) -> str:
-    """Validate value is lowercase."""
-    if value.lower() != value:
-        raise vol.Invalid("Needs to be lowercase")
+def translation_key_validator(value: str) -> str:
+    """Validate value is valid translation key."""
+    if RE_TRANSLATION_KEY.match(value) is None:
+        raise vol.Invalid(
+            f"Invalid translation key '{value}', need to be [a-z0-9-_]+ and"
+            " cannot start or end with a hyphen or underscore."
+        )
 
     return value
 
@@ -133,6 +135,7 @@ def gen_data_entry_schema(
                 vol.Optional("data"): {str: cv.string_with_no_html},
                 vol.Optional("data_description"): {str: cv.string_with_no_html},
                 vol.Optional("menu_options"): {str: cv.string_with_no_html},
+                vol.Optional("submit"): cv.string_with_no_html,
             }
         },
         vol.Optional("error"): {str: cv.string_with_no_html},
@@ -214,6 +217,14 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 flow_title=UNDEFINED,
                 require_step_title=False,
             ),
+            vol.Optional("selector"): cv.schema_with_slug_keys(
+                {
+                    "options": cv.schema_with_slug_keys(
+                        cv.string_with_no_html, slug_validator=translation_key_validator
+                    )
+                },
+                slug_validator=vol.Any("_", cv.slug),
+            ),
             vol.Optional("device_automation"): {
                 vol.Optional("action_type"): {str: cv.string_with_no_html},
                 vol.Optional("condition_type"): {str: cv.string_with_no_html},
@@ -221,15 +232,32 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 vol.Optional("trigger_subtype"): {str: cv.string_with_no_html},
             },
             vol.Optional("state"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
+                cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=translation_key_validator
+                ),
+                slug_validator=vol.Any("_", cv.slug),
+            ),
+            vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    {
+                        vol.Optional("name"): str,
+                        vol.Optional("state"): cv.schema_with_slug_keys(
+                            cv.string_with_no_html,
+                            slug_validator=translation_key_validator,
+                        ),
+                    },
+                    slug_validator=translation_key_validator,
+                ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
             vol.Optional("system_health"): {
-                vol.Optional("info"): {str: cv.string_with_no_html}
+                vol.Optional("info"): cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=translation_key_validator
+                ),
             },
             vol.Optional("config_panel"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(
-                    cv.string_with_no_html, slug_validator=lowercase_validator
+                    cv.string_with_no_html, slug_validator=translation_key_validator
                 ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
@@ -255,6 +283,25 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     ),
                 )
             },
+            vol.Optional("entity"): {
+                str: {
+                    str: {
+                        vol.Optional("state_attributes"): {
+                            str: {
+                                vol.Optional("name"): cv.string_with_no_html,
+                                vol.Optional("state"): cv.schema_with_slug_keys(
+                                    cv.string_with_no_html,
+                                    slug_validator=translation_key_validator,
+                                ),
+                            }
+                        },
+                        vol.Optional("state"): cv.schema_with_slug_keys(
+                            cv.string_with_no_html,
+                            slug_validator=translation_key_validator,
+                        ),
+                    }
+                }
+            },
         }
     )
 
@@ -269,6 +316,22 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
                     integration=integration,
                     flow_title=REQUIRED,
                     require_step_title=True,
+                )
+            }
+        }
+    )
+
+
+def gen_ha_hardware_schema(config: Config, integration: Integration):
+    """Generate auth schema."""
+    return vol.Schema(
+        {
+            str: {
+                vol.Optional("options"): gen_data_entry_schema(
+                    config=config,
+                    integration=integration,
+                    flow_title=UNDEFINED,
+                    require_step_title=False,
                 )
             }
         }
@@ -311,7 +374,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration) -> vol
     return vol.Schema(
         {
             vol.Optional("state"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
+                cv.schema_with_slug_keys(str, slug_validator=translation_key_validator),
                 slug_validator=device_class_validator,
             )
         }
@@ -351,6 +414,8 @@ def validate_translation_file(  # noqa: C901
                 )
             }
         )
+    elif integration.domain == "homeassistant_hardware":
+        strings_schema = gen_ha_hardware_schema(config, integration)
     else:
         strings_schema = gen_strings_schema(config, integration)
 

@@ -80,7 +80,8 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             raise ConfigEntryError("Invalid username or Smile ID") from err
         except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
-                "Invalid XML data, or error indication received for the Plugwise Adam/Smile/Stretch"
+                "Invalid XML data, or error indication received for the Plugwise"
+                " Adam/Smile/Stretch"
             ) from err
         except UnsupportedDeviceError as err:
             raise ConfigEntryError("Device with unsupported firmware") from err

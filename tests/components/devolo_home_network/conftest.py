@@ -8,7 +8,7 @@ from .const import DISCOVERY_INFO, IP
 from .mock import MockDevice
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_device():
     """Mock connecting to a devolo home network device."""
     device = MockDevice(ip=IP)

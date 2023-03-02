@@ -7,7 +7,12 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -17,7 +22,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
-    DATA_RATE_MEGABYTES_PER_SECOND,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -33,7 +38,14 @@ DEFAULT_PORT = 8000
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND]}
+SENSOR_TYPES = {
+    "speed": SensorEntityDescription(
+        key="speed",
+        name="Speed",
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+    )
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,7 +90,7 @@ def setup_platform(
     devices = []
     for ng_type in monitored_types:
         new_sensor = PyLoadSensor(
-            api=pyloadapi, sensor_type=SENSOR_TYPES.get(ng_type), client_name=name
+            api=pyloadapi, sensor_type=SENSOR_TYPES[ng_type], client_name=name
         )
         devices.append(new_sensor)
 
@@ -88,28 +100,14 @@ def setup_platform(
 class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
-    def __init__(self, api, sensor_type, client_name):
+    def __init__(
+        self, api: PyLoadAPI, sensor_type: SensorEntityDescription, client_name
+    ) -> None:
         """Initialize a new pyLoad sensor."""
-        self._name = f"{client_name} {sensor_type[1]}"
-        self.type = sensor_type[0]
+        self._attr_name = f"{client_name} {sensor_type.name}"
+        self.type = sensor_type.key
         self.api = api
-        self._state = None
-        self._unit_of_measurement = sensor_type[2]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self.entity_description = sensor_type
 
     def update(self) -> None:
         """Update state of sensor."""
@@ -121,7 +119,7 @@ class PyLoadSensor(SensorEntity):
 
         if self.api.status is None:
             _LOGGER.debug(
-                "Update of %s requested, but no status is available", self._name
+                "Update of %s requested, but no status is available", self.name
             )
             return
 
@@ -131,9 +129,9 @@ class PyLoadSensor(SensorEntity):
 
         if "speed" in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            self._state = round(value / 2**20, 2)
+            self._attr_native_value = round(value / 2**20, 2)
         else:
-            self._state = value
+            self._attr_native_value = value
 
 
 class PyLoadAPI:

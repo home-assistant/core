@@ -21,24 +21,22 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
-from tests.common import MockConfigEntry
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_brightness(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric display brightness controls."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("number.frenck_s_lametric_brightness")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
@@ -84,13 +82,11 @@ async def test_brightness(
 
 async def test_volume(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric volume controls."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
@@ -135,7 +131,6 @@ async def test_volume(
 
 async def test_number_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test error handling of the LaMetric numbers."""
@@ -166,7 +161,6 @@ async def test_number_error(
 
 async def test_number_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test connection error handling of the LaMetric numbers."""

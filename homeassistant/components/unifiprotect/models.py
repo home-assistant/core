@@ -5,9 +5,9 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar, cast
 
-from pyunifiprotect.data import NVR, ProtectAdoptableDeviceModel
+from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
 
@@ -15,7 +15,7 @@ from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=Union[ProtectAdoptableDeviceModel, NVR])
+T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
 
 
 class PermRequired(int, Enum):
@@ -53,6 +53,53 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
         if self.ufp_enabled is not None:
             return bool(get_nested_attr(obj, self.ufp_enabled))
         return True
+
+    def has_required(self, obj: T) -> bool:
+        """Return if has required field."""
+
+        if self.ufp_required_field is None:
+            return True
+        return bool(get_nested_attr(obj, self.ufp_required_field))
+
+
+@dataclass
+class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
+    """Mixin for events."""
+
+    ufp_event_obj: str | None = None
+    ufp_smart_type: str | None = None
+
+    def get_event_obj(self, obj: T) -> Event | None:
+        """Return value from UniFi Protect device."""
+
+        if self.ufp_event_obj is not None:
+            return cast(Event, get_nested_attr(obj, self.ufp_event_obj))
+        return None
+
+    def get_is_on(self, obj: T) -> bool:
+        """Return value if event is active."""
+
+        value = bool(self.get_ufp_value(obj))
+        if value:
+            event = self.get_event_obj(obj)
+            value = event is not None
+            if not value:
+                _LOGGER.debug("%s (%s): missing event", self.name, obj.mac)
+
+            if event is not None and self.ufp_smart_type is not None:
+                value = self.ufp_smart_type in event.smart_detect_types
+                if not value:
+                    _LOGGER.debug(
+                        "%s (%s): %s not in %s",
+                        self.name,
+                        obj.mac,
+                        self.ufp_smart_type,
+                        event.smart_detect_types,
+                    )
+
+        if value:
+            _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)
+        return value
 
 
 @dataclass

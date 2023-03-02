@@ -409,7 +409,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Prevent the device from keep running if HVACMode.OFF."""
         if self._hvac_mode == HVACMode.OFF and self._is_device_active:
             _LOGGER.warning(
-                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
+                (
+                    "The climate mode is OFF, but the switch device is ON. Turning off"
+                    " device %s"
+                ),
                 self.heater_entity_id,
             )
             await self._async_heater_turn_off()
@@ -445,8 +448,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             ):
                 self._active = True
                 _LOGGER.info(
-                    "Obtained current and target temperature. "
-                    "Generic thermostat active. %s, %s",
+                    (
+                        "Obtained current and target temperature. "
+                        "Generic thermostat active. %s, %s"
+                    ),
                     self._cur_temp,
                     self._target_temp,
                 )
@@ -526,7 +531,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Set new preset mode."""
         if preset_mode not in (self.preset_modes or []):
             raise ValueError(
-                f"Got unsupported preset_mode {preset_mode}. Must be one of {self.preset_modes}"
+                f"Got unsupported preset_mode {preset_mode}. Must be one of"
+                f" {self.preset_modes}"
             )
         if preset_mode == self._attr_preset_mode:
             # I don't think we need to call async_write_ha_state if we didn't change the state

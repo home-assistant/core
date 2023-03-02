@@ -13,12 +13,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
     data = defaultdict(list)
 
     for domain in sorted(integrations):
-        integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
-        ssdp = integration.manifest.get("ssdp")
+        ssdp = integrations[domain].manifest.get("ssdp")
 
         if not ssdp:
             continue

@@ -52,7 +52,7 @@
       "bad_certificate": "The CA certificate is invalid",
       "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
       "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
-      "bad_client_cert_key": "Client certificate and private are no valid pair",
+      "bad_client_cert_key": "Client certificate and private key are not a valid pair",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_inclusion": "The client certificate and private key must be configurered together"
@@ -135,6 +135,15 @@
       "bad_ws_headers": "[%key:component::mqtt::config::error::bad_ws_headers%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_inclusion": "[%key:component::mqtt::config::error::invalid_inclusion%]"
+    }
+  },
+  "selector": {
+    "set_ca_cert": {
+      "options": {
+        "off": "Off",
+        "auto": "Auto",
+        "custom": "Custom"
+      }
     }
   }
 }

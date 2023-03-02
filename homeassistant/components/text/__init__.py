@@ -1,7 +1,7 @@
 """Component to allow setting text as platforms."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import timedelta
 import logging
 import re
@@ -20,6 +20,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -64,15 +65,16 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
     value = service_call.data[ATTR_VALUE]
     if len(value) < entity.min:
         raise ValueError(
-            f"Value {value} for {entity.name} is too short (minimum length {entity.min})"
+            f"Value {value} for {entity.entity_id} is too short (minimum length"
+            f" {entity.min})"
         )
     if len(value) > entity.max:
         raise ValueError(
-            f"Value {value} for {entity.name} is too long (maximum length {entity.max})"
+            f"Value {value} for {entity.entity_id} is too long (maximum length {entity.max})"
         )
     if entity.pattern_cmp and not entity.pattern_cmp.match(value):
         raise ValueError(
-            f"Value {value} for {entity.name} doesn't match pattern {entity.pattern}"
+            f"Value {value} for {entity.entity_id} doesn't match pattern {entity.pattern}"
         )
     await entity.async_set_value(value)
 
@@ -222,3 +224,47 @@ class TextEntity(Entity):
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
         await self.hass.async_add_executor_job(self.set_value, value)
+
+
+@dataclass
+class TextExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    native_value: str | None
+    native_min: int
+    native_max: int
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the text data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> TextExtraStoredData | None:
+        """Initialize a stored text state from a dict."""
+        try:
+            return cls(
+                restored["native_value"],
+                restored["native_min"],
+                restored["native_max"],
+            )
+        except KeyError:
+            return None
+
+
+class RestoreText(TextEntity, RestoreEntity):
+    """Mixin class for restoring previous text state."""
+
+    @property
+    def extra_restore_state_data(self) -> TextExtraStoredData:
+        """Return text specific state data to be restored."""
+        return TextExtraStoredData(
+            self.native_value,
+            self.native_min,
+            self.native_max,
+        )
+
+    async def async_get_last_text_data(self) -> TextExtraStoredData | None:
+        """Restore attributes."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return TextExtraStoredData.from_dict(restored_last_extra_data.as_dict())

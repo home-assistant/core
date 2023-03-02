@@ -20,14 +20,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_SCAN_INTERVAL,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_NEST, DOMAIN, SIGNAL_NEST_UPDATE
 
@@ -63,14 +61,9 @@ PRESET_AWAY_AND_ECO = "Away and Eco"
 PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO, PRESET_AWAY_AND_ECO]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Nest thermostat.
-
-    No longer in use.
-    """
-
-
-async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_legacy_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 
@@ -341,6 +334,6 @@ class NestThermostat(ClimateEntity):
         self._max_temperature = self.device.max_temperature
         self._is_locked = self.device.is_locked
         if self.device.temperature_scale == "C":
-            self._temperature_scale = TEMP_CELSIUS
+            self._temperature_scale = UnitOfTemperature.CELSIUS
         else:
-            self._temperature_scale = TEMP_FAHRENHEIT
+            self._temperature_scale = UnitOfTemperature.FAHRENHEIT

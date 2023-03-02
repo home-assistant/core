@@ -27,12 +27,12 @@ CONF_TRANSPORT = "transport"
 CONF_WS_PATH = "ws_path"
 CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
+CONF_PAYLOAD_RESET = "payload_reset"
 
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
-CONF_TLS_VERSION = "tls_version"
 
 DATA_MQTT = "mqtt"
 
@@ -40,6 +40,7 @@ DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
 DEFAULT_DISCOVERY = True
 DEFAULT_ENCODING = "utf-8"
+DEFAULT_OPTIMISTIC = False
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_AVAILABLE = "online"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
@@ -54,7 +55,6 @@ SUPPORTED_PROTOCOLS = [PROTOCOL_31, PROTOCOL_311, PROTOCOL_5]
 
 TRANSPORT_TCP = "tcp"
 TRANSPORT_WEBSOCKETS = "websockets"
-SUPPORTED_TRANSPORTS = [TRANSPORT_TCP, TRANSPORT_WEBSOCKETS]
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
@@ -101,6 +101,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
 ]
@@ -122,6 +123,7 @@ RELOADABLE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
 ]

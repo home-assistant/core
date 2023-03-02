@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     PERCENTAGE,
-    TIME_HOURS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -46,7 +46,7 @@ CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
 UNITS: dict[str, str] = {
-    CONF_TYPE_TIME: TIME_HOURS,
+    CONF_TYPE_TIME: UnitOfTime.HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
     CONF_TYPE_COUNT: "",
 }

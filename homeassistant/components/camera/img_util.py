@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
 
@@ -38,7 +38,10 @@ def find_supported_scaling_factor(
 
 
 def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
-    """Scale a camera image as close as possible to one of the supported scaling factors."""
+    """Scale a camera image.
+
+    Scale as close as possible to one of the supported scaling factors.
+    """
     turbo_jpeg = TurboJPEGSingleton.instance()
     if not turbo_jpeg:
         return cam_image.content
@@ -67,18 +70,17 @@ def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
 
 
 class TurboJPEGSingleton:
-    """
-    Load TurboJPEG only once.
+    """Load TurboJPEG only once.
 
     Ensures we do not log load failures each snapshot
     since camera image fetches happen every few
     seconds.
     """
 
-    __instance = None
+    __instance: TurboJPEG | Literal[False] | None = None
 
     @staticmethod
-    def instance() -> TurboJPEG:
+    def instance() -> TurboJPEG | Literal[False] | None:
         """Singleton for TurboJPEG."""
         if TurboJPEGSingleton.__instance is None:
             TurboJPEGSingleton()
