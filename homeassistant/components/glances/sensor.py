@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -257,7 +257,7 @@ async def async_setup_entry(
         hass: HomeAssistant, old_unique_id: str, new_key: str
     ) -> None:
         """Migrate unique IDs to the new format."""
-        ent_reg = entity_registry.async_get(hass)
+        ent_reg = er.async_get(hass)
 
         if entity_id := ent_reg.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_unique_id

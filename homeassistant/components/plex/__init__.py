@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
@@ -289,17 +289,15 @@ async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None
 @callback
 def async_cleanup_plex_devices(hass, entry):
     """Clean up old and invalid devices from the registry."""
-    device_registry = dev_reg.async_get(hass)
-    entity_registry = ent_reg.async_get(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
-    device_entries = dev_reg.async_entries_for_config_entry(
-        device_registry, entry.entry_id
-    )
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     for device_entry in device_entries:
         if (
             len(
-                ent_reg.async_entries_for_device(
+                er.async_entries_for_device(
                     entity_registry, device_entry.id, include_disabled_entities=True
                 )
             )

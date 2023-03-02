@@ -1,7 +1,7 @@
 {
   "domain": "actiontec",
   "name": "Actiontec",
-  "documentation": "https://www.home-assistant.io/integrations/actiontec",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/actiontec",
   "iot_class": "local_polling"
 }

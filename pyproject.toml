@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.3.0.dev0"
+version     = "2023.4.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.10.0"
 dependencies    = [
-    "aiohttp==3.8.1",
+    "aiohttp==3.8.4",
     "astral==2.2",
     "async_timeout==4.0.2",
     "attrs==22.2.0",
@@ -35,23 +35,24 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.23.3",
-    "home-assistant-bluetooth==1.9.2",
+    "home-assistant-bluetooth==1.9.3",
     "ifaddr==0.1.7",
     "jinja2==3.1.2",
     "lru-dict==1.1.8",
     "PyJWT==2.5.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==39.0.0",
+    "cryptography==39.0.1",
     # pyOpenSSL 23.0.0 is required to work with cryptography 39+
     "pyOpenSSL==23.0.0",
-    "orjson==3.8.5",
+    "orjson==3.8.7",
     "pip>=21.0,<23.1",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
-    "requests==2.28.1",
-    "typing-extensions>=4.4.0,<5.0",
+    "requests==2.28.2",
+    "typing-extensions>=4.5.0,<5.0",
+    "ulid-transform==0.4.0",
     "voluptuous==0.13.1",
-    "voluptuous-serialize==2.5.0",
+    "voluptuous-serialize==2.6.0",
     "yarl==1.8.1",
 ]
 
@@ -74,7 +75,6 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.black]
-target-version = ["py310"]
 extend-exclude = "/generated/"
 
 [tool.isort]
@@ -112,7 +112,6 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "hass_constructor",
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
@@ -164,9 +163,6 @@ good-names = [
 # Pylint CodeStyle plugin
 # consider-using-namedtuple-or-dataclass - too opinionated
 # consider-using-assignment-expr - decision to use := better left to devs
-# ---
-# Temporary for the Python 3.10 update, remove with mypy v1.0
-# consider-alternative-union-syntax
 disable = [
     "format",
     "abstract-method",
@@ -191,7 +187,6 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
-    "consider-alternative-union-syntax",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
@@ -240,23 +235,31 @@ norecursedirs = [
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
+filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
 
 [tool.ruff]
 target-version = "py310"
 
 select = [
+    "B007", # Loop control variable {name} not used within loop body
+    "B014", # Exception handler with duplicate exception
     "C",  # complexity
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
+    "ICN001", # import concentions; {name} should be imported as {asname}
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117", # Merge with-statements that use the same scope
+    "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
+    "SIM201", # Use {left} != {right} instead of not {left} == {right}
+    "SIM212", # Use {a} if {a} else {b} instead of {b} if not {a} else {a}
     "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
     "SIM401", # Use get from dict with default instead of an if block
     "T20",  # flake8-print
     "TRY004", # Prefer TypeError exception for invalid type
+    "RUF006", # Store a reference to the return value of asyncio.create_task
     "UP",  # pyupgrade
     "W",  # pycodestyle
 ]
@@ -268,10 +271,17 @@ ignore = [
     "D404",  # First word of the docstring should not be This
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
-    "D411",  # Missing blank line before section
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
 ]
+
+[tool.ruff.flake8-import-conventions.extend-aliases]
+voluptuous = "vol"
+"homeassistant.helpers.area_registry" = "ar"
+"homeassistant.helpers.config_validation" = "cv"
+"homeassistant.helpers.device_registry" = "dr"
+"homeassistant.helpers.entity_registry" = "er"
+"homeassistant.helpers.issue_registry" = "ir"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

@@ -6,18 +6,20 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder import Recorder, get_instance
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
     list_statistic_ids,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -26,7 +28,9 @@ def mock_history(hass):
     hass.config.components.add("history")
 
 
-async def test_demo_statistics(recorder_mock, mock_history, hass):
+async def test_demo_statistics(
+    recorder_mock: Recorder, mock_history, hass: HomeAssistant
+) -> None:
     """Test that the kitchen sink component makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -58,7 +62,9 @@ async def test_demo_statistics(recorder_mock, mock_history, hass):
     } in statistic_ids
 
 
-async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
+async def test_demo_statistics_growth(
+    recorder_mock: Recorder, mock_history, hass: HomeAssistant
+) -> None:
     """Test that the kitchen sink sum statistics adds to the previous state."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
@@ -96,7 +102,12 @@ async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
 
 
-async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
+async def test_issues_created(
+    mock_history,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test issues are created and can be fixed."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

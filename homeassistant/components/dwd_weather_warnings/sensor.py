@@ -113,7 +113,7 @@ class DwdWeatherWarningsSensor(SensorEntity):
         api,
         name,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self.entity_description = description

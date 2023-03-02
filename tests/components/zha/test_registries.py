@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 
 import homeassistant.components.zha.core.registries as registries
+from homeassistant.helpers import entity_registry as er
 
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
@@ -26,7 +27,7 @@ def channels(channel):
 
 
 @pytest.mark.parametrize(
-    "rule, matched",
+    ("rule", "matched"),
     [
         (registries.MatchRule(), False),
         (registries.MatchRule(channel_names={"level"}), True),
@@ -125,13 +126,13 @@ def channels(channel):
         ),
     ],
 )
-def test_registry_matching(rule, matched, channels):
+def test_registry_matching(rule, matched, channels) -> None:
     """Test strict rule matching."""
     assert rule.strict_matched(MANUFACTURER, MODEL, channels) is matched
 
 
 @pytest.mark.parametrize(
-    "rule, matched",
+    ("rule", "matched"),
     [
         (registries.MatchRule(), False),
         (registries.MatchRule(channel_names={"level"}), True),
@@ -208,12 +209,12 @@ def test_registry_matching(rule, matched, channels):
         ),
     ],
 )
-def test_registry_loose_matching(rule, matched, channels):
+def test_registry_loose_matching(rule, matched, channels) -> None:
     """Test loose rule matching."""
     assert rule.loose_matched(MANUFACTURER, MODEL, channels) is matched
 
 
-def test_match_rule_claim_channels_color(channel):
+def test_match_rule_claim_channels_color(channel) -> None:
     """Test channel claiming."""
     ch_color = channel("color", 0x300)
     ch_level = channel("level", 8)
@@ -225,7 +226,7 @@ def test_match_rule_claim_channels_color(channel):
 
 
 @pytest.mark.parametrize(
-    "rule, match",
+    ("rule", "match"),
     [
         (registries.MatchRule(channel_names={"level"}), {"level"}),
         (registries.MatchRule(channel_names={"level", "no match"}), {"level"}),
@@ -245,7 +246,7 @@ def test_match_rule_claim_channels_color(channel):
         (registries.MatchRule(channel_names={"color"}), set()),
     ],
 )
-def test_match_rule_claim_channels(rule, match, channel, channels):
+def test_match_rule_claim_channels(rule, match, channel, channels) -> None:
     """Test channel claiming."""
     ch_basic = channel("basic", 0)
     channels.append(ch_basic)
@@ -263,7 +264,7 @@ def entity_registry():
 
 
 @pytest.mark.parametrize(
-    "manufacturer, model, match_name",
+    ("manufacturer", "model", "match_name"),
     (
         ("random manufacturer", "random model", "OnOff"),
         ("random manufacturer", MODEL, "OnOffModel"),
@@ -272,7 +273,9 @@ def entity_registry():
         (MANUFACTURER, "some model", "OnOffMultimodel"),
     ),
 )
-def test_weighted_match(channel, entity_registry, manufacturer, model, match_name):
+def test_weighted_match(
+    channel, entity_registry: er.EntityRegistry, manufacturer, model, match_name
+) -> None:
     """Test weightedd match."""
 
     s = mock.sentinel
@@ -316,7 +319,7 @@ def test_weighted_match(channel, entity_registry, manufacturer, model, match_nam
     assert claimed == [ch_on_off]
 
 
-def test_multi_sensor_match(channel, entity_registry):
+def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None:
     """Test multi-entity match."""
 
     s = mock.sentinel

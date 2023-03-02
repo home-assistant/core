@@ -43,6 +43,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
     },
     {
+        "domain": "dormakaba_dkey",
+        "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897",
+    },
+    {
+        "domain": "dormakaba_dkey",
+        "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897",
+    },
+    {
         "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
@@ -224,6 +232,19 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "ld2410_ble",
         "local_name": "HLK-LD2410B_*",
+    },
+    {
+        "domain": "ld2410_ble",
+        "local_name": "HLK-LD2410_*",
+    },
+    {
+        "domain": "ld2410_ble",
+        "manufacturer_data_start": [
+            7,
+            1,
+        ],
+        "manufacturer_id": 256,
+        "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb",
     },
     {
         "domain": "led_ble",

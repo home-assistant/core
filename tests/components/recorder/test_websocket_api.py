@@ -10,6 +10,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import recorder
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
@@ -19,6 +20,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -33,6 +35,7 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
@@ -126,7 +129,7 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
 }
 
 
-def test_converters_align_with_sensor():
+def test_converters_align_with_sensor() -> None:
     """Ensure UNIT_SCHEMA is aligned with sensor UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
         assert converter.UNIT_CLASS in UNIT_SCHEMA.schema
@@ -135,7 +138,9 @@ def test_converters_align_with_sensor():
         assert any(c for c in UNIT_CONVERTERS.values() if unit_class == c.UNIT_CLASS)
 
 
-async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
+async def test_statistics_during_period(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
@@ -214,7 +219,12 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
 
 @freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
 @pytest.mark.parametrize("offset", (0, 1, 2))
-async def test_statistic_during_period(recorder_mock, hass, hass_ws_client, offset):
+async def test_statistic_during_period(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    offset,
+) -> None:
     """Test statistic_during_period."""
     id = 1
 
@@ -623,7 +633,9 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client, offs
 
 
 @freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
-async def test_statistic_during_period_hole(recorder_mock, hass, hass_ws_client):
+async def test_statistic_during_period_hole(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test statistic_during_period when there are holes in the data."""
     id = 1
 
@@ -785,7 +797,7 @@ async def test_statistic_during_period_hole(recorder_mock, hass, hass_ws_client)
 
 @freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
 @pytest.mark.parametrize(
-    "calendar_period, start_time, end_time",
+    ("calendar_period", "start_time", "end_time"),
     (
         (
             {"period": "hour"},
@@ -840,8 +852,13 @@ async def test_statistic_during_period_hole(recorder_mock, hass, hass_ws_client)
     ),
 )
 async def test_statistic_during_period_calendar(
-    recorder_mock, hass, hass_ws_client, calendar_period, start_time, end_time
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    calendar_period,
+    start_time,
+    end_time,
+) -> None:
     """Test statistic_during_period."""
     client = await hass_ws_client()
 
@@ -868,7 +885,7 @@ async def test_statistic_during_period_calendar(
 
 
 @pytest.mark.parametrize(
-    "attributes, state, value, custom_units, converted_value",
+    ("attributes", "state", "value", "custom_units", "converted_value"),
     [
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
@@ -889,15 +906,15 @@ async def test_statistic_during_period_calendar(
     ],
 )
 async def test_statistics_during_period_unit_conversion(
-    recorder_mock,
-    hass,
-    hass_ws_client,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     attributes,
     state,
     value,
     custom_units,
     converted_value,
-):
+) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
@@ -968,7 +985,7 @@ async def test_statistics_during_period_unit_conversion(
 
 
 @pytest.mark.parametrize(
-    "attributes, state, value, custom_units, converted_value",
+    ("attributes", "state", "value", "custom_units", "converted_value"),
     [
         (ENERGY_SENSOR_KWH_ATTRIBUTES, 10, 10, {"energy": "kWh"}, 10),
         (ENERGY_SENSOR_KWH_ATTRIBUTES, 10, 10, {"energy": "MWh"}, 0.010),
@@ -980,15 +997,15 @@ async def test_statistics_during_period_unit_conversion(
     ],
 )
 async def test_sum_statistics_during_period_unit_conversion(
-    recorder_mock,
-    hass,
-    hass_ws_client,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     attributes,
     state,
     value,
     custom_units,
     converted_value,
-):
+) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
@@ -1071,8 +1088,11 @@ async def test_sum_statistics_during_period_unit_conversion(
     ],
 )
 async def test_statistics_during_period_invalid_unit_conversion(
-    recorder_mock, hass, hass_ws_client, custom_units
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    custom_units,
+) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
@@ -1087,6 +1107,7 @@ async def test_statistics_during_period_invalid_unit_conversion(
             "id": 1,
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
         }
     )
@@ -1100,6 +1121,7 @@ async def test_statistics_during_period_invalid_unit_conversion(
             "id": 2,
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
             "units": custom_units,
         }
@@ -1110,8 +1132,8 @@ async def test_statistics_during_period_invalid_unit_conversion(
 
 
 async def test_statistics_during_period_in_the_past(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test statistics_during_period in the past."""
     hass.config.set_time_zone("UTC")
     now = dt_util.utcnow().replace()
@@ -1231,8 +1253,8 @@ async def test_statistics_during_period_in_the_past(
 
 
 async def test_statistics_during_period_bad_start_time(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test statistics_during_period."""
     client = await hass_ws_client()
     await client.send_json(
@@ -1240,6 +1262,7 @@ async def test_statistics_during_period_bad_start_time(
             "id": 1,
             "type": "recorder/statistics_during_period",
             "start_time": "cats",
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
         }
     )
@@ -1249,8 +1272,8 @@ async def test_statistics_during_period_bad_start_time(
 
 
 async def test_statistics_during_period_bad_end_time(
-    recorder_mock, hass, hass_ws_client
-):
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
@@ -1261,6 +1284,7 @@ async def test_statistics_during_period_bad_end_time(
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
             "end_time": "dogs",
+            "statistic_ids": ["sensor.test"],
             "period": "5minute",
         }
     )
@@ -1269,8 +1293,51 @@ async def test_statistics_during_period_bad_end_time(
     assert response["error"]["code"] == "invalid_end_time"
 
 
+async def test_statistics_during_period_no_statistic_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test statistics_during_period without passing statistic_ids."""
+    now = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": (now + timedelta(seconds=1)).isoformat(),
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
+async def test_statistics_during_period_empty_statistic_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test statistics_during_period with passing an empty list of statistic_ids."""
+    now = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": [],
+            "end_time": (now + timedelta(seconds=1)).isoformat(),
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
 @pytest.mark.parametrize(
-    "units, attributes, display_unit, statistics_unit, unit_class",
+    ("units", "attributes", "display_unit", "statistics_unit", "unit_class"),
     [
         (US_CUSTOMARY_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
@@ -1327,15 +1394,15 @@ async def test_statistics_during_period_bad_end_time(
     ],
 )
 async def test_list_statistic_ids(
-    recorder_mock,
-    hass,
-    hass_ws_client,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     units,
     attributes,
     display_unit,
     statistics_unit,
     unit_class,
-):
+) -> None:
     """Test list_statistic_ids."""
     now = dt_util.utcnow()
     has_mean = attributes["state_class"] == "measurement"
@@ -1442,7 +1509,7 @@ async def test_list_statistic_ids(
 
 
 @pytest.mark.parametrize(
-    "attributes, attributes2, display_unit, statistics_unit, unit_class",
+    ("attributes", "attributes2", "display_unit", "statistics_unit", "unit_class"),
     [
         (
             DISTANCE_SENSOR_M_ATTRIBUTES,
@@ -1491,15 +1558,15 @@ async def test_list_statistic_ids(
     ],
 )
 async def test_list_statistic_ids_unit_change(
-    recorder_mock,
-    hass,
-    hass_ws_client,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     attributes,
     attributes2,
     display_unit,
     statistics_unit,
     unit_class,
-):
+) -> None:
     """Test list_statistic_ids."""
     now = dt_util.utcnow()
     has_mean = attributes["state_class"] == "measurement"
@@ -1556,7 +1623,9 @@ async def test_list_statistic_ids_unit_change(
     ]
 
 
-async def test_validate_statistics(recorder_mock, hass, hass_ws_client):
+async def test_validate_statistics(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test validate_statistics can be called."""
     id = 1
 
@@ -1578,7 +1647,9 @@ async def test_validate_statistics(recorder_mock, hass, hass_ws_client):
     await assert_validation_result(client, {})
 
 
-async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
+async def test_clear_statistics(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test removing statistics."""
     now = dt_util.utcnow()
 
@@ -1604,6 +1675,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
             "id": 1,
             "type": "recorder/statistics_during_period",
             "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test1", "sensor.test2", "sensor.test3"],
             "period": "5minute",
         }
     )
@@ -1665,6 +1737,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
         {
             "id": 3,
             "type": "recorder/statistics_during_period",
+            "statistic_ids": ["sensor.test1", "sensor.test2", "sensor.test3"],
             "start_time": now.isoformat(),
             "period": "5minute",
         }
@@ -1689,6 +1762,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
         {
             "id": 5,
             "type": "recorder/statistics_during_period",
+            "statistic_ids": ["sensor.test1", "sensor.test2", "sensor.test3"],
             "start_time": now.isoformat(),
             "period": "5minute",
         }
@@ -1699,12 +1773,17 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
 
 
 @pytest.mark.parametrize(
-    "new_unit, new_unit_class, new_display_unit",
+    ("new_unit", "new_unit_class", "new_display_unit"),
     [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
 )
 async def test_update_statistics_metadata(
-    recorder_mock, hass, hass_ws_client, new_unit, new_unit_class, new_display_unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    new_unit,
+    new_unit_class,
+    new_display_unit,
+) -> None:
     """Test removing statistics."""
     now = dt_util.utcnow()
 
@@ -1795,7 +1874,9 @@ async def test_update_statistics_metadata(
     }
 
 
-async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
+async def test_change_statistics_unit(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test change unit of recorded statistics."""
     now = dt_util.utcnow()
 
@@ -1914,8 +1995,11 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
 
 
 async def test_change_statistics_unit_errors(
-    recorder_mock, hass, hass_ws_client, caplog
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test change unit of recorded statistics."""
     now = dt_util.utcnow()
     ws_id = 0
@@ -2031,7 +2115,9 @@ async def test_change_statistics_unit_errors(
     await assert_statistics(expected_statistics)
 
 
-async def test_recorder_info(recorder_mock, hass, hass_ws_client):
+async def test_recorder_info(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting recorder status."""
     client = await hass_ws_client()
 
@@ -2051,7 +2137,9 @@ async def test_recorder_info(recorder_mock, hass, hass_ws_client):
     }
 
 
-async def test_recorder_info_no_recorder(hass, hass_ws_client):
+async def test_recorder_info_no_recorder(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting recorder status when recorder is not present."""
     client = await hass_ws_client()
 
@@ -2061,7 +2149,9 @@ async def test_recorder_info_no_recorder(hass, hass_ws_client):
     assert response["error"]["code"] == "unknown_command"
 
 
-async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
+async def test_recorder_info_bad_recorder_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting recorder status when recorder is not started."""
     config = {recorder.CONF_DB_URL: "sqlite://no_file", recorder.CONF_DB_RETRY_WAIT: 0}
 
@@ -2085,7 +2175,9 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     assert response["result"]["thread_running"] is False
 
 
-async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
+async def test_recorder_info_migration_queue_exhausted(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test getting recorder status when recorder queue is exhausted."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
@@ -2148,8 +2240,10 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
 
 
 async def test_backup_start_no_recorder(
-    hass, hass_ws_client, hass_supervisor_access_token
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
     """Test getting backup start when recorder is not present."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
@@ -2160,10 +2254,14 @@ async def test_backup_start_no_recorder(
 
 
 async def test_backup_start_timeout(
-    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_access_token: str,
+    recorder_db_url: str,
+) -> None:
     """Test getting backup start when recorder is not present."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
@@ -2183,8 +2281,11 @@ async def test_backup_start_timeout(
 
 
 async def test_backup_end(
-    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
     """Test backup start."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
@@ -2201,10 +2302,14 @@ async def test_backup_end(
 
 
 async def test_backup_end_without_start(
-    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_access_token: str,
+    recorder_db_url: str,
+) -> None:
     """Test backup start."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
@@ -2220,7 +2325,7 @@ async def test_backup_end_without_start(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit, unit_class",
+    ("units", "attributes", "unit", "unit_class"),
     [
         (METRIC_SYSTEM, ENERGY_SENSOR_KWH_ATTRIBUTES, "kWh", "energy"),
         (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "kWh", "energy"),
@@ -2239,8 +2344,14 @@ async def test_backup_end_without_start(
     ],
 )
 async def test_get_statistics_metadata(
-    recorder_mock, hass, hass_ws_client, units, attributes, unit, unit_class
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+    unit_class,
+) -> None:
     """Test get_statistics_metadata."""
     now = dt_util.utcnow()
     has_mean = attributes["state_class"] == "measurement"
@@ -2380,15 +2491,20 @@ async def test_get_statistics_metadata(
 
 
 @pytest.mark.parametrize(
-    "source, statistic_id",
+    ("source", "statistic_id"),
     (
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
     ),
 )
 async def test_import_statistics(
-    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    source,
+    statistic_id,
+) -> None:
     """Test importing statistics."""
     client = await hass_ws_client()
 
@@ -2438,8 +2554,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": (period1 + timedelta(hours=1)),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2448,8 +2564,8 @@ async def test_import_statistics(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2496,8 +2612,8 @@ async def test_import_statistics(
     assert last_stats == {
         statistic_id: [
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2533,8 +2649,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2543,8 +2659,8 @@ async def test_import_statistics(
                 "sum": pytest.approx(6.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2583,8 +2699,8 @@ async def test_import_statistics(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(1.0),
                 "mean": pytest.approx(2.0),
                 "min": pytest.approx(3.0),
@@ -2593,8 +2709,8 @@ async def test_import_statistics(
                 "sum": pytest.approx(5.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2607,15 +2723,20 @@ async def test_import_statistics(
 
 
 @pytest.mark.parametrize(
-    "source, statistic_id",
+    ("source", "statistic_id"),
     (
         ("test", "test:total_energy_import"),
         ("recorder", "sensor.total_energy_import"),
     ),
 )
 async def test_adjust_sum_statistics_energy(
-    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    source,
+    statistic_id,
+) -> None:
     """Test adjusting statistics."""
     client = await hass_ws_client()
 
@@ -2665,8 +2786,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2675,8 +2796,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2733,8 +2854,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2743,8 +2864,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2774,8 +2895,8 @@ async def test_adjust_sum_statistics_energy(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2784,8 +2905,8 @@ async def test_adjust_sum_statistics_energy(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2798,15 +2919,20 @@ async def test_adjust_sum_statistics_energy(
 
 
 @pytest.mark.parametrize(
-    "source, statistic_id",
+    ("source", "statistic_id"),
     (
         ("test", "test:total_gas"),
         ("recorder", "sensor.total_gas"),
     ),
 )
 async def test_adjust_sum_statistics_gas(
-    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    source,
+    statistic_id,
+) -> None:
     """Test adjusting statistics."""
     client = await hass_ws_client()
 
@@ -2856,8 +2982,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2866,8 +2992,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2924,8 +3050,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2934,8 +3060,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2965,8 +3091,8 @@ async def test_adjust_sum_statistics_gas(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": pytest.approx(None),
                 "mean": pytest.approx(None),
                 "min": pytest.approx(None),
@@ -2975,8 +3101,8 @@ async def test_adjust_sum_statistics_gas(
                 "sum": pytest.approx(2.0),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -2989,7 +3115,14 @@ async def test_adjust_sum_statistics_gas(
 
 
 @pytest.mark.parametrize(
-    "state_unit, statistic_unit, unit_class, factor, valid_units, invalid_units",
+    (
+        "state_unit",
+        "statistic_unit",
+        "unit_class",
+        "factor",
+        "valid_units",
+        "invalid_units",
+    ),
     (
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("MWh", "MWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
@@ -3000,17 +3133,17 @@ async def test_adjust_sum_statistics_gas(
     ),
 )
 async def test_adjust_sum_statistics_errors(
-    recorder_mock,
-    hass,
-    hass_ws_client,
-    caplog,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     state_unit,
     statistic_unit,
     unit_class,
     factor,
     valid_units,
     invalid_units,
-):
+) -> None:
     """Test incorrectly adjusting statistics."""
     statistic_id = "sensor.total_energy_import"
     source = "recorder"
@@ -3062,8 +3195,8 @@ async def test_adjust_sum_statistics_errors(
     assert stats == {
         statistic_id: [
             {
-                "start": period1,
-                "end": period1 + timedelta(hours=1),
+                "start": period1.timestamp(),
+                "end": (period1 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -3072,8 +3205,8 @@ async def test_adjust_sum_statistics_errors(
                 "sum": pytest.approx(2.0 * factor),
             },
             {
-                "start": period2,
-                "end": period2 + timedelta(hours=1),
+                "start": period2.timestamp(),
+                "end": (period2 + timedelta(hours=1)).timestamp(),
                 "max": None,
                 "mean": None,
                 "min": None,
