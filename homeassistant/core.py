@@ -38,6 +38,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import async_timeout
 from typing_extensions import Self
 import voluptuous as vol
 import yarl
@@ -711,6 +712,14 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Keep holding the reference to the tasks but do not allow them
+        # to block shutdown. Only tasks created after this point will
+        # be waited for.
+        running_tasks = self._tasks
+        # Avoid clearing here since we want the remove callbacks to fire
+        # and remove the tasks from the original set which is now running_tasks
+        self._tasks = set()
+
         # Cancel all background tasks
         for task in self._background_tasks:
             self._tasks.add(task)
@@ -748,6 +757,35 @@ class HomeAssistant:
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+
+        # Make a copy of running_tasks since a task can finish
+        # while we are awaiting canceled tasks to get their result
+        # which will result in the set size changing during iteration
+        for task in list(running_tasks):
+            if task.done():
+                # Since we made a copy we need to check
+                # to see if the task finished while we
+                # were awaiting another task
+                continue
+            _LOGGER.warning(
+                "Task %s was still running after stage 2 shutdown; "
+                "Integrations should cancel non-critical tasks when receiving "
+                "the stop event to prevent delaying shutdown",
+                task,
+            )
+            task.cancel()
+            try:
+                async with async_timeout.timeout(0.1):
+                    await task
+            except asyncio.CancelledError:
+                pass
+            except asyncio.TimeoutError:
+                # Task may be shielded from cancellation.
+                _LOGGER.exception(
+                    "Task %s could not be canceled during stage 3 shutdown", task
+                )
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -833,7 +871,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context(
-            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+            id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -1495,7 +1533,7 @@ class StateMachine:
         now = dt_util.utcnow()
 
         if context is None:
-            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
+            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
         state = State(
             entity_id,
             new_state,

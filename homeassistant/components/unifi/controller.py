@@ -198,26 +198,26 @@ class UniFiController:
         @callback
         def async_load_entities(description: UnifiEntityDescription) -> None:
             """Load and subscribe to UniFi endpoints."""
-            entities: list[UnifiEntity] = []
             api_handler = description.api_handler_fn(self.api)
 
             @callback
+            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+                """Add UniFi entity."""
+                async_add_entities(
+                    [
+                        unifi_platform_entity(obj_id, self, description)
+                        for obj_id in obj_ids
+                        if description.allowed_fn(self, obj_id)
+                        if description.supported_fn(self, obj_id)
+                    ]
+                )
+
+            async_add_unifi_entity(list(api_handler))
+
+            @callback
             def async_create_entity(event: ItemEvent, obj_id: str) -> None:
-                """Create UniFi entity."""
-                if not description.allowed_fn(
-                    self, obj_id
-                ) or not description.supported_fn(self, obj_id):
-                    return
-
-                entity = unifi_platform_entity(obj_id, self, description)
-                if event == ItemEvent.ADDED:
-                    async_add_entities([entity])
-                    return
-                entities.append(entity)
-
-            for obj_id in api_handler:
-                async_create_entity(ItemEvent.CHANGED, obj_id)
-            async_add_entities(entities)
+                """Create new UniFi entity on event."""
+                async_add_unifi_entity([obj_id])
 
             api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
 

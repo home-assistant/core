@@ -10,6 +10,7 @@ from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_iblinds_v2(hass: HomeAssistant, client, iblinds_v2, integration) -> None:
@@ -100,3 +101,41 @@ async def test_dynamic_climate_data_discovery_template_failure(
         DynamicCurrentTempClimateDataTemplate().resolve_data(
             node.values[f"{node.node_id}-49-0-Ultraviolet"]
         )
+
+
+async def test_merten_507801(hass, client, merten_507801, integration):
+    """Test that Merten 507801 multilevel switch value is discovered as a cover."""
+    node = merten_507801
+    assert node.device_class.specific.label == "Unused"
+
+    state = hass.states.get("light.connect_roller_shutter")
+    assert not state
+
+    state = hass.states.get("cover.connect_roller_shutter")
+    assert state
+
+
+async def test_merten_507801_disabled_enitites(
+    hass, client, merten_507801, integration
+):
+    """Test that Merten 507801 entities created by endpoint 2 are disabled."""
+    registry = er.async_get(hass)
+    entity_ids = [
+        "cover.connect_roller_shutter_2",
+        "select.connect_roller_shutter_local_protection_state_2",
+        "select.connect_roller_shutter_rf_protection_state_2",
+    ]
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is None
+        entry = registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+        # Test enabling entity
+        updated_entry = registry.async_update_entity(
+            entry.entity_id, **{"disabled_by": None}
+        )
+        assert updated_entry != entry
+        assert updated_entry.disabled is False
