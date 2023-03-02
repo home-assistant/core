@@ -365,9 +365,7 @@ async def webhook_stream_camera(
     return webhook_response(resp, registration=config_entry.data)
 
 
-# Hold a reference to the cached template string to prevent it from being
-# garbage collected so the template compile cache can be used.
-_cached_template_str = lru_cache(str)
+_cached_template = lru_cache(template.Template)
 
 
 @WEBHOOK_COMMANDS.register("render_template")
@@ -386,7 +384,8 @@ async def webhook_render_template(
     resp = {}
     for key, item in data.items():
         try:
-            tpl = template.Template(_cached_template_str(item[ATTR_TEMPLATE]), hass)
+            tpl = _cached_template(item[ATTR_TEMPLATE])
+            tpl.hass = hass
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
         except TemplateError as ex:
             resp[key] = {"error": str(ex)}

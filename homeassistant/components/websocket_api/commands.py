@@ -425,9 +425,7 @@ def handle_ping(
     connection.send_message(pong_message(msg["id"]))
 
 
-# Hold a reference to the cached template string to prevent it from being
-# garbage collected so the template compile cache can be used.
-_cached_template_str = lru_cache(str)
+_cached_template = lru_cache(template.Template)
 
 
 @decorators.websocket_command(
@@ -446,7 +444,8 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = template.Template(_cached_template_str(template_str), hass)
+    template_obj = _cached_template(template_str)
+    template_obj.hass = hass
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
