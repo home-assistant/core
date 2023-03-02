@@ -32,6 +32,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -409,6 +410,14 @@ class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
     _attr_should_poll = False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._electricity_id)},
+            name=self._electricity_id,
+        )
 
     def __init__(self, electricity_id, obis, name, entity_description, telegram):
         """Initialize an EDL21Entity."""
