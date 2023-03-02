@@ -33,7 +33,9 @@ async def test_sensors(
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
-async def test_windows(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_windows(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test for successfully setting up the Radarr platform on Windows."""
     await setup_integration(hass, aioclient_mock, windows=True)
 

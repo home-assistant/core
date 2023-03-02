@@ -50,7 +50,9 @@ async def test_async_setup_entry_auth_failed(
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
-async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+async def test_device_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test device info."""
     entry = await setup_integration(hass, aioclient_mock)
     device_registry = dr.async_get(hass)
