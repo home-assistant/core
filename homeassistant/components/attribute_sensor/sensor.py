@@ -1,4 +1,4 @@
-"""Support for creating a sensor based on a attribute value."""
+"""Support for creating a sensor based on an attribute value."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -116,7 +116,7 @@ async def async_setup_platform(
 
 
 class AttributeSensor(SensorEntity):
-    """Representation of a attribute sensor."""
+    """Representation of an attribute sensor."""
 
     _attr_icon = ICON
     _attr_should_poll = False
@@ -193,7 +193,7 @@ class AttributeSensor(SensorEntity):
         if update_state:
             if self._attribute_name not in new_state.attributes:
                 _LOGGER.warning(
-                    'Entity "%s" does not have attribute "%s"',
+                    'Entity "%s" does not have attribute key "%s"',
                     entity_id,
                     self._attribute_name,
                 )

@@ -1,10 +1,10 @@
 {
-  "title": "Makes a sensor of a entity attribute",
+  "title": "Create a sensor of an entity attribute",
   "config": {
     "step": {
       "user": {
-        "title": "Makes a sensor of a entity attribute",
-        "description": "Create a sensor from a attribute value of another entity",
+        "title": "Create a sensor from an entity attribute",
+        "description": "Create a sensor from an attribute value of another entity",
         "data": {
           "source": "Source entity",
           "name": "Name",
@@ -24,19 +24,6 @@
           "device_class": "[%key:component::attribute_sensor::config::step::user::data::device_class%]",
           "unit_of_measurement": "[%key:component::attribute_sensor::config::step::user::data::unit_of_measurement%]"
         }
-      }
-    }
-  },
-  "selector": {
-    "type": {
-      "options": {
-        "min": "Minimum",
-        "max": "Maximum",
-        "mean": "Arithmetic mean",
-        "median": "Median",
-        "last": "Most recently updated",
-        "range": "Statistical range",
-        "sum": "Sum"
       }
     }
   }
