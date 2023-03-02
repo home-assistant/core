@@ -308,10 +308,11 @@ class EnsureJobAfterCooldown:
         self, timeout: float, subscribe_job: Callable[[], Coroutine[Any, None, None]]
     ) -> None:
         """Initialize the timer."""
+        self._loop = asyncio.get_running_loop()
         self._timeout = timeout
         self._callback = subscribe_job
         self._task: asyncio.Future | None = None
-        self._lock = asyncio.Lock()
+        self._timer: asyncio.TimerHandle | None = None
 
     def set_timeout(self, timeout: float) -> None:
         """Set a new timeout period."""
@@ -319,31 +320,52 @@ class EnsureJobAfterCooldown:
 
     async def _async_job(self) -> None:
         """Subscribe after a cooldown period."""
-        await asyncio.sleep(self._timeout)
-        # Ensure we do not cancel a running task
-        async with self._lock:
-            self._task = None
         try:
             await self._callback()
         except HomeAssistantError as ha_error:
             _LOGGER.error("%s", ha_error)
 
-    async def async_execute(self) -> None:
+    def _async_task_done(self, task: asyncio.Future) -> None:
+        """Handle task done."""
+        self._task = None
+
+    def _async_execute(self) -> None:
+        """Execute the job."""
+        if self._task:
+            # Task we already running, so we schedule another run
+            self.async_schedule()
+            return
+
+        self._async_cancel_timer()
+        self._task = asyncio.create_task(self._async_job())
+        self._task.add_done_callback(self._async_task_done)
+
+    def _async_cancel_timer(self) -> None:
+        """Cancel any pending task."""
+        if self._timer:
+            self._timer.cancel()
+            self._timer = None
+
+    def async_schedule(self) -> None:
         """Ensure we execute after a cooldown period."""
-        # Ensure we do not cancel a running task
-        async with self._lock:
-            # Cancel the current waiting task (if it exists) and start a new one
-            if self._task:
-                self._task.cancel()
-            self._task = asyncio.ensure_future(self._async_job())
+        # If you don't want to reschedule the timer in the future
+        # every time this is called you could instead return if
+        # self._timer is set and self._task is None.
+        self._async_cancel_timer()
+        self._timer = self._loop.call_later(self._timeout, self._async_execute)
 
     async def async_cleanup(self) -> None:
         """Cleanup any pending task."""
-        async with self._lock:
-            # Cancel the current waiting task (if it exists) and start a new one
-            if self._task:
-                self._task.cancel()
-            self._task = None
+        self._async_cancel_timer()
+        if not self._task:
+            return
+        self._task.cancel()
+        try:
+            await self._task
+        except asyncio.CancelledError:
+            pass
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error cleaning up task")
 
 
 class MQTT:
@@ -565,7 +587,7 @@ class MQTT:
                     self._pending_subscriptions[topic] = qos
         if queue_only:
             return
-        await self._subscribe_debouncer.async_execute()
+        self._subscribe_debouncer.async_schedule()
 
     async def async_subscribe(
         self,
