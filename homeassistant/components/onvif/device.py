@@ -561,7 +561,13 @@ class ONVIFDevice:
                 LOGGER.error("Error trying to set Imaging settings: %s", err)
 
 
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
+def get_device(
+    hass: HomeAssistant,
+    host: str,
+    port: int,
+    username: str | None,
+    password: str | None,
+) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
     return ONVIFCamera(
         host,

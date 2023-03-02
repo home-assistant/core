@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Integrasi Magicseaweed sedang menunggu penghapusan dari Home Assistant dan tidak akan lagi tersedia pada Home Assistant 2023.3.\n\nHapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Integrasi Magicseaweed dalam proses penghapusan"
-        }
-    }
-}

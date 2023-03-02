@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "user": {
+        "title": "Add your EDL21 smart meter",
+        "data": {
+          "serial_port": "[%key:common::config_flow::data::usb_path%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "EDL21 YAML configuration is being removed",
+      "description": "Configuring EDL21 using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the EDL21 YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

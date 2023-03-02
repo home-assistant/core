@@ -23,8 +23,9 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
-DEVICE_UPDATE_INTERVAL = 60
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.NUMBER, Platform.UPDATE]
+DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
 
 
 @dataclass
@@ -33,6 +34,7 @@ class ReolinkData:
 
     host: ReolinkHost
     device_coordinator: DataUpdateCoordinator
+    firmware_coordinator: DataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -54,6 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady(
             f"Error while trying to setup {host.api.host}:{host.api.port}: {str(err)}"
         ) from err
+    except Exception:  # pylint: disable=broad-except
+        await host.stop()
+        raise
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
@@ -72,19 +77,48 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with async_timeout.timeout(host.api.timeout):
             await host.renew()
 
-    coordinator_device_config_update = DataUpdateCoordinator(
+    async def async_check_firmware_update():
+        """Check for firmware updates."""
+        if not host.api.supported(None, "update"):
+            return False
+
+        async with async_timeout.timeout(host.api.timeout):
+            try:
+                return await host.api.check_new_firmware()
+            except ReolinkError as err:
+                raise UpdateFailed(
+                    f"Error checking Reolink firmware update {host.api.nvr_name}"
+                ) from err
+
+    device_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=f"reolink.{host.api.nvr_name}",
         update_method=async_device_config_update,
-        update_interval=timedelta(seconds=DEVICE_UPDATE_INTERVAL),
+        update_interval=DEVICE_UPDATE_INTERVAL,
+    )
+    firmware_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"reolink.{host.api.nvr_name}.firmware",
+        update_method=async_check_firmware_update,
+        update_interval=FIRMWARE_UPDATE_INTERVAL,
     )
     # Fetch initial data so we have data when entities subscribe
-    await coordinator_device_config_update.async_config_entry_first_refresh()
+    try:
+        # If camera WAN blocked, firmware check fails, do not prevent setup
+        await asyncio.gather(
+            device_coordinator.async_config_entry_first_refresh(),
+            firmware_coordinator.async_refresh(),
+        )
+    except ConfigEntryNotReady:
+        await host.stop()
+        raise
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,
-        device_coordinator=coordinator_device_config_update,
+        device_coordinator=device_coordinator,
+        firmware_coordinator=firmware_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

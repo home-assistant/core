@@ -97,7 +97,6 @@ async def async_setup_entry(
     ]
     flume_entity_list = []
     for device in flume_devices:
-
         device_id = device[KEY_DEVICE_ID]
         device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
         device_location_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]

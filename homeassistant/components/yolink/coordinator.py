@@ -24,7 +24,8 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         """Init YoLink DataUpdateCoordinator.
 
         fetch state every 30 minutes base on yolink device heartbeat interval
-        data is None before the first successful update, but we need to use data at first update
+        data is None before the first successful update, but we need to use
+        data at first update
         """
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)

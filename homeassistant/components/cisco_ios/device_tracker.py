@@ -64,8 +64,7 @@ class CiscoDeviceScanner(DeviceScanner):
         return self.last_results
 
     def _update_info(self):
-        """
-        Ensure the information from the Cisco router is up to date.
+        """Ensure the information from the Cisco router is up to date.
 
         Returns boolean if scanning successful.
         """
@@ -139,8 +138,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
 
 def _parse_cisco_mac_address(cisco_hardware_addr):
-    """
-    Parse a Cisco formatted HW address to normal MAC.
+    """Parse a Cisco formatted HW address to normal MAC.
 
     e.g. convert
     001d.ec02.07ab

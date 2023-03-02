@@ -16,9 +16,12 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 
-async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client, ev_entry):
+async def test_config_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, ev_entry
+) -> None:
     """Test config entry diagnostics."""
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -33,7 +36,9 @@ async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client, ev_ent
     )
 
 
-async def test_device_diagnostics(hass: HomeAssistant, hass_client, ev_entry):
+async def test_device_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, ev_entry
+) -> None:
     """Test device diagnostics."""
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -53,8 +58,8 @@ async def test_device_diagnostics(hass: HomeAssistant, hass_client, ev_entry):
 
 
 async def test_device_diagnostics_vehicle_not_found(
-    hass: HomeAssistant, hass_client, ev_entry
-):
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, ev_entry
+) -> None:
     """Test device diagnostics when the vehicle cannot be found."""
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]

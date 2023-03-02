@@ -114,6 +114,12 @@ MOCK_VEHICLES = {
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_charge",
             },
+            {
+                ATTR_ENTITY_ID: "button.reg_number_stop_charge",
+                ATTR_ICON: "mdi:ev-station",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_stop_charge",
+            },
         ],
         Platform.DEVICE_TRACKER: [],
         Platform.SELECT: [
@@ -335,6 +341,12 @@ MOCK_VEHICLES = {
                 ATTR_ICON: "mdi:ev-station",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_charge",
+            },
+            {
+                ATTR_ENTITY_ID: "button.reg_number_stop_charge",
+                ATTR_ICON: "mdi:ev-station",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_stop_charge",
             },
         ],
         Platform.DEVICE_TRACKER: [
@@ -565,6 +577,12 @@ MOCK_VEHICLES = {
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_start_charge",
             },
+            {
+                ATTR_ENTITY_ID: "button.reg_number_stop_charge",
+                ATTR_ICON: "mdi:ev-station",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_stop_charge",
+            },
         ],
         Platform.DEVICE_TRACKER: [
             {
@@ -671,7 +689,7 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "sensor.reg_number_fuel_quantity",
                 ATTR_ICON: "mdi:fuel",
                 ATTR_STATE: "3",
-                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_fuel_quantity",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.LITERS,
             },
@@ -796,7 +814,7 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "sensor.reg_number_fuel_quantity",
                 ATTR_ICON: "mdi:fuel",
                 ATTR_STATE: "3",
-                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_fuel_quantity",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.LITERS,
             },

@@ -1,5 +1,4 @@
-"""
-Helpers for Zigbee Home Automation.
+"""Helpers for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
@@ -338,7 +337,6 @@ def retryable_req(
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(channel, *args, **kwargs):
-
             exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
             try_count, errors = 1, []
             for delay in itertools.chain(delays, [None]):

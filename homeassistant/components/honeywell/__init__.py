@@ -2,7 +2,7 @@
 import asyncio
 from dataclasses import dataclass
 
-import AIOSomecomfort
+import aiosomecomfort
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -50,19 +50,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
-    client = AIOSomecomfort.AIOSomeComfort(
+    client = aiosomecomfort.AIOSomeComfort(
         username, password, session=async_get_clientsession(hass)
     )
     try:
         await client.login()
         await client.discover()
 
-    except AIOSomecomfort.device.AuthError as ex:
+    except aiosomecomfort.device.AuthError as ex:
         raise ConfigEntryAuthFailed("Incorrect Password") from ex
 
     except (
-        AIOSomecomfort.device.ConnectionError,
-        AIOSomecomfort.device.ConnectionTimeout,
+        aiosomecomfort.device.ConnectionError,
+        aiosomecomfort.device.ConnectionTimeout,
         asyncio.TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(
@@ -114,5 +114,5 @@ class HoneywellData:
     """Shared data for Honeywell."""
 
     entry_id: str
-    client: AIOSomecomfort.AIOSomeComfort
-    devices: dict[str, AIOSomecomfort.device.Device]
+    client: aiosomecomfort.AIOSomeComfort
+    devices: dict[str, aiosomecomfort.device.Device]
