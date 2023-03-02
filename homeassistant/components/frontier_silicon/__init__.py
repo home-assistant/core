@@ -30,7 +30,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Perform migration from YAML config to Config Flow entity."""
 
     async def _migrate_entry(entry_to_migrate):
-
         await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},

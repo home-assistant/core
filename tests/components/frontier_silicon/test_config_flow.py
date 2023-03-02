@@ -58,7 +58,6 @@ async def test_import(hass: HomeAssistant) -> None:
         assert result["type"] == FlowResultType.CREATE_ENTRY
 
     with INVALID_DEVICE_URL_PATCH:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -74,7 +73,6 @@ async def test_import(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
     with UNEXPECTED_ERROR_GET_WEBFSAPI_ENDPOINT_PATCH:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -323,7 +321,6 @@ async def test_ssdp(hass):
     """Test a device being discovered."""
 
     with VALID_DEVICE_CONFIG_PATCH, VALID_DEVICE_URL_PATCH:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
@@ -356,7 +353,6 @@ async def test_ssdp_nondefault_pin(hass):
     """Test a device being discovered."""
 
     with VALID_DEVICE_URL_PATCH, INVALID_PIN_PATCH:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
@@ -418,7 +414,6 @@ async def test_ssdp_nondefault_pin(hass):
 async def test_ssdp_fail(hass):
     """Test a device being discovered but failing to reply."""
     with UNEXPECTED_ERROR_GET_WEBFSAPI_ENDPOINT_PATCH:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
@@ -435,7 +430,6 @@ async def test_ssdp_fail(hass):
     assert result["reason"] == "unknown"
 
     with INVALID_DEVICE_URL_PATCH:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
