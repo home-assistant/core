@@ -57,6 +57,9 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
+    # Cleanup debouncer to avoid lingering tasks
+    debouncer.async_cancel()
+
 
 async def test_not_immediate_works(hass: HomeAssistant) -> None:
     """Test immediate works."""
@@ -106,6 +109,9 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+    # Cleanup debouncer to avoid lingering tasks
+    debouncer.async_cancel()
 
 
 async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> None:
@@ -167,3 +173,6 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+    # Cleanup debouncer to avoid lingering tasks
+    debouncer.async_cancel()
