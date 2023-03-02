@@ -69,8 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await afsapi.get_power()
     except FSConnectionError as exception:
         raise PlatformNotReady from exception
-    except InvalidPinException as exception:
-        raise ConfigEntryAuthFailed(exception) from exception
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = afsapi
 

@@ -76,14 +76,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             return self.async_abort(reason="unknown")
 
-        # For manually added devices the unique_id is the radio_id,
-        # for devices discovered through SSDP it is the UDN
         await self.async_set_unique_id(self._unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         self._name = import_info[CONF_NAME] or "Radio"
 
-        _LOGGER.warning("Frontier Silicon %s imported from YAML config", self._name)
         return await self._create_entry(pin=import_info[CONF_PIN])
 
     async def async_step_user(
@@ -106,8 +103,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return await self._async_step_device_config_if_needed()
 
+        data_schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
@@ -137,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._async_step_device_config_if_needed(show_confirm=True)
 
     async def _async_step_device_config_if_needed(
-        self, show_confirm=False
+        self
     ) -> FlowResult:
         """Most users will not have changed the default PIN on their radio.
 
@@ -152,16 +150,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.context["title_placeholders"] = {"name": self._name}
 
-            # _unique_id will already be set when discovered through SSDP with the SSDP UDN,
-            # however, when adding a device manually, it will still be empty at this point.
-            # Now we have successfully logged in, we can check the radio_id of this device
-            if self._unique_id is None:
-                self._unique_id = await afsapi.get_radio_id()
-                await self.async_set_unique_id(self._unique_id)
-                self._abort_if_unique_id_configured()
-
-            if show_confirm:
-                return await self.async_step_confirm()
+            self._unique_id = await afsapi.get_radio_id()
+            await self.async_set_unique_id(self._unique_id)
+            self._abort_if_unique_id_configured()
 
             return await self._create_entry()
         except InvalidPinException:
@@ -219,6 +210,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return await self._create_entry(pin=user_input[CONF_PIN])
 
+        data_schema = self.add_suggested_values_to_schema(STEP_DEVICE_CONFIG_DATA_SCHEMA, user_input)
         return self.async_show_form(
             step_id="device_config",
             data_schema=STEP_DEVICE_CONFIG_DATA_SCHEMA,
