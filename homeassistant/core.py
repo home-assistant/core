@@ -14,6 +14,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+import concurrent.futures
 from contextlib import suppress
 from contextvars import ContextVar
 import datetime
@@ -37,6 +38,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import async_timeout
 from typing_extensions import Self
 import voluptuous as vol
 import yarl
@@ -79,11 +81,7 @@ from .exceptions import (
 )
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .util import dt as dt_util, location, ulid as ulid_util
-from .util.async_ import (
-    fire_coroutine_threadsafe,
-    run_callback_threadsafe,
-    shutdown_run_callback_threadsafe,
-)
+from .util.async_ import run_callback_threadsafe, shutdown_run_callback_threadsafe
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import (
@@ -294,6 +292,7 @@ class HomeAssistant:
         self._stopped: asyncio.Event | None = None
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
+        self._stop_future: concurrent.futures.Future[None] | None = None
 
     @property
     def is_running(self) -> bool:
@@ -312,12 +311,14 @@ class HomeAssistant:
         For regular use, use "await hass.run()".
         """
         # Register the async start
-        fire_coroutine_threadsafe(self.async_start(), self.loop)
-
+        _future = asyncio.run_coroutine_threadsafe(self.async_start(), self.loop)
         # Run forever
         # Block until stopped
         _LOGGER.info("Starting Home Assistant core loop")
         self.loop.run_forever()
+        # The future is never retrieved but we still hold a reference to it
+        # to prevent the task from being garbage collected prematurely.
+        del _future
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -682,7 +683,11 @@ class HomeAssistant:
         """Stop Home Assistant and shuts down all threads."""
         if self.state == CoreState.not_running:  # just ignore
             return
-        fire_coroutine_threadsafe(self.async_stop(), self.loop)
+        # The future is never retrieved, and we only hold a reference
+        # to it to prevent it from being garbage collected.
+        self._stop_future = asyncio.run_coroutine_threadsafe(
+            self.async_stop(), self.loop
+        )
 
     async def async_stop(self, exit_code: int = 0, *, force: bool = False) -> None:
         """Stop Home Assistant and shuts down all threads.
@@ -707,6 +712,14 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Keep holding the reference to the tasks but do not allow them
+        # to block shutdown. Only tasks created after this point will
+        # be waited for.
+        running_tasks = self._tasks
+        # Avoid clearing here since we want the remove callbacks to fire
+        # and remove the tasks from the original set which is now running_tasks
+        self._tasks = set()
+
         # Cancel all background tasks
         for task in self._background_tasks:
             self._tasks.add(task)
@@ -726,6 +739,7 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(1)
 
         # stage 2
         self.state = CoreState.final_write
@@ -738,10 +752,40 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(2)
 
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+
+        # Make a copy of running_tasks since a task can finish
+        # while we are awaiting canceled tasks to get their result
+        # which will result in the set size changing during iteration
+        for task in list(running_tasks):
+            if task.done():
+                # Since we made a copy we need to check
+                # to see if the task finished while we
+                # were awaiting another task
+                continue
+            _LOGGER.warning(
+                "Task %s was still running after stage 2 shutdown; "
+                "Integrations should cancel non-critical tasks when receiving "
+                "the stop event to prevent delaying shutdown",
+                task,
+            )
+            task.cancel()
+            try:
+                async with async_timeout.timeout(0.1):
+                    await task
+            except asyncio.CancelledError:
+                pass
+            except asyncio.TimeoutError:
+                # Task may be shielded from cancellation.
+                _LOGGER.exception(
+                    "Task %s could not be canceled during stage 3 shutdown", task
+                )
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -758,10 +802,17 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(3)
+
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
+
+    def _async_log_running_tasks(self, stage: int) -> None:
+        """Log all running tasks."""
+        for task in self._tasks:
+            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
 
 
 class Context:
@@ -820,7 +871,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context(
-            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+            id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -1482,7 +1533,7 @@ class StateMachine:
         now = dt_util.utcnow()
 
         if context is None:
-            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
+            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
         state = State(
             entity_id,
             new_state,
@@ -1813,7 +1864,10 @@ class Config:
 
         self.latitude: float = 0
         self.longitude: float = 0
+
         self.elevation: int = 0
+        """Elevation (always in meters regardless of the unit system)."""
+
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM

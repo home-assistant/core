@@ -68,6 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
+    config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
@@ -83,6 +85,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+async def async_update_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Reload Met component when options changed."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class CannotConnect(HomeAssistantError):

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.3.0.dev0"
+version     = "2023.4.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -44,12 +44,13 @@ dependencies    = [
     "cryptography==39.0.1",
     # pyOpenSSL 23.0.0 is required to work with cryptography 39+
     "pyOpenSSL==23.0.0",
-    "orjson==3.8.6",
+    "orjson==3.8.7",
     "pip>=21.0,<23.1",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
-    "requests==2.28.1",
+    "requests==2.28.2",
     "typing-extensions>=4.5.0,<5.0",
+    "ulid-transform==0.4.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.8.1",
@@ -277,7 +278,11 @@ ignore = [
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
+"homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
+"homeassistant.helpers.device_registry" = "dr"
+"homeassistant.helpers.entity_registry" = "er"
+"homeassistant.helpers.issue_registry" = "ir"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

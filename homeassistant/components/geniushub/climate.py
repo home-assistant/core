@@ -79,10 +79,10 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
     def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         if "_state" in self._zone.data:  # only for v3 API
+            if self._zone.data["output"] == 1:
+                return HVACAction.HEATING
             if not self._zone.data["_state"].get("bIsActive"):
                 return HVACAction.OFF
-            if self._zone.data["_state"].get("bOutRequestHeat"):
-                return HVACAction.HEATING
             return HVACAction.IDLE
         return None
 

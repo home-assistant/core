@@ -92,6 +92,17 @@ def _test_selector(
             (None,),
         ),
         ({"entity": {"device_class": "motion"}}, ("abc123",), (None,)),
+        ({"entity": {"device_class": ["motion", "temperature"]}}, ("abc123",), (None,)),
+        (
+            {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
         (
             {
                 "integration": "zha",
@@ -106,6 +117,35 @@ def _test_selector(
             {"multiple": True},
             (["abc123", "def456"],),
             ("abc123", None, ["abc123", None]),
+        ),
+        (
+            {
+                "filter": {
+                    "integration": "zha",
+                    "manufacturer": "mock-manuf",
+                    "model": "mock-model",
+                }
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "integration": "zha",
+                        "manufacturer": "mock-manuf",
+                        "model": "mock-model",
+                    },
+                    {
+                        "integration": "matter",
+                        "manufacturer": "other-mock-manuf",
+                        "model": "other-mock-model",
+                    },
+                ]
+            },
+            ("abc123",),
+            (None,),
         ),
     ),
 )
@@ -126,6 +166,11 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
             (None, "dog.abc123"),
         ),
         ({"device_class": "motion"}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
+        (
+            {"device_class": ["motion", "temperature"]},
+            ("sensor.abc123", FAKE_UUID),
+            (None, "abc123"),
+        ),
         (
             {"integration": "zha", "domain": "light"},
             ("light.abc123", FAKE_UUID),
@@ -167,6 +212,21 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
                 ["sensor.abc123", "sensor.ghi789"],
             ),
         ),
+        (
+            {"filter": {"domain": "light"}},
+            ("light.abc123", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            ("light.abc123", "binary_sensor.abc123", FAKE_UUID),
+            (None,),
+        ),
     ),
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -197,7 +257,27 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
             (None,),
         ),
         (
+            {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
             {"device": {"integration": "demo", "model": "mock-model"}},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "device": [
+                    {"integration": "demo", "model": "mock-model"},
+                    {"integration": "other-demo", "model": "other-mock-model"},
+                ]
+            },
             ("abc123",),
             (None,),
         ),
@@ -347,6 +427,16 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
         ({"entity": {"domain": "binary_sensor", "device_class": "motion"}}, (), ()),
         (
             {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            (),
+            (),
+        ),
+        (
+            {
                 "entity": {
                     "domain": "binary_sensor",
                     "device_class": "motion",
@@ -357,6 +447,16 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
             (),
         ),
         ({"device": {"integration": "demo", "model": "mock-model"}}, (), ()),
+        (
+            {
+                "device": [
+                    {"integration": "demo", "model": "mock-model"},
+                    {"integration": "other-demo", "model": "other-mock-model"},
+                ],
+            },
+            (),
+            (),
+        ),
         (
             {
                 "entity": {"domain": "binary_sensor", "device_class": "motion"},
