@@ -228,9 +228,9 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
-            await self.async_turn_on()
-        else:
             await self.async_turn_off()
+        else:
+            await self.async_turn_on()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
