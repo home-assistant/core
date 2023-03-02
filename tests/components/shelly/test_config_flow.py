@@ -26,6 +26,7 @@ from homeassistant.setup import async_setup_component
 from . import init_integration
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
@@ -54,7 +55,9 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
         (2, "SNSW-002P16EU"),
     ],
 )
-async def test_form(hass, gen, model, mock_block_device, mock_rpc_device):
+async def test_form(
+    hass: HomeAssistant, gen, model, mock_block_device, mock_rpc_device
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -107,8 +110,14 @@ async def test_form(hass, gen, model, mock_block_device, mock_rpc_device):
     ],
 )
 async def test_form_auth(
-    hass, gen, model, user_input, username, mock_block_device, mock_rpc_device
-):
+    hass: HomeAssistant,
+    gen,
+    model,
+    user_input,
+    username,
+    mock_block_device,
+    mock_rpc_device,
+) -> None:
     """Test manual configuration if auth is required."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -160,7 +169,7 @@ async def test_form_auth(
         (ValueError, "unknown"),
     ],
 )
-async def test_form_errors_get_info(hass, exc, base_error):
+async def test_form_errors_get_info(hass: HomeAssistant, exc, base_error) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -176,7 +185,9 @@ async def test_form_errors_get_info(hass, exc, base_error):
     assert result2["errors"] == {"base": base_error}
 
 
-async def test_form_missing_model_key(hass, mock_rpc_device, monkeypatch):
+async def test_form_missing_model_key(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test we handle missing Shelly model key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -195,7 +206,9 @@ async def test_form_missing_model_key(hass, mock_rpc_device, monkeypatch):
     assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
 
 
-async def test_form_missing_model_key_auth_enabled(hass, mock_rpc_device, monkeypatch):
+async def test_form_missing_model_key_auth_enabled(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test we handle missing Shelly model key when auth enabled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -224,8 +237,8 @@ async def test_form_missing_model_key_auth_enabled(hass, mock_rpc_device, monkey
 
 
 async def test_form_missing_model_key_zeroconf(
-    hass, mock_rpc_device, monkeypatch, caplog
-):
+    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we handle missing Shelly model key via zeroconf."""
     monkeypatch.setattr(mock_rpc_device, "shelly", {"gen": 2})
     with patch(
@@ -255,7 +268,9 @@ async def test_form_missing_model_key_zeroconf(
         (ValueError, "unknown"),
     ],
 )
-async def test_form_errors_test_connection(hass, exc, base_error):
+async def test_form_errors_test_connection(
+    hass: HomeAssistant, exc, base_error
+) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -304,7 +319,9 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_user_setup_ignored_device(hass, mock_block_device):
+async def test_user_setup_ignored_device(
+    hass: HomeAssistant, mock_block_device
+) -> None:
     """Test user can successfully setup an ignored device."""
 
     entry = MockConfigEntry(
@@ -368,7 +385,9 @@ async def test_form_firmware_unsupported(hass: HomeAssistant) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_form_auth_errors_test_connection_gen1(hass, exc, base_error):
+async def test_form_auth_errors_test_connection_gen1(
+    hass: HomeAssistant, exc, base_error
+) -> None:
     """Test we handle errors in Gen1 authenticated devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -403,7 +422,9 @@ async def test_form_auth_errors_test_connection_gen1(hass, exc, base_error):
         (ValueError, "unknown"),
     ],
 )
-async def test_form_auth_errors_test_connection_gen2(hass, exc, base_error):
+async def test_form_auth_errors_test_connection_gen2(
+    hass: HomeAssistant, exc, base_error
+) -> None:
     """Test we handle errors in Gen2 authenticated devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -444,7 +465,9 @@ async def test_form_auth_errors_test_connection_gen2(hass, exc, base_error):
         ),
     ],
 )
-async def test_zeroconf(hass, gen, model, get_info, mock_block_device, mock_rpc_device):
+async def test_zeroconf(
+    hass: HomeAssistant, gen, model, get_info, mock_block_device, mock_rpc_device
+) -> None:
     """Test we get the form."""
 
     with patch(
@@ -488,7 +511,9 @@ async def test_zeroconf(hass, gen, model, get_info, mock_block_device, mock_rpc_
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_sleeping_device(hass, mock_block_device, monkeypatch):
+async def test_zeroconf_sleeping_device(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
     """Test sleeping device configuration via zeroconf."""
     monkeypatch.setitem(
         mock_block_device.settings,
@@ -667,7 +692,7 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_require_auth(hass, mock_block_device):
+async def test_zeroconf_require_auth(hass: HomeAssistant, mock_block_device) -> None:
     """Test zeroconf if auth is required."""
 
     with patch(
@@ -716,8 +741,8 @@ async def test_zeroconf_require_auth(hass, mock_block_device):
     ],
 )
 async def test_reauth_successful(
-    hass, gen, user_input, mock_block_device, mock_rpc_device
-):
+    hass: HomeAssistant, gen, user_input, mock_block_device, mock_rpc_device
+) -> None:
     """Test starting a reauthentication flow."""
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
@@ -753,7 +778,7 @@ async def test_reauth_successful(
         (2, {"password": "test2 password"}),
     ],
 )
-async def test_reauth_unsuccessful(hass, gen, user_input):
+async def test_reauth_unsuccessful(hass: HomeAssistant, gen, user_input) -> None:
     """Test reauthentication flow failed."""
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
@@ -792,7 +817,7 @@ async def test_reauth_unsuccessful(hass, gen, user_input):
     "error",
     [DeviceConnectionError, FirmwareUnsupported],
 )
-async def test_reauth_get_info_error(hass, error):
+async def test_reauth_get_info_error(hass: HomeAssistant, error) -> None:
     """Test reauthentication flow failed with error in get_info()."""
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
@@ -821,7 +846,9 @@ async def test_reauth_get_info_error(hass, error):
         assert result["reason"] == "reauth_unsuccessful"
 
 
-async def test_options_flow_disabled_gen_1(hass, mock_block_device, hass_ws_client):
+async def test_options_flow_disabled_gen_1(
+    hass: HomeAssistant, mock_block_device, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test options are disabled for gen1 devices."""
     await async_setup_component(hass, "config", {})
     entry = await init_integration(hass, 1)
@@ -840,7 +867,9 @@ async def test_options_flow_disabled_gen_1(hass, mock_block_device, hass_ws_clie
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_options_flow_enabled_gen_2(hass, mock_rpc_device, hass_ws_client):
+async def test_options_flow_enabled_gen_2(
+    hass: HomeAssistant, mock_rpc_device, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test options are enabled for gen2 devices."""
     await async_setup_component(hass, "config", {})
     entry = await init_integration(hass, 2)
@@ -860,8 +889,8 @@ async def test_options_flow_enabled_gen_2(hass, mock_rpc_device, hass_ws_client)
 
 
 async def test_options_flow_disabled_sleepy_gen_2(
-    hass, mock_rpc_device, hass_ws_client
-):
+    hass: HomeAssistant, mock_rpc_device, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test options are disabled for sleepy gen2 devices."""
     await async_setup_component(hass, "config", {})
     entry = await init_integration(hass, 2, sleep_period=10)
@@ -880,7 +909,7 @@ async def test_options_flow_disabled_sleepy_gen_2(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_options_flow_ble(hass, mock_rpc_device):
+async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device) -> None:
     """Test setting ble options for gen2 devices."""
     entry = await init_integration(hass, 2)
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -934,7 +963,9 @@ async def test_options_flow_ble(hass, mock_rpc_device):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_options_flow_pre_ble_device(hass, mock_pre_ble_rpc_device):
+async def test_options_flow_pre_ble_device(
+    hass: HomeAssistant, mock_pre_ble_rpc_device
+) -> None:
     """Test setting ble options for gen2 devices with pre ble firmware."""
     entry = await init_integration(hass, 2)
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -989,8 +1020,8 @@ async def test_options_flow_pre_ble_device(hass, mock_pre_ble_rpc_device):
 
 
 async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
-    hass, mock_rpc_device, monkeypatch
-):
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test zeroconf discovery triggers refresh when the mac is in the device name."""
     entry = MockConfigEntry(
         domain="shelly",
@@ -1021,8 +1052,8 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
 
 
 async def test_zeroconf_already_configured_triggers_refresh(
-    hass, mock_rpc_device, monkeypatch
-):
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test zeroconf discovery triggers refresh when the mac is obtained via get_info."""
     entry = MockConfigEntry(
         domain="shelly",
@@ -1053,8 +1084,8 @@ async def test_zeroconf_already_configured_triggers_refresh(
 
 
 async def test_zeroconf_sleeping_device_not_triggers_refresh(
-    hass, mock_rpc_device, monkeypatch, caplog
-):
+    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test zeroconf discovery does not triggers refresh for sleeping device."""
     entry = MockConfigEntry(
         domain="shelly",

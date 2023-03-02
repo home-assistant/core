@@ -857,7 +857,9 @@ async def test_track_template(hass: HomeAssistant) -> None:
     assert iterate_calls[0][2].state == "on"
 
 
-async def test_track_template_error(hass, caplog):
+async def test_track_template_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test tracking template with error."""
     template_error = Template("{{ (states.switch | lunch) > 0 }}", hass)
     error_calls = []
@@ -888,7 +890,9 @@ async def test_track_template_error(hass, caplog):
     assert "TemplateAssertionError" not in caplog.text
 
 
-async def test_track_template_error_can_recover(hass, caplog):
+async def test_track_template_error_can_recover(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test tracking template with error."""
     hass.states.async_set("switch.data_system", "cow", {"opmode": 0})
     template_error = Template(
@@ -915,7 +919,9 @@ async def test_track_template_error_can_recover(hass, caplog):
     assert "UndefinedError" not in caplog.text
 
 
-async def test_track_template_time_change(hass, caplog):
+async def test_track_template_time_change(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test tracking template with time change."""
     template_error = Template("{{ utcnow().minute % 2 == 0 }}", hass)
     calls = []
@@ -1399,7 +1405,9 @@ async def test_track_template_result_super_template_initially_false(
         "{% if states('sensor.test2') != 'unavailable' -%} {{'a' + 5}} {%- else -%} false {%- endif %}",
     ],
 )
-async def test_track_template_result_super_template_2(hass, availability_template):
+async def test_track_template_result_super_template_2(
+    hass: HomeAssistant, availability_template
+) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
     specific_runs_availability = []
@@ -1537,8 +1545,8 @@ async def test_track_template_result_super_template_2(hass, availability_templat
     ],
 )
 async def test_track_template_result_super_template_2_initially_false(
-    hass, availability_template
-):
+    hass: HomeAssistant, availability_template
+) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
     specific_runs_availability = []
@@ -2136,7 +2144,9 @@ async def test_track_template_result_iterator(hass: HomeAssistant) -> None:
     assert filter_runs == ["", "sensor.new"]
 
 
-async def test_track_template_result_errors(hass, caplog):
+async def test_track_template_result_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test tracking template with errors in the template."""
     template_syntax_error = Template("{{states.switch", hass)
 
@@ -3838,7 +3848,7 @@ async def test_periodic_task_duplicate_time(hass: HomeAssistant) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
-async def test_periodic_task_entering_dst(hass, freezer):
+async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
     """Test periodic task behavior when entering dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -3884,7 +3894,7 @@ async def test_periodic_task_entering_dst(hass, freezer):
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:59:59+01:00")
-async def test_periodic_task_entering_dst_2(hass, freezer):
+async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> None:
     """Test periodic task behavior when entering dst.
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
@@ -3935,7 +3945,7 @@ async def test_periodic_task_entering_dst_2(hass, freezer):
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst(hass, freezer):
+async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -4009,7 +4019,7 @@ async def test_periodic_task_leaving_dst(hass, freezer):
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst_2(hass, freezer):
+async def test_periodic_task_leaving_dst_2(hass: HomeAssistant, freezer) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -4391,8 +4401,8 @@ async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) ->
 
 
 async def test_async_track_entity_registry_updated_event_with_a_callback_that_throws(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test tracking entity registry updates for an entity_id when one callback throws."""
 
     entity_id = "switch.puppy_feeder"

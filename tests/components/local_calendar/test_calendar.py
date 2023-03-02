@@ -48,8 +48,12 @@ class FakeStore(LocalCalendarStore):
 def mock_store() -> None:
     """Test cleanup, remove any media storage persisted during the test."""
 
+    stores: dict[Path, FakeStore] = {}
+
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
-        return FakeStore(hass, path)
+        if path not in stores:
+            stores[path] = FakeStore(hass, path)
+        return stores[path]
 
     with patch(
         "homeassistant.components.local_calendar.LocalCalendarStore", new=new_store
@@ -961,8 +965,20 @@ async def test_update_invalid_event_id(
     assert resp.get("error").get("code") == "failed"
 
 
+@pytest.mark.parametrize(
+    ("start_date_time", "end_date_time"),
+    [
+        ("1997-07-14T17:00:00+00:00", "1997-07-15T04:00:00+00:00"),
+        ("1997-07-14T11:00:00-06:00", "1997-07-14T22:00:00-06:00"),
+    ],
+)
 async def test_create_event_service(
-    hass: HomeAssistant, setup_integration: None, get_events: GetEventsFn
+    hass: HomeAssistant,
+    setup_integration: None,
+    get_events: GetEventsFn,
+    start_date_time: str,
+    end_date_time: str,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test creating an event using the create_event service."""
 
@@ -970,13 +986,15 @@ async def test_create_event_service(
         "calendar",
         "create_event",
         {
-            "start_date_time": "1997-07-14T17:00:00+00:00",
-            "end_date_time": "1997-07-15T04:00:00+00:00",
+            "start_date_time": start_date_time,
+            "end_date_time": end_date_time,
             "summary": "Bastille Day Party",
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
+    # Ensure data is written to disk
+    await hass.async_block_till_done()
 
     events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
     assert list(map(event_fields, events)) == [
@@ -986,6 +1004,20 @@ async def test_create_event_service(
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
         }
     ]
+
+    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+
+    # Reload the config entry, which reloads the content from the store and
+    # verifies that the persisted data can be parsed correctly.
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
     assert list(map(event_fields, events)) == [

@@ -17,8 +17,12 @@ from . import (
     ROUTER_DISCOVERY_HASS,
 )
 
+from tests.typing import WebSocketGenerator
 
-async def test_add_dataset(hass: HomeAssistant, hass_ws_client) -> None:
+
+async def test_add_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can add a dataset."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -39,7 +43,9 @@ async def test_add_dataset(hass: HomeAssistant, hass_ws_client) -> None:
     assert dataset.tlv == DATASET_1
 
 
-async def test_add_invalid_dataset(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_add_invalid_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test adding an invalid dataset."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -54,7 +60,65 @@ async def test_add_invalid_dataset(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["error"] == {"code": "invalid_format", "message": "unknown type 222"}
 
 
-async def test_list_get_dataset(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_delete_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test we can delete a dataset."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "thread/add_dataset_tlv", "source": "test", "tlv": DATASET_1}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json_auto_id(
+        {"type": "thread/add_dataset_tlv", "source": "test", "tlv": DATASET_2}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json_auto_id({"type": "thread/list_datasets"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    datasets = msg["result"]["datasets"]
+
+    # Try deleting the preferred dataset
+    await client.send_json_auto_id(
+        {"type": "thread/delete_dataset", "dataset_id": datasets[0]["dataset_id"]}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_allowed",
+        "message": "attempt to remove preferred dataset",
+    }
+
+    # Try deleting a non preferred dataset
+    await client.send_json_auto_id(
+        {"type": "thread/delete_dataset", "dataset_id": datasets[1]["dataset_id"]}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # Try deleting the same dataset again
+    await client.send_json_auto_id(
+        {"type": "thread/delete_dataset", "dataset_id": datasets[1]["dataset_id"]}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": f"'{datasets[1]['dataset_id']}'",
+    }
+
+
+async def test_list_get_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test list and get datasets."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -134,7 +198,7 @@ async def test_list_get_dataset(hass: HomeAssistant, hass_ws_client) -> None:
 
 
 async def test_discover_routers(
-    hass: HomeAssistant, hass_ws_client, mock_async_zeroconf
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_async_zeroconf: None
 ) -> None:
     """Test discovering thread routers."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -176,6 +240,8 @@ async def test_discover_routers(
                 "network_name": "OpenThread HC",
                 "server": "core-silabs-multiprotocol.local.",
                 "vendor_name": "HomeAssistant",
+                "addresses": ["192.168.0.115"],
+                "thread_version": "1.3.0",
             },
             "key": "aeeb2f594b570bbf",
             "type": "router_discovered",
@@ -201,6 +267,8 @@ async def test_discover_routers(
                 "network_name": "NEST-PAN-E1AF",
                 "server": "2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",
                 "vendor_name": "Google Inc.",
+                "thread_version": "1.3.0",
+                "addresses": ["192.168.0.124"],
             },
             "key": "f6a99b425a67abed",
             "type": "router_discovered",

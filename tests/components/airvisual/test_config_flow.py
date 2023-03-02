@@ -53,7 +53,7 @@ from .conftest import (
     ],
 )
 @pytest.mark.parametrize(
-    "response,errors",
+    ("response", "errors"),
     [
         (AsyncMock(side_effect=AirVisualError), {"base": "unknown"}),
         (AsyncMock(side_effect=InvalidKeyError), {CONF_API_KEY: "invalid_api_key"}),
@@ -166,3 +166,4 @@ async def test_step_reauth(
 
     assert len(hass.config_entries.async_entries()) == 1
     assert hass.config_entries.async_entries()[0].data[CONF_API_KEY] == new_api_key
+    await hass.async_block_till_done()

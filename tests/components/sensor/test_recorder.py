@@ -1,4 +1,6 @@
 """The tests for sensor recorder platform."""
+from collections.abc import Callable
+
 # pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import math
@@ -8,7 +10,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import loader
-from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, history
+from homeassistant.components.recorder import (
+    DOMAIN as RECORDER_DOMAIN,
+    Recorder,
+    history,
+)
 from homeassistant.components.recorder.db_schema import (
     StateAttributes,
     States,
@@ -42,6 +48,7 @@ from tests.components.recorder.common import (
     statistics_during_period,
     wait_recording_done,
 )
+from tests.typing import WebSocketGenerator
 
 BATTERY_SENSOR_ATTRIBUTES = {
     "device_class": "battery",
@@ -127,8 +134,8 @@ def set_time_zone():
     ],
 )
 def test_compile_hourly_statistics(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
@@ -137,7 +144,7 @@ def test_compile_hourly_statistics(
     mean,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -192,14 +199,14 @@ def test_compile_hourly_statistics(
     ],
 )
 def test_compile_hourly_statistics_purged_state_changes(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
     statistics_unit,
     unit_class,
-):
+) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -260,7 +267,11 @@ def test_compile_hourly_statistics_purged_state_changes(
 
 
 @pytest.mark.parametrize("attributes", [TEMPERATURE_SENSOR_ATTRIBUTES])
-def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes):
+def test_compile_hourly_statistics_wrong_unit(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    attributes,
+) -> None:
     """Test compiling hourly statistics for sensor with unit not matching device class."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -418,7 +429,15 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "units, device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "units",
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         (US_CUSTOMARY_SYSTEM, "distance", "m", "m", "m", "distance", 1),
         (US_CUSTOMARY_SYSTEM, "distance", "mi", "mi", "mi", "distance", 1),
@@ -447,10 +466,10 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
-    recorder_mock,
-    hass,
-    hass_ws_client,
-    caplog,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     units,
     state_class,
     device_class,
@@ -459,7 +478,7 @@ async def test_compile_hourly_sum_statistics_amount(
     statistics_unit,
     unit_class,
     factor,
-):
+) -> None:
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
@@ -611,7 +630,14 @@ async def test_compile_hourly_sum_statistics_amount(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
         ("energy", "Wh", "Wh", "Wh", "energy", 1),
@@ -622,8 +648,8 @@ async def test_compile_hourly_sum_statistics_amount(
     ],
 )
 def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
     state_unit,
@@ -631,7 +657,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     statistics_unit,
     unit_class,
     factor,
-):
+) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -730,14 +756,21 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
     state_unit,
@@ -745,7 +778,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     statistics_unit,
     unit_class,
     factor,
-):
+) -> None:
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -820,14 +853,21 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
 
 @pytest.mark.parametrize("state_class", ["total"])
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "factor",
+    ),
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_nan_inf_state(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
     state_unit,
@@ -835,7 +875,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     statistics_unit,
     unit_class,
     factor,
-):
+) -> None:
     """Test compiling hourly statistics with nan and inf states."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -955,8 +995,8 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
 )
 @pytest.mark.parametrize("state_class", ["total_increasing"])
 def test_compile_hourly_sum_statistics_negative_state(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     entity_id,
     warning_1,
     warning_2,
@@ -967,7 +1007,7 @@ def test_compile_hourly_sum_statistics_negative_state(
     statistics_unit,
     unit_class,
     offset,
-):
+) -> None:
     """Test compiling hourly statistics with negative states."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -1067,15 +1107,15 @@ def test_compile_hourly_sum_statistics_negative_state(
     ],
 )
 def test_compile_hourly_sum_statistics_total_no_reset(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
     statistics_unit,
     unit_class,
     factor,
-):
+) -> None:
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
@@ -1176,15 +1216,15 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     ],
 )
 def test_compile_hourly_sum_statistics_total_increasing(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
     statistics_unit,
     unit_class,
     factor,
-):
+) -> None:
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
@@ -1283,15 +1323,15 @@ def test_compile_hourly_sum_statistics_total_increasing(
     [("energy", "kWh", "kWh", "kWh", "energy", 1)],
 )
 def test_compile_hourly_sum_statistics_total_increasing_small_dip(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
     statistics_unit,
     unit_class,
     factor,
-):
+) -> None:
     """Test small dips in sensor readings do not trigger a reset."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
@@ -1388,7 +1428,9 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
+def test_compile_hourly_energy_statistics_unsupported(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compiling hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
@@ -1482,7 +1524,9 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
+def test_compile_hourly_energy_statistics_multiple(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compiling multiple hourly statistics."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
@@ -1683,8 +1727,12 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     ],
 )
 def test_compile_hourly_statistics_unchanged(
-    hass_recorder, caplog, device_class, state_unit, value
-):
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    device_class,
+    state_unit,
+    value,
+) -> None:
     """Test compiling hourly statistics, with no changes during the hour."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -1719,7 +1767,9 @@ def test_compile_hourly_statistics_unchanged(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
+def test_compile_hourly_statistics_partially_unavailable(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compiling hourly statistics, with the sensor being partially unavailable."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -1776,8 +1826,12 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     ],
 )
 def test_compile_hourly_statistics_unavailable(
-    hass_recorder, caplog, device_class, state_unit, value
-):
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    device_class,
+    state_unit,
+    value,
+) -> None:
     """Test compiling hourly statistics, with one sensor being unavailable.
 
     sensor.test1 is unavailable and should not have statistics generated
@@ -1820,7 +1874,9 @@ def test_compile_hourly_statistics_unavailable(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_statistics_fails(hass_recorder, caplog):
+def test_compile_hourly_statistics_fails(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compiling hourly statistics throws."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -1886,8 +1942,8 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
     ],
 )
 def test_list_statistic_ids(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     state_class,
     device_class,
     state_unit,
@@ -1895,7 +1951,7 @@ def test_list_statistic_ids(
     statistics_unit,
     unit_class,
     statistic_type,
-):
+) -> None:
     """Test listing future statistic ids."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -1943,7 +1999,11 @@ def test_list_statistic_ids(
     "_attributes",
     [{**ENERGY_SENSOR_ATTRIBUTES, "last_reset": 0}, TEMPERATURE_SENSOR_ATTRIBUTES],
 )
-def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
+def test_list_statistic_ids_unsupported(
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
+    _attributes,
+) -> None:
     """Test listing future statistic ids for unsupported sensor."""
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -1980,8 +2040,8 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
     ],
 )
 def test_compile_hourly_statistics_changing_units_1(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     state_unit2,
@@ -1989,7 +2049,7 @@ def test_compile_hourly_statistics_changing_units_1(
     mean,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where units change from one hour to the next.
 
     This tests the case where the recorder cannot convert between the units.
@@ -2101,8 +2161,8 @@ def test_compile_hourly_statistics_changing_units_1(
     ],
 )
 def test_compile_hourly_statistics_changing_units_2(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
@@ -2111,7 +2171,7 @@ def test_compile_hourly_statistics_changing_units_2(
     mean,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where units change during an hour.
 
     This tests the behaviour when the sensor units are note supported by any unit
@@ -2174,8 +2234,8 @@ def test_compile_hourly_statistics_changing_units_2(
     ],
 )
 def test_compile_hourly_statistics_changing_units_3(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
@@ -2184,7 +2244,7 @@ def test_compile_hourly_statistics_changing_units_3(
     mean,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where units change from one hour to the next.
 
     This tests the behaviour when the sensor units are note supported by any unit
@@ -2291,8 +2351,8 @@ def test_compile_hourly_statistics_changing_units_3(
     ],
 )
 def test_compile_hourly_statistics_convert_units_1(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     state_unit_1,
     state_unit_2,
     unit_class,
@@ -2300,7 +2360,7 @@ def test_compile_hourly_statistics_convert_units_1(
     min,
     max,
     factor,
-):
+) -> None:
     """Test compiling hourly statistics where units change from one hour to the next.
 
     This tests the case where the recorder can convert between the units.
@@ -2427,8 +2487,8 @@ def test_compile_hourly_statistics_convert_units_1(
     ],
 )
 def test_compile_hourly_statistics_equivalent_units_1(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     state_unit2,
@@ -2438,7 +2498,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
     mean2,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where units change from one hour to the next."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -2547,8 +2607,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
     ],
 )
 def test_compile_hourly_statistics_equivalent_units_2(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     state_unit2,
@@ -2556,7 +2616,7 @@ def test_compile_hourly_statistics_equivalent_units_2(
     mean,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where units change during an hour."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -2630,8 +2690,8 @@ def test_compile_hourly_statistics_equivalent_units_2(
     ],
 )
 def test_compile_hourly_statistics_changing_device_class_1(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     statistic_unit,
@@ -2640,7 +2700,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     mean2,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where device class changes from one hour to the next.
 
     Device class is ignored, meaning changing device class should not influence the statistics.
@@ -2828,8 +2888,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
     ],
 )
 def test_compile_hourly_statistics_changing_device_class_2(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
@@ -2839,7 +2899,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     mean2,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where device class changes from one hour to the next.
 
     Device class is ignored, meaning changing device class should not influence the statistics.
@@ -2962,8 +3022,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
     ],
 )
 def test_compile_hourly_statistics_changing_state_class(
-    hass_recorder,
-    caplog,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
     device_class,
     state_unit,
     display_unit,
@@ -2972,7 +3032,7 @@ def test_compile_hourly_statistics_changing_state_class(
     mean,
     min,
     max,
-):
+) -> None:
     """Test compiling hourly statistics where state class changes."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
@@ -3085,7 +3145,9 @@ def test_compile_hourly_statistics_changing_state_class(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
+def test_compile_statistics_hourly_daily_monthly_summary(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compiling hourly statistics + monthly and daily summary."""
     zero = dt_util.utcnow()
     # August 31st, 23:00 local time
@@ -3216,7 +3278,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
 
     # Generate 5-minute statistics for two hours
     start = zero
-    for i in range(24):
+    for _ in range(24):
         do_adhoc_statistics(hass, start=start)
         wait_recording_done(hass)
         start += timedelta(minutes=5)
@@ -3573,8 +3635,15 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
     ],
 )
 async def test_validate_unit_change_convertible(
-    recorder_mock, hass, hass_ws_client, units, attributes, unit, unit2, supported_unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+    unit2,
+    supported_unit,
+) -> None:
     """Test validate_statistics.
 
     This tests what happens if a sensor is first recorded in a unit which supports unit
@@ -3688,8 +3757,12 @@ async def test_validate_unit_change_convertible(
     ],
 )
 async def test_validate_statistics_unit_ignore_device_class(
-    recorder_mock, hass, hass_ws_client, units, attributes
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+) -> None:
     """Test validate_statistics.
 
     The test asserts that the sensor's device class is ignored.
@@ -3772,8 +3845,15 @@ async def test_validate_statistics_unit_ignore_device_class(
     ],
 )
 async def test_validate_statistics_unit_change_no_device_class(
-    recorder_mock, hass, hass_ws_client, units, attributes, unit, unit2, supported_unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+    unit2,
+    supported_unit,
+) -> None:
     """Test validate_statistics.
 
     This tests what happens if a sensor is first recorded in a unit which supports unit
@@ -3887,8 +3967,13 @@ async def test_validate_statistics_unit_change_no_device_class(
     ],
 )
 async def test_validate_statistics_unsupported_state_class(
-    recorder_mock, hass, hass_ws_client, units, attributes, unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+) -> None:
     """Test validate_statistics."""
     id = 1
 
@@ -3951,8 +4036,13 @@ async def test_validate_statistics_unsupported_state_class(
     ],
 )
 async def test_validate_statistics_sensor_no_longer_recorded(
-    recorder_mock, hass, hass_ws_client, units, attributes, unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+) -> None:
     """Test validate_statistics."""
     id = 1
 
@@ -4014,8 +4104,13 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     ],
 )
 async def test_validate_statistics_sensor_not_recorded(
-    recorder_mock, hass, hass_ws_client, units, attributes, unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+) -> None:
     """Test validate_statistics."""
     id = 1
 
@@ -4074,8 +4169,13 @@ async def test_validate_statistics_sensor_not_recorded(
     ],
 )
 async def test_validate_statistics_sensor_removed(
-    recorder_mock, hass, hass_ws_client, units, attributes, unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+) -> None:
     """Test validate_statistics."""
     id = 1
 
@@ -4133,8 +4233,13 @@ async def test_validate_statistics_sensor_removed(
     ],
 )
 async def test_validate_statistics_unit_change_no_conversion(
-    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    attributes,
+    unit1,
+    unit2,
+) -> None:
     """Test validate_statistics."""
     id = 1
 
@@ -4259,8 +4364,13 @@ async def test_validate_statistics_unit_change_no_conversion(
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units(
-    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    attributes,
+    unit1,
+    unit2,
+) -> None:
     """Test validate_statistics.
 
     This tests no validation issue is created when a sensor's unit changes to an
@@ -4338,8 +4448,14 @@ async def test_validate_statistics_unit_change_equivalent_units(
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units_2(
-    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2, supported_unit
-):
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    attributes,
+    unit1,
+    unit2,
+    supported_unit,
+) -> None:
     """Test validate_statistics.
 
     This tests a validation issue is created when a sensor's unit changes to an
@@ -4424,7 +4540,9 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     await assert_validation_result(client, expected)
 
 
-async def test_validate_statistics_other_domain(recorder_mock, hass, hass_ws_client):
+async def test_validate_statistics_other_domain(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test sensor does not raise issues for statistics for other domains."""
     id = 1
 
@@ -4606,7 +4724,7 @@ def record_states_partially_unavailable(hass, zero, entity_id, attributes):
     return four, states
 
 
-async def test_exclude_attributes(recorder_mock: None, hass: HomeAssistant) -> None:
+async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test sensor attributes to be excluded."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -4617,7 +4735,11 @@ async def test_exclude_attributes(recorder_mock: None, hass: HomeAssistant) -> N
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
-            for db_state, db_state_attributes in session.query(States, StateAttributes):
+            for db_state, db_state_attributes in session.query(
+                States, StateAttributes
+            ).outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            ):
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)

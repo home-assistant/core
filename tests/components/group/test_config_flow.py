@@ -116,7 +116,7 @@ async def test_config_flow(
     ("hide_members", "hidden_by"), ((False, None), (True, "integration"))
 )
 @pytest.mark.parametrize(
-    "group_type,extra_input",
+    ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),
@@ -371,7 +371,7 @@ async def test_all_options(
     ),
 )
 @pytest.mark.parametrize(
-    "group_type,extra_input",
+    ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),

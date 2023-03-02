@@ -58,10 +58,17 @@ FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) 
 
 
 @callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up entity sources."""
+    hass.data[DATA_ENTITY_SOURCE] = {}
+
+
+@callback
 @bind_hass
 def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
     """Get the entity sources."""
-    return hass.data.get(DATA_ENTITY_SOURCE, {})
+    _entity_sources: dict[str, dict[str, str]] = hass.data[DATA_ENTITY_SOURCE]
+    return _entity_sources
 
 
 def generate_entity_id(
@@ -868,7 +875,7 @@ class Entity(ABC):
             else:
                 info["source"] = SOURCE_PLATFORM_CONFIG
 
-            self.hass.data.setdefault(DATA_ENTITY_SOURCE, {})[self.entity_id] = info
+            self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests

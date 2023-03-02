@@ -68,11 +68,11 @@ from homeassistant.util import (
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
-from .json import JSON_DECODE_EXCEPTIONS, json_loads
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -2063,6 +2063,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | str | None
         ] = weakref.WeakValueDictionary()
+        self.add_extension("jinja2.ext.loopcontrols")
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
