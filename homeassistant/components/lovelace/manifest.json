@@ -1,7 +1,8 @@
 {
   "domain": "lovelace",
   "name": "Dashboards",
-  "documentation": "https://www.home-assistant.io/integrations/lovelace",
   "codeowners": ["@home-assistant/frontend"],
+  "documentation": "https://www.home-assistant.io/integrations/lovelace",
+  "integration_type": "system",
   "quality_scale": "internal"
 }

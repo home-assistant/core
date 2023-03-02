@@ -20,11 +20,12 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_switch_set_state(hass, hk_driver, events):
+async def test_switch_set_state(hass: HomeAssistant, hk_driver, events) -> None:
     """Test if accessory and HA are updated accordingly."""
     code = "1234"
     config = {ATTR_CODE: code}
@@ -116,7 +117,7 @@ async def test_switch_set_state(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize("config", [{}, {ATTR_CODE: None}])
-async def test_no_alarm_code(hass, hk_driver, config, events):
+async def test_no_alarm_code(hass: HomeAssistant, hk_driver, config, events) -> None:
     """Test accessory if security_system doesn't require an alarm_code."""
     entity_id = "alarm_control_panel.test"
 
@@ -137,7 +138,7 @@ async def test_no_alarm_code(hass, hk_driver, config, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_arming(hass, hk_driver, events):
+async def test_arming(hass: HomeAssistant, hk_driver, events) -> None:
     """Test to make sure arming sets the right state."""
     entity_id = "alarm_control_panel.test"
 
@@ -188,7 +189,7 @@ async def test_arming(hass, hk_driver, events):
     assert acc.char_current_state.value == 4
 
 
-async def test_supported_states(hass, hk_driver, events):
+async def test_supported_states(hass: HomeAssistant, hk_driver, events) -> None:
     """Test different supported states."""
     code = "1234"
     config = {ATTR_CODE: code}
@@ -282,13 +283,16 @@ async def test_supported_states(hass, hk_driver, events):
         },
     ]
 
+    aid = 1
+
     for test_config in test_configs:
         attrs = {"supported_features": test_config.get("features")}
 
         hass.states.async_set(entity_id, None, attributes=attrs)
         await hass.async_block_till_done()
 
-        acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
+        aid += 1
+        acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, aid, config)
         await acc.run()
         await hass.async_block_till_done()
 

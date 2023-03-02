@@ -38,6 +38,12 @@ set:
       example: domain.entity_id1, domain.entity_id2
       selector:
         object:
+    remove_entities:
+      name: Remove Entities
+      description: List of members that will be removed from group listening.
+      example: domain.entity_id1, domain.entity_id2
+      selector:
+        object:
     all:
       name: All
       description: Enable this option if the group should only turn on when all entities are on.

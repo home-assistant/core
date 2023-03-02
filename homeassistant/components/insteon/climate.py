@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -89,8 +89,8 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self._insteon_device.configuration[CELSIUS].value:
-            return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
+            return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_humidity(self) -> int | None:

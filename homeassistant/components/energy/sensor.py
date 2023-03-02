@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import copy
 from dataclasses import dataclass
 import logging
@@ -15,14 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import reset_detected
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import (
     HomeAssistant,
     State,
@@ -34,18 +28,38 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import unit_conversion
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
 
-SUPPORTED_STATE_CLASSES = [
+SUPPORTED_STATE_CLASSES = {
     SensorStateClass.MEASUREMENT,
     SensorStateClass.TOTAL,
     SensorStateClass.TOTAL_INCREASING,
-]
-VALID_ENERGY_UNITS = [ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR]
-VALID_ENERGY_UNITS_GAS = [VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS] + VALID_ENERGY_UNITS
+}
+VALID_ENERGY_UNITS: set[str] = {
+    UnitOfEnergy.GIGA_JOULE,
+    UnitOfEnergy.KILO_WATT_HOUR,
+    UnitOfEnergy.MEGA_JOULE,
+    UnitOfEnergy.MEGA_WATT_HOUR,
+    UnitOfEnergy.WATT_HOUR,
+}
+VALID_ENERGY_UNITS_GAS = {
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
+    *VALID_ENERGY_UNITS,
+}
+VALID_VOLUME_UNITS_WATER: set[str] = {
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.GALLONS,
+    UnitOfVolume.LITERS,
+}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -64,7 +78,7 @@ async def async_setup_platform(
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
-    source_type: Literal["grid", "gas"]
+    source_type: Literal["grid", "gas", "water"]
     flow_type: Literal["flow_from", "flow_to", None]
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -91,6 +105,14 @@ SOURCE_ADAPTERS: Final = (
     ),
     SourceAdapter(
         "gas",
+        None,
+        "stat_energy_from",
+        "stat_cost",
+        "Cost",
+        "cost",
+    ),
+    SourceAdapter(
+        "water",
         None,
         "stat_energy_from",
         "stat_cost",
@@ -235,6 +257,22 @@ class EnergyCostSensor(SensorEntity):
     @callback
     def _update_cost(self) -> None:
         """Update incurred costs."""
+        if self._adapter.source_type == "grid":
+            valid_units = VALID_ENERGY_UNITS
+            default_price_unit: str | None = UnitOfEnergy.KILO_WATT_HOUR
+
+        elif self._adapter.source_type == "gas":
+            valid_units = VALID_ENERGY_UNITS_GAS
+            # No conversion for gas.
+            default_price_unit = None
+
+        elif self._adapter.source_type == "water":
+            valid_units = VALID_VOLUME_UNITS_WATER
+            if self.hass.config.units is METRIC_SYSTEM:
+                default_price_unit = UnitOfVolume.CUBIC_METERS
+            else:
+                default_price_unit = UnitOfVolume.GALLONS
+
         energy_state = self.hass.states.get(
             cast(str, self._config[self._adapter.stat_energy_key])
         )
@@ -279,41 +317,27 @@ class EnergyCostSensor(SensorEntity):
             except ValueError:
                 return
 
-            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{ENERGY_WATT_HOUR}"
-            ):
-                energy_price *= 1000.0
+            energy_price_unit: str | None = energy_price_state.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT, ""
+            ).partition("/")[2]
 
-            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{ENERGY_MEGA_WATT_HOUR}"
-            ):
-                energy_price /= 1000.0
+            # For backwards compatibility we don't validate the unit of the price
+            # If it is not valid, we assume it's our default price unit.
+            if energy_price_unit not in valid_units:
+                energy_price_unit = default_price_unit
 
         else:
-            energy_price_state = None
             energy_price = cast(float, self._config["number_energy_price"])
+            energy_price_unit = default_price_unit
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
             self._reset(energy_state)
             return
 
-        energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        energy_unit: str | None = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if self._adapter.source_type == "grid":
-            if energy_unit not in VALID_ENERGY_UNITS:
-                energy_unit = None
-
-        elif self._adapter.source_type == "gas":
-            if energy_unit not in VALID_ENERGY_UNITS_GAS:
-                energy_unit = None
-
-        if energy_unit == ENERGY_WATT_HOUR:
-            energy_price /= 1000
-        elif energy_unit == ENERGY_MEGA_WATT_HOUR:
-            energy_price *= 1000
-
-        if energy_unit is None:
+        if energy_unit is None or energy_unit not in valid_units:
             if not self._wrong_unit_reported:
                 self._wrong_unit_reported = True
                 _LOGGER.warning(
@@ -343,10 +367,30 @@ class EnergyCostSensor(SensorEntity):
             energy_state_copy = copy.copy(energy_state)
             energy_state_copy.state = "0.0"
             self._reset(energy_state_copy)
+
         # Update with newly incurred cost
         old_energy_value = float(self._last_energy_sensor_state.state)
         cur_value = cast(float, self._attr_native_value)
-        self._attr_native_value = cur_value + (energy - old_energy_value) * energy_price
+
+        if energy_price_unit is None:
+            converted_energy_price = energy_price
+        else:
+            if self._adapter.source_type == "grid":
+                converter: Callable[
+                    [float, str, str], float
+                ] = unit_conversion.EnergyConverter.convert
+            elif self._adapter.source_type in ("gas", "water"):
+                converter = unit_conversion.VolumeConverter.convert
+
+            converted_energy_price = converter(
+                energy_price,
+                energy_unit,
+                energy_price_unit,
+            )
+
+        self._attr_native_value = (
+            cur_value + (energy - old_energy_value) * converted_energy_price
+        )
 
         self._last_energy_sensor_state = energy_state
 

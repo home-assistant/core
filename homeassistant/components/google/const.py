@@ -10,6 +10,7 @@ CONF_CALENDAR_ACCESS = "calendar_access"
 DATA_CALENDARS = "calendars"
 DATA_SERVICE = "service"
 DATA_CONFIG = "config"
+DATA_STORE = "store"
 
 
 class FeatureAccess(Enum):

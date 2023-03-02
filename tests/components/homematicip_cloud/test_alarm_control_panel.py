@@ -9,6 +9,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .helper import get_and_check_entity_basics
@@ -18,7 +19,7 @@ async def _async_manipulate_security_zones(
     hass, home, internal_active=False, external_active=False, alarm_triggered=False
 ):
     """Set new values on hmip security zones."""
-    json = home._rawJSONData  # pylint: disable=protected-access
+    json = home._rawJSONData
     json["functionalHomes"]["SECURITY_AND_ALARM"]["alarmActive"] = alarm_triggered
     external_zone_id = json["functionalHomes"]["SECURITY_AND_ALARM"]["securityZones"][
         "EXTERNAL"
@@ -36,7 +37,7 @@ async def _async_manipulate_security_zones(
     await hass.async_block_till_done()
 
 
-async def test_manually_configured_platform(hass):
+async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     """Test that we do not set up an access point."""
     assert await async_setup_component(
         hass,
@@ -47,7 +48,9 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_alarm_control_panel(hass, default_mock_hap_factory):
+async def test_hmip_alarm_control_panel(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipAlarmControlPanel."""
     entity_id = "alarm_control_panel.hmip_alarm_control_panel"
     entity_name = "HmIP Alarm Control Panel"

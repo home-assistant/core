@@ -3,22 +3,24 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
+    CHANNEL_BASIC,
+    CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
     DATA_ZHA,
@@ -33,10 +35,6 @@ if TYPE_CHECKING:
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
-
-_ZHANumberConfigurationEntitySelfT = TypeVar(
-    "_ZHANumberConfigurationEntitySelfT", bound="ZHANumberConfigurationEntity"
-)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -381,12 +379,12 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     @classmethod
     def create_entity(
-        cls: type[_ZHANumberConfigurationEntitySelfT],
+        cls,
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
         **kwargs: Any,
-    ) -> _ZHANumberConfigurationEntitySelfT | None:
+    ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -446,15 +444,18 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
             _LOGGER.debug("read value=%s", value)
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac02", "lumi.motion.agl04"}
+)
 class AqaraMotionDetectionInterval(
     ZHANumberConfigurationEntity, id_suffix="detection_interval"
 ):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA motion detection interval configuration entity."""
 
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
     _zcl_attribute: str = "detection_interval"
+    _attr_name = "Detection interval"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -466,6 +467,7 @@ class OnOffTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFF
     _zcl_attribute: str = "on_off_transition_time"
+    _attr_name = "On/Off transition time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -475,6 +477,7 @@ class OnLevelConfigurationEntity(ZHANumberConfigurationEntity, id_suffix="on_lev
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "on_level"
+    _attr_name = "On level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -486,6 +489,7 @@ class OnTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "on_transition_time"
+    _attr_name = "On transition time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -497,6 +501,7 @@ class OffTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "off_transition_time"
+    _attr_name = "Off transition time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -508,6 +513,7 @@ class DefaultMoveRateConfigurationEntity(
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFE
     _zcl_attribute: str = "default_move_rate"
+    _attr_name = "Default move rate"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -519,6 +525,32 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
+    _attr_name = "Start-up current level"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_COLOR)
+class StartUpColorTemperatureConfigurationEntity(
+    ZHANumberConfigurationEntity, id_suffix="start_up_color_temperature"
+):
+    """Representation of a ZHA startup color temperature configuration entity."""
+
+    _attr_native_min_value: float = 153
+    _attr_native_max_value: float = 500
+    _zcl_attribute: str = "start_up_color_temperature"
+    _attr_name = "Start-up color temperature"
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
+        """Init this ZHA startup color temperature entity."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        if self._channel:
+            self._attr_native_min_value: float = self._channel.min_mireds
+            self._attr_native_max_value: float = self._channel.max_mireds
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -536,11 +568,12 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
     _attr_native_max_value: float = 0x257
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
+    _attr_name = "Timer duration"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
 class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
-    """Representation of a ZHA timer duration configuration entity."""
+    """Representation of a ZHA filter lifetime configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
@@ -548,6 +581,21 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_native_max_value: float = 0xFFFFFFFF
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"
+    _attr_name = "Filter life time"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"TexasInstruments"},
+    models={"ti.router"},
+)
+class TiRouterTransmitPower(ZHANumberConfigurationEntity, id_suffix="transmit_power"):
+    """Representation of a ZHA TI transmit power configuration entity."""
+
+    _attr_native_min_value: float = -20
+    _attr_native_max_value: float = 20
+    _zcl_attribute: str = "transmit_power"
+    _attr_name = "Transmit power"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
@@ -784,3 +832,32 @@ class InovelliDefaultAllLEDOffIntensity(
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_off"
     _attr_name: str = "Default all LED off intensity"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
+    """Aqara pet feeder serving size configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 10
+    _zcl_attribute: str = "serving_size"
+    _attr_name: str = "Serving to dispense"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:counter"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionWeight(
+    ZHANumberConfigurationEntity, id_suffix="portion_weight"
+):
+    """Aqara pet feeder portion weight configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "portion_weight"
+    _attr_name: str = "Portion weight"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
+    _attr_icon: str = "mdi:weight-gram"

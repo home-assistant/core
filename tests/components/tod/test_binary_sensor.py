@@ -5,6 +5,8 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -32,7 +34,7 @@ def hass_tz_info(hass):
     return dt_util.get_time_zone(hass.config.time_zone)
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the setup."""
     config = {
         "binary_sensor": [
@@ -56,7 +58,7 @@ async def test_setup(hass):
         assert await async_setup_component(hass, "binary_sensor", config)
 
 
-async def test_setup_no_sensors(hass):
+async def test_setup_no_sensors(hass: HomeAssistant) -> None:
     """Test setup with no sensors."""
     with assert_setup_component(0):
         assert await async_setup_component(
@@ -65,7 +67,7 @@ async def test_setup_no_sensors(hass):
 
 
 @freeze_time("2019-01-10 18:43:00-08:00")
-async def test_in_period_on_start(hass):
+async def test_in_period_on_start(hass: HomeAssistant) -> None:
     """Test simple setting."""
     config = {
         "binary_sensor": [
@@ -85,7 +87,9 @@ async def test_in_period_on_start(hass):
 
 
 @freeze_time("2019-01-10 22:30:00-08:00")
-async def test_midnight_turnover_before_midnight_inside_period(hass):
+async def test_midnight_turnover_before_midnight_inside_period(
+    hass: HomeAssistant,
+) -> None:
     """Test midnight turnover setting before midnight inside period ."""
     config = {
         "binary_sensor": [
@@ -100,8 +104,8 @@ async def test_midnight_turnover_before_midnight_inside_period(hass):
 
 
 async def test_midnight_turnover_after_midnight_inside_period(
-    hass, freezer, hass_tz_info
-):
+    hass: HomeAssistant, freezer, hass_tz_info
+) -> None:
     """Test midnight turnover setting before midnight inside period ."""
     test_time = datetime(2019, 1, 10, 21, 0, 0, tzinfo=hass_tz_info)
     config = {
@@ -127,7 +131,9 @@ async def test_midnight_turnover_after_midnight_inside_period(
 
 
 @freeze_time("2019-01-10 20:30:00-08:00")
-async def test_midnight_turnover_before_midnight_outside_period(hass):
+async def test_midnight_turnover_before_midnight_outside_period(
+    hass: HomeAssistant,
+) -> None:
     """Test midnight turnover setting before midnight outside period."""
     config = {
         "binary_sensor": [
@@ -142,7 +148,7 @@ async def test_midnight_turnover_before_midnight_outside_period(hass):
 
 
 @freeze_time("2019-01-10 10:00:00-08:00")
-async def test_after_happens_tomorrow(hass):
+async def test_after_happens_tomorrow(hass: HomeAssistant) -> None:
     """Test when both before and after are in the future, and after is later than before."""
     config = {
         "binary_sensor": [
@@ -157,8 +163,8 @@ async def test_after_happens_tomorrow(hass):
 
 
 async def test_midnight_turnover_after_midnight_outside_period(
-    hass, freezer, hass_tz_info
-):
+    hass: HomeAssistant, freezer, hass_tz_info
+) -> None:
     """Test midnight turnover setting before midnight inside period ."""
     test_time = datetime(2019, 1, 10, 20, 0, 0, tzinfo=hass_tz_info)
 
@@ -190,7 +196,9 @@ async def test_midnight_turnover_after_midnight_outside_period(
     assert state.state == STATE_OFF
 
 
-async def test_from_sunrise_to_sunset(hass, freezer, hass_tz_info):
+async def test_from_sunrise_to_sunset(
+    hass: HomeAssistant, freezer, hass_tz_info
+) -> None:
     """Test period from sunrise to sunset."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
     sunrise = dt_util.as_local(
@@ -247,7 +255,9 @@ async def test_from_sunrise_to_sunset(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_from_sunset_to_sunrise(hass, freezer, hass_tz_info):
+async def test_from_sunset_to_sunrise(
+    hass: HomeAssistant, freezer, hass_tz_info
+) -> None:
     """Test period from sunset to sunrise."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
     sunset = dt_util.as_local(get_astral_event_date(hass, "sunset", test_time))
@@ -301,7 +311,7 @@ async def test_from_sunset_to_sunrise(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_offset(hass, freezer, hass_tz_info):
+async def test_offset(hass: HomeAssistant, freezer, hass_tz_info) -> None:
     """Test offset."""
     after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=hass_tz_info) + timedelta(
         hours=1, minutes=34
@@ -355,7 +365,7 @@ async def test_offset(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_offset_overnight(hass, freezer, hass_tz_info):
+async def test_offset_overnight(hass: HomeAssistant, freezer, hass_tz_info) -> None:
     """Test offset overnight."""
     after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=hass_tz_info) + timedelta(
         hours=1, minutes=34
@@ -386,7 +396,9 @@ async def test_offset_overnight(hass, freezer, hass_tz_info):
     assert state.state == STATE_ON
 
 
-async def test_norwegian_case_winter(hass, freezer, hass_tz_info):
+async def test_norwegian_case_winter(
+    hass: HomeAssistant, freezer, hass_tz_info
+) -> None:
     """Test location in Norway where the sun doesn't set in summer."""
     hass.config.latitude = 69.6
     hass.config.longitude = 18.8
@@ -452,7 +464,9 @@ async def test_norwegian_case_winter(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_norwegian_case_summer(hass, freezer, hass_tz_info):
+async def test_norwegian_case_summer(
+    hass: HomeAssistant, freezer, hass_tz_info
+) -> None:
     """Test location in Norway where the sun doesn't set in summer."""
     hass.config.latitude = 69.6
     hass.config.longitude = 18.8
@@ -520,7 +534,7 @@ async def test_norwegian_case_summer(hass, freezer, hass_tz_info):
     assert state.state == STATE_OFF
 
 
-async def test_sun_offset(hass, freezer, hass_tz_info):
+async def test_sun_offset(hass: HomeAssistant, freezer, hass_tz_info) -> None:
     """Test sun event with offset."""
     test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
     sunrise = dt_util.as_local(
@@ -594,7 +608,7 @@ async def test_sun_offset(hass, freezer, hass_tz_info):
     assert state.state == STATE_ON
 
 
-async def test_dst(hass, freezer, hass_tz_info):
+async def test_dst(hass: HomeAssistant, freezer, hass_tz_info) -> None:
     """Test sun event with offset."""
     hass.config.time_zone = "CET"
     dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
@@ -622,7 +636,9 @@ async def test_dst(hass, freezer, hass_tz_info):
 
 @freeze_time("2019-01-10 18:43:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
-async def test_simple_before_after_does_not_loop_utc_not_in_range(hass):
+async def test_simple_before_after_does_not_loop_utc_not_in_range(
+    hass: HomeAssistant,
+) -> None:
     """Test simple before after."""
     config = {
         "binary_sensor": [
@@ -646,7 +662,9 @@ async def test_simple_before_after_does_not_loop_utc_not_in_range(hass):
 
 @freeze_time("2019-01-10 22:43:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
-async def test_simple_before_after_does_not_loop_utc_in_range(hass):
+async def test_simple_before_after_does_not_loop_utc_in_range(
+    hass: HomeAssistant,
+) -> None:
     """Test simple before after."""
     config = {
         "binary_sensor": [
@@ -670,7 +688,9 @@ async def test_simple_before_after_does_not_loop_utc_in_range(hass):
 
 @freeze_time("2019-01-11 06:00:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
-async def test_simple_before_after_does_not_loop_utc_fire_at_before(hass):
+async def test_simple_before_after_does_not_loop_utc_fire_at_before(
+    hass: HomeAssistant,
+) -> None:
     """Test simple before after."""
     config = {
         "binary_sensor": [
@@ -694,7 +714,9 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_before(hass):
 
 @freeze_time("2019-01-10 22:00:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
-async def test_simple_before_after_does_not_loop_utc_fire_at_after(hass):
+async def test_simple_before_after_does_not_loop_utc_fire_at_after(
+    hass: HomeAssistant,
+) -> None:
     """Test simple before after."""
     config = {
         "binary_sensor": [
@@ -718,7 +740,9 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_after(hass):
 
 @freeze_time("2019-01-10 22:00:00")
 @pytest.mark.parametrize("hass_time_zone", ("UTC",))
-async def test_simple_before_after_does_not_loop_utc_both_before_now(hass):
+async def test_simple_before_after_does_not_loop_utc_both_before_now(
+    hass: HomeAssistant,
+) -> None:
     """Test simple before after."""
     config = {
         "binary_sensor": [
@@ -742,7 +766,9 @@ async def test_simple_before_after_does_not_loop_utc_both_before_now(hass):
 
 @freeze_time("2019-01-10 17:43:00+01:00")
 @pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
-async def test_simple_before_after_does_not_loop_berlin_not_in_range(hass):
+async def test_simple_before_after_does_not_loop_berlin_not_in_range(
+    hass: HomeAssistant,
+) -> None:
     """Test simple before after."""
     config = {
         "binary_sensor": [
@@ -766,7 +792,9 @@ async def test_simple_before_after_does_not_loop_berlin_not_in_range(hass):
 
 @freeze_time("2019-01-11 00:43:00+01:00")
 @pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
-async def test_simple_before_after_does_not_loop_berlin_in_range(hass):
+async def test_simple_before_after_does_not_loop_berlin_in_range(
+    hass: HomeAssistant,
+) -> None:
     """Test simple before after."""
     config = {
         "binary_sensor": [
@@ -786,3 +814,25 @@ async def test_simple_before_after_does_not_loop_berlin_in_range(hass):
     assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
     assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
     assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
+
+
+async def test_unique_id(hass: HomeAssistant) -> None:
+    """Test unique id."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Evening",
+                "after": "18:00",
+                "before": "22:00",
+                "unique_id": "very_unique_id",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("binary_sensor.evening")
+
+    assert entity.unique_id == "very_unique_id"

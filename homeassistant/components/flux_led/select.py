@@ -14,9 +14,8 @@ from flux_led.protocol import PowerRestoreState, RemoteConfig
 
 from homeassistant import config_entries
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_WHITE_CHANNEL_TYPE, DOMAIN, FLUX_COLOR_MODE_RGBW
@@ -81,8 +80,7 @@ async def async_setup_entry(
     if FLUX_COLOR_MODE_RGBW in device.color_modes:
         entities.append(FluxWhiteChannelSelect(coordinator.device, entry))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class FluxConfigAtStartSelect(FluxBaseEntity, SelectEntity):

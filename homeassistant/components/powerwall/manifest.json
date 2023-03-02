@@ -1,15 +1,18 @@
 {
   "domain": "powerwall",
   "name": "Tesla Powerwall",
+  "codeowners": ["@bdraco", "@jrester", "@daniel-simpson"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/powerwall",
-  "requirements": ["tesla-powerwall==0.3.18"],
-  "codeowners": ["@bdraco", "@jrester"],
   "dhcp": [
     {
       "hostname": "1118431-*"
+    },
+    {
+      "hostname": "1232100-*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/powerwall",
   "iot_class": "local_polling",
-  "loggers": ["tesla_powerwall"]
+  "loggers": ["tesla_powerwall"],
+  "requirements": ["tesla-powerwall==0.3.19"]
 }

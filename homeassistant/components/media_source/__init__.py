@@ -163,7 +163,7 @@ async def async_resolve_media(
 )
 @websocket_api.async_response
 async def websocket_browse_media(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Browse available media."""
     try:
@@ -185,7 +185,7 @@ async def websocket_browse_media(
 )
 @websocket_api.async_response
 async def websocket_resolve_media(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Resolve media."""
     try:

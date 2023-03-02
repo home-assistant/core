@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 from typing import NamedTuple
 
 from miio.fan_common import LedBrightness as FanLedBrightness
@@ -14,6 +15,7 @@ from miio.integrations.airpurifier.zhimi.airfresh import (
 )
 from miio.integrations.airpurifier.zhimi.airpurifier import (
     LedBrightness as AirpurifierLedBrightness,
+    OperationMode as AirpurifierOperationMode,
 )
 from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
     LedBrightness as AirpurifierMiotLedBrightness,
@@ -27,9 +29,8 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -47,9 +48,13 @@ from .const import (
     MODEL_AIRHUMIDIFIER_V1,
     MODEL_AIRPURIFIER_3,
     MODEL_AIRPURIFIER_3H,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
+    MODEL_AIRPURIFIER_MA2,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -62,6 +67,9 @@ from .device import XiaomiCoordinatedMiioEntity
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
+ATTR_MODE = "mode"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -72,7 +80,6 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
     options_map: dict = field(default_factory=dict)
     set_method: str = ""
     set_method_error_message: str = ""
-    options: tuple = ()
 
 
 class AttributeEnumMapping(NamedTuple):
@@ -105,10 +112,20 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_AIRHUMIDIFIER_V1: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
     ],
+    MODEL_AIRPURIFIER_MA2: [AttributeEnumMapping(ATTR_MODE, AirpurifierOperationMode)],
     MODEL_AIRPURIFIER_3: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
+    MODEL_AIRPURIFIER_ZA1: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
     MODEL_AIRPURIFIER_3H: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_4: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_4_PRO: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_AIRPURIFIER_M1: [
@@ -141,8 +158,19 @@ SELECTOR_TYPES = (
         set_method="set_display_orientation",
         set_method_error_message="Setting the display orientation failed.",
         icon="mdi:tablet",
-        device_class="xiaomi_miio__display_orientation",
-        options=("forward", "left", "right"),
+        translation_key="display_orientation",
+        options=["forward", "left", "right"],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSelectDescription(
+        key=ATTR_MODE,
+        attr_name=ATTR_MODE,
+        name="Mode",
+        set_method="set_mode",
+        set_method_error_message="Setting the mode of the fan failed.",
+        icon="mdi:fan",
+        translation_key="airpurifier_mode",
+        options=["silent", "auto", "favorite"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -152,8 +180,8 @@ SELECTOR_TYPES = (
         set_method="set_led_brightness",
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
-        device_class="xiaomi_miio__led_brightness",
-        options=("bright", "dim", "off"),
+        translation_key="led_brightness",
+        options=["bright", "dim", "off"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -163,8 +191,8 @@ SELECTOR_TYPES = (
         set_method="set_ptc_level",
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
-        device_class="xiaomi_miio__ptc_level",
-        options=("low", "medium", "high"),
+        translation_key="ptc_level",
+        options=["low", "medium", "high"],
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -176,7 +204,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     model = config_entry.data[CONF_MODEL]
@@ -212,7 +240,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
-        self._attr_options = list(description.options)
         self.entity_description = description
 
 
@@ -242,11 +269,17 @@ class XiaomiGenericSelector(XiaomiSelector):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        attr = self._enum_class(
-            self._extract_value_from_attribute(
+        try:
+            value = self._extract_value_from_attribute(
                 self.coordinator.data, self.entity_description.attr_name
             )
-        )
+            attr = self._enum_class(value)
+        except ValueError:  # if the value does not exist in
+            _LOGGER.debug(
+                "Value '%s' does not exist in enum %s", value, self._enum_class
+            )
+            attr = None
+
         if attr is not None:
             self._current_attr = attr
             self.async_write_ha_state()

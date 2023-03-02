@@ -3,7 +3,7 @@ from meteoclimatic import Condition
 
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRESSURE_HPA, SPEED_KILOMETERS_PER_HOUR, TEMP_CELSIUS
+from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -38,9 +38,9 @@ async def async_setup_entry(
 class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     def __init__(self, coordinator: DataUpdateCoordinator) -> None:
         """Initialise the weather platform."""

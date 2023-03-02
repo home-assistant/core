@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+from typing import Any
 
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 import voluptuous as vol
@@ -21,6 +22,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -93,6 +95,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Init the config flow."""
+        self._reauth_entry: config_entries.ConfigEntry | None = None
+
     @staticmethod
     @core.callback
     def async_get_options_flow(
@@ -112,8 +118,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Configure a cloud based alarm."""
         errors = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
-            self._abort_if_unique_id_configured()
+            if not self._reauth_entry:
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                self._abort_if_unique_id_configured()
 
             try:
                 info = await validate_cloud_input(self.hass, user_input)
@@ -125,11 +132,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                if not self._reauth_entry:
+                    return self.async_create_entry(title=info["title"], data=user_input)
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry,
+                    data=user_input,
+                    unique_id=user_input[CONF_USERNAME],
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="cloud", data_schema=CLOUD_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._reauth_entry = await self.async_set_unique_id(entry_data[CONF_USERNAME])
+        return await self.async_step_cloud()
 
     async def async_step_local(self, user_input=None):
         """Configure a local based alarm."""
@@ -138,6 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_local_input(self.hass, user_input)
             except CannotConnectError:
+                _LOGGER.debug("Cannot connect", exc_info=1)
                 errors["base"] = "cannot_connect"
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"

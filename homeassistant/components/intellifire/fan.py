@@ -125,6 +125,5 @@ class IntellifireFan(IntellifireEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        self.coordinator.control_api.fan_off()
         await self.entity_description.set_fn(self.coordinator.control_api, 0)
         await self.coordinator.async_request_refresh()

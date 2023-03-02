@@ -9,16 +9,18 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    DATA_RATE_KIBIBYTES_PER_SECOND,
     STATE_IDLE,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -42,12 +44,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         name="Up Speed",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -104,7 +110,7 @@ class QBittorrentSensor(SensorEntity):
         qbittorrent_client,
         client_name,
         exception,
-    ):
+    ) -> None:
         """Initialize the qBittorrent sensor."""
         self.entity_description = description
         self.client = qbittorrent_client

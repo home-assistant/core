@@ -66,7 +66,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     server_address = (conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-
         ebusdpy.init(server_address)
         hass.data[DOMAIN] = EbusdData(server_address, circuit)
 
@@ -111,7 +110,7 @@ class EbusdData:
             raise RuntimeError(err) from err
 
     def write(self, call: ServiceCall) -> None:
-        """Call write methon on ebusd."""
+        """Call write method on ebusd."""
         name = call.data.get("name")
         value = call.data.get("value")
 

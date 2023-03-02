@@ -4,27 +4,30 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.netatmo import sensor
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import TEST_TIME, selected_platforms
 
 
-async def test_weather_sensor(hass, config_entry, netatmo_auth):
+async def test_weather_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
     """Test weather sensor setup."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
-    prefix = "sensor.netatmoindoor_"
+    prefix = "sensor.parents_bedroom_"
 
-    assert hass.states.get(f"{prefix}temperature").state == "24.6"
-    assert hass.states.get(f"{prefix}humidity").state == "36"
-    assert hass.states.get(f"{prefix}co2").state == "749"
-    assert hass.states.get(f"{prefix}pressure").state == "1017.3"
+    assert hass.states.get(f"{prefix}temperature").state == "20.3"
+    assert hass.states.get(f"{prefix}humidity").state == "63"
+    assert hass.states.get(f"{prefix}co2").state == "494"
+    assert hass.states.get(f"{prefix}pressure").state == "1014.5"
 
 
-async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
+async def test_public_weather_sensor(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test public weather sensor setup."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -75,54 +78,54 @@ async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
 
 
 @pytest.mark.parametrize(
-    "strength, expected",
+    ("strength", "expected"),
     [(50, "Full"), (60, "High"), (80, "Medium"), (90, "Low")],
 )
-async def test_process_wifi(strength, expected):
+async def test_process_wifi(strength, expected) -> None:
     """Test wifi strength translation."""
     assert sensor.process_wifi(strength) == expected
 
 
 @pytest.mark.parametrize(
-    "strength, expected",
+    ("strength", "expected"),
     [(50, "Full"), (70, "High"), (80, "Medium"), (90, "Low")],
 )
-async def test_process_rf(strength, expected):
+async def test_process_rf(strength, expected) -> None:
     """Test radio strength translation."""
     assert sensor.process_rf(strength) == expected
 
 
 @pytest.mark.parametrize(
-    "health, expected",
+    ("health", "expected"),
     [(4, "Unhealthy"), (3, "Poor"), (2, "Fair"), (1, "Fine"), (0, "Healthy")],
 )
-async def test_process_health(health, expected):
+async def test_process_health(health, expected) -> None:
     """Test health index translation."""
     assert sensor.process_health(health) == expected
 
 
 @pytest.mark.parametrize(
-    "uid, name, expected",
+    ("uid", "name", "expected"),
     [
-        ("12:34:56:37:11:ca-reachable", "mystation_reachable", "True"),
-        ("12:34:56:03:1b:e4-rf_status", "mystation_yard_radio", "Full"),
+        ("12:34:56:03:1b:e4-reachable", "villa_garden_reachable", "True"),
+        ("12:34:56:03:1b:e4-rf_status", "villa_garden_radio", "Full"),
         (
-            "12:34:56:37:11:ca-wifi_status",
-            "mystation_wifi_strength",
-            "Full",
+            "12:34:56:80:bb:26-wifi_status",
+            "villa_wifi_strength",
+            "High",
         ),
         (
-            "12:34:56:37:11:ca-temp_trend",
-            "mystation_temperature_trend",
+            "12:34:56:80:bb:26-temp_trend",
+            "villa_temperature_trend",
             "stable",
         ),
         (
-            "12:34:56:37:11:ca-pressure_trend",
-            "netatmo_mystation_pressure_trend",
-            "down",
+            "12:34:56:80:bb:26-pressure_trend",
+            "villa_pressure_trend",
+            "up",
         ),
-        ("12:34:56:05:51:20-sum_rain_1", "netatmo_mystation_yard_rain_last_hour", "0"),
-        ("12:34:56:05:51:20-sum_rain_24", "netatmo_mystation_yard_rain_today", "0"),
+        ("12:34:56:80:c1:ea-sum_rain_1", "villa_rain_rain_last_hour", "0"),
+        ("12:34:56:80:c1:ea-sum_rain_24", "villa_rain_rain_today", "6.9"),
         ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "SW"),
         (
             "12:34:56:03:1b:e4-windangle_value",
@@ -167,8 +170,8 @@ async def test_process_health(health, expected):
     ],
 )
 async def test_weather_sensor_enabling(
-    hass, config_entry, uid, name, expected, netatmo_auth
-):
+    hass: HomeAssistant, config_entry, uid, name, expected, netatmo_auth
+) -> None:
     """Test enabling of by default disabled sensors."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         states_before = len(hass.states.async_all())
@@ -190,7 +193,9 @@ async def test_weather_sensor_enabling(
         assert hass.states.get(f"sensor.{name}").state == expected
 
 
-async def test_climate_battery_sensor(hass, config_entry, netatmo_auth):
+async def test_climate_battery_sensor(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test climate device battery sensor."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(
         ["sensor", "climate"]

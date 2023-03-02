@@ -1,5 +1,4 @@
-"""
-Provide a mock lock platform.
+"""Provide a mock lock platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

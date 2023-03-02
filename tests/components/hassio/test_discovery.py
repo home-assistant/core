@@ -5,17 +5,19 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockModule, mock_entity_platform, mock_integration
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.fixture
-async def mock_mqtt(hass):
+@pytest.fixture(name="mock_mqtt")
+async def mock_mqtt_fixture(hass):
     """Mock the MQTT integration's config flow."""
     mock_integration(hass, MockModule(MQTT_DOMAIN))
     mock_entity_platform(hass, f"config_flow.{MQTT_DOMAIN}", None)
@@ -32,7 +34,9 @@ async def mock_mqtt(hass):
         yield MqttFlow
 
 
-async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client, mock_mqtt):
+async def test_hassio_discovery_startup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+) -> None:
     """Test startup and discovery after event."""
     aioclient_mock.get(
         "http://127.0.0.1/discovery",
@@ -78,14 +82,16 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client, moc
                 "password": "mock-pass",
                 "protocol": "3.1.1",
                 "addon": "Mosquitto Test",
-            }
+            },
+            name="Mosquitto Test",
+            slug="mosquitto",
         )
     )
 
 
 async def test_hassio_discovery_startup_done(
-    hass, aioclient_mock, hassio_client, mock_mqtt
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+) -> None:
     """Test startup and discovery with hass discovery."""
     aioclient_mock.post(
         "http://127.0.0.1/supervisor/options",
@@ -140,12 +146,16 @@ async def test_hassio_discovery_startup_done(
                     "password": "mock-pass",
                     "protocol": "3.1.1",
                     "addon": "Mosquitto Test",
-                }
+                },
+                name="Mosquitto Test",
+                slug="mosquitto",
             )
         )
 
 
-async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client, mock_mqtt):
+async def test_hassio_discovery_webhook(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hassio_client, mock_mqtt
+) -> None:
     """Test discovery webhook."""
     aioclient_mock.get(
         "http://127.0.0.1/discovery/testuuid",
@@ -190,6 +200,8 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client, moc
                 "password": "mock-pass",
                 "protocol": "3.1.1",
                 "addon": "Mosquitto Test",
-            }
+            },
+            name="Mosquitto Test",
+            slug="mosquitto",
         )
     )

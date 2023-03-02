@@ -82,8 +82,7 @@ async def async_setup_entry(
         if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup)):
             entities.append(HomematicipGroupSwitch(hap, group))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):

@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "La integraci\u00f3 de Deutsche Bahn est\u00e0 pendent d'eliminar-se de Home Assistant i ja no estar\u00e0 disponible a partir de Home Assistant 2022.11. \n\nLa integraci\u00f3 s'est\u00e0 eliminant, perqu\u00e8 es basa en el 'webscraping', que no est\u00e0 adm\u00e8s. \n\nElimina la configuraci\u00f3 YAML de Deutsche Bahn del fitxer configuration.yaml i reinicia Home Assistant per arreglar aquest error.",
-            "title": "La integraci\u00f3 Deutsche Bahn est\u00e0 sent eliminada"
-        }
-    }
-}

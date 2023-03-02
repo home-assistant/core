@@ -11,7 +11,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, Union, cast
+from typing import Any, TypedDict, cast
 
 import async_timeout
 import voluptuous as vol
@@ -50,6 +50,7 @@ from homeassistant.const import (
     CONF_SEQUENCE,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
@@ -374,7 +375,7 @@ class _ScriptRun:
             self._script._changed()  # pylint: disable=protected-access
 
     async def _async_get_condition(self, config):
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         return await self._script._async_get_condition(config)
 
     def _log(
@@ -756,7 +757,7 @@ class _ScriptRun:
                 with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
-                            if not cond(hass, variables):
+                            if cond(hass, variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
                 _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
@@ -785,7 +786,7 @@ class _ScriptRun:
                 repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         script = self._script._get_repeat_script(self._step)
 
         async def async_run_sequence(iteration, extra_msg=""):
@@ -1109,14 +1110,13 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[dict[str, Any], MappingProxyType]
+_VarsType = dict[str, Any] | MappingProxyType
 
 
-def _referenced_extract_ids(
-    data: dict[str, Any] | None, key: str, found: set[str]
-) -> None:
+def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
     """Extract referenced IDs."""
-    if not data:
+    # Data may not exist, or be a template
+    if not isinstance(data, dict):
         return
 
     item_ids = data.get(key)
@@ -1300,7 +1300,7 @@ class Script:
                 for data in (
                     step.get(CONF_TARGET),
                     step.get(CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_AREA_ID, referenced)
 
@@ -1340,7 +1340,7 @@ class Script:
                 for data in (
                     step.get(CONF_TARGET),
                     step.get(CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_DEVICE_ID, referenced)
 
@@ -1391,7 +1391,7 @@ class Script:
                     step,
                     step.get(CONF_TARGET),
                     step.get(CONF_SERVICE_DATA),
-                    step.get(service.CONF_SERVICE_DATA_TEMPLATE),
+                    step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
                     _referenced_extract_ids(data, ATTR_ENTITY_ID, referenced)
 
@@ -1538,7 +1538,7 @@ class Script:
         self, update_state: bool = True, spare: _ScriptRun | None = None
     ) -> None:
         """Stop running script."""
-        # Collect a a list of script runs to stop. This must be done before calling
+        # Collect a list of script runs to stop. This must be done before calling
         # asyncio.shield as asyncio.shield yields to the event loop, which would cause
         # us to wait for script runs added after the call to async_stop.
         aws = [

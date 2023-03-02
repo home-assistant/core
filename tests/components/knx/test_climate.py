@@ -3,7 +3,7 @@ from homeassistant.components.climate import PRESET_ECO, PRESET_SLEEP, HVACMode
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
@@ -11,7 +11,9 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_climate_basic_temperature_set(hass: HomeAssistant, knx: KNXTestKit):
+async def test_climate_basic_temperature_set(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test KNX climate basic."""
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
@@ -45,7 +47,7 @@ async def test_climate_basic_temperature_set(hass: HomeAssistant, knx: KNXTestKi
     events.pop()
 
 
-async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit):
+async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX climate hvac mode."""
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
@@ -97,7 +99,9 @@ async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_write("1/2/6", (0x01,))
 
 
-async def test_climate_preset_mode(hass: HomeAssistant, knx: KNXTestKit):
+async def test_climate_preset_mode(
+    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+) -> None:
     """Test KNX climate preset mode."""
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
@@ -153,15 +157,14 @@ async def test_climate_preset_mode(hass: HomeAssistant, knx: KNXTestKit):
     assert len(knx.xknx.devices[0].device_updated_cbs) == 2
     assert len(knx.xknx.devices[1].device_updated_cbs) == 2
     # test removing also removes hooks
-    er = entity_registry.async_get(hass)
-    er.async_remove("climate.test")
+    entity_registry.async_remove("climate.test")
     await hass.async_block_till_done()
 
     # If we remove the entity the underlying devices should disappear too
     assert len(knx.xknx.devices) == 0
 
 
-async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit):
+async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test update climate entity for KNX."""
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
@@ -205,7 +208,7 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_read("1/2/7")
 
 
-async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit):
+async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX climate command_value."""
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(

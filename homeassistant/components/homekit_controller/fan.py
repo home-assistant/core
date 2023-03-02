@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -21,6 +22,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import KNOWN_DEVICES
+from .connection import HKDevice
 from .entity import HomeKitEntity
 
 # 0 is clockwise, 1 is counter-clockwise. The match to forward and reverse is so that
@@ -93,9 +95,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return oscillating == 1
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        features = 0
+        features = FanEntityFeature(0)
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
             features |= FanEntityFeature.DIRECTION
@@ -193,15 +195,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit fans."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)], True)
+        entity: HomeKitEntity = entity_class(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.FAN
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)

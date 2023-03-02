@@ -8,10 +8,10 @@
         "description": "Select the serial port for your Zigbee radio"
       },
       "confirm": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       },
       "confirm_hardware": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       },
       "manual_pick_radio_type": {
         "data": { "radio_type": "Radio Type" },
@@ -31,7 +31,8 @@
         "title": "Network Formation",
         "description": "Choose the network settings for your radio.",
         "menu_options": {
-          "form_new_network": "Erase network settings and form a new network",
+          "form_new_network": "Erase network settings and create a new network",
+          "form_initial_network": "Create a network",
           "reuse_settings": "Keep radio network settings",
           "choose_automatic_backup": "Restore an automatic backup",
           "upload_manual_backup": "Upload a manual backup"
@@ -76,6 +77,22 @@
         "title": "Reconfigure ZHA",
         "description": "ZHA will be stopped.  Do you wish to continue?"
       },
+      "prompt_migrate_or_reconfigure": {
+        "title": "Migrate or re-configure",
+        "description": "Are you migrating to a new radio or re-configuring the current radio?",
+        "menu_options": {
+          "intent_migrate": "Migrate to a new radio",
+          "intent_reconfigure": "Re-configure the current radio"
+        }
+      },
+      "intent_migrate": {
+        "title": "Migrate to a new radio",
+        "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
+      },
+      "instruct_unplug": {
+        "title": "Unplug your old radio",
+        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
+      },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",
         "data": {
@@ -104,6 +121,7 @@
         "description": "[%key:component::zha::config::step::choose_formation_strategy::description%]",
         "menu_options": {
           "form_new_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::form_new_network%]",
+          "form_initial_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::form_initial_network%]",
           "reuse_settings": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::reuse_settings%]",
           "choose_automatic_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::choose_automatic_backup%]",
           "upload_manual_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::upload_manual_backup%]"
@@ -147,6 +165,7 @@
       "enhanced_light_transition": "Enable enhanced light color/temperature transition from an off-state",
       "light_transitioning_flag": "Enable enhanced brightness slider during light transition",
       "always_prefer_xy_color_mode": "Always prefer XY color mode",
+      "group_members_assume_state": "Group members assume state of group",
       "enable_identify_on_join": "Enable identify effect when devices join the network",
       "default_light_transition": "Default light transition time (seconds)",
       "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
@@ -167,22 +186,22 @@
       "issue_individual_led_effect": "Issue effect for individual LED"
     },
     "trigger_type": {
-      "remote_button_short_press": "\"{subtype}\" button pressed",
-      "remote_button_short_release": "\"{subtype}\" button released",
-      "remote_button_long_press": "\"{subtype}\" button continuously pressed",
-      "remote_button_long_release": "\"{subtype}\" button released after long press",
-      "remote_button_double_press": "\"{subtype}\" button double clicked",
-      "remote_button_triple_press": "\"{subtype}\" button triple clicked",
-      "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
-      "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
-      "remote_button_alt_short_press": "\"{subtype}\" button pressed (Alternate mode)",
-      "remote_button_alt_short_release": "\"{subtype}\" button released (Alternate mode)",
-      "remote_button_alt_long_press": "\"{subtype}\" button continuously pressed (Alternate mode)",
-      "remote_button_alt_long_release": "\"{subtype}\" button released after long press (Alternate mode)",
-      "remote_button_alt_double_press": "\"{subtype}\" button double clicked (Alternate mode)",
-      "remote_button_alt_triple_press": "\"{subtype}\" button triple clicked (Alternate mode)",
-      "remote_button_alt_quadruple_press": "\"{subtype}\" button quadruple clicked (Alternate mode)",
-      "remote_button_alt_quintuple_press": "\"{subtype}\" button quintuple clicked (Alternate mode)",
+      "remote_button_short_press": "\"{subtype}\" pressed",
+      "remote_button_short_release": "\"{subtype}\" released",
+      "remote_button_long_press": "\"{subtype}\" continuously pressed",
+      "remote_button_long_release": "\"{subtype}\" released after long press",
+      "remote_button_double_press": "\"{subtype}\" double clicked",
+      "remote_button_triple_press": "\"{subtype}\" triple clicked",
+      "remote_button_quadruple_press": "\"{subtype}\" quadruple clicked",
+      "remote_button_quintuple_press": "\"{subtype}\" quintuple clicked",
+      "remote_button_alt_short_press": "\"{subtype}\" pressed (Alternate mode)",
+      "remote_button_alt_short_release": "\"{subtype}\" released (Alternate mode)",
+      "remote_button_alt_long_press": "\"{subtype}\" continuously pressed (Alternate mode)",
+      "remote_button_alt_long_release": "\"{subtype}\" released after long press (Alternate mode)",
+      "remote_button_alt_double_press": "\"{subtype}\" double clicked (Alternate mode)",
+      "remote_button_alt_triple_press": "\"{subtype}\" triple clicked (Alternate mode)",
+      "remote_button_alt_quadruple_press": "\"{subtype}\" quadruple clicked (Alternate mode)",
+      "remote_button_alt_quintuple_press": "\"{subtype}\" quintuple clicked (Alternate mode)",
       "device_rotated": "Device rotated \"{subtype}\"",
       "device_shaken": "Device shaken",
       "device_slid": "Device slid \"{subtype}\"",
@@ -202,6 +221,7 @@
       "open": "Open",
       "close": "Close",
       "both_buttons": "Both buttons",
+      "button": "Button",
       "button_1": "First button",
       "button_2": "Second button",
       "button_3": "Third button",

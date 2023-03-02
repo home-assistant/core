@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "server": "Server",
+          "port": "[%key:common::config_flow::data::port%]",
+          "charset": "Character set",
+          "folder": "Folder",
+          "search": "IMAP search"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The password for {username} is invalid.",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_charset": "The specified charset is not supported",
+      "invalid_search": "The selected search is invalid"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The IMAP YAML configuration is being removed",
+      "description": "Configuring IMAP using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the IMAP YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

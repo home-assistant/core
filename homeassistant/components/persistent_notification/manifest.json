@@ -1,8 +1,9 @@
 {
   "domain": "persistent_notification",
   "name": "Persistent Notification",
-  "documentation": "https://www.home-assistant.io/integrations/persistent_notification",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "iot_class": "local_push"
+  "documentation": "https://www.home-assistant.io/integrations/persistent_notification",
+  "integration_type": "system",
+  "iot_class": "local_push",
+  "quality_scale": "internal"
 }

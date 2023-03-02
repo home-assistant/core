@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from math import floor
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -12,13 +11,12 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import (
-    FirmwareUpdateFinished,
-    FirmwareUpdateInfo,
-    FirmwareUpdateProgress,
-    FirmwareUpdateStatus,
-)
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.node.firmware import (
+    NodeFirmwareUpdateInfo,
+    NodeFirmwareUpdateProgress,
+    NodeFirmwareUpdateResult,
+)
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -26,10 +24,10 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
@@ -86,14 +84,13 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.driver = driver
         self.node = node
         self.semaphore = semaphore
-        self._latest_version_firmware: FirmwareUpdateInfo | None = None
+        self._latest_version_firmware: NodeFirmwareUpdateInfo | None = None
         self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
         self._progress_unsub: Callable[[], None] | None = None
         self._finished_unsub: Callable[[], None] | None = None
-        self._num_files_installed: int = 0
         self._finished_event = asyncio.Event()
-        self._finished_status: FirmwareUpdateStatus | None = None
+        self._result: NodeFirmwareUpdateResult | None = None
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -112,28 +109,17 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     @callback
     def _update_progress(self, event: dict[str, Any]) -> None:
         """Update install progress on event."""
-        progress: FirmwareUpdateProgress = event["firmware_update_progress"]
+        progress: NodeFirmwareUpdateProgress = event["firmware_update_progress"]
         if not self._latest_version_firmware:
             return
-        # We will assume that each file in the firmware update represents an equal
-        # percentage of the overall progress. This is likely not true because each file
-        # may be a different size, but it's the best we can do since we don't know the
-        # total number of fragments across all files.
-        self._attr_in_progress = floor(
-            100
-            * (
-                self._num_files_installed
-                + (progress.sent_fragments / progress.total_fragments)
-            )
-            / len(self._latest_version_firmware.files)
-        )
+        self._attr_in_progress = int(progress.progress)
         self.async_write_ha_state()
 
     @callback
     def _update_finished(self, event: dict[str, Any]) -> None:
         """Update install progress on event."""
-        finished: FirmwareUpdateFinished = event["firmware_update_finished"]
-        self._finished_status = finished.status
+        result: NodeFirmwareUpdateResult = event["firmware_update_finished"]
+        self._result = result
         self._finished_event.set()
 
     @callback
@@ -149,10 +135,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             self._finished_unsub()
             self._finished_unsub = None
 
-        self._finished_status = None
+        self._result = None
         self._finished_event.clear()
-        self._num_files_installed = 0
-        self._attr_in_progress = 0
+        self._attr_in_progress = False
         if write_state:
             self.async_write_ha_state()
 
@@ -235,41 +220,24 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
             "firmware update finished", self._update_finished
         )
 
-        for file in firmware.files:
-            try:
-                await self.driver.controller.async_begin_ota_firmware_update(
-                    self.node, file
-                )
-            except BaseZwaveJSServerError as err:
-                self._unsub_firmware_events_and_reset_progress()
-                raise HomeAssistantError(err) from err
-
-            # We need to block until we receive the `firmware update finished` event
-            await self._finished_event.wait()
-            # Clear the event so that a second firmware update blocks again
-            self._finished_event.clear()
-            assert self._finished_status is not None
-
-            # If status is not OK, we should throw an error to let the user know
-            if self._finished_status not in (
-                FirmwareUpdateStatus.OK_NO_RESTART,
-                FirmwareUpdateStatus.OK_RESTART_PENDING,
-                FirmwareUpdateStatus.OK_WAITING_FOR_ACTIVATION,
-            ):
-                status = self._finished_status
-                self._unsub_firmware_events_and_reset_progress()
-                raise HomeAssistantError(status.name.replace("_", " ").title())
-
-            # If we get here, the firmware installation was successful and we need to
-            # update progress accordingly
-            self._num_files_installed += 1
-            self._attr_in_progress = floor(
-                100 * self._num_files_installed / len(firmware.files)
+        try:
+            await self.driver.controller.async_firmware_update_ota(
+                self.node, firmware.files
             )
+        except BaseZwaveJSServerError as err:
+            self._unsub_firmware_events_and_reset_progress()
+            raise HomeAssistantError(err) from err
 
-            # Clear the status so we can get a new one
-            self._finished_status = None
-            self.async_write_ha_state()
+        # We need to block until we receive the `firmware update finished` event
+        await self._finished_event.wait()
+        assert self._result is not None
+
+        # If the update was not successful, we should throw an error
+        # to let the user know
+        if not self._result.success:
+            error_msg = self._result.status.name.replace("_", " ").title()
+            self._unsub_firmware_events_and_reset_progress()
+            raise HomeAssistantError(error_msg)
 
         # If we get here, all files were installed successfully
         self._attr_installed_version = self._attr_latest_version = firmware.version
@@ -279,8 +247,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
         LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value "
-            "service won't work for it"
+            "There is no value to refresh for this entity so the zwave_js.refresh_value"
+            " service won't work for it"
         )
 
     async def async_added_to_hass(self) -> None:

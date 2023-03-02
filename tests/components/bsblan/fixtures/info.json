@@ -1,23 +1,29 @@
 {
-  "6224": {
-    "name": "Geräte-Identifikation",
+  "device_identification": {
+    "name": "Gerte-Identifikation",
+    "error": 0,
     "value": "RVS21.831F/127",
-    "unit": "",
     "desc": "",
-    "dataType": 7
+    "dataType": 7,
+    "readonly": 0,
+    "unit": ""
   },
-  "6225": {
+  "controller_family": {
     "name": "Device family",
+    "error": 0,
     "value": "211",
-    "unit": "",
     "desc": "",
-    "dataType": 0
+    "dataType": 0,
+    "readonly": 0,
+    "unit": ""
   },
-  "6226": {
+  "controller_variant": {
     "name": "Device variant",
+    "error": 0,
     "value": "127",
-    "unit": "",
     "desc": "",
-    "dataType": 0
+    "dataType": 0,
+    "readonly": 0,
+    "unit": ""
   }
 }

@@ -11,7 +11,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -135,8 +135,10 @@ class ONVIFDevice:
             await self.device.close()
         except Fault as err:
             LOGGER.error(
-                "Couldn't connect to camera '%s', please verify "
-                "that the credentials are correct. Error: %s",
+                (
+                    "Couldn't connect to camera '%s', please verify "
+                    "that the credentials are correct. Error: %s"
+                ),
                 self.name,
                 err,
             )
@@ -230,9 +232,11 @@ class ONVIFDevice:
 
                 if self._dt_diff_seconds > 5:
                     LOGGER.warning(
-                        "The date/time on %s (UTC) is '%s', "
-                        "which is different from the system '%s', "
-                        "this could lead to authentication issues",
+                        (
+                            "The date/time on %s (UTC) is '%s', "
+                            "which is different from the system '%s', "
+                            "this could lead to authentication issues"
+                        ),
                         self.name,
                         cam_date_utc,
                         system_date,
@@ -284,7 +288,7 @@ class ONVIFDevice:
             snapshot = media_capabilities and media_capabilities.SnapshotUri
 
         pullpoint = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(ONVIFError, Fault, RequestError, XMLParseError):
             pullpoint = await self.events.async_start()
 
         ptz = False
@@ -292,7 +296,12 @@ class ONVIFDevice:
             self.device.get_definition("ptz")
             ptz = True
 
-        return Capabilities(snapshot, pullpoint, ptz)
+        imaging = False
+        with suppress(ONVIFError, Fault, RequestError):
+            self.device.create_imaging_service()
+            imaging = True
+
+        return Capabilities(snapshot, pullpoint, ptz, imaging)
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
@@ -343,6 +352,12 @@ class ONVIFDevice:
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
 
+            # Configure Imaging options
+            if self.capabilities.imaging and onvif_profile.VideoSourceConfiguration:
+                profile.video_source_token = (
+                    onvif_profile.VideoSourceConfiguration.SourceToken
+                )
+
             profiles.append(profile)
 
         return profiles
@@ -384,7 +399,10 @@ class ONVIFDevice:
         speed_val = speed
         preset_val = preset
         LOGGER.debug(
-            "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f | Preset = %s",
+            (
+                "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed ="
+                " %4.2f | Preset = %s"
+            ),
             move_mode,
             pan_val,
             tilt_val,
@@ -461,7 +479,10 @@ class ONVIFDevice:
                     return
                 if preset_val not in profile.ptz.presets:
                     LOGGER.warning(
-                        "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
+                        (
+                            "PTZ preset '%s' does not exist on device '%s'. Available"
+                            " Presets: %s"
+                        ),
                         preset_val,
                         self.name,
                         ", ".join(profile.ptz.presets),
@@ -482,8 +503,71 @@ class ONVIFDevice:
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 
+    async def async_run_aux_command(
+        self,
+        profile: Profile,
+        cmd: str,
+    ) -> None:
+        """Execute a PTZ auxiliary command on the camera."""
+        if not self.capabilities.ptz:
+            LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
+            return
 
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
+        ptz_service = self.device.create_ptz_service()
+
+        LOGGER.debug(
+            "Running Aux Command | Cmd = %s",
+            cmd,
+        )
+        try:
+            req = ptz_service.create_type("SendAuxiliaryCommand")
+            req.ProfileToken = profile.token
+            req.AuxiliaryData = cmd
+            await ptz_service.SendAuxiliaryCommand(req)
+        except ONVIFError as err:
+            if "Bad Request" in err.reason:
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
+            else:
+                LOGGER.error("Error trying to send PTZ auxiliary command: %s", err)
+
+    async def async_set_imaging_settings(
+        self,
+        profile: Profile,
+        settings: dict,
+    ) -> None:
+        """Set an imaging setting on the ONVIF imaging service."""
+        # The Imaging Service is defined by ONVIF standard
+        # https://www.onvif.org/specs/srv/img/ONVIF-Imaging-Service-Spec-v210.pdf
+        if not self.capabilities.imaging:
+            LOGGER.warning(
+                "The imaging service is not supported on device '%s'", self.name
+            )
+            return
+
+        imaging_service = self.device.create_imaging_service()
+
+        LOGGER.debug("Setting Imaging Setting | Settings = %s", settings)
+        try:
+            req = imaging_service.create_type("SetImagingSettings")
+            req.VideoSourceToken = profile.video_source_token
+            req.ImagingSettings = settings
+            await imaging_service.SetImagingSettings(req)
+        except ONVIFError as err:
+            if "Bad Request" in err.reason:
+                LOGGER.warning(
+                    "Device '%s' doesn't support the Imaging Service", self.name
+                )
+            else:
+                LOGGER.error("Error trying to set Imaging settings: %s", err)
+
+
+def get_device(
+    hass: HomeAssistant,
+    host: str,
+    port: int,
+    username: str | None,
+    password: str | None,
+) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
     return ONVIFCamera(
         host,

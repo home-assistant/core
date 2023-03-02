@@ -30,7 +30,7 @@ from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceCoordinator(DataUpdateCoordinator):
+class DeviceCoordinator(DataUpdateCoordinator[None]):
     """Home Assistant wrapper for a pyWeMo device."""
 
     def __init__(self, hass: HomeAssistant, wemo: WeMoDevice, device_id: str) -> None:

@@ -7,18 +7,21 @@ import pytest
 
 from homeassistant.components.ridwell.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-ACCOUNT_ID = "12345"
+TEST_ACCOUNT_ID = "12345"
+TEST_DASHBOARD_URL = "https://www.ridwell.com/users/12345/dashboard"
+TEST_PASSWORD = "password"
+TEST_USERNAME = "user@email.com"
+TEST_USER_ID = "12345"
 
 
 @pytest.fixture(name="account")
 def account_fixture():
     """Define a Ridwell account."""
     return Mock(
-        account_id=ACCOUNT_ID,
+        account_id=TEST_ACCOUNT_ID,
         address={
             "street1": "123 Main Street",
             "city": "New York",
@@ -42,14 +45,16 @@ def client_fixture(account):
     """Define an aioridwell client."""
     return Mock(
         async_authenticate=AsyncMock(),
-        async_get_accounts=AsyncMock(return_value={ACCOUNT_ID: account}),
+        async_get_accounts=AsyncMock(return_value={TEST_ACCOUNT_ID: account}),
+        get_dashboard_url=Mock(return_value=TEST_DASHBOARD_URL),
+        user_id=TEST_USER_ID,
     )
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=config[CONF_USERNAME], data=config)
     entry.add_to_hass(hass)
     return entry
 
@@ -58,28 +63,26 @@ def config_entry_fixture(hass, config, unique_id):
 def config_fixture(hass):
     """Define a config entry data fixture."""
     return {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
 
 
-@pytest.fixture(name="setup_ridwell")
-async def setup_ridwell_fixture(hass, client, config):
-    """Define a fixture to set up Ridwell."""
+@pytest.fixture(name="mock_aioridwell")
+async def mock_aioridwell_fixture(hass, client, config):
+    """Define a fixture to patch aioridwell."""
     with patch(
         "homeassistant.components.ridwell.config_flow.async_get_client",
         return_value=client,
     ), patch(
-        "homeassistant.components.ridwell.async_get_client", return_value=client
-    ), patch(
-        "homeassistant.components.ridwell.PLATFORMS", []
+        "homeassistant.components.ridwell.coordinator.async_get_client",
+        return_value=client,
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
         yield
 
 
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "user@email.com"
+@pytest.fixture(name="setup_config_entry")
+async def setup_config_entry_fixture(hass, config_entry, mock_aioridwell):
+    """Define a fixture to set up ridwell."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

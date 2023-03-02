@@ -26,9 +26,9 @@ NAME_SUFFIX_HYPERION_PRIORITY_LIGHT = "Priority"
 NAME_SUFFIX_HYPERION_COMPONENT_SWITCH = "Component"
 NAME_SUFFIX_HYPERION_CAMERA = ""
 
-SIGNAL_INSTANCE_ADD = f"{DOMAIN}_instance_add_signal." "{}"
-SIGNAL_INSTANCE_REMOVE = f"{DOMAIN}_instance_remove_signal." "{}"
-SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal." "{}"
+SIGNAL_INSTANCE_ADD = f"{DOMAIN}_instance_add_signal.{{}}"
+SIGNAL_INSTANCE_REMOVE = f"{DOMAIN}_instance_remove_signal.{{}}"
+SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal.{{}}"
 
 TYPE_HYPERION_CAMERA = "hyperion_camera"
 TYPE_HYPERION_LIGHT = "hyperion_light"

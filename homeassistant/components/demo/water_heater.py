@@ -8,7 +8,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -29,8 +29,12 @@ async def async_setup_platform(
     """Set up the Demo water_heater devices."""
     async_add_entities(
         [
-            DemoWaterHeater("Demo Water Heater", 119, TEMP_FAHRENHEIT, False, "eco"),
-            DemoWaterHeater("Demo Water Heater Celsius", 45, TEMP_CELSIUS, True, "eco"),
+            DemoWaterHeater(
+                "Demo Water Heater", 119, UnitOfTemperature.FAHRENHEIT, False, "eco"
+            ),
+            DemoWaterHeater(
+                "Demo Water Heater Celsius", 45, UnitOfTemperature.CELSIUS, True, "eco"
+            ),
         ]
     )
 
@@ -61,18 +65,11 @@ class DemoWaterHeater(WaterHeaterEntity):
         """Initialize the water_heater device."""
         self._attr_name = name
         if target_temperature is not None:
-            self._attr_supported_features = (
-                self._attr_supported_features
-                | WaterHeaterEntityFeature.TARGET_TEMPERATURE
-            )
+            self._attr_supported_features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
         if away is not None:
-            self._attr_supported_features = (
-                self._attr_supported_features | WaterHeaterEntityFeature.AWAY_MODE
-            )
+            self._attr_supported_features |= WaterHeaterEntityFeature.AWAY_MODE
         if current_operation is not None:
-            self._attr_supported_features = (
-                self._attr_supported_features | WaterHeaterEntityFeature.OPERATION_MODE
-            )
+            self._attr_supported_features |= WaterHeaterEntityFeature.OPERATION_MODE
         self._attr_target_temperature = target_temperature
         self._attr_temperature_unit = unit_of_measurement
         self._attr_is_away_mode_on = away

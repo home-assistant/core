@@ -9,8 +9,8 @@ from pynetgear import ALLOW, BLOCK
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -143,8 +143,7 @@ async def async_setup_entry(
             )
             tracked.add(mac)
 
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
