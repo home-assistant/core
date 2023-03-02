@@ -44,6 +44,7 @@ from homeassistant.helpers.entity_registry import async_get as async_get_entity_
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -559,6 +560,8 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
 class TibberDataCoordinator(DataUpdateCoordinator[None]):
     """Handle Tibber data and insert statistics."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:
         """Initialize the data handler."""
         super().__init__(
@@ -571,9 +574,17 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Update data via API."""
-        await self._tibber_connection.fetch_consumption_data_active_homes()
-        await self._tibber_connection.fetch_production_data_active_homes()
-        await self._insert_statistics()
+        try:
+            await self._tibber_connection.fetch_consumption_data_active_homes()
+            await self._tibber_connection.fetch_production_data_active_homes()
+            await self._insert_statistics()
+        except tibber.RetryableHttpException as err:
+            raise UpdateFailed(f"Error communicating with API ({err.status})") from err
+        except tibber.FatalHttpException:
+            # Fatal error. Reload config entry to show correct error.
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            )
 
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
