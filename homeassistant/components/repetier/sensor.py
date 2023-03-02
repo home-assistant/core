@@ -69,7 +69,7 @@ class RepetierSensor(SensorEntity):
         name,
         printer_id,
         description: RepetierSensorEntityDescription,
-    ):
+    ) -> None:
         """Init new sensor."""
         self.entity_description = description
         self._api = api

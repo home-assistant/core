@@ -87,5 +87,6 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        # key Fuel_type is not available when the fuel station is closed, use "get" instead of "[]" to avoid exceptions
+        # key Fuel_type is not available when the fuel station is closed,
+        # use "get" instead of "[]" to avoid exceptions
         return self.coordinator.data[self._station_id].get(self._fuel_type)

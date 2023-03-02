@@ -104,7 +104,6 @@ omit =
     homeassistant/components/baf/sensor.py
     homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
-    homeassistant/components/balboa/__init__.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -205,10 +204,7 @@ omit =
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
-    homeassistant/components/dlink/__init__.py
     homeassistant/components/dlink/data.py
-    homeassistant/components/dlink/entity.py
-    homeassistant/components/dlink/switch.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
     homeassistant/components/doorbird/__init__.py
@@ -216,6 +212,11 @@ omit =
     homeassistant/components/doorbird/camera.py
     homeassistant/components/doorbird/entity.py
     homeassistant/components/doorbird/util.py
+    homeassistant/components/dormakaba_dkey/__init__.py
+    homeassistant/components/dormakaba_dkey/binary_sensor.py
+    homeassistant/components/dormakaba_dkey/entity.py
+    homeassistant/components/dormakaba_dkey/lock.py
+    homeassistant/components/dormakaba_dkey/sensor.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
     homeassistant/components/dsmr_reader/__init__.py
@@ -248,7 +249,8 @@ omit =
     homeassistant/components/ecowitt/sensor.py
     homeassistant/components/eddystone_temperature/sensor.py
     homeassistant/components/edimax/switch.py
-    homeassistant/components/edl21/*
+    homeassistant/components/edl21/__init__.py
+    homeassistant/components/edl21/sensor.py
     homeassistant/components/egardia/*
     homeassistant/components/eight_sleep/__init__.py
     homeassistant/components/eight_sleep/binary_sensor.py
@@ -413,6 +415,7 @@ omit =
     homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/button.py
+    homeassistant/components/goodwe/coordinator.py
     homeassistant/components/goodwe/number.py
     homeassistant/components/goodwe/select.py
     homeassistant/components/goodwe/sensor.py
@@ -637,6 +640,10 @@ omit =
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
+    homeassistant/components/livisi/__init__.py
+    homeassistant/components/livisi/climate.py
+    homeassistant/components/livisi/coordinator.py
+    homeassistant/components/livisi/switch.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/logi_circle/__init__.py
     homeassistant/components/logi_circle/camera.py
@@ -801,7 +808,9 @@ omit =
     homeassistant/components/nuki/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/oasa_telematics/sensor.py
-    homeassistant/components/obihai/*
+    homeassistant/components/obihai/__init__.py
+    homeassistant/components/obihai/connectivity.py
+    homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
     homeassistant/components/oem/climate.py
     homeassistant/components/ohmconnect/sensor.py
@@ -896,7 +905,6 @@ omit =
     homeassistant/components/ping/binary_sensor.py
     homeassistant/components/ping/device_tracker.py
     homeassistant/components/pioneer/media_player.py
-    homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/__init__.py
     homeassistant/components/plaato/binary_sensor.py
     homeassistant/components/plaato/entity.py
@@ -970,6 +978,8 @@ omit =
     homeassistant/components/reolink/camera.py
     homeassistant/components/reolink/entity.py
     homeassistant/components/reolink/host.py
+    homeassistant/components/reolink/number.py
+    homeassistant/components/reolink/update.py
     homeassistant/components/repetier/__init__.py
     homeassistant/components/repetier/sensor.py
     homeassistant/components/rest/notify.py
@@ -1001,6 +1011,7 @@ omit =
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/rympro/__init__.py
+    homeassistant/components/rympro/coordinator.py
     homeassistant/components/rympro/sensor.py
     homeassistant/components/sabnzbd/__init__.py
     homeassistant/components/sabnzbd/sensor.py
@@ -1010,6 +1021,7 @@ omit =
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/entity.py
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
     homeassistant/components/screenlogic/sensor.py
@@ -1270,6 +1282,10 @@ omit =
     homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink_lte/*
+    homeassistant/components/tplink_omada/__init__.py
+    homeassistant/components/tplink_omada/coordinator.py
+    homeassistant/components/tplink_omada/entity.py
+    homeassistant/components/tplink_omada/switch.py
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py
@@ -1354,7 +1370,6 @@ omit =
     homeassistant/components/verisure/sensor.py
     homeassistant/components/verisure/switch.py
     homeassistant/components/versasense/*
-    homeassistant/components/vesync/__init__.py
     homeassistant/components/vesync/common.py
     homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/light.py

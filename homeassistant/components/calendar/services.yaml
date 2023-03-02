@@ -45,4 +45,4 @@ create_event:
     in:
       name: In
       description: Days or weeks that you want to create the event in.
-      example: '"days": 2 or "weeks": 2'
+      example: '{"days": 2} or {"weeks": 2}'

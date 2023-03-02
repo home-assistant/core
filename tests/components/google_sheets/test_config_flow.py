@@ -1,5 +1,4 @@
 """Test the Google Sheets config flow."""
-
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 
@@ -17,6 +16,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -48,9 +49,9 @@ async def mock_client() -> Generator[Mock, None, None]:
 
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -115,9 +116,9 @@ async def test_full_flow(
 
 async def test_create_sheet_error(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -167,9 +168,9 @@ async def test_create_sheet_error(
 
 async def test_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -248,9 +249,9 @@ async def test_reauth(
 
 async def test_reauth_abort(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -317,9 +318,9 @@ async def test_reauth_abort(
 
 async def test_already_configured(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:

@@ -18,10 +18,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt
 
@@ -32,7 +32,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_switch_setup(hass: HomeAssistant):
+async def test_switch_setup(hass: HomeAssistant) -> None:
     """Test default setup of the switch component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -47,7 +47,7 @@ async def test_switch_setup(hass: HomeAssistant):
 
 async def test_update_guest_wifi_status_auth_failed(
     hass: HomeAssistant, mock_device: MockDevice
-):
+) -> None:
     """Test getting the wifi_status with wrong password triggers the reauth flow."""
     entry = configure_integration(hass)
     mock_device.device.async_get_wifi_guest_access.side_effect = DevicePasswordProtected
@@ -70,7 +70,9 @@ async def test_update_guest_wifi_status_auth_failed(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDevice):
+async def test_update_enable_guest_wifi(
+    hass: HomeAssistant, mock_device: MockDevice
+) -> None:
     """Test state change of a enable_guest_wifi switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -155,7 +157,9 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
+async def test_update_enable_leds(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test state change of a enable_leds switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -168,8 +172,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
     assert state is not None
     assert state.state == STATE_OFF
 
-    er = entity_registry.async_get(hass)
-    assert er.async_get(state_key).entity_category == EntityCategory.CONFIG
+    assert entity_registry.async_get(state_key).entity_category == EntityCategory.CONFIG
 
     # Emulate state change
     mock_device.device.async_get_led_setting.return_value = True
@@ -238,7 +241,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
 
 
 @pytest.mark.parametrize(
-    "name, get_method, update_interval",
+    ("name", "get_method", "update_interval"),
     [
         ["enable_guest_wifi", "async_get_wifi_guest_access", SHORT_UPDATE_INTERVAL],
         ["enable_leds", "async_get_led_setting", SHORT_UPDATE_INTERVAL],
@@ -250,7 +253,7 @@ async def test_device_failure(
     name: str,
     get_method: str,
     update_interval: timedelta,
-):
+) -> None:
     """Test device failure."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -273,7 +276,7 @@ async def test_device_failure(
 
 
 @pytest.mark.parametrize(
-    "name, set_method",
+    ("name", "set_method"),
     [
         ["enable_guest_wifi", "async_set_wifi_guest_access"],
         ["enable_leds", "async_set_led_setting"],
@@ -281,7 +284,7 @@ async def test_device_failure(
 )
 async def test_auth_failed(
     hass: HomeAssistant, mock_device: MockDevice, name: str, set_method: str
-):
+) -> None:
     """Test setting unautherized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()

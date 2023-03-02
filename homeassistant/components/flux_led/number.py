@@ -18,11 +18,10 @@ from flux_led.protocol import (
 from homeassistant import config_entries
 from homeassistant.components.light import EFFECT_RANDOM
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

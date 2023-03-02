@@ -6,9 +6,10 @@ from epson_projector.const import PWR_OFF_STATE
 from homeassistant import config_entries
 from homeassistant.components.epson.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     with patch("homeassistant.components.epson.Projector.get_power", return_value="01"):
@@ -40,7 +41,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -59,7 +60,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_powered_off(hass):
+async def test_form_powered_off(hass: HomeAssistant) -> None:
     """Test we handle powered off during initial configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

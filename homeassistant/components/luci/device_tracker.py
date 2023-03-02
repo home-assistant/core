@@ -77,8 +77,7 @@ class LuciDeviceScanner(DeviceScanner):
         return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include MAC address (mac), network device (dev), IP address

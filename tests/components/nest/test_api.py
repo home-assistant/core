@@ -7,7 +7,6 @@ for token refresh and for testing:
 
 The tests below exercise both cases during integration setup.
 """
-
 import time
 from unittest.mock import patch
 
@@ -15,6 +14,7 @@ import pytest
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -29,6 +29,8 @@ from .common import (
     create_config_entry,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 FAKE_UPDATED_TOKEN = "fake-updated-token"
 
 
@@ -39,7 +41,7 @@ async def async_setup_sdm(hass):
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_YAML_ONLY])
-async def test_auth(hass, aioclient_mock):
+async def test_auth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Exercise authentication library creates valid credentials."""
 
     expiration_time = time.time() + 86400
@@ -91,7 +93,9 @@ async def test_auth(hass, aioclient_mock):
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_YAML_ONLY])
-async def test_auth_expired_token(hass, aioclient_mock):
+async def test_auth_expired_token(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify behavior of an expired token."""
 
     expiration_time = time.time() - 86400
