@@ -111,6 +111,34 @@ async def test_setting_sensor_value_via_mqtt_message(
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
+async def test_setting_sensor_value_with_empty_uom(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the setting of the value via MQTT with an empty uom."""
+    assert await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "unit_of_measurement": "",
+                    "device_class": "timestamp",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    async_fire_mqtt_message(hass, "test-topic", "2021-08-19T15:05:00+00:00")
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "2021-08-19T15:05:00+00:00"
+    assert state.attributes.get("unit_of_measurement") is None
+
+
 @pytest.mark.parametrize(
     ("device_class", "native_value", "state_value", "log"),
     [

@@ -231,7 +231,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self._attr_suggested_display_precision = config.get(
             CONF_SUGGESTED_DISPLAY_PRECISION
         )
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_native_unit_of_measurement = (
+            config.get(CONF_UNIT_OF_MEASUREMENT) or None
+        )
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
         self._expire_after = config.get(CONF_EXPIRE_AFTER)
