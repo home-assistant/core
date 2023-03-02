@@ -272,7 +272,7 @@ class SensorEntity(Entity):
     def _numeric_state_expected(self) -> bool:
         """Return true if the sensor must be numeric."""
         device_class = try_parse_enum(SensorDeviceClass, self.device_class)
-        if device_class in {*NON_NUMERIC_DEVICE_CLASSES}:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES:
             return False
         if (
             self.state_class is not None
