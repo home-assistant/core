@@ -49,19 +49,19 @@ def mock_error(
     aioclient_mock.get(f"{API_URL}/wanted/missing", exc=ClientError)
 
 
-@pytest.fixture()
+@pytest.fixture
 def cannot_connect(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock cannot connect error."""
     mock_error(aioclient_mock, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-@pytest.fixture()
+@pytest.fixture
 def invalid_auth(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock invalid authorization error."""
     mock_error(aioclient_mock, status=HTTPStatus.UNAUTHORIZED)
 
 
-@pytest.fixture()
+@pytest.fixture
 def wrong_app(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Lidarr wrong app."""
     aioclient_mock.get(
@@ -71,7 +71,7 @@ def wrong_app(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def zeroconf_failed(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Lidarr zero configuration failure."""
     aioclient_mock.get(
@@ -81,7 +81,7 @@ def zeroconf_failed(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def unknown(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock Lidarr unknown error."""
     aioclient_mock.get(
@@ -139,4 +139,4 @@ async def mock_setup_integration(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    yield func
+    return func
