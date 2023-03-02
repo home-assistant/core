@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -33,7 +34,7 @@ from . import init_integration
 from tests.common import async_fire_time_changed, load_fixture
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test states of the sensor."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -170,7 +171,7 @@ async def test_sensor(hass):
     assert entry.unique_id == "123-aqi"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
@@ -212,7 +213,7 @@ async def test_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_invalid_indexes(hass):
+async def test_invalid_indexes(hass: HomeAssistant) -> None:
     """Test states of the sensor when API returns invalid indexes."""
     await init_integration(hass, invalid_indexes=True)
     registry = er.async_get(hass)
@@ -334,7 +335,7 @@ async def test_invalid_indexes(hass):
     assert state is None
 
 
-async def test_aqi_sensor_availability(hass):
+async def test_aqi_sensor_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the AQI sensor unavailable correctly when indexes are invalid."""
     await init_integration(hass)
 
@@ -359,7 +360,7 @@ async def test_aqi_sensor_availability(hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_unique_id_migration(hass):
+async def test_unique_id_migration(hass: HomeAssistant) -> None:
     """Test states of the unique_id migration."""
     registry = er.async_get(hass)
 

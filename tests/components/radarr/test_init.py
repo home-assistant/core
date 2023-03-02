@@ -9,7 +9,7 @@ from . import create_entry, mock_connection_invalid_auth, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test unload."""
     entry = await setup_integration(hass, aioclient_mock)
     assert entry.state == ConfigEntryState.LOADED
@@ -23,7 +23,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
 
 async def test_async_setup_entry_not_ready(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = await setup_integration(hass, aioclient_mock, connection_error=True)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -33,7 +33,7 @@ async def test_async_setup_entry_not_ready(
 
 async def test_async_setup_entry_auth_failed(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
     entry = create_entry(hass)
     mock_connection_invalid_auth(aioclient_mock)
@@ -43,7 +43,9 @@ async def test_async_setup_entry_auth_failed(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_device_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test device info."""
     entry = await setup_integration(hass, aioclient_mock)
     device_registry = dr.async_get(hass)

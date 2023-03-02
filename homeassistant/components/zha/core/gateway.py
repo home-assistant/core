@@ -40,7 +40,9 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_TYPE,
     CONF_DATABASE,
+    CONF_DEVICE_PATH,
     CONF_RADIO_TYPE,
+    CONF_USE_THREAD,
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
@@ -91,7 +93,7 @@ if TYPE_CHECKING:
     from ..entity import ZhaEntity
     from .channels.base import ZigbeeChannel
 
-    _LogFilterType = Filter | Callable[[LogRecord], int]
+    _LogFilterType = Filter | Callable[[LogRecord], bool]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,6 +169,15 @@ class ZHAGateway:
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
+        # The bellows UART thread sometimes propagates a cancellation into the main Core
+        # event loop, when a connection to a TCP coordinator fails in a specific way
+        if (
+            CONF_USE_THREAD not in app_config
+            and RadioType[radio_type] is RadioType.ezsp
+            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
+        ):
+            app_config[CONF_USE_THREAD] = False
+
         app_config = app_controller_cls.SCHEMA(app_config)
 
         for attempt in range(STARTUP_RETRIES):
@@ -230,7 +241,8 @@ class ZHAGateway:
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
             zha_group = self._async_get_or_create_group(group)
-            # we can do this here because the entities are in the entity registry tied to the devices
+            # we can do this here because the entities are in the
+            # entity registry tied to the devices
             discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
     async def async_initialize_devices_and_entities(self) -> None:
@@ -253,7 +265,9 @@ class ZHAGateway:
             )
 
         # background the fetching of state for mains powered devices
-        asyncio.create_task(fetch_updated_state())
+        self.config_entry.async_create_background_task(
+            self._hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
+        )
 
     def device_joined(self, device: zigpy.device.Device) -> None:
         """Handle device joined.
@@ -325,7 +339,8 @@ class ZHAGateway:
             self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
         if len(zha_group.members) == 2:
-            # we need to do this because there wasn't already a group entity to remove and re-add
+            # we need to do this because there wasn't already
+            # a group entity to remove and re-add
             discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
     def group_added(self, zigpy_group: zigpy.group.Group) -> None:
@@ -419,7 +434,9 @@ class ZHAGateway:
         if entity.zha_device.ieee in self.device_registry:
             entity_refs = self.device_registry.get(entity.zha_device.ieee)
             self.device_registry[entity.zha_device.ieee] = [
-                e for e in entity_refs if e.reference_id != entity.entity_id  # type: ignore[union-attr]
+                e
+                for e in entity_refs  # type: ignore[union-attr]
+                if e.reference_id != entity.entity_id
             ]
 
     def _cleanup_group_entity_registry_entries(
@@ -440,7 +457,8 @@ class ZHAGateway:
             include_disabled_entities=True,
         )
 
-        # then we get the entity entries for this specific group by getting the entries that match
+        # then we get the entity entries for this specific group
+        # by getting the entries that match
         entries_to_remove = [
             entry
             for entry in all_group_entity_entries
@@ -619,7 +637,8 @@ class ZHAGateway:
             zha_device.nwk,
             zha_device.ieee,
         )
-        # we don't have to do this on a nwk swap but we don't have a way to tell currently
+        # we don't have to do this on a nwk swap
+        # but we don't have a way to tell currently
         await zha_device.async_configure()
         device_info = zha_device.device_info
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name

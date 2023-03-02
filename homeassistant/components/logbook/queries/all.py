@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from sqlalchemy import lambda_stmt
-from sqlalchemy.orm import Query
-from sqlalchemy.sql.elements import ClauseList
+from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
     LAST_UPDATED_INDEX_TS,
@@ -24,8 +24,8 @@ def all_stmt(
     start_day: float,
     end_day: float,
     event_types: tuple[str, ...],
-    states_entity_filter: ClauseList | None = None,
-    events_entity_filter: ClauseList | None = None,
+    states_entity_filter: ColumnElement | None = None,
+    events_entity_filter: ColumnElement | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
@@ -37,8 +37,18 @@ def all_stmt(
         # are gone from the database remove the
         # _legacy_select_events_context_id()
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _states_query_for_context_id(start_day, end_day, context_id),
-            legacy_select_events_context_id(start_day, end_day, context_id),
+            _states_query_for_context_id(
+                start_day,
+                end_day,
+                # https://github.com/python/mypy/issues/2608
+                context_id,  # type:ignore[arg-type]
+            ),
+            legacy_select_events_context_id(
+                start_day,
+                end_day,
+                # https://github.com/python/mypy/issues/2608
+                context_id,  # type:ignore[arg-type]
+            ),
         )
     else:
         if events_entity_filter is not None:
@@ -46,7 +56,10 @@ def all_stmt(
 
         if states_entity_filter is not None:
             stmt += lambda s: s.union_all(
-                _states_query_for_all(start_day, end_day).where(states_entity_filter)
+                _states_query_for_all(start_day, end_day).where(
+                    # https://github.com/python/mypy/issues/2608
+                    states_entity_filter  # type:ignore[arg-type]
+                )
             )
         else:
             stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
@@ -55,20 +68,20 @@ def all_stmt(
     return stmt
 
 
-def _states_query_for_all(start_day: float, end_day: float) -> Query:
+def _states_query_for_all(start_day: float, end_day: float) -> Select:
     return apply_states_filters(_apply_all_hints(select_states()), start_day, end_day)
 
 
-def _apply_all_hints(query: Query) -> Query:
+def _apply_all_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large selects."""
-    return query.with_hint(
+    return sel.with_hint(
         States, f"FORCE INDEX ({LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
     )
 
 
 def _states_query_for_context_id(
     start_day: float, end_day: float, context_id: str
-) -> Query:
+) -> Select:
     return apply_states_filters(select_states(), start_day, end_day).where(
         States.context_id == context_id
     )

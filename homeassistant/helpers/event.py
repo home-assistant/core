@@ -1349,9 +1349,24 @@ def async_call_later(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
-    if not isinstance(delay, timedelta):
-        delay = timedelta(seconds=delay)
-    return async_track_point_in_utc_time(hass, action, dt_util.utcnow() + delay)
+    if isinstance(delay, timedelta):
+        delay = delay.total_seconds()
+
+    @callback
+    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job, time_tracker_utcnow())
+
+    job = action if isinstance(action, HassJob) else HassJob(action)
+    cancel_callback = hass.loop.call_later(delay, run_action, job)
+
+    @callback
+    def unsub_call_later_listener() -> None:
+        """Cancel the call_later."""
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_call_later_listener
 
 
 call_later = threaded_listener_factory(async_call_later)

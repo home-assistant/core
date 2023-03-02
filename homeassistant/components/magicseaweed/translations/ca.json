@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "La integraci\u00f3 Magicseaweed s'eliminar\u00e0 de Home Assistant i deixar\u00e0 d'estar disponible a la versi\u00f3 de Home Assistant 2023.3.\n\nElimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per eliminar aquest error.",
-            "title": "La integraci\u00f3 Magicseaweed est\u00e0 sent eliminada"
-        }
-    }
-}

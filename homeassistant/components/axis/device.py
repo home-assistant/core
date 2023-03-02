@@ -155,7 +155,7 @@ class AxisNetworkDevice:
 
         Called when config entry is updated.
         This is a static method because a class method (bound method),
-        can not be used with weak references.
+        cannot be used with weak references.
         """
         device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.entry_id]
         device.api.config.host = device.host

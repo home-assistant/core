@@ -29,7 +29,11 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
+from homeassistant.helpers.json import (
+    JSON_DUMP,
+    ExtendedJSONEncoder,
+    find_paths_unserializable_data,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import (
     Integration,
@@ -39,10 +43,7 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
@@ -113,18 +114,14 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events, run_immediately=True
@@ -296,9 +293,7 @@ def handle_subscribe_entities(
         if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
-        connection.send_message(
-            lambda: messages.cached_state_diff_message(msg["id"], event)
-        )
+        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
