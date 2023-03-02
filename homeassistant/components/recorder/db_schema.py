@@ -205,7 +205,7 @@ class Events(Base):
     context_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
     )
-    context_user_id: Mapped[str | None] = mapped_column(
+    context_user_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID)
     )
     context_parent_id: Mapped[str | None] = mapped_column(  # no longer used
@@ -377,7 +377,7 @@ class States(Base):
     context_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
     )
-    context_user_id: Mapped[str | None] = mapped_column(
+    context_user_id: Mapped[str | None] = mapped_column(  # no longer used
         String(MAX_LENGTH_EVENT_CONTEXT_ID)
     )
     context_parent_id: Mapped[str | None] = mapped_column(  # no longer used
