@@ -549,9 +549,12 @@ class KNXCommonFlow(ABC, FlowHandler):
                     ),
                     None,
                 )
+            _tunnel_identifier = selected_tunnel_ia or self.new_entry_data.get(
+                CONF_HOST
+            )
+            _tunnel_suffix = f" @ {_tunnel_identifier}" if _tunnel_identifier else ""
             self.new_title = (
-                f"{'Secure ' if _if_user_id else ''}"
-                f"Tunneling @ {selected_tunnel_ia or self.new_entry_data[CONF_HOST]}"
+                f"{'Secure ' if _if_user_id else ''}Tunneling{_tunnel_suffix}"
             )
             return self.finish_flow()
 
@@ -708,7 +711,8 @@ class KNXCommonFlow(ABC, FlowHandler):
                 else:
                     dest_path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
                     dest_path.mkdir(exist_ok=True)
-                    file_path.rename(dest_path / DEFAULT_KNX_KEYRING_FILENAME)
+                    dest_file = dest_path / DEFAULT_KNX_KEYRING_FILENAME
+                    dest_file.write_bytes(file_path.read_bytes())
             return keyring, errors
 
         keyring, errors = await self.hass.async_add_executor_job(_process_upload)

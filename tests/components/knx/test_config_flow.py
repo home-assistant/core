@@ -77,16 +77,19 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
         side_effect=side_effect,
     ), patch(
         "pathlib.Path.mkdir"
-    ) as mkdir_mock:
-        file_path_mock = Mock()
-        file_upload_mock.return_value.__enter__.return_value = file_path_mock
+    ) as mkdir_mock, patch(
+        "pathlib.Path.write_bytes"
+    ) as write_bytes_mock, patch(
+        "pathlib.Path.read_bytes"  # avoid reading the file on each test
+    ):
+        file_upload_mock.return_value.__enter__.return_value = Mock()
         yield return_value
         if side_effect:
             mkdir_mock.assert_not_called()
-            file_path_mock.rename.assert_not_called()
+            write_bytes_mock.assert_not_called()
         else:
             mkdir_mock.assert_called_once()
-            file_path_mock.rename.assert_called_once()
+            write_bytes_mock.assert_called_once()
 
 
 def _gateway_descriptor(
