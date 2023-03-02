@@ -54,7 +54,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # C=0: General purpose objects
     # D=0: Free ID-numbers for utilities
     # E=0 Ownership ID
-    SensorEntityDescription(key="1-0:0.0.0*255", name="Ownership ID", icon="mdi:flash"),
+    SensorEntityDescription(
+        key="1-0:0.0.0*255",
+        name="Ownership ID",
+        icon="mdi:flash",
+        entity_registry_enabled_default=False,
+    ),
     # E=9: Electrity ID
     SensorEntityDescription(
         key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
