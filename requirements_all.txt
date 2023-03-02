@@ -1430,7 +1430,7 @@ py-canary==0.5.3
 py-cpuinfo==8.0.0
 
 # homeassistant.components.dormakaba_dkey
-py-dormakaba-dkey==1.0.3
+py-dormakaba-dkey==1.0.4
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
