@@ -527,7 +527,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
         TuyaSensorEntityDescription(
             key=DPCode.TIME_USE,
-            name="Total Watering Time",
+            name="Total watering time",
             icon="mdi:history",
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
