@@ -68,13 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
         store: Store = Store(hass, 1, DOMAIN)
-        # The first time we start with APPS but after that we store each retrieved
-        # list of apps so we aren't starting from scratch on restart. This will
-        # preserve the app list for this HA instance in case the URLs to retrieve
-        # the app list change.
-        initial_data = await store.async_load() or APPS
-        coordinator = VizioAppsDataUpdateCoordinator(hass, initial_data, store)
-        await coordinator.async_refresh()
+        coordinator = VizioAppsDataUpdateCoordinator(hass, store)
+        await coordinator.async_config_entry_first_refresh()
         hass.data[DOMAIN][CONF_APPS] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -105,9 +100,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Define an object to hold Vizio app config data."""
 
-    def __init__(
-        self, hass: HomeAssistant, initial_data: list[dict[str, Any]], store: Store
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, store: Store) -> None:
         """Initialize."""
         super().__init__(
             hass,
@@ -116,15 +109,20 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
             update_interval=timedelta(days=1),
             update_method=self._async_update_data,
         )
-        self.data = initial_data
         self.fail_count = 0
         self.fail_threshold = 10
         self.store = store
 
+    async def async_config_entry_first_refresh(self) -> None:
+        """Refresh data for the first time when a config entry is setup."""
+        self.data = await self.store.async_load() or APPS
+        await super().async_config_entry_first_refresh()
+
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update data via library."""
-        data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
-        if data:
+        if data := await gen_apps_list_from_url(
+            session=async_get_clientsession(self.hass)
+        ):
             # Reset the fail count and threshold when the data is successfully retrieved
             self.fail_count = 0
             self.fail_threshold = 10
