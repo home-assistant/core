@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -30,7 +30,7 @@ async def async_setup_entry(
     coordinators: dict[
         str, DataUpdateCoordinator[list[ConnectedStationInfo]]
     ] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     tracked = set()
 
     @callback
@@ -53,9 +53,7 @@ async def async_setup_entry(
     def restore_entities() -> None:
         """Restore clients that are not a part of active clients list."""
         missing = []
-        for entity in entity_registry.async_entries_for_config_entry(
-            registry, entry.entry_id
-        ):
+        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
             if (
                 entity.platform == DOMAIN
                 and entity.domain == DEVICE_TRACKER_DOMAIN

@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
@@ -491,6 +491,13 @@ async def test_state_children_only(hass: HomeAssistant, mock_states) -> None:
     await hass.async_block_till_done()
     await ump.async_update()
     assert ump.state == STATE_PLAYING
+
+    mock_states.mock_mp_1._state = STATE_ON
+    mock_states.mock_mp_1._attr_assumed_state = True
+    mock_states.mock_mp_1.async_schedule_update_ha_state()
+    await hass.async_block_till_done()
+    await ump.async_update()
+    assert ump.assumed_state is True
 
 
 async def test_state_with_children_and_attrs(
@@ -1176,7 +1183,9 @@ async def test_device_class(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.tv").attributes["device_class"] == "tv"
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id property."""
     hass.states.async_set("sensor.test_sensor", "on")
 
@@ -1192,8 +1201,10 @@ async def test_unique_id(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    er = entity_registry.async_get(hass)
-    assert er.async_get("media_player.tv").unique_id == "universal_master_bed_tv"
+    assert (
+        entity_registry.async_get("media_player.tv").unique_id
+        == "universal_master_bed_tv"
+    )
 
 
 async def test_invalid_state_template(hass: HomeAssistant) -> None:
