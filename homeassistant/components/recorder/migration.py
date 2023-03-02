@@ -968,6 +968,7 @@ def _apply_update(  # noqa: C901
                 table,
                 [
                     f"context_id_bin {context_bin_type}",
+                    f"context_user_id_bin {context_bin_type}",
                     f"context_parent_id_bin {context_bin_type}",
                 ],
             )
@@ -1243,11 +1244,13 @@ def migrate_context_ids(instance: Recorder) -> bool:
                     {
                         "event_id": event_id,
                         "context_id": None,
-                        "context_parent_id": None,
                         "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_user_id": None,
+                        "context_user_id_bin": _to_bytes(context_user_id),
+                        "context_parent_id": None,
                         "context_parent_id_bin": _to_bytes(context_parent_id),
                     }
-                    for event_id, context_id, context_parent_id in events
+                    for event_id, context_id, context_user_id, context_parent_id in events
                 ],
             )
         if states := session.execute(find_states_context_ids_to_migrate()).all():
@@ -1257,11 +1260,13 @@ def migrate_context_ids(instance: Recorder) -> bool:
                     {
                         "state_id": state_id,
                         "context_id": None,
-                        "context_parent_id": None,
                         "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_user_id": None,
+                        "context_user_id_bin": _to_bytes(context_user_id),
+                        "context_parent_id": None,
                         "context_parent_id_bin": _to_bytes(context_parent_id),
                     }
-                    for state_id, context_id, context_parent_id in states
+                    for state_id, context_id, context_user_id, context_parent_id in states
                 ],
             )
         # If there is more work to do return False

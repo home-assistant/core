@@ -135,6 +135,9 @@ class Events(Base):  # type: ignore
     context_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
@@ -236,6 +239,9 @@ class States(Base):  # type: ignore
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     context_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    context_user_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
     context_parent_id_bin = Column(

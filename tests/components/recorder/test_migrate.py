@@ -552,6 +552,7 @@ async def test_migrate_context_ids(
                         context_id=uuid_hex,
                         context_id_bin=None,
                         context_user_id=None,
+                        context_user_id_bin=None,
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
@@ -564,6 +565,7 @@ async def test_migrate_context_ids(
                         context_id=None,
                         context_id_bin=None,
                         context_user_id=None,
+                        context_user_id_bin=None,
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
@@ -575,7 +577,8 @@ async def test_migrate_context_ids(
                         time_fired_ts=1677721632.552529,
                         context_id="01ARZ3NDEKTSV4RRFFQ69G5FAV",
                         context_id_bin=None,
-                        context_user_id=None,
+                        context_user_id="9400facee45711eaa9308bfd3d19e474",
+                        context_user_id_bin=None,
                         context_parent_id="01ARZ3NDEKTSV4RRFFQ69G5FA2",
                         context_parent_id_bin=None,
                     ),
@@ -588,6 +591,7 @@ async def test_migrate_context_ids(
                         context_id="invalid",
                         context_id_bin=None,
                         context_user_id=None,
+                        context_user_id_bin=None,
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
@@ -627,22 +631,31 @@ async def test_migrate_context_ids(
 
     old_uuid_context_id_event = events_by_type["old_uuid_context_id_event"]
     assert old_uuid_context_id_event["context_id"] is None
+    assert old_uuid_context_id_event["context_user_id"] is None
     assert old_uuid_context_id_event["context_parent_id"] is None
     assert old_uuid_context_id_event["context_id_bin"] == uuid_bin
+    assert old_uuid_context_id_event["context_user_id_bin"] is None
     assert old_uuid_context_id_event["context_parent_id_bin"] is None
 
     empty_context_id_event = events_by_type["empty_context_id_event"]
     assert empty_context_id_event["context_id"] is None
+    assert empty_context_id_event["context_user_id"] is None
     assert empty_context_id_event["context_parent_id"] is None
     assert empty_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert empty_context_id_event["context_user_id_bin"] is None
     assert empty_context_id_event["context_parent_id_bin"] is None
 
     ulid_context_id_event = events_by_type["ulid_context_id_event"]
     assert ulid_context_id_event["context_id"] is None
+    assert ulid_context_id_event["context_user_id"] is None
     assert ulid_context_id_event["context_parent_id"] is None
     assert (
         bytes_to_ulid(ulid_context_id_event["context_id_bin"])
         == "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    )
+    assert (
+        ulid_context_id_event["context_user_id_bin"]
+        == b"\x94\x00\xfa\xce\xe4W\x11\xea\xa90\x8b\xfd=\x19\xe4t"
     )
     assert (
         bytes_to_ulid(ulid_context_id_event["context_parent_id_bin"])
@@ -651,6 +664,8 @@ async def test_migrate_context_ids(
 
     invalid_context_id_event = events_by_type["invalid_context_id_event"]
     assert invalid_context_id_event["context_id"] is None
+    assert invalid_context_id_event["context_user_id"] is None
     assert invalid_context_id_event["context_parent_id"] is None
     assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert invalid_context_id_event["context_user_id_bin"] is None
     assert invalid_context_id_event["context_parent_id_bin"] is None

@@ -12,6 +12,7 @@ from sqlalchemy.engine.row import Row
 
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
+    bytes_to_uuid_hex_or_none,
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
 )
@@ -308,8 +309,8 @@ class ContextAugmenter:
         self, data: dict[str, Any], row: Row | EventAsRow, context_id: bytes | None
     ) -> None:
         """Augment data from the row and cache."""
-        if context_user_id := row.context_user_id:
-            data[CONTEXT_USER_ID] = context_user_id
+        if context_user_id_bin := row.context_user_id_bin:
+            data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(context_user_id_bin)
 
         if not (context_row := self._get_context_row(context_id, row)):
             return

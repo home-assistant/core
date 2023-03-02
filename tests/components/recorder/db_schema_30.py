@@ -219,6 +219,9 @@ class Events(Base):  # type: ignore[misc,valid-type]
     context_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok
@@ -357,6 +360,9 @@ class States(Base):  # type: ignore[misc,valid-type]
     context_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok
+    context_user_id_bin = Column(
+        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
+    )  # *** Not originally in v23, only added for recorder to startup ok
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v30, only added for recorder to startup ok

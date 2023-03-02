@@ -48,7 +48,7 @@ EVENT_COLUMNS = (
     Events.event_data.label("event_data"),
     Events.time_fired_ts.label("time_fired_ts"),
     Events.context_id_bin.label("context_id_bin"),
-    Events.context_user_id.label("context_user_id"),
+    Events.context_user_id_bin.label("context_user_id_bin"),
     Events.context_parent_id_bin.label("context_parent_id_bin"),
 )
 
@@ -80,7 +80,7 @@ EVENT_COLUMNS_FOR_STATE_SELECT = (
     literal(value=None, type_=sqlalchemy.Text).label("event_data"),
     States.last_updated_ts.label("time_fired_ts"),
     States.context_id_bin.label("context_id_bin"),
-    States.context_user_id.label("context_user_id"),
+    States.context_user_id_bin.label("context_user_id_bin"),
     States.context_parent_id_bin.label("context_parent_id_bin"),
     literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
 )

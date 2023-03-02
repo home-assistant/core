@@ -324,7 +324,7 @@ def create_state_changed_event_from_old_new(
             "time_fired",
             "time_fired_ts",
             "context_id_bin",
-            "context_user_id",
+            "context_user_id_bin",
             "context_parent_id_bin",
             "state",
             "entity_id",
@@ -353,7 +353,7 @@ def create_state_changed_event_from_old_new(
     row.friendly_name = None
     row.icon = None
     row.old_format_icon = None
-    row.context_user_id = None
+    row.context_user_id_bin = None
     row.context_parent_id_bin = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
