@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
+from functools import lru_cache
 import json
 from typing import Any, cast
 
@@ -424,6 +425,9 @@ def handle_ping(
     connection.send_message(pong_message(msg["id"]))
 
 
+_cached_template = lru_cache(template.Template)
+
+
 @decorators.websocket_command(
     {
         vol.Required("type"): "render_template",
@@ -440,7 +444,8 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = template.Template(template_str, hass)
+    template_obj = _cached_template(template_str)
+    template_obj.hass = hass
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None

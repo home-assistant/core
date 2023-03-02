@@ -1,5 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
+from functools import lru_cache
 from http import HTTPStatus
 import logging
 
@@ -350,6 +351,9 @@ class APIComponentsView(HomeAssistantView):
         return self.json(request.app["hass"].config.components)
 
 
+_cached_template = lru_cache(template.Template)
+
+
 class APITemplateView(HomeAssistantView):
     """View to handle Template requests."""
 
@@ -362,7 +366,8 @@ class APITemplateView(HomeAssistantView):
             raise Unauthorized()
         try:
             data = await request.json()
-            tpl = template.Template(data["template"], request.app["hass"])
+            tpl = _cached_template(data["template"])
+            tpl.hass = request.app["hass"]
             return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
             return self.json_message(
