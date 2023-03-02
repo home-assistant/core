@@ -83,6 +83,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_COOLDOWN = 2
+INITIAL_SUBSCRIBE_COOLDOWN = 1.0
 SUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 
@@ -311,6 +312,10 @@ class EnsureJobAfterCooldown:
         self._callback = subscribe_job
         self._task: asyncio.Future | None = None
         self._lock = asyncio.Lock()
+
+    def set_timeout(self, timeout: float) -> None:
+        """Set a new timeout period."""
+        self._timeout = timeout
 
     async def _async_job(self) -> None:
         """Subscribe after a cooldown period."""
@@ -614,7 +619,9 @@ class MQTT:
             if self._is_active_subscription(topic):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
-
+            if topic in self._pending_subscriptions:
+                # avoid any pending subscription to be executed
+                del self._pending_subscriptions[topic]
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
 
@@ -705,6 +712,8 @@ class MQTT:
             async def publish_birth_message(birth_message: PublishMessage) -> None:
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
+                # Update subscribe cooldown period to a shorter time
+                self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
                 await self.async_publish(
                     topic=birth_message.topic,
                     payload=birth_message.payload,

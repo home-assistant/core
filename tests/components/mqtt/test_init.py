@@ -1262,6 +1262,7 @@ async def test_subscribe_special_characters(
     assert calls[0].payload == payload
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_same_topic(
     hass: HomeAssistant,
@@ -1307,6 +1308,7 @@ async def test_subscribe_same_topic(
     mqtt_client_mock.subscribe.assert_called()
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_not_calling_unsubscribe_with_active_subscribers(
     hass: HomeAssistant,
@@ -1330,6 +1332,31 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     assert not mqtt_client_mock.unsubscribe.called
 
 
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.1)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.1)
+async def test_not_calling_subscribe_when_unsubscribed_within_cooldown(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test not calling subscribe() when it is unsubscribed.
+
+    Make sure subscriptions are cleared if unsubscribed before
+    the subscribe cool down period has ended.
+    """
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    unsub = await mqtt.async_subscribe(hass, "test/state", record_calls)
+    unsub()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert not mqtt_client_mock.subscribe.called
+
+
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_unsubscribe_race(
     hass: HomeAssistant,
@@ -1387,6 +1414,7 @@ async def test_unsubscribe_race(
     "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_restore_subscriptions_on_reconnect(
     hass: HomeAssistant,
@@ -1416,6 +1444,7 @@ async def test_restore_subscriptions_on_reconnect(
     "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_restore_all_active_subscriptions_on_reconnect(
     hass: HomeAssistant,
@@ -1592,7 +1621,7 @@ async def test_publish_error(
         assert "Failed to connect to MQTT server: Out of memory." in caplog.text
 
 
-@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 async def test_subscribe_error(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
