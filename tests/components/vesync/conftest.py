@@ -81,6 +81,7 @@ def manager_fixture() -> VeSync:
 def fan_fixture():
     """Create a mock VeSync fan fixture."""
     mock_fixture = Mock(VeSyncAirBypass)
+    mock_fixture.device_type = "fan device"
     return mock_fixture
 
 

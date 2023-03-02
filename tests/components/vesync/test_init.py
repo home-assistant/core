@@ -87,7 +87,11 @@ async def test_async_setup_entry__loads_fans(
         hass.config_entries, "async_forward_entry_setups"
     ) as setups_mock, patch.object(
         hass.config_entries, "async_forward_entry_setup"
-    ) as setup_mock:
+    ) as setup_mock, patch(
+        "homeassistant.components.vesync.common.is_humidifier"
+    ) as mock_is_humidifier:
+        mock_is_humidifier.return_value = False
+
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
