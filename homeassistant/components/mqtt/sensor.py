@@ -284,12 +284,23 @@ class MqttSensor(MqttEntity, RestoreSensor):
             if self.device_class is None:
                 self._attr_native_value = new_value
                 return
-            if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
+            try:
+                if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
+                    _LOGGER.warning(
+                        "Invalid state message '%s' from '%s'", msg.payload, msg.topic
+                    )
+                    self._attr_native_value = None
+                    return
+            except ValueError as value_error:
                 _LOGGER.warning(
-                    "Invalid state message '%s' from '%s'", msg.payload, msg.topic
+                    "Invalid state message '%s' from '%s': %s",
+                    msg.payload,
+                    msg.topic,
+                    value_error.args,
                 )
                 self._attr_native_value = None
                 return
+
             if self.device_class == SensorDeviceClass.DATE:
                 self._attr_native_value = payload_datetime.date()
                 return
