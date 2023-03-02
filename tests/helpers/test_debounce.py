@@ -41,6 +41,8 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     # Call and let timer run out
     await debouncer.async_call()
     assert len(calls) == 2
+    # Cancel the TimerHandle to avoid lingering tasks
+    debouncer._timer_task.cancel()
     await debouncer._handle_timer_finish()
     assert len(calls) == 2
     assert debouncer._timer_task is None
@@ -56,9 +58,6 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
-
-    # Cleanup debouncer to avoid lingering tasks
-    debouncer.async_cancel()
 
 
 async def test_not_immediate_works(hass: HomeAssistant) -> None:
@@ -92,6 +91,8 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     # Call and let timer run out
     await debouncer.async_call()
     assert len(calls) == 0
+    # Cancel the TimerHandle to avoid lingering tasks
+    debouncer._timer_task.cancel()
     await debouncer._handle_timer_finish()
     assert len(calls) == 1
     assert debouncer._timer_task is not None
@@ -109,9 +110,6 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
-
-    # Cleanup debouncer to avoid lingering tasks
-    debouncer.async_cancel()
 
 
 async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> None:
@@ -156,6 +154,8 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     await debouncer.async_call()
     assert len(calls) == 2
     assert calls == [1, 2]
+    # Cancel the TimerHandle to avoid lingering tasks
+    debouncer._timer_task.cancel()
     await debouncer._handle_timer_finish()
     assert len(calls) == 2
     assert calls == [1, 2]
@@ -173,6 +173,3 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
-
-    # Cleanup debouncer to avoid lingering tasks
-    debouncer.async_cancel()
